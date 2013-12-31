@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:50747 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754345Ab3LaRQN (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:35111 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754666Ab3LaRQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:13 -0500
-Received: by mail-ea0-f177.google.com with SMTP id n15so5651219ead.36
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:11 -0800 (PST)
+	Tue, 31 Dec 2013 12:16:16 -0500
+Received: by mail-ee0-f52.google.com with SMTP id d17so5546066eek.25
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:15 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/28] iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
-Date: Tue, 31 Dec 2013 19:15:36 +0200
-Message-Id: <1388510157-23345-7-git-send-email-egrumbach@gmail.com> (sfid-20131231_181621_197989_525D8914)
+Subject: [PATCH 10/28] iwlwifi: pcie: use don't disable interrupt when irq_lock is taken
+Date: Tue, 31 Dec 2013 19:15:39 +0200
+Message-Id: <1388510157-23345-10-git-send-email-egrumbach@gmail.com> (sfid-20131231_181626_194503_3DF53185)
 In-Reply-To: <52C2FB68.2010708@gmail.com>
 References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -19,133 +19,250 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-These functions are meant to return an interrupt cause and
-not an irqreturn_t.
-We still return IRQ_HANDLED if we had an error and IRQ_NONE
-if our device hasn't fired any interrupt.
+Since we don't take this lock in the primary interrupt
+handler, there is no pointin disabling the interrupt
+in the critical section protected by trans_pcie->irq_lock.
 
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c |   38 ++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c    |   28 ++++++++++++----------------
+ drivers/net/wireless/iwlwifi/pcie/trans.c |   23 ++++++++++-------------
+ drivers/net/wireless/iwlwifi/pcie/tx.c    |   10 ++++------
+ 3 files changed, 26 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 58d3f64..a042c4a 100644
+index 2e11512..7ab510e 100644
 --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
 +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -807,7 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	wake_up(&trans_pcie->wait_command_queue);
- }
- 
--static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
-+static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+@@ -379,13 +379,12 @@ static void iwl_pcie_rxq_free_rbs(struct iwl_trans *trans)
+ static void iwl_pcie_rx_replenish(struct iwl_trans *trans)
  {
  	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta;
-@@ -841,14 +841,15 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
- 		    !trans_pcie->inta)
- 			iwl_enable_interrupts(trans);
--		return IRQ_NONE;
-+		return trans_pcie->inta;
- 	}
+-	unsigned long flags;
  
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return IRQ_HANDLED;
-+		trans_pcie->inta = 0xFFFFFFFF;
-+		return trans_pcie->inta;
- 	}
+ 	iwl_pcie_rxq_alloc_rbs(trans, GFP_KERNEL);
  
- 	if (iwl_have_debug_level(IWL_DL_ISR))
-@@ -859,7 +860,7 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 
- 	trans_pcie->inta |= inta;
- 	/* the thread will service interrupts and re-enable them */
--	return IRQ_WAKE_THREAD;
-+	return trans_pcie->inta;
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_pcie_rxq_restock(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
  }
  
- /* a device (PCI-E) page is 4096 bytes long */
-@@ -875,10 +876,9 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
-  * the interrupt we need to service, driver will set the entries back to 0 and
-  * set index.
-  */
--static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
-+static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	irqreturn_t ret;
- 	u32 inta;
- 	u32 val = 0;
- 	u32 read;
-@@ -938,9 +938,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ static void iwl_pcie_rx_replenish_now(struct iwl_trans *trans)
+@@ -541,10 +540,10 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
  
- 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
- 	if (likely(inta))
--		return IRQ_WAKE_THREAD;
--
--	ret = IRQ_HANDLED;
-+		return trans_pcie->inta;
+ 	iwl_pcie_rx_hw_init(trans, rxq);
  
-  none:
- 	/* re-enable interrupts here since we don't have anything to service.
-@@ -950,7 +948,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	    !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	rxq->need_update = 1;
+ 	iwl_pcie_rxq_inc_wr_ptr(trans, rxq);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
  
--	return ret;
-+	return trans_pcie->inta;
+ 	return 0;
  }
- 
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
-@@ -961,7 +959,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+@@ -895,12 +894,11 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
  	u32 inta = 0;
  	u32 handled = 0;
- 	unsigned long flags;
--	irqreturn_t ret;
+-	unsigned long flags;
  	u32 i;
  
  	lock_map_acquire(&trans->sync_cmd_lockdep_map);
-@@ -972,13 +969,19 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	 * use legacy interrupt.
- 	 */
- 	if (likely(trans_pcie->use_ict))
--		ret = iwl_pcie_int_cause_ict(trans);
-+		inta = iwl_pcie_int_cause_ict(trans);
- 	else
--		ret = iwl_pcie_int_cause_non_ict(trans);
-+		inta = iwl_pcie_int_cause_non_ict(trans);
  
--	if (ret != IRQ_WAKE_THREAD) {
-+	if (unlikely(!inta)) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--		return ret;
-+		lock_map_release(&trans->sync_cmd_lockdep_map);
-+		return IRQ_NONE;
-+	}
-+
-+	if (unlikely(inta == 0xFFFFFFFF)) {
-+		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+		goto out;
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 
+ 	/* dram interrupt table not set yet,
+ 	 * use legacy interrupt.
+@@ -937,7 +935,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 		 */
+ 		if (test_bit(STATUS_INT_ENABLED, &trans->status))
+ 			iwl_enable_interrupts(trans);
+-		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++		spin_unlock(&trans_pcie->irq_lock);
+ 		lock_map_release(&trans->sync_cmd_lockdep_map);
+ 		return IRQ_NONE;
+ 	}
+@@ -948,7 +946,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 		 * already raised an interrupt.
+ 		 */
+ 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+-		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++		spin_unlock(&trans_pcie->irq_lock);
+ 		goto out;
  	}
  
- 	/* Ack/clear/reset pending uCode interrupts.
-@@ -992,10 +995,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	 * hardware bugs here by ACKing all the possible interrupts so that
- 	 * interrupt coalescing can still be achieved.
- 	 */
--	iwl_write32(trans, CSR_INT,
--		    trans_pcie->inta | ~trans_pcie->inta_mask);
--
--	inta = trans_pcie->inta;
-+	iwl_write32(trans, CSR_INT, inta | ~trans_pcie->inta_mask);
- 
- 	if (iwl_have_debug_level(IWL_DL_ISR))
+@@ -969,7 +967,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
  		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
+ 			      inta, iwl_read32(trans, CSR_INT_MASK));
+ 
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* Now service all interrupt bits discovered above. */
+ 	if (inta & CSR_INT_BIT_HW_ERR) {
+@@ -1194,12 +1192,11 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 val;
+-	unsigned long flags;
+ 
+ 	if (!trans_pcie->ict_tbl)
+ 		return;
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+ 
+ 	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+@@ -1216,18 +1213,17 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
+ 	trans_pcie->ict_index = 0;
+ 	iwl_write32(trans, CSR_INT, trans_pcie->inta_mask);
+ 	iwl_enable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ }
+ 
+ /* Device is going down disable ict interrupt usage */
+ void iwl_pcie_disable_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	trans_pcie->use_ict = false;
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ }
+ 
+ irqreturn_t iwl_pcie_isr(int irq, void *data)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 7210507..9a07cf3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -271,13 +271,12 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans)
+ static int iwl_pcie_nic_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	unsigned long flags;
+ 
+ 	/* nic_init */
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_pcie_apm_init(trans);
+ 
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_set_pwr(trans, false);
+ 
+@@ -635,13 +634,12 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
+ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	unsigned long flags;
+ 	bool hw_rfkill;
+ 
+ 	/* tell the device to stop sending interrupts */
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* device going down, Stop using ICT table */
+ 	iwl_pcie_disable_ict(trans);
+@@ -673,9 +671,9 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
+ 	 * Clean again the interrupt here
+ 	 */
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* stop and reset the on-board processor */
+ 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+@@ -821,18 +819,17 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ static void iwl_trans_pcie_op_mode_leave(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	unsigned long flags;
+ 
+ 	/* disable interrupts - don't enable HW RF kill interrupt */
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_apm_stop(trans);
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_disable_ict(trans);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 8df2478..b49a1853 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -737,10 +737,9 @@ int iwl_pcie_tx_stop(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int ch, txq_id, ret;
+-	unsigned long flags;
+ 
+ 	/* Turn off all Tx DMA fifos */
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_txq_set_sched(trans, 0);
+ 
+@@ -757,7 +756,7 @@ int iwl_pcie_tx_stop(struct iwl_trans *trans)
+ 				iwl_read_direct32(trans,
+ 						  FH_TSSR_TX_STATUS_REG));
+ 	}
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	if (!trans_pcie->txq) {
+ 		IWL_WARN(trans,
+@@ -865,7 +864,6 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int ret;
+ 	int txq_id, slots_num;
+-	unsigned long flags;
+ 	bool alloc = false;
+ 
+ 	if (!trans_pcie->txq) {
+@@ -875,7 +873,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 		alloc = true;
+ 	}
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	spin_lock(&trans_pcie->irq_lock);
+ 
+ 	/* Turn off all Tx DMA fifos */
+ 	iwl_write_prph(trans, SCD_TXFACT, 0);
+@@ -884,7 +882,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 	iwl_write_direct32(trans, FH_KW_MEM_ADDR_REG,
+ 			   trans_pcie->kw.dma >> 4);
+ 
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
+ 	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
 -- 
 1.7.9.5
 
