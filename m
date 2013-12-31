@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45007 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513Ab3LJJnR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 04:43:17 -0500
-Date: Tue, 10 Dec 2013 10:43:16 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2 09/16] wl1251: fix channel switching in monitor mode
-Message-ID: <20131210094316.GJ22756@amd.pavel.ucw.cz> (sfid-20131210_104342_605551_B2BB923D)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-10-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1386494714-21070-10-git-send-email-pali.rohar@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:49961 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753915Ab3LaReA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Dec 2013 12:34:00 -0500
+Received: from spike ([81.217.122.98]) by mail.gmx.com (mrgmx102) with ESMTPSA
+ (Nemesis) id 0M2FhY-1V8Z6o2DRM-00s79L for <linux-wireless@vger.kernel.org>;
+ Tue, 31 Dec 2013 18:33:58 +0100
+Date: Tue, 31 Dec 2013 18:33:57 +0100
+From: Christian Engelmayer <cengelma@gmx.at>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless: cw1200: Fix memory leak in cw1200_wow_suspend()
+Message-ID: <20131231183357.3664e978@spike> (sfid-20131231_183404_551762_2F30ED8B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-12-08 10:25:07, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> Use the ENABLE_RX command for channel switching when no interface is present
-> (monitor mode only).
-> The advantage of ENABLE_RX is that it leaves the tx data path disabled in
-> firmware, whereas the usual JOIN command seems to transmit some frames at
-> firmware level.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Fix a memory leak in the cw1200_wow_suspend() error handling path.
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
+---
+ drivers/net/wireless/cw1200/pm.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Thanks,
-								Pavel
-
+diff --git a/drivers/net/wireless/cw1200/pm.c b/drivers/net/wireless/cw1200/pm.c
+index b37abb9..6907c8f 100644
+--- a/drivers/net/wireless/cw1200/pm.c
++++ b/drivers/net/wireless/cw1200/pm.c
+@@ -225,7 +225,7 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 		cw1200_set_pm(priv, &priv->powersave_mode);
+ 		if (wait_event_interruptible_timeout(priv->ps_mode_switch_done,
+ 						     !priv->ps_mode_switch_in_progress, 1*HZ) <= 0) {
+-			goto revert3;
++			goto revert4;
+ 		}
+ 	}
+ 
+@@ -254,11 +254,11 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	/* Stop serving thread */
+ 	if (cw1200_bh_suspend(priv))
+-		goto revert4;
++		goto revert5;
+ 
+ 	ret = timer_pending(&priv->mcast_timeout);
+ 	if (ret)
+-		goto revert5;
++		goto revert6;
+ 
+ 	/* Store suspend state */
+ 	pm_state->suspend_state = state;
+@@ -280,9 +280,9 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	return 0;
+ 
+-revert5:
++revert6:
+ 	WARN_ON(cw1200_bh_resume(priv));
+-revert4:
++revert5:
+ 	cw1200_resume_work(priv, &priv->bss_loss_work,
+ 			   state->bss_loss_tmo);
+ 	cw1200_resume_work(priv, &priv->join_timeout,
+@@ -291,6 +291,7 @@ revert4:
+ 			   state->direct_probe);
+ 	cw1200_resume_work(priv, &priv->link_id_gc_work,
+ 			   state->link_id_gc);
++revert4:
+ 	kfree(state);
+ revert3:
+ 	wsm_set_udp_port_filter(priv, &cw1200_udp_port_filter_off);
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.8.3.2
