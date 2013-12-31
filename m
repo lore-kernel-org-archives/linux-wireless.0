@@ -1,235 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47389 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab3LaCrP (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:43846 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754871Ab3LaRQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 21:47:15 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 5/5] ath9k: Add hardware support for QCA9531
-Date: Tue, 31 Dec 2013 08:12:02 +0530
-Message-Id: <1388457722-29643-5-git-send-email-sujith@msujith.org> (sfid-20131231_034721_002910_F0A2286B)
-In-Reply-To: <1388457722-29643-1-git-send-email-sujith@msujith.org>
-References: <1388457722-29643-1-git-send-email-sujith@msujith.org>
+	Tue, 31 Dec 2013 12:16:26 -0500
+Received: by mail-ea0-f180.google.com with SMTP id f15so5553287eak.25
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:25 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/28] iwlwifi: mvm: disable the device as soon as RFKILL fires
+Date: Tue, 31 Dec 2013 19:15:46 +0200
+Message-Id: <1388510157-23345-17-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_947927_209B2559)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The firmware needs to be stopped quickly (100ms) after the
+RFKILL interrupt fired. Failing to do so would allow the
+firmware to access the radio registers which would lead to
+a hardware error.
+
+Before this change, we would kill the firmware only when
+mac80211 stops the device which can take a fair amount of
+time. Take a shortcut by stopping the device right away
+in the interrupt.
+
+This is not relevant if the current firmware is INIT
+firmware since that firmware can run while in RFKILL.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 13 ++++---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 14 ++++---
- drivers/net/wireless/ath/ath9k/hw.c            | 52 ++++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/recv.c          |  2 +-
- 4 files changed, 57 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/ops.c  |    2 ++
+ drivers/net/wireless/iwlwifi/mvm/scan.c |    9 +++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c8d22ec..25243cb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3598,7 +3598,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
- 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
--	} else if (AR_SREV_9550(ah)) {
-+	} else if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
- 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
- 				AR_SWITCH_TABLE_COM_AR9550_ALL, value);
- 	} else
-@@ -3975,7 +3975,7 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index a362430..d6b96ca 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -665,6 +665,8 @@ static void iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
+ 	else
+ 		clear_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status);
  
--	if (AR_SREV_9340(ah))
-+	if (AR_SREV_9340(ah) || AR_SREV_9531(ah))
++	if (state && mvm->cur_ucode != IWL_UCODE_INIT)
++		iwl_trans_stop_device(mvm->trans);
+ 	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, iwl_mvm_is_radio_killed(mvm));
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 4ce9bb5..71718a81 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -473,13 +473,18 @@ void iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
+ 	if (mvm->scan_status == IWL_MVM_SCAN_NONE)
  		return;
  
- 	if (eep->baseEepHeader.featureEnable & 0x40) {
-@@ -4030,7 +4030,10 @@ static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is2ghz)
- 	if (!(eep->baseEepHeader.featureEnable & 0x80))
- 		return;
- 
--	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
-+	if (!AR_SREV_9300(ah) &&
-+	    !AR_SREV_9340(ah) &&
-+	    !AR_SREV_9580(ah) &&
-+	    !AR_SREV_9531(ah))
- 		return;
- 
- 	xpa_ctl = ar9003_modal_header(ah, is2ghz)->txFrameToXpaOn;
-@@ -4163,7 +4166,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	ar9003_hw_xlna_bias_strength_apply(ah, is2ghz);
- 	ar9003_hw_atten_apply(ah, chan);
- 	ar9003_hw_quick_drop_apply(ah, chan->channel);
--	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
-+	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9531(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
- 	ar9003_hw_apply_tuning_caps(ah);
- 	ar9003_hw_apply_minccapwr_thresh(ah, chan);
-@@ -4788,7 +4791,7 @@ static void ar9003_hw_power_control_override(struct ath_hw *ah,
- 	}
- 
- tempslope:
--	if (AR_SREV_9550(ah)) {
-+	if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
- 		/*
- 		 * AR955x has tempSlope register for each chain.
- 		 * Check whether temp_compensation feature is enabled or not.
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 9b1494c..09facba 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -103,7 +103,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			} else {
- 				channelSel = CHANSEL_2G(freq) >> 1;
- 			}
--		} else if (AR_SREV_9550(ah)) {
-+		} else if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
- 			if (ah->is_clk_25mhz)
- 				div = 75;
- 			else
-@@ -118,7 +118,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 		/* Set to 2G mode */
- 		bMode = 1;
- 	} else {
--		if ((AR_SREV_9340(ah) || AR_SREV_9550(ah)) &&
-+		if ((AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah)) &&
- 		    ah->is_clk_25mhz) {
- 			channelSel = freq / 75;
- 			chan_frac = ((freq % 75) * 0x20000) / 75;
-@@ -810,10 +810,12 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	/*
- 	 * TXGAIN initvals.
- 	 */
--	if (AR_SREV_9550(ah)) {
--		int modes_txgain_index;
-+	if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
-+		int modes_txgain_index = 1;
++	if (iwl_mvm_is_radio_killed(mvm)) {
++		ieee80211_scan_completed(mvm->hw, true);
++		mvm->scan_status = IWL_MVM_SCAN_NONE;
++		return;
++	}
 +
-+		if (AR_SREV_9550(ah))
-+			modes_txgain_index = ar9550_hw_get_modes_txgain_index(ah, chan);
+ 	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_abort,
+ 				   scan_abort_notif,
+ 				   ARRAY_SIZE(scan_abort_notif),
+ 				   iwl_mvm_scan_abort_notif, NULL);
  
--		modes_txgain_index = ar9550_hw_get_modes_txgain_index(ah, chan);
- 		if (modes_txgain_index < 0)
- 			return -EINVAL;
- 
-@@ -1862,7 +1864,7 @@ bool ar9003_hw_bb_watchdog_check(struct ath_hw *ah)
- 	case 0x04000b09:
- 		return true;
- 	case 0x04000409:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9340(ah) || AR_SREV_9531(ah))
- 			return false;
- 		else
- 			return true;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2525cb1..f6a2e1b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -757,7 +757,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 		/* program BB PLL phase_shift */
- 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
- 			      AR_CH0_BB_DPLL3_PHASE_SHIFT, 0x1);
--	} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
-+	} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
- 		u32 regval, pll2_divint, pll2_divfrac, refdiv;
- 
- 		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
-@@ -767,9 +767,15 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 		udelay(100);
- 
- 		if (ah->is_clk_25mhz) {
--			pll2_divint = 0x54;
--			pll2_divfrac = 0x1eb85;
--			refdiv = 3;
-+			if (AR_SREV_9531(ah)) {
-+				pll2_divint = 0x1c;
-+				pll2_divfrac = 0xa3d2;
-+				refdiv = 1;
-+			} else {
-+				pll2_divint = 0x54;
-+				pll2_divfrac = 0x1eb85;
-+				refdiv = 3;
-+			}
- 		} else {
- 			if (AR_SREV_9340(ah)) {
- 				pll2_divint = 88;
-@@ -783,7 +789,10 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 		}
- 
- 		regval = REG_READ(ah, AR_PHY_PLL_MODE);
--		regval |= (0x1 << 16);
-+		if (AR_SREV_9531(ah))
-+			regval |= (0x1 << 22);
-+		else
-+			regval |= (0x1 << 16);
- 		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
- 		udelay(100);
- 
-@@ -793,14 +802,33 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 
- 		regval = REG_READ(ah, AR_PHY_PLL_MODE);
- 		if (AR_SREV_9340(ah))
--			regval = (regval & 0x80071fff) | (0x1 << 30) |
--				 (0x1 << 13) | (0x4 << 26) | (0x18 << 19);
-+			regval = (regval & 0x80071fff) |
-+				(0x1 << 30) |
-+				(0x1 << 13) |
-+				(0x4 << 26) |
-+				(0x18 << 19);
-+		else if (AR_SREV_9531(ah))
-+			regval = (regval & 0x01c00fff) |
-+				(0x1 << 31) |
-+				(0x2 << 29) |
-+				(0xa << 25) |
-+				(0x1 << 19) |
-+				(0x6 << 12);
- 		else
--			regval = (regval & 0x80071fff) | (0x3 << 30) |
--				 (0x1 << 13) | (0x4 << 26) | (0x60 << 19);
-+			regval = (regval & 0x80071fff) |
-+				(0x3 << 30) |
-+				(0x1 << 13) |
-+				(0x4 << 26) |
-+				(0x60 << 19);
- 		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
--		REG_WRITE(ah, AR_PHY_PLL_MODE,
--			  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
-+
-+		if (AR_SREV_9531(ah))
-+			REG_WRITE(ah, AR_PHY_PLL_MODE,
-+				  REG_READ(ah, AR_PHY_PLL_MODE) & 0xffbfffff);
-+		else
-+			REG_WRITE(ah, AR_PHY_PLL_MODE,
-+				  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
-+
- 		udelay(1000);
- 	}
- 
-@@ -1614,7 +1642,7 @@ static void ath9k_hw_init_desc(struct ath_hw *ah)
- 		}
- #ifdef __BIG_ENDIAN
- 		else if (AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
--			 AR_SREV_9550(ah))
-+			 AR_SREV_9550(ah) || AR_SREV_9531(ah))
- 			REG_RMW(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB, 0);
- 		else
- 			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 470e1c0..bd7daf5 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -419,7 +419,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
- 	}
- 
--	if (AR_SREV_9550(sc->sc_ah))
-+	if (AR_SREV_9550(sc->sc_ah) || AR_SREV_9531(sc->sc_ah))
- 		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
- 
- 	return rfilt;
+-	ret = iwl_mvm_send_cmd_pdu(mvm, SCAN_ABORT_CMD,
+-				   CMD_SYNC | CMD_SEND_IN_RFKILL, 0, NULL);
++	ret = iwl_mvm_send_cmd_pdu(mvm, SCAN_ABORT_CMD, CMD_SYNC, 0, NULL);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Couldn't send SCAN_ABORT_CMD: %d\n", ret);
+ 		/* mac80211's state will be cleaned in the fw_restart flow */
 -- 
-1.8.5.2
+1.7.9.5
 
