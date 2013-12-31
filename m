@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36834 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756738Ab3LSXwZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40687 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753510Ab3LaPzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 18:52:25 -0500
-Date: Thu, 19 Dec 2013 18:52:23 -0500 (EST)
-Message-Id: <20131219.185223.661280204547522817.davem@davemloft.net> (sfid-20131220_005358_082678_0E60752C)
-To: rashika.kheria@gmail.com
-Cc: sgruszka@redhat.com, linville@tuxdriver.com,
+	Tue, 31 Dec 2013 10:55:00 -0500
+Message-ID: <52C2E8BA.6000800@candelatech.com> (sfid-20131231_165611_841559_9F620DF7)
+Date: Tue, 31 Dec 2013 07:54:34 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Julia Lawall <julia.lawall@lip6.fr>, Joe Perches <joe@perches.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, josh@joshtriplett.org
-Subject: Re: [PATCH v3 5/8] drivers: net: Mark functions as static in
- 3945-debug.c
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <f6dd170a28455058d1d236425150d40baa3df0b3.1387382457.git.rashika.kheria@gmail.com>
-References: <04fe932bc3585620c91d511bb0894e45bb762ffa.1387382457.git.rashika.kheria@gmail.com>
-	<f6dd170a28455058d1d236425150d40baa3df0b3.1387382457.git.rashika.kheria@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  <1388429761.4410.1.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>  <1388438724.4573.2.camel@jlt4.sipsolutions.net>  <20131230215701.GA4938@khazad-dum.debian.net>  <1388445188.18164.0.camel@jlt4.sipsolutions.net> <1388445422.26796.38.camel@joe-AO722> <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6>
+In-Reply-To: <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogUmFzaGlrYSBLaGVyaWEgPHJhc2hpa2Eua2hlcmlhQGdtYWlsLmNvbT4NCkRhdGU6IFRo
-dSwgMTkgRGVjIDIwMTMgMTQ6MjM6NDkgKzA1MzANCg0KPiBUaGlzIHBhdGNoIG1hcmtzIHRoZSBm
-dW5jdGlvbiBpbDM5NDVfdWNvZGVfcnhfc3RhdHNfcmVhZCgpLA0KPiBpbDM5NDVfdWNvZGVfdHhf
-c3RhdHNfcmVhZCgpIGFuZCBpbDM5NDVfdWNvZGVfZ2VuZXJhbF9zdGF0c19yZWFkKCkgaW4NCj4g
-Mzk0NS1kZWJ1Zy5jIGFzIHN0YXRpYyBiZWNhdXNlIHRoZXkgYXJlIG5vdCB1c2VkIG91dHNpZGUg
-dGhpcyBmaWxlLg0KPiANCj4gVGh1cywgaXQgYWxzbyByZW1vdmVzIHRoZSBmb2xsb3dpbmcgd2Fy
-bmluZ3MgaW4NCj4gd2lyZWxlc3MvaXdsZWdhY3kvMzk0NS1kZWJ1Zy5jOg0KPiANCj4gZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsZWdhY3kvMzk0NS1kZWJ1Zy5jOjUyOjE6IHdhcm5pbmc6IG5vIHBy
-ZXZpb3VzIHByb3RvdHlwZSBmb3IgoWlsMzk0NV91Y29kZV9yeF9zdGF0c19yZWFkoiBbLVdtaXNz
-aW5nLXByb3RvdHlwZXNdDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bGVnYWN5LzM5NDUtZGVi
-dWcuYzozMTc6MTogd2FybmluZzogbm8gcHJldmlvdXMgcHJvdG90eXBlIGZvciChaWwzOTQ1X3Vj
-b2RlX3R4X3N0YXRzX3JlYWSiIFstV21pc3NpbmctcHJvdG90eXBlc10NCj4gZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsZWdhY3kvMzk0NS1kZWJ1Zy5jOjQwNzoxOiB3YXJuaW5nOiBubyBwcmV2aW91
-cyBwcm90b3R5cGUgZm9yIKFpbDM5NDVfdWNvZGVfZ2VuZXJhbF9zdGF0c19yZWFkoiBbLVdtaXNz
-aW5nLXByb3RvdHlwZXNdDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBSYXNoaWthIEtoZXJpYSA8cmFz
-aGlrYS5raGVyaWFAZ21haWwuY29tPg0KPiBSZXZpZXdlZC1ieTogSm9zaCBUcmlwbGV0dCA8am9z
-aEBqb3NodHJpcGxldHQub3JnPg0KDQpBcHBsaWVkLg0K
+On 12/30/2013 10:32 PM, Julia Lawall wrote:
+>>>>> I'm just thinking of a programmer, e.g. changing a struct like this:
+>>>>>
+>>>>>   struct foo {
+>>>>>     u8 addr[ETH_ALEN];
+>>>>> -  u16 dummy;
+>>>>>   };
+>>
+>> I don't know of a way to catch that.
+>> Anyone else?
+>
+> Well, one could have a semantic patch that checks for that.  But the
+> problem is that it is very slow, and it only covers the cases that I can
+> transform automatically, which currently means no pointers, only explicit
+> arrays.
+>
+> On the other hand, I am finding the structure definition, so I can easily
+> update the structure definition with an appropriate comment.
+>
+> struct foo {
+>      u8 addr[ETH_ALEN]; /* must be followed by two bytes in the structure */
+>      u16 dummy;
+> };
+>
+> Unfortunately it is kind of verbose.  Could there be an attribute?  That
+> could even easily be checked.
+
+Can you not just add a build-time macro to check that sizeof(foo) >= 8
+for each of these struct foos?  Or, is it required that the dummy field
+be there and be not used by anything else?
+
+Thanks,
+Ben
+
+>
+> julia
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
