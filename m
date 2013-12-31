@@ -1,79 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:41729 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab3LQVtX (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:47150 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755176Ab3LaRQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 16:49:23 -0500
-Date: Tue, 17 Dec 2013 22:49:14 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1254825772.20131217224914@eikelenboom.it> (sfid-20131217_224957_865272_2A6E00CB)
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <20131217212709.GB5624@decadent.org.uk>
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 31 Dec 2013 12:16:31 -0500
+Received: by mail-ee0-f41.google.com with SMTP id t10so5667746eei.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:30 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/28] iwlwifi: mvm: dump to debugfs the SRAM as binary
+Date: Tue, 31 Dec 2013 19:15:49 +0200
+Message-Id: <1388510157-23345-20-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_163819_3223F13F)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Tuesday, December 17, 2013, 10:27:09 PM, you wrote:
+This allows to format it at will using external tools.
+Since different teams want it in different formats, dump
+the raw data and everyone can play with the data the way
+they want.
 
-> On Tue, Dec 17, 2013 at 09:33:19PM +0100, Sander Eikelenboom wrote:
-> [...]
->> > It's the official Debian package.
-> [...]
->> > I will report back when i have tested converting the wireless stuff to loadable modules / seeing if i can put the CRDA stuff in initrd.
->> 
->> With all the wireless stuff switched to loadable modules it *does* work.
->> 
->> So the problem is that:
->> The current code blocks all future regulatory domain setting attempts forever (till the next reboot)
->> when it can't find the CRDA. This can and does happen when the modules are compiled in and the CRDA is not in initrd.
->> 
->> So from the question department:
->> 
->> A) Why doesn't the code timeout the processing of a regulatory domain hint and remove the pending request when it aborts ?
->> B) Why isn't the CRDA treated as firmware and placed in /lib/firmware, which has a much greater chance of automagically appearing in initrd ?
-> [...]
+While at it - make this code slightly more robust by making
+the required verification on the offsets / length in the
+write handler.
 
-> It doesn't make any logical sense to put a userland program in
-> /lib/firmware, and it wouldn't have any effect on the initramfs
-> builders I'm familiar with (which look at module metadata to work
-> out which files to include from /lib/firmware).
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c |   49 ++++++++++++----------------
+ 1 file changed, 21 insertions(+), 28 deletions(-)
 
-Ah yes of course stupid, it's not just a blob of the regdb but
-a userland program.
-
-> Debian official kernels use modular drivers, and neither
-> initramfs-tools nor dracut includes wireless drivers in the initramfs.
-> If you build a custom kernel with built-in drivers then you most
-> likely don't need an initramfs at all.
-
-> As maintainer of crda in Debian, I could add an initramfs hook that
-> would include it in an initramfs.  But I don't understand why it would
-> be worth doing so.  Why is it so useful to have wireless drivers
-> built-in *and* an initramfs?  If you think I should do this then open
-> a bug (reportbug crda).
-
-Indeed, I looked for a crda hook for initramfs-tools but didn't find it, so skipped that idea
-for the moment.
-
-So if i combine the two .. it's essentially just a very bad idea to compile the wireless stuff in.
-It needs a access to a userland program at module load time, or it will block forever.
-
-> Ben.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index e8f62a6..373ced6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -123,51 +123,31 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file, char __user *user_buf,
+ {
+ 	struct iwl_mvm *mvm = file->private_data;
+ 	const struct fw_img *img;
+-	int ofs, len, pos = 0;
+-	size_t bufsz, ret;
+-	char *buf;
++	unsigned int ofs, len;
++	size_t ret;
+ 	u8 *ptr;
+ 
+ 	if (!mvm->ucode_loaded)
+ 		return -EINVAL;
+ 
+ 	/* default is to dump the entire data segment */
++	img = &mvm->fw->img[mvm->cur_ucode];
++	ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
++	len = img->sec[IWL_UCODE_SECTION_DATA].len;
++
+ 	if (!mvm->dbgfs_sram_offset && !mvm->dbgfs_sram_len) {
+-		img = &mvm->fw->img[mvm->cur_ucode];
+-		ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+-		len = img->sec[IWL_UCODE_SECTION_DATA].len;
+-	} else {
+ 		ofs = mvm->dbgfs_sram_offset;
+ 		len = mvm->dbgfs_sram_len;
+ 	}
+ 
+-	bufsz = len * 4 + 256;
+-	buf = kzalloc(bufsz, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
+-
+ 	ptr = kzalloc(len, GFP_KERNEL);
+-	if (!ptr) {
+-		kfree(buf);
++	if (!ptr)
+ 		return -ENOMEM;
+-	}
+-
+-	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: 0x%x\n", len);
+-	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: 0x%x\n", ofs);
+ 
+ 	iwl_trans_read_mem_bytes(mvm->trans, ofs, ptr, len);
+-	for (ofs = 0; ofs < len; ofs += 16) {
+-		pos += scnprintf(buf + pos, bufsz - pos, "0x%.4x ", ofs);
+-		hex_dump_to_buffer(ptr + ofs, 16, 16, 1, buf + pos,
+-				   bufsz - pos, false);
+-		pos += strlen(buf + pos);
+-		if (bufsz - pos > 0)
+-			buf[pos++] = '\n';
+-	}
+ 
+-	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	ret = simple_read_from_buffer(user_buf, count, ppos, ptr, len);
+ 
+-	kfree(buf);
+ 	kfree(ptr);
+ 
+ 	return ret;
+@@ -176,11 +156,24 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file, char __user *user_buf,
+ static ssize_t iwl_dbgfs_sram_write(struct iwl_mvm *mvm, char *buf,
+ 				    size_t count, loff_t *ppos)
+ {
++	const struct fw_img *img;
+ 	u32 offset, len;
++	u32 img_offset, img_len;
++
++	if (!mvm->ucode_loaded)
++		return -EINVAL;
++
++	img = &mvm->fw->img[mvm->cur_ucode];
++	img_offset = img->sec[IWL_UCODE_SECTION_DATA].offset;
++	img_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+ 
+ 	if (sscanf(buf, "%x,%x", &offset, &len) == 2) {
+ 		if ((offset & 0x3) || (len & 0x3))
+ 			return -EINVAL;
++
++		if (offset + len > img_offset + img_len)
++			return -EINVAL;
++
+ 		mvm->dbgfs_sram_offset = offset;
+ 		mvm->dbgfs_sram_len = len;
+ 	} else {
+-- 
+1.7.9.5
 
