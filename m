@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:48313 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191Ab3LKSBz (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:60742 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752170Ab3LaJgZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 13:01:55 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so6680306wgh.26
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 10:01:54 -0800 (PST)
+	Tue, 31 Dec 2013 04:36:25 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Xs7mgp6oM4VTXHjKGgPnsPz5v=2O4LwPKu=Cm4V4P7fw@mail.gmail.com>
-References: <20131207035407.GA19456@pe-lt052.marvell.com> <CAB=NE6Xs7mgp6oM4VTXHjKGgPnsPz5v=2O4LwPKu=Cm4V4P7fw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 11 Dec 2013 19:01:33 +0100
-Message-ID: <CAB=NE6UFYSfrScF-SO-_JA1KOiDsYY58Adaqd5p-QD20pUrYRA@mail.gmail.com> (sfid-20131211_190200_106799_ED599264)
-Subject: Re: [RFC] cfg80211: set regulatory request processed for initiator core
-To: Avinash Patil <patila@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <52C21CE3.3020402@lwfinger.net>
+References: <52C21CE3.3020402@lwfinger.net>
+Date: Tue, 31 Dec 2013 10:36:25 +0100
+Message-ID: <CAMuHMdVkLBBhz0Q7ae4TRww2k7foMeiff=fE1yruohQGr2u7-g@mail.gmail.com> (sfid-20131231_103642_895571_9E046AD6)
+Subject: Re: Question on compiler warning
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 11, 2013 at 6:38 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Sat, Dec 7, 2013 at 4:54 AM, Avinash Patil <patila@marvell.com> wrote:
->> During cfg80211 init, cfg80211 initializes regulatory to set to
->> world domain. Here we dont set last request processed flag.
->> This results into further request set to pending indefinitely.
->>
->> This patch fixes this by setting last request to processed.
->>
->> Signed-off-by: Avinash Patil <patila@marvell.com>
->> ---
->>  net/wireless/reg.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index ec54e1a..70a8f0a 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -1670,6 +1670,8 @@ static void reg_process_hint(struct regulatory_request *reg_request)
->>         switch (reg_request->initiator) {
->>         case NL80211_REGDOM_SET_BY_CORE:
->>                 reg_process_hint_core(reg_request);
->> +               nl80211_send_reg_change_event(reg_request);
->> +               reg_set_request_processed();
->>                 return;
->>         case NL80211_REGDOM_SET_BY_USER:
->>                 treatment = reg_process_hint_user(reg_request);
+On Tue, Dec 31, 2013 at 2:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In his regular article entitled Build regressions/improvements in v3.13-rc6"
+> (http://lkml.indiana.edu/hypermail/linux/kernel/1312.3/01550.html), Geert
+> Uytterhoeven reports the following warning regression:
 >
-> NACK, the reg_process_hint() is supposed to *process* a request, and
-> then call the internal regdb if its there and also call CRDA. Later
-> whoever sends the regulatory domain and gets cfg80211 to process it
-> will have reg_set_request_processed() called.
+> + /scratch/kisskb/src/drivers/net/wireless/b43/phy_n.c: warning: 'val_addr'
+> may be used uninitialized in this function [-Wuninitialized]: => 178:21
 >
-> Can you verify if CRDA is sending the regulatory domains to cfg80211?
+> This warning does not show up on any of my compilers, and it should not as
+> the initialization and usage of that variable both take place in conditional
+> branches that are testing exactly the same pointer.
 
-Also are you seeing this with wireless-testing ?
+It depends on the compiler version. Some versions of gcc are not smart enough
+to notice all usage sites depends on the same condition.
 
-  Luis
+> Despite the fact that the warning is bogus, should a patch be submitted to
+> clear it? I lean toward "no" as an answer because that would mask the
+> warning if there were some future change that screwed up the flow; however,
+> I wanted to check with the community.
+
+If it's clearly bogus, there's no reason to submit a patch.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
