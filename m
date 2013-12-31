@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:40122 "EHLO
-	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755286Ab3LJROx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36389 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539Ab3LaCrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 12:14:53 -0500
-Message-ID: <52A74A7F.5000309@open-mesh.com> (sfid-20131210_181500_320786_9332E5D9)
-Date: Tue, 10 Dec 2013 18:08:15 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>,
-	Antonio Quartulli <antonio@meshcoding.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/2] mac80211: iterate over vif using RCU
-References: <1386693598-3934-1-git-send-email-antonio@meshcoding.com> <CAB3XZEfwLk5PUp34hQ_8Uog6T8BHRP6akW4SThjXjgAQRAhC-Q@mail.gmail.com>
-In-Reply-To: <CAB3XZEfwLk5PUp34hQ_8Uog6T8BHRP6akW4SThjXjgAQRAhC-Q@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="uUiqckdBNn9ExKSEUVu9tkBCdflMeN90x"
+	Mon, 30 Dec 2013 21:47:10 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/5] ath9k: Add version/revision macros for QCA9531
+Date: Tue, 31 Dec 2013 08:11:58 +0530
+Message-Id: <1388457722-29643-1-git-send-email-sujith@msujith.org> (sfid-20131231_034714_900935_ECAE7ED5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---uUiqckdBNn9ExKSEUVu9tkBCdflMeN90x
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On 10/12/13 18:05, Eliad Peller wrote:
-> hi,
->=20
-> On Tue, Dec 10, 2013 at 6:39 PM, Antonio Quartulli
-> <antonio@meshcoding.com> wrote:
->> I need to invoke ieee80211_iter_keys() from a periodic worker in a dri=
-ver and
->> therefore I would prefer to get rid of any of locks to avoid problems.=
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
->> These two patches try to use rcu lock to protect the iteration, but I'=
-d like to
->> get a feedback before sending this stuff as a patch :-)
->>
-> at least iwlwifi might sleep inside the iterator, so you can't just
-> convert it to rcu (atomic).
->=20
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c9a8b77..b1fd3fa 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -813,6 +813,9 @@
+ #define AR_SREV_REVISION_9565_101       1
+ #define AR_SREV_REVISION_9565_11        2
+ #define AR_SREV_VERSION_9550		0x400
++#define AR_SREV_VERSION_9531            0x500
++#define AR_SREV_REVISION_9531_10        0
++#define AR_SREV_REVISION_9531_11        1
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -946,11 +949,19 @@
+ #define AR_SREV_9580(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9580) && \
+ 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9580_10))
+-
+ #define AR_SREV_9580_10(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9580) && \
+ 	((_ah)->hw_version.macRev == AR_SREV_REVISION_9580_10))
+ 
++#define AR_SREV_9531(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531))
++#define AR_SREV_9531_10(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9531_10))
++#define AR_SREV_9531_11(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9531_11))
++
+ /* NOTE: When adding chips newer than Peacock, add chip check here */
+ #define AR_SREV_9580_10_OR_LATER(_ah) \
+ 	(AR_SREV_9580(_ah))
+-- 
+1.8.5.2
 
-mh, this "might sleep" could be an issue, ok.
-
->> Moreover, why do we use list_for_each_entry_safe() is ieee80211_iter_k=
-eys() if
->> the list cannot be altered (pointer to key is not passed to iter() so =
-we should
->> be sure that nobody is going to invoke list_del())?
->=20
-> see the documentation of ieee80211_remove_key():
-
-This function does not exist anymore
-
-
---=20
-Antonio Quartulli
-
-
---uUiqckdBNn9ExKSEUVu9tkBCdflMeN90x
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSp0qDAAoJEEKTMo6mOh1VxggQAII+xhK92X1VFCJoNyhTQB14
-98Y1685gbRxhi66/9gOQe/o4joirH7ew5rTjV1U6pULIoqznyBmbJ4zhrl7+4Slv
-6yDamXX+I+SQWcLx/V6E0dMjS1qlTQrdZzQjjsU4VudhyEaqUUBQY9qjRSHbxybT
-xlEey0HbgPFPRuIA8r2pVmkLEU0nx1uRHFwUzjRIGwFNSe8LU2y4TqgHDSWA/o0Y
-+kRe/uDWoXiuonaFwlAhadSO5AU+6zoLIfMQv6lyEHf6n0EPQgM2fqxmLdMYJJfT
-U+cO1voDqRUe0Rv39pRa9nj/0ybbOHzBOHzPEe2Wa/pAhBm5IC+rOIrIyNaiwQPz
-9MrbMtAhZVQoUqp68Nr/c75hmK1rFu+Jn6Z8ut259f0LHUxzMR+QEsSdNvNl1mfr
-zvWrMv0BQ21wNOMSxYtfp5DOtQE03jt7gSuVL3e4C0Y7US5utIDHaFlI4gToFtC+
-AfUTQ/xXDvx+u5XNMDC68UR91pDFalhdYVa9cFel7b71SnZG7AtAWJCS1EYlySt8
-BAIUYthtoluTtaZUJ0X5qyDeJPNmiB6CzFFuBYMtY5uxOweZDDTugjzSqaS4SgSn
-3ALMQTgW9eOEoDjTzudX/fUCXlGPamTs5/V8CD0T+XXmA9Or/OKQF2tYGntMufIk
-D8t7T2e3b927l9ScP0cb
-=uus2
------END PGP SIGNATURE-----
-
---uUiqckdBNn9ExKSEUVu9tkBCdflMeN90x--
