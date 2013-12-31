@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f42.google.com ([209.85.128.42]:35544 "EHLO
-	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab3LPSeb (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36093 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752408Ab3LaI2Y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 13:34:31 -0500
-Received: by mail-qe0-f42.google.com with SMTP id b4so4281924qen.15
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 10:34:31 -0800 (PST)
+	Tue, 31 Dec 2013 03:28:24 -0500
+Received: by mail-ob0-f180.google.com with SMTP id wo20so12538289obc.11
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 00:28:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAHNKnsTAJJBNT0nj8z-4mSAC_Gh1F6M7pdu3CGAMQ70+aALx4w@mail.gmail.com>
-References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
- <1387142056-21850-2-git-send-email-twpedersen@gmail.com> <CAHNKnsTAJJBNT0nj8z-4mSAC_Gh1F6M7pdu3CGAMQ70+aALx4w@mail.gmail.com>
-From: Thomas Pedersen <twpedersen@gmail.com>
-Date: Mon, 16 Dec 2013 10:34:10 -0800
-Message-ID: <CAHmEv85q4c0FmvS+_kwQG9SfZgrokfYPNUvJmteKjdzxqnDvHw@mail.gmail.com> (sfid-20131216_193434_931870_A4CDB084)
-Subject: Re: [PATCH 2/3] mac80211: reset TSF to 0 when joining a mesh
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	open80211s <devel@lists.open80211s.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>
+In-Reply-To: <87sit9o2ct.fsf@purkki.adurom.net>
+References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
+ <87sit9o2ct.fsf@purkki.adurom.net>
+From: Pierre Bourdon <delroth@gmail.com>
+Date: Tue, 31 Dec 2013 09:28:03 +0100
+Message-ID: <CA+V6dmjqJUBtZvngh-Yp2gxmW=TS=GPqF2ZJ+x9HspmUao1aUw@mail.gmail.com> (sfid-20131231_092828_148592_6F33D7D7)
+Subject: Re: Exporting the TSF to userland
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 4:33 AM, Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
-> Hello Thomas,
+On Tue, Dec 31, 2013 at 9:23 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> Pierre Bourdon <delroth@gmail.com> writes:
 >
-> 2013/12/16 Thomas Pedersen <twpedersen@gmail.com>:
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index 330d1f7..1174157 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -802,6 +802,8 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
->>                 return -ENOMEM;
->>         }
->>
->> +       /* next beacon will be DTIM-1, so TSF=0 was DTIM=0 */
->> +       drv_set_tsf(local, sdata, 0);
->>         ieee80211_bss_info_change_notify(sdata, changed);
->>
->>         netif_carrier_on(sdata->dev);
+>> I'm a developer of libdrc, a project that allows Linux computers to
+>> control a Wii U GamePad. Because of how the device operates, our
+>> library needs to be able to read the TSF value of the access point
+>> device from userland.
 >
-> What happen with AP interface on the same radio if we configure mesh
-> portal? Clients could be confused by such TSF jump.
+> Just out of curiosity, how do you use TSF exactly?
 
-Like Johannes said; either the driver supports per-vif TSF, or well,
-it doesn't. Anyway wouldn't clients reset their own TSF when the new
-beacon is received?
+The Wii U GamePad reads the TSF and uses that to configure its
+internal clock. All video and audio packets sent to the device have to
+contain a timestamp that roughly matches (1000us window) this internal
+clock. This means our library has to be able to read the TSF from the
+AP NIC to generate these timestamps.
 
-Thomas
+-- 
+Pierre "delroth" Bourdon <delroth@gmail.com>
+Software Engineer @ Zürich, Switzerland
+http://code.delroth.net/
