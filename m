@@ -1,31 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59832 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbaATKuU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 05:50:20 -0500
-Message-ID: <1390215015.4335.6.camel@jlt4.sipsolutions.net> (sfid-20140120_115024_095547_2DCBE8F0)
-Subject: Re: [PATCH V2] cfg80211: Do not call CRDA when using internal
- regulatory database
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chaitanya T K <chaitanya.mgit@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Mon, 20 Jan 2014 11:50:15 +0100
-In-Reply-To: <1390009167-4766-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140118_153524_887371_952B5952)
-References: <1390009167-4766-1-git-send-email-chaitanya.mgit@gmail.com>
-	 (sfid-20140118_153524_887371_952B5952)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51320 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636AbaABSbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jan 2014 13:31:46 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] ssb: fix sparse warnings in driver_chipcommon_sflash.c
+Date: Thu,  2 Jan 2014 19:31:37 +0100
+Message-Id: <1388687497-8645-2-git-send-email-hauke@hauke-m.de> (sfid-20140102_193154_726353_46AEF5E0)
+In-Reply-To: <1388687497-8645-1-git-send-email-hauke@hauke-m.de>
+References: <1388687497-8645-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-01-18 at 07:09 +0530, Chaitanya T K wrote:
-> When using internal regulatory data base kconfig option,
-> do not try to call crda. This completely defeats the 
-> purpose of enabling internal regulatory db.
+  CHECK   drivers/ssb/driver_chipcommon_sflash.c
+drivers/ssb/driver_chipcommon_sflash.c:40:11: warning: Using plain integer as NULL pointer
+drivers/ssb/driver_chipcommon_sflash.c:58:11: warning: Using plain integer as NULL pointer
+drivers/ssb/driver_chipcommon_sflash.c:69:11: warning: Using plain integer as NULL pointer
 
-I still think that this is a significant userspace API change, so I'm
-not going to apply it. Find another solution.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/driver_chipcommon_sflash.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/ssb/driver_chipcommon_sflash.c b/drivers/ssb/driver_chipcommon_sflash.c
+index 50328de..937fc31 100644
+--- a/drivers/ssb/driver_chipcommon_sflash.c
++++ b/drivers/ssb/driver_chipcommon_sflash.c
+@@ -37,7 +37,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_st_tbl[] = {
+ 	{ "M25P32", 0x15, 0x10000, 64, },
+ 	{ "M25P64", 0x16, 0x10000, 128, },
+ 	{ "M25FL128", 0x17, 0x10000, 256, },
+-	{ 0 },
++	{ NULL },
+ };
+ 
+ static const struct ssb_sflash_tbl_e ssb_sflash_sst_tbl[] = {
+@@ -55,7 +55,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_sst_tbl[] = {
+ 	{ "SST25VF016", 0x41, 0x1000, 512, },
+ 	{ "SST25VF032", 0x4a, 0x1000, 1024, },
+ 	{ "SST25VF064", 0x4b, 0x1000, 2048, },
+-	{ 0 },
++	{ NULL },
+ };
+ 
+ static const struct ssb_sflash_tbl_e ssb_sflash_at_tbl[] = {
+@@ -66,7 +66,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_at_tbl[] = {
+ 	{ "AT45DB161", 0x2c, 512, 4096, },
+ 	{ "AT45DB321", 0x34, 512, 8192, },
+ 	{ "AT45DB642", 0x3c, 1024, 8192, },
+-	{ 0 },
++	{ NULL },
+ };
+ 
+ static void ssb_sflash_cmd(struct ssb_chipcommon *cc, u32 opcode)
+-- 
+1.7.10.4
 
