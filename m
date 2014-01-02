@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:34689 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663AbaAVQmX (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:33584 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbaABVDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 11:42:23 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so3948318ead.27
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 08:42:22 -0800 (PST)
-Date: Wed, 22 Jan 2014 17:41:22 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
- frames, as per spec
-Message-ID: <20140122164122.GC18365@magnum.frso.rivierawaves.com> (sfid-20140122_174227_916322_02E4D0F9)
-References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
- <1390394079.4334.30.camel@jlt4.sipsolutions.net>
- <20140122130924.GA18365@magnum.frso.rivierawaves.com>
- <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
- <20140122152845.GB18365@magnum.frso.rivierawaves.com>
- <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
+	Thu, 2 Jan 2014 16:03:55 -0500
+Message-ID: <52C5D438.9050909@broadcom.com> (sfid-20140102_220359_114109_20DD2E32)
+Date: Thu, 2 Jan 2014 22:03:52 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
+To: Chen-Yu Tsai <wens@csie.org>
+CC: linux-sunxi <linux-sunxi@googlegroups.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>,
+	<benn@cubietech.com>
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52C570B6.30500@broadcom.com> <CAGb2v650WNnXqRY+PTwqjbo7pBPDvwHEfzvLM6HaLakZ4Nt1JA@mail.gmail.com>
+In-Reply-To: <CAGb2v650WNnXqRY+PTwqjbo7pBPDvwHEfzvLM6HaLakZ4Nt1JA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 04:36:14PM +0100, Helmut Schaa wrote:
-> On Wed, Jan 22, 2014 at 4:28 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
-> > On Wed, Jan 22, 2014 at 02:33:14PM +0100, Helmut Schaa wrote:
-> >> On Wed, Jan 22, 2014 at 2:09 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
-> >> > On Wed, Jan 22, 2014 at 01:34:39PM +0100, Johannes Berg wrote:
-> >> >> Hmm. I guess you're right about the spec, but I vaguely remember races
-> >> >> in this with the delBA going out too soon or so?
-> >> >>
-> >> >
-> >> > Indeed, this was intended by cf6bb79 ("Use appropriate TID for sending
-> >> > BAR, ADDBA and DELBA frames") and I overlooked it .. will look into it,
-> >> > thanks.
-> >> > I Cced Helmut who authored the said commit.
-> >>
-> >> You're right. There were some issues with that, but that was 2 years ago :)
-> >>
-> >> Sending ADDBA over AV_VO should be safe.
-> >> If a DELBA is sent as AC_VO it might get received before the last AMPDU
-> >> of the BlockAck session. So, the pending AMPDUs will get dropped at the
-> >> receiver.
-> >>
-> >> In theory this could also be avoided by properly flushing all pending AMPDUs
-> >> of the TID in question from the hw queues or by waiting for the tx status
-> >> of all pending AMPDUs.
-> >>
-> >
-> > I just looked at the code with your change in mind and couldn't find any
-> > issue caused by sending {add,del}ba on AC_VO.
-> > As of today, a delba is sent only after a driver has called 'purposely'
-> > ieee80211_stop_tx_ba_cb_irqsafe so I see no issue with the delba either,
-> > do you see one today ?
+On 01/02/2014 06:09 PM, Chen-Yu Tsai wrote:
+> Hi,
 > 
-> If the driver does the right thing by flushing the right frames in the
-> hw tx queues
-> I think this should be ok. At least rt2x00 is not doing that, but
-> maybe that's just
-> an issue in rt2x00 :(
+> On Thu, Jan 2, 2014 at 9:59 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> [snip]
+>> Hi Chen-Yu,
+>>
+>> I confirmed the patch is working with a revision 0 of the device. What
+>> chip revision does it give in your log (need to load brcmfmac with
+>> module parameter debug=4).
+> 
+> Mine is revision 1. Managed mode confirmed working.
+
+Which firmware did you use. Can you provide 'hexdump -C' output
+(especially the last part).
+
+Gr. AvS
+
+> Logs:
+> brcmfmac: F1 signature read @0x18000000=0x1591a962
+> brcmfmac: brcmf_sdio_chip_recognition chipid=0xa962 chiprev=1
+> brcmfmac: brcmf_sdio_chip_buscoresetup ccrev=39, pmurev=13, buscore
+> rev/type=10/0x829
+> 
+> 
+> ChenYu
 > 
 
-
-I see you are one of the maintainers of the ralink drivers, do you
-intend to fix it in those ?
-
-Callers of ieee80211_stop_tx_ba_cb_irqsafe are:
-ath9k
-ath9k_htc
-carl9170
-wcn36xx
-brcm80211
-iwlegacy
-iwlwifi
-mwl8k
-rt2x00
-rtlwifi
-
-Johannes, what is your impression ?
-
- 
-Karl
