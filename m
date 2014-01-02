@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38289 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbaAON2A (ORCPT
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:55035 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbaABRMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 08:28:00 -0500
-Message-ID: <1389792475.4338.11.camel@jlt4.sipsolutions.net> (sfid-20140115_142802_974101_E5FD2A11)
-Subject: Re: [RFC 2/2] cfg80211: DFS get CAC time from regulatory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Wed, 15 Jan 2014 14:27:55 +0100
-In-Reply-To: <1389788210-7246-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140115_131704_469508_0B919594)
-References: <1389788210-7246-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1389788210-7246-2-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140115_131704_469508_0B919594)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 2 Jan 2014 12:12:02 -0500
+Received: by mail-vc0-f170.google.com with SMTP id la4so7357201vcb.29
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 09:12:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOMqctSBd+AvYzKJT+JMPW5h62P2pWKHgV+1wiR0BP7ALarijQ@mail.gmail.com>
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
+ <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+ <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
+ <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
+ <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAOMqctSBd+AvYzKJT+JMPW5h62P2pWKHgV+1wiR0BP7ALarijQ@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Fri, 3 Jan 2014 01:11:41 +0800
+Message-ID: <CAGb2v67G8eND2xEP-JwM+B691ETKOM=-3mHSb_OPgs8Dsi6ajQ@mail.gmail.com> (sfid-20140102_181210_608959_A2697E6E)
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-15 at 13:16 +0100, Janusz Dziedzic wrote:
+Hi,
 
-> @@ -3211,6 +3212,7 @@ struct wireless_dev {
->  
->  	bool cac_started;
->  	unsigned long cac_start_time;
-> +	unsigned int cac_time_ms;
+On Fri, Jan 3, 2014 at 12:52 AM, Michal Suchanek <hramrach@gmail.com> wrote:
+> Hello,
+>
+> On 19 December 2013 11:12, Chen-Yu Tsai <wens@csie.org> wrote:
+[snip]
+>> Bluetooth still isn't responding.
+>>
+>
+> Well, bluetooth is supposed to be attached to an UART, not SDIO.
+> That's what the datasheets of the chip I found looked like.
 
-Why would that need to be stored here? Isn't it just a pretty much local
-parameter of the radar detection startup?
+Correct. CubieTruck schematics indicate it's connected to UART2.
 
-johannes
+> Not sure how firmware is supposed to fit in in this case but this
+> would not be the first serial BT chip requiring firmware, would it?
 
+Broadcom has a utility called brcm_patchram_plus that loads the
+firmware. However I can't get my chip to respond to its first
+reset command.
+
+
+ChenYu
