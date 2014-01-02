@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:35364 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715AbaAPOAB (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57464 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbaABV0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 09:00:01 -0500
-Received: by mail-la0-f42.google.com with SMTP id hr13so536037lab.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 06:00:00 -0800 (PST)
-Message-ID: <52D7E5DA.1060900@gmail.com> (sfid-20140116_150006_205539_63103AE8)
-Date: Thu, 16 Jan 2014 14:59:54 +0100
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+	Thu, 2 Jan 2014 16:26:09 -0500
+Received: by mail-pb0-f46.google.com with SMTP id md12so14993139pbc.33
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 13:26:08 -0800 (PST)
+Message-ID: <52C5D96E.7060306@lwfinger.net> (sfid-20140102_222613_044099_4DCC8936)
+Date: Thu, 02 Jan 2014 15:26:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Chris Taylor <chris.taylor@cantab.net>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Reset split_start on error path when split dump
- is not used
-References: <1389879279-20832-1-git-send-email-pontus.fuchs@gmail.com>		 (sfid-20140116_143453_482265_044A6882) <1389879668.4345.5.camel@jlt4.sipsolutions.net>	 <52D7E3C1.4090308@gmail.com> (sfid-20140116_145102_990344_1690246A) <1389880396.4345.6.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1389880396.4345.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: RTL8723ae PCI Driver update
+References: <CAC94StQ0EQYDxUQR6jNLEpJjB+tpR9ue2rzesz8uT6cmRTkQ8A@mail.gmail.com>	<52C5A8DB.2090506@lwfinger.net> <CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
+In-Reply-To: <CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-01-16 14:53, Johannes Berg wrote:
-
->>> @@ -1680,6 +1680,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
->>>    				    !skb->len &&
->>>    				    cb->min_dump_alloc < 4096) {
->>>    					cb->min_dump_alloc = 4096;
->>> +					state->split_start = 0;
->>>    					rtnl_unlock();
->>>    					return 1;
->>>    				}
->>
->> Will that not cause problem if split scan is in use and one of the split
->> chunks needs to be resent due to EMSGSIZE?
+On 01/02/2014 02:44 PM, Chris Taylor wrote:
+> Larry,
 >
-> That's not supposed to happen, and the "!skb->len" check should catch
-> it.
+> Thank you for your reply and filling me on the correct netiquette re: driver
+> mailing lists.
 >
-> johannes
+> The PCI ID I have is 10ec:8723, but the built-in version seems to suffer from
+> the slow data rates, poor signal reception and regular dropouts that many users
+> seems to be experiencing with this chipset (at least going by e.g. the Ubuntu
+> forums). I wanted to try compiling my own module from the Realtek source but I
+> think I need a patch to get that to work in kernel 3.11? But I also wondered if
+> it were worth trying a later kernel to see if any of the regular updates have
+> improved things?
 
-Ok. Thanks. Lets go for that version then.
+As I cannot duplicate the results that Ubuntu users seem to have, I don't know 
+if there are changes that will help.
 
-//Pontus
+It seems to me that there is something in the Ubuntu user code that is having 
+problems. I run openSUSE KDE with NetworkManages, and I never have any of those 
+difficulties.
+
+Although no changes in rtl8723ae come to mind, there are many changes in the 
+mca80211 stack. It is always worthwhile to try a newer kernel, or the backports 
+source if you do not want to build a whole new kernel.
+
+Larry
 
 
