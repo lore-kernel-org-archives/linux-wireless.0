@@ -1,83 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:46606 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754861AbaADVY0 (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:38472 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbaABVeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jan 2014 16:24:26 -0500
-Received: by mail-pd0-f179.google.com with SMTP id r10so16713995pdi.10
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 13:24:25 -0800 (PST)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the interface loop.
-Date: Sun,  5 Jan 2014 02:54:13 +0530
-Message-Id: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140104_222430_478014_280447E1)
+	Thu, 2 Jan 2014 16:34:37 -0500
+Received: by mail-ig0-f182.google.com with SMTP id c10so34711697igq.3
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 13:34:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com> <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 2 Jan 2014 14:34:17 -0700
+Message-ID: <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com> (sfid-20140102_223443_446582_20C4393D)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface loop identifies the no of static and dynamic
-smps chains, but overwrites their values across the VIF's
-(assuming there are more than one, in my case its AP and STA
-loopback), so the driver might not intimated about this update
-of SMPS mode, is the value is same. 
+On Sun, Dec 29, 2013 at 2:23 AM, wzyboy <wzyboy@wzyboy.org> wrote:
+> 2013/12/29 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+>> http://rweverything.com/
+>
+>
+> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
 
-So inform driver for every VIF.
+ASPM must be configured on both ends of the link, so for completeness,
+can you also collect the "PCI" output for the bridge leading to the
+7260 device?  Based on the Linux lspci output, this should be
+0000:00:1c.1.
 
-For Ex: STA's SMPS state is changed, but in the loop AP appears
-at the last, SMPS state of AP is unchanged hence not intimated
-to the driver.
+And I assume the device works well with the Windows driver?
 
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
-
- net/mac80211/chan.c |   34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f43613a..e153a7e 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -483,26 +483,26 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 
- 		rx_chains_static = max(rx_chains_static, needed_static);
- 		rx_chains_dynamic = max(rx_chains_dynamic, needed_dynamic);
--	}
--	rcu_read_unlock();
-+		if (!local->use_chanctx) {
-+				if (rx_chains_static > 1)
-+					local->smps_mode = IEEE80211_SMPS_OFF;
-+				else if (rx_chains_dynamic > 1)
-+					local->smps_mode = IEEE80211_SMPS_DYNAMIC;
-+				else
-+					local->smps_mode = IEEE80211_SMPS_STATIC;
-+						ieee80211_hw_config(local, 0);
-+		}
- 
--	if (!local->use_chanctx) {
--		if (rx_chains_static > 1)
--			local->smps_mode = IEEE80211_SMPS_OFF;
--		else if (rx_chains_dynamic > 1)
--			local->smps_mode = IEEE80211_SMPS_DYNAMIC;
--		else
--			local->smps_mode = IEEE80211_SMPS_STATIC;
--		ieee80211_hw_config(local, 0);
--	}
-+		if (rx_chains_static == chanctx->conf.rx_chains_static &&
-+		rx_chains_dynamic == chanctx->conf.rx_chains_dynamic)
-+				return;
- 
--	if (rx_chains_static == chanctx->conf.rx_chains_static &&
--	    rx_chains_dynamic == chanctx->conf.rx_chains_dynamic)
--		return;
-+		chanctx->conf.rx_chains_static = rx_chains_static;
-+		chanctx->conf.rx_chains_dynamic = rx_chains_dynamic;
-+		drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RX_CHAINS);
-+	}
-+	rcu_read_unlock();
- 
--	chanctx->conf.rx_chains_static = rx_chains_static;
--	chanctx->conf.rx_chains_dynamic = rx_chains_dynamic;
--	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RX_CHAINS);
- }
- 
- int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+Bjorn
