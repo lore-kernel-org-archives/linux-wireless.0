@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:44661 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800AbaATKrM (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:62309 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbaABT05 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 05:47:12 -0500
-Received: by mail-wg0-f42.google.com with SMTP id l18so3804982wgh.5
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 02:47:11 -0800 (PST)
-Message-ID: <52DCFE87.9080103@gmail.com> (sfid-20140120_114715_500949_3C62CFAB)
-Date: Mon, 20 Jan 2014 12:46:31 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 2 Jan 2014 14:26:57 -0500
+Received: by mail-wg0-f53.google.com with SMTP id k14so12625208wgh.8
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 11:26:56 -0800 (PST)
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: pull request: iwlwifi-next 2014-1-20
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="x4x7NkSplSkuWGQ9A0H0t49x1dNFUxmM9"
+In-Reply-To: <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
+ <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+ <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
+ <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
+ <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
+ <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com>
+ <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
+ <52C570B6.30500@broadcom.com> <CAGb2v650WNnXqRY+PTwqjbo7pBPDvwHEfzvLM6HaLakZ4Nt1JA@mail.gmail.com>
+ <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
+From: Michal Suchanek <hramrach@gmail.com>
+Date: Thu, 2 Jan 2014 20:26:16 +0100
+Message-ID: <CAOMqctTs7VrQVqO50Pa0GF87UF46OrsWAtMW54Gy61Ef8_vn7Q@mail.gmail.com> (sfid-20140102_202701_572505_E824B8EE)
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---x4x7NkSplSkuWGQ9A0H0t49x1dNFUxmM9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 2 January 2014 20:22, Rosimildo DaSilva <rosimildo@gmail.com> wrote:
+> It would be nice to be precise about what is working:
+>
+> a) Wifi + BT
+> b) WIFI only
+> c) BT only
+>
+> Reading the thread, it seems you got (a) WIFI + BT working. Is this correct
 
-Hi John,
+No, it's b)
 
-Well... I know... Not something to be proud of...
+There is some bit missing for BT. Possibly setting the power and reset
+gpio pins correctly. Or maybe the uart is set up with wrong
+parameters.
 
-A critical bug has been reported on all NICs supported by iwldvm.
-iwlwifi would simply panic upon interface up This patch fixes this. The
-offending code is by me and is present in wireless-next.git and hence in
-net-next.git.
-I hope that this pull reuqest can reach 3.14-rc1 otherwise, all the
-system with NICs supported by iwldvm will simply lock up.
+Thanks
 
-Thanks!
-
-
-The following changes since commit cf38e4f756d6396657c76f72ef42b6f47c523f=
-97:
-
-  iwlwifi: mvm: don't use highest rate in VHT MCS Set (2014-01-13
-22:17:22 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
-for-john
-
-for you to fetch changes up to 23e76d1a516eef416fb5c038791e943fc0916b67:
-
-  iwlwifi: pcie: don't panic on host commands in iwldvm (2014-01-20
-12:32:06 +0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: pcie: don't panic on host commands in iwldvm
-
- drivers/net/wireless/iwlwifi/pcie/tx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-
---x4x7NkSplSkuWGQ9A0H0t49x1dNFUxmM9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJS3P6hAAoJEC0Llv5uNjIBwIwP/RhI307vK2+3XOgfM0j5U83X
-s00C45kiAA728RS0jbmtf/xiBEmevXOkyeQUAZEpnihRtVmAhYtnId8DgIKbWpxI
-GbQZJ39GGTdbA5Fg6o/0DojY9dCbyGaJyFI50h7AMUhYx8k2CAmfTZO8sfRnsxyp
-UmuSDEXxgqRLX0Cowb2AnpLFPVKEOW0vj8i0GoEWFQK3bbeGkntfk5LW62spjqUS
-EbRewmplqNldbGv/onLTMiBcZpCc7Clmn70ITEsDKMz7Arldds/AHoej0SCDEy+m
-c/k8lY62uOK/3UgE7D8ntJ51gDavmy+6ed3bpEGFLe2Xl8aSTZKXdphPHeAiurHr
-lN1xcq6EPTLX5VRzRMwA65adFUYLEpNJNZj/UrFzQJnbw2B79EL5lKqwM2fUG/qz
-PVvvey44KBpNhDVASPSRFuqCLIvu0xhPjNcJf0kzuHOxABl+1YlKcCVhmOFfqz6B
-x8U9pXkem3/nTHDuvm9yGRaX0bA05XuzDqTk0OmUf06BZqFxk+y9FV7E9Pw/ZtId
-OFZzzrbyMiQAe5qJp/XBte0mL6oFP4WPsq9Dw1oZ4P6guksOUKMBx0sLqrx5rTIV
-+pYaZI/a8wkhWa77Oq6siTaX7QOGn66sEDrV4eHVesg8Q60TDIbMRZevSC7F42hU
-1bfI9arljxKmbbDwYiJC
-=tzKp
------END PGP SIGNATURE-----
-
---x4x7NkSplSkuWGQ9A0H0t49x1dNFUxmM9--
+Michal
