@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:53302 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaAPFz7 (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:60086 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbaACLIx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 00:55:59 -0500
-Date: Thu, 16 Jan 2014 16:55:47 +1100
-From: James Cameron <quozl@laptop.org>
-To: Olivier Langlois <olivier@trillion01.com>
-Cc: linux-wireless@vger.kernel.org, daniel@zonque.org
-Subject: Re: [ISSUE] rtl8192ce appears to interfere with ALSA playback
-Message-ID: <20140116055547.GU19393@us.netrek.org> (sfid-20140116_065604_316719_4DA6D4A8)
-References: <1389767820.2436.45.camel@Wailaba2>
- <52D6BEEF.5050705@lwfinger.net>
- <52D76D56.6060906@trillion01.com>
+	Fri, 3 Jan 2014 06:08:53 -0500
+Subject: [PATCH 1/3] ath10k: handle WMI debug print events
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 03 Jan 2014 12:59:20 +0200
+Message-ID: <20140103105920.13474.65657.stgit@potku.adurom.net> (sfid-20140103_120856_783649_8F6EF973)
+In-Reply-To: <20140103105718.13474.70922.stgit@potku.adurom.net>
+References: <20140103105718.13474.70922.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52D76D56.6060906@trillion01.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 12:25:42AM -0500, Olivier Langlois wrote:
-> On 01/15/2014 12:01 PM, Larry Finger wrote:
-> >On 01/15/2014 12:37 AM, Olivier Langlois wrote:
-> >>How to reproduce:
-> >>
-> >>1. Enable Wifi while not connecting to any AP.
-> >>2. lano1106@hpmini ~/Music $ aplay -c1 sine.wav
-> >>underrun!!! (at least 1856093977.967 ms long)
+Firmware can send simple ascii strings as debug messages using
+WMI_DEBUG_PRINT_EVENTID, print those with ATH10K_DBG_WMI log level.
 
-Indeed, that timing is fishy.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   33 +++++++++++++++++++++++++++++++--
+ 1 file changed, 31 insertions(+), 2 deletions(-)
 
-I've looked at the alsa-devel thread [1] and your problem description
-there.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 3ec6c9a..f992570 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -16,6 +16,7 @@
+  */
+ 
+ #include <linux/skbuff.h>
++#include <linux/ctype.h>
+ 
+ #include "core.h"
+ #include "htc.h"
+@@ -1676,9 +1677,37 @@ static void ath10k_wmi_event_profile_match(struct ath10k *ar,
+ }
+ 
+ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
+-				  struct sk_buff *skb)
++					 struct sk_buff *skb)
+ {
+-	ath10k_dbg(ATH10K_DBG_WMI, "WMI_DEBUG_PRINT_EVENTID\n");
++	char buf[101], c;
++	int i;
++
++	for (i = 0; i < sizeof(buf) - 1; i++) {
++		if (i >= skb->len)
++			break;
++
++		c = skb->data[i];
++
++		if (c == '\0')
++			break;
++
++		if (isascii(c) && isprint(c))
++			buf[i] = c;
++		else
++			buf[i] = '.';
++	}
++
++	if (i == sizeof(buf) - 1)
++		ath10k_warn("wmi debug print truncated: %d\n", skb->len);
++
++	/* for some reason the debug prints end with \n, remove that */
++	if (skb->data[i - 1] == '\n')
++		i--;
++
++	/* the last byte is always reserved for the null character */
++	buf[i] = '\0';
++
++	ath10k_dbg(ATH10K_DBG_WMI, "wmi event debug print '%s'\n", buf);
+ }
+ 
+ static void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
 
-At OLPC during development we found similar symptoms showing up in
-ALSA playback that were contributed to other drivers, but the
-underlying causes were in the ALSA driver for our codec chip, and the
-other drivers were changing the appearance of the fault only because
-of timing changes.
-
-But there's no need to conclude that interrupts were disabled or
-delayed.  There can be many other causes.
-
-The timing miscalculation by ALSA might be important.  I can't figure
-out how a wireless driver can easily cause that.
-
-1.
-http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071142.html
-
--- 
-James Cameron
-http://quozl.linux.org.au/
