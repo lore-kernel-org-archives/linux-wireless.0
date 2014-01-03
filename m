@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:53269 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756024AbaAVPgP (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:63141 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbaACWGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 10:36:15 -0500
-Received: by mail-ie0-f173.google.com with SMTP id e14so11736335iej.18
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 07:36:15 -0800 (PST)
+	Fri, 3 Jan 2014 17:06:25 -0500
+Received: by mail-lb0-f181.google.com with SMTP id q8so8342097lbi.26
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 14:06:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140122152845.GB18365@magnum.frso.rivierawaves.com>
-References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
-	<1390394079.4334.30.camel@jlt4.sipsolutions.net>
-	<20140122130924.GA18365@magnum.frso.rivierawaves.com>
-	<CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
-	<20140122152845.GB18365@magnum.frso.rivierawaves.com>
-Date: Wed, 22 Jan 2014 16:36:14 +0100
-Message-ID: <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com> (sfid-20140122_163618_839337_E1F5D207)
-Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
- frames, as per spec
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
+In-Reply-To: <52C72C01.4030209@lwfinger.net>
+References: <CAC94StQ0EQYDxUQR6jNLEpJjB+tpR9ue2rzesz8uT6cmRTkQ8A@mail.gmail.com>
+	<52C5A8DB.2090506@lwfinger.net>
+	<CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
+	<52C5D96E.7060306@lwfinger.net>
+	<CAC94StTgBSG927imnZi36b2jXZ4Wt_hQbQ3ceO0co6e_H49n2Q@mail.gmail.com>
+	<52C72C01.4030209@lwfinger.net>
+Date: Fri, 3 Jan 2014 22:06:23 +0000
+Message-ID: <CAC94StTSz9szzyK=k3nS_FWDAF04yEV-yxzUE5F78NpeQkiDyQ@mail.gmail.com> (sfid-20140103_230629_218136_84322DF6)
+Subject: Re: RTL8723ae PCI Driver update
+From: Chris Taylor <chris.taylor@cantab.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 4:28 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
-> On Wed, Jan 22, 2014 at 02:33:14PM +0100, Helmut Schaa wrote:
->> On Wed, Jan 22, 2014 at 2:09 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
->> > On Wed, Jan 22, 2014 at 01:34:39PM +0100, Johannes Berg wrote:
->> >> Hmm. I guess you're right about the spec, but I vaguely remember races
->> >> in this with the delBA going out too soon or so?
->> >>
->> >
->> > Indeed, this was intended by cf6bb79 ("Use appropriate TID for sending
->> > BAR, ADDBA and DELBA frames") and I overlooked it .. will look into it,
->> > thanks.
->> > I Cced Helmut who authored the said commit.
+Which backports package are you referring to? I can only see a few
+listed here (http://packages.ubuntu.com/saucy-backports/).
+
+My AP is a Technicolor TG582n, latest firmware - but my Windows 8.1
+tablet has no problems connecting in locations round the house where
+my Kubuntu laptop struggles. I don't think I've got an option on the
+encryption mode - it's listed as 802.11b/g/n, which I guess means n.
+
+I've got another AP I could try somewhere - I'd not thought of trying
+that since my Windows machines seem to pick up the signal fine. But it
+might be worth a go.
+
+Chris
+
+On 3 January 2014 21:30, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 01/03/2014 03:14 PM, Chris Taylor wrote:
 >>
->> You're right. There were some issues with that, but that was 2 years ago :)
+>> OK, I wasn't aware that it was only a Ubuntu issue. Sorry if it's
+>> sounded like I've criticised your work on the current driver - I
+>> assumed it was an issue affecting all. I've tried the 3.12.6 kernel
+>> but didn't notice any significant difference.
 >>
->> Sending ADDBA over AV_VO should be safe.
->> If a DELBA is sent as AC_VO it might get received before the last AMPDU
->> of the BlockAck session. So, the pending AMPDUs will get dropped at the
->> receiver.
->>
->> In theory this could also be avoided by properly flushing all pending AMPDUs
->> of the TID in question from the hw queues or by waiting for the tx status
->> of all pending AMPDUs.
->>
+>> Would you recommend filing a bug report with Ubuntu? If so, do you
+>> have any inkling where the Ubuntu devs should start looking for the
+>> problem?
 >
-> I just looked at the code with your change in mind and couldn't find any
-> issue caused by sending {add,del}ba on AC_VO.
-> As of today, a delba is sent only after a driver has called 'purposely'
-> ieee80211_stop_tx_ba_cb_irqsafe so I see no issue with the delba either,
-> do you see one today ?
-
-If the driver does the right thing by flushing the right frames in the
-hw tx queues
-I think this should be ok. At least rt2x00 is not doing that, but
-maybe that's just
-an issue in rt2x00 :(
-
-Helmut
+>
+> It may not only be an issue with Ubuntu; however, I am not aware of problems
+> posted elsewhere. I am also aware that Ubuntu user space has a lot more
+> trouble than I see with NetworkManager on openSUSE. I doubt that the Ubuntu
+> devs would do much with a bug report.
+>
+> Have you tried the backports package? It has material that will be in 3.14.
+> If that still has the same problem, then I would need to see whatever
+> diagnostics that your system outputs. As I am not an Ubuntu user, I have no
+> idea where it might be. The stuff from dmesg is a help, but not usually
+> definitive. What make/model of AP are you using? Is the firmware up to date?
+> What encryption mode do you use, and is it 802.11n or g?
+>
+> Larry
+>
