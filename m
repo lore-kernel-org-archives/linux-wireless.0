@@ -1,68 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:44929 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755295AbaAITOo (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:58118 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841AbaACJni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 14:14:44 -0500
-Message-ID: <52CEF521.90009@lwfinger.net> (sfid-20140109_201507_208455_8B9E393C)
-Date: Thu, 09 Jan 2014 13:14:41 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Lockdep problem
-References: <52CC474A.7090207@lwfinger.net> <20140109162414.GA1719@redhat.com>
-In-Reply-To: <20140109162414.GA1719@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 3 Jan 2014 04:43:38 -0500
+Received: by mail-pb0-f53.google.com with SMTP id ma3so15424374pbc.40
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 01:43:38 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: fix the MAC address of peer statistic
+Date: Fri,  3 Jan 2014 17:43:27 +0800
+Message-Id: <1388742207-15694-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140103_104402_096247_7F67E50F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2014 10:24 AM, Stanislaw Gruszka wrote:
-> On Tue, Jan 07, 2014 at 12:28:26PM -0600, Larry Finger wrote:
->>    rtnl_mutex --> misc_mtx --> rfkill_global_mutex
->>
->>    Possible unsafe locking scenario:
->>
->>          CPU0                    CPU1
->>          ----                    ----
->>     lock(rfkill_global_mutex);
->>                                  lock(misc_mtx);
->>                                  lock(rfkill_global_mutex);
->>     lock(rtnl_mutex);
->>
->>   *** DEADLOCK ***
->
-> There are 3 mutexes dependency. The deadlock can happen if on another
-> cpu, let say CPU2, there will be sequence:
->
-> lock(rtnl_mutex);
-> lock(misc_mtx);
->
-> Then on deadlock scenario:
-> CPU0 waits for rtnl_mutex to unlock, keep rfkill_global_mutex locked
-> CPU1 waits for rfkill_global_mutex to unlock, keep misc_mtx locked
-> CPU2 waits for misc_mtx to unlock, keep rtnl_mutex locked.
->
-> This dependency can be broken by moving b43_rng_init() outside from
-> rtnl_mutex scope, like on below patch. IIUC b43 random number generator
-> works only if we already started network connection, but this should
-> not be a problem, as b43_rng_read() do not return any data if device
-> is not prepared.
->
-> You could also remove whole b43 rnd. Everyone know, that HW vendors
-> are influenced by NSA and they random generators do not provide truly
-> random numbers (just kidding ;-)
+Fix the MAC address of wmi_peer_stats so that it is
+printed correctly. This is tested and verified using
+firmware version 999.999.0.636.
 
-Well, I have no idea to what extent NSA affects the RNGs in computers; however, 
-I do like having that additional source of entropy. :)
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    3 +++
+ drivers/net/wireless/ath/ath10k/wmi.h   |   14 +++++++-------
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
-Your analysis was spot on, and I will be submitting a patch shortly with you as 
-author. I'll give the reporter on b.k.o a chance to test it, but it removed the 
-splat here.
-
-Thanks,
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 6bdfad3..eec3439 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -242,6 +242,9 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 		}
+ 	}
+ 
++	/* The first peer is self MAC address, ignore this */
++	num_peer_stats--;
++
+ 	if (num_peer_stats) {
+ 		struct wmi_peer_stats *peer_stats;
+ 		struct ath10k_peer_stat *s;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 0087d69..106a23e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -200,12 +200,12 @@ struct wmi_mac_addr {
+ 
+ /* macro to convert MAC address from WMI word format to char array */
+ #define WMI_MAC_ADDR_TO_CHAR_ARRAY(pwmi_mac_addr, c_macaddr) do { \
+-	(c_macaddr)[0] =  ((pwmi_mac_addr)->word0) & 0xff; \
+-	(c_macaddr)[1] = (((pwmi_mac_addr)->word0) >> 8) & 0xff; \
+-	(c_macaddr)[2] = (((pwmi_mac_addr)->word0) >> 16) & 0xff; \
+-	(c_macaddr)[3] = (((pwmi_mac_addr)->word0) >> 24) & 0xff; \
+-	(c_macaddr)[4] =  ((pwmi_mac_addr)->word1) & 0xff; \
+-	(c_macaddr)[5] = (((pwmi_mac_addr)->word1) >> 8) & 0xff; \
++	(c_macaddr)[0] = (((pwmi_mac_addr)->word0) >> 24) & 0xff; \
++	(c_macaddr)[1] = (((pwmi_mac_addr)->word0) >> 16) & 0xff; \
++	(c_macaddr)[2] = (((pwmi_mac_addr)->word0) >> 8) & 0xff; \
++	(c_macaddr)[3] =  ((pwmi_mac_addr)->word0) & 0xff; \
++	(c_macaddr)[4] = (((pwmi_mac_addr)->word1) >> 24) & 0xff; \
++	(c_macaddr)[5] = (((pwmi_mac_addr)->word1) >> 16) & 0xff; \
+ 	} while (0)
+ 
+ struct wmi_cmd_map {
+@@ -2820,9 +2820,9 @@ struct wmi_vdev_stats {
+  * TODO: add more stats
+  */
+ struct wmi_peer_stats {
++	__le32 peer_tx_rate;	/* TBA */
+ 	struct wmi_mac_addr peer_macaddr;
+ 	__le32 peer_rssi;
+-	__le32 peer_tx_rate;
+ } __packed;
+ 
+ struct wmi_vdev_create_cmd {
+-- 
+1.7.9.5
 
