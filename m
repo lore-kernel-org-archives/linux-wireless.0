@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:21152 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbaAOPdg (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56517 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911AbaACUaQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 10:33:36 -0500
-Message-ID: <52D6AA49.6000707@broadcom.com> (sfid-20140115_163342_875276_4AA0A934)
-Date: Wed, 15 Jan 2014 16:33:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 3 Jan 2014 15:30:16 -0500
+Date: Fri, 3 Jan 2014 15:25:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2013-12-19
+Message-ID: <20140103202543.GA6353@tuxdriver.com> (sfid-20140103_213032_977703_2FE89FC7)
+References: <1387484847.4298.21.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11
- and CR4 cores
-References: <1389648029-23560-1-git-send-email-arend@broadcom.com>	<1389648029-23560-4-git-send-email-arend@broadcom.com> <CACna6ryGU_Rc-iJDJWAjjrKLteg7eyPVorasB-cR4sDhE8o8dw@mail.gmail.com>
-In-Reply-To: <CACna6ryGU_Rc-iJDJWAjjrKLteg7eyPVorasB-cR4sDhE8o8dw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1387484847.4298.21.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/14/2014 07:29 AM, Rafał Miłecki wrote:
-> 2014/1/13 Arend van Spriel <arend@broadcom.com>:
->> The IOCTL register in the agent/wrapper contains additional bits
->> that are core specific and use in the core reset sequence.
+On Thu, Dec 19, 2013 at 09:27:27PM +0100, Johannes Berg wrote:
+> John,
 > 
-> I'm not sure about this. I don't think we want to keep device-specific
-> bits in a commond (bcma's) code.
-
-Hi John,
-
-Given that I agree with Rafał's argument, can you drop patch #3 from
-this series. I applied the other patches using 'git am -3' and that
-works. Let me know if I should resend them.
-
-Gr. AvS
-
-> For example, I can't see PCI defines (like linux/pci_regs.h) having
-> any device specific bits in this shared code.
+> Yeah, I know what you're going to say ... but here are some (locking)
+> fixes for mac80211-next that people may want to use over the
+> holidays :-)
 > 
-> Our case with bcma is a bit more tricky, because we have a single
-> register with common and device-specific bits at the same time. So
-> maybe I'll find another example.
+> Felix adds some helper functions for P2P NoA software tracking, Joe
+> fixes alignment (but as this apparently never caused issues I didn't
+> send it to 3.13), Kyeyoon/Jouni add QoS-mapping support (a Hotspot 2.0
+> feature), Weilong fixed a bunch of checkpatch errors and I get to play
+> fire-fighter or so and clean up other people's locking issues. I also
+> added nl80211 vendor-specific events, as we'd discussed at the wireless
+> summit.
 > 
-> What about USB? Let's say linux/usb/ch9.h. There is a struct
-> usb_ctrlrequest that has bRequestType and bRequest.
-> bRequestType accepts some common values like USB_DIR_IN,
-> USB_RECIP_INTERFACE, etc. They are defined in the same file.
-> bRequest values are device-specific and you don't have them defined in
-> the above file.
-> That makes pretty much sense for me.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Let me know if there's any problem; however, with this, I'm going on
+> vacation until January 6th. I'll check in to see if there are any
+> important issues that need my attention, but I don't expect to send you
+> any more pull requests this year.
 > 
+> johannes
+> ---
+> The following changes since commit 204e35a91c4b3327b7239d7687fbd4923edbbf08:
+> 
+>   nl80211: add VHT support for set_bitrate_mask (2013-12-16 16:05:17 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 32db6b54dfba38aa8fa4072b2a3fc6425139166a:
+> 
+>   mac80211: Add support for QoS mapping (2013-12-19 16:30:58 +0100)
 
+Pulling now...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
