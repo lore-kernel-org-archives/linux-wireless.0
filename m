@@ -1,113 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:64966 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaAIJJy (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:46606 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754861AbaADVY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 04:09:54 -0500
-Received: by mail-bk0-f49.google.com with SMTP id my13so1022368bkb.36
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 01:09:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CADnKcViXui6jCsBxgbYh5A2R4ra+p3YxBP-Om1cT5GaYjjAFPw@mail.gmail.com>
-References: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com>
-	<CAEFj987Rxv9azS4EmW47a5guhVT-JijXsxSOgcGfvgwLkB9tEg@mail.gmail.com>
-	<CADnKcViXui6jCsBxgbYh5A2R4ra+p3YxBP-Om1cT5GaYjjAFPw@mail.gmail.com>
-Date: Thu, 9 Jan 2014 17:09:52 +0800
-Message-ID: <CAEFj985kz+5DWx=hvDu=w=BEud0fJGbYMpUT939xVPbvFbXFPw@mail.gmail.com> (sfid-20140109_101002_393211_41A471A9)
-Subject: Re: [PATCH] ath10k: disable STA KICKOUT in FW
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 4 Jan 2014 16:24:26 -0500
+Received: by mail-pd0-f179.google.com with SMTP id r10so16713995pdi.10
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 13:24:25 -0800 (PST)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the interface loop.
+Date: Sun,  5 Jan 2014 02:54:13 +0530
+Message-Id: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140104_222430_478014_280447E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Marek
+The interface loop identifies the no of static and dynamic
+smps chains, but overwrites their values across the VIF's
+(assuming there are more than one, in my case its AP and STA
+loopback), so the driver might not intimated about this update
+of SMPS mode, is the value is same. 
 
-Do you mind to share which firmware that you are using?
+So inform driver for every VIF.
 
-I have tried your patch and this is set accordingly in an the AP (set
-param 13). But once the associated STA is leaving,
-WMI_PEER_STA_KICKOUT_EVENTID is still received.
+For Ex: STA's SMPS state is changed, but in the loop AP appears
+at the last, SMPS state of AP is unchanged hence not intimated
+to the driver.
 
-[  145.060000] ath10k: wmi pdev set param 13 value 0
-.......
-[  148.560000] ath10k: wmi vdev id 0x0 set param 8 value 1
-[  148.560000] ath10k: wmi peer create vdev_id 0 peer_addr 04:f0:21:0c:a5:44
-[  148.560000] ath10k: wmi peer assoc vdev 0 addr 04:f0:21:0c:a5:44
-[  149.040000] ath10k: wmi event debug mesg len 44
-[  209.090000] ath10k: WMI_PEER_STA_KICKOUT_EVENTID
-[  210.090000] ath10k: WMI_PEER_STA_KICKOUT_EVENTID
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
 
-FYI, I am using firmware version 999.999.0.636
+ net/mac80211/chan.c |   34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-ethtool -i wlan0
-driver: ath10k_pci
-firmware-version: 999.999.0.636
-
-Thanks
-
-Regards,
-Chun-Yeow
-
-
-On Wed, Jan 8, 2014 at 6:40 PM, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
-> On 2 January 2014 13:41, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->>
->> On Dec 30, 2013 4:08 PM, "Marek Puzyniak" <marek.puzyniak@tieto.com> wrote:
->>>
->>> Currently ath10k is not using STA KICKOUT firmware functionality.
->>> In order to avoid unwanted FW events this functionality should be
->>> disabled when not used.
->>
->> What are unwanted FW events?
->
-> WMI_PEER_STA_KICKOUT_EVENT which indicates lack of activity from
-> associated STA for specified period of time.
->
->>
->> ----
->> Chun-Yeow
-> Marek
->>
->>> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
->>> ---
->>>  drivers/net/wireless/ath/ath10k/mac.c | 9 +++++++++
->>>  1 file changed, 9 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
->>> b/drivers/net/wireless/ath/ath10k/mac.c
->>> index 5b45f3a..93416ab 100644
->>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>> @@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct
->>> ieee80211_hw *hw,
->>>         }
->>>
->>>         if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
->>> +               u32 param_id;
->>> +
->>>                 ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
->>>                 if (ret) {
->>>                         ath10k_warn("Failed to create peer for AP: %d\n",
->>> ret);
->>>                         goto err_vdev_delete;
->>>                 }
->>> +
->>> +               param_id = ar->wmi.pdev_param->sta_kickout_th;
->>> +
->>> +               /* Disable STA KICKOUT functionality in FW */
->>> +               ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
->>> +               if (ret)
->>> +                       ath10k_warn("Failed to disable STA KICKOUT\n");
->>>         }
->>>
->>>         if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
->>> --
->>> 1.8.1.2
->>>
->>>
->>> _______________________________________________
->>> ath10k mailing list
->>> ath10k@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f43613a..e153a7e 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -483,26 +483,26 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 
+ 		rx_chains_static = max(rx_chains_static, needed_static);
+ 		rx_chains_dynamic = max(rx_chains_dynamic, needed_dynamic);
+-	}
+-	rcu_read_unlock();
++		if (!local->use_chanctx) {
++				if (rx_chains_static > 1)
++					local->smps_mode = IEEE80211_SMPS_OFF;
++				else if (rx_chains_dynamic > 1)
++					local->smps_mode = IEEE80211_SMPS_DYNAMIC;
++				else
++					local->smps_mode = IEEE80211_SMPS_STATIC;
++						ieee80211_hw_config(local, 0);
++		}
+ 
+-	if (!local->use_chanctx) {
+-		if (rx_chains_static > 1)
+-			local->smps_mode = IEEE80211_SMPS_OFF;
+-		else if (rx_chains_dynamic > 1)
+-			local->smps_mode = IEEE80211_SMPS_DYNAMIC;
+-		else
+-			local->smps_mode = IEEE80211_SMPS_STATIC;
+-		ieee80211_hw_config(local, 0);
+-	}
++		if (rx_chains_static == chanctx->conf.rx_chains_static &&
++		rx_chains_dynamic == chanctx->conf.rx_chains_dynamic)
++				return;
+ 
+-	if (rx_chains_static == chanctx->conf.rx_chains_static &&
+-	    rx_chains_dynamic == chanctx->conf.rx_chains_dynamic)
+-		return;
++		chanctx->conf.rx_chains_static = rx_chains_static;
++		chanctx->conf.rx_chains_dynamic = rx_chains_dynamic;
++		drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RX_CHAINS);
++	}
++	rcu_read_unlock();
+ 
+-	chanctx->conf.rx_chains_static = rx_chains_static;
+-	chanctx->conf.rx_chains_dynamic = rx_chains_dynamic;
+-	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RX_CHAINS);
+ }
+ 
+ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
