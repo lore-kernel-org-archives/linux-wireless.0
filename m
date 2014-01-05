@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52694 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755576AbaAFUAQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 15:00:16 -0500
-Date: Mon, 6 Jan 2014 14:53:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Ding Tianhong <dingtianhong@huawei.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3.5 18/19] rtlwifi: slight optimization of addr compare
-Message-ID: <20140106195302.GF10885@tuxdriver.com> (sfid-20140106_210112_890922_BBF6EA86)
-References: <52BC15EA.2020603@huawei.com>
- <52BC2576.3090601@cogentembedded.com>
+Received: from mga01.intel.com ([192.55.52.88]:16491 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754416AbaAEAIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jan 2014 19:08:24 -0500
+Date: Sun, 5 Jan 2014 01:08:04 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Thierry Escande <thierry.escande@linux.intel.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] NFC: port100: fix leak of usb_device
+Message-ID: <20140105000804.GD6003@zurbaran> (sfid-20140105_010906_064804_66297884)
+References: <1388866085-11007-1-git-send-email-khoroshilov@ispras.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52BC2576.3090601@cogentembedded.com>
+In-Reply-To: <1388866085-11007-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 26, 2013 at 04:47:50PM +0400, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 26-12-2013 15:41, Ding Tianhong wrote:
-> 
-> >Use possibly more efficient ether_addr_equal_unaligned
-> >instead of memcmp.
-> 
-> >Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> >Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> >Cc: John W. Linville <linville@tuxdriver.com>
-> >Cc: linux-wireless@vger.kernel.org
-> >Cc: netdev@vger.kernel.org
-> >Cc: linux-kernel@vger.kernel.org
-> >Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-> >Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> >---
-> >  drivers/net/wireless/rtlwifi/cam.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> >diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> >index 0e510f7..0276153 100644
-> >--- a/drivers/net/wireless/rtlwifi/cam.c
-> >+++ b/drivers/net/wireless/rtlwifi/cam.c
-> [...]
-> >@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
-> >  		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
-> >  		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
-> >  		if (((bitmap & BIT(0)) == BIT(0)) &&
-> >-		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-> >+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
-> 
->    It's pointless to enclose function call in parens, again.
+Hi Alexey,
 
-I'll correct that issue when merging the patch.
+On Sun, Jan 05, 2014 at 12:08:05AM +0400, Alexey Khoroshilov wrote:
+> port100_probe() calls usb_get_dev(), but there is no usb_put_dev()
+> in port100_disconnect(). The patch adds one.
+> 
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> ---
+>  drivers/nfc/port100.c | 1 +
+>  1 file changed, 1 insertion(+)
+Patch applied to nfc-next, thanks.
+I wonder if we really need to refcount the port100 USB interface, but
+dev->in_urb does reference it for the whole driver life cycle, so I
+think it all makes sense.
+
+Cheers,
+Samuel.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Intel Open Source Technology Centre
+http://oss.intel.com/
