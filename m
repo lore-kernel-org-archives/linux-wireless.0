@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:64435 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093AbaAYAdE (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:59628 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816AbaAEHVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 19:33:04 -0500
-Received: by mail-pa0-f51.google.com with SMTP id ld10so3859985pab.38
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 16:33:02 -0800 (PST)
-Date: Fri, 24 Jan 2014 16:32:57 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth flag
-Message-ID: <20140125003255.GE28512@garbanzo.do-not-panic.com> (sfid-20140125_013330_165745_A928E895)
-References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
- <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
- <1390492620.4142.33.camel@jlt4.sipsolutions.net>
+	Sun, 5 Jan 2014 02:21:40 -0500
+Received: by mail-we0-f179.google.com with SMTP id q59so14651815wes.38
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 23:21:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390492620.4142.33.camel@jlt4.sipsolutions.net>
+In-Reply-To: <CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com>
+References: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com> <CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 5 Jan 2014 12:51:18 +0530
+Message-ID: <CABPxzYJ_iEdFVmyqMtpvzfVnyiMFR+ek8dfTjwRU0zoEBk5Dbw@mail.gmail.com> (sfid-20140105_082157_885277_A5AB7571)
+Subject: Re: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the
+ interface loop.
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 04:57:00PM +0100, Johannes Berg wrote:
-> On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
-> > Introduce regulatory flags field, NL80211_REG_WIDE_BW
-> > country flag and new attribute NL80211_ATTR_REG_FLAGS.
-> > If NL80211_REG_WIDE_BW is set, check rules and calculate
-> > maximum bandwidth base on all contiguous regulatory rules.
-> > If unset get maximum badwitdh from regulatory rule.
-> > This patch is backward compatible with current CRDA/db.txt
-> > implementation.
-> 
-> This seems reasonable, thanks. Maybe we should require the bandwidth to
-> not be set at all or something? At least maybe in the regdb parser - it
-> makes very little sense to have @20 and then ignore it completely?
-> 
-> Or maybe the userspace code could just not expose the flag, but rather
-> set the new "wide_bw" flag when all the rules are marked as @N/A (and
-> treat a combination of @number and @N/A as a bug)?
+On Sun, Jan 5, 2014 at 12:12 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>
+> On Sat, Jan 4, 2014 at 11:24 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
+> > The interface loop identifies the no of static and dynamic
+> > smps chains, but overwrites their values across the VIF's
+> > (assuming there are more than one, in my case its AP and STA
+> > loopback), so the driver might not intimated about this update
+> > of SMPS mode, is the value is same.
+> >
+> > So inform driver for every VIF.
+> >
+> > For Ex: STA's SMPS state is changed, but in the loop AP appears
+> > at the last, SMPS state of AP is unchanged hence not intimated
+> > to the driver.
+> >
+> > Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> > ---
+>
+> But the dynamic / static chains number is a property of the channel
+> context. If you have several vifs on the same channel context, the
+> maximum number of dynamic / static chains will be assigned to the
+> channel context. In short, I think that mac80211 already does the job
+> of taking all the parameters into account and putting the right value
+> into the channel context?
+> I don't really see what bug you are trying to solve - could you please
+> tell us exactly what is your configuration?
+> What SMPS do you have for each interface and what dynamic / static
+> chains settings does mac80211 end up with?
 
-The optimizer code I added to CRDA does all this for us, so technically,
-unless I'm missing something, this could be dealt with magically in
-userspace. Its also unclear why we'd define this as a regulatory
-parameter -- this just seems to make sense.
+Agree this looks good in channel context angle.
 
-I'd look at extending CRDA binary to use the optimizer on the regulatory
-domain prior to sending it to the kernel. All of a sudden you get full
-support for this for free on any kernel.
-
-  Luis
+Lets say we have two VIF's one AP and one STA and the driver doesn't
+support channel context's so in that case the config will happen
+through hw_config but the problem is hw_config is out side the loop
+so the config will happen with the parameters of the last VIF, which
+is incorrect.
