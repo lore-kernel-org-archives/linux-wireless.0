@@ -1,88 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:65221 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbaAZM6q (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212AbaAFLEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 07:58:46 -0500
-Message-ID: <52E50683.8060003@broadcom.com> (sfid-20140126_135850_267469_0996DD5A)
-Date: Sun, 26 Jan 2014 13:58:43 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hans de Goede <hdegoede@redhat.com>, <linux-sunxi@googlegroups.com>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>,
-	<benn@cubietech.com>
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com> <52E4E21F.2040307@redhat.com>
-In-Reply-To: <52E4E21F.2040307@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 6 Jan 2014 06:04:39 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: add tracing for ieee80211_sta_set_buffered
+Date: Mon,  6 Jan 2014 12:04:30 +0100
+Message-Id: <1389006270-21768-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_120442_243958_09E1FBFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2014 11:23 AM, Hans de Goede wrote:
-> Hi,
-> 
-> On 01/26/2014 09:53 AM, Arend van Spriel wrote:
->> On 01/24/2014 05:34 PM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
->>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
->>>>> Hi,
->>>>>
->>>>> I've been working on updating sunxi-devel to include more
->>>>> recent versions if your gmac patches, as well as adding support
->>>>> for the wifi + bluetooth found on the cubietruck.
->>>>>
->>>>> Here is my current work on this:
->>>>>
->>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
->>>>>
->>>>> It is close to working, but unfortunately it does not work,
->>>>> here is what I get in dmesg when I modprove the module:
->>>>>
->>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
->>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
->>>>> wl0:
->>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
->>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
->>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>>> already: status (1)
->>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>>> already: status (1)
->>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>>> already: status (1)
->>>>
->>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can
->>>> have
->>>> a look.
->>>
->>> I've captured a log with these flags until the first "Scanning already"
->>> message, you can find it here:
->>
->> Bedankt, Hans
->>
->> Looking at the log it looks more or less ok. wpa_supplicant (assume you
->> use that) first does three regular scans which end with no APs found.
->> Not sure why that happens unless you are in a shielded room :-) After
->> those scans wpa_supplicant tries to tell the device to do a so-called
->> scheduled scan. Basically, it is a scan offload. However, the driver
->> still thinks there is a regular scan ongoing. This needs to be
->> investigated more.
-> 
-> Thanks for looking into this. I've nothing scheduled this entire Sunday
-> except working on hobby projects. If there is anything I can do to help,
-> you can find me in #linux-sunxi on freenode irc. My nick is hansg.
-> 
-> I would really like to get this working, so feel free to poke me to run
-> any tests / debug log gathering exercises you think will be helpful.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I did a quick diff between your brcmfmac folder and mine. I am curious
-what your results are after the merge window. There has been a lot of
-rework in SDIO part of brcmfmac driver.
+This is useful for debugging issues with drivers using this
+function (erroneously), so add tracing for the API call.
 
-Regards,
-Arend
+Change-Id: Ice9d7eabb8fecbac188f0a741920d3488de700ec
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c |  2 ++
+ net/mac80211/trace.h    | 27 +++++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4576ba0..8da3af2 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1485,6 +1485,8 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
+ 	if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
+ 		return;
+ 
++	trace_api_sta_set_buffered(sta->local, pubsta, tid, buffered);
++
+ 	if (buffered)
+ 		set_bit(tid, &sta->driver_buffered_tids);
+ 	else
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index da93666..a0b0aea 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1835,6 +1835,33 @@ TRACE_EVENT(api_eosp,
+ 	)
+ );
+ 
++TRACE_EVENT(api_sta_set_buffered,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sta *sta,
++		 u8 tid, bool buffered),
++
++	TP_ARGS(local, sta, tid, buffered),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		STA_ENTRY
++		__field(u8, tid)
++		__field(bool, buffered)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		STA_ASSIGN;
++		__entry->tid = tid;
++		__entry->buffered = buffered;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT STA_PR_FMT " tid:%d buffered:%d",
++		LOCAL_PR_ARG, STA_PR_ARG, __entry->tid, __entry->buffered
++	)
++);
++
+ /*
+  * Tracing for internal functions
+  * (which may also be called in response to driver calls)
+-- 
+1.8.5.1
+
