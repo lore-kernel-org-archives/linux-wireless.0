@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42341 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbaA2Mpy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 07:45:54 -0500
-Message-ID: <1390999550.4143.9.camel@jlt4.sipsolutions.net> (sfid-20140129_134601_507186_32915F8C)
-Subject: Re: [PATCH] mac80211: send ibss probe responses with noack flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <simon@open-mesh.com>
-Date: Wed, 29 Jan 2014 13:45:50 +0100
-In-Reply-To: <1390603709-8041-1-git-send-email-sw@simonwunderlich.de>
-References: <1390603709-8041-1-git-send-email-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:31495 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756000AbaAFUJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 15:09:04 -0500
+Date: Mon, 6 Jan 2014 21:09:01 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.12] NFC fix
+Message-ID: <20140106200901.GK6003@zurbaran> (sfid-20140106_210909_307475_364B8C65)
+References: <20140104234802.GA10578@zurbaran>
+ <20140106192242.GE10885@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140106192242.GE10885@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-24 at 23:48 +0100, Simon Wunderlich wrote:
-> From: Simon Wunderlich <simon@open-mesh.com>
-> 
-> Responding to probe requests for scanning clients will often create
-> excessive rtries, as it happens quite often that the scanning client
-> already left the channel. Therefore do it like hostapd and send probe
-> responses for broadcast SSID only once by using the noack flag.
+Hi John,
 
-Applied. Should have said "wildcard" though, technically :)
+On Mon, Jan 06, 2014 at 02:22:42PM -0500, John W. Linville wrote:
+> 3.13 is the current stream.
+Argh, sorry about that.
 
-johannes
+> Do you want to adjust your tag name?
+Tag name and message adjusted. The new pull request URL is:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.13-1
+
+Cheers,
+Samuel.
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
