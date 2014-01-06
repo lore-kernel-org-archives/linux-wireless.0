@@ -1,82 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:34720 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751674AbaAXVxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 16:53:38 -0500
-Date: Fri, 24 Jan 2014 22:53:22 +0100
-From: Sebastian Reichel <sre@ring0.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Tony Lindgren <tony@atomide.com>, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org
-Subject: Re: [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140124215321.GA25727@earth.universe> (sfid-20140124_225343_432410_CCF260D5)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
- <20140106225709.GA23070@earth.universe>
- <20140117014514.GA604@earth.universe>
- <20140117150127.GA15145@tuxdriver.com>
- <20140117174415.GG7993@atomide.com>
- <20140117192204.GB15145@tuxdriver.com>
- <20140118174705.GE7235@atomide.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52694 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755576AbaAFUAQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 15:00:16 -0500
+Date: Mon, 6 Jan 2014 14:53:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Ding Tianhong <dingtianhong@huawei.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3.5 18/19] rtlwifi: slight optimization of addr compare
+Message-ID: <20140106195302.GF10885@tuxdriver.com> (sfid-20140106_210112_890922_BBF6EA86)
+References: <52BC15EA.2020603@huawei.com>
+ <52BC2576.3090601@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="FCuugMFkClbJLl1L"
-In-Reply-To: <20140118174705.GE7235@atomide.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52BC2576.3090601@cogentembedded.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---FCuugMFkClbJLl1L
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, Jan 18, 2014 at 09:47:06AM -0800, Tony Lindgren wrote:
+On Thu, Dec 26, 2013 at 04:47:50PM +0400, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 26-12-2013 15:41, Ding Tianhong wrote:
+> 
+> >Use possibly more efficient ether_addr_equal_unaligned
+> >instead of memcmp.
+> 
+> >Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> >Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+> >Cc: John W. Linville <linville@tuxdriver.com>
+> >Cc: linux-wireless@vger.kernel.org
+> >Cc: netdev@vger.kernel.org
+> >Cc: linux-kernel@vger.kernel.org
+> >Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+> >Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> >---
+> >  drivers/net/wireless/rtlwifi/cam.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> >diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+> >index 0e510f7..0276153 100644
+> >--- a/drivers/net/wireless/rtlwifi/cam.c
+> >+++ b/drivers/net/wireless/rtlwifi/cam.c
 > [...]
->=20
-> The reason was for keeping things building and git bisect working.
->=20
-> I do have wl1251-pdata-signed as the base for branch
-> omap-for-v3.14/omap3-board-removal. However the board removal was
-> considered too early for v3.14, so that's been postponed. This is
-> because people are still updating their systems to device tree
-> based booting. So I can redo my omap-for-v3.14/omap3-board-removal
-> against v3.14.
->=20
-> So if you want to, feel free to pick all the wl12xx patches to your
-> wireless tree. AFAIK my omap-for-v3.14/omap3-board-removal is the
-> only other user for those patches, and that I can redo that on
-> v3.14.
->=20
-> So for the arch/arm/*omap* touching patches, feel free to add:
->=20
-> Acked-by: Tony Lindgren <tony@atomide.com>
+> >@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+> >  		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
+> >  		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
+> >  		if (((bitmap & BIT(0)) == BIT(0)) &&
+> >-		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
+> >+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
+> 
+>    It's pointless to enclose function call in parens, again.
 
-Another ping. If this does not go into 3.14 via wireless tree
-it will become complicated for 3.15 again.
+I'll correct that issue when merging the patch.
 
--- Sebastian
-
---FCuugMFkClbJLl1L
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBCAAGBQJS4uDRAAoJENju1/PIO/qaAOkP/AnKO//56D5poxvhpsDbnG1/
-kQz24cexjIPlWeeWHlFQaiU7gTl5ftqhhtR0xBES6CbPfQKD3zFMqN3I6llN66eA
-SaNVP6/l/AN6PTvMKxrf2EYzRw/tD/axGKyl2DfTylcZlXjVaW0kErbtLAts/ghl
-fHbAT4R3B2OoHOlzlFDrm/0rw7/uVSoiXFcIZwmwxTItQXJrOMwL/OmpoOdbmoqE
-Q+uXEl6qroM2lH+JjAhIoj04z66R9bWawBr18Xb36jNhRFHwhEz3WZx+feqoM9JI
-bdNyl35iUDba/hgDxoTLsa9NXPeWQd7j6ONbcCYypOF748ix9AW8Du8hefdEY5ab
-Pa0eVfa7191+SulBFAwhddNeXzlHy+KiBi9CTqSDGOO7/K3Wh3ISBHl8ZdlUvt+o
-k4w8lcF//K8D9IG1k1dk1+0OFrCfcOOPLYXznTbt1zPkLr2sxci7K4Rt48jBahyF
-q9A93IQEJ/GUlp//HSybLUGG5Pkz3SU7qHvRc+MdsWBSvqIvWndAzDgRmA4kSS2d
-pJju2qTMavqNcxxOjksR6hQ3U7j2HJ1V867UeM60TmvnDiHODPlJb9z5zr3MvGEK
-vObVFoWEK+sRrZV2CjeeN8rmL3fsW9d5ODKfc/vnTlZAWTrwsyzC291sK7YoJh/b
-9FhEweMck6Ia3so0s7th
-=4YoO
------END PGP SIGNATURE-----
-
---FCuugMFkClbJLl1L--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
