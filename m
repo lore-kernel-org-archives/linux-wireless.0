@@ -1,159 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:44731 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbaAZF4P convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:48519 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbaAFNig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 00:56:15 -0500
-From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Petko Manolov <petkan@nucleusys.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	remove <ilw@linux.intel.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-Date: Sun, 26 Jan 2014 05:56:04 +0000
-Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558E6242@ALA-MBA.corp.ad.wrs.com> (sfid-20140126_065617_730791_D731599B)
-References: <DE84205DFC6FCF4A904A2F75D822FABA558E6210@ALA-MBA.corp.ad.wrs.com>
-In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558E6210@ALA-MBA.corp.ad.wrs.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 6 Jan 2014 08:38:36 -0500
+Received: by mail-pb0-f49.google.com with SMTP id jt11so18259816pbb.8
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 05:38:36 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1655218.I1JJMSx2BO@debian64>
+References: <CAP+W=6QCwL1hbz5fRKuBr7dCS58_fVFTQ-mFjgW5rTr6y6QO-w@mail.gmail.com>
+	<1655218.I1JJMSx2BO@debian64>
+Date: Mon, 6 Jan 2014 15:38:36 +0200
+Message-ID: <CAP+W=6Q1=PCcA2T5gaar960Zek8=sO05UjouwWfX6SpDjrcL6Q@mail.gmail.com> (sfid-20140106_143839_982945_276723AC)
+Subject: Re: r92su driver for realtek rtl8192su usb wireless adapter
+From: Julian Gordon <jewelsofthought@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill list
-0: phy0: wlan
-	Soft blocked: no
-	Hard blocked: no
+Christian,
+
+Thanks for the reply. After I sent the email, I continued to do some more
+investigation, and am presently downloading the OS's needed to upgrade from
+12.04 to 13.10 (or 12). I was hoping to be able to remain on 12.04 for its
+LTS.
+
+Oh well, that's life in the boonies.
+
+Thanks for this useful tool - especially of those of us living out of the
+mainstream, down in the far south of Africa where our device choice is much
+more limited.
+
+Regards,
+Julian
+
+On Mon, Jan 6, 2014 at 2:37 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Monday, January 06, 2014 11:18:27 AM you wrote:
+>> I have downloaded the dirver from http://github.com/chunkeey/rtl8192su for
+>> the adapter.
+>>
+>> Upon running the make, it reports an error: it cannot find
+>> IEEE80211_NUM_TIDS in file r92/su/sta.h:120:26.
+>>
+>> Where can I find the correct defintion for this varaible or an alternative
+>> to it?
+> Ah, IEEE80211_NUM_TIDS is probably just the tip. There are a few more
+> definitions and functions missing for the driver to compile with anything
+> older than 3.10 [0].
+>
+> Either you can update the kernel to 3.10+ (if possible to 3.12). Or, if
+> you want to stick with 3.2,0-58-generic, then take a look backports [1]
+> project. [However, this is more complicated since you'll have to integrate
+> r92su into backports first].
+>
+> Regards,
+>
+> Christian
+>
+> [0] <https://github.com/chunkeey/rtl8192su/issues/1>
+> [1] <https://backports.wiki.kernel.org/index.php/Main_Page>
+>
+>
 
 
 
-Best Regards.
---------------------------------------
-Bopeng Liu
-WIND RIVER | China Development Center
-Phone: 8610-6483-5012
-
-
-
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Liu, Bopeng [Bopeng.Liu@windriver.com]
-Sent: Sunday, January 26, 2014 1:52 PM
-To: Emmanuel Grumbach; Petko Manolov; Grumbach, Emmanuel; linux-wireless@vger.kernel.org; remove
-Cc: linux-wireless@vger.kernel.org; ilw@linux.intel.com; Berg, Johannes
-Subject: iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-
-Hi,All:
-
-Have you ever met such problem?
-
-----
-On hostap mode:
-
-I use iperf3 to set up a client and server for testing the performance of wifi.
-
-But, wlan0 often down and I can't ping successfully to server on client side.
-
-
-The logs:
-
-wifi_log# grep phy0 *
-0.0.log:[   26.269709] Registered led device: phy0-led
-0.0.log:[   26.295254] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [   26.269709] Registered led device: phy0-led
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [   26.295254] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [   74.209275] Registered led device: phy0-led
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [   74.233835] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-2:[   74.209275] Registered led device: phy0-led
-2:[   74.233835] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-log1:[  187.283480] Registered led device: phy0-led
-log1:[  187.340005] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-log1:[  937.014207] cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on phy0
-root@pek-bliu2-d3:~/Desktop/wifi_log#
-
-
-
-
-
-root@pek-bliu2-d3:~/Desktop/wifi_log# grep fail *
-0.0.log:[    1.127111] acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-0.0.log:[    2.298207] button: probe of LNXPWRBN:00 failed with error -22
-0.0.log:[    2.754792] lpc_sch: probe of 0000:00:1f.0 failed with error -16
-0.0.log:[    4.288308] i2c_eg20t: probe of 0000:05:0c.2 failed with error -16
-0.0.log:[  360.510445] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 1246.718648] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 1592.318580] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 1760.430714] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 2515.854822] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 2561.998692] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.log:[ 2586.030725] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [    1.127111] acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [    2.298207] button: probe of LNXPWRBN:00 failed with error -22
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [    2.754792] lpc_sch: probe of 0000:00:1f.0 failed with error -16
-0.0.syslog.txt:Oct 16 17:35:04 WR-IntelligentDevice kernel: [    4.288308] i2c_eg20t: probe of 0000:05:0c.2 failed with error -16
-0.0.syslog.txt:Oct 16 17:39:41 WR-IntelligentDevice kernel: [  360.510445] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Oct 16 17:54:27 WR-IntelligentDevice kernel: [ 1246.718648] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Jan 17 07:11:09 WR-IntelligentDevice kernel: [ 1592.318580] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Jan 17 07:13:57 WR-IntelligentDevice kernel: [ 1760.430714] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Jan 17 07:26:32 WR-IntelligentDevice kernel: [ 2515.854822] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Jan 17 07:27:19 WR-IntelligentDevice kernel: [ 2561.998692] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-0.0.syslog.txt:Jan 17 07:27:43 WR-IntelligentDevice kernel: [ 2586.030725] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [    1.127139] acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [    2.252334] button: probe of LNXPWRBN:00 failed with error -22
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [    2.714659] lpc_sch: probe of 0000:00:1f.0 failed with error -16
-1:Oct 16 13:39:29 WR-IntelligentDevice kernel: [    4.248330] i2c_eg20t: probe of 0000:05:0c.2 failed with error -16
-1:Jan 17 02:56:10 WR-IntelligentDevice kernel: [  476.038463] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:08:23 WR-IntelligentDevice kernel: [ 1209.414518] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:11:58 WR-IntelligentDevice kernel: [ 1424.182555] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:12:09 WR-IntelligentDevice kernel: [ 1435.782677] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:23:01 WR-IntelligentDevice kernel: [ 2087.318658] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:53:10 WR-IntelligentDevice kernel: [ 3896.774891] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:56:43 WR-IntelligentDevice kernel: [ 4109.574897] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 03:59:47 WR-IntelligentDevice kernel: [ 4293.270915] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 04:12:57 WR-IntelligentDevice kernel: [ 5082.983133] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 04:20:13 WR-IntelligentDevice kernel: [ 5519.207071] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 04:45:20 WR-IntelligentDevice kernel: [ 7026.279286] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 05:06:10 WR-IntelligentDevice kernel: [ 8276.359433] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 05:09:14 WR-IntelligentDevice kernel: [ 8460.487560] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 05:16:29 WR-IntelligentDevice kernel: [ 8895.543505] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-1:Jan 17 05:18:25 WR-IntelligentDevice kernel: [ 9011.144097] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-1:Jan 17 05:18:30 WR-IntelligentDevice kernel: [ 9016.340103] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-1:Jan 17 05:22:45 WR-IntelligentDevice kernel: [ 9270.976150] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-1:Jan 17 05:22:50 WR-IntelligentDevice kernel: [ 9276.296190] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-1:Jan 17 05:22:58 WR-IntelligentDevice kernel: [ 9284.452175] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-1:Jan 17 05:23:15 WR-IntelligentDevice kernel: [ 9301.047675] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[    1.127139] acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-2:[    2.252334] button: probe of LNXPWRBN:00 failed with error -22
-2:[    2.714659] lpc_sch: probe of 0000:00:1f.0 failed with error -16
-2:[    4.248330] i2c_eg20t: probe of 0000:05:0c.2 failed with error -16
-2:[  476.038463] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 1209.414518] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 1424.182555] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 1435.782677] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 2087.318658] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 3896.774891] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 4109.574897] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 4293.270915] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 5082.983133] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 5519.207071] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 7026.279286] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 8276.359433] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 8460.487560] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 8895.543505] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-2:[ 9011.144097] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-2:[ 9016.340103] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-2:[ 9270.976150] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-2:[ 9276.296190] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-2:[ 9284.452175] iwlwifi 0000:01:00.0: fail to flush all tx fifo queues
-2:[ 9301.047675] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-log1:[    1.123103] acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-log1:[    2.252346] button: probe of LNXPWRBN:00 failed with error -22
-log1:[    2.714689] lpc_sch: probe of 0000:00:1f.0 failed with error -16
-log1:[    4.248330] i2c_eg20t: probe of 0000:05:0c.2 failed with error -16
-log1:[ 1074.870540] cdc_acm 1-2:1.1: acm_ctrl_irq - usb_submit_urb failed: -1
-root@pek-bliu2-d3:~/Desktop/wifi_log# ^C
-root@pek-bliu2-d3:~/Desktop/wifi_log#
+-- 
+Julian Gordon,
+South Africa: +27 (021) 650-3210
+Cell: +27 (083) 226-5482
+Email
 --
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Not everything that is faced can be changed. But nothing can be
+changed until it is faced.
