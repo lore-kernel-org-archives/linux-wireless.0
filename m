@@ -1,102 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:44178 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190AbaAVMgJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755124AbaAFVYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 07:36:09 -0500
-Message-ID: <1390394166.4189.28.camel@porter.coelho.fi> (sfid-20140122_133612_438466_767ADB31)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 22 Jan 2014 14:36:06 +0200
-In-Reply-To: <1390385995.4334.27.camel@jlt4.sipsolutions.net>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	 (sfid-20140122_111301_086907_C6814DB8) <1390385995.4334.27.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 Jan 2014 16:24:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove channel_change_time
+Date: Mon,  6 Jan 2014 22:24:36 +0100
+Message-Id: <1389043476-6193-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_222445_458949_E5C4ADFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 11:19 +0100, Johannes Berg wrote:
-> On Wed, 2014-01-22 at 11:13 +0100, Michal Kazior wrote:
-> 
-> > > That seems pretty much fine, though I was talking to Luca yesterday and
-> > > there is actually a case where a CSA chanctx should be usable later, for
-> > > example if you have this:
-> > >  * managed mode interface receives a channel switch announcements and
-> > > acts on it
-> > >  * it also sends an event to userspace (this is a TODO but we're on it)
-> > >  * wpa_s decides that a concurrent GO should also switch
-> > 
-> > Hmm. This sounds interesting. But it makes me wonder..
-> > 
-> > If STA iface receives CSA it starts it right away? It doesn't care if
-> > other interfaces are using a given channel context too? It just
-> > assumes other intefaces may actively request channel switch and if
-> > they do, the CSA will be 'aggregated/merged'?
-> 
-> Well, in Luca's implementation a new channel context has to be
-> available. In the current implementation, it will simply disconnect if
-> using chanctx, or if there's any other interface using the channel (I
-> believe)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes, that's right.  Unless the channel context we're going to switch to
-already exists.  Let's say: we have a STA in channel 1 and a GO in
-channel 11; the STA receives a CSA from its AP to change to channel 11;
-the STA interface "reserves" the channel 11 context.  The context
-already exists, so we don't need a new one and, since we reserve it, it
-will remain available, even if the GO goes away from it.
+This value is no longer used by mac80211, and practically no
+driver ever set it to a correct value anyway, so remove it.
 
-I don't think we should try to merge the channel switches.  We should
-just perform them separately, especially because the exact time of the
-switch will most likely not be the same (since the TBTTs are not in
-sync).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/adm8211.c                        |  1 -
+ drivers/net/wireless/at76c50x-usb.c                   |  1 -
+ drivers/net/wireless/ath/ath10k/mac.c                 |  1 -
+ drivers/net/wireless/ath/ath5k/base.c                 |  1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c         |  1 -
+ drivers/net/wireless/ath/ath9k/init.c                 |  1 -
+ drivers/net/wireless/ath/carl9170/main.c              | 12 ------------
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  1 -
+ drivers/net/wireless/cw1200/main.c                    |  1 -
+ drivers/net/wireless/mac80211_hwsim.c                 |  1 -
+ drivers/net/wireless/mwl8k.c                          |  2 --
+ drivers/net/wireless/p54/main.c                       |  1 -
+ drivers/net/wireless/rtlwifi/base.c                   |  1 -
+ drivers/net/wireless/ti/wl1251/main.c                 |  1 -
+ drivers/net/wireless/ti/wlcore/main.c                 |  1 -
+ drivers/staging/winbond/wbusb.c                       |  1 -
+ include/net/mac80211.h                                |  3 ---
+ 17 files changed, 31 deletions(-)
 
-In the STA and GO sharing the context case, the idea is that the STA
-interface will send a notification to userspace and let the userspace
-take action.  In this case, the userspace will trigger a GO CSA as well.
-The userspace will decide the exact timing of the GO CSA (it should be
-as close as possible to the original STA CSA).  The userspace will
-probably tell the GO to switch to the same context as the STA is
-switching to, so both will end up reserving the same channel context.
-
-The non-chanctx case needs to be considered separately.  As Johannes
-already mentioned, I simply ignored non-chanctx in my patch for now. :P
-
-
-> > What about cfg80211 intf combinations? If GO sends a channel switch it
-> > will fail on num_available_channels unless you implicitly consider the
-> > userspace event you mentioned or export CSA state down to cfg80211.
-> 
-> Yeah, that's a good point, need to consider that.
-
-Very good point.  I hadn't thought about it.  When mac80211 decides to
-change channel to an existing context, it needs to know whether the
-combination will be valid or not.
-
-
-> > At one point I was wondering if channel contexts should be actually
-> > exposed in cfg80211. It would probably make it easier to coordinate
-> > some CSA scenarios like this in a sane way, don't you think? But then
-> > again that's quite big of a change.
-> 
-> Yeah that'd be a bit of a change, but maybe it's worth it? Not sure.
-
-That's probably going to be necessary.  How would mac80211 be able to
-know if the future combination would be possible or not? I thought about
-asking cfg80211 if the combination would be okay when reserving a
-context, but that wouldn't work if we have >= 2 reservations.  cfg80211
-needs to know about the reservations as well. :(
-
---
-Luca.
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index cfce83e..54afde0 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1866,7 +1866,6 @@ static int adm8211_probe(struct pci_dev *pdev,
+ 	dev->flags = IEEE80211_HW_SIGNAL_UNSPEC;
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+-	dev->channel_change_time = 1000;
+ 	dev->max_signal = 100;    /* FIXME: find better value */
+ 
+ 	dev->queues = 1; /* ADM8211C supports more, maybe ADM8211B too */
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 34c8a33..8cfd1d6 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -2112,7 +2112,6 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ 	priv->pm_period = 0;
+ 
+ 	/* unit us */
+-	priv->hw->channel_change_time = 100000;
+ 
+ 	return priv;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ce9ef349..747c8bd 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3704,7 +3704,6 @@ int ath10k_mac_register(struct ath10k *ar)
+ 
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
+ 
+-	ar->hw->channel_change_time = 5000;
+ 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
+ 
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 69f58b0..fe6878b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2549,7 +2549,6 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	hw->wiphy->available_antennas_rx = 0x3;
+ 
+ 	hw->extra_tx_headroom = 2;
+-	hw->channel_change_time = 5000;
+ 
+ 	/*
+ 	 * Mark the device as detached to avoid processing
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index c3676bf..bcdb50a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -748,7 +748,6 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+ 	hw->queues = 4;
+-	hw->channel_change_time = 5000;
+ 	hw->max_listen_interval = 1;
+ 
+ 	hw->vif_data_size = sizeof(struct ath9k_htc_vif);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 609b7e1..d878769 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -950,7 +950,6 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+-	hw->channel_change_time = 5000;
+ 	hw->max_listen_interval = 1;
+ 	hw->max_rate_tries = 10;
+ 	hw->sta_data_size = sizeof(struct ath_node);
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 349fa22..5ab68fd 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1968,18 +1968,6 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
+ 		return -ENOMEM;
+ 	ar->num_channels = chans;
+ 
+-	/*
+-	 * I measured this, a bandswitch takes roughly
+-	 * 135 ms and a frequency switch about 80.
+-	 *
+-	 * FIXME: measure these values again once EEPROM settings
+-	 *	  are used, that will influence them!
+-	 */
+-	if (bands == 2)
+-		ar->hw->channel_change_time = 135 * 1000;
+-	else
+-		ar->hw->channel_change_time = 80 * 1000;
+-
+ 	regulatory->current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
+ 
+ 	/* second part of wiphy init */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index e71ce8c..925034b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1071,7 +1071,6 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
+ 	hw->max_rates = 2;	/* Primary rate and 1 fallback rate */
+ 
+ 	/* channel change time is dependent on chip and band  */
+-	hw->channel_change_time = 7 * 1000;
+ 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				     BIT(NL80211_IFTYPE_AP) |
+ 				     BIT(NL80211_IFTYPE_ADHOC);
+diff --git a/drivers/net/wireless/cw1200/main.c b/drivers/net/wireless/cw1200/main.c
+index 090f015..1be819d 100644
+--- a/drivers/net/wireless/cw1200/main.c
++++ b/drivers/net/wireless/cw1200/main.c
+@@ -302,7 +302,6 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
+ 
+-	hw->channel_change_time = 1000;	/* TODO: find actual value */
+ 	hw->queues = 4;
+ 
+ 	priv->rts_threshold = -1;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ff48cea..4e94224 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2340,7 +2340,6 @@ static int __init init_mac80211_hwsim(void)
+ 		INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
+ 		INIT_DELAYED_WORK(&data->hw_scan, hw_scan_work);
+ 
+-		hw->channel_change_time = 1;
+ 		hw->queues = 5;
+ 		hw->offchannel_tx_hw_queue = 4;
+ 		hw->wiphy->interface_modes =
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index b953ad6..721c738 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5893,8 +5893,6 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ 
+ 	hw->extra_tx_headroom -= priv->ap_fw ? REDUCED_TX_HEADROOM : 0;
+ 
+-	hw->channel_change_time = 10;
+-
+ 	hw->queues = MWL8K_TX_WMM_QUEUES;
+ 
+ 	/* Set rssi values to dBm */
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 067e6f2..b61fefa 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -757,7 +757,6 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+ 				      BIT(NL80211_IFTYPE_AP) |
+ 				      BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+-	dev->channel_change_time = 1000;	/* TODO: find actual value */
+ 	priv->beacon_req_id = cpu_to_le32(0);
+ 	priv->tx_stats[P54_QUEUE_BEACON].limit = 1;
+ 	priv->tx_stats[P54_QUEUE_FWSCAN].limit = 1;
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index fcf9b621..2cfb6d4 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -353,7 +353,6 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 
+ 	/* TODO: Correct this value for our hw */
+ 	/* TODO: define these hard code value */
+-	hw->channel_change_time = 100;
+ 	hw->max_listen_interval = 10;
+ 	hw->max_rate_tries = 4;
+ 	/* hw->max_rates = 1; */
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 3291ffa..ee4ec4e 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1347,7 +1347,6 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 
+ 	/* unit us */
+ 	/* FIXME: find a proper value */
+-	wl->hw->channel_change_time = 10000;
+ 
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_SUPPORTS_PS |
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index e9da47c..18a009e 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5710,7 +5710,6 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 
+ 	/* unit us */
+ 	/* FIXME: find a proper value */
+-	wl->hw->channel_change_time = 10000;
+ 	wl->hw->max_listen_interval = wl->conf.conn.max_listen_interval;
+ 
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+diff --git a/drivers/staging/winbond/wbusb.c b/drivers/staging/winbond/wbusb.c
+index 07891a3..0d29624 100644
+--- a/drivers/staging/winbond/wbusb.c
++++ b/drivers/staging/winbond/wbusb.c
+@@ -788,7 +788,6 @@ static int wb35_probe(struct usb_interface *intf,
+ 	dev->flags = IEEE80211_HW_SIGNAL_UNSPEC;
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+-	dev->channel_change_time = 1000;
+ 	dev->max_signal = 100;
+ 	dev->queues = 1;
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f838af8..25b1887 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1616,8 +1616,6 @@ enum ieee80211_hw_flags {
+  * @extra_beacon_tailroom: tailroom to reserve in each beacon tx skb.
+  *	Can be used by drivers to add extra IEs.
+  *
+- * @channel_change_time: time (in microseconds) it takes to change channels.
+- *
+  * @max_signal: Maximum value for signal (rssi) in RX information, used
+  *	only when @IEEE80211_HW_SIGNAL_UNSPEC or @IEEE80211_HW_SIGNAL_DB
+  *
+@@ -1699,7 +1697,6 @@ struct ieee80211_hw {
+ 	u32 flags;
+ 	unsigned int extra_tx_headroom;
+ 	unsigned int extra_beacon_tailroom;
+-	int channel_change_time;
+ 	int vif_data_size;
+ 	int sta_data_size;
+ 	int chanctx_data_size;
+-- 
+1.8.5.1
 
