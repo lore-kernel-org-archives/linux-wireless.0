@@ -1,91 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:52954 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755876AbaA2HBZ (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:46431 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754491AbaAFLk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 02:01:25 -0500
-Received: by mail-ee0-f44.google.com with SMTP id c13so655556eek.17
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 23:01:24 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/5] mac80211: fix sdata->radar_required locking
-Date: Wed, 29 Jan 2014 07:56:20 +0100
-Message-Id: <1390978581-13273-5-git-send-email-michal.kazior@tieto.com> (sfid-20140129_080150_032942_7E979C98)
-In-Reply-To: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
-References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 6 Jan 2014 06:40:58 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/15] brcmfmac: add sdio drive strength programming for bcm4334 chipset
+Date: Mon, 6 Jan 2014 12:40:42 +0100
+Message-ID: <1389008450-28529-8-git-send-email-arend@broadcom.com> (sfid-20140106_124129_154774_B94200B9)
+In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-radar_required setting wasn't protected by
-local->mtx in some places. This should prevent
-from scanning/radar detection/roc colliding.
+The table for BCM4334 SDIO drive strength programming was missing
+from the driver. Adding it with this patch set.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/cfg.c  | 4 ++--
- net/mac80211/chan.c | 2 ++
- net/mac80211/ibss.c | 2 +-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 20d4ee6..18e8687 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -970,9 +970,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	/* TODO: make hostapd tell us what it wants */
- 	sdata->smps_mode = IEEE80211_SMPS_OFF;
- 	sdata->needed_rx_chains = sdata->local->rx_chains;
--	sdata->radar_required = params->radar_required;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index 5f39f28..6aa6ba0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -83,6 +83,13 @@ static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
+ 	{0, 0x1}
+ };
  
- 	mutex_lock(&local->mtx);
-+	sdata->radar_required = params->radar_required;
- 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
- 					IEEE80211_CHANCTX_SHARED);
- 	mutex_unlock(&local->mtx);
-@@ -3002,8 +3002,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	int err, changed = 0;
- 
--	sdata->radar_required = sdata->csa_radar_required;
- 	mutex_lock(&local->mtx);
-+	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	mutex_unlock(&local->mtx);
- 	if (WARN_ON(err < 0))
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f43613a..42c6592 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -196,6 +196,8 @@ static bool ieee80211_is_radar_required(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	lockdep_assert_held(&local->mtx);
++/* SDIO Drive Strength to sel value table for PMU Rev 17 (1.8v) */
++static const struct sdiod_drive_str sdiod_drvstr_tab6_1v8[] = {
++	{3, 0x3},
++	{2, 0x2},
++	{1, 0x1},
++	{0, 0x0} };
 +
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (sdata->radar_required) {
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 82d3d14..f01d468 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -303,6 +303,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		mutex_unlock(&local->mtx);
- 		return;
- 	}
-+	sdata->radar_required = radar_required;
- 	mutex_unlock(&local->mtx);
- 
- 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
-@@ -318,7 +319,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	rcu_assign_pointer(ifibss->presp, presp);
- 	mgmt = (void *)presp->head;
- 
--	sdata->radar_required = radar_required;
- 	sdata->vif.bss_conf.enable_beacon = true;
- 	sdata->vif.bss_conf.beacon_int = beacon_int;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
+ /* SDIO Drive Strength to sel value table for 43143 PMU Rev 17 (3.3V) */
+ static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
+ 	{16, 0x7},
+@@ -757,6 +764,11 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+ 		str_mask = 0x00003800;
+ 		str_shift = 11;
+ 		break;
++	case SDIOD_DRVSTR_KEY(BCM4334_CHIP_ID, 17):
++		str_tab = sdiod_drvstr_tab6_1v8;
++		str_mask = 0x00001800;
++		str_shift = 11;
++		break;
+ 	case SDIOD_DRVSTR_KEY(BCM43143_CHIP_ID, 17):
+ 		/* note: 43143 does not support tristate */
+ 		i = ARRAY_SIZE(sdiod_drvstr_tab2_3v3) - 1;
 -- 
-1.8.5.3
+1.7.10.4
 
