@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41875 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966AbaAGLLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 06:11:47 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] mac80211: simplify code in ieee80211_prepare_and_rx_handle
-Date: Tue,  7 Jan 2014 13:10:20 +0200
-Message-Id: <1389093020-12005-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140107_121149_666438_F149886B)
+Received: from s3.sipsolutions.net ([144.76.43.152]:42986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754997AbaAFPE1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 10:04:27 -0500
+Message-ID: <1389020664.5891.18.camel@jlt4.sipsolutions.net> (sfid-20140106_160439_209967_245CB594)
+Subject: Re: [PATCH] mac80211: Return untuned timestamp in case of invalid
+ bitrates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chaitanya Tata <Chaitanya.Tata@imgtec.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Date: Mon, 06 Jan 2014 16:04:24 +0100
+In-Reply-To: <82A67CC48AF04D43A69EB66645975134107C6285@hbmail01.hb.imgtec.org>
+References: <82A67CC48AF04D43A69EB66645975134107C6285@hbmail01.hb.imgtec.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to assign the return value of prepare_for_handlers
-to a variable if the only usage is to test it.
+On Thu, 2013-12-26 at 13:42 +0000, Chaitanya Tata wrote:
+> In case the driver sends MCS9 and doesn't advertise CBW
+> (or) advertises 20MHz bandwidth, return the timestamp As is, 
+> instead of returning 0 as timestamp.
+> 
+> Signed-off-by: Chaitanya T K <Chaitanya.mgit@gmail.com>
+> ---
+> net/mac80211/util.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c index 06265d7..bc92b25 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -2265,7 +2265,7 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+>  	if (WARN_ONCE(!rate,
+>  		      "Invalid bitrate: flags=0x%x, idx=%d, vht_nss=%d\n",
+>  		      status->flag, status->rate_idx, status->vht_nss))
+> -		return 0;
+> +		return ts;
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/rx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+I think this is wrong - we've already warned, we know we have no usable
+timestamp, and this should never happen anyway.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 274f43c..9dea249 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3191,13 +3191,11 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
--	int prepares;
- 
- 	rx->skb = skb;
- 	status->rx_flags |= IEEE80211_RX_RA_MATCH;
--	prepares = prepare_for_handlers(rx, hdr);
- 
--	if (!prepares)
-+	if (!prepare_for_handlers(rx, hdr))
- 		return false;
- 
- 	if (!consume) {
--- 
-1.8.3.2
+johannes
 
