@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:61191 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719AbaAVGyH convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59121 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbaAFLkz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 01:54:07 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so4295259eaj.40
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 22:54:06 -0800 (PST)
+	Mon, 6 Jan 2014 06:40:55 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/15] brcmfmac: Remove some obsolete definitions and variables.
+Date: Mon, 6 Jan 2014 12:40:37 +0100
+Message-ID: <1389008450-28529-3-git-send-email-arend@broadcom.com> (sfid-20140106_124059_421765_BA194131)
+In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1390316116.6199.23.camel@jlt4.sipsolutions.net>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	<1390227670-19030-2-git-send-email-michal.kazior@tieto.com>
-	<1390316116.6199.23.camel@jlt4.sipsolutions.net>
-Date: Wed, 22 Jan 2014 07:54:06 +0100
-Message-ID: <CA+BoTQ=RSDMBQYC0nZxP8a6oY6=dH28aeLy3GCxWkup-1DS3SA@mail.gmail.com> (sfid-20140122_075411_613025_0A23BE74)
-Subject: Re: [PATCH 1/7] mac80211: fix possible memory leak on AP CSA failure
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 January 2014 15:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
->> If CSA for AP interface failed and the interface
->> was not stopped afterwards another CSA request
->> would leak sdata->u.ap.next_beacon.
->
->>  void ieee80211_csa_finish(struct ieee80211_vif *vif)
->>  {
->>       struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
->> @@ -3019,15 +3034,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->>       sdata->vif.csa_active = false;
->>       switch (sdata->vif.type) {
->>       case NL80211_IFTYPE_AP:
->> -             err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
->> +             err = ieee80211_ap_finish_csa(sdata);
->>               if (err < 0)
->>                       return;
->> -
->> -             changed |= err;
->
-> This looks a bit like somebody had intended to batch the
-> ieee80211_bss_info_change_notify() calls, which would probably be a good
-> thing. You're breaking them apart even further - maybe we should
-> actually batch them instead by moving ieee80211_bss_info_change_notify()
-> after the switch()?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Sounds good. I'll fix it.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h        |    2 --
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c |    2 --
+ 2 files changed, 4 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 252024b..e299657 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -21,8 +21,6 @@
+ #ifndef _BRCMF_H_
+ #define _BRCMF_H_
+ 
+-#define BRCMF_VERSION_STR		"4.218.248.5"
+-
+ #include "fweh.h"
+ 
+ #define TOE_TX_CSUM_OL		0x00000001
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 7b6bdd1..6a8983a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -32,8 +32,6 @@
+ #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ #define BRCMF_DEFAULT_PACKET_FILTER	"100 0 0 0 0x01 0x00"
+ 
+-static const char brcmf_version[] =
+-	"Dongle Host Driver, version " BRCMF_VERSION_STR;
+ 
+ bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
+ 		      struct sk_buff *pkt, int prec)
+-- 
+1.7.10.4
 
-Michał
