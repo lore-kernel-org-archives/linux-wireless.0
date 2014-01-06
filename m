@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35585 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbaAID0b (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754997AbaAFPPZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 22:26:31 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	stable@vger.kernel.org
-Subject: [PATCH v2 3/3] ath9k: Disable cross-band FCC
-Date: Thu,  9 Jan 2014 08:51:15 +0530
-Message-Id: <1389237675-32658-3-git-send-email-sujith@msujith.org> (sfid-20140109_042633_856097_65823C63)
-In-Reply-To: <1389237675-32658-1-git-send-email-sujith@msujith.org>
-References: <1389237675-32658-1-git-send-email-sujith@msujith.org>
+	Mon, 6 Jan 2014 10:15:25 -0500
+Message-ID: <1389021322.5891.25.camel@jlt4.sipsolutions.net> (sfid-20140106_161531_707494_B7415662)
+Subject: Re: [PATCH] mac80211: Fix the buffer length in debugfs for smps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 06 Jan 2014 16:15:22 +0100
+In-Reply-To: <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com> (sfid-20140106_160529_519013_7D101F00)
+References: <1388869583-2767-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1389019739.5891.16.camel@jlt4.sipsolutions.net>
+	 <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com>
+	 (sfid-20140106_160529_519013_7D101F00)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, 2014-01-06 at 20:35 +0530, Krishna Chaitanya wrote:
+> On Mon, Jan 6, 2014 at 8:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Sun, 2014-01-05 at 02:36 +0530, Chaitanya T K wrote:
+> >> This was blocking sending SMPS action frames
+> >> through debugfs.
+> >
+> > I don't see any issue here, explain.
+> >
+> > johannes
+> >
+> buflen includes the new line character as well, hence the comparison
+> strncmp fails for all combiantions.
+> 
+> echo "static" > ieee80211/phyX/netdev\:wlanX/smps
+> Then
+> 
+> buf=static\n
+> buflen=7
+> 
+> But the comparison is with "static" which doesn't include "\n"
+> hence the comparison fails.
 
-Fast Channel Change across bands was enabled for
-AR9462 recently, but this is causing baseband issues.
-Disable it until this feature is tested well. Also,
-remove the feature bit for AR9565 since it is
-a single-band card and doesn't support this feature.
+Err, ok, so you can just do "echo -n static", right?
 
-Cc: stable@vger.kernel.org
-Reported-by: Oleksij Rempel <linux@rempel-privat.de>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 7 -------
- 1 file changed, 7 deletions(-)
+And then your patch breaks the way it currently works, which is about
+the worst you can do.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 47c6285..ce41658 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2476,13 +2476,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	    ah->eep_ops->get_eeprom(ah, EEP_PAPRD))
- 			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
- 
--	/*
--	 * Fast channel change across bands is available
--	 * only for AR9462 and AR9565.
--	 */
--	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
--		pCap->hw_caps |= ATH9K_HW_CAP_FCC_BAND_SWITCH;
--
- 	return 0;
- }
- 
--- 
-1.8.5.2
+johannes
+
 
