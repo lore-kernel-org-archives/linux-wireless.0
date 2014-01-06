@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:39846 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbaAMQL1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42981 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbaAFPD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 11:11:27 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21204.3832.404821.109119@gargle.gargle.HOWL> (sfid-20140113_171134_884700_55566E38)
-Date: Mon, 13 Jan 2014 21:36:16 +0530
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-In-Reply-To: <21204.2384.710460.402183@gargle.gargle.HOWL>
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
-	<1384665016-12022-5-git-send-email-sujith@msujith.org>
-	<52CE934D.1020400@neratec.com>
-	<21198.40916.260973.48444@gargle.gargle.HOWL>
-	<52CEA5A3.2040308@neratec.com>
-	<21198.43395.235654.597422@gargle.gargle.HOWL>
-	<52CEAB24.5090700@neratec.com>
-	<52D3F962.1010302@neratec.com>
-	<21204.319.492595.58625@gargle.gargle.HOWL>
-	<52D402C3.3070606@neratec.com>
-	<21204.1991.201080.986559@gargle.gargle.HOWL>
-	<21204.2384.710460.402183@gargle.gargle.HOWL>
+	Mon, 6 Jan 2014 10:03:57 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: ZHAO Gang <gamerh2o@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix memory leak in register_hw() error path
+Date: Mon,  6 Jan 2014 16:03:53 +0100
+Message-Id: <1389020633-32021-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_160400_698237_83451B57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> > I used this patch:
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> > index 5bf3243..c85be42 100644
-> > --- a/drivers/net/wireless/ath/ath9k/recv.c
-> > +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> > @@ -1088,6 +1088,9 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
-> >  
-> >  	ath9k_process_rssi(common, hw, rx_stats, rx_status);
-> >  
-> > +	printk("NOISE/RSSI/SIGNAL for %pM: %d/%d/%d\n",
-> > +	       hdr->addr3, ah->noise, rx_stats->rs_rssi, rx_status->signal);
-> > +
-> >  	rx_status->band = ah->curchan->chan->band;
-> >  	rx_status->freq = ah->curchan->chan->center_freq;
-> >  	rx_status->antenna = rx_stats->rs_antenna;
+From: Johannes Berg <johannes.berg@intel.com>
 
-With this patch, can you please post the kernel log with debug=0x749 ?
+Move the internal scan request allocation below the last
+sanity check in ieee80211_register_hw() to avoid leaking
+memory if the sanity check actually triggers.
 
-Sujith
+Reported-by: ZHAO Gang <gamerh2o@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 2bd5b55..d767cfb 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -846,17 +846,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		/* TODO: consider VHT for RX chains, hopefully it's the same */
+ 	}
+ 
+-	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
+-				      sizeof(void *) * channels, GFP_KERNEL);
+-	if (!local->int_scan_req)
+-		return -ENOMEM;
+-
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		if (!local->hw.wiphy->bands[band])
+-			continue;
+-		local->int_scan_req->rates[band] = (u32) -1;
+-	}
+-
+ 	/* if low-level driver supports AP, we also support VLAN */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+@@ -880,6 +869,17 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 				return -EINVAL;
+ 	}
+ 
++	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
++				      sizeof(void *) * channels, GFP_KERNEL);
++	if (!local->int_scan_req)
++		return -ENOMEM;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!local->hw.wiphy->bands[band])
++			continue;
++		local->int_scan_req->rates[band] = (u32) -1;
++	}
++
+ #ifndef CONFIG_MAC80211_MESH
+ 	/* mesh depends on Kconfig, but drivers should set it if they want */
+ 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+-- 
+1.8.5.1
+
