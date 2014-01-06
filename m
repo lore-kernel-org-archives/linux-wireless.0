@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43298 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754993AbaAFQkJ (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:46022 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753846AbaAFMhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 11:40:09 -0500
-Message-ID: <1389026403.5891.36.camel@jlt4.sipsolutions.net> (sfid-20140106_174106_598099_5F7D567D)
-Subject: Re: [PATCH 2/2 V3] nl80211/cfg80211: Enable station PMF requirement
- to be specified to driver with AP SME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: clanctot@codeaurora.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:40:03 +0100
-In-Reply-To: <508ee22698c0bc2a2387a23158c97e8d.squirrel@www.codeaurora.org>
-References: <508ee22698c0bc2a2387a23158c97e8d.squirrel@www.codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 Jan 2014 07:37:52 -0500
+Received: by mail-bk0-f45.google.com with SMTP id mx13so5692547bkb.32
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 04:37:50 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Julian Gordon <jewelsofthought@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: r92su driver for realtek rtl8192su usb wireless adapter
+Date: Mon, 06 Jan 2014 13:37:33 +0100
+Message-ID: <1655218.I1JJMSx2BO@debian64> (sfid-20140106_133800_257462_DAF99C8D)
+In-Reply-To: <CAP+W=6QCwL1hbz5fRKuBr7dCS58_fVFTQ-mFjgW5rTr6y6QO-w@mail.gmail.com>
+References: <CAP+W=6QCwL1hbz5fRKuBr7dCS58_fVFTQ-mFjgW5rTr6y6QO-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-03 at 21:30 +0000, clanctot@codeaurora.org wrote:
-
-> >> +	} else
-> >> +		params.mfp = NL80211_MFP_NO;
-> > Code style.
-
-> For the issue of code style, I am not sure what you mean here.  I copied
-> this code from the nl80211_connect routine, which has similar processing
-> for a “use MFP” parameter.  I tried to make the code I added be consistent
-> with this existing code.
+On Monday, January 06, 2014 11:18:27 AM you wrote:
+> I have downloaded the dirver from http://github.com/chunkeey/rtl8192su for
+> the adapter.
 > 
-> If you explain what needs to be changed to improve the code style, I will
-> make the changes.
+> Upon running the make, it reports an error: it cannot find
+> IEEE80211_NUM_TIDS in file r92/su/sta.h:120:26.
+> 
+> Where can I find the correct defintion for this varaible or an alternative
+> to it?
+Ah, IEEE80211_NUM_TIDS is probably just the tip. There are a few more
+definitions and functions missing for the driver to compile with anything
+older than 3.10 [0].
 
-All branches should (now) have braces if one of them requires it.
+Either you can update the kernel to 3.10+ (if possible to 3.12). Or, if
+you want to stick with 3.2,0-58-generic, then take a look backports [1]
+project. [However, this is more complicated since you'll have to integrate
+r92su into backports first].
 
-> Regarding your question about a feature flag, there is already a  flag
-> that indicates that the driver implements the AP SME:
->      * @WIPHY_FLAG_HAVE_AP_SME: device integrates AP SME
-> Is this the type of flag you were referring to?
+Regards,
 
-Yes, but it seems to me that you need a flag in the nl80211 API
-indicating that the AP SME supports PMF in this way.
+Christian
 
-johannes
+[0] <https://github.com/chunkeey/rtl8192su/issues/1>
+[1] <https://backports.wiki.kernel.org/index.php/Main_Page>
+
 
