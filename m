@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:33758 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaAFJSb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52290 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756095AbaAFTaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 04:18:31 -0500
-Received: by mail-pb0-f41.google.com with SMTP id jt11so18246316pbb.14
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 01:18:27 -0800 (PST)
+	Mon, 6 Jan 2014 14:30:21 -0500
+Date: Mon, 6 Jan 2014 14:22:42 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.12] NFC fix
+Message-ID: <20140106192242.GE10885@tuxdriver.com> (sfid-20140106_203028_154450_86946A6D)
+References: <20140104234802.GA10578@zurbaran>
 MIME-Version: 1.0
-Date: Mon, 6 Jan 2014 11:18:27 +0200
-Message-ID: <CAP+W=6QCwL1hbz5fRKuBr7dCS58_fVFTQ-mFjgW5rTr6y6QO-w@mail.gmail.com> (sfid-20140106_101835_494224_E4B3F992)
-Subject: r92su driver for realtek rtl8192su usb wireless adapte
-From: Julian Gordon <jewelsofthought@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140104234802.GA10578@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have downloaded the dirver from http://github.com/chunkeey/rtl8192su for
-the adapter.
+3.13 is the current stream.  Do you want to adjust your tag name?
 
-Upon running the make, it reports an error: it cannot find
-IEEE80211_NUM_TIDS in file r92/su/sta.h:120:26.
+John
 
-Where can I find the correct defintion for this varaible or an alternative
-to it?
-
-I am running on ubuntu 12.04 64b, with kernel 3.2.0-58-generic.
-
-Regards,--
+On Sun, Jan 05, 2014 at 12:48:02AM +0100, Samuel Ortiz wrote:
+> Hi John,
+> 
+> Hopefully it's not too late for a 3.12 fix for NFC. Please let me know
+> if it is, and I'll add it to my 3.13 pull request.
+> 
+> This pull request only contains one fix for a regression introduced with
+> commit e29a9e2ae165620d. Without this fix, we can not establish a p2p link
+> in target mode. Only initiator mode works.
+> 
+> The following changes since commit b7e047358449f8eb5cba8197b42280b676b82e54:
+> 
+>   Merge branch 'for-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth (2013-12-18 13:46:08 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.12-1
+> 
+> for you to fetch changes up to d31652a26bc9e752a99b6ac3b61353129934e451:
+> 
+>   NFC: Fix target mode p2p link establishment (2014-01-04 03:31:32 +0100)
+> 
+> ----------------------------------------------------------------
+> Arron Wang (1):
+>       NFC: Fix target mode p2p link establishment
+> 
+>  net/nfc/core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> -- 
+> Intel Open Source Technology Centre
+> http://oss.intel.com/
+> 
 
 -- 
-Julian Gordon,
-South Africa: +27 (021) 650-3210
-Cell: +27 (083) 226-5482
-Email
---
-
-Not everything that is faced can be changed. But nothing can be
-changed until it is faced.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
