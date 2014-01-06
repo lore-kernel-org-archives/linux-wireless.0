@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51313 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636AbaABSbn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 13:31:43 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] bcma: fix sparse warnings in driver_chipcommon_sflash.c
-Date: Thu,  2 Jan 2014 19:31:36 +0100
-Message-Id: <1388687497-8645-1-git-send-email-hauke@hauke-m.de> (sfid-20140102_193154_138715_4DA87CD1)
+Received: from s3.sipsolutions.net ([144.76.43.152]:42815 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbaAFOJa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 09:09:30 -0500
+Message-ID: <1389017367.5891.13.camel@jlt4.sipsolutions.net> (sfid-20140106_150946_523453_B71385B4)
+Subject: Re: BUG: build fail due to dependency issue (LIB80211_CRYPT_*
+ failed to depend on LIB80211)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Mohr <andi@lisas.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 15:09:27 +0100
+In-Reply-To: <20140106140103.GA24241@rhlx01.hs-esslingen.de> (sfid-20140106_150647_318044_741BFBBB)
+References: <20140106140103.GA24241@rhlx01.hs-esslingen.de>
+	 (sfid-20140106_150647_318044_741BFBBB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   drivers/bcma/driver_chipcommon_sflash.c
-drivers/bcma/driver_chipcommon_sflash.c:41:11: warning: Using plain integer as NULL pointer
-drivers/bcma/driver_chipcommon_sflash.c:59:11: warning: Using plain integer as NULL pointer
-drivers/bcma/driver_chipcommon_sflash.c:70:11: warning: Using plain integer as NULL pointer
+On Mon, 2014-01-06 at 15:01 +0100, Andreas Mohr wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon_sflash.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> config LIB80211
+>         tristate
 
-diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
-index 4d07cce..7e11ef4 100644
---- a/drivers/bcma/driver_chipcommon_sflash.c
-+++ b/drivers/bcma/driver_chipcommon_sflash.c
-@@ -38,7 +38,7 @@ static const struct bcma_sflash_tbl_e bcma_sflash_st_tbl[] = {
- 	{ "M25P32", 0x15, 0x10000, 64, },
- 	{ "M25P64", 0x16, 0x10000, 128, },
- 	{ "M25FL128", 0x17, 0x10000, 256, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static const struct bcma_sflash_tbl_e bcma_sflash_sst_tbl[] = {
-@@ -56,7 +56,7 @@ static const struct bcma_sflash_tbl_e bcma_sflash_sst_tbl[] = {
- 	{ "SST25VF016", 0x41, 0x1000, 512, },
- 	{ "SST25VF032", 0x4a, 0x1000, 1024, },
- 	{ "SST25VF064", 0x4b, 0x1000, 2048, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static const struct bcma_sflash_tbl_e bcma_sflash_at_tbl[] = {
-@@ -67,7 +67,7 @@ static const struct bcma_sflash_tbl_e bcma_sflash_at_tbl[] = {
- 	{ "AT45DB161", 0x2c, 512, 4096, },
- 	{ "AT45DB321", 0x34, 512, 8192, },
- 	{ "AT45DB642", 0x3c, 1024, 8192, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static void bcma_sflash_cmd(struct bcma_drv_cc *cc, u32 opcode)
--- 
-1.7.10.4
+> config LIB80211_CRYPT_WEP
+>         tristate
+> 
+> config LIB80211_CRYPT_CCMP
+>         tristate
+> 
+> config LIB80211_CRYPT_TKIP
+>         tristate
+
+>     make menuconfig
+> showed these three crypt options rather very prominently,
+
+Well, then your 'make menuconfig' is somehow broken - on mainline
+options that have no prompt are not shown, and indeed 'make menuconfig'
+on the current mainline kernel confirms that those options are not
+possible to select manually.
+
+johannes
+
 
