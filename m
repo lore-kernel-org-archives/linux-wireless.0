@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:42576 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaAJQZn (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:23227 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753353AbaAFJUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 11:25:43 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH IW] util: parse NL80211_CMD_CHANNEL_SWITCH
-Date: Fri, 10 Jan 2014 18:25:37 +0200
-Message-Id: <1389371137-30282-1-git-send-email-luca@coelho.fi> (sfid-20140110_172546_697804_29522EF2)
+	Mon, 6 Jan 2014 04:20:45 -0500
+Date: Mon, 6 Jan 2014 10:20:25 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Julia Lawall <julia.lawall@lip6.fr>, Joe Perches <joe@perches.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+In-Reply-To: <1388999220.5891.3.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.DEB.2.10.1401061014430.2079@hadrien> (sfid-20140106_102119_362246_0DFEC71D)
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>   <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>   <1388429761.4410.1.camel@jlt4.sipsolutions.net>   <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>  
+ <1388438724.4573.2.camel@jlt4.sipsolutions.net>   <20131230215701.GA4938@khazad-dum.debian.net>   <1388445188.18164.0.camel@jlt4.sipsolutions.net>   <1388445422.26796.38.camel@joe-AO722>   <alpine.DEB.2.10.1401060947550.2079@hadrien>  <1388998750.5808.43.camel@joe-AO722>
+  <alpine.DEB.2.10.1401061001340.2079@hadrien> <1388999220.5891.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Mon, 6 Jan 2014, Johannes Berg wrote:
 
-Add the NL80211_CMD_CHANNEL_SWITCH definition to the nl80211 commands
-array so that it prints out something useful in the phy info.
+> On Mon, 2014-01-06 at 10:04 +0100, Julia Lawall wrote:
+>
+> > OK, the question was expressed badly.  Is there any way to use the value
+> > to trigger an action at build time?  The only way I kow to trigger an
+> > action is with #error, but #error is processed by cpp, which doesn't know
+> > about the size of types.
+>
+> That's exactly BUILD_BUG_ON(), I believe.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- util.c | 1 +
- 1 file changed, 1 insertion(+)
+Maybe BUILD_BUG_ON_ZERO?  It's goal seems to be to return an integer,
+which could then be used as an array size in a dummy structure.  The
+structure declaration would not generate any code.  The structure would
+have to have a name, thoough.
 
-diff --git a/util.c b/util.c
-index 4542749..3233743 100644
---- a/util.c
-+++ b/util.c
-@@ -248,6 +248,7 @@ static const char *commands[NL80211_CMD_MAX + 1] = {
- 	[NL80211_CMD_FT_EVENT] = "ft_event",
- 	[NL80211_CMD_CRIT_PROTOCOL_START] = "crit_protocol_start",
- 	[NL80211_CMD_CRIT_PROTOCOL_STOP] = "crit_protocol_stop",
-+	[NL80211_CMD_CHANNEL_SWITCH] = "channel_switch",
- };
- 
- static char cmdbuf[100];
--- 
-1.8.5.2
-
+julia
