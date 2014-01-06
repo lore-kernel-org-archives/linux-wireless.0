@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54229 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156AbaAZNlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 08:41:10 -0500
-Received: from [192.168.1.100] ([93.196.93.204]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0Lkfii-1VXGKM2VL2-00aZU4 for
- <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2014 14:41:09 +0100
-Message-ID: <52E51061.9090006@rempel-privat.de> (sfid-20140126_144114_143906_7EEE4428)
-Date: Sun, 26 Jan 2014 14:40:49 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:7149 "EHLO
+	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751218AbaAFJEs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 04:04:48 -0500
+Date: Mon, 6 Jan 2014 10:04:28 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Joe Perches <joe@perches.com>
+cc: Julia Lawall <julia.lawall@lip6.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+In-Reply-To: <1388998750.5808.43.camel@joe-AO722>
+Message-ID: <alpine.DEB.2.10.1401061001340.2079@hadrien> (sfid-20140106_100527_728269_CA46B66A)
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  <1388429761.4410.1.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
+ <1388438724.4573.2.camel@jlt4.sipsolutions.net>  <20131230215701.GA4938@khazad-dum.debian.net>  <1388445188.18164.0.camel@jlt4.sipsolutions.net>  <1388445422.26796.38.camel@joe-AO722>  <alpine.DEB.2.10.1401060947550.2079@hadrien>
+ <1388998750.5808.43.camel@joe-AO722>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 0/5] eliminate some ath9k_htc code
-References: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
-In-Reply-To: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, 6 Jan 2014, Joe Perches wrote:
 
-Please do not apply this patch set, it will need some changes.
+> On Mon, 2014-01-06 at 09:48 +0100, Julia Lawall wrote:
+> > Is there any way to get sizeof evaluated at build time?
+>
+> I'm confused a bit by what you want to accomplish.
 
-Am 20.01.2014 19:48, schrieb Oleksij Rempel:
-> Ath9k_htc has too match outdated copy/paste from ath9k.
->=20
-> This patch set trying to remove some of it and make some function commo=
-n
-> to both drivers.
->=20
-> Oleksij Rempel (5):
->   ath: add last_rssi to ath_common
->   ath9k: move ath9k_process_rssi to common.c
->   ath9k: move ath9k_process_rate to common.c
->   ath9k: move ath9k_rx_accept to common.c
->   ath9k_htc: rework ath9k_rx_prepare and make use of common funcs
->=20
->  drivers/net/wireless/ath/ath.h                |   2 +
->  drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
->  drivers/net/wireless/ath/ath9k/common.c       | 192 ++++++++++++++++++=
-+++++
->  drivers/net/wireless/ath/ath9k/common.h       |  14 ++
->  drivers/net/wireless/ath/ath9k/htc.h          |   1 -
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 149 ++++++------------=
+To check that a field that is an argument od ether_addr_equal_64bits is
+a sufficient distance from the end of the structure.
 
->  drivers/net/wireless/ath/ath9k/init.c         |   2 +-
->  drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
->  drivers/net/wireless/ath/ath9k/main.c         |   2 +-
->  drivers/net/wireless/ath/ath9k/recv.c         | 211 ++----------------=
---------
->  12 files changed, 270 insertions(+), 315 deletions(-)
->=20
+> Except for variable length arrays, isn't sizeof always
+> evaluated at build time?
 
+OK, the question was expressed badly.  Is there any way to use the value
+to trigger an action at build time?  The only way I kow to trigger an
+action is with #error, but #error is processed by cpp, which doesn't know
+about the size of types.
 
---=20
-Regards,
-Oleksij
+julia
 
-
---0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlLlEHEACgkQHwImuRkmbWm5rgD9Gn3PH/kgzlYM9ZPQijkyMwtt
-lyyHeVst4yKN6XI1uqEA+wVGP3GIJ587Uv055VO+xCVxKRHyphFtSmTzAG3PAtRT
-=1ZJu
------END PGP SIGNATURE-----
-
---0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O--
+> 6.5.3.4 The sizeof operator
+> Constraints
+> []
+> 2 The sizeof operator yields the size (in bytes) of its operand, which may be an
+> expression or the parenthesized name of a type. The size is determined from the type of
+> the operand. The result is an integer. If the type of the operand is a variable length array
+> type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an
+> integer constant.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
