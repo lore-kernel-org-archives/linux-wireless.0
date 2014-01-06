@@ -1,80 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25474 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752346AbaAZKY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 05:24:59 -0500
-Message-ID: <52E4E21F.2040307@redhat.com> (sfid-20140126_112503_326307_D92C5B6E)
-Date: Sun, 26 Jan 2014 11:23:27 +0100
-From: Hans de Goede <hdegoede@redhat.com>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>, linux-sunxi@googlegroups.com
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com>
-In-Reply-To: <52E4CCFF.1020200@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:42947 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbaAFOsG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 09:48:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: clean up netdev debugfs macros a bit
+Date: Mon,  6 Jan 2014 15:48:00 +0100
+Message-Id: <1389019680-29417-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_154810_216544_1CBBA69C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On 01/26/2014 09:53 AM, Arend van Spriel wrote:
-> On 01/24/2014 05:34 PM, Hans de Goede wrote:
->> Hi,
->>
->> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
->>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
->>>> Hi,
->>>>
->>>> I've been working on updating sunxi-devel to include more
->>>> recent versions if your gmac patches, as well as adding support
->>>> for the wifi + bluetooth found on the cubietruck.
->>>>
->>>> Here is my current work on this:
->>>>
->>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
->>>>
->>>> It is close to working, but unfortunately it does not work,
->>>> here is what I get in dmesg when I modprove the module:
->>>>
->>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
->>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
->>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
->>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>> [  100.322508] usbcore: registered new interface driver brcmfmac
->>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>> already: status (1)
->>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>> already: status (1)
->>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
->>>> already: status (1)
->>>
->>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can have
->>> a look.
->>
->> I've captured a log with these flags until the first "Scanning already"
->> message, you can find it here:
->
-> Bedankt, Hans
->
-> Looking at the log it looks more or less ok. wpa_supplicant (assume you
-> use that) first does three regular scans which end with no APs found.
-> Not sure why that happens unless you are in a shielded room :-) After
-> those scans wpa_supplicant tries to tell the device to do a so-called
-> scheduled scan. Basically, it is a scan offload. However, the driver
-> still thinks there is a regular scan ongoing. This needs to be
-> investigated more.
+Clean up the file macros a bit and use that to remove the
+unnecessary format function for the tkip MIC test file
+that really is write-only.
 
-Thanks for looking into this. I've nothing scheduled this entire Sunday
-except working on hobby projects. If there is anything I can do to help,
-you can find me in #linux-sunxi on freenode irc. My nick is hansg.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_netdev.c | 60 ++++++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 27 deletions(-)
 
-I would really like to get this working, so feel free to poke me to run
-any tests / debug log gathering exercises you think will be helpful.
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 04b5a14..b62cbe8 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -133,7 +133,15 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 			 jiffies_to_msecs(sdata->field));		\
+ }
+ 
+-#define __IEEE80211_IF_FILE(name, _write)				\
++#define _IEEE80211_IF_FILE_OPS(name, _read, _write)			\
++static const struct file_operations name##_ops = {			\
++	.read = (_read),						\
++	.write = (_write),						\
++	.open = simple_open,						\
++	.llseek = generic_file_llseek,					\
++}
++
++#define _IEEE80211_IF_FILE_R_FN(name)					\
+ static ssize_t ieee80211_if_read_##name(struct file *file,		\
+ 					char __user *userbuf,		\
+ 					size_t count, loff_t *ppos)	\
+@@ -141,28 +149,34 @@ static ssize_t ieee80211_if_read_##name(struct file *file,		\
+ 	return ieee80211_if_read(file->private_data,			\
+ 				 userbuf, count, ppos,			\
+ 				 ieee80211_if_fmt_##name);		\
+-}									\
+-static const struct file_operations name##_ops = {			\
+-	.read = ieee80211_if_read_##name,				\
+-	.write = (_write),						\
+-	.open = simple_open,						\
+-	.llseek = generic_file_llseek,					\
+ }
+ 
+-#define __IEEE80211_IF_FILE_W(name)					\
++#define _IEEE80211_IF_FILE_W_FN(name)					\
+ static ssize_t ieee80211_if_write_##name(struct file *file,		\
+ 					 const char __user *userbuf,	\
+ 					 size_t count, loff_t *ppos)	\
+ {									\
+ 	return ieee80211_if_write(file->private_data, userbuf, count,	\
+ 				  ppos, ieee80211_if_parse_##name);	\
+-}									\
+-__IEEE80211_IF_FILE(name, ieee80211_if_write_##name)
++}
++
++#define IEEE80211_IF_FILE_R(name)					\
++	_IEEE80211_IF_FILE_R_FN(name)					\
++	_IEEE80211_IF_FILE_OPS(name, ieee80211_if_read_##name, NULL)
++
++#define IEEE80211_IF_FILE_W(name)					\
++	_IEEE80211_IF_FILE_W_FN(name)					\
++	_IEEE80211_IF_FILE_OPS(name, NULL, ieee80211_if_write_##name)
+ 
++#define IEEE80211_IF_FILE_RW(name)					\
++	_IEEE80211_IF_FILE_R_FN(name)					\
++	_IEEE80211_IF_FILE_W_FN(name)					\
++	_IEEE80211_IF_FILE_OPS(name, ieee80211_if_read_##name,		\
++			       ieee80211_if_write_##name)
+ 
+ #define IEEE80211_IF_FILE(name, field, format)				\
+-		IEEE80211_IF_FMT_##format(name, field)			\
+-		__IEEE80211_IF_FILE(name, NULL)
++	IEEE80211_IF_FMT_##format(name, field)				\
++	IEEE80211_IF_FILE_R(name)
+ 
+ /* common attributes */
+ IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
+@@ -199,7 +213,7 @@ ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
+ 
+ 	return len;
+ }
+-__IEEE80211_IF_FILE(hw_queues, NULL);
++IEEE80211_IF_FILE_R(hw_queues);
+ 
+ /* STA attributes */
+ IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
+@@ -275,14 +289,7 @@ static ssize_t ieee80211_if_parse_smps(struct ieee80211_sub_if_data *sdata,
+ 
+ 	return -EINVAL;
+ }
+-
+-__IEEE80211_IF_FILE_W(smps);
+-
+-static ssize_t ieee80211_if_fmt_tkip_mic_test(
+-	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+-{
+-	return -EOPNOTSUPP;
+-}
++IEEE80211_IF_FILE_RW(smps);
+ 
+ static ssize_t ieee80211_if_parse_tkip_mic_test(
+ 	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
+@@ -349,8 +356,7 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
+ 
+ 	return buflen;
+ }
+-
+-__IEEE80211_IF_FILE_W(tkip_mic_test);
++IEEE80211_IF_FILE_W(tkip_mic_test);
+ 
+ static ssize_t ieee80211_if_fmt_uapsd_queues(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+@@ -378,7 +384,7 @@ static ssize_t ieee80211_if_parse_uapsd_queues(
+ 
+ 	return buflen;
+ }
+-__IEEE80211_IF_FILE_W(uapsd_queues);
++IEEE80211_IF_FILE_RW(uapsd_queues);
+ 
+ static ssize_t ieee80211_if_fmt_uapsd_max_sp_len(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+@@ -406,7 +412,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
+ 
+ 	return buflen;
+ }
+-__IEEE80211_IF_FILE_W(uapsd_max_sp_len);
++IEEE80211_IF_FILE_RW(uapsd_max_sp_len);
+ 
+ /* AP attributes */
+ IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+@@ -419,7 +425,7 @@ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ 	return scnprintf(buf, buflen, "%u\n",
+ 			 skb_queue_len(&sdata->u.ap.ps.bc_buf));
+ }
+-__IEEE80211_IF_FILE(num_buffered_multicast, NULL);
++IEEE80211_IF_FILE_R(num_buffered_multicast);
+ 
+ /* IBSS attributes */
+ static ssize_t ieee80211_if_fmt_tsf(
+@@ -470,7 +476,7 @@ static ssize_t ieee80211_if_parse_tsf(
+ 
+ 	return buflen;
+ }
+-__IEEE80211_IF_FILE_W(tsf);
++IEEE80211_IF_FILE_RW(tsf);
+ 
+ 
+ /* WDS attributes */
+-- 
+1.8.5.1
 
-Regards,
-
-Hans
