@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36807 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754987AbaAHIXZ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6407 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608AbaAFLk7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 03:23:25 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
-References: <cover.1389103215.git.agordeev@redhat.com>
-	<dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
-Date: Wed, 8 Jan 2014 10:23:18 +0200
-In-Reply-To: <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
-	(Alexander Gordeev's message of "Tue, 7 Jan 2014 19:05:41 +0100")
-Message-ID: <87txdehog9.fsf@kamboji.qca.qualcomm.com> (sfid-20140108_092330_913119_92A894D4)
+	Mon, 6 Jan 2014 06:40:59 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 09/15] brcmfmac: enable watchdog when bus initialization is complete
+Date: Mon, 6 Jan 2014 12:40:44 +0100
+Message-ID: <1389008450-28529-10-git-send-email-arend@broadcom.com> (sfid-20140106_124132_687592_88ECA832)
+In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexander Gordeev <agordeev@redhat.com> writes:
+Change condition in brcmf_sdio_wd_timer() function to program
+watchdog only when in BRCMF_BUS_DATA state. This avoids watchdog
+being active during initialization. During initialization the
+SDIO save&restore capability is determined which affect the
+bus sleep mechanism used in watchdog thread.
 
-> This update also fixes a stylistic (naming and messaging only)
-> confusion of MSI-X vs multiple MSIs which are not the same.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks good to me.
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Do you want me to take this patch to my ath.git tree or how were you
-planning to handle it?
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index ae5f040..124f5e8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -4105,7 +4105,7 @@ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
+ 	}
+ 
+ 	/* don't start the wd until fw is loaded */
+-	if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN)
++	if (bus->sdiodev->bus_if->state != BRCMF_BUS_DATA)
+ 		return;
+ 
+ 	if (wdtick) {
 -- 
-Kalle Valo
+1.7.10.4
+
