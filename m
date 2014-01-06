@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25661 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752416AbaARJl7 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:9254 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbaAFJac (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 04:41:59 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Julien Massot <jmassot@aldebaran-robotics.com>
-CC: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath6kl: Fix Tx credits management for ar6004 usb
-References: <1389034368-5370-1-git-send-email-jmassot@aldebaran-robotics.com>
-Date: Sat, 18 Jan 2014 11:41:53 +0200
-In-Reply-To: <1389034368-5370-1-git-send-email-jmassot@aldebaran-robotics.com>
-	(Julien Massot's message of "Mon, 6 Jan 2014 19:52:46 +0100")
-Message-ID: <87sislocda.fsf@kamboji.qca.qualcomm.com> (sfid-20140118_104245_711750_80EBA7F0)
+	Mon, 6 Jan 2014 04:30:32 -0500
+Received: from [10.176.68.141] (unknown [10.176.68.141])	by
+ mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 262C3207C0	for
+ <linux-wireless@vger.kernel.org>; Mon,  6 Jan 2014 01:30:30 -0800 (PST)
+Message-ID: <52CA77B5.5060100@broadcom.com> (sfid-20140106_103040_059390_26262C87)
+Date: Mon, 6 Jan 2014 10:30:29 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: py80211 update on github
+References: <51D49027.9010803@broadcom.com>
+In-Reply-To: <51D49027.9010803@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julien Massot <jmassot@aldebaran-robotics.com> writes:
+On 07/03/2013 10:57 PM, Arend van Spriel wrote:
+> A common say in Linux arena is "when you have an itch, just scratch it".
+> My itch is that tools like ifconfig and iw are great, but in an
+> automated test environment it kind of sucks to parse output, which is
+> confirmed by blurb from iw: "Do NOT screenscrape this tool, we don't
+> consider its output stable.".
 
-> By stressing the communication with different stream, iperf, ping,
-> and web browsing, the transmission is stuck after a while. (5-10 minutes)
->
-> The driver doesn't update correctly the tx credit,
-> and the transmission becomes very slow.
->
-> The ping latency raise to 20 secs, and finally stop with
-> "no buffer space available".
->
-> The first patch fixes a babble error in Rx message:
-> "ath6kl: ath6kl_usb_recv_complete: recv pipe: 5, stat:-75, len:1536 urb:0xffff8802010dad80".
->
-> The second patch decreases the Rx read threshold to make sure we read
-> the tx credit report as soon as possible.
->
-> Julien Massot (2):
->   ath6kl: increase usb rx buffer size to 4096
->   ath6kl: set rx urb count threshold to 1
+In the christmas holiday I tinkered a bit more on py80211. It comes with
+a utility to extract definitions and netlink policies from the nl80211
+source files. What is currently on github is in prototype state. It can
+retrieve all wiphy information including band, frequency and rate
+information. It relies on policy information and it turned out that not
+all attributes are properly initialized in nl80211_policy. One that I
+added manually is NL80211_ATTR_SUPPORTED_IFTYPES, which should actually
+be typed as NLA_NESTED. There are other attributes that are not covered yet.
 
-Thanks, both patches applied.
+> 
+> https://github.com/arend/py80211
+> 
 
--- 
-Kalle Valo
+The source files are found in the github repository. It has two
+branches. The master branch is based on 3.12.6 and I intend to follow
+the kernel releases on that. The wl-next branch is based on the
+wireless-next repository.
+
+Regards,
+Arend
