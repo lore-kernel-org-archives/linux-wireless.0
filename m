@@ -1,36 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18263 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbaAHJvH (ORCPT
+Received: from li674-96.members.linode.com ([212.71.239.96]:43897 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751063AbaAFILy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:51:07 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 0/3] wil6210 patches
-Date: Wed, 8 Jan 2014 11:50:46 +0200
-Message-ID: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140108_105113_837751_A7EE1DBC)
+	Mon, 6 Jan 2014 03:11:54 -0500
+Date: Mon, 6 Jan 2014 10:11:51 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC] cfg80211: Advertise maximum associated STAs in AP mode
+Message-ID: <20140106081151.GA1613@w1.fi> (sfid-20140106_091158_593936_5F478FF0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Small set of ready to integration patches.
+This allows drivers to advertise the maximum number of associated
+stations they support in AP mode (including P2P GO). User space
+applications can use this for cleaner way of handling the limit (e.g.,
+hostapd rejecting IEEE 802.11 authentication without manual
+configuration of the limit) or to figure out what type of use cases can
+be executed with multiple devices before trying and failing.
 
-- fix for IPv6 (Fix IP version indication for Tx csum offload)
-- performance improvements (2 other patches)
+Signed-off-by: Jouni Malinen <j@w1.fi>
+---
+ include/net/cfg80211.h       |    5 +++++
+ include/uapi/linux/nl80211.h |    5 +++++
+ net/wireless/nl80211.c       |    6 ++++++
+ 3 files changed, 16 insertions(+)
 
-Vladimir Kondratiev (3):
-  wil6210: interrupt moderation
-  wil6210: Fix IP version indication for Tx csum offload
-  wil6210: prefetch head of packet
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3553c3a..efa7af5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2890,6 +2890,9 @@ struct wiphy_vendor_command {
+  * @n_vendor_commands: number of vendor commands
+  * @vendor_events: array of vendor events supported by the hardware
+  * @n_vendor_events: number of vendor events
++ *
++ * @max_ap_assoc_sta: maximum number of associated stations supported in AP mode
++ *	(including P2P GO) or 0 to indicate no such limit is advertised
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -3005,6 +3008,8 @@ struct wiphy {
+ 	const struct nl80211_vendor_cmd_info *vendor_events;
+ 	int n_vendor_commands, n_vendor_events;
+ 
++	u16 max_ap_assoc_sta;
++
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 86b8888..28d3194 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1576,6 +1576,9 @@ enum nl80211_commands {
+  *	scans). If not included, the driver will use its default value. u32
+  *	attribute.
+  *
++ * @NL80211_ATTR_MAX_AP_ASSOC_STA: Device attribute that indicates how many
++ *	associated stations are supported in AP mode (including P2P GO); u32.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1910,6 +1913,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_MIN_CHANNEL_TIME,
+ 	NL80211_ATTR_MAX_CHANNEL_TIME,
+ 
++	NL80211_ATTR_MAX_AP_ASSOC_STA,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index caf2829..2fbb84d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1592,6 +1592,12 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 		    (nla_put_flag(msg, NL80211_ATTR_SUPPORT_5_MHZ) ||
+ 		     nla_put_flag(msg, NL80211_ATTR_SUPPORT_10_MHZ)))
+ 			goto nla_put_failure;
++
++		if (dev->wiphy.max_ap_assoc_sta &&
++		    nla_put_u32(msg, NL80211_ATTR_MAX_AP_ASSOC_STA,
++				dev->wiphy.max_ap_assoc_sta))
++			goto nla_put_failure;
++
+ 		state->split_start++;
+ 		break;
+ 	case 11:
+-- 
+1.7.9.5
 
- drivers/net/wireless/ath/wil6210/interrupt.c | 13 +++++++++++++
- drivers/net/wireless/ath/wil6210/txrx.c      |  8 ++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h   |  1 +
- 3 files changed, 20 insertions(+), 2 deletions(-)
 
 -- 
-1.8.3.2
-
+Jouni Malinen                                            PGP id EFC895FA
