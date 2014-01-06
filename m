@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:35815 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaAXK0q (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:37421 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754827AbaAFPcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 05:26:46 -0500
-Message-ID: <1390559202.19968.76.camel@porter.coelho.fi> (sfid-20140124_112648_881157_1847457D)
-Subject: Re: [PATCH-v2] nl80211: Fix bug in match set count calculation
-From: Luca Coelho <luca@coelho.fi>
+	Mon, 6 Jan 2014 10:32:35 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hq4so2877555wib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 07:32:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389021322.5891.25.camel@jlt4.sipsolutions.net>
+References: <1388869583-2767-1-git-send-email-chaitanya.mgit@gmail.com>
+ <1389019739.5891.16.camel@jlt4.sipsolutions.net> <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com>
+ <1389021322.5891.25.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 6 Jan 2014 21:02:13 +0530
+Message-ID: <CABPxzY+En=1GxfBWHYgaSYSLv61MMYiFHz=hnJnsGnfBWpBJSQ@mail.gmail.com> (sfid-20140106_163238_421834_DBF63FCA)
+Subject: Re: [PATCH] mac80211: Fix the buffer length in debugfs for smps
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Raja Mani <rmani@qti.qualcomm.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 24 Jan 2014 12:26:42 +0200
-In-Reply-To: <1390555312.4257.35.camel@jlt4.sipsolutions.net>
-References: <1390476858-4833-1-git-send-email-rmani@qti.qualcomm.com>
-	 <1390555312.4257.35.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-24 at 10:21 +0100, Johannes Berg wrote:
-> On Thu, 2014-01-23 at 17:04 +0530, Raja Mani wrote:
-> > Match set count is calculated in nl80211_start_sched_scan() by counting
-> > each attr available in NL80211_ATTR_SCHED_SCAN_MATCH. Some cases, RSSI
-> > threshold limit NL80211_SCHED_SCAN_MATCH_ATTR_RSSI attr also can come
-> > from user space along with NL80211_SCHED_SCAN_MATCH_ATTR_SSID attr.
-> > In such cases, exiting code counts NL80211_SCHED_SCAN_MATCH_ATTR_RSSI
-> > attr also as one of SSID and leads extra memory allocation for match set
-> > array (request->match_sets).
-> > 
-> > Counting only NL80211_SCHED_SCAN_MATCH_ATTR_RSSI attr will help nl80211 to
-> > allocate exact memory needed for match set array and also driver can know
-> > the exact valid SSID available in match set array.
-> 
-> Much better now. I still think you should explain *why* this is a
-> problem. It's not obvious at first glance that the sched scan match
-> thing is actually completely stupid, allowing the RSSI attribute in the
-> nested thing but then only using a single one of it ... Luca, any ideas
-> about that part? Was something else intended?
+On Mon, Jan 6, 2014 at 8:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2014-01-06 at 20:35 +0530, Krishna Chaitanya wrote:
+>> On Mon, Jan 6, 2014 at 8:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Sun, 2014-01-05 at 02:36 +0530, Chaitanya T K wrote:
+>> >> This was blocking sending SMPS action frames
+>> >> through debugfs.
+>> >
+>> > I don't see any issue here, explain.
+>> >
+>> > johannes
+>> >
+>> buflen includes the new line character as well, hence the comparison
+>> strncmp fails for all combiantions.
+>>
+>> echo "static" > ieee80211/phyX/netdev\:wlanX/smps
+>> Then
+>>
+>> buf=static\n
+>> buflen=7
+>>
+>> But the comparison is with "static" which doesn't include "\n"
+>> hence the comparison fails.
+>
+> Err, ok, so you can just do "echo -n static", right?
+>
+> And then your patch breaks the way it currently works, which is about
+> the worst you can do.
+>
+Ok, if one works other fails.
 
-As discussed on IRC, the problem was the implementation of the RSSI
-attribute.  It should have been included in every matchset (ie. one for
-each matchset that contains a BSSI attribute) to have the desired
-effect.
-
-Looked at your other patch and it looks like a good wait to solve the
-problem, while keeping backwards compatibility.
-
---
-Luca.
-
+So instead why cant we use strlen(local_string)
+instead of using buflen(remote). That way we can make sure we only
+compare the characters we need and leave out the extra ones.
