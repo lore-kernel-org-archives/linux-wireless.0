@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:19835 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaAWJtE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41926 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753429AbaAFJHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:49:04 -0500
-Message-ID: <52E0E586.7050806@huawei.com> (sfid-20140123_104913_779178_CDA84F1E)
-Date: Thu, 23 Jan 2014 17:48:54 +0800
-From: Zhao Hongjiang <zhaohongjiang@huawei.com>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <zhousiyi@huawei.com>
-Subject: Get multiple ip addresses by dhcp for wireless card
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 6 Jan 2014 04:07:11 -0500
+Message-ID: <1388999220.5891.3.camel@jlt4.sipsolutions.net> (sfid-20140106_100749_851549_63D9AA9B)
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Joe Perches <joe@perches.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 10:07:00 +0100
+In-Reply-To: <alpine.DEB.2.10.1401061001340.2079@hadrien>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
+	  <1388429761.4410.1.camel@jlt4.sipsolutions.net>
+	  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
+	  <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+	  <20131230215701.GA4938@khazad-dum.debian.net>
+	  <1388445188.18164.0.camel@jlt4.sipsolutions.net>
+	  <1388445422.26796.38.camel@joe-AO722>
+	  <alpine.DEB.2.10.1401060947550.2079@hadrien>
+	 <1388998750.5808.43.camel@joe-AO722>
+	 <alpine.DEB.2.10.1401061001340.2079@hadrien>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2014-01-06 at 10:04 +0100, Julia Lawall wrote:
 
-Is it possible for one station to get multiple ip addresses from AP/Wireless
-router by dhcp? I had tried to add one or more virtual interface for
-phy0 (wlan0, wlan1, wlan2,etc), but only wlan0 can get ip address from AP. 
-the following is the steps:
+> OK, the question was expressed badly.  Is there any way to use the value
+> to trigger an action at build time?  The only way I kow to trigger an
+> action is with #error, but #error is processed by cpp, which doesn't know
+> about the size of types.
 
-/bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
-/bin/wpa_cli -i wlan0 -p /wlan0
->add_network
->set_network 0 ssid "APabc" 
->set_network 0 psk "1111111" 
->enable_network 0
+That's exactly BUILD_BUG_ON(), I believe.
 
-iw wlan0 interface add wlan1 type station 4addr on
-ip link set wlan1 up
-dhcpcd -ABKL wlan0 #works, can get ip
-dhcpcd -ABKL wlan1 #cannot work
+johannes
+
 
