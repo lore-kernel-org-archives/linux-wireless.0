@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f178.google.com ([209.85.128.178]:38878 "EHLO
-	mail-ve0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592AbaAQRnx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbaAFPzV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 12:43:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <201401171747.46332.arnd@arndb.de>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
- <1389941251-32692-5-git-send-email-wens@csie.org> <201401171747.46332.arnd@arndb.de>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Sat, 18 Jan 2014 01:43:31 +0800
-Message-ID: <CAGb2v67UKiyfJbKZ_Frk3OwZupMPoA2Ck3Hj2zsRFXBQPztavg@mail.gmail.com> (sfid-20140117_184415_076071_24C865B5)
-Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree <devicetree@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 6 Jan 2014 10:55:21 -0500
+Message-ID: <1389023718.5891.31.camel@jlt4.sipsolutions.net> (sfid-20140106_165526_044576_13E01FF1)
+Subject: Re: [PATCH] mac80211: Fix the buffer length in debugfs for smps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 06 Jan 2014 16:55:18 +0100
+In-Reply-To: <CABPxzY+En=1GxfBWHYgaSYSLv61MMYiFHz=hnJnsGnfBWpBJSQ@mail.gmail.com> (sfid-20140106_163234_617156_9CE8C726)
+References: <1388869583-2767-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1389019739.5891.16.camel@jlt4.sipsolutions.net>
+	 <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com>
+	 <1389021322.5891.25.camel@jlt4.sipsolutions.net>
+	 <CABPxzY+En=1GxfBWHYgaSYSLv61MMYiFHz=hnJnsGnfBWpBJSQ@mail.gmail.com>
+	 (sfid-20140106_163234_617156_9CE8C726)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 12:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 17 January 2014, Chen-Yu Tsai wrote:
->> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
->> new file mode 100644
->> index 0000000..8a07ea4
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
->> @@ -0,0 +1,26 @@
->> +GPIO controlled RFKILL devices
->> +
->> +Required properties:
->> +- compatible   : Must be "rfkill-gpio".
->> +- rfkill-name  : Name of RFKILL device
->> +- rfkill-type  : Type of RFKILL device: 1 for WiFi, 2 for BlueTooth
->> +- NAME_shutdown-gpios  : GPIO phandle to shutdown control
->> +                         (phandle must be the second)
->> +- NAME_reset-gpios     : GPIO phandle to reset control
->> +
->> +NAME must match the rfkill-name property. NAME_shutdown-gpios or
->> +NAME_reset-gpios, or both, must be defined.
->> +
->
-> I don't understand this part. Why do you include the name in the
-> gpios property, rather than just hardcoding the property strings
-> to "shutdown-gpios" and "reset-gpios"?
+On Mon, 2014-01-06 at 21:02 +0530, Krishna Chaitanya wrote:
+> On Mon, Jan 6, 2014 at 8:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Mon, 2014-01-06 at 20:35 +0530, Krishna Chaitanya wrote:
+> >> On Mon, Jan 6, 2014 at 8:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> > On Sun, 2014-01-05 at 02:36 +0530, Chaitanya T K wrote:
+> >> >> This was blocking sending SMPS action frames
+> >> >> through debugfs.
+> >> >
+> >> > I don't see any issue here, explain.
+> >> >
+> >> > johannes
+> >> >
+> >> buflen includes the new line character as well, hence the comparison
+> >> strncmp fails for all combiantions.
+> >>
+> >> echo "static" > ieee80211/phyX/netdev\:wlanX/smps
+> >> Then
+> >>
+> >> buf=static\n
+> >> buflen=7
+> >>
+> >> But the comparison is with "static" which doesn't include "\n"
+> >> hence the comparison fails.
+> >
+> > Err, ok, so you can just do "echo -n static", right?
+> >
+> > And then your patch breaks the way it currently works, which is about
+> > the worst you can do.
+> >
+> Ok, if one works other fails.
+> 
+> So instead why cant we use strlen(local_string)
+> instead of using buflen(remote). That way we can make sure we only
+> compare the characters we need and leave out the extra ones.
 
-This quirk is a result of how gpiod_get_index implements device tree
-lookup. You'll also notice that the shutdown GPIO must be the second
-phandle, as the driver uses indexed lookup to support ACPI cases.
-If con_id is given, it is prepended to "gpios" as the property string.
-con_id is also used as the label passed to gpiod_request, which is
-then shown in /sys/kernel/debug/gpio.
+It wouldn't fix the problem and would introduce a buffer overflow bug.
 
-I can do a seperate lookup for the device tree case, with or without
-fallback to platform lookup tables. Then the names can be "reset-gpio"
-and "shutdown-gpio". Need to promote gpiod_request to non-static so
-we can register usage of the gpio, to match non-dt code path.
+johannes
 
-Personally I prefer adding a "label" parameter to gpiod_get_index, so
-we can use a different name than con_id. con_id isn't used in the ACPI
-case, and is optional in platform lookup case. However device tree
-lookup is dependent on this. What I see is non-uniform behavior
-between the three. In my opinion this is undesirable, but I haven't
-come up with a good solution yet.
 
-About the property string, is the plural form required, even though we
-only want one?
-
-Thanks!
-
-ChenYu
-
-> The description of hte "rfkill-name" property seems to suggest
-> that you can only have one logical RFKILL device per device node,
-> so he names would not be ambiguous.
->
->         Arnd
