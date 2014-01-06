@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46622 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:42362 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753709AbaAWSpj (ORCPT
+	with ESMTP id S1754462AbaAFLXI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 13:45:39 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.82)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1W6PHV-0001go-4t
-	for linux-wireless@vger.kernel.org; Thu, 23 Jan 2014 19:45:37 +0100
-Message-ID: <1390502735.4142.37.camel@jlt4.sipsolutions.net> (sfid-20140123_194545_055216_6DABD349)
-Subject: Re: [PATCH] mac80211_hwsim: make P2P-Device support optional
+	Mon, 6 Jan 2014 06:23:08 -0500
+Message-ID: <1389007385.5891.9.camel@jlt4.sipsolutions.net> (sfid-20140106_122312_850698_1FE5EE59)
+Subject: Re: Exporting the TSF to userland
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 23 Jan 2014 19:45:35 +0100
-In-Reply-To: <1389794461-30686-1-git-send-email-johannes@sipsolutions.net> (sfid-20140115_150117_489379_FFA0449D)
-References: <1389794461-30686-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20140115_150117_489379_FFA0449D)
+To: Pierre Bourdon <delroth@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Jan 2014 12:23:05 +0100
+In-Reply-To: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com> (sfid-20131231_052532_890939_E8ECD40B)
+References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
+	 (sfid-20131231_052532_890939_E8ECD40B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-15 at 15:01 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2013-12-31 at 05:24 +0100, Pierre Bourdon wrote:
+> Hello linux-wireless,
 > 
-> When creating new devices, allow P2P-Device support to be
-> turned off to be able to test default behaviour with and
-> without the support.
+> I'm a developer of libdrc, a project that allows Linux computers to
+> control a Wii U GamePad. Because of how the device operates, our
+> library needs to be able to read the TSF value of the access point
+> device from userland.
 > 
-> Also add a module parameter for the default setting.
+> We currently have a hacky patch that works for our use cases, but it
+> would be a lot more convenient if that feature could be upstreamed.
+> What would be the best way to proceed?
 
-Applied.
+That patch ... let's say I think "hacky" is almost lauding it. :)
+
+sysfs is a really bad place for this too, no other wireless APIs use
+sysfs.
 
 johannes
 
