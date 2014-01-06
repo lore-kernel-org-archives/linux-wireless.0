@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40330 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:42173 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755111AbaAVKfD (ORCPT
+	with ESMTP id S1752491AbaAFKSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 05:35:03 -0500
+	Mon, 6 Jan 2014 05:18:12 -0500
+Message-ID: <1389003467.5891.5.camel@jlt4.sipsolutions.net> (sfid-20140106_111830_516062_C92AF75D)
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/7] mac80211: minstrel_ht: sample_table can be __read_mostly
-Date: Wed, 22 Jan 2014 11:34:57 +0100
-Message-Id: <1390386898-14316-7-git-send-email-johannes@sipsolutions.net> (sfid-20140122_113515_184509_D1F6D6C7)
-In-Reply-To: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
-References: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Joe Perches <joe@perches.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 11:17:47 +0100
+In-Reply-To: <alpine.DEB.2.10.1401061007160.2079@hadrien>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	   <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
+	   <1388429761.4410.1.camel@jlt4.sipsolutions.net>
+	   <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
+	   <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+	   <20131230215701.GA4938@khazad-dum.debian.net>
+	   <1388445188.18164.0.camel@jlt4.sipsolutions.net>
+	  <1388445422.26796.38.camel@joe-AO722>
+	  <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6>
+	  <52C2E8BA.6000800@candelatech.com>
+	  <alpine.DEB.2.10.1312311704320.2074@hadrien>
+	  <52C2F056.1020005@candelatech.com>
+	  <alpine.DEB.2.10.1312311732080.2074@hadrien>
+	 <1388999147.5891.2.camel@jlt4.sipsolutions.net>
+	 <alpine.DEB.2.10.1401061007160.2079@hadrien>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2014-01-06 at 10:09 +0100, Julia Lawall wrote:
 
-The sample table is initialized only once at module start, so
-is really __read_mostly. Additionally, the code to init it can
-be marked __init since it will never be needed again, it is
-likely automatically inlined into the __init function already
-by the compiler, so this doesn't really make a difference.
+> > BUILD_BUG_ON(sizeof(struct foo) - offsetof(struct foo, addr) < 8);
+> >
+> > with the user(s?) and that should catch the scenario I was worrying
+> > about?
+> 
+> OK, thanks.  That is what I had in mind.  But I was hoping to be able to
+> put it with the structure.  
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Right - you might be able to do that with BUILD_BUG_ON_ZERO() as you
+pointed out, I haven't looked at these macros in a while.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a6d6cc5..bccaf85 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -124,7 +124,7 @@ const struct mcs_group minstrel_mcs_groups[] = {
- 
- #define MINSTREL_CCK_GROUP	(ARRAY_SIZE(minstrel_mcs_groups) - 1)
- 
--static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES];
-+static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
- 
- static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
-@@ -1048,8 +1048,7 @@ static const struct rate_control_ops mac80211_minstrel_ht = {
- };
- 
- 
--static void
--init_sample_table(void)
-+static void __init init_sample_table(void)
- {
- 	int col, i, new_idx;
- 	u8 rnd[MCS_GROUP_RATES];
--- 
-1.8.5.1
+> Perhaps there is a way to make a macro that
+> expands to a dummy function that contains the BUILD_BUG_ON?  But I guess
+> that would waste space?
+> 
+> I think that 8 should be 16?
+
+No, that should be ETH_ALEN+2 really, I guess - it's not taking into
+account the size of the address member itself at all.
+
+johannes
+
 
