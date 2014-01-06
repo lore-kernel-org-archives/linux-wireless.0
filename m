@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:50361
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751911AbaAMPVp (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48267 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753123AbaAFPFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 10:21:45 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] brcmsmac: delete useless variable
-Date: Mon, 13 Jan 2014 17:17:26 +0100
-Message-Id: <1389629847-5330-4-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140113_162316_824642_304E11CA)
-In-Reply-To: <1389629847-5330-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1389629847-5330-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 6 Jan 2014 10:05:31 -0500
+Received: by mail-wg0-f44.google.com with SMTP id a1so15946043wgh.35
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 07:05:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389019739.5891.16.camel@jlt4.sipsolutions.net>
+References: <1388869583-2767-1-git-send-email-chaitanya.mgit@gmail.com> <1389019739.5891.16.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 6 Jan 2014 20:35:08 +0530
+Message-ID: <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com> (sfid-20140106_160534_610292_9874C03F)
+Subject: Re: [PATCH] mac80211: Fix the buffer length in debugfs for smps
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Mon, Jan 6, 2014 at 8:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2014-01-05 at 02:36 +0530, Chaitanya T K wrote:
+>> This was blocking sending SMPS action frames
+>> through debugfs.
+>
+> I don't see any issue here, explain.
+>
+> johannes
+>
+buflen includes the new line character as well, hence the comparison
+strncmp fails for all combiantions.
 
-Delete a variable that is at most only assigned to a constant, but never
-used otherwise.
+echo "static" > ieee80211/phyX/netdev\:wlanX/smps
+Then
 
-A simplified version of the semantic patch that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+buf=static\n
+buflen=7
 
-// <smpl>
-@@
-type T;
-identifier i;
-constant c;
-@@
-
--T i;
-<... when != i
--i = c;
-...>
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-I don't know whether the comment before the removed assignment should also
-be adjusted.
-
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8138f1c..9417cb5 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7108,7 +7108,6 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- 		     struct sk_buff *p,
- 		     struct ieee80211_rx_status *rx_status)
- {
--	int preamble;
- 	int channel;
- 	u32 rspec;
- 	unsigned char *plcp;
-@@ -7191,7 +7190,6 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- 			rx_status->rate_idx -= BRCMS_LEGACY_5G_RATE_OFFSET;
- 
- 		/* Determine short preamble and rate_idx */
--		preamble = 0;
- 		if (is_cck_rate(rspec)) {
- 			if (rxh->PhyRxStatus_0 & PRXS0_SHORTH)
- 				rx_status->flag |= RX_FLAG_SHORTPRE;
-
+But the comparison is with "static" which doesn't include "\n"
+hence the comparison fails.
