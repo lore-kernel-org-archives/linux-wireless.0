@@ -1,35 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45255 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752516AbaAWPKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 10:10:17 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: Re: [PATCH] mac80211_hwsim: add channel switch support
-References: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
-Date: Thu, 23 Jan 2014 17:10:14 +0200
-In-Reply-To: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Wed, 22 Jan 2014 11:51:39 +0100")
-Message-ID: <87k3dqn38p.fsf@purkki.adurom.net> (sfid-20140123_161022_207051_1D2947FD)
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:59020 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbaAFOGn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jan 2014 09:06:43 -0500
+Date: Mon, 6 Jan 2014 15:01:03 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: BUG: build fail due to dependency issue (LIB80211_CRYPT_* failed to
+ depend on LIB80211)
+Message-ID: <20140106140103.GA24241@rhlx01.hs-esslingen.de> (sfid-20140106_150647_318044_741BFBBB)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi,
 
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->
-> Advertise to mac80211 that we can do channel switch both
-> for STA and AP/GO.
-> After each beacon transmission check if CSA is done and
-> call ieee80211_csa_finish if needed.
->
-> Change-Id: I1cb34c04f533275522236381ae14b624bec35418
+just had the following non-satisfactory build result here
+(read: caused sizeable waste of time):
 
-Change id visible.
+
+  SORTEX  vmlinux
+  SYSMAP  System.map
+  Building modules, stage 2.
+  MODPOST 210 modules
+ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_wep.ko] undefined!
+ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_wep.ko] undefined!
+ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_tkip.ko] undefined!
+ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_tkip.ko] undefined!
+ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_ccmp.ko] undefined!
+ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_ccmp.ko] undefined!
+make[5]: *** [__modpost] Error 1
+make[4]: *** [modules] Error 2
+
+
+
+This is due to net/wireless/Kconfig:
+
+
+config LIB80211
+        tristate
+        default n
+        help
+          This options enables a library of common routines used
+          by IEEE802.11 wireless LAN drivers.
+
+          Drivers should select this themselves if needed.
+
+config LIB80211_CRYPT_WEP
+        tristate
+
+config LIB80211_CRYPT_CCMP
+        tristate
+
+config LIB80211_CRYPT_TKIP
+        tristate
+
+config LIB80211_DEBUG
+        bool "lib80211 debugging messages"
+        depends on LIB80211
+        default n
+        ---help---
+          You can enable this if you want verbose debugging messages
+          from lib80211.
+
+
+A
+    make menuconfig
+showed these three crypt options rather very prominently,
+yet with entry of LIB80211 proper nowhere to be seen,
+thus it was very easy to fall into the trap of "enabling"
+various crypto options, thereby "enabling" nice ultimate build failure.
+
+And as you can see above as well, LIB80211_DEBUG decided to be
+a law-abiding citizen, by caring to announce a proper dependency on LIB80211.
+
+
+Happened on OpenWrt's 3.10.24, and verified Kconfig status to still be identical on linux trunk.
+
+Thanks,
+
+Andreas Mohr
 
 -- 
-Kalle Valo
+GNU/Linux. It's not the software that's free, it's you.
