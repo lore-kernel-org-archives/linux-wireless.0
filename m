@@ -1,73 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18263 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755337AbaAHJvI (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53208 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766AbaAGJj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:51:08 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 1/3] wil6210: interrupt moderation
-Date: Wed, 8 Jan 2014 11:50:47 +0200
-Message-ID: <1389174649-14077-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140108_105114_433605_DBFBD4FB)
-In-Reply-To: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 7 Jan 2014 04:39:57 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Update WB335 PCI IDs
+Date: Tue,  7 Jan 2014 15:04:41 +0530
+Message-Id: <1389087281-4090-1-git-send-email-sujith@msujith.org> (sfid-20140107_104002_769073_5A89E092)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use hardware capabilities to limit IRQ generation to about 15 per msec
-It corresponds to about 7 packets/IRQ when running iperf with default
-parameters at 1.3Gbps
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Do not enable this feature in the sniffer (monitor)  mode, because
-interrupt moderation cause timestamp accuracy deterioration.
-For the sniffer flow, it is important to get precise timestamp.
+* Add new AR9565 1.0/1.0.1/1.1 IDs
+* Change Dell/Lenovo/Samsung cards to 2-Antenna with diversity.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 13 +++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h   |  1 +
- 2 files changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath9k/pci.c | 101 ++++++++++++++++++++++++++++-------
+ 1 file changed, 82 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 8205d3e..10919f9 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -156,6 +156,19 @@ void wil6210_enable_irq(struct wil6210_priv *wil)
- 	iowrite32(WIL_ICR_ICC_VALUE, wil->csr + HOSTADDR(RGF_DMA_EP_MISC_ICR) +
- 		  offsetof(struct RGF_ICR, ICC));
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index e9a5857..55724b0 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -412,6 +412,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 0x11AD, /* LITEON */
++			 0x06B2),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0842),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
+ 			 0x6671),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+@@ -424,6 +434,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 0x1B9A, /* XAVI */
+ 			 0x2812),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x1B9A, /* XAVI */
++			 0x28A1),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x218A),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
  
-+	/* interrupt moderation parameters */
-+	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR) {
-+		/* disable interrupt moderation for monitor
-+		 * to get better timestamp precision
-+		 */
-+		iowrite32(0, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-+	} else {
-+		iowrite32(WIL6210_ITR_TRSH,
-+			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
-+		iowrite32(BIT_DMA_ITR_CNT_CRL_EN,
-+			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-+	}
-+
- 	wil6210_unmask_irq_pseudo(wil);
- 	wil6210_unmask_irq_tx(wil);
- 	wil6210_unmask_irq_rx(wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index c4a5163..1f91eaf 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -39,6 +39,7 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
- #define WIL6210_MAX_CID		(8) /* HW limit */
- #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
-+#define WIL6210_ITR_TRSH	(10000) /* arbitrary - about 15 IRQs/msec */
+ 	/* WB335 1-ANT / Antenna Diversity */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+@@ -469,22 +489,17 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 0x11AD, /* LITEON */
+-			 0x0682),
++			 0x06A2),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+-			 PCI_VENDOR_ID_AZWAVE,
+-			 0x213A),
+-	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+-			 0x0036,
+-			 PCI_VENDOR_ID_LENOVO,
+-			 0x3026),
++			 0x11AD, /* LITEON */
++			 0x0682),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+-			 PCI_VENDOR_ID_LENOVO,
+-			 0x4026),
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x213A),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+@@ -504,37 +519,35 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_DELL,
+-			 0x020E),
++			 0x020C),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
  
- /* Hardware definitions begin */
+-	/* WB335 2-ANT */
++	/* WB335 2-ANT / Antenna-Diversity */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411A),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411B),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411C),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411D),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411E),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
+-
+-	/* WB335 2-ANT / Antenna-Diversity */
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_ATHEROS,
+@@ -562,11 +575,31 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0832),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0692),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2130),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x213B),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x2182),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 0x144F, /* ASKEY */
+ 			 0x7202),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -577,6 +610,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 0x1B9A, /* XAVI */
++			 0x28A2),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 0x185F, /* WNC */
+ 			 0x3027),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -590,6 +628,31 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 PCI_VENDOR_ID_FOXCONN,
+ 			 0xE07F),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_FOXCONN,
++			 0xE081),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x3026),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x4026),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_ASUSTEK,
++			 0x85F2),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_DELL,
++			 0x020E),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
  
+ 	/* PCI-E AR9565 (WB335) */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0036),
 -- 
-1.8.3.2
+1.8.5.2
 
