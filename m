@@ -1,74 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:65148 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbaAEHhF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jan 2014 02:37:05 -0500
-Received: by mail-la0-f46.google.com with SMTP id eh20so8989539lab.5
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 23:37:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P3PK60sfTK2HHsjssrVjHX-pCpv5oVepB2aXP9Qzh6AMQ@mail.gmail.com>
-References: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com>
-	<CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com>
-	<CABPxzYJ_iEdFVmyqMtpvzfVnyiMFR+ek8dfTjwRU0zoEBk5Dbw@mail.gmail.com>
-	<CANUX_P3PK60sfTK2HHsjssrVjHX-pCpv5oVepB2aXP9Qzh6AMQ@mail.gmail.com>
-Date: Sun, 5 Jan 2014 09:37:01 +0200
-Message-ID: <CANUX_P0f-SLc6GQ-t7y0O+OXOUcWmer1BrfeAt0zB7cYfLuVUg@mail.gmail.com> (sfid-20140105_083709_419877_D8019BC6)
-Subject: Re: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the
- interface loop.
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:51492 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750857AbaAGLLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jan 2014 06:11:08 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] mac80211: clean up garbage in comment
+Date: Tue,  7 Jan 2014 13:09:38 +0200
+Message-Id: <1389092979-11957-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140107_121131_613732_D8B188AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, Jan 5, 2014 at 9:21 AM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
->> On Sun, Jan 5, 2014 at 12:12 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>
->>> On Sat, Jan 4, 2014 at 11:24 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
->>> > The interface loop identifies the no of static and dynamic
->>> > smps chains, but overwrites their values across the VIF's
->>> > (assuming there are more than one, in my case its AP and STA
->>> > loopback), so the driver might not intimated about this update
->>> > of SMPS mode, is the value is same.
->>> >
->>> > So inform driver for every VIF.
->>> >
->>> > For Ex: STA's SMPS state is changed, but in the loop AP appears
->>> > at the last, SMPS state of AP is unchanged hence not intimated
->>> > to the driver.
->>> >
->>> > Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
->>> > ---
->>>
->>> But the dynamic / static chains number is a property of the channel
->>> context. If you have several vifs on the same channel context, the
->>> maximum number of dynamic / static chains will be assigned to the
->>> channel context. In short, I think that mac80211 already does the job
->>> of taking all the parameters into account and putting the right value
->>> into the channel context?
->>> I don't really see what bug you are trying to solve - could you please
->>> tell us exactly what is your configuration?
->>> What SMPS do you have for each interface and what dynamic / static
->>> chains settings does mac80211 end up with?
->>
->> Agree this looks good in channel context angle.
->>
->> Lets say we have two VIF's one AP and one STA and the driver doesn't
->> support channel context's so in that case the config will happen
->> through hw_config but the problem is hw_config is out side the loop
->> so the config will happen with the parameters of the last VIF, which
->> is incorrect.
->
-> Same applies if the driver doesn't support channel contexts. hw_config
-> will be called with the correct local->smps_mode based on the number
-> of channels required by each one of the vifs?
+Not clear how this landed here.
 
-s/channels/chains/
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/wpa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> I don't see why only the last vif will be taken into account: the loop
-> computes the maximum number of antenna requires by *all* the vifs.
-> What am I missing here?
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 0752f84..7ac88ff 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -127,7 +127,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 		 * APs with pairwise keys should never receive Michael MIC
+ 		 * errors for non-zero keyidx because these are reserved for
+ 		 * group keys and only the AP is sending real multicast
+-		 * frames in the BSS. (
++		 * frames in the BSS.
+ 		 */
+ 		return RX_DROP_UNUSABLE;
+ 	}
+-- 
+1.8.3.2
+
