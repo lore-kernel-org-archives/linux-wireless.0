@@ -1,140 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47167 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbaAGPYP (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58803 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbaAGMKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 10:24:15 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: clean up prepare_for_handlers() return value
-Date: Tue,  7 Jan 2014 16:24:11 +0100
-Message-Id: <1389108251-19311-1-git-send-email-johannes@sipsolutions.net> (sfid-20140107_162417_967806_8D93F92D)
+	Tue, 7 Jan 2014 07:10:52 -0500
+Date: Tue, 7 Jan 2014 13:10:51 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 10/13] wl1251: disable retry and ACK policy for injected
+ packets
+Message-ID: <20140107121051.GJ10836@amd.pavel.ucw.cz> (sfid-20140107_131055_329907_06CDD71D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: David Gnedt <david.gnedt@davizone.at>
 
-Using an int with 0/1 is not very common, make the function
-return a bool instead with the same values (false/true).
+Set the retry limit to 0 and disable the ACK policy for injected packets.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Pavel Machek <pavel@ucw.cz>
+
 ---
- net/mac80211/rx.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ti/wl1251/acx.c |    8 +++++++-
+ drivers/net/wireless/ti/wl1251/tx.c  |    7 ++++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8cb20d7..c24ca0d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3076,8 +3076,8 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 
- /* main receive path */
- 
--static int prepare_for_handlers(struct ieee80211_rx_data *rx,
--				struct ieee80211_hdr *hdr)
-+static bool prepare_for_handlers(struct ieee80211_rx_data *rx,
-+				 struct ieee80211_hdr *hdr)
- {
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct sk_buff *skb = rx->skb;
-@@ -3088,29 +3088,29 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
- 		if (!bssid && !sdata->u.mgd.use_4addr)
--			return 0;
-+			return false;
- 		if (!multicast &&
- 		    !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
- 			if (!(sdata->dev->flags & IFF_PROMISC) ||
- 			    sdata->u.mgd.use_4addr)
--				return 0;
-+				return false;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		}
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		if (!bssid)
--			return 0;
-+			return false;
- 		if (ether_addr_equal(sdata->vif.addr, hdr->addr2) ||
- 		    ether_addr_equal(sdata->u.ibss.bssid, hdr->addr2))
--			return 0;
-+			return false;
- 		if (ieee80211_is_beacon(hdr->frame_control)) {
--			return 1;
-+			return true;
- 		} else if (!ieee80211_bssid_match(bssid, sdata->u.ibss.bssid)) {
--			return 0;
-+			return false;
- 		} else if (!multicast &&
- 			   !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
- 			if (!(sdata->dev->flags & IFF_PROMISC))
--				return 0;
-+				return false;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		} else if (!rx->sta) {
- 			int rate_idx;
-@@ -3126,7 +3126,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 		if (!multicast &&
- 		    !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
- 			if (!(sdata->dev->flags & IFF_PROMISC))
--				return 0;
-+				return false;
- 
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		}
-@@ -3135,7 +3135,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 	case NL80211_IFTYPE_AP:
- 		if (!bssid) {
- 			if (!ether_addr_equal(sdata->vif.addr, hdr->addr1))
--				return 0;
-+				return false;
- 		} else if (!ieee80211_bssid_match(bssid, sdata->vif.addr)) {
- 			/*
- 			 * Accept public action frames even when the
-@@ -3145,26 +3145,26 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 			 */
- 			if (!multicast &&
- 			    !ether_addr_equal(sdata->vif.addr, hdr->addr1))
--				return 0;
-+				return false;
- 			if (ieee80211_is_public_action(hdr, skb->len))
--				return 1;
-+				return true;
- 			if (!ieee80211_is_beacon(hdr->frame_control))
--				return 0;
-+				return false;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		}
- 		break;
- 	case NL80211_IFTYPE_WDS:
- 		if (bssid || !ieee80211_is_data(hdr->frame_control))
--			return 0;
-+			return false;
- 		if (!ether_addr_equal(sdata->u.wds.remote_addr, hdr->addr2))
--			return 0;
-+			return false;
- 		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		if (!ieee80211_is_public_action(hdr, skb->len) &&
- 		    !ieee80211_is_probe_req(hdr->frame_control) &&
- 		    !ieee80211_is_probe_resp(hdr->frame_control) &&
- 		    !ieee80211_is_beacon(hdr->frame_control))
--			return 0;
-+			return false;
- 		if (!ether_addr_equal(sdata->vif.addr, hdr->addr1) &&
- 		    !multicast)
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
-@@ -3175,7 +3175,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 		break;
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index f772e62..8f420d0 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -943,12 +943,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
  	}
  
--	return 1;
-+	return true;
- }
+ 	/* configure one default (one-size-fits-all) rate class */
+-	acx->rate_class_cnt = 1;
++	acx->rate_class_cnt = 2;
+ 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
+ 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].aflags = 0;
  
- /*
--- 
-1.8.5.1
-
++	/* no-retry rate class */
++	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
++	acx->rate_class[1].short_retry_limit = 0;
++	acx->rate_class[1].long_retry_limit = 0;
++	acx->rate_class[1].aflags = 0;
++
+ 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+ 		wl1251_warning("Setting of rate policies failed: %d", ret);
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
+index 216334d..4516180 100644
+--- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
+ 	/* 802.11 packets */
+ 	tx_hdr->control.packet_type = 0;
+ 
+-	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
++	/* Also disable retry and ACK policy for injected packets */
++	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
++	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
++		tx_hdr->control.rate_policy = 1;
+ 		tx_hdr->control.ack_policy = 1;
++	}
+ 
+ 	tx_hdr->control.tx_complete = 1;
+ 
+@@ -422,6 +426,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    (result->status == TX_SUCCESS))
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 
