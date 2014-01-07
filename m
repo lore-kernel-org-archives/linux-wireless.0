@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58803 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbaAGMKw (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:59247 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092AbaAGSkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 07:10:52 -0500
-Date: Tue, 7 Jan 2014 13:10:51 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 10/13] wl1251: disable retry and ACK policy for injected
- packets
-Message-ID: <20140107121051.GJ10836@amd.pavel.ucw.cz> (sfid-20140107_131055_329907_06CDD71D)
+	Tue, 7 Jan 2014 13:40:10 -0500
+Received: by mail-wg0-f45.google.com with SMTP id y10so521012wgg.24
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2014 10:40:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <52CC4799.4080806@candelatech.com>
+References: <CAAVw_ZERCJhy4-Qczn36_CywE6_ceRc03BHfpvavn=A=xo=qRA@mail.gmail.com>
+ <52CC4799.4080806@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 8 Jan 2014 00:09:49 +0530
+Message-ID: <CABPxzYLUmq1sUKDX=sN6YbTfvXem53soy+b7kL4DSytW2+J9fg@mail.gmail.com> (sfid-20140107_194015_216002_4C3368A6)
+Subject: Re: Virtual Network Interface
+To: Ben Greear <greearb@candelatech.com>
+Cc: Duy Tai Nguyen <duytai.cse@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+On Tue, Jan 7, 2014 at 11:59 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 01/07/2014 05:24 AM, Duy Tai Nguyen wrote:
+>> Dir sir!
+>> I'm a student of University of Technology HCMC, When I find whether
+>> Android is able to support virtual network interface (vif) like vif in
+>> linux (wireless.kernel.org/en/users/Documentation/iw/vif/)
+>> I am wondering if you can help me explain some questions below.
+>> 1. does android kernel support virtual network interface (vif)?
+>> 2. does 802.11 standard consist of vif?
+>> 3. does all WiFi cards support vif or only some of them?
+>
+> The android phone I looked at briefly was running an Atheros
+> based NIC, but it did not support more than one station VIF.
+>
+> Possibly other systems can do more, but I think it is not
+> very likely.
+>
+> In general, if you want multiple stations vifs, you need
+> ath9k, and for more than just a few stations, you need a
+> pci or pci-e based NIC (not USB).
+>
+> Ath5k might work in some cases, and with proper firmware and
+> some driver tweaks, ath10k should support some as well.
+>
+> Thanks,
+> Ben
+>
+>
+Adding to that, its not a question of android supports or not, rather
+your wifi chipset supports or not. iw (if its available will give info
+of the NIC capabilities).
 
-Set the retry limit to 0 and disable the ACK policy for injected packets.
+VIF is a implementation term, no the 802.11 standard concept.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Signed-off-by: Pavel Machek <pavel@ucw.cz>
+My phone has a qualcomm WCN chipset which does support multiple
+VIF's, one for STA, SoftAP, P2P etc..
 
----
- drivers/net/wireless/ti/wl1251/acx.c |    8 +++++++-
- drivers/net/wireless/ti/wl1251/tx.c  |    7 ++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
-index f772e62..8f420d0 100644
---- a/drivers/net/wireless/ti/wl1251/acx.c
-+++ b/drivers/net/wireless/ti/wl1251/acx.c
-@@ -943,12 +943,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
- 	}
- 
- 	/* configure one default (one-size-fits-all) rate class */
--	acx->rate_class_cnt = 1;
-+	acx->rate_class_cnt = 2;
- 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
- 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].aflags = 0;
- 
-+	/* no-retry rate class */
-+	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
-+	acx->rate_class[1].short_retry_limit = 0;
-+	acx->rate_class[1].long_retry_limit = 0;
-+	acx->rate_class[1].aflags = 0;
-+
- 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1251_warning("Setting of rate policies failed: %d", ret);
-diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
-index 216334d..4516180 100644
---- a/drivers/net/wireless/ti/wl1251/tx.c
-+++ b/drivers/net/wireless/ti/wl1251/tx.c
-@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
- 	/* 802.11 packets */
- 	tx_hdr->control.packet_type = 0;
- 
--	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
-+	/* Also disable retry and ACK policy for injected packets */
-+	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
-+	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
-+		tx_hdr->control.rate_policy = 1;
- 		tx_hdr->control.ack_policy = 1;
-+	}
- 
- 	tx_hdr->control.tx_complete = 1;
- 
-@@ -422,6 +426,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
- 	info = IEEE80211_SKB_CB(skb);
- 
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
- 	    (result->status == TX_SUCCESS))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 
+Once you have rooted the phone you can use the same commands
+as desktop linux and play around with the VIF's.
