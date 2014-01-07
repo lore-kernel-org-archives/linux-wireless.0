@@ -1,117 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:39882 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbaAQPUS (ORCPT
+Received: from li674-96.members.linode.com ([212.71.239.96]:44306 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752543AbaAGQMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 10:20:18 -0500
-Received: by mail-pb0-f53.google.com with SMTP id ma3so4209892pbc.12
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 07:20:17 -0800 (PST)
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 2/2] b43: use kernel api to replace b43 specific helper function
-Date: Fri, 17 Jan 2014 23:19:14 +0800
-Message-Id: <55214eacffbb07577f07b58f3333f151af469720.1389970392.git.gamerh2o@gmail.com> (sfid-20140117_162024_437646_9D69BEAA)
-In-Reply-To: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
-References: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
-In-Reply-To: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
-References: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
+	Tue, 7 Jan 2014 11:12:44 -0500
+Date: Tue, 7 Jan 2014 18:12:41 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] cfg80211: Advertise maximum associated STAs in AP mode
+Message-ID: <20140107161241.GA9092@w1.fi> (sfid-20140107_171249_069506_78E83FDB)
+References: <20140106081151.GA1613@w1.fi>
+ <1389110063.4645.21.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389110063.4645.21.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ieee80211_channel_to_frequency() to replace b43_channel_to_freq_{2,5}ghz(),
-and remove unused b43_freq_to_channel_{2,5}ghz().
+On Tue, Jan 07, 2014 at 04:54:23PM +0100, Johannes Berg wrote:
+> In theory, I think this is fine. In practice, I'm not sure it really
+> covers things too well, and some drivers like iwlwifi might end up not
+> being able to set it. The reason is that we have a limit of ~16 stations
+> internally, but some may be used for BSS/P2P-client interfaces and some
+> are used internally. In addition, when TDLS will be added, concurrency
+> might mean that we'd have to set this to a very low number although it
+> is likely that you'd never have P2P-GO, BSS clientand TDLS all together.
 
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
----
-v3: let this fix be two patches again.
-    first patch is fix, second patch is improvement.
+I think both cases of limiting associated stations will need to be
+supported. It can be useful for user space to be aware of some limits
+and there are cases where at least 1 vs. 2 vs. 16 vs. 128 can be easily
+indicated even if some of the values are not accurate (e.g., that 16 may
+actually mean 10 in some cases, etc.).
 
- drivers/net/wireless/b43/main.h | 35 -----------------------------------
- drivers/net/wireless/b43/xmit.c | 12 ++++++------
- 2 files changed, 6 insertions(+), 41 deletions(-)
+> Since the current auth/assoc state machine is rather racy with mac80211
+> etc. anyway, wouldn't it be better to instead make hostapd take
+> advantage of my kernel commit d582cffbcd04eae0bd8a83b05648bfd54bfd21c9
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Fri Oct 26 17:53:44 2012 +0200
+> 
+>     nl80211/mac80211: support full station state in AP mode
+> 
+> With that, hostapd/wpa_s can add the station to the kernel, in
+> unauthenticated state, before sending the authentication frame, and
+> respond negatively if the addition fails. After auth frame ACK it would
+> set to authenticated state and then after association set to associated
+> state. This would also more accurately reflect the state to the driver,
+> which might be helpful for some drivers.
 
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index abac25e..f476fc3 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -58,41 +58,6 @@ enum b43_verbosity {
- #endif
- };
- 
--
--/* Lightweight function to convert a frequency (in Mhz) to a channel number. */
--static inline u8 b43_freq_to_channel_5ghz(int freq)
--{
--	return ((freq - 5000) / 5);
--}
--static inline u8 b43_freq_to_channel_2ghz(int freq)
--{
--	u8 channel;
--
--	if (freq == 2484)
--		channel = 14;
--	else
--		channel = (freq - 2407) / 5;
--
--	return channel;
--}
--
--/* Lightweight function to convert a channel number to a frequency (in Mhz). */
--static inline int b43_channel_to_freq_5ghz(u8 channel)
--{
--	return (5000 + (5 * channel));
--}
--static inline int b43_channel_to_freq_2ghz(u8 channel)
--{
--	int freq;
--
--	if (channel == 14)
--		freq = 2484;
--	else
--		freq = 2407 + (5 * channel);
--
--	return freq;
--}
--
- static inline int b43_is_cck_rate(int rate)
- {
- 	return (rate == B43_CCK_RATE_1MB ||
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 50e5ddb..218a0f3 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -806,7 +806,8 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		B43_WARN_ON(1);
- 		/* FIXME: We don't really know which value the "chanid" contains.
- 		 *        So the following assignment might be wrong. */
--		status.freq = b43_channel_to_freq_5ghz(chanid);
-+		status.freq =
-+			ieee80211_channel_to_frequency(chanid, status.band);
- 		break;
- 	case B43_PHYTYPE_G:
- 		status.band = IEEE80211_BAND_2GHZ;
-@@ -819,13 +820,12 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 	case B43_PHYTYPE_HT:
- 		/* chanid is the SHM channel cookie. Which is the plain
- 		 * channel number in b43. */
--		if (chanstat & B43_RX_CHAN_5GHZ) {
-+		if (chanstat & B43_RX_CHAN_5GHZ)
- 			status.band = IEEE80211_BAND_5GHZ;
--			status.freq = b43_channel_to_freq_5ghz(chanid);
--		} else {
-+		else
- 			status.band = IEEE80211_BAND_2GHZ;
--			status.freq = b43_channel_to_freq_2ghz(chanid);
--		}
-+		status.freq =
-+			ieee80211_channel_to_frequency(chanid, status.band);
- 		break;
- 	default:
- 		B43_WARN_ON(1);
+I'm trying to remember why this did not get used, but cannot really
+remember.. It would sound useful to support this regardless of the
+question of how maximum supported association state count is handled.
+While these do have some use cases in common, not all cases can be
+addressed with this, or well, cannot be addressed cleanly. I would hate
+to have make wpa_supplicant add a dummy station entry into the driver
+just to figure out whether one more station can be added..
+
+There are use cases where an AP advertises in Beacon/Probe Response
+frames information about how preferable it is for stations to try to
+associate with it. I'd expect this area to get used more in the future,
+but even now, there is an example that I can give of a deployed
+functionality. P2P has a P2P Group Limit field which the GO uses to
+advertise in Beacon/Probe Response frames to indicate that no more P2P
+Clients can join the group. wpa_supplicant supports this functionality,
+but currently, requires user (or well, whoever is building the system)
+to configure the maximum limit. This is an extra complexity that could
+be easily avoided for cases where the driver were able to advertise the
+maximum number of associated stations.
+
+> Additionally, it would go some way towards fixing the race between
+> station addition and EAPOL RX, I believe there are some scenarios (WSC?
+> WAPI?) where the station sends the first EAPOL(-equivalent) frame, and
+> currently stations are added only after transmitting the assoc response,
+> so that those frames may be dropped erroneously.
+
+Like I said above, I see value in doing this, but that does not mean I
+would see that as replacing need for this patch to allow drivers to
+advertise the limit (if known).
+
 -- 
-1.8.4.2
-
+Jouni Malinen                                            PGP id EFC895FA
