@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52242 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:48615 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932238AbaAaOLZ (ORCPT
+	with ESMTP id S1754528AbaAGXPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 09:11:25 -0500
-Message-ID: <1391177479.4141.23.camel@jlt4.sipsolutions.net> (sfid-20140131_151128_617707_AE9AE5A8)
-Subject: Re: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
- channels
+	Tue, 7 Jan 2014 18:15:23 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Date: Fri, 31 Jan 2014 15:11:19 +0100
-In-Reply-To: <1390818118-27261-4-git-send-email-ilan.peer@intel.com> (sfid-20140127_112147_514798_01405A03)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-	 <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140127_112147_514798_01405A03)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 06/12] mac80211_hwsim: minimize rctbl module parameter usage
+Date: Wed,  8 Jan 2014 00:15:11 +0100
+Message-Id: <1389136517-21216-7-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001534_450426_A3837343)
+In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-27 at 12:21 +0200, Ilan Peer wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> It is assumed that such restrictions are enforced by user space.
-> Furthermore, it is assumed, that if the conditions that allowed for
-> the operation of the GO on such a channel change, i.e., the station
-> interface disconnected from the AP, it is the responsibility of user
-> space to evacuate the GO from the channel.
+Check the flag that the module parameter sets instead, so
+later radios can use different parameters.
 
-For the latter here, don't we need some sort of flag with userspace
-saying "trust me, I know what I'm doing"? Or put another way - how does
-this not make us break compliance when running with old versions of
-wpa_supplicant?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 421528e..5670ecb 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -802,7 +802,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	if (control->sta)
+ 		hwsim_check_sta_magic(control->sta);
+ 
+-	if (rctbl)
++	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
+ 		ieee80211_get_tx_rates(txi->control.vif, control->sta, skb,
+ 				       txi->control.rates,
+ 				       ARRAY_SIZE(txi->control.rates));
+@@ -909,7 +909,7 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ {
+ 	u32 _pid = ACCESS_ONCE(wmediumd_portid);
+ 
+-	if (rctbl) {
++	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE) {
+ 		struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
+ 		ieee80211_get_tx_rates(txi->control.vif, NULL, skb,
+ 				       txi->control.rates,
+@@ -946,7 +946,7 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 	if (skb == NULL)
+ 		return;
+ 	info = IEEE80211_SKB_CB(skb);
+-	if (rctbl)
++	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
+ 		ieee80211_get_tx_rates(vif, NULL, skb,
+ 				       info->control.rates,
+ 				       ARRAY_SIZE(info->control.rates));
+-- 
+1.8.5.1
 
