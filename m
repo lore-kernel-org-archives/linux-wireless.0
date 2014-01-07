@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38090 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbaAWJyM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47207 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562AbaAGPf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:54:12 -0500
-From: "Mani, Raja" <rmani@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] nl80211: Count only ssid attr to know number of match
- sets
-Date: Thu, 23 Jan 2014 09:53:43 +0000
-Message-ID: <BD8355E3EE4C424D96D29100D45098AB42C40238@aphydexd01a.ap.qualcomm.com> (sfid-20140123_105417_268332_E7ADB42E)
-References: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com>
- <1390465052.4142.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1390465052.4142.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 7 Jan 2014 10:35:28 -0500
+Message-ID: <1389108924.4645.14.camel@jlt4.sipsolutions.net> (sfid-20140107_163532_219008_9EE11A76)
+Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev
+ notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org
+Date: Tue, 07 Jan 2014 16:35:24 +0100
+In-Reply-To: <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215341_748002_0553EE53)
+References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131219_215341_748002_0553EE53)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4gTkw4MDIxMV9BVFRSX1NDSEVEX1NDQU5fTUFUQ0ggY2FuIGhhdmUgDQo+PiBOTDgwMjExX1ND
-SEVEX1NDQU5fTUFUQ0hfQVRUUl9TU0lEDQo+PiBhcyB3ZWxsIGFzIE5MODAyMTFfU0NIRURfU0NB
-Tl9NQVRDSF9BVFRSX1JTU0kgaW4gaXQuIEVhY2ggbmVzdGVkIA0KPj4gYXR0cmlidXRlcyB3aGlj
-aCBhcmUgcGFydCBvZiBOTDgwMjExX0FUVFJfU0NIRURfU0NBTl9NQVRDSCBhcmUgY291bnRlZCAN
-Cj4+IHRvIGZpbmQgb3V0IG51bWJlciBvZiBtYXRjaCBzZXRzIGluIG5sODAyMTFfc3RhcnRfc2No
-ZWRfc2NhbigpLg0KPj4gDQo+PiBUaGlzIGlzIHRoZSBwcm9ibGVtIGlmIE5MODAyMTFfU0NIRURf
-U0NBTl9NQVRDSF9BVFRSX1JTU0kgYWxzbyBwYXJ0IG9mIA0KPj4gTkw4MDIxMV9BVFRSX1NDSEVE
-X1NDQU5fTUFUQ0guIEZpeCB0aGlzIGluY29ycmVjdCBjYWxjdWxhdGlvbiBieSANCj4+IGNvbnNp
-ZGVyaW5nIG9ubHkgTkw4MDIxMV9TQ0hFRF9TQ0FOX01BVENIX0FUVFJfU1NJRCB0byBrbm93IG1h
-dGNoIHNldCBjb3VudC4NCj4NCj5FcnIsIHlvdSBmYWlsZWQgdG8gZXhwbGFpbiAqd2h5KiB0aGlz
-IGlzIGEgcHJvYmxlbS4gSSdtIG5vdCBldmVuIGNvbnZpbmNlZCB5b3UncmUgcmlnaHQgYW55d2F5
-Lg0KPg0KPmpvaGFubmVzDQoNClRvIGtub3cgbWF0Y2ggc2V0IGNvdW50LCBubDgwMjExIHNob3Vs
-ZCBjb3VudCBvbmx5IE5MODAyMTFfU0NIRURfKl9BVFRSX1NTSUQuDQpTb21lIGNhc2VzLCB3cGFf
-c3VwcGxpY2FudCB3b3VsZCBwYXNzIE5MODAyMTFfU0NIRURfKl9BVFRSX1JTU0kgYWxzbyBhbG9u
-ZSB3aXRoDQpOTDgwMjExX1NDSEVEXypfQVRUUl9TU0lELiAgRm9yIGV4YW1wbGUsIGFzc3VtZSAg
-b25lIE5MODAyMTFfU0NIRURfKl9BVFRSX1NTSUQgYW5kDQpvbmUgTkw4MDIxMV9TQ0hFRF8qX0FU
-VFJfUlNTSSBwYXNzZWQgZnJvbSB3cGFfc3VwcGxpY2FudC4gSW4gdGhpcyBjYXNlLCBubDgwMjEx
-IGNvdW50DQpOTDgwMjExX1NDSEVEXypfQVRUUl9SU1NJIGFsc28gb25lIG9mIHRoZSBwcm9maWxl
-ICwgRmluYWxseSBtYXRjaCBzZXQgY291bnQgd2lsbCBiZSBjb21lDQoyIGluIHRoaXMgY2FzZS4g
-KElkZWFsbHksIG1hdGNoIHNldCBjb3VudCBzaG91bGQgYmUgMSkuICBUaGUgc2FtZSBjb3VudCB2
-YWx1ZSBpcyBwYXNzZWQgdG8gZHJpdmVyLA0KYW5kIGRyaXZlciBhbHNvIHdvdWxkIGFzc3VtZSB0
-aGVyZSBhcmUgdHdvIFNTSUQgYXZhaWxhYmxlIGluIG1hdGNoIHNldCBhcnJheSAocmVxdWVzdC0+
-bWF0Y2hfc2V0cykuDQpCdXQgb25seSBvbmUgU1NJRCBpcyB2YWxpZCBpbiByZXF1ZXN0LT5tYXRj
-aF9zZXRzIGFycmF5IGluIHRoaXMgY2FzZS4NCg0KVGhhbmtzLA0KUmFqYQ0KDQoNCg==
+On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
+> This adds a trigger to review any pending regulatory
+> requests whenever an 802.11 device interface is brought
+> down or up. We use this as an opportunistic trigger
+> for checking the regulatory work queues as otherwise
+> they they're only checked upon an initial regulatory
+> request or when beacon hints are found.
+> 
+> This opportunistic mechanism can be used to trigger
+> kicking the queues regulatory queues at any time from
+> userspace without having to change the regulatory state.
+
+I don't like this. Can't we just have a self-contained timeout on the
+userspace request instead?
+
+johannes
+
