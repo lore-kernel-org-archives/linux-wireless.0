@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:64966 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbaA2ECE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47284 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbaAGP41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 23:02:04 -0500
-MIME-Version: 1.0
-In-Reply-To: <20140127142400.GI3867@lukather>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
- <1389941251-32692-5-git-send-email-wens@csie.org> <20140127142400.GI3867@lukather>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 29 Jan 2014 12:01:42 +0800
-Message-ID: <CAGb2v65cipUXbL52adDTYLqVJB5gMoDjfWVFa6AYYp0EKvkS6g@mail.gmail.com> (sfid-20140129_050231_804536_B042D5CC)
-Subject: Re: [linux-sunxi] Re: [PATCH RFC 4/6] net: rfkill: gpio: add device
- tree support
-To: linux-sunxi <linux-sunxi@googlegroups.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Jan 2014 10:56:27 -0500
+Message-ID: <1389110184.4645.23.camel@jlt4.sipsolutions.net> (sfid-20140107_165630_816284_0BD2B542)
+Subject: Re: [RFC 1/3] cfg80211: Allow BSS hint to be provided for connect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 07 Jan 2014 16:56:24 +0100
+In-Reply-To: <20140106075102.GA31031@w1.fi>
+References: <20140106075102.GA31031@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2014-01-06 at 09:51 +0200, Jouni Malinen wrote:
+> This clarifies the expected driver behavior on the older
+> NL80211_ATTR_MAC and NL80211_ATTR_WIPHY_FREQ attributes and adds a new
+> set of similar attributes with _HINT postfix to enable use of a
+> recommendation of the initial BSS to choose. This can be helpful for
+> some drivers that can avoid an additional full scan on connection
+> request if the information is provided to them (user space tools like
+> wpa_supplicant already has that information available based on earlier
+> scans).
+> 
+> In addition, this can be used to get more expected behavior for cases
+> where a specific BSS should be picked first based on operations like
+> Interworking network selection or WPS. These cases were already easily
+> addressed with drivers that leave BSS selection to user space, but there
+> was no convenient way to do this with drivers that take care of BSS
+> selection internally without using the NL80211_ATTR_MAC which is not
+> really desired since it is needed for other purposes to force the
+> association to remain with the same BSS.
 
-On Mon, Jan 27, 2014 at 10:24 PM, Maxime Ripard
-<maxime.ripard@free-electrons.com> wrote:
-> Hi,
->
-> On Fri, Jan 17, 2014 at 02:47:29PM +0800, Chen-Yu Tsai wrote:
->> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
->> ---
->>  .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 26 ++++++++++++++++++++++
->>  net/rfkill/rfkill-gpio.c                           | 23 +++++++++++++++++++
->>  2 files changed, 49 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
->>
->> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
->> new file mode 100644
->> index 0000000..8a07ea4
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
->> @@ -0,0 +1,26 @@
->> +GPIO controlled RFKILL devices
->> +
->> +Required properties:
->> +- compatible : Must be "rfkill-gpio".
->> +- rfkill-name        : Name of RFKILL device
->> +- rfkill-type        : Type of RFKILL device: 1 for WiFi, 2 for BlueTooth
->> +- NAME_shutdown-gpios        : GPIO phandle to shutdown control
->> +                       (phandle must be the second)
->
-> Can't it be handled by a regulator?
->
->> +- NAME_reset-gpios   : GPIO phandle to reset control
->
-> And this one using the reset framework?
+Makes sense.
 
-The driver is already used in platform device and ACPI fashions.
-AFAIK, ACPI only passes the GPIO lines. Preferably the behavior
-and requirements between the different usages remain the same.
+>  struct cfg80211_connect_params {
+>  	struct ieee80211_channel *channel;
+> +	struct ieee80211_channel *channel_hint;
+>  	u8 *bssid;
+> +	u8 *bssid_hint;
+>  	u8 *ssid;
+
+Those should probably all be const, but we can do that separately.
 
 
-Cheers
-ChenYu
+>  			return -EINVAL;
+> +	} else if (info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]) {
+> +		connect.channel_hint =
+> +			ieee80211_get_channel(wiphy,
+> +					      nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]));
+> +		if (!connect.channel_hint ||
+> +		    connect.channel_hint->flags & IEEE80211_CHAN_DISABLED)
+> +			return -EINVAL;
+
+I'm starting to wonder if this pattern should be abstracted out, but
+again, we can do that separately.
+
+johannes
+
