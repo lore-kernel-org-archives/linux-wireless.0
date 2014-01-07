@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:59810 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbaA2TF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:05:28 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0MKIEQ-1WAF8q0MuU-001g3L for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:05:26 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 00/13] eliminate some ath9k_htc code
-Date: Wed, 29 Jan 2014 20:05:02 +0100
-Message-Id: <1391022315-20946-1-git-send-email-linux@rempel-privat.de> (sfid-20140129_200532_393430_88F665D4)
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:52884 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbaAGSfU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jan 2014 13:35:20 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x13so833290ief.20
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2014 10:35:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140107181333.GB7267@magnum.frso.rivierawaves.com>
+References: <529CF2D6.1080008@gmail.com> <1386017965-13641-12-git-send-email-egrumbach@gmail.com>
+ <20140106150716.GA5358@magnum.frso.rivierawaves.com> <CAF8O4-y4K_0G=3e2fcNzfJuGSz6WwrUU3EyL1H3B7Z6-koGFyw@mail.gmail.com>
+ <20140107102746.GA20561@magnum.frso.rivierawaves.com> <CAF8O4-xaNWO+tFS=0+ffR5aKf0Z+OWDBSPpnjYWUgP86Oiey2g@mail.gmail.com>
+ <20140107181333.GB7267@magnum.frso.rivierawaves.com>
+From: Eyal Shapira <eyal@wizery.com>
+Date: Tue, 7 Jan 2014 20:34:59 +0200
+Message-ID: <CAF8O4-zE-EAMh4-HHFTM6FHEB76icTfpNWHZUR+VE5HWkvb5KA@mail.gmail.com> (sfid-20140107_193523_947052_4CD25DB0)
+Subject: Re: [PATCH 12/13] iwlwifi: mvm: rs: overhaul search cycle state machine
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set moves most common RX code from ath9k/recv.c to
-common.c without any additional changes and reworks ath9k_htc RX code 
-to make use of new common functions.
-Since ath9k_htc part was more intrusive I made tests in STA and AP modes. No noticeable regressions was introduced. 
-Last patch is important for debugging FW crashes.
+On Tue, Jan 7, 2014 at 8:13 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
+> On Tue, Jan 07, 2014 at 06:30:07PM +0200, Eyal Shapira wrote:
+>> Thanks. Seems like we decided the AP doesn't support any MIMO rates.
+>> This wasn't handled well and caused the search cycle for an optimal Tx
+>> configuration to get stuck.
+>> Can you try the attached patch ?
+>>
+> Working, thanks.
+>
 
-Oleksij Rempel (13):
-  ath: add last_rssi to ath_common
-  ath9k: move ath9k_process_rssi to common.c
-  ath9k: move ath9k_process_rate to common.c
-  ath9k: move ath9k_rx_accept to common.c
-  ath9k_htc: add rx header converter to make it usable by ath9k
-  ath9k_htc: use ath9k_cmn_process_rssi
-  ath9k_htc: use ath9k_cmn_process_rate
-  ath9k_htc: use ath9k_cmn_rx_accept
-  ath9k_htc: sync rx_status-> related code with ath9k
-  ath9k: move ath9k_rx_skb_postprocess to common.c
-  ath9k_htc: use ath9k_cmn_rx_skb_postprocess
-  ath9k_htc: remove useless memcpy
-  ath9k_htc: catch fw panic pattern
+great. thanks for testing and again for reporting to begin with.
 
- drivers/net/wireless/ath/ath.h                |   2 +
- drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
- drivers/net/wireless/ath/ath9k/common.c       | 244 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h       |  19 ++
- drivers/net/wireless/ath/ath9k/htc.h          |   1 -
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 180 ++++++-----------
- drivers/net/wireless/ath/ath9k/htc_hst.c      |  36 ++++
- drivers/net/wireless/ath/ath9k/htc_hst.h      |  12 ++
- drivers/net/wireless/ath/ath9k/init.c         |   2 +-
- drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
- drivers/net/wireless/ath/ath9k/main.c         |   2 +-
- drivers/net/wireless/ath/ath9k/recv.c         | 266 ++------------------------
- 14 files changed, 392 insertions(+), 384 deletions(-)
+>> Also, any chance you can send a traffic capture of some beacons and the assoc ?
+>> I'd like to understand why we come to the conclusion no MIMO is supported.
+>>
+> AP limitation, but here is a capture anyway.
 
--- 
-1.8.5.3
-
+ok. so everything here makes sense.
