@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41724 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:48626 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310AbaAVS2z (ORCPT
+	with ESMTP id S1753989AbaAGXQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 13:28:55 -0500
-Message-ID: <1390415331.4334.37.camel@jlt4.sipsolutions.net> (sfid-20140122_192859_724744_1711838A)
-Subject: Re: [PATCH] nl80211: check channel switch validity better
+	Tue, 7 Jan 2014 18:16:58 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <twpedersen@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 22 Jan 2014 19:28:51 +0100
-In-Reply-To: <CAHmEv86saxzZzy-qS6C_6k48EXFh2GVb8gVEcwJcBKQtj1Cv7Q@mail.gmail.com> (sfid-20140122_190244_490139_0BA936C0)
-References: <1390382185.4334.19.camel@jlt4.sipsolutions.net>
-	 <CAHmEv86saxzZzy-qS6C_6k48EXFh2GVb8gVEcwJcBKQtj1Cv7Q@mail.gmail.com>
-	 (sfid-20140122_190244_490139_0BA936C0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 11/12] mac80211_hwsim: register netlink even with multi-channel
+Date: Wed,  8 Jan 2014 00:15:16 +0100
+Message-Id: <1389136517-21216-12-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001701_785830_A0912FCB)
+In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 10:02 -0800, Thomas Pedersen wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > --- a/net/wireless/nl80211.c
-> > +++ b/net/wireless/nl80211.c
-> > @@ -5799,10 +5799,15 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+Reject wmediumd registrations when any devices have multi-channel
+capability, but register the generic netlink family unconditionally
+to make it possible to add new commands that shouldn't depend on
+the number of (default) channels.
 
-> >         case NL80211_IFTYPE_MESH_POINT:
-> > +               if (!wdev->mesh_id_len)
-> > +                       return -ENOTCONN;
-> 
-> Hmmm. I'm pretty sure there are some users which set the channel prior
-> to mesh join. This would break that and only allow sending the channel
-> with mesh join?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-I don't think channel_switch() is invoked for that? That's done only for
-run-time switching of the channel with CSA etc.
-
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 68375f7..e623a9e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2240,6 +2240,22 @@ out:
+ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ 				      struct genl_info *info)
+ {
++	struct mac80211_hwsim_data *data;
++	int chans = 1;
++
++	spin_lock_bh(&hwsim_radio_lock);
++	list_for_each_entry(data, &hwsim_radios, list)
++		chans = max(chans, data->channels);
++	spin_unlock_bh(&hwsim_radio_lock);
++
++	/* In the future we should revise the userspace API and allow it
++	 * to set a flag that it does support multi-channel, then we can
++	 * let this pass conditionally on the flag.
++	 * For current userspace, prohibit it since it won't work right.
++	 */
++	if (chans > 1)
++		return -EOPNOTSUPP;
++
+ 	if (wmediumd_portid)
+ 		return -EBUSY;
+ 
+@@ -2297,10 +2313,6 @@ static int hwsim_init_netlink(void)
+ {
+ 	int rc;
+ 
+-	/* userspace test API hasn't been adjusted for multi-channel */
+-	if (channels > 1)
+-		return 0;
+-
+ 	printk(KERN_INFO "mac80211_hwsim: initializing netlink\n");
+ 
+ 	rc = genl_register_family_with_ops(&hwsim_genl_family, hwsim_ops);
+@@ -2320,10 +2332,6 @@ failure:
+ 
+ static void hwsim_exit_netlink(void)
+ {
+-	/* userspace test API hasn't been adjusted for multi-channel */
+-	if (channels > 1)
+-		return;
+-
+ 	/* unregister the notifier */
+ 	netlink_unregister_notifier(&hwsim_netlink_notifier);
+ 	/* unregister the family */
+-- 
+1.8.5.1
 
