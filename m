@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:38894 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067AbaACA3a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 19:29:30 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless: delete non-required instances of include <linux/init.h>
-Date: Fri, 03 Jan 2014 01:29:16 +0100
-Message-ID: <7093338.RGBiBKGbAL@debian64> (sfid-20140103_012937_534160_E4BADE59)
-In-Reply-To: <1388707112-5669-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1388707112-5669-1-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([143.182.124.21]:16966 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750857AbaAGLN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jan 2014 06:13:29 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: allow to set smps mode to OFF in AP mode
+Date: Tue,  7 Jan 2014 13:11:41 +0200
+Message-Id: <1389093101-12186-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140107_121332_507073_ACA94FD5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 02, 2014 06:58:32 PM Paul Gortmaker wrote:
-> None of these files are actually using any __init type directives
-> and hence don't need to include <linux/init.h>.  Most are just a
-> left over from __devinit and __cpuinit removal, or simply due to
-> code getting copied from one driver to the next.
-> 
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+In managed mode, we should not ask for OFF mode because the
+power settings may still require DYNAMIC. In AP mode, this
+should be allowed since the default settings is OFF and
+AUTOMATIC is not allowed.
 
-for p54 and carl9170 parts.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/ht.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 9a8be8f..fab7b91 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -479,10 +479,9 @@ void ieee80211_request_smps(struct ieee80211_vif *vif,
+ 			 vif->type != NL80211_IFTYPE_AP))
+ 		return;
+ 
+-	if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
+-		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+-
+ 	if (vif->type == NL80211_IFTYPE_STATION) {
++		if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
++			smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 		if (sdata->u.mgd.driver_smps_mode == smps_mode)
+ 			return;
+ 		sdata->u.mgd.driver_smps_mode = smps_mode;
+-- 
+1.8.3.2
 
-Christian
