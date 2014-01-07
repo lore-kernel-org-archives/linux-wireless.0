@@ -1,70 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34489 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbaAZI4o (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbaAGP7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 03:56:44 -0500
-Received: by mail-ie0-f174.google.com with SMTP id tp5so4480550ieb.5
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2014 00:56:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-Date: Sun, 26 Jan 2014 10:56:43 +0200
-Message-ID: <CAB3XZEc94pTAMXWPYeWhu7o_YLEnD1_9O035-+YXYiR0Uij28w@mail.gmail.com> (sfid-20140126_095647_466805_4260BCE4)
-Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute confusion
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Jan 2014 10:59:50 -0500
+Message-ID: <1389110387.4645.26.camel@jlt4.sipsolutions.net> (sfid-20140107_165953_380826_C571F25A)
+Subject: Re: [RFC 2/3] cfg80211: MinChannelTime and MaxChannelTime for scan
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 07 Jan 2014 16:59:47 +0100
+In-Reply-To: <20140106075126.GA31046@w1.fi>
+References: <20140106075126.GA31046@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 24, 2014 at 2:20 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> The scheduled scan matchsets were intended to be a list of filters,
-> with the found BSS having to pass at least one of them to be passed
-> to the host. When the RSSI attribute was added, however, this was
-> broken and currently wpa_supplicant adds that attribute in its own
-> matchset; however, it doesn't intend that to mean that anything
-> that passes the RSSI filter should be passed to the host, instead
-> it wants it to mean that everything needs to also have higher RSSI.
->
-> This is semantically problematic because we have a list of filters
-> like [ SSID1, SSID2, SSID3, RSSI ] with no real indication which
-> one should be OR'ed and which one AND'ed.
->
-> To fix this, move the RSSI filter attribute into each matchset. As
-> we need to stay backward compatible, treat a matchset with only the
-> RSSI attribute as a "default RSSI filter" for all other matchsets,
-> but only if there are other matchsets (an RSSI-only matchset by
-> itself is still desirable.)
->
-> To make driver implementation easier, keep a global min_rssi_thold
-> for the entire request as well. The only affected driver is ath6kl.
->
-> I found this when I looked into the code after Raja Mani submitted
-> a patch fixing the n_match_sets calculation to disregard the RSSI,
-> but that patch didn't address the semantic issue.
->
-> Reported-by: Raja Mani <rmani@qti.qualcomm.com>
-> Acked-by: Luciano Coelho <luciano.coelho@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+On Mon, 2014-01-06 at 09:51 +0200, Jouni Malinen wrote:
+> This adds new nl80211 attributes to allow MinChannelTime and
+> MaxChannelTime to be specified for scan requests. The parameters can be
+> used to control the amount of time spent on each channel during a scan
+> as specified in the IEEE Std 802.11-2012 MLME-SCAN.request() primitive.
 
-> +
-> +       /* However, if there's no other matchset, add the RSSI one */
-> +       if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
-> +               n_match_sets = 1;
->
+What are the specific use cases for this? Our driver is likely to muck
+around with these in the future, possibly depending on traffic levels
+etc., so I wonder what this addresses and whether it can be unified in
+some way?
 
-this means that min-rssi-only sched scan request will be seen as
-req->n_match_sets = 1 with empty SSID?
-i don't think that's desirable (at least the current documentation
-assumes n_match_sets=0 for this case).
+Would you expect these to always be specified, to the point where our
+driver no longer has any flexibility in adjusting things internally?
 
-Eliad.
+> + * @min_chan_time: MinChannelTime in TUs; time to spend waiting for
+> + * PHY-CCA.indication (channel busy) in Active scan; 0 to indicate that driver
+> + * default value to be used
+> + * @max_chan_time: MaxChannelTime in TUs; time to spend waiting for Beacon or
+> + * Probe Response frames; 0 to indicate that driver default value to be used
+
+missing some indentation
+
+> + * @NL80211_ATTR_MIN_CHANNEL_TIME: MinChannelTime - Minimum time (in TU) to
+> + *	spend on each channel when scanning (used for active scans). If not
+> + *	included, the driver will use its default value. u32 attribute.
+
+What about passive scans?
+
+> +	if (info->attrs[NL80211_ATTR_MIN_CHANNEL_TIME])
+> +		request->min_chan_time = nla_get_u32(
+> +			info->attrs[NL80211_ATTR_MIN_CHANNEL_TIME]);
+> +	if (info->attrs[NL80211_ATTR_MAX_CHANNEL_TIME])
+> +		request->max_chan_time = nla_get_u32(
+> +			info->attrs[NL80211_ATTR_MAX_CHANNEL_TIME]);
+> +	if (request->max_chan_time &&
+> +	    request->max_chan_time < request->min_chan_time) {
+> +		err = -EINVAL;
+> +		goto out_free;
+> +	}
+
+If you specify a very long min_chan_time, that's unlikely to please
+drivers. Especially if multi-channel mode is implemented, maybe in
+conjunction with operating as a GO or a client that wants to hear DTIM
+beacons, this might become very complicated.
+
+I'd be really interested in seeing if we can address the use cases here
+in a different way that keeps more flexibility in the
+driver/firmware/... implementation of scan.
+
+johannes
+
