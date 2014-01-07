@@ -1,136 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:60089 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755625AbaA2HBU (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58396 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbaAGMIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 02:01:20 -0500
-Received: by mail-ea0-f173.google.com with SMTP id d10so663041eaj.18
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 23:01:19 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] mac80211: batch CSA bss info notification
-Date: Wed, 29 Jan 2014 07:56:17 +0100
-Message-Id: <1390978581-13273-2-git-send-email-michal.kazior@tieto.com> (sfid-20140129_080147_673107_42008B03)
-In-Reply-To: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
-References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 7 Jan 2014 07:08:32 -0500
+Date: Tue, 7 Jan 2014 13:08:30 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 06/13] wl1251: implement multicast address filtering
+ (fwd)
+Message-ID: <20140107120830.GF10836@amd.pavel.ucw.cz> (sfid-20140107_130836_275519_3FD1A915)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of having
-ieee80211_bss_info_change_notify() scattered all
-over the place just call it once when finalizing
-CSA.
+From: David Gnedt <david.gnedt@davizone.at>
 
-As a side effect this patch adds missing error
-checking for IBSS CSA beacon update.
+Port multicast address filtering from wl1271 driver.
+It sets up the hardware multicast address filter in configure_filter() with
+addresses supplied through prepare_multicast().
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Pavel Machek <pavel@ucw.cz>
 ---
- net/mac80211/cfg.c  | 14 +++++++++-----
- net/mac80211/ibss.c |  7 +++----
- net/mac80211/mesh.c |  5 +++--
- 3 files changed, 15 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ti/wl1251/acx.c    |    9 ++---
+ drivers/net/wireless/ti/wl1251/acx.h    |    9 ++---
+ drivers/net/wireless/ti/wl1251/init.c   |    2 +-
+ drivers/net/wireless/ti/wl1251/main.c   |   57 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ti/wl1251/wl1251.h |    1 +
+ 5 files changed, 67 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cf27c62..b503f92 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3014,8 +3014,6 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_hw_config(local, 0);
- 	}
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index 1ec98e9..f772e62 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -408,7 +408,8 @@ out:
+ 	return ret;
+ }
  
--	ieee80211_bss_info_change_notify(sdata, changed);
--
- 	sdata->vif.csa_active = false;
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
-@@ -3026,17 +3024,21 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		changed |= err;
- 		kfree(sdata->u.ap.next_beacon);
- 		sdata->u.ap.next_beacon = NULL;
--
--		ieee80211_bss_info_change_notify(sdata, err);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		ieee80211_ibss_finish_csa(sdata);
-+		err = ieee80211_ibss_finish_csa(sdata);
-+		if (err < 0)
-+			return;
-+
-+		changed |= err;
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
- 		err = ieee80211_mesh_finish_csa(sdata);
- 		if (err < 0)
- 			return;
-+
-+		changed |= err;
- 		break;
- #endif
- 	default:
-@@ -3044,6 +3046,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 
-+	ieee80211_bss_info_change_notify(sdata, err);
-+
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index ed7eec3..82d3d14 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -530,7 +530,7 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
+-int wl1251_acx_group_address_tbl(struct wl1251 *wl)
++int wl1251_acx_group_address_tbl(struct wl1251 *wl, bool enable,
++				 void *mc_list, u32 mc_list_len)
  {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct cfg80211_bss *cbss;
--	int err;
-+	int err, changed = 0;
- 	u16 capability;
+ 	struct acx_dot11_grp_addr_tbl *acx;
+ 	int ret;
+@@ -422,9 +423,9 @@ int wl1251_acx_group_address_tbl(struct wl1251 *wl)
+ 	}
  
- 	sdata_assert_lock(sdata);
-@@ -562,10 +562,9 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	if (err < 0)
- 		return err;
+ 	/* MAC filtering */
+-	acx->enabled = 0;
+-	acx->num_groups = 0;
+-	memset(acx->mac_table, 0, ADDRESS_GROUP_MAX_LEN);
++	acx->enabled = enable;
++	acx->num_groups = mc_list_len;
++	memcpy(acx->mac_table, mc_list, mc_list_len * ETH_ALEN);
  
--	if (err)
--		ieee80211_bss_info_change_notify(sdata, err);
-+	changed |= err;
+ 	ret = wl1251_cmd_configure(wl, DOT11_GROUP_ADDRESS_TBL,
+ 				   acx, sizeof(*acx));
+diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti/wl1251/acx.h
+index bea2e67..820573c 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.h
++++ b/drivers/net/wireless/ti/wl1251/acx.h
+@@ -350,8 +350,8 @@ struct acx_slot {
+ } __packed;
  
--	return 0;
-+	return changed;
+ 
+-#define ADDRESS_GROUP_MAX	(8)
+-#define ADDRESS_GROUP_MAX_LEN	(ETH_ALEN * ADDRESS_GROUP_MAX)
++#define ACX_MC_ADDRESS_GROUP_MAX	(8)
++#define ACX_MC_ADDRESS_GROUP_MAX_LEN	(ETH_ALEN * ACX_MC_ADDRESS_GROUP_MAX)
+ 
+ struct acx_dot11_grp_addr_tbl {
+ 	struct acx_header header;
+@@ -359,7 +359,7 @@ struct acx_dot11_grp_addr_tbl {
+ 	u8 enabled;
+ 	u8 num_groups;
+ 	u8 pad[2];
+-	u8 mac_table[ADDRESS_GROUP_MAX_LEN];
++	u8 mac_table[ACX_MC_ADDRESS_GROUP_MAX_LEN];
+ } __packed;
+ 
+ 
+@@ -1464,7 +1464,8 @@ int wl1251_acx_rx_msdu_life_time(struct wl1251 *wl, u32 life_time);
+ int wl1251_acx_rx_config(struct wl1251 *wl, u32 config, u32 filter);
+ int wl1251_acx_pd_threshold(struct wl1251 *wl);
+ int wl1251_acx_slot(struct wl1251 *wl, enum acx_slot_type slot_time);
+-int wl1251_acx_group_address_tbl(struct wl1251 *wl);
++int wl1251_acx_group_address_tbl(struct wl1251 *wl, bool enable,
++				 void *mc_list, u32 mc_list_len);
+ int wl1251_acx_service_period_timeout(struct wl1251 *wl);
+ int wl1251_acx_rts_threshold(struct wl1251 *wl, u16 rts_threshold);
+ int wl1251_acx_beacon_filter_opt(struct wl1251 *wl, bool enable_filter);
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+index 92de289..f8a2ea9 100644
+--- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -127,7 +127,7 @@ int wl1251_hw_init_phy_config(struct wl1251 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1251_acx_group_address_tbl(wl);
++	ret = wl1251_acx_group_address_tbl(wl, true, NULL, 0);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 39a6105..ee318c8 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -29,6 +29,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
++#include <linux/netdevice.h>
+ 
+ #include "wl1251.h"
+ #include "wl12xx_80211.h"
+@@ -678,6 +679,44 @@ out:
+ 	return ret;
  }
  
- void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 836ec01..bd55115 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1058,6 +1058,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct mesh_csa_settings *tmp_csa_settings;
- 	int ret = 0;
-+	int changed = 0;
++struct wl1251_filter_params {
++	bool enabled;
++	int mc_list_length;
++	u8 mc_list[ACX_MC_ADDRESS_GROUP_MAX][ETH_ALEN];
++};
++
++static u64 wl1251_op_prepare_multicast(struct ieee80211_hw *hw,
++				       struct netdev_hw_addr_list *mc_list)
++{
++	struct wl1251_filter_params *fp;
++	struct netdev_hw_addr *ha;
++	struct wl1251 *wl = hw->priv;
++
++	if (unlikely(wl->state == WL1251_STATE_OFF))
++		return 0;
++
++	fp = kzalloc(sizeof(*fp), GFP_ATOMIC);
++	if (!fp) {
++		wl1251_error("Out of memory setting filters.");
++		return 0;
++	}
++
++	/* update multicast filtering parameters */
++	fp->mc_list_length = 0;
++	if (netdev_hw_addr_list_count(mc_list) > ACX_MC_ADDRESS_GROUP_MAX) {
++		fp->enabled = false;
++	} else {
++		fp->enabled = true;
++		netdev_hw_addr_list_for_each(ha, mc_list) {
++			memcpy(fp->mc_list[fp->mc_list_length],
++					ha->addr, ETH_ALEN);
++			fp->mc_list_length++;
++		}
++	}
++
++	return (u64)(unsigned long)fp;
++}
++
+ #define WL1251_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
+ 				  FIF_ALLMULTI | \
+ 				  FIF_FCSFAIL | \
+@@ -688,8 +727,9 @@ out:
  
- 	/* Reset the TTL value and Initiator flag */
- 	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
-@@ -1072,11 +1073,11 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	if (ret)
- 		return -EINVAL;
+ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 				       unsigned int changed,
+-				       unsigned int *total,u64 multicast)
++				       unsigned int *total, u64 multicast)
+ {
++	struct wl1251_filter_params *fp = (void *)(unsigned long)multicast;
+ 	struct wl1251 *wl = hw->priv;
+ 	int ret;
  
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+	changed |= BSS_CHANGED_BEACON;
+@@ -698,9 +738,11 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 	*total &= WL1251_SUPPORTED_FILTERS;
+ 	changed &= WL1251_SUPPORTED_FILTERS;
  
- 	mcsa_dbg(sdata, "complete switching to center freq %d MHz",
- 		 sdata->vif.bss_conf.chandef.chan->center_freq);
--	return 0;
-+	return changed;
+-	if (changed == 0)
++	if (changed == 0) {
+ 		/* no filters which we support changed */
++		kfree(fp);
+ 		return;
++	}
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -737,6 +779,15 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if (*total & FIF_ALLMULTI || *total & FIF_PROMISC_IN_BSS)
++		ret = wl1251_acx_group_address_tbl(wl, false, NULL, 0);
++	else if (fp)
++		ret = wl1251_acx_group_address_tbl(wl, fp->enabled,
++						   fp->mc_list,
++						   fp->mc_list_length);
++	if (ret < 0)
++		goto out;
++
+ 	/* send filters to firmware */
+ 	wl1251_acx_rx_config(wl, wl->rx_config, wl->rx_filter);
+ 
+@@ -744,6 +795,7 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
++	kfree(fp);
  }
  
- int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
--- 
-1.8.5.3
-
+ /* HW encryption */
+@@ -1283,6 +1335,7 @@ static const struct ieee80211_ops wl1251_ops = {
+ 	.add_interface = wl1251_op_add_interface,
+ 	.remove_interface = wl1251_op_remove_interface,
+ 	.config = wl1251_op_config,
++	.prepare_multicast = wl1251_op_prepare_multicast,
+ 	.configure_filter = wl1251_op_configure_filter,
+ 	.tx = wl1251_op_tx,
+ 	.set_key = wl1251_op_set_key,
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 45df03a..93c18d2 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -93,6 +93,7 @@ enum {
+ 	} while (0)
+ 
+ #define WL1251_DEFAULT_RX_CONFIG (CFG_UNI_FILTER_EN |	\
++				  CFG_MC_FILTER_EN |	\
+ 				  CFG_BSSID_FILTER_EN)
+ 
+ #define WL1251_DEFAULT_RX_FILTER (CFG_RX_PRSP_EN |  \
