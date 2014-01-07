@@ -1,62 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:39761 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752243AbaAPLEE (ORCPT
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50128 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754235AbaAGVj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 06:04:04 -0500
-Received: by mail-ie0-f177.google.com with SMTP id at1so533004iec.36
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 03:04:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-	<1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 16 Jan 2014 13:04:03 +0200
-Message-ID: <CAB3XZEe0yM2F4C5DbWE+BjDVn92Sv_=k5EiUpokZjF1QugdSWw@mail.gmail.com> (sfid-20140116_120407_757857_D0FCEAC5)
-Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Jan 2014 16:39:26 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
+Date: Tue,  7 Jan 2014 19:05:41 +0100
+Message-Id: <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com> (sfid-20140107_224046_396791_BEFCBB0C)
+In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 15, 2014 at 2:04 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> This implements a fairly simple multi-interface
-> CSA. It doesn't support multiple channel
-> contexts so it doesn't support multi-channel.
->
-> Once a CSA is started other CSA requests are
-> denied until the first one is completed. A single
-> CSA may affect multiple interfaces. CSA can happen
-> only if it all target CSA chandefs are compatible
-> and it affects all interfaces are sharing a single
-> channel context exclusively.
->
-> A new worker is introduced: csa_complete_work
-> which is used to account per-interface countdowns
-> and issue the actual channel switch after last
-> interface completes its CSA.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+This update also fixes a stylistic (naming and messaging only)
+confusion of MSI-X vs multiple MSIs which are not the same.
 
->
-> +static int ieee80211_ap_beacon_presp_backup(struct ieee80211_sub_if_data *sdata)
-> +{
-> +       struct beacon_data *beacon;
-> +       struct probe_resp *probe_resp;
-> +
-> +       beacon = sdata_dereference(sdata->u.ap.beacon, sdata);
-> +       if (beacon) {
-> +               sdata->u.ap.prev_beacon = kmemdup(beacon, sizeof(beacon) +
-> +                                                 beacon->head_len +
-> +                                                 beacon->tail_len, GFP_KERNEL);
-> +               if (!sdata->u.ap.prev_beacon)
-> +                       return -ENOMEM;
-> +       }
-> +
-you must also update the pointers here...
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 9e86a81..08807fe 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2073,14 +2073,14 @@ static void ath10k_pci_tasklet(unsigned long data)
+ 	}
+ }
+ 
+-static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
++static int ath10k_pci_start_intr_multi_msi(struct ath10k *ar, int num)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 	int i;
+ 
+-	ret = pci_enable_msi_block(ar_pci->pdev, num);
+-	if (ret)
++	ret = pci_enable_msi_range(ar_pci->pdev, num, num);
++	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
+@@ -2111,16 +2111,16 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
+ 		}
+ 	}
+ 
+-	ath10k_info("MSI-X interrupt handling (%d intrs)\n", num);
++	ath10k_info("Multi MSI interrupt handling (%d intrs)\n", num);
+ 	return 0;
+ }
+ 
+-static int ath10k_pci_start_intr_msi(struct ath10k *ar)
++static int ath10k_pci_start_intr_single_msi(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+-	ret = pci_enable_msi(ar_pci->pdev);
++	ret = pci_enable_msi_range(ar_pci->pdev, 1, 1);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -2132,7 +2132,7 @@ static int ath10k_pci_start_intr_msi(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	ath10k_info("MSI interrupt handling\n");
++	ath10k_info("Single MSI interrupt handling\n");
+ 	return 0;
+ }
+ 
+@@ -2199,20 +2199,20 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
+ 		num = 1;
+ 
+ 	if (num > 1) {
+-		ret = ath10k_pci_start_intr_msix(ar, num);
++		ret = ath10k_pci_start_intr_multi_msi(ar, num);
+ 		if (ret == 0)
+ 			goto exit;
+ 
+-		ath10k_warn("MSI-X didn't succeed (%d), trying MSI\n", ret);
++		ath10k_warn("Multi MSI failed (%d), trying single MSI\n", ret);
+ 		num = 1;
+ 	}
+ 
+ 	if (num == 1) {
+-		ret = ath10k_pci_start_intr_msi(ar);
++		ret = ath10k_pci_start_intr_single_msi(ar);
+ 		if (ret == 0)
+ 			goto exit;
+ 
+-		ath10k_warn("MSI didn't succeed (%d), trying legacy INTR\n",
++		ath10k_warn("Single MSI failed (%d), trying legacy INTR\n",
+ 			    ret);
+ 		num = 0;
+ 	}
+-- 
+1.7.7.6
+
