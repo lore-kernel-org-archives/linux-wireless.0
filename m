@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:57941 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbaAOMJ2 (ORCPT
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50128 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754204AbaAGVjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 07:09:28 -0500
-Received: by mail-ee0-f49.google.com with SMTP id d17so823105eek.36
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:09:27 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 3/9] mac80211: move csa_active setting in STA CSA
-Date: Wed, 15 Jan 2014 13:04:48 +0100
-Message-Id: <1389787494-7361-4-git-send-email-michal.kazior@tieto.com> (sfid-20140115_130933_855780_FE376049)
-In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 7 Jan 2014 16:39:21 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
+Date: Tue,  7 Jan 2014 19:05:42 +0100
+Message-Id: <a5774459cb8eebfc95156b8cd3b249d896e04400.1389103215.git.agordeev@redhat.com> (sfid-20140107_224148_984407_6985689A)
+In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sdata->vif.csa_active could be left set after,
-e.g. channel context contraints check fail in STA
-mode leaving the interface in a strange state for
-a brief period of time until it is disconnected.
-This was harmless but ugly.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
+ 1 files changed, 19 insertions(+), 17 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fc1d824..bfb81cb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1001,7 +1001,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index eeceab3..022dfe4 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
+ 	switch (use_msi) {
+ 	case 3:
+ 	case 1:
++		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
++		break;
+ 	case 0:
++		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
+ 		break;
+ 	default:
+-		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
+-			use_msi);
++		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
+ 		use_msi = 1;
+ 	}
+-	wil->n_msi = use_msi;
+-	if (wil->n_msi) {
+-		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
+-		rc = pci_enable_msi_block(pdev, wil->n_msi);
+-		if (rc && (wil->n_msi == 3)) {
+-			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
+-			wil->n_msi = 1;
+-			rc = pci_enable_msi_block(pdev, wil->n_msi);
+-		}
+-		if (rc) {
+-			wil_err(wil, "pci_enable_msi failed, use INTx\n");
+-			wil->n_msi = 0;
+-		}
+-	} else {
+-		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
++
++	switch (use_msi) {
++	case 3:
++		if (pci_enable_msi_range(pdev, 3, 3) > 0)
++			break;
++		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
++		use_msi = 1;
++		/* fallthrough */
++	case 1:
++		if (pci_enable_msi_range(pdev, 1, 1) > 0)
++			break;
++		wil_err(wil, "pci_enable_msi_range failed, use INTx\n");
++		use_msi = 0;
  	}
  
- 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
--	sdata->vif.csa_active = true;
- 
- 	mutex_lock(&local->chanctx_mtx);
- 	if (local->use_chanctx) {
-@@ -1039,6 +1038,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	mutex_unlock(&local->chanctx_mtx);
- 
- 	sdata->csa_chandef = csa_ie.chandef;
-+	sdata->vif.csa_active = true;
- 
- 	if (csa_ie.mode)
- 		ieee80211_stop_queues_by_reason(&local->hw,
++	wil->n_msi = use_msi;
++
+ 	rc = wil6210_init_irq(wil, pdev->irq);
+ 	if (rc)
+ 		goto stop_master;
 -- 
-1.8.4.rc3
+1.7.7.6
 
