@@ -1,86 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:40839 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932295AbaAWTL4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47307 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528AbaAGQEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 14:11:56 -0500
-Received: by mail-we0-f169.google.com with SMTP id u57so1704859wes.28
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 11:11:55 -0800 (PST)
-Message-ID: <52E16978.3040602@gmail.com> (sfid-20140123_201206_714657_9B5CC91B)
-Date: Thu, 23 Jan 2014 21:11:52 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Petko Manolov <petkan@nucleusys.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi crash with 3.13
-References: <20140123091659.GE9077@localhost> <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com> <20140123123125.GA3424@localhost> <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
-Content-Type: multipart/mixed;
- boundary="------------080204090707000405030806"
+	Tue, 7 Jan 2014 11:04:23 -0500
+Message-ID: <1389110654.4645.30.camel@jlt4.sipsolutions.net> (sfid-20140107_170448_364092_B72786C5)
+Subject: Re: [PATCH 1/2 V3] nl80211/cfg80211: Add support for drivers with
+ AP SME that require PMF SA Query assistance
+From: Johannes Berg <johannes@sipsolutions.net>
+To: clanctot@codeaurora.org
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 07 Jan 2014 17:04:14 +0100
+In-Reply-To: <639efbd4cc1a2cf8a93953dc037ed52e.squirrel@www.codeaurora.org>
+References: <639efbd4cc1a2cf8a93953dc037ed52e.squirrel@www.codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080204090707000405030806
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+[please fix your quoting. I'll reply anyway this time, but still, it's
+odd to read if you get linebreaks but the quote marks only apply to the
+first line]
 
-Ok -  I put the pieces together:
+On Fri, 2014-01-03 at 21:30 +0000, clanctot@codeaurora.org wrote:
 
-> iwlwifi 0000:01:00.0: loaded firmware version 22.15.8.0 op_mode iwlmvm
-> iwlwifi 0000:01:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
+> Yes, the device will detect the case of an unprotected Assoc Request from
+> a station where there is already a PMF connection and, in this case, will
+> pass up the frame to hostapd.  hostapd already has code to handle this
+> case and will initiate the SA Query procedure.  This has been tested and
+> it works correctly.
 
-This means that your NIC is 2.4GHz only. Dual band NICs print something
-else.
+Documentation needed then.
 
-Now here come the catch. You seem to have an "old" NIC in a way that the
-NVM (EEPROM like) is old. In that NVM, there was a bug that advertised
-the A band channels but disabled the A band in SKU cap.
+> The station flag is added for hostapd to signal back to the device that SA
+> Query has timed out (completed) and that the device should process Assoc
+> Request frames from that station normally.
 
-Can you please try the patch attached?
-I will prevent the driver from trying to work on A band while the HW
-doesn't allow.
+Seems reasonable I guess.
 
-emmanuel
+> > Also, which (upstream) driver is going to use this?
+> These changes are of general utility for any device that implements AP SME
+> and will also implement PMF.  We will be up-steaming a driver that will
+> use these extensions in the future.
 
---------------080204090707000405030806
-Content-Type: text/x-patch;
- name="0001-iwlwifi-mvm-don-t-allow-A-band-if-SKU-forbids-it.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-iwlwifi-mvm-don-t-allow-A-band-if-SKU-forbids-it.patch"
+I'm curious, for what device? :)
 
->From dd40219d34426e4f9c7d1b10653ece3dc67588c5 Mon Sep 17 00:00:00 2001
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 5 Dec 2013 22:42:55 +0200
-Subject: [PATCH] iwlwifi: mvm: don't allow A band if SKU forbids it
+> For existing PMF (MFP) code, there is no check for driver support of PMF.
+> wpa_supplicant and hostapd just pass PMF information to the driver.  The
+> driver just ignores the information if it does not support PMF.
 
-Change-Id: I920b7c53dc05a41de43ab9762eb7853dc4bed1ed
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Really? But anyway the driver might be confused if it sees a station
+change with something changing that doesn't actually do anything for it?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 1fce0ec..9600afc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -192,6 +192,10 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 			continue;
- 		}
- 
-+		if (ch_idx >= NUM_2GHZ_CHANNELS &&
-+		    !data->sku_cap_band_52GHz_enable)
-+			continue;
-+
- 		channel = &data->channels[n_channels];
- 		n_channels++;
- 
--- 
-1.8.1.msysgit.1
+> >> @@ -4090,7 +4091,7 @@ static int nl80211_new_station(struct sk_buff
+> *skb, struct genl_info *info)
+> >>  		return -EINVAL;
+> >>  	/* When you run into this, adjust the code below for the new flag */
+> >> -	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+> >> +	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 8);
+> >>  	switch (dev->ieee80211_ptr->iftype) {
+> >>  	case NL80211_IFTYPE_AP:
+> > Can this really be right? Is it simply invalid on a new station? Why
+> does this even make sense - this is done for AP SME where this is never
+> invoked?
+> > Anyway you need to reject adding TDLS peers with this flag, for example,
+> afaict.
+> The idea here was that this new flag is used to signal a state transition
+> for stations for which the SA Query procedure has already started.  So,
+> yes, it is invalid for a “new station” operation.
 
+Right, so then you should just reject it there? New station is never
+even called for AP SME, I believe, so it wouldn't make sense at all to
+specify the flag.
 
---------------080204090707000405030806--
+> But when the driver detects that an SA Query procedure is needed for an
+> associated station, it passes the Association Request up to hostapd and
+> remembers that the SA Query is in progress for that station.
+> 
+> This new flag allows hostapd to signal to the driver that SA Query has
+> completed and the driver can clear the state for that station indicating
+> that SA Query is in progress.  So this flag is only used in the “station
+> change” operation.
+
+Yeah, I get that.
+
+> Perhaps there is a cleaner way to do this?  What we are trying to
+> accomplish is to allow hostapd to signal to the driver that SA Query has
+> completed and do this using an already existing nl80211/cfg80211 interface
+> (and just adding a new flag).
+
+I think that's OK, but you're adding it in a way that allows the flag to
+be used with other operations and that'd be inconsistent with the flag
+semantics, it seems?
+
+johannes
+
