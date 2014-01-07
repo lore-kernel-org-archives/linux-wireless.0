@@ -1,54 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:51935 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216AbaAXVds (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47167 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987AbaAGPYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 16:33:48 -0500
-Received: by mail-ie0-f177.google.com with SMTP id at1so3474278iec.22
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 13:33:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1390572447.4257.43.camel@jlt4.sipsolutions.net>
-References: <1390570161-25041-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1390572447.4257.43.camel@jlt4.sipsolutions.net>
-Date: Fri, 24 Jan 2014 22:33:47 +0100
-Message-ID: <CAFED-j=bfkffdtb8PLdbkCwWhXamWY2uiL6iFuAZhz95VLFHJg@mail.gmail.com> (sfid-20140124_223412_869932_AF17F934)
-Subject: Re: [PATCH] cfg80211: set preset_chandef after channel switch
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Jan 2014 10:24:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: clean up prepare_for_handlers() return value
+Date: Tue,  7 Jan 2014 16:24:11 +0100
+Message-Id: <1389108251-19311-1-git-send-email-johannes@sipsolutions.net> (sfid-20140107_162417_967806_8D93F92D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/24 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2014-01-24 at 14:29 +0100, Janusz Dziedzic wrote:
->> Set preset_chandef in channel switch notification.
->> In other case we will have old preset_chandef.
->
-> Why would we care? We only keep the preset_chandef thing around because
-> hostapd (currently) doesn't pass the frequency to START_AP/the first
-> SET_BEACON, but after that this doesn't matter. And when you shut down
-> hostapd, and restart it, then it'll set the preset_chandef again through
-> explicitly setting the channel.
->
-> So in which case would we care? Who would ever STOP_AP and then START_AP
-> without a new frequency?
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-We have test code in cfg80211 that using preset_chandef when compare
-chandefs when csa.
-And after that I see we never change preset_chandef after csa.
+Using an int with 0/1 is not very common, make the function
+return a bool instead with the same values (false/true).
 
->From other side, I could imagine case where we have two VAPs in hostapd.
-- first we start first VAPs (eg. channel 36 HT40+)
-- next we call CSA (channel 44 HT40+)
-- now we start second VAPs - we will get err here because of
-preset_chandef (36 HT40+)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-BR
-Janusz
-
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8cb20d7..c24ca0d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3076,8 +3076,8 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 
+ /* main receive path */
+ 
+-static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+-				struct ieee80211_hdr *hdr)
++static bool prepare_for_handlers(struct ieee80211_rx_data *rx,
++				 struct ieee80211_hdr *hdr)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct sk_buff *skb = rx->skb;
+@@ -3088,29 +3088,29 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		if (!bssid && !sdata->u.mgd.use_4addr)
+-			return 0;
++			return false;
+ 		if (!multicast &&
+ 		    !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
+ 			if (!(sdata->dev->flags & IFF_PROMISC) ||
+ 			    sdata->u.mgd.use_4addr)
+-				return 0;
++				return false;
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!bssid)
+-			return 0;
++			return false;
+ 		if (ether_addr_equal(sdata->vif.addr, hdr->addr2) ||
+ 		    ether_addr_equal(sdata->u.ibss.bssid, hdr->addr2))
+-			return 0;
++			return false;
+ 		if (ieee80211_is_beacon(hdr->frame_control)) {
+-			return 1;
++			return true;
+ 		} else if (!ieee80211_bssid_match(bssid, sdata->u.ibss.bssid)) {
+-			return 0;
++			return false;
+ 		} else if (!multicast &&
+ 			   !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
+ 			if (!(sdata->dev->flags & IFF_PROMISC))
+-				return 0;
++				return false;
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		} else if (!rx->sta) {
+ 			int rate_idx;
+@@ -3126,7 +3126,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 		if (!multicast &&
+ 		    !ether_addr_equal(sdata->vif.addr, hdr->addr1)) {
+ 			if (!(sdata->dev->flags & IFF_PROMISC))
+-				return 0;
++				return false;
+ 
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		}
+@@ -3135,7 +3135,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 	case NL80211_IFTYPE_AP:
+ 		if (!bssid) {
+ 			if (!ether_addr_equal(sdata->vif.addr, hdr->addr1))
+-				return 0;
++				return false;
+ 		} else if (!ieee80211_bssid_match(bssid, sdata->vif.addr)) {
+ 			/*
+ 			 * Accept public action frames even when the
+@@ -3145,26 +3145,26 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 			 */
+ 			if (!multicast &&
+ 			    !ether_addr_equal(sdata->vif.addr, hdr->addr1))
+-				return 0;
++				return false;
+ 			if (ieee80211_is_public_action(hdr, skb->len))
+-				return 1;
++				return true;
+ 			if (!ieee80211_is_beacon(hdr->frame_control))
+-				return 0;
++				return false;
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_WDS:
+ 		if (bssid || !ieee80211_is_data(hdr->frame_control))
+-			return 0;
++			return false;
+ 		if (!ether_addr_equal(sdata->u.wds.remote_addr, hdr->addr2))
+-			return 0;
++			return false;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		if (!ieee80211_is_public_action(hdr, skb->len) &&
+ 		    !ieee80211_is_probe_req(hdr->frame_control) &&
+ 		    !ieee80211_is_probe_resp(hdr->frame_control) &&
+ 		    !ieee80211_is_beacon(hdr->frame_control))
+-			return 0;
++			return false;
+ 		if (!ether_addr_equal(sdata->vif.addr, hdr->addr1) &&
+ 		    !multicast)
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+@@ -3175,7 +3175,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 		break;
+ 	}
+ 
+-	return 1;
++	return true;
+ }
+ 
+ /*
 -- 
-Janusz Dziedzic
+1.8.5.1
+
