@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59121 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbaAFLkz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48613 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754454AbaAGXPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:40:55 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 02/15] brcmfmac: Remove some obsolete definitions and variables.
-Date: Mon, 6 Jan 2014 12:40:37 +0100
-Message-ID: <1389008450-28529-3-git-send-email-arend@broadcom.com> (sfid-20140106_124059_421765_BA194131)
-In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 7 Jan 2014 18:15:23 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 05/12] mac80211_hwsim: refactor radio cleanup
+Date: Wed,  8 Jan 2014 00:15:10 +0100
+Message-Id: <1389136517-21216-6-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001532_305116_6592D57A)
+In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Refactor the radio cleanup into a new function to later
+allow deleting a single radio from the list.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h        |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c |    2 --
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 252024b..e299657 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -21,8 +21,6 @@
- #ifndef _BRCMF_H_
- #define _BRCMF_H_
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 23fa6ee..421528e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1623,25 +1623,26 @@ static const struct ieee80211_ops mac80211_hwsim_ops = {
  
--#define BRCMF_VERSION_STR		"4.218.248.5"
+ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ 
++static void mac80211_hwsim_destroy_radio(struct mac80211_hwsim_data *data)
++{
++	lockdep_assert_held(&hwsim_radio_lock);
++	list_del(&data->list);
++
++	debugfs_remove_recursive(data->debugfs);
++	ieee80211_unregister_hw(data->hw);
++	device_release_driver(data->dev);
++	device_unregister(data->dev);
++	ieee80211_free_hw(data->hw);
++}
++
+ static void mac80211_hwsim_free(void)
+ {
+-	struct list_head tmplist, *i, *tmp;
+ 	struct mac80211_hwsim_data *data, *tmpdata;
+ 
+-	INIT_LIST_HEAD(&tmplist);
 -
- #include "fweh.h"
+ 	spin_lock_bh(&hwsim_radio_lock);
+-	list_for_each_safe(i, tmp, &hwsim_radios)
+-		list_move(i, &tmplist);
++	list_for_each_entry_safe(data, tmpdata, &hwsim_radios, list)
++		mac80211_hwsim_destroy_radio(data);
+ 	spin_unlock_bh(&hwsim_radio_lock);
+-
+-	list_for_each_entry_safe(data, tmpdata, &tmplist, list) {
+-		debugfs_remove_recursive(data->debugfs);
+-		ieee80211_unregister_hw(data->hw);
+-		device_release_driver(data->dev);
+-		device_unregister(data->dev);
+-		ieee80211_free_hw(data->hw);
+-	}
+ 	class_destroy(hwsim_class);
+ }
  
- #define TOE_TX_CSUM_OL		0x00000001
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 7b6bdd1..6a8983a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -32,8 +32,6 @@
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
- #define BRCMF_DEFAULT_PACKET_FILTER	"100 0 0 0 0x01 0x00"
- 
--static const char brcmf_version[] =
--	"Dongle Host Driver, version " BRCMF_VERSION_STR;
- 
- bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
- 		      struct sk_buff *pkt, int prec)
 -- 
-1.7.10.4
+1.8.5.1
 
