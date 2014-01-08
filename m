@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53439 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755092AbaAFVAU (ORCPT
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43488 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755327AbaAHCy7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 16:00:20 -0500
-Date: Mon, 6 Jan 2014 15:51:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Ding Tianhong <dingtianhong@huawei.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3.5 18/19] rtlwifi: slight optimization of addr compare
-Message-ID: <20140106205143.GH10885@tuxdriver.com> (sfid-20140106_220045_676592_45643B5E)
-References: <52BC15EA.2020603@huawei.com>
- <52BC2576.3090601@cogentembedded.com>
- <20140106195302.GF10885@tuxdriver.com>
+	Tue, 7 Jan 2014 21:54:59 -0500
+Message-ID: <52CCBDDF.4050301@huawei.com> (sfid-20140108_035624_853067_4B3B228F)
+Date: Wed, 8 Jan 2014 10:54:23 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140106195302.GF10885@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3.6 18/19] rtlwifi: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 06, 2014 at 02:53:02PM -0500, John W. Linville wrote:
-> On Thu, Dec 26, 2013 at 04:47:50PM +0400, Sergei Shtylyov wrote:
-> > Hello.
-> > 
-> > On 26-12-2013 15:41, Ding Tianhong wrote:
-> > 
-> > >Use possibly more efficient ether_addr_equal_unaligned
-> > >instead of memcmp.
-> > 
-> > >Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> > >Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> > >Cc: John W. Linville <linville@tuxdriver.com>
-> > >Cc: linux-wireless@vger.kernel.org
-> > >Cc: netdev@vger.kernel.org
-> > >Cc: linux-kernel@vger.kernel.org
-> > >Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-> > >Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> > >---
-> > >  drivers/net/wireless/rtlwifi/cam.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > >diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> > >index 0e510f7..0276153 100644
-> > >--- a/drivers/net/wireless/rtlwifi/cam.c
-> > >+++ b/drivers/net/wireless/rtlwifi/cam.c
-> > [...]
-> > >@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
-> > >  		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
-> > >  		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
-> > >  		if (((bitmap & BIT(0)) == BIT(0)) &&
-> > >-		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-> > >+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
-> > 
-> >    It's pointless to enclose function call in parens, again.
-> 
-> I'll correct that issue when merging the patch.
+Use possibly more efficient ether_addr_equal_unaligned
+instead of memcmp.
 
-Well, that was the plan...  But since ether_addr_equal_unaligned
-isn't in the wireless trees at the moment, it will have to wait or go
-through another tree that has that definition.  Feel free to respin
-with the extra parenthesis removed...
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/rtlwifi/cam.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 0e510f7..0276153 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -295,7 +295,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 	/* Does STA already exist? */
+ 	for (i = 4; i < TOTAL_CAM_ENTRY; i++) {
+ 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
+-		if (memcmp(addr, sta_addr, ETH_ALEN) == 0)
++		if (ether_addr_equal_unaligned(addr, sta_addr))
+ 			return i;
+ 	}
+ 	/* Get a free CAM entry. */
+@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
+ 		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
+ 		if (((bitmap & BIT(0)) == BIT(0)) &&
+-		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
++		    (ether_addr_equal_unaligned(addr, sta_addr))) {
+ 			/* Remove from HW Security CAM */
+ 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
+ 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
+
