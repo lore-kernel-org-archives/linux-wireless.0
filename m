@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:58213 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbaARMyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 07:54:38 -0500
-Received: from ultralex.lan ([93.218.86.193]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0LjeWC-1VTEix0jFo-00bcJr for
- <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 13:54:37 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 1/5] ath: add common function ath_is_mybeacon
-Date: Sat, 18 Jan 2014 13:54:15 +0100
-Message-Id: <1390049659-27021-2-git-send-email-linux@rempel-privat.de> (sfid-20140118_135450_355473_86AB406D)
-In-Reply-To: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
-References: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:40775 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111AbaAHKkL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jan 2014 05:40:11 -0500
+Received: by mail-la0-f49.google.com with SMTP id er20so974636lab.22
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 02:40:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAEFj987Rxv9azS4EmW47a5guhVT-JijXsxSOgcGfvgwLkB9tEg@mail.gmail.com>
+References: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com>
+	<CAEFj987Rxv9azS4EmW47a5guhVT-JijXsxSOgcGfvgwLkB9tEg@mail.gmail.com>
+Date: Wed, 8 Jan 2014 11:40:09 +0100
+Message-ID: <CADnKcViXui6jCsBxgbYh5A2R4ra+p3YxBP-Om1cT5GaYjjAFPw@mail.gmail.com> (sfid-20140108_114015_292484_8B021894)
+Subject: Re: [PATCH] ath10k: disable STA KICKOUT in FW
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this function is used by most ath driver, so it can be moved here.
+On 2 January 2014 13:41, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>
+> On Dec 30, 2013 4:08 PM, "Marek Puzyniak" <marek.puzyniak@tieto.com> wrote:
+>>
+>> Currently ath10k is not using STA KICKOUT firmware functionality.
+>> In order to avoid unwanted FW events this functionality should be
+>> disabled when not used.
+>
+> What are unwanted FW events?
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath.h | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+WMI_PEER_STA_KICKOUT_EVENT which indicates lack of activity from
+associated STA for specified period of time.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index e0ba7cd..ab6a0c8 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -17,6 +17,7 @@
- #ifndef ATH_H
- #define ATH_H
- 
-+#include <linux/etherdevice.h>
- #include <linux/skbuff.h>
- #include <linux/if_ether.h>
- #include <linux/spinlock.h>
-@@ -162,10 +163,17 @@ struct ath_common {
- 	bool bt_ant_diversity;
- };
- 
-+static inline bool ath_is_mybeacon(struct ath_common *common,
-+				   struct ieee80211_hdr *hdr)
-+{
-+	return ieee80211_is_beacon(hdr->frame_control) &&
-+		!is_zero_ether_addr(common->curbssid) &&
-+		ether_addr_equal_64bits(hdr->addr3, common->curbssid);
-+}
-+
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- 				u32 len,
- 				gfp_t gfp_mask);
--
- void ath_hw_setbssidmask(struct ath_common *common);
- void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key);
- int ath_key_config(struct ath_common *common,
--- 
-1.8.5.2
-
+>
+> ----
+> Chun-Yeow
+Marek
+>
+>> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 9 +++++++++
+>>  1 file changed, 9 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 5b45f3a..93416ab 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct
+>> ieee80211_hw *hw,
+>>         }
+>>
+>>         if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+>> +               u32 param_id;
+>> +
+>>                 ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
+>>                 if (ret) {
+>>                         ath10k_warn("Failed to create peer for AP: %d\n",
+>> ret);
+>>                         goto err_vdev_delete;
+>>                 }
+>> +
+>> +               param_id = ar->wmi.pdev_param->sta_kickout_th;
+>> +
+>> +               /* Disable STA KICKOUT functionality in FW */
+>> +               ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
+>> +               if (ret)
+>> +                       ath10k_warn("Failed to disable STA KICKOUT\n");
+>>         }
+>>
+>>         if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
+>> --
+>> 1.8.1.2
+>>
+>>
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
