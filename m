@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:48756 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755296AbaA1VdJ (ORCPT
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:39558 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756260AbaAHPbO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 16:33:09 -0500
-MIME-Version: 1.0
-Date: Tue, 28 Jan 2014 13:33:07 -0800
-Message-ID: <CACUGKYOT3sSveRZ6-JjMX-ZGHjyVjmJ2ZnYQXLzFj11J6mbypQ@mail.gmail.com> (sfid-20140128_223313_257820_A5FB381A)
-Subject: Marvell Driver for SD8797
-From: John Tobias <john.tobias.ph@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"<linux-arm-kernel@lists.infradead.org>"
-	<linux-arm-kernel@lists.infradead.org>,
-	"<linux-kernel@vger.kernel.org>" <linux-kernel@vger.kernel.org>
-Cc: sebastian.hesselbarth@gmail.com, frankh@marvell.com,
-	Bing Zhao <bzhao@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Jan 2014 10:31:14 -0500
+Received: by mail-ea0-f171.google.com with SMTP id h10so890791eak.16
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 07:31:12 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/4] cfg80211: implement multi-BSS CSA
+Date: Wed,  8 Jan 2014 16:26:54 +0100
+Message-Id: <1389194818-7864-1-git-send-email-michal.kazior@tieto.com> (sfid-20140108_163117_469260_5B946839)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+Hi,
 
-Does anyone using the Marvell SD8797 here?. I tested both the
-opensource and the proprietary driver of Marvell for suspend mode (S3)
-on iMX6SL board running 3.13 kernel.
-
-In opensource, the driver were able to suspend/resume and able to keep
-the IP address and SSID as well, which is good.
-
-In proprietary driver, the driver were able to suspend/resume and able
-to keep the IP address but, not the SSID.
-
-Any idea?.
+I'm trying to implement multi-BSS CSA. So far I've
+prepared some cfg80211 patches and I'd like to get
+feedback whether this kind of apprach is okay or
+not.
 
 
-Regards,
+Michal Kazior (4):
+  nl80211: make chandef parser take nlattr arg
+  cfg80211: rename function argument to be more readable
+  cfg80211: implement multi-vif interface combination validation
+  cfg80211: implement multi-BSS CSA
 
-john
+ include/net/cfg80211.h       |  10 +-
+ include/uapi/linux/nl80211.h |   2 +
+ net/mac80211/cfg.c           |  10 +-
+ net/wireless/core.h          |  36 +++++--
+ net/wireless/nl80211.c       | 227 +++++++++++++++++++++++++++++--------------
+ net/wireless/rdev-ops.h      |   8 +-
+ net/wireless/trace.h         |  29 +-----
+ net/wireless/util.c          | 158 ++++++++++++++++++------------
+ 8 files changed, 306 insertions(+), 174 deletions(-)
+
+-- 
+1.8.4.rc3
+
