@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:42383 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbaAWGPo (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6416 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753691AbaAHCuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 01:15:44 -0500
-Received: by mail-wi0-f170.google.com with SMTP id ex4so262449wid.5
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 22:15:43 -0800 (PST)
+	Tue, 7 Jan 2014 21:50:39 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Ding Tianhong <dingtianhong@huawei.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Tue, 7 Jan 2014 18:50:28 -0800
+Subject: RE: [PATCH v3.5 17/19] mwifiex: slight optimization of addr compare
+Message-ID: <477F20668A386D41ADCC57781B1F70430F534B5541@SC-VEXCH1.marvell.com> (sfid-20140108_035115_763699_993C4997)
+References: <52BC15E7.7050205@huawei.com>
+In-Reply-To: <52BC15E7.7050205@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-References: <52DF947E.40800@gmail.com> <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 23 Jan 2014 11:45:22 +0530
-Message-ID: <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com> (sfid-20140123_071547_325135_7DC8A6F1)
-Subject: Re: 802.11a is supported in AP mode or not?
-To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-Cc: zhuyj <zyjzyj2000@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 7:30 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
-> Thanks for your mail, but very pity, after checking, it doesn't as well. May you test it on your board?
->
->
-> # iw reg get
-> country US:
->         (2402 - 2472 @ 40), (30, 0)
->         (5170 - 5250 @ 80), (17, 0)
->         (5250 - 5330 @ 80), (23, 0)
->         (5735 - 5835 @ 80), (30, 0)
->         (57240 - 63720 @ 2160), (40, 0)
->
-> country_code=US
-> hw_mode=a
-> channel=149
->
-> #hostapd -B /etc/hostapd.conf
-> Configuration file: /etc/hostapd.conf
-> channel [19] (149) is disabled for use in AP mode, flags: 0x7
-> wlan0: IEEE 802.11 Configured channel (149) not found from the channel list of current mode (2) IEEE 802.11a
-> wlan0: IEEE 802.11 Hardware does not support configured channel
-> Could not select hw_mode and channel. (-4)
-> wlan0: Unable to setup interface.
-> rmdir[ctrl_interface]: No such file or directory
->
-Can you use "hostapd -dd -B /etc/hostapd.conf"and send the output?
-Also "hostapd -v" and "iw phy" as well.
+SGkgRGluZywNCg0KPiBVc2UgcG9zc2libHkgbW9yZSBlZmZpY2llbnQgZXRoZXJfYWRkcl9lcXVh
+bA0KPiBpbnN0ZWFkIG9mIG1lbWNtcC4NCg0KPiBAQCAtNzgyLDggKzc4Miw3IEBAIHN0YXRpYyBp
+bnQgbXdpZmlleF9yZXRfaWJzc19jb2FsZXNjaW5nX3N0YXR1cyhzdHJ1Y3QgbXdpZmlleF9wcml2
+YXRlICpwcml2LA0KPiAgCX0NCj4gDQo+ICAJLyogSWYgQlNTSUQgaXMgZGlmZiwgbW9kaWZ5IGN1
+cnJlbnQgQlNTIHBhcmFtZXRlcnMgKi8NCj4gLQlpZiAobWVtY21wKHByaXYtPmN1cnJfYnNzX3Bh
+cmFtcy5ic3NfZGVzY3JpcHRvci5tYWNfYWRkcmVzcywNCj4gLQkJICAgaWJzc19jb2FsX3Jlc3At
+PmJzc2lkLCBFVEhfQUxFTikpIHsNCj4gKwlpZiAoIWV0aGVyX2FkZHJfZXF1YWwocHJpdi0+Y3Vy
+cl9ic3NfcGFyYW1zLmJzc19kZXNjcmlwdG9yLm1hY19hZGRyZXNzLCBpYnNzX2NvYWxfcmVzcC0+
+YnNzaWQpKQ0KDQpDb3VsZCB5b3UgYnJlYWsgdGhlIGxpbmU/DQpJZiB5b3UgcnVuICJjaGVja3Bh
+dGNoLnBsIiB5b3Ugd2lsbCBzcG90IHRoaXMgd2FybmluZy4NCg0KPiAgCWlmICghSVNfMTFOX0VO
+QUJMRUQocHJpdikgfHwNCj4gLQkgICAgbWVtY21wKHByaXYtPmN1cnJfYWRkciwgcnhfcGt0X2hk
+ci0+ZXRoODAzX2hkci5oX2Rlc3QsIEVUSF9BTEVOKSkgew0KPiArCSAgICAhZXRoZXJfYWRkcl9l
+cXVhbF91bmFsaWduZWQocHJpdi0+Y3Vycl9hZGRyLCByeF9wa3RfaGRyLT5ldGg4MDNfaGRyLmhf
+ZGVzdCkpIHsNCg0KQWxzbyBvdmVyIDgwIGNoYXJhY3RlcnMgaGVyZS4NCg0KVGhhbmtzLA0KQmlu
+Zw0KDQo=
