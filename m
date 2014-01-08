@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:34348 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaALVMD (ORCPT
+Received: from mail-qe0-f48.google.com ([209.85.128.48]:53131 "EHLO
+	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbaAHMt1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jan 2014 16:12:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 3/3 V2] b43legacy: Fix unload oops if firmware is not available
-Date: Sun, 12 Jan 2014 15:11:39 -0600
-Message-Id: <1389561099-17181-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140112_221218_433235_073A0F8E)
-In-Reply-To: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 8 Jan 2014 07:49:27 -0500
+Received: by mail-qe0-f48.google.com with SMTP id k5so442694qej.7
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 04:49:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389174573-5204-1-git-send-email-arend@broadcom.com>
+References: <1389174573-5204-1-git-send-email-arend@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 8 Jan 2014 23:49:04 +1100
+Message-ID: <CAGRGNgWySMpEecaPFL0NuynSwCik17xGRPk44z5cw+AAckaBvA@mail.gmail.com> (sfid-20140108_134930_870892_EAD4E41A)
+Subject: Re: [linux-sunxi] [PATCH] brcmfmac: add support for bcm43362 device
+To: linux-sunxi@googlegroups.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Arend van Spriel <arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The asyncronous firmware load uses a completion struct to hold firmware
-processing until the user-space routines are up and running. There is.
-however, a problem in that the waiter is nevered canceled during teardown.
-As a result, unloading the driver when firmware is not available causes an oops.
+Hi Arend,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
-V2 - Addresses the comments of Ben Hutchings and removes the race condition.
+On Wed, Jan 8, 2014 at 8:49 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> This patch adds support for the bcm43362 1x1 11n chipset. This
+> chipset is used in AP6210 wifi module found on Cubieboard [1].
+>
+> [1] http://cubieboard.org/
+>
+> Reviewed-by: Franky Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi John,
+>
+> Here a straggler for new device support that people
+> playing with Cubieboards have been asking for. Intended
+> for v3.14 kernel.
+>
+> Regards,
+> Arend
+> ---
+>  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    1 +
+>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +++
+>  .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   33 ++++++++++++++++++++
+>  .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
+>  4 files changed, 40 insertions(+)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> index 2bf4757..9c7f08a 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> @@ -509,6 +509,8 @@ enum brcmf_sdio_frmtype {
+>  #define BCM4334_NVRAM_NAME             "brcm/brcmfmac4334-sdio.txt"
+>  #define BCM4335_FIRMWARE_NAME          "brcm/brcmfmac4335-sdio.bin"
+>  #define BCM4335_NVRAM_NAME             "brcm/brcmfmac4335-sdio.txt"
+> +#define BCM43362_FIRMWARE_NAME         "brcm/brcmfmac43362-sdio.bin"
+> +#define BCM43362_NVRAM_NAME            "brcm/brcmfmac43362-sdio.txt"
 
- drivers/net/wireless/b43legacy/main.c | 1 +
- 1 file changed, 1 insertion(+)
+I haven't been following the discussion so this may be redundant, but
+is this firmware is presently winging it's way towards Linux-firmware?
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 5726688..349c776 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3919,6 +3919,7 @@ static void b43legacy_remove(struct ssb_device *dev)
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
- 	cancel_work_sync(&wl->firmware_load);
-+	complete(&wldev->fw_load_complete);
- 
- 	B43legacy_WARN_ON(!wl);
- 	if (!wldev->fw.ucode)
+Thanks,
+
 -- 
-1.8.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
