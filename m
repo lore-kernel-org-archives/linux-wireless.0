@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:38055 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768AbaAPOjN (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3942 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755078AbaAHLau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 09:39:13 -0500
-Received: by mail-ea0-f178.google.com with SMTP id a15so38078eae.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 06:39:12 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] cfg80211: fix wiphy freq hint nl80211 policy
-Date: Thu, 16 Jan 2014 15:34:45 +0100
-Message-Id: <1389882885-6950-1-git-send-email-michal.kazior@tieto.com> (sfid-20140116_153917_182776_CC4A5E96)
+	Wed, 8 Jan 2014 06:30:50 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<wil6210@qca.qualcomm.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
+Date: Wed, 8 Jan 2014 13:30:45 +0200
+Message-ID: <1649789.pNiBbZVqTd@lx-vladimir> (sfid-20140108_123055_465449_4020D75F)
+In-Reply-To: <a5774459cb8eebfc95156b8cd3b249d896e04400.1389103215.git.agordeev@redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com> <a5774459cb8eebfc95156b8cd3b249d896e04400.1389103215.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The attribute name was mistyped. Actual nl80211
-policy for NL80211_ATTR_WIPHY_FREQ_HINT was
-missing.
+On Tuesday, January 07, 2014 07:05:42 PM Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
+>  1 files changed, 19 insertions(+), 17 deletions(-)
+> 
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+Patch looks fine, but I can't validate it as I can't find patch introducing
+pci_enable_msi_range(). Where this patch landed on?
 
-I've spoted this while rebasing some of my
-patches. This should apply on top of
-mac80211-next/master.
+I am working with:
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
 
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I also checked
+git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+and, of course
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fa5368a..6e78c62 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -385,7 +385,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_QOS_MAP] = { .type = NLA_BINARY,
- 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
--	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
-+	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
--- 
-1.8.4.rc3
-
+Thanks, Vladimir
