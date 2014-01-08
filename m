@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58269 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbaA2LFm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55305 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523AbaAHTAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 06:05:42 -0500
-Message-ID: <1390993539.22155.8.camel@porter.coelho.fi> (sfid-20140129_120545_038080_FFF44888)
-Subject: Re: [PATCH 5/5] mac80211: add missing CSA locking
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Wed, 29 Jan 2014 13:05:39 +0200
-In-Reply-To: <1390978581-13273-6-git-send-email-michal.kazior@tieto.com>
-References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
-	 <1390978581-13273-6-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 Jan 2014 14:00:16 -0500
+Date: Wed, 8 Jan 2014 13:45:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-01-07
+Message-ID: <20140108184543.GE11076@tuxdriver.com> (sfid-20140108_200039_705713_75499AAE)
+References: <20140107152251.GA24183@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140107152251.GA24183@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-29 at 07:56 +0100, Michal Kazior wrote:
-> The patch adds a missing sdata lock and adds a few
-> lockdeps for easier maintenance.
+On Tue, Jan 07, 2014 at 01:22:51PM -0200, Gustavo Padovan wrote:
+> Hi John,
 > 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> More patches to 3.14. The bulk of changes here is the 6LoWPAN support for
+> Bluetooth LE Devices. The commits that touches net/ieee802154/ are already
+> acked by David Miller. Other than that we have some RFCOMM fixes and
+> improvements plus fixes and clean ups all over the tree.
+> 
+> Please pull, or let me know of any concerns you have.
+> 
+> 	Gustavo
+> 
 > ---
+> The following changes since commit 71fb419724fadab4efdf98210aa3fe053bd81d29:
+> 
+>   Bluetooth: Fix handling of L2CAP Command Reject over LE (2013-12-10 01:15:44 -0800)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to e825eb1d7e06f616003c17e2e8e421c2e5e44142:
+> 
+>   Bluetooth: Fix 6loWPAN peer lookup (2014-01-07 11:32:15 -0200)
 
-Looks okay at first glance, but Johannes is the lock master and should
-review this. ;)
+Pulling now...
 
-Otherwise, the series looks fine to me.
-
---
-Luca.
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
