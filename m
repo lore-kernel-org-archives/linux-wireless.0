@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:49181 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259AbaAOQFf (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:45773 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755928AbaAHQTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 11:05:35 -0500
-Received: by mail-la0-f51.google.com with SMTP id c6so1579239lan.38
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 08:05:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389792228.4338.7.camel@jlt4.sipsolutions.net>
-References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1389720570-2430-2-git-send-email-janusz.dziedzic@tieto.com>
-	<1389792228.4338.7.camel@jlt4.sipsolutions.net>
-Date: Wed, 15 Jan 2014 17:05:31 +0100
-Message-ID: <CALhHN=rpWARWuq4TUj2ZRnwUfRZzfs5=TLxj+7s9yaC36U7EOQ@mail.gmail.com> (sfid-20140115_170538_375579_2091110B)
-Subject: Re: [RFC 1/5] cfg80211: regulatory rules, fix bw checking
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Jan 2014 11:19:20 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH] ath9k: Use correct channel for RX packets
+Date: Wed,  8 Jan 2014 21:44:10 +0530
+Message-Id: <1389197650-12496-1-git-send-email-sujith@msujith.org> (sfid-20140108_171925_159014_FC3288A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 January 2014 14:23, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2014-01-14 at 18:29 +0100, Janusz Dziedzic wrote:
->> Allow BW cross over REG_RULES if rules continous.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->> ---
->> I am not sure about rule_intersect() here ...
->
-> I'm not sure about the whole thing ...
->
-> We did discuss something like this previously (and see our todo list on
-> the wiki), but this isn't just some arbitrary internal change, it
-> completely changes the interpretation of the regulatory database.
->
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-We need this because of such split DFS REG_RULE for ETSI:
+Accessing the current channel definition in mac80211
+when processing RX packets is problematic because it
+could have been updated when a scan is issued. Since a
+channel change involves flushing the existing packets
+in the RX queue before a chip-reset is done, they would
+be processed using the wrong band/channel information.
 
--       (5250 - 5330 @ 80), (N/A, 20), DFS
--       (5490 - 5710 @ 80), (N/A, 27), DFS
-+       (5250 - 5330 @ 80), (N/A, 20), (60), DFS
-+       (5490 - 5590 @ 80), (N/A, 27), (60), DFS
-+       (5590 - 5650 @ 80), (N/A, 27), (600), DFS   // here different
-CAC time but still 80MHz should be available
-+       (5650 - 5710 @ 80), (N/A, 27), (60), DFS
+To avoid this, use the current channel information
+maintained in the driver.
 
-In the future could be also usefull for 160MHz:
-        (5170 - 5250 @ 160), (N/A, 20)
-        (5250 - 5330 @ 160), (N/A, 20), DFS
+Cc: stable@vger.kernel.org
+Reported-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-eg. using channels 36 - 64 @ 160MHz (with current code this is not
-possible, due to BW check per single rule)
-I am not sure there is a card with 160MHz support on the market today,
-but who knows?
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6d643ca..9a96517 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -850,20 +850,15 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	enum ieee80211_band band;
+ 	unsigned int i = 0;
+ 	struct ath_softc __maybe_unused *sc = common->priv;
++	struct ath_hw *ah = common->ah;
+ 
+-	band = hw->conf.chandef.chan->band;
++	band = ah->curchan->chan->band;
+ 	sband = hw->wiphy->bands[band];
+ 
+-	switch (hw->conf.chandef.width) {
+-	case NL80211_CHAN_WIDTH_5:
++	if (IS_CHAN_QUARTER_RATE(ah->curchan))
+ 		rxs->flag |= RX_FLAG_5MHZ;
+-		break;
+-	case NL80211_CHAN_WIDTH_10:
++	else if (IS_CHAN_HALF_RATE(ah->curchan))
+ 		rxs->flag |= RX_FLAG_10MHZ;
+-		break;
+-	default:
+-		break;
+-	}
+ 
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+@@ -1085,8 +1080,8 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 
+ 	ath9k_process_rssi(common, hw, rx_stats, rx_status);
+ 
+-	rx_status->band = hw->conf.chandef.chan->band;
+-	rx_status->freq = hw->conf.chandef.chan->center_freq;
++	rx_status->band = ah->curchan->chan->band;
++	rx_status->freq = ah->curchan->chan->center_freq;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+-- 
+1.8.5.2
 
-We can implement CAC time as hardcoded (already send such patches some
-time ago) one but seems this is close connected with regulatory
-configuration and seems like good idea put this in regulatory db.
-
-> At a minimum, that means you need a big commit log discussing the impact
-> of the changes etc.
->
-Because of that I send this RFC, I wasn't sure about all possible
-problems with that.
-I hope Luis could help here.
-
-BR
-Janusz
