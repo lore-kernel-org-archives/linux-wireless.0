@@ -1,38 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbaAFKgV (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:58147 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaAHHqR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 05:36:21 -0500
-Message-ID: <1389004577.5891.6.camel@jlt4.sipsolutions.net> (sfid-20140106_113624_830486_E8B5D48E)
-Subject: Re: py80211 update on github
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 06 Jan 2014 11:36:17 +0100
-In-Reply-To: <52CA77B5.5060100@broadcom.com> (sfid-20140106_103040_059390_26262C87)
-References: <51D49027.9010803@broadcom.com> <52CA77B5.5060100@broadcom.com>
-	 (sfid-20140106_103040_059390_26262C87)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 Jan 2014 02:46:17 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so623635eaj.7
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2014 23:46:16 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v3] nl80211: add Guard Interval support for set_bitrate_mask
+Date: Wed,  8 Jan 2014 08:46:02 +0100
+Message-Id: <1389167162-3681-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140108_084620_623630_13849C9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 10:30 +0100, Arend van Spriel wrote:
+Allow to force SGI, LGI.
+Mainly for test purpose.
 
-> In the christmas holiday I tinkered a bit more on py80211. It comes with
-> a utility to extract definitions and netlink policies from the nl80211
-> source files. What is currently on github is in prototype state. It can
-> retrieve all wiphy information including band, frequency and rate
-> information. It relies on policy information and it turned out that not
-> all attributes are properly initialized in nl80211_policy. One that I
-> added manually is NL80211_ATTR_SUPPORTED_IFTYPES, which should actually
-> be typed as NLA_NESTED. There are other attributes that are not covered yet.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+*V3 - check GI value
 
-This makes sense because the kernel policy only covers things that are
-sent *to* the kernel. In some very rare cases, the stuff sent *to* the
-kernel and *by* the kernel may even differ, so you may have to add some
-special cases.
+ include/net/cfg80211.h       |    1 +
+ include/uapi/linux/nl80211.h |    8 ++++++++
+ net/wireless/nl80211.c       |    7 +++++++
+ 3 files changed, 16 insertions(+)
 
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 80a1021..514c612 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1768,6 +1768,7 @@ struct cfg80211_bitrate_mask {
+ 		u32 legacy;
+ 		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
+ 		u16 vht_mcs[NL80211_VHT_NSS_MAX];
++		enum nl80211_txrate_gi gi;
+ 	} control[IEEE80211_NUM_BANDS];
+ };
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e130790..a7a8aa2 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3114,6 +3114,7 @@ enum nl80211_key_attributes {
+  *	in an array of MCS numbers.
+  * @NL80211_TXRATE_VHT: VHT rates allowed for TX rate selection,
+  *	see &struct nl80211_txrate_vht
++ * @NL80211_TXRATE_GI: configure GI, see &enum nl80211_txrate_gi
+  * @__NL80211_TXRATE_AFTER_LAST: internal
+  * @NL80211_TXRATE_MAX: highest TX rate attribute
+  */
+@@ -3122,6 +3123,7 @@ enum nl80211_tx_rate_attributes {
+ 	NL80211_TXRATE_LEGACY,
+ 	NL80211_TXRATE_HT,
+ 	NL80211_TXRATE_VHT,
++	NL80211_TXRATE_GI,
+ 
+ 	/* keep last */
+ 	__NL80211_TXRATE_AFTER_LAST,
+@@ -3139,6 +3141,12 @@ struct nl80211_txrate_vht {
+ 	__u16 mcs[NL80211_VHT_NSS_MAX];
+ };
+ 
++enum nl80211_txrate_gi {
++	NL80211_TXRATE_DEFAULT_GI,
++	NL80211_TXRATE_FORCE_SGI,
++	NL80211_TXRATE_FORCE_LGI,
++};
++
+ /**
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 04681a4..358deee 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7394,6 +7394,7 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 	[NL80211_TXRATE_HT] = { .type = NLA_BINARY,
+ 				.len = NL80211_MAX_SUPP_HT_RATES },
+ 	[NL80211_TXRATE_VHT] = { .len = sizeof(struct nl80211_txrate_vht)},
++	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
+ };
+ 
+ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+@@ -7474,6 +7475,12 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 					mask.control[band].vht_mcs))
+ 				return -EINVAL;
+ 		}
++		if (tb[NL80211_TXRATE_GI]) {
++			mask.control[band].gi =
++				nla_get_u8(tb[NL80211_TXRATE_GI]);
++			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI)
++				return -EINVAL;
++		}
+ 
+ 		if (mask.control[band].legacy == 0) {
+ 			/* don't allow empty legacy rates if HT or VHT
+-- 
+1.7.9.5
 
