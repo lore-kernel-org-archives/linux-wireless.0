@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755785AbaAFQmp (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36807 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754987AbaAHIXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 11:42:45 -0500
-Message-ID: <1389026561.5891.37.camel@jlt4.sipsolutions.net> (sfid-20140106_174255_798543_340D91BA)
-Subject: Re: [PATCH] mac80211: reorder packet checking and processing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Fred Chou <fred.chou.nd@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:42:41 +0100
-In-Reply-To: <1387798975-17708-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20131223_124110_891154_2DF4DCCD)
-References: <1387798975-17708-1-git-send-email-fred.chou.nd@gmail.com>
-	 (sfid-20131223_124110_891154_2DF4DCCD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 Jan 2014 03:23:25 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
+References: <cover.1389103215.git.agordeev@redhat.com>
+	<dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
+Date: Wed, 8 Jan 2014 10:23:18 +0200
+In-Reply-To: <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
+	(Alexander Gordeev's message of "Tue, 7 Jan 2014 19:05:41 +0100")
+Message-ID: <87txdehog9.fsf@kamboji.qca.qualcomm.com> (sfid-20140108_092330_913119_92A894D4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-23 at 19:42 +0800, Fred Chou wrote:
-> Check received packet length first and drop the packet
-> if it is shorter than MAC header. Process packet after
-> the checking. 
+Alexander Gordeev <agordeev@redhat.com> writes:
 
-Why do you think we should do this? Your commit message is also
-misleading - we already check that the patch is long enough. Too short
-packets should be relatively rare anyway.
+> This update also fixes a stylistic (naming and messaging only)
+> confusion of MSI-X vs multiple MSIs which are not the same.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-johannes
+Looks good to me.
 
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Do you want me to take this patch to my ath.git tree or how were you
+planning to handle it?
+
+-- 
+Kalle Valo
