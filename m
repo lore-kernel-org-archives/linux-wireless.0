@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43549 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbaAWE1R (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33950 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591AbaAHSgz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 23:27:17 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] nl80211: Count only ssid attr to know number of match sets
-Date: Thu, 23 Jan 2014 09:57:09 +0530
-Message-ID: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20140123_052721_677350_857D5D7A)
+	Wed, 8 Jan 2014 13:36:55 -0500
+Message-ID: <52CD9AAF.1040407@candelatech.com> (sfid-20140108_193658_955410_CA0D38CD)
+Date: Wed, 08 Jan 2014 10:36:31 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: ath10k@lists.infradead.org
+Subject: How to make software re-calc received frames with bad FCS?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NL80211_ATTR_SCHED_SCAN_MATCH can have NL80211_SCHED_SCAN_MATCH_ATTR_SSID
-as well as NL80211_SCHED_SCAN_MATCH_ATTR_RSSI in it. Each nested attributes
-which are part of NL80211_ATTR_SCHED_SCAN_MATCH are counted to find out
-number of match sets in nl80211_start_sched_scan().
+I'm back to trying to get multiple stations working to same AP
+with WPA2 on ath10k.
 
-This is the problem if NL80211_SCHED_SCAN_MATCH_ATTR_RSSI also part of
-NL80211_ATTR_SCHED_SCAN_MATCH. Fix this incorrect calculation by considering
-only NL80211_SCHED_SCAN_MATCH_ATTR_SSID to know match set count.
+I tried  doing 'nohwcrypt', but I had no luck with that.  I think
+the firmware would require a fair bit of changes to make that happen.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- net/wireless/nl80211.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+So, a second plan is to just tell the firmware to use hardware crypt
+for the VIFs.  This would have a good benefit of offloading the tx
+path, at least.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0afd82..2d3a86f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5504,11 +5504,17 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	if (n_ssids > wiphy->max_sched_scan_ssids)
- 		return -EINVAL;
- 
--	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH])
-+	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH]) {
- 		nla_for_each_nested(attr,
- 				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
--				    tmp)
--			n_match_sets++;
-+				    tmp) {
-+			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
-+				  nla_data(attr), nla_len(attr),
-+				  nl80211_match_policy);
-+			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID])
-+				n_match_sets++;
-+		}
-+	}
- 
- 	if (n_match_sets > wiphy->max_match_sets)
- 		return -EINVAL;
+This seems to work for transmit, but on receive, the hardware hash
+collides since 2+ stations have same peer (ie, the AP).
+
+I do receive packets, but they are flagged with FCS errors (and I think
+there is no re-assembly of ampdu, but I'm not sure how much that matters).
+
+My thought is to somehow flag these packets as needing to be decrypted
+by software instead, similar to how the normal nohwcrypt logic works.
+
+Any suggestions for how to go about attempting this?   Maybe
+just force remove the CRC failure bit from the status before
+passing up the stack?
+
+Thanks,
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
