@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754908AbaAUQDF (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:37765 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511AbaAHUIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 11:03:05 -0500
-Message-ID: <1390320181.6199.64.camel@jlt4.sipsolutions.net> (sfid-20140121_170323_476321_5FD317E1)
-Subject: Re: [RFC 5/5] cfg80211: implement cfg80211_get_station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Tue, 21 Jan 2014 17:03:01 +0100
-In-Reply-To: <1390302591-3352-6-git-send-email-antonio@meshcoding.com>
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
-	 <1390302591-3352-6-git-send-email-antonio@meshcoding.com>
+	Wed, 8 Jan 2014 15:08:52 -0500
+Received: by mail-wg0-f47.google.com with SMTP id n12so1943427wgh.14
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 12:08:51 -0800 (PST)
+Message-ID: <1389211722.6175.4.camel@canaries32-MCP7A> (sfid-20140108_210856_335691_DFC67547)
+Subject: [PATCH 1/2] staging: vt6656: rxtx.c Camel case and clean up
+ s_uGetTxRsvTime
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 08 Jan 2014 20:08:42 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-01-21 at 12:09 +0100, Antonio Quartulli wrote:
+White space clean.
 
-> +++ b/net/wireless/nl80211.c
-> @@ -3780,6 +3780,28 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
->  	return genlmsg_reply(msg, info);
->  }
->  
-> +int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
-> +			 struct station_info *sinfo)
+Remove unneeded comments.
 
-Not sure nl80211.c is the best place for this?
+Camel case changes
+pDevice
+byPktType
+cbFrameLength
+wRate
+bNeedAck
 
-> +{
-> +	struct cfg80211_registered_device *rdev;
-> +	struct wireless_dev *wdev;
-> +	int err;
-> +
-> +	wdev = dev->ieee80211_ptr;
-> +	if (!wdev)
-> +		return -EOPNOTSUPP;
-> +
-> +	rdev = wiphy_to_dev(wdev->wiphy);
-> +	if (!rdev->ops->get_station)
-> +		return -EOPNOTSUPP;
-> +
-> +	err = rdev_get_station(rdev, dev, mac_addr, sinfo);
-> +	if (err)
-> +		return err;
-> +
-> +	return 0;
+uDataTime
+uAckTime
 
-Those "err" variable checks and whatever are just pointless -- this is
-really just
-return rdev_get_station(...)
+} -> {
 
-> +}
+priv
+pkt_type
+frame_length
+rate
+need_ack
 
-Consider exporting it if you actually want to use your new function. :)
+data_time
+ack_time
 
-johannes
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 3186971..6102822 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -338,24 +338,25 @@ static u16 vnt_time_stamp_off(struct vnt_private *priv, u16 rate)
+              PK_TYPE_11GB    2
+              PK_TYPE_11GA    3
+ */
+-static u32 s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
+-	u32 cbFrameLength, u16 wRate, int bNeedAck)
++static u32 s_uGetTxRsvTime(struct vnt_private *priv, u8 pkt_type,
++	u32 frame_length, u16 rate, int need_ack)
+ {
+-	u32 uDataTime, uAckTime;
++	u32 data_time, ack_time;
+ 
+-    uDataTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, cbFrameLength, wRate);
+-    if (byPktType == PK_TYPE_11B) {//llb,CCK mode
+-        uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, (u16)pDevice->byTopCCKBasicRate);
+-    } else {//11g 2.4G OFDM mode & 11a 5G OFDM mode
+-        uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, (u16)pDevice->byTopOFDMBasicRate);
+-    }
++	data_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++							frame_length, rate);
+ 
+-    if (bNeedAck) {
+-        return (uDataTime + pDevice->uSIFS + uAckTime);
+-    }
+-    else {
+-        return uDataTime;
+-    }
++	if (pkt_type == PK_TYPE_11B)
++		ack_time = BBuGetFrameTime(priv->byPreambleType, pkt_type, 14,
++						(u16)priv->byTopCCKBasicRate);
++	else
++		ack_time = BBuGetFrameTime(priv->byPreambleType, pkt_type, 14,
++						(u16)priv->byTopOFDMBasicRate);
++
++	if (need_ack)
++		return data_time + priv->uSIFS + ack_time;
++
++	return data_time;
+ }
+ 
+ static u16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
+-- 
+1.8.5.2
 
