@@ -1,105 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:32796 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752503AbaATC55 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40799 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755337AbaAHJvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 21:57:57 -0500
-Message-ID: <1390186665.3651.27.camel@deadeye.wl.decadent.org.uk> (sfid-20140120_035802_394433_4E289D4E)
-Subject: Re: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 20 Jan 2014 02:57:45 +0000
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com>
-References: <1389325691-21371-1-git-send-email-bzhao@marvell.com>
-	 <1390174797.3651.7.camel@deadeye.wl.decadent.org.uk>
-	 <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-RWSLA4TKYEPXMnhAoF7j"
-Mime-Version: 1.0
+	Wed, 8 Jan 2014 04:51:11 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 3/3] wil6210: prefetch head of packet
+Date: Wed, 8 Jan 2014 11:50:49 +0200
+Message-ID: <1389174649-14077-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140108_105115_727753_2301C0A4)
+In-Reply-To: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As soon as skb is ready to be reaped, prefetch 1-st cache line.
+This accelerates data access that is performed later, during the
+packet classification by the driver and IP stack.
 
---=-RWSLA4TKYEPXMnhAoF7j
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-On Sun, 2014-01-19 at 18:10 -0800, Bing Zhao wrote:
-> Hi Ben,
->=20
-> > > @@ -730,10 +730,13 @@ File: mrvl/sd8797_uapsta.bin
-> > >  Version: 14.66.11.p151
-> > >
-> > >  File: mrvl/sd8897_uapsta.bin
-> > > -Version: 15.69.2.p11
-> > > +Version: 15.68.201.p113
-> > >
-> > >  File: mrvl/usb8797_uapsta.bin
-> > > -Version: 14.69.11.p179
-> > > +Version: 14.68.29.p26
-> > [...]
-> >=20
-> > Why are these updates rolling the version number backward?  Did the
-> > later versions cause regressions?
->=20
-> These images are newer firmware versions actually.
->=20
-> The 2nd (69 or 68) and 3rd (11 or 29) numbers in the version string do
-> not necessarily mean the version increasing or decreasing. Only when
-> first 3 numbers are fixed, a smaller 4th number will mean that the
-> version is rolling backward. For examples,
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 18003c0..9b88440 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -21,6 +21,7 @@
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
+ #include <net/ipv6.h>
++#include <asm/processor.h>
+ 
+ #include "wil6210.h"
+ #include "wmi.h"
+@@ -377,6 +378,8 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 	}
+ 	skb_trim(skb, dmalen);
+ 
++	prefetch(skb->data);
++
+ 	wil_hex_dump_txrx("Rx ", DUMP_PREFIX_OFFSET, 16, 1,
+ 			  skb->data, skb_headlen(skb), false);
+ 
+-- 
+1.8.3.2
 
-So what do you they mean and why are they in the version number?
-
-> File: mrvl/sd8797_uapsta.bin
-> -Version: 14.66.11.p100
-> +Version: 14.66.11.p151
->=20
-> The version is moving forward.
->=20
-> But if we do,
->=20
-> -Version: 14.66.11.p100
-> +Version: 14.66.11.p99
->=20
-> this will be rolling backward.
->=20
->=20
-> Each firmware image contains a timestamp such as "2013/12/06, 21:28:31".
-> If you think that is informative I can add the timestamps in commit
-> logs and resend the pull request.
-
-I don't think it is.
-
-Ben.
-
---=20
-Ben Hutchings
-One of the nice things about standards is that there are so many of them.
-
---=-RWSLA4TKYEPXMnhAoF7j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUtyQqee/yOyVhhEJAQovMA//Wtkd7OxfTLUqvKwIW3C0rGgOrLmvy4X6
-GDgG1ztbC0h5UAdsXEGmv2RQPhz1o/XfQP7AaDDi6wUO1hwTbhBiE6P9E1orbORZ
-EfIL1Fs9Gto6rh1DlS5lDOg9g76SfCAy5OhvmSSBpgmYUSQZNH5Mo1CjwAt/Etv+
-/GNN0egy48Kk43lJrgLD4/I/pX6vswUuiQjFcSzbalTHEY0JJbGSik4O4+vfWy1r
-1KBsAr0UsB2N7UwgjofnOmdIvqYI0ZoEUVmU9gEsBUVO83U8SOeDbSraAqtLgI6q
-U/SKXgTvOS8SklzTOKSvL+zlysV0OSdnq4RyWD5U7rV/fum22b7JUcCub7mqP49X
-VrexVDGqwTpLWUXCxmtzg9iFxjw1S3tSVnQkVN7fQ7fWt/VrAt0IkeDQDrq7NPIM
-xggDkMxcTn+eTeaO+FiES0cocjsoxWs5V9my2Cv35vdmzNMetIhdWGZYZpGrgh2y
-PWu46ZbBACdXNIJTE5oc4atCTtdfjbJuthW3SB50Ry9JpRds9JV/OTZGvndpm5hQ
-t/D5Eg/nuk/oIwSFiJ9dSgblOMwsHpPvL6CgYduD5Mmp/akH+q+F0JIgTxe9UAWA
-V7cdYt4rZwlhWIiw0pAEJ01ZLnbzW2XJeeHC80kk+Vjdh3ROuVqUjzUxdu93e+XF
-Ra7vI0OdsQA=
-=Oqst
------END PGP SIGNATURE-----
-
---=-RWSLA4TKYEPXMnhAoF7j--
