@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:58282 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751167AbaAWUVu (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52368 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757266AbaAHXqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 15:21:50 -0500
-Date: Thu, 23 Jan 2014 22:21:43 +0200
-From: Petko Manolov <petkan@nucleusys.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi crash with 3.13
-Message-ID: <20140123202142.GC4064@localhost> (sfid-20140123_212154_206616_4F75B031)
-References: <20140123091659.GE9077@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
- <20140123123125.GA3424@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
- <20140123200045.GA4064@localhost>
- <52E17698.9070607@gmail.com>
+	Wed, 8 Jan 2014 18:46:21 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Stewart <pstew@chromium.org>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: fix potential buffer overflow in dt configuration
+Date: Wed, 8 Jan 2014 15:45:56 -0800
+Message-ID: <1389224757-14339-1-git-send-email-bzhao@marvell.com> (sfid-20140109_004624_880853_6534FC9C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52E17698.9070607@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-01-23 22:07:52, Emmanuel Grumbach wrote:
-> 
-> Unfortunately, I can't see the loading of iwlwifi.
+If cfgdata length exceeds the command buffer size we will end up
+getting buffer overflow problem. Fix it by checking the buffer
+size less the command header length.
 
-It overflowed.  That's what happen when debug != 0 ... :)
+Reviewed-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_cmd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> Doesn't matter any more - I found the issue.
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 9c2404c..9208a88 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1170,8 +1170,9 @@ int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
+ 		    strncmp(prop->name, prefix, len))
+ 			continue;
+ 
+-		/* property header is 6 bytes */
+-		if (prop && prop->value && prop->length > 6) {
++		/* property header is 6 bytes, data must fit in cmd buffer */
++		if (prop && prop->value && prop->length > 6 &&
++		    prop->length <= MWIFIEX_SIZE_OF_CMD_BUFFER - S_DS_GEN) {
+ 			ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_CFG_DATA,
+ 						    HostCmd_ACT_GEN_SET, 0,
+ 						    prop);
+-- 
+1.8.2.3
 
-Ah, good.  Cheers.
-
-
-		Petko
