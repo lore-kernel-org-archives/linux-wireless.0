@@ -1,71 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:48597 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbaAOTzw (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:37856 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbaAHUNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 14:55:52 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x12so2224900wgg.25
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 11:55:51 -0800 (PST)
-Message-ID: <1389815739.3027.18.camel@canaries32-MCP7A> (sfid-20140115_205606_395539_7FFA98B3)
-Subject: Re: [PATCH 6/6] staging: vt6656: sparse fixes: aes_ccmp.c missing
- header.
+	Wed, 8 Jan 2014 15:13:38 -0500
+Received: by mail-we0-f176.google.com with SMTP id p61so1893127wes.21
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 12:13:37 -0800 (PST)
+Message-ID: <1389212009.6175.7.camel@canaries32-MCP7A> (sfid-20140108_211342_198600_5201ABA8)
+Subject: [PATCH 2/2] staging: vt6656: rxtx.c Camel case and clean up
+ s_uGetRTSCTSRsvTime
 From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Jan 2014 19:55:39 +0000
-In-Reply-To: <20140114211929.GD28705@kroah.com>
-References: <1389630555.2590.6.camel@canaries32-MCP7A>
-	 <20140113234614.GA16467@kroah.com>
-	 <1389733208.8159.9.camel@canaries32-MCP7A>
-	 <20140114211929.GD28705@kroah.com>
+Date: Wed, 08 Jan 2014 20:13:29 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-01-14 at 13:19 -0800, Greg KH wrote:
-> On Tue, Jan 14, 2014 at 09:00:08PM +0000, Malcolm Priestley wrote:
-> > On Mon, 2014-01-13 at 15:46 -0800, Greg KH wrote:
-> > > On Mon, Jan 13, 2014 at 04:29:15PM +0000, Malcolm Priestley wrote:
-> > > > Add missing aes_ccmp.h header and move device.h to
-> > > > aes_ccmp.h
-> > > 
-> > > Why move device.h?
-> > device.h is needed by aes_ccmp.h and only currently gets away with it
-> > by the include order elsewhere.
-> 
-> Then fix that up first.
-> 
-> > I didn't see the need to include device.h twice or fix
-> > it with the include order in aes_ccmo.c, there is enough of
-> > that already in this driver.
-> 
-> Fix it properly, as it will have to be resolved sometime, right?
-> 
-The headers are just too tangled to fix just yet.
+White space clean
 
-There is still a lot of typedefs, duplicate and dead code spread across
-the driver that need removing first.
+Remove unneeded comments.
 
-I've just realised that aes_ccmp.c is dead code, it is part of the
-non functioning hostapd code in hostap.c, I am planning to remove it.
+Camel case changes
 
-Regards
+pDevice,
+byRTSRsvType
+byPktType
+cbFrameLength
+wCurrentRate
 
+uRrvTime
+uRTSTime
+uCTSTime
+uAckTime
+uDataTime
 
-Malcolm
+} -> {
 
+priv,
+rsv_type
+pkt_type
+frame_lenght
+current_rate
 
+rrv_time
+rts_time
+cts_time
+ack_time
+data_time
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 68 +++++++++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 29 deletions(-)
 
-
-
-
-
-
-
-> thanks,
-> 
-> greg k-h
-
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 6102822..51fff89 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -118,8 +118,8 @@ static void s_vSWencryption(struct vnt_private *pDevice,
+ static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
+ 	u32 cbFrameLength, u16 wRate, int bNeedAck);
+ 
+-static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice, u8 byRTSRsvType,
+-	u8 byPktType, u32 cbFrameLength, u16 wCurrentRate);
++static u16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
++	u8 rsv_type, u8 pkt_type, u32 frame_lenght, u16 current_rate);
+ 
+ static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ 	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
+@@ -367,37 +367,47 @@ static u16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
+ }
+ 
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+-static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
+-	u8 byRTSRsvType, u8 byPktType, u32 cbFrameLength, u16 wCurrentRate)
++static u16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
++	u8 rsv_type, u8 pkt_type, u32 frame_lenght, u16 current_rate)
+ {
+-	u32 uRrvTime, uRTSTime, uCTSTime, uAckTime, uDataTime;
++	u32 rrv_time, rts_time, cts_time, ack_time, data_time;
+ 
+-    uRrvTime = uRTSTime = uCTSTime = uAckTime = uDataTime = 0;
++	rrv_time = rts_time = cts_time = ack_time = data_time = 0;
+ 
+-    uDataTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, cbFrameLength, wCurrentRate);
+-    if (byRTSRsvType == 0) { //RTSTxRrvTime_bb
+-        uRTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 20, pDevice->byTopCCKBasicRate);
+-        uCTSTime = uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-    }
+-    else if (byRTSRsvType == 1){ //RTSTxRrvTime_ba, only in 2.4GHZ
+-        uRTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 20, pDevice->byTopCCKBasicRate);
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-        uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+-    }
+-    else if (byRTSRsvType == 2) { //RTSTxRrvTime_aa
+-        uRTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 20, pDevice->byTopOFDMBasicRate);
+-        uCTSTime = uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+-    }
+-    else if (byRTSRsvType == 3) { //CTSTxRrvTime_ba, only in 2.4GHZ
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-        uAckTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+-        uRrvTime = uCTSTime + uAckTime + uDataTime + 2*pDevice->uSIFS;
+-        return uRrvTime;
+-    }
++	data_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++						frame_lenght, current_rate);
++
++	if (rsv_type == 0) {
++		rts_time = BBuGetFrameTime(priv->byPreambleType,
++			pkt_type, 20, priv->byTopCCKBasicRate);
++		cts_time = ack_time = BBuGetFrameTime(priv->byPreambleType,
++			pkt_type, 14, priv->byTopCCKBasicRate);
++	} else if (rsv_type == 1) {
++		rts_time = BBuGetFrameTime(priv->byPreambleType,
++			pkt_type, 20, priv->byTopCCKBasicRate);
++		cts_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++			14, priv->byTopCCKBasicRate);
++		ack_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++			14, priv->byTopOFDMBasicRate);
++	} else if (rsv_type == 2) {
++		rts_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++			20, priv->byTopOFDMBasicRate);
++		cts_time = ack_time = BBuGetFrameTime(priv->byPreambleType,
++			pkt_type, 14, priv->byTopOFDMBasicRate);
++	} else if (rsv_type == 3) {
++		cts_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++			14, priv->byTopCCKBasicRate);
++		ack_time = BBuGetFrameTime(priv->byPreambleType, pkt_type,
++			14, priv->byTopOFDMBasicRate);
++
++		rrv_time = cts_time + ack_time + data_time + 2 * priv->uSIFS;
++
++		return rrv_time;
++	}
++
++	rrv_time = rts_time + cts_time + ack_time + data_time + 3 * priv->uSIFS;
+ 
+-    //RTSRrvTime
+-    uRrvTime = uRTSTime + uCTSTime + uAckTime + uDataTime + 3*pDevice->uSIFS;
+-	return cpu_to_le16((u16)uRrvTime);
++	return cpu_to_le16((u16)rrv_time);
+ }
+ 
+ //byFreqType 0: 5GHz, 1:2.4Ghz
+-- 
+1.8.5.2
 
