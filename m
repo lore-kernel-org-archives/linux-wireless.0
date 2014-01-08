@@ -1,57 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47883 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaAPUa3 (ORCPT
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:45250 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756074AbaAHKRn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 15:30:29 -0500
-Date: Thu, 16 Jan 2014 15:29:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
-Message-ID: <20140116202945.GD10165@tuxdriver.com> (sfid-20140116_213032_941138_F3FF1656)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <201312311047.30147@pali>
- <20140106200050.GG10885@tuxdriver.com>
- <20140116002121.GA3726@amd.pavel.ucw.cz>
+	Wed, 8 Jan 2014 05:17:43 -0500
+Received: by mail-ve0-f181.google.com with SMTP id oy12so1055906veb.40
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 02:17:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20140116002121.GA3726@amd.pavel.ucw.cz>
+In-Reply-To: <52CD1B52.5000101@broadcom.com>
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
+ <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+ <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
+ <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
+ <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
+ <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com>
+ <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
+ <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com>
+ <52CD1B52.5000101@broadcom.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Wed, 8 Jan 2014 18:17:20 +0800
+Message-ID: <CAGb2v64ym6_EkGKcT48hKy-7Y02-SxzN+Dka4RFHcngBjMMeaA@mail.gmail.com> (sfid-20140108_111750_801994_C7760ADE)
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 01:21:21AM +0100, Pavel Machek wrote:
-> On Mon 2014-01-06 15:00:50, John W. Linville wrote:
-> > On Tue, Dec 31, 2013 at 10:47:29AM +0100, Pali Rohár wrote:
-> > > On Sunday 08 December 2013 10:24:58 Pali Rohár wrote:
-> > > > Hello, I'm sending wl1251 patches from linux-n900 tree [1] for
-> > > > comments. More patches come from David's monitor & packet
-> > > > injection work. Patches are tested with 3.12 rc5 kernel on
-> > > > Nokia N900.
-> > > > 
-> > > > Second version contains new patch for fixing NULL pointer
-> > > > dereference which sometimes cause kernel panic and fixes code
-> > > > suggested by Pavel Machek.
-> >  
-> > > So far, there are no new comments for patches 01, 03-13 and 16. 
-> > > Are there any other problems with that patches or can be accepted 
-> > > for upstream?
-> >  
-> > They are probably fine to merge now.  Of course, I was still deleting
-> > wl12xx patches when they were originally posted, so I'll need someone
-> > to resend the patches to me...
-> 
-> Ping? Did they get merged? Did you receive the patches?
+On Wed, Jan 8, 2014 at 5:33 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/08/2014 10:23 AM, Chen-Yu Tsai wrote:
+>> On Wed, Jan 8, 2014 at 4:56 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 12/27/2013 01:36 PM, Chen-Yu Tsai wrote:
+>>>>>>>> Working tree:
+>>>>>>>>
+>>>>>>>>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
+>>>>>>>>
+>>>>>>>> Comments welcome :)
+>>>>>>
+>>>>>> No comment, but: Nice work!
+>>>> Thanks. BTW, who should submit the patch? :)
+>>>
+>>> Hi Chen-Yu
+>>>
+>>> I will submit the patch today.
+>>
+>> Great!
+>>
+>> I added device tree support for brcmfmac SDIO devices,
+>> to be able to specify external out-of-band interrupts.
+>> Unfortunately it's not working. I get the following output:
+>>
+>> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
+>> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
+>> brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -110
+>> brcmfmac: brcmf_bus_start: failed: -110
+>> brcmfmac: brcmf_sdbrcm_probe: dongle is not responding
+>
+> This is typeical behaviour when interrupt is not picked up.
 
-They are already available in wireless-next.
+Maxime said the pinctrl irq chip driver wasn't tested,
+so not picking up an interrupt isn't a big surprise.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>> brcmfmac: brcmf_sdio_probe: device attach failed
+>> brcmfmac: brcmf_ops_sdio_probe: F2 error, probe failed -19...
+>>
+>> Should we add device tree support for the brcmf platform driver,
+>> so we can enable power, clocks, etc. before the SDIO driver is probed?
+>
+> How does the device-tree change for oob interrupt look like.
+
+See https://github.com/wens/linux/blob/wip/sunxi-next-wifi/arch/arm/boot/dts/sun7i-a20-cubietruck.dts#L38
+
+
+The platform driver device node would be something like:
+
+/{
+        brcmf {
+                compatible = "broadcom,brcmf";
+                vbat-supply = <&wifi_pwr_regulator>;
+                /* maybe other regulators */
+                clocks = <&wifi_main>, <&wifi_lpo>;
+                clock-names = "main", "lpo";
+                reset-gpio = <&gpio A B C>;
+        };
+};
+
+>> Not sure if this is the right way. Maxime mentioned on IRC that some
+>> mmc host drivers take a vmmc regulator property.
+>>
+>> Currently I am using rfkill-gpio to do this. But brcmfmac also
+>> registers an rfkill of its own.
+>
+> Not sure what you mean here. The only thing I am aware of is that
+> cfg80211 registers brcmfmac as wifi transmitter in the rfkill framework,
+> which is unrelated to gpio's.
+
+They are unrelated, but overlapping I suppose.
+
+https://github.com/wens/linux/blob/wip/sunxi-next-wifi/arch/arm/boot/dts/sun7i-a20-cubietruck.dts#L220
+
+Here I register a wifi rfkill that switches the brcmfmac device on or off.
+If it is off the device disappears from the system. Not sure if the kernel
+would detect it when we turn it back on.
+
+IMO the rfkill framework by design should only turn off the RF part of the
+device, not the controller altogether.
+
+Feedback on this or other patches in my tree is much appreciated.
+
+
+Thanks
+ChenYu
+
+>> Also, I have bluetooth working. Turns out it was a wrong pinctrl
+>> setting in my dt. For those who want to try:
+>>
+>>   Get and compile brcm_patchram_plus from
+>>   http://code.google.com/p/broadcom-bluetooth/
+>>
+>>   Run brcm_patchram_plus --patchram bcm20710a1.hcd --no2bytes /dev/ttyS1
+>>   and hciattach /dev/ttyS1
+>>
+>>   If brcm_patchram_plus hangs, you may need to reset the controller
+>>   by blocking then unblocking the bluetooth rfkill switch.
+>>
+>> I pushed all my work out already. Here's the link again:
+>>
+>>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
+>
+> I will take a look.
+>
+> Gr. AvS
