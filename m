@@ -1,83 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:25856 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752535AbaA2Ocg (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:51464 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756620AbaAHP2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 09:32:36 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 01/14] brcmfmac: expand sta info to report dtim and beacon period.
-Date: Wed, 29 Jan 2014 15:32:11 +0100
-Message-ID: <1391005944-3220-2-git-send-email-arend@broadcom.com> (sfid-20140129_153244_949275_5F0C30E0)
-In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+	Wed, 8 Jan 2014 10:28:34 -0500
+Date: Wed, 8 Jan 2014 18:28:38 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: heikki.krogerus@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: net: rfkill: gpio: convert to descriptor-based GPIO interface
+Message-ID: <20140108152837.GA3017@elgon.mountain> (sfid-20140108_162837_170736_08A2253E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Hello Heikki Krogerus,
 
-Expand the get_station command to also report dtim period and
-beacon interval when the device is connected.
+This is a semi-automatic email about new static checker warnings.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   26 ++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+The patch 2111cad655e3: "net: rfkill: gpio: convert to
+descriptor-based GPIO interface" from Nov 26, 2013, leads to the
+following Smatch complaint:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index d7718a5..17170a5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2164,6 +2164,8 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 	s32 err = 0;
- 	u8 *bssid = profile->bssid;
- 	struct brcmf_sta_info_le sta_info_le;
-+	u32 beacon_period;
-+	u32 dtim_period;
- 
- 	brcmf_dbg(TRACE, "Enter, MAC %pM\n", mac);
- 	if (!check_vif_up(ifp->vif))
-@@ -2218,6 +2220,30 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 				sinfo->signal = rssi;
- 				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
- 			}
-+			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_BCNPRD,
-+						    &beacon_period);
-+			if (err) {
-+				brcmf_err("Could not get beacon period (%d)\n",
-+					  err);
-+				goto done;
-+			} else {
-+				sinfo->bss_param.beacon_interval =
-+					beacon_period;
-+				brcmf_dbg(CONN, "Beacon peroid %d\n",
-+					  beacon_period);
-+			}
-+			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_DTIMPRD,
-+						    &dtim_period);
-+			if (err) {
-+				brcmf_err("Could not get DTIM period (%d)\n",
-+					  err);
-+				goto done;
-+			} else {
-+				sinfo->bss_param.dtim_period = dtim_period;
-+				brcmf_dbg(CONN, "DTIM peroid %d\n",
-+					  dtim_period);
-+			}
-+			sinfo->filled |= STATION_INFO_BSS_PARAM;
- 		}
- 	} else
- 		err = -EPERM;
--- 
-1.7.10.4
+net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
+	 warn: variable dereferenced before check 'rfkill->name' (see line 144)
 
+net/rfkill/rfkill-gpio.c
+   111          len = strlen(rfkill->name);
+                             ^^^^^^^^^^^^
+Dereference.
+
+   112          rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
+   113          if (!rfkill->reset_name)
+   114                  return -ENOMEM;
+   115  
+   116          rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
+   117          if (!rfkill->shutdown_name)
+   118                  return -ENOMEM;
+   119  
+   120          snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+   121          snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+   122  
+   123          rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
+   124  
+   125          gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+   126          if (!IS_ERR(gpio)) {
+   127                  ret = gpiod_direction_output(gpio, 0);
+   128                  if (ret)
+   129                          return ret;
+   130                  rfkill->reset_gpio = gpio;
+   131          }
+   132  
+   133          gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
+   134          if (!IS_ERR(gpio)) {
+   135                  ret = gpiod_direction_output(gpio, 0);
+   136                  if (ret)
+   137                          return ret;
+   138                  rfkill->shutdown_gpio = gpio;
+   139          }
+   140  
+   141          /* Make sure at-least one of the GPIO is defined and that
+   142           * a name is specified for this instance
+   143		 */
+   144		if ((!rfkill->reset_gpio && !rfkill->shutdown_gpio) || !rfkill->name) {
+                                                                        ^^^^^^^^^^^^
+The check was originally before the dereference, but the patch moves it
+after the dereference.
+
+   145			dev_err(&pdev->dev, "invalid platform data\n");
+   146			return -EINVAL;
+
+regards,
+dan carpenter
