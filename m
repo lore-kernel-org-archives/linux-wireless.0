@@ -1,84 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40319 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754861AbaAVKfC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 05:35:02 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/7] mac80211: make cfg80211 ops and privid const
-Date: Wed, 22 Jan 2014 11:34:53 +0100
-Message-Id: <1390386898-14316-3-git-send-email-johannes@sipsolutions.net> (sfid-20140122_113535_215053_B17FE3F1)
-In-Reply-To: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
-References: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:24339 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755049AbaAHJDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jan 2014 04:03:10 -0500
+Date: Wed, 8 Jan 2014 10:04:50 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
+Message-ID: <20140108090449.GC20157@dhcp-26-207.brq.redhat.com> (sfid-20140108_100339_598508_C7BA6CE8)
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
+ <87txdehog9.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87txdehog9.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jan 08, 2014 at 10:23:18AM +0200, Kalle Valo wrote:
+> Looks good to me.
+> 
+> Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-The wiphy privid (to identify wiphys) and the cfg80211
-ops should both be const, so change them to be.
+Thanks, Kalle.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 2 +-
- net/mac80211/cfg.h         | 2 +-
- net/mac80211/ieee80211_i.h | 2 +-
- net/mac80211/util.c        | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+> Do you want me to take this patch to my ath.git tree or how were you
+> planning to handle it?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d2125a3..cf27c62 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3918,7 +3918,7 @@ static int ieee80211_set_qos_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
--struct cfg80211_ops mac80211_config_ops = {
-+const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
- 	.change_virtual_intf = ieee80211_change_iface,
-diff --git a/net/mac80211/cfg.h b/net/mac80211/cfg.h
-index 7d7879f..2d51f62 100644
---- a/net/mac80211/cfg.h
-+++ b/net/mac80211/cfg.h
-@@ -4,6 +4,6 @@
- #ifndef __CFG_H
- #define __CFG_H
- 
--extern struct cfg80211_ops mac80211_config_ops;
-+extern const struct cfg80211_ops mac80211_config_ops;
- 
- #endif /* __CFG_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 96eb272..d37dc75 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1608,7 +1608,7 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
- }
- 
- /* utility functions/constants */
--extern void *mac80211_wiphy_privid; /* for wiphy privid */
-+extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum nl80211_iftype type);
- int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 676dc09..128a0c5 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -34,7 +34,7 @@
- #include "wep.h"
- 
- /* privid for wiphys to determine whether they belong to us or not */
--void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
-+const void *const mac80211_wiphy_privid = &mac80211_wiphy_privid;
- 
- struct ieee80211_hw *wiphy_to_ieee80211_hw(struct wiphy *wiphy)
- {
+I see no option other than pushing it thru pci.git tree at this stage.
+
+> -- 
+> Kalle Valo
+
 -- 
-1.8.5.1
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
