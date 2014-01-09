@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbaA3Rfz (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:59239 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbaAIT3v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 12:35:55 -0500
-Message-ID: <1391103351.4323.23.camel@jlt4.sipsolutions.net> (sfid-20140130_183559_453932_E7146837)
-Subject: Re: [PATCH 3.13.1 3/9] rsi: Packet queueing/dequeueing to device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jahnavi <jahnavi.meher@redpinesignals.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 30 Jan 2014 18:35:51 +0100
-In-Reply-To: <52EA75B5.5040002@redpinesignals.com> (sfid-20140130_170030_682221_D838173E)
-References: <52EA75B5.5040002@redpinesignals.com>
-	 (sfid-20140130_170030_682221_D838173E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Jan 2014 14:29:51 -0500
+Received: by mail-pb0-f51.google.com with SMTP id up15so3401700pbc.24
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 11:29:48 -0800 (PST)
+Message-ID: <52CEF8A8.2050803@lwfinger.net> (sfid-20140109_202954_763979_A3FF9152)
+Date: Thu, 09 Jan 2014 13:29:44 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Steven Bateman <steven@fndtn.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: FW: Issue with authentication to Aerohive APs
+References: <CEF439BF.167DB%steven@fndtn.com> <CEF44F30.167EB%steven@fndtn.com> <CEF450DF.167F3%steven@fndtn.com>
+In-Reply-To: <CEF450DF.167F3%steven@fndtn.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-30 at 21:24 +0530, Jahnavi wrote:
+On 01/09/2014 01:13 PM, Steven Bateman wrote:
+> From: Steven Bateman <steven@fndtn.com>
+> Date: Thursday, January 9, 2014 11:34 AM
+> To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+> "ilw@linux.intel.com"
+>   <ilw@linux.intel.com>
+> Subject: Issue with authentication to Aerohive APs
+>
+>
+>
+>
+> Hello,
+>
+>
+> I'm writing on behalf of about 4 or 5 users that are having issues
+> connecting to a WLAN that I manage. The majority of the information can be
+> found at the following link, including relevant logs. I've enclosed the
+> packet capture
+>   from next to the station with failed authentications.
+>
+> http://community.aerohive.com/aerohive/topics/issue_with_linux_connectivity
+> _in_a_high_density_wlan
+>
+> We seem to have narrowed it down to a possible driver or firmware bug, but
+> I'm reliant on the user to provide me requested information. At the moment
+> I'm requesting that the user upgrade or downgrade his firmware or kernel in
+>   case that changes the behavior.
+>
+> I'd like to submit this to this group for review, and to see if you can
+> elucidate what might be happening so I that I can work towards a solution
+> with these users.
+>
 
-> +#ifdef USE_SDIO_INTF
-> +static unsigned int pkt_count;
-> +#endif
-> +static unsigned int selected_qnum, pkt_cnt;
+For completeness, what device/driver pair(s) and kernel versions are the Linux 
+user(s) running?
 
-static variables are a really bad idea, especially ones like this. Have
-you ever thought about more than one USB device being plugged in to the
-same machine? :)
-
-Also, I'm not sure trying to implement QoS in software is a great idea,
-or does it only look like that's what you're doing?
-
-johannes
+Larry
 
