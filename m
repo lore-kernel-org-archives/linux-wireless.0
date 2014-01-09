@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:62725 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbaAJIsx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56020 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbaAINP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 03:48:53 -0500
-Received: by mail-qa0-f54.google.com with SMTP id j7so3888573qaq.13
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2014 00:48:52 -0800 (PST)
+	Thu, 9 Jan 2014 08:15:59 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Date: Fri, 10 Jan 2014 09:48:52 +0100
-Message-ID: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com> (sfid-20140110_094919_078774_BFC52CED)
-Subject: mwifiex wowlan not working
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org, akarwar@marvell.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21198.40916.260973.48444@gargle.gargle.HOWL> (sfid-20140109_141602_210602_4645E3DE)
+Date: Thu, 9 Jan 2014 18:40:44 +0530
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+In-Reply-To: <52CE934D.1020400@neratec.com>
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
+	<1384665016-12022-5-git-send-email-sujith@msujith.org>
+	<52CE934D.1020400@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Wojciech Dubowik wrote:
+> This code will always set run_agc to true. Does it mean you always have 
+> to run agc cal no matter what since default is anyway true or it's just a typo?
 
-I'm experimenting with wowlan as described here:
-http://www.spinics.net/lists/linux-wireless/msg104402.html
+That was the aim of the patch.
 
-It's indeed very powerfu, I'm just fighting with a few minor things see below
+When it has been decided to do TX IQ calibration, AGC cal has to be
+run. IQ cal can be done separately in the driver (pre-AR9485) or it
+can be taken care of by the HW when AGC cal is triggered.
 
-these work nice:
+> The reason I am asking is that I have ran into problem with rssi reporting
+> when calibration is ongoing.  It looks like beacon received just after IQ
+> mismatch calibration is reported ~10-15 dB higher than it should. I have
+> verified power with wireshark and they are ok at antenna port.  Next beacons
+> are reported fine. I have tried to enable disable different antennas but it
+> doesn't seem to affect the results.
+> 
+> It doesn't happen all the time but since iq calibration is on every time we
+> are scanning it puts wrong rssi value in scan result entry. I don't have a
+> proof yet but it might affect probe responses as well.
 
-wake-on ARP request for <ip addr>:
-iw phy0 wowlan enable patterns ff:ff:ff:ff:ff:ff 20+08:06 46+<ip addr in hex>
-sudo arping -c 3 <ip addr>
+Which chip ? Is this issue seen with an older snapshot of the driver ?
+(There is an IQ cal fix for AR955x which I haven't ported to ath9k yet).
 
-wake on multicast packet
-iw phy0 wowlan enable patterns 33:33  <ipv4>
-iw phy0 wowlan enable patterns 01:00:5e <ipv6>
-sudo /etc/init.d/avahi-daemon restart
-
-these fail:
-
-iw phy0 wowlan enable magic-packet
-etherwake -i wlan0 5C:F8:A1:15:1B:0B
-wakeonlan 5C:F8:A1:15:1B:0B
-
-wake-on RX packets with TCP destination port 22
-iw phy0 wowlan enable patterns 44+16
-<hit random keys in ssh session, established before sleep>
-
-any hints on that
-
-kind regards
-
-andreas
-
----
-
-wlan0     Link encap:Ethernet  HWaddr 5C:F8:A1:15:1B:0B
-          inet addr:192.168.11.219  Bcast:192.168.11.255  Mask:255.255.255.0
-          inet6 addr: fe80::5ef8:a1ff:fe15:1b0b/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:26 errors:8 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:1478 (1.4 KiB)  TX bytes:6535 (6.3 KiB)
-
-driver_version = mwifiex 1.0 (14.66.9.p96)
+Sujith
