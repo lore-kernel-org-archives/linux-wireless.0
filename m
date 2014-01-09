@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39575 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbaAOURh (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61744 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751330AbaAIXXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 15:17:37 -0500
-Message-ID: <1389817049.4338.27.camel@jlt4.sipsolutions.net> (sfid-20140115_211749_474029_DB43357C)
-Subject: Re: [RFC 1/5] cfg80211: regulatory rules, fix bw checking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 15 Jan 2014 21:17:29 +0100
-In-Reply-To: <CALhHN=rpWARWuq4TUj2ZRnwUfRZzfs5=TLxj+7s9yaC36U7EOQ@mail.gmail.com> (sfid-20140115_170537_817111_C2FFDF5B)
-References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1389720570-2430-2-git-send-email-janusz.dziedzic@tieto.com>
-	 <1389792228.4338.7.camel@jlt4.sipsolutions.net>
-	 <CALhHN=rpWARWuq4TUj2ZRnwUfRZzfs5=TLxj+7s9yaC36U7EOQ@mail.gmail.com>
-	 (sfid-20140115_170537_817111_C2FFDF5B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Jan 2014 18:23:16 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] ieee80211: add definition for WAPI key len
+Date: Thu, 9 Jan 2014 15:22:56 -0800
+Message-ID: <1389309777-19113-1-git-send-email-bzhao@marvell.com> (sfid-20140110_002319_454895_C46BC823)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-15 at 17:05 +0100, Janusz Dziedzic wrote:
+Add WAPI key length definition to ieee80211_key_len enum.
 
-> > We did discuss something like this previously (and see our todo list on
-> > the wiki), but this isn't just some arbitrary internal change, it
-> > completely changes the interpretation of the regulatory database.
-> >
-> 
-> We need this because of such split DFS REG_RULE for ETSI:
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/ieee80211.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-In general, I totally think what you're proposing makes sense, and I
-also think we should take it further like here:
-http://wireless.kernel.org/en/developers/todo-list/regulatory
-
-However I do think that should be considered carefully in terms of the
-userspace impact/change.
-
-> -       (5250 - 5330 @ 80), (N/A, 20), DFS
-> -       (5490 - 5710 @ 80), (N/A, 27), DFS
-> +       (5250 - 5330 @ 80), (N/A, 20), (60), DFS
-> +       (5490 - 5590 @ 80), (N/A, 27), (60), DFS
-> +       (5590 - 5650 @ 80), (N/A, 27), (600), DFS   // here different
-> CAC time but still 80MHz should be available
-> +       (5650 - 5710 @ 80), (N/A, 27), (60), DFS
-> 
-> In the future could be also usefull for 160MHz:
->         (5170 - 5250 @ 160), (N/A, 20)
->         (5250 - 5330 @ 160), (N/A, 20), DFS
-
-Yes, the whole @xyz thing is a bit superfluous, I believe it should
-really be @unlimited (meaning only restriction is that it fits) for most
-countries.
-
-> We can implement CAC time as hardcoded (already send such patches some
-> time ago) one but seems this is close connected with regulatory
-> configuration and seems like good idea put this in regulatory db.
-
-I totally agree, this is a good idea.
-
-johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 776cbb8..5c0b4b0 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1857,6 +1857,7 @@ enum ieee80211_key_len {
+ 	WLAN_KEY_LEN_CCMP = 16,
+ 	WLAN_KEY_LEN_TKIP = 32,
+ 	WLAN_KEY_LEN_AES_CMAC = 16,
++	WLAN_KEY_LEN_WAPI = 32,
+ };
+ 
+ #define IEEE80211_WEP_IV_LEN		4
+-- 
+1.8.2.3
 
