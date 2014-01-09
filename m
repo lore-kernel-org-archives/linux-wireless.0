@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:57328 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932215AbaAWOt7 (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:33785 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbaAIRGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 09:49:59 -0500
-Received: by mail-ie0-f180.google.com with SMTP id at1so1218478iec.11
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 06:49:58 -0800 (PST)
+	Thu, 9 Jan 2014 12:06:38 -0500
+Received: by mail-lb0-f169.google.com with SMTP id u14so2581032lbd.28
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 09:06:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1390478759.4189.91.camel@porter.coelho.fi>
-References: <CAKKnJbdK1eJJoFZik1SENg1PtnqMsK=B4mEtoausGybKNywSqw@mail.gmail.com>
-	<1390478759.4189.91.camel@porter.coelho.fi>
-Date: Thu, 23 Jan 2014 09:49:58 -0500
-Message-ID: <CAKKnJbd+HDOuOkK63NskHaaYtAvj9WUwpCutJ_YvoPpQhkhPYw@mail.gmail.com> (sfid-20140123_155016_666558_792868BB)
-Subject: Re: wl12xx force lower bitrate
-From: Charles <hobbesc7@gmail.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 9 Jan 2014 12:06:36 -0500
+Message-ID: <CAN44aq1na7XbhArseUVwKybMS7bhn_0uCFXxVvEvgX=RfUbBGQ@mail.gmail.com> (sfid-20140109_180642_166802_512E25DC)
+Subject: [PATCH v2] wl12xx: fix tx power setting
+From: Alex Gal <a.gal@motsai.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I'm using the wl12xx-spi driver with a TI wl1271 chipset.  In my
->> application, range is more important than throughput, so I want to
->> force a lower bitrate (like 802.11b speeds at the fastest.)
->>
->> None of the commands for doing this seem to have any effect, however.
->> I've tried both iwconfig and iw.
->>
->> Is forcing a lower bitrate possible with this driver / firmware / chipset?
->
-> Rate control should do this automatically.  If you have good signal
-> conditions, it will use the highest possible rate.  If things start to
-> degrade (as if you get further away from the AP), the rate will drop.
->
+Fixes wl12xx tx power.
 
-I know about automatic rate control.  But in our experience, 802.11b
-adapters perform better at the margins (of range), possibly because
-their rate is not jumping around as much.  I know there is allowance
-within iwconfig and iw for fixing bitrate, but I have yet to find an
-adapter/driver where this functionality works.
+Signed-off-by: Alex Gal <a.gal@motsai.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c
+b/drivers/net/wireless/ti/wlcore/main.c
+index e9da47c..3f77a8d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4457,6 +4457,15 @@ static void wl1271_op_bss_info_changed(struct
+ieee80211_hw *hw,
+        if (ret < 0)
+                goto out;
+
++    if ((changed & BSS_CHANGED_TXPOWER) && bss_conf->txpower !=
+wlvif->power_level) {
++
++        ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
++        if (ret < 0)
++            goto out;
++
++        wlvif->power_level = bss_conf->txpower;
++    }
++
+        if (is_ap)
+                wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
+        else
+-- 
+1.8.5.2
