@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:49245 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbaA0Nel (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41374 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589AbaAIRaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 08:34:41 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Sujith Manoharan <sujith@msujith.org>
-Subject: Re: IBSS can't beacon after rejoin / regression in TSF syncing code?
-Date: Mon, 27 Jan 2014 14:34:37 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@meshcoding.com>
-References: <201401241826.45121.sw@simonwunderlich.de> <21221.57261.792711.70974@gargle.gargle.HOWL> <201401271427.51372.sw@simonwunderlich.de>
-In-Reply-To: <201401271427.51372.sw@simonwunderlich.de>
+	Thu, 9 Jan 2014 12:30:18 -0500
+Date: Thu, 9 Jan 2014 12:28:47 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Alex Gal <a.gal@motsai.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] wl12xx: fix tx power setting
+Message-ID: <20140109172847.GB2131@tuxdriver.com> (sfid-20140109_183022_186969_44C32666)
+References: <CAN44aq1na7XbhArseUVwKybMS7bhn_0uCFXxVvEvgX=RfUbBGQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201401271434.37513.sw@simonwunderlich.de> (sfid-20140127_143444_140753_2826A42E)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAN44aq1na7XbhArseUVwKybMS7bhn_0uCFXxVvEvgX=RfUbBGQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm CCing Teemu, who introduced this roughly 3.5 years ago ("mac80211:
-> remove BSS from cfg80211 list when leaving IBSS",
-> 5ea096c0c85e80335889539899af9a4717976e0b) , maybe he can explain it more. 
-> I couldn't understand that from the commit message and the corresponding
-> mail thread.
+On Thu, Jan 09, 2014 at 12:06:36PM -0500, Alex Gal wrote:
+> Fixes wl12xx tx power.
 > 
-> If we don't hear anything or there aren't any further objections, I think
-> we can clean this patch and merge it. :)
+> Signed-off-by: Alex Gal <a.gal@motsai.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c
+> b/drivers/net/wireless/ti/wlcore/main.c
+> index e9da47c..3f77a8d 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -4457,6 +4457,15 @@ static void wl1271_op_bss_info_changed(struct
+> ieee80211_hw *hw,
+>         if (ret < 0)
+>                 goto out;
+> 
+> +    if ((changed & BSS_CHANGED_TXPOWER) && bss_conf->txpower !=
+> wlvif->power_level) {
 
-Nokias mailserver just told me that Teemus e-mail address isn't registered, so 
-I guess we shouldn't wait for him. :)
+This line needs to be broken after the '&&'.  FWIW, I think the
+rest of the patch is whitespace-damaged as well...
+
+> +
+> +        ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
+> +        if (ret < 0)
+> +            goto out;
+> +
+> +        wlvif->power_level = bss_conf->txpower;
+> +    }
+> +
+>         if (is_ap)
+>                 wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
+>         else
+> -- 
+> 1.8.5.2
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
