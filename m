@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5279 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721AbaATSsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 13:48:50 -0500
-Date: Mon, 20 Jan 2014 19:50:45 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sergei Antonov <saproj@gmail.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: USB rt2x00 driver regression
-Message-ID: <20140120185044.GA1682@redhat.com> (sfid-20140120_194853_061928_413E2640)
-References: <CABikg9yZrXX=qfqeR+V77u+Ndegx50D1_POAYMeq63qJuEzv=w@mail.gmail.com>
- <20140117100613.GD1425@redhat.com>
- <A411C6B4-8474-47AC-97E1-0D92B24EB675@gmail.com>
- <1390133995.6945.11.camel@X1Carbon.localdomain>
- <03574886-F38F-461C-97FC-B10DCCCF30E8@gmail.com>
- <52DC1761.9080608@openwrt.org>
- <CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:42901 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754343AbaAITCC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jan 2014 14:02:02 -0500
+Received: by mail-lb0-f169.google.com with SMTP id u14so2686989lbd.28
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 11:02:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com>
+Date: Thu, 9 Jan 2014 14:02:00 -0500
+Message-ID: <CAN44aq1AQYHDUsU6wVf01NcWS9EWnJe0BwF+Ygv1kqZ7M8AwgA@mail.gmail.com> (sfid-20140109_200207_631965_78552137)
+Subject: [PATCH v3] wl12xx: fix tx power setting
+From: Alex Gal <a.gal@motsai.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 12:20:05PM +0100, Sergei Antonov wrote:
-> On 19 January 2014 19:20, Gabor Juhos <juhosg@openwrt.org> wrote:
-> > The attached patch set adds the missing code to rt2x00. Please test whether it
-> > fixes the problem or not.
-> 
-> It does not work.
-> 
-> The minimal change that fixes the problem is removing 'return;' after
-> rt2800_mcu_request() allowing the standard freq. adjustment code to
-> execute.
+Sorry for the previous format.
 
-Perhaps this MCU request is not supported by old firmware from
-linux-firmware repository.
+Fixes wl12xx tx power.
 
-Please download binary file accessible from this link
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-January/005610.html
-and replace rt2870.bin file in /lib/firmware directory.
+Signed-off-by: Alex Gal <a.gal@motsai.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Does it help ?
+diff --git a/drivers/net/wireless/ti/wlcore/main.c
+b/drivers/net/wireless/ti/wlcore/main.c
+index e9da47c..cbbfc50 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4457,6 +4457,16 @@ static void wl1271_op_bss_info_changed(struct
+ieee80211_hw *hw,
+        if (ret < 0)
+                goto out;
 
-Stanislaw
-
++       if ((changed & BSS_CHANGED_TXPOWER) &&
++               bss_conf->txpower != wlvif->power_level) {
++
++               ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
++               if (ret < 0)
++                       goto out;
++
++               wlvif->power_level = bss_conf->txpower;
++       }
++
+        if (is_ap)
+                wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
+        else
+-- 
+1.8.5.2
