@@ -1,103 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26442 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751137AbaAIQWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 11:22:31 -0500
-Date: Thu, 9 Jan 2014 17:24:15 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Lockdep problem
-Message-ID: <20140109162414.GA1719@redhat.com> (sfid-20140109_172245_556609_5598FF83)
-References: <52CC474A.7090207@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52CC474A.7090207@lwfinger.net>
+Received: from s3.sipsolutions.net ([144.76.43.152]:54531 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbaAIJSu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jan 2014 04:18:50 -0500
+Message-ID: <1389259126.4348.1.camel@jlt4.sipsolutions.net> (sfid-20140109_101855_216724_6D754BC0)
+Subject: Re: [PATCH 1/2 v2] cfg80211: Add a function to get the number of
+ supported channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 09 Jan 2014 10:18:46 +0100
+In-Reply-To: <1389259051-18072-1-git-send-email-ilan.peer@intel.com> (sfid-20140109_101612_081487_E0BEE015)
+References: <1388503946-25862-2-git-send-email-ilan.peer@intel.com>
+	 <1389259051-18072-1-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140109_101612_081487_E0BEE015)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 12:28:26PM -0600, Larry Finger wrote:
->   rtnl_mutex --> misc_mtx --> rfkill_global_mutex
-> 
->   Possible unsafe locking scenario:
-> 
->         CPU0                    CPU1
->         ----                    ----
->    lock(rfkill_global_mutex);
->                                 lock(misc_mtx);
->                                 lock(rfkill_global_mutex);
->    lock(rtnl_mutex);
-> 
->  *** DEADLOCK ***
+On Thu, 2014-01-09 at 11:17 +0200, Ilan Peer wrote:
 
-There are 3 mutexes dependency. The deadlock can happen if on another
-cpu, let say CPU2, there will be sequence:
+> +unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy)
+> +{
+> +	enum ieee80211_band band;
+> +	unsigned int n_channels;
 
-lock(rtnl_mutex);
-lock(misc_mtx);
+Seems nicer to do the = 0 here rather than in the loop?
 
-Then on deadlock scenario:
-CPU0 waits for rtnl_mutex to unlock, keep rfkill_global_mutex locked
-CPU1 waits for rfkill_global_mutex to unlock, keep misc_mtx locked
-CPU2 waits for misc_mtx to unlock, keep rtnl_mutex locked.
+> +	for (band = 0, n_channels = 0; band < IEEE80211_NUM_BANDS; band++)
 
-This dependency can be broken by moving b43_rng_init() outside from
-rtnl_mutex scope, like on below patch. IIUC b43 random number generator
-works only if we already started network connection, but this should
-not be a problem, as b43_rng_read() do not return any data if device
-is not prepared.
-
-You could also remove whole b43 rnd. Everyone know, that HW vendors
-are influenced by NSA and they random generators do not provide truly
-random numbers (just kidding ;-)
-
-Stanislaw
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ccd24f0a..2c153f9 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2475,6 +2475,10 @@ start_ieee80211:
- 		goto err_one_core_detach;
- 	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
-+
-+	/* Register HW RNG driver */
-+	b43_rng_init(wl);
-+
- 	goto out;
- 
- err_one_core_detach:
-@@ -4636,9 +4640,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
- 
--	/* Unregister HW RNG driver */
--	b43_rng_exit(dev->wl);
--
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
- 	/* Stop the microcode PSM. */
-@@ -4795,9 +4796,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
- 
--	/* Register HW RNG driver */
--	b43_rng_init(dev->wl);
--
- out:
- 	return err;
- 
-@@ -5464,6 +5462,9 @@ static void b43_bcma_remove(struct bcma_device *core)
- 
- 	b43_one_core_detach(wldev->dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	b43_leds_unregister(wl);
- 
- 	ieee80211_free_hw(wl->hw);
-
+johannes
 
