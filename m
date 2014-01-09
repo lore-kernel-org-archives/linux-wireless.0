@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22656 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750854AbaAYFq1 convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55331 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbaAIMv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jan 2014 00:46:27 -0500
-From: "Mani, Raja" <rmani@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes.berg@intel.com>
-Subject: RE: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute
- confusion
-Date: Sat, 25 Jan 2014 05:46:21 +0000
-Message-ID: <BD8355E3EE4C424D96D29100D45098AB42C43A80@aphydexd01a.ap.qualcomm.com> (sfid-20140125_064651_390781_C2CA632A)
-References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 9 Jan 2014 07:51:27 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] mac80211: reset TX info flags when frame will be reprocessed
+Date: Thu,  9 Jan 2014 13:51:21 +0100
+Message-Id: <1389271882-15806-4-git-send-email-johannes@sipsolutions.net> (sfid-20140109_135132_217131_C7FB5878)
+In-Reply-To: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
+References: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->@@ -5669,15 +5708,28 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
->                                       nla_data(ssid), nla_len(ssid));
->                                request->match_sets[i].ssid.ssid_len =
->                                        nla_len(ssid);
->+                               /* special attribute - old implemenation w/a */
->+                               request->match_sets[i].rssi_thold =
->+                                       default_match_rssi;
+From: Johannes Berg <johannes.berg@intel.com>
 
-How about this case where RSSI is disabled for SSID1 and and SSID 4
-and only SSID2 and SSID3 needs RSSI filter.
+The temporary TX info flags need to be cleared if the frame will
+be processed through the TX handlers again, otherwise it can get
+messed up. This fixes a bug that happened when an aggregation
+session was stopped while the station was sleeping - some frames
+might get transmitted marked as aggregation erroneously without
+this fix.
 
-   SSID1, SSID2, RSSI, SSID3, RSSI, SSID4
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Wouldn't this change set RSSI of SSID3 to SSID1 and SSID4 ?
-Did i miss to understand anything ?
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 377cf97..9f3cbf1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -500,6 +500,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		info->control.jiffies = jiffies;
+ 		info->control.vif = &tx->sdata->vif;
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
+ 
+ 		if (!timer_pending(&local->sta_cleanup))
+@@ -1073,6 +1074,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 			queued = true;
+ 			info->control.vif = &tx->sdata->vif;
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
++			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 			__skb_queue_tail(&tid_tx->pending, skb);
+ 			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
+ 				purge_skb = __skb_dequeue(&tid_tx->pending);
+-- 
+1.8.5.1
 
->+                               rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
->+                               if (rssi)
->+                                       request->match_sets[i].rssi_thold =
->+                                               nla_get_s32(rssi);
->                        }
->-                       rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
->-                       if (rssi)
->-                               request->rssi_thold = nla_get_u32(rssi);
