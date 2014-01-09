@@ -1,46 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:54225 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752647AbaAXWrY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 17:47:24 -0500
-Received: by mail-pd0-f178.google.com with SMTP id y13so3634459pdi.9
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:47:24 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 10/11] rel-html: update CRDA project file
-Date: Fri, 24 Jan 2014 14:46:32 -0800
-Message-Id: <1390603593-27728-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20140125_000006_069830_7ECF63CA)
-In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26442 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751137AbaAIQWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jan 2014 11:22:31 -0500
+Date: Thu, 9 Jan 2014 17:24:15 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Lockdep problem
+Message-ID: <20140109162414.GA1719@redhat.com> (sfid-20140109_172245_556609_5598FF83)
+References: <52CC474A.7090207@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52CC474A.7090207@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CRDA is now licensed under the copyleft-next project.
+On Tue, Jan 07, 2014 at 12:28:26PM -0600, Larry Finger wrote:
+>   rtnl_mutex --> misc_mtx --> rfkill_global_mutex
+> 
+>   Possible unsafe locking scenario:
+> 
+>         CPU0                    CPU1
+>         ----                    ----
+>    lock(rfkill_global_mutex);
+>                                 lock(misc_mtx);
+>                                 lock(rfkill_global_mutex);
+>    lock(rtnl_mutex);
+> 
+>  *** DEADLOCK ***
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- projects/crda.cfg | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+There are 3 mutexes dependency. The deadlock can happen if on another
+cpu, let say CPU2, there will be sequence:
 
-diff --git a/projects/crda.cfg b/projects/crda.cfg
-index c52bb6b..33c2c66 100644
---- a/projects/crda.cfg
-+++ b/projects/crda.cfg
-@@ -1,9 +1,10 @@
- [project]
- rel_html_proj           = crda
- supported =
--	1.1
-+	3.13
-+	3.14
- rel_html_url_releases	= http://kernel.org/pub/software/network/crda/
--rel_license 		= ISC
-+rel_license 		= copyleft-next
- ignore_changelogs	= True
+lock(rtnl_mutex);
+lock(misc_mtx);
+
+Then on deadlock scenario:
+CPU0 waits for rtnl_mutex to unlock, keep rfkill_global_mutex locked
+CPU1 waits for rfkill_global_mutex to unlock, keep misc_mtx locked
+CPU2 waits for misc_mtx to unlock, keep rtnl_mutex locked.
+
+This dependency can be broken by moving b43_rng_init() outside from
+rtnl_mutex scope, like on below patch. IIUC b43 random number generator
+works only if we already started network connection, but this should
+not be a problem, as b43_rng_read() do not return any data if device
+is not prepared.
+
+You could also remove whole b43 rnd. Everyone know, that HW vendors
+are influenced by NSA and they random generators do not provide truly
+random numbers (just kidding ;-)
+
+Stanislaw
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ccd24f0a..2c153f9 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2475,6 +2475,10 @@ start_ieee80211:
+ 		goto err_one_core_detach;
+ 	wl->hw_registred = true;
+ 	b43_leds_register(wl->current_dev);
++
++	/* Register HW RNG driver */
++	b43_rng_init(wl);
++
+ 	goto out;
  
- [html]
--- 
-1.8.5.2
+ err_one_core_detach:
+@@ -4636,9 +4640,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
+ 
+-	/* Unregister HW RNG driver */
+-	b43_rng_exit(dev->wl);
+-
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+ 	/* Stop the microcode PSM. */
+@@ -4795,9 +4796,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+-	/* Register HW RNG driver */
+-	b43_rng_init(dev->wl);
+-
+ out:
+ 	return err;
+ 
+@@ -5464,6 +5462,9 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 
+ 	b43_one_core_detach(wldev->dev);
+ 
++	/* Unregister HW RNG driver */
++	b43_rng_exit(wl);
++
+ 	b43_leds_unregister(wl);
+ 
+ 	ieee80211_free_hw(wl->hw);
+
 
