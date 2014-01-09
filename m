@@ -1,66 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbaAWI0v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:26:51 -0500
-Message-ID: <1390465607.4142.7.camel@jlt4.sipsolutions.net> (sfid-20140123_092658_532006_E12498FA)
-Subject: Re: [PATCH 3/3] cfg80211: implement multi-interface CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
+Received: from mail.neratec.com ([46.140.151.2]:31752 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755235AbaAIOCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jan 2014 09:02:35 -0500
+Message-ID: <52CEAB24.5090700@neratec.com> (sfid-20140109_150301_500558_F6DEB551)
+Date: Thu, 09 Jan 2014 14:59:00 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Date: Thu, 23 Jan 2014 09:26:47 +0100
-In-Reply-To: <1390458525.4189.46.camel@porter.coelho.fi>
-References: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com>
-	 <1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
-	 <1390458525.4189.46.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>	<1384665016-12022-5-git-send-email-sujith@msujith.org>	<52CE934D.1020400@neratec.com>	<21198.40916.260973.48444@gargle.gargle.HOWL>	<52CEA5A3.2040308@neratec.com> <21198.43395.235654.597422@gargle.gargle.HOWL>
+In-Reply-To: <21198.43395.235654.597422@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-23 at 08:28 +0200, Luca Coelho wrote:
-
-> Why is this necessary? I think it's easier to treat the CSA's
-> separately.  When wpa_supplicant decides to switch channel in one
-> interface, it asks cfg80211 to do so.  Then, if that interface change is
-> "approved" (ie. there's no internal reason why it would fail), cfg80211
-> sends a notification to userspace that the interface will switch.  Then
-> wpa_s decides whether any other interfaces need switching as well (ie.
-> if it's in the same channel context).
-
-I don't think that makes sense. If userspace requested the CSA
-operation, the fact that it will happen should be known as soon as the
-request returns 0. No need for a notification (other than when the mlme
-code in mac80211 decided to switch by itself). You're mixing the cases
-of GO-follow-client-interface and switch-multiple-AP-BSSes, which I'm
-not sure is right.
-
-The problem with using the approach you're suggesting to switch multiple
-AP interfaces is that when you do that, you open the system up to races
-much more than when requesting multiple interfaces at once. Also, I
-still think we need to enforce that the interface switch at the same
-time, which would practically be impossible with multiple switch
-commands.
-
-> > This makes it possible for userspace to request a
-> > multi-interface channel switch while allowing
-> > sanity checks wrt target interface/channel
-> > combination.
-> 
-> Okay, the sanity checks are an interesting issue.  But if the
-> combination is not good, the whole command will fail and none of the
-> interfaces will switch.  If wpa_s does this interface-by-interface,
-> separately, the triggering interface (ie. the one that decided to switch
-> in the first place) may succeed while the subsequent requests may fail
-> (eg. if the interface combination is not allowed in the new channel).
-> If the second one fails, wpa_s may make another decision, for instance
-> trying to switch the second interface to a *different* channel instead,
-> or not switch at all.
-
-That makes no sense. You're talking about completely different
-scenarios, see above.
-
-johannes
+On 01/09/2014 02:52 PM, Sujith Manoharan wrote:
+> Wojciech Dubowik wrote:
+>> AR9590 running on powerpc with latest openwrt i.e.
+>> compat-wireless-2013-11-05 backported with
+>> your changes for split pci/soc IQ calibration.
+>>
+>> I could try to reproduce it on my host with latest wireless testing if
+>> you think
+> It would also be good to know if this is a regression from this patch,
+> so checking an older version of the driver without this patch would help.
+It will take some time but I am on it.
+> Sujith
 
