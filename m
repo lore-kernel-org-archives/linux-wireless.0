@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:38896 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbaAMUWO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:14 -0500
-Received: by mail-ea0-f175.google.com with SMTP id z10so3558082ead.34
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:12 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/18] iwlwifi: mvm: send all the NVM sections to the NIC
-Date: Mon, 13 Jan 2014 22:21:47 +0200
-Message-Id: <1389644517-22807-8-git-send-email-egrumbach@gmail.com> (sfid-20140113_212218_186197_98D2B002)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:38597 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751678AbaAINjH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jan 2014 08:39:07 -0500
+Message-ID: <52CEA5A3.2040308@neratec.com> (sfid-20140109_143911_770978_21949EFE)
+Date: Thu, 09 Jan 2014 14:35:31 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>	<1384665016-12022-5-git-send-email-sujith@msujith.org>	<52CE934D.1020400@neratec.com> <21198.40916.260973.48444@gargle.gargle.HOWL>
+In-Reply-To: <21198.40916.260973.48444@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 01/09/2014 02:10 PM, Sujith Manoharan wrote:
+> Wojciech Dubowik wrote:
+>> This code will always set run_agc to true. Does it mean you always have
+>> to run agc cal no matter what since default is anyway true or it's just a typo?
+> That was the aim of the patch.
+>
+> When it has been decided to do TX IQ calibration, AGC cal has to be
+> run. IQ cal can be done separately in the driver (pre-AR9485) or it
+> can be taken care of by the HW when AGC cal is triggered.
+Ok
+>> The reason I am asking is that I have ran into problem with rssi reporting
+>> when calibration is ongoing.  It looks like beacon received just after IQ
+>> mismatch calibration is reported ~10-15 dB higher than it should. I have
+>> verified power with wireshark and they are ok at antenna port.  Next beacons
+>> are reported fine. I have tried to enable disable different antennas but it
+>> doesn't seem to affect the results.
+>>
+>> It doesn't happen all the time but since iq calibration is on every time we
+>> are scanning it puts wrong rssi value in scan result entry. I don't have a
+>> proof yet but it might affect probe responses as well.
+> Which chip ? Is this issue seen with an older snapshot of the driver ?
+> (There is an IQ cal fix for AR955x which I haven't ported to ath9k yet).
+AR9590 running on powerpc with latest openwrt i.e. 
+compat-wireless-2013-11-05 backported with
+your changes for split pci/soc IQ calibration.
 
-Some NIC comes with more than the 4 NVM (non volative
-memory) sections described in the nvm_to_read array.
-These NICs usually get their NVM from an external file
-fetched from userland during init.
-We already parsed the file, but sent to the NIC only 4 NVM
-sections whereas there could be more sections in the file.
-Fix this.
+I could try to reproduce it on my host with latest wireless testing if 
+you think
+it helps.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/nvm.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index c6beb0f..9affd43 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -393,16 +393,15 @@ out:
- int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
- {
- 	int i, ret;
--	u16 section_id;
- 	struct iwl_nvm_section *sections = mvm->nvm_sections;
- 
- 	IWL_DEBUG_EEPROM(mvm->trans->dev, "'Write to NVM\n");
- 
--	for (i = 0; i < ARRAY_SIZE(nvm_to_read); i++) {
--		section_id = nvm_to_read[i];
--		ret = iwl_nvm_write_section(mvm, section_id,
--					    sections[section_id].data,
--					    sections[section_id].length);
-+	for (i = 0; i < ARRAY_SIZE(mvm->nvm_sections); i++) {
-+		if (!mvm->nvm_sections[i].data || !mvm->nvm_sections[i].length)
-+			continue;
-+		ret = iwl_nvm_write_section(mvm, i, sections[i].data,
-+					    sections[i].length);
- 		if (ret < 0) {
- 			IWL_ERR(mvm, "iwl_mvm_send_cmd failed: %d\n", ret);
- 			break;
--- 
-1.7.9.5
+Wojtek
+>
+> Sujith
 
