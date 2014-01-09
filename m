@@ -1,82 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:53203 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbaANVA2 (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:64574 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbaAINWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 16:00:28 -0500
-Received: by mail-wg0-f48.google.com with SMTP id x13so926717wgg.3
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 13:00:27 -0800 (PST)
-Message-ID: <1389733208.8159.9.camel@canaries32-MCP7A> (sfid-20140114_220032_524114_612AA080)
-Subject: Re: [PATCH 6/6] staging: vt6656: sparse fixes: aes_ccmp.c missing
- header.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Jan 2014 21:00:08 +0000
-In-Reply-To: <20140113234614.GA16467@kroah.com>
-References: <1389630555.2590.6.camel@canaries32-MCP7A>
-	 <20140113234614.GA16467@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Jan 2014 08:22:38 -0500
+Received: by mail-pa0-f49.google.com with SMTP id kx10so3300346pab.22
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 05:22:35 -0800 (PST)
+From: Ujjal Roy <royujjal@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: WiFi Mailing List <linux-wireless@vger.kernel.org>
+Subject: [RFC] iw: add support for retry limit
+Date: Thu,  9 Jan 2014 18:52:16 +0530
+Message-Id: <1389273736-9486-1-git-send-email-royujjal@gmail.com> (sfid-20140109_142241_296492_C3FC42F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-13 at 15:46 -0800, Greg KH wrote:
-> On Mon, Jan 13, 2014 at 04:29:15PM +0000, Malcolm Priestley wrote:
-> > Add missing aes_ccmp.h header and move device.h to
-> > aes_ccmp.h
-> 
-> Why move device.h?
-device.h is needed by aes_ccmp.h and only currently gets away with it
-by the include order elsewhere.
+Show the retry limit in phy details and also configure the
+retry limit.
 
-I didn't see the need to include device.h twice or fix
-it with the include order in aes_ccmo.c, there is enough of
-that already in this driver.
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+---
+ info.c | 16 ++++++++++++++++
+ phy.c  | 39 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 55 insertions(+)
 
-Regards
-
-Malcolm
-
-> That shouldn't be needed to fix this issue.
-> 
-> > sparse warning
-> > aes_ccmp.c:221:6: warning: symbol 'AESbGenCCMP' was not declared. Should it be static?
-> > 
-> > Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> > ---
-> >  drivers/staging/vt6656/aes_ccmp.c | 2 +-
-> >  drivers/staging/vt6656/aes_ccmp.h | 2 ++
-> >  2 files changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/vt6656/aes_ccmp.c b/drivers/staging/vt6656/aes_ccmp.c
-> > index 61b9f7b..3dbf458 100644
-> > --- a/drivers/staging/vt6656/aes_ccmp.c
-> > +++ b/drivers/staging/vt6656/aes_ccmp.c
-> > @@ -30,7 +30,7 @@
-> >   * Revision History:
-> >   */
-> >  
-> > -#include "device.h"
-> > +#include "aes_ccmp.h"
-> >  #include "80211hdr.h"
-> >  
-> >  /*
-> > diff --git a/drivers/staging/vt6656/aes_ccmp.h b/drivers/staging/vt6656/aes_ccmp.h
-> > index ed6a9ae..4cac3ec 100644
-> > --- a/drivers/staging/vt6656/aes_ccmp.h
-> > +++ b/drivers/staging/vt6656/aes_ccmp.h
-> > @@ -30,6 +30,8 @@
-> >  #ifndef __AES_H__
-> >  #define __AES_H__
-> >  
-> > +#include "device.h"
-> 
-> If you can prevent it, keeping .h files from having to include other .h
-> files is a good thing.
-> 
-> thanks,
-> 
-> greg k-h
-
+diff --git a/info.c b/info.c
+index a696503..08b3292 100644
+--- a/info.c
++++ b/info.c
+@@ -246,6 +246,22 @@ next:
+ 			printf("\tRTS threshold: %d\n", rts);
+ 	}
+ 
++	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT] ||
++	    tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]) {
++		unsigned char retry_s = 0, retry_l = 0;
++
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT])
++			retry_s = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT]);
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG])
++			retry_l = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]);
++		if (retry_s == retry_l) {
++			printf("\tRetry short long limit: %d\n", retry_s);
++		} else {
++			printf("\tRetry short limit: %d\n", retry_s);
++			printf("\tRetry long limit: %d\n", retry_l);
++		}
++	}
++
+ 	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+ 		unsigned char coverage;
+ 
+diff --git a/phy.c b/phy.c
+index 68f40f6..da05103 100644
+--- a/phy.c
++++ b/phy.c
+@@ -232,6 +232,45 @@ COMMAND(set, rts, "<rts threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+ 	"Set rts threshold.");
+ 
++static int handle_retry(struct nl80211_state *state,
++		      struct nl_cb *cb, struct nl_msg *msg,
++		      int argc, char **argv,
++		      enum id_input id)
++{
++	unsigned int retry_short = 0, retry_long = 0;
++	char *end;
++
++	if (!argc || argc > 2)
++		return 1;
++
++	if (!*argv[0])
++		return 1;
++	retry_short = strtoul(argv[0], &end, 10);
++	if (*end != '\0')
++		return 1;
++	if (!retry_short || retry_short > 255)
++		return -EINVAL;
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT, retry_short);
++
++	if (argc == 2) {
++		if (!*argv[1])
++			return 1;
++		retry_long = strtoul(argv[1], &end, 10);
++		if (*end != '\0')
++			return 1;
++		if (!retry_long || retry_long > 255)
++			return -EINVAL;
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG, retry_long);
++	}
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, retry, "<short limit> [<long limit>]",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
++	"Set retry limit.");
++
+ static int handle_netns(struct nl80211_state *state,
+ 			struct nl_cb *cb,
+ 			struct nl_msg *msg,
+-- 
+1.8.1.4
 
