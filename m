@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:41797 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbaAWENv (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:44929 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295AbaAITOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 23:13:51 -0500
-Received: by mail-oa0-f42.google.com with SMTP id i7so1558902oag.15
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 20:13:49 -0800 (PST)
-Message-ID: <52E096F7.8040903@lwfinger.net> (sfid-20140123_051426_637339_AAAB9745)
-Date: Wed, 22 Jan 2014 22:13:43 -0600
+	Thu, 9 Jan 2014 14:14:44 -0500
+Message-ID: <52CEF521.90009@lwfinger.net> (sfid-20140109_201507_208455_8B9E393C)
+Date: Thu, 09 Jan 2014 13:14:41 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Realtek 8821 wireless PCI driver?
-References: <20140120193249.GA25707@kroah.com> <52E066A1.9010009@lwfinger.net> <20140123021208.GA13639@kroah.com>
-In-Reply-To: <20140123021208.GA13639@kroah.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Lockdep problem
+References: <52CC474A.7090207@lwfinger.net> <20140109162414.GA1719@redhat.com>
+In-Reply-To: <20140109162414.GA1719@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2014 08:12 PM, Greg KH wrote:
-> On Wed, Jan 22, 2014 at 06:47:29PM -0600, Larry Finger wrote:
->> On 01/20/2014 01:32 PM, Greg KH wrote:
->>> Hi all,
->>>
->>> I have a box here with a Realtek 8821 wireless PCI device.  We don't
->>> seem to have a driver upstream for it yet, but there's a huge tarball
->>> from Realtek on their site.
->>>
->>> Has anyone started picking the needed pieces out of the tarball to get
->>> this merged "properly", or does this need to be done yet?
->>>
->>> Hm, I wonder if I should just dump the tarball into staging for now, to
->>> get my box working, any objections to me doing that?
+On 01/09/2014 10:24 AM, Stanislaw Gruszka wrote:
+> On Tue, Jan 07, 2014 at 12:28:26PM -0600, Larry Finger wrote:
+>>    rtnl_mutex --> misc_mtx --> rfkill_global_mutex
 >>
->> I have had contact with the Realtek developers regarding a Linux driver for the
->> RTL8821AE device with PCI ID 10ec:8821. On Dec 10, 2013, they indicated that
->> there were still 802.11ac problems, and they were not yet ready to release it to
->> me. I will write them again and check if the driver is now ready, and they just
->> forgot to send it to me. Once they are ready, they will also be sending me
->> sample devices.
+>>    Possible unsafe locking scenario:
 >>
->> What is the URL for the driver that you found? I did a quick search on their
->> site and did not find it.
+>>          CPU0                    CPU1
+>>          ----                    ----
+>>     lock(rfkill_global_mutex);
+>>                                  lock(misc_mtx);
+>>                                  lock(rfkill_global_mutex);
+>>     lock(rtnl_mutex);
+>>
+>>   *** DEADLOCK ***
 >
-> It came with a device I got at a conference, along with 1,000 other
-> people, so it's being used in the "wild" now, running Linux.  I'll send
-> you the patch off-list as it's not small.
+> There are 3 mutexes dependency. The deadlock can happen if on another
+> cpu, let say CPU2, there will be sequence:
 >
->> To answer your question, I certainly would have no objections to your dumping
->> the driver into staging. I can fix it up there as easily as in my own private
->> stores. You will, of course, get a lot more intermediate patches, but I think
->> you have already anticipated that. The PCI group usually send me mac80211-based
->> drivers, thus the residence in staging may be short, but that is desirable.
+> lock(rtnl_mutex);
+> lock(misc_mtx);
 >
-> Ok, I spent an hour or so trying to see if I could just use the existing
-> rtlwifi module with this driver, but it seems that they are using a 2
-> year-old version of it, so I'll have to bundle it directly into the
-> driver for now, along with an "odd" bluetooth sharing module.  I'll work
-> on making the needed changes to the driver to get it to work with
-> rtlwifi first, and then clean up the rest over the next few months.  I
-> have the hardware here to test with, so that should make it easier than
-> the normal staging driver work I do.
+> Then on deadlock scenario:
+> CPU0 waits for rtnl_mutex to unlock, keep rfkill_global_mutex locked
+> CPU1 waits for rfkill_global_mutex to unlock, keep misc_mtx locked
+> CPU2 waits for misc_mtx to unlock, keep rtnl_mutex locked.
 >
-> But for now, staging seems like a good idea, especially as one "distro"
-> is already shipping it in this form (SteamOS).
+> This dependency can be broken by moving b43_rng_init() outside from
+> rtnl_mutex scope, like on below patch. IIUC b43 random number generator
+> works only if we already started network connection, but this should
+> not be a problem, as b43_rng_read() do not return any data if device
+> is not prepared.
+>
+> You could also remove whole b43 rnd. Everyone know, that HW vendors
+> are influenced by NSA and they random generators do not provide truly
+> random numbers (just kidding ;-)
 
-Too bad I couldn't get one of those devices.
+Well, I have no idea to what extent NSA affects the RNGs in computers; however, 
+I do like having that additional source of entropy. :)
 
-The "odd" bluetooth sharing module is part of a new driver that I am about to 
-push into drivers/net/wireless to be part of 3.15. This one drives the RTL8723BE 
-device, which is somewhat different from the existing RTL8723AE. Both of the 
-8723 device are both wifi and BT, and it also seems that the 8821AE is also a 
-dual device.
+Your analysis was spot on, and I will be submitting a patch shortly with you as 
+author. I'll give the reporter on b.k.o a chance to test it, but it removed the 
+splat here.
 
-I will merge the 8821 code with my current working version of rtlwifi and 
-becoexist, and send you patches for testing. I agree that staging is a good 
-place for now.
-
-Thanks for the heads-up on this matter.
+Thanks,
 
 Larry
 
