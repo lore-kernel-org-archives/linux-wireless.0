@@ -1,57 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:60249 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbaANU0z (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:40166 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766AbaAIKsT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 15:26:55 -0500
-Received: by mail-we0-f178.google.com with SMTP id t60so923586wes.9
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 12:26:54 -0800 (PST)
-Message-ID: <1389731210.7960.5.camel@canaries32-MCP7A> (sfid-20140114_212658_302281_BF094CAB)
-Subject: Re: [PATCH 2/6] staging: vt6656:  sparse fixes: device_get_stats
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Jan 2014 20:26:50 +0000
-In-Reply-To: <20140113234212.GA3066@kroah.com>
-References: <1389629930.2590.1.camel@canaries32-MCP7A>
-	 <20140113234212.GA3066@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Jan 2014 05:48:19 -0500
+Received: by mail-ob0-f176.google.com with SMTP id vb8so3059629obc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 02:48:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389174573-5204-1-git-send-email-arend@broadcom.com>
+References: <1389174573-5204-1-git-send-email-arend@broadcom.com>
+Date: Thu, 9 Jan 2014 11:48:18 +0100
+Message-ID: <CACna6rw--5F1J_AwantAnFUjudQc9w8AQhmHt15GQ9xqxEfrDg@mail.gmail.com> (sfid-20140109_114823_828743_2AA51579)
+Subject: Re: [PATCH] brcmfmac: add support for bcm43362 device
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-13 at 15:42 -0800, Greg KH wrote:
-> On Mon, Jan 13, 2014 at 04:18:50PM +0000, Malcolm Priestley wrote:
-> > sparse warning
-> > main_usb.c:1442:44: warning: cast removes address space of expression
-> > 
-> > Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> > ---
-> >  drivers/staging/vt6656/main_usb.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-> > index 4cb7aa7..59c2430 100644
-> > --- a/drivers/staging/vt6656/main_usb.c
-> > +++ b/drivers/staging/vt6656/main_usb.c
-> > @@ -1418,8 +1418,9 @@ static void device_set_multi(struct net_device *dev)
-> >  static struct net_device_stats *device_get_stats(struct net_device *dev)
-> >  {
-> >  	struct vnt_private *pDevice = netdev_priv(dev);
-> > +	struct net_device_stats *stats = &pDevice->stats;
-> >  
-> > -	return &pDevice->stats;
-> > +	return stats;
-> 
-> This change makes no sense to me.  Why is sparse complaining about this?
-> 
-> Is this a bug in sparse, or am I missing something obvious here?
-Yes me!!!
+2014/1/8 Arend van Spriel <arend@broadcom.com>:
+> This patch adds support for the bcm43362 1x1 11n chipset. This
+> chipset is used in AP6210 wifi module found on Cubieboard [1].
 
-Sorry. that is not line 1442, a case of number dyslexia.
-
-That is fixed in the next patch.
-
-Malcolm
-
-
+Will you update http://wireless.kernel.org/en/users/Drivers/brcm80211
+please? Now, or when it's pushed, whenever you prefer :)
