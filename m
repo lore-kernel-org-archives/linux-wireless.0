@@ -1,58 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:51340 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602AbaAKTsq (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:40054 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264AbaAID01 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 14:48:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 3/3] b43legacy: Fix oops if firmware is not available
-Date: Sat, 11 Jan 2014 13:48:34 -0600
-Message-Id: <1389469714-13040-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_204908_989070_A070BEF3)
-In-Reply-To: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 8 Jan 2014 22:26:27 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 1/3] ath9k: Update WB335 PCI IDs
+Date: Thu,  9 Jan 2014 08:51:13 +0530
+Message-Id: <1389237675-32658-1-git-send-email-sujith@msujith.org> (sfid-20140109_042631_018417_DEFD61E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On openSUSE systems, the script that installs the firmware for b43legacy
-also unloads and reloads the driver. When the firmware was not previously
-available, the driver has stalled at a wait_for_completion(). When the
-unload routine releases that hold, the driver encounters structures
-that have already been deleted and generates a fatal condition. When
-the user does a manual restart, the file system cleanup frequently
-results in the firmware files being deleted and the user is never able
-to install the firmware. The fix is to change the wait_for_completion()
-with a wait_for_completion_timeout() with a 60 second wait period.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-There is a potential race condition; however, the chances that less
-than a minute has elapsed between the initial driver load and a
-subsequent unload is very unlikely.
+* Add new AR9565 1.0/1.0.1/1.1 IDs
+* Change Dell/Lenovo/Samsung cards to 2-Antenna with diversity.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43legacy/main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c | 101 ++++++++++++++++++++++++++++-------
+ 1 file changed, 82 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 5726688..bd5f142 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -1546,8 +1546,9 @@ static int do_request_fw(struct b43legacy_wldev *dev,
- 			b43legacyerr(dev->wl, "Unable to load firmware\n");
- 			return err;
- 		}
--		/* stall here until fw ready */
--		wait_for_completion(&dev->fw_load_complete);
-+		/* stall here until fw ready or 60 sec elapses */
-+		wait_for_completion_timeout(&dev->fw_load_complete,
-+					    msecs_to_jiffies(60000));
- 		if (!dev->fwp)
- 			err = -EINVAL;
- 		*fw = dev->fwp;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index e9a5857..55724b0 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -412,6 +412,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 0x11AD, /* LITEON */
++			 0x06B2),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0842),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
+ 			 0x6671),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+@@ -424,6 +434,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 0x1B9A, /* XAVI */
+ 			 0x2812),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x1B9A, /* XAVI */
++			 0x28A1),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x218A),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT },
+ 
+ 	/* WB335 1-ANT / Antenna Diversity */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+@@ -469,22 +489,17 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 0x11AD, /* LITEON */
+-			 0x0682),
++			 0x06A2),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+-			 PCI_VENDOR_ID_AZWAVE,
+-			 0x213A),
+-	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+-			 0x0036,
+-			 PCI_VENDOR_ID_LENOVO,
+-			 0x3026),
++			 0x11AD, /* LITEON */
++			 0x0682),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+-			 PCI_VENDOR_ID_LENOVO,
+-			 0x4026),
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x213A),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+@@ -504,37 +519,35 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_DELL,
+-			 0x020E),
++			 0x020C),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 
+-	/* WB335 2-ANT */
++	/* WB335 2-ANT / Antenna-Diversity */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411A),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411B),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411C),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411D),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_SAMSUNG,
+ 			 0x411E),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT },
+-
+-	/* WB335 2-ANT / Antenna-Diversity */
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_ATHEROS,
+@@ -562,11 +575,31 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0832),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0692),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2130),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x213B),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_AZWAVE,
++			 0x2182),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 0x144F, /* ASKEY */
+ 			 0x7202),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -577,6 +610,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 0x1B9A, /* XAVI */
++			 0x28A2),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 0x185F, /* WNC */
+ 			 0x3027),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -590,6 +628,31 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 PCI_VENDOR_ID_FOXCONN,
+ 			 0xE07F),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_FOXCONN,
++			 0xE081),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x3026),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x4026),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_ASUSTEK,
++			 0x85F2),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_DELL,
++			 0x020E),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+ 
+ 	/* PCI-E AR9565 (WB335) */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0036),
 -- 
-1.8.4
+1.8.5.2
 
