@@ -1,32 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:43428 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452AbaAUTDF (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36814 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264AbaAID0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 14:03:05 -0500
-Received: by mail-wi0-f182.google.com with SMTP id ex4so4753150wid.3
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 11:03:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com>
-References: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 22 Jan 2014 00:32:42 +0530
-Message-ID: <CABPxzYKykToRsDanUpUdcE7xvsiPZ2E-fMG7B=Xn9JkuXGAHGQ@mail.gmail.com> (sfid-20140121_200309_428191_A0CF8720)
-Subject: Re: [PATCH] mac80211: add check on hw->max_signal value on ieee80211_register_hw
-To: andrea merello <andrea.merello@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Jan 2014 22:26:33 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	stable@vger.kernel.org
+Subject: [PATCH v2 2/3] ath9k: Use correct channel for RX packets
+Date: Thu,  9 Jan 2014 08:51:14 +0530
+Message-Id: <1389237675-32658-2-git-send-email-sujith@msujith.org> (sfid-20140109_042636_920342_3B1D66A7)
+In-Reply-To: <1389237675-32658-1-git-send-email-sujith@msujith.org>
+References: <1389237675-32658-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 2:51 AM, andrea merello
-<andrea.merello@gmail.com> wrote:
->
-> +       if (hw->flags &
-> IEEE80211_HW_SIGNAL_UNSPEC && hw->max_signal <= 0)
-> +               return -EINVAL;
-> +
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Should we add a check for > 100 as well, similar to cfg?
+Accessing the current channel definition in mac80211
+when processing RX packets is problematic because it
+could have been updated when a scan is issued. Since a
+channel change involves flushing the existing packets
+in the RX queue before a chip-reset is done, they would
+be processed using the wrong band/channel information.
+
+To avoid this, use the current channel information
+maintained in the driver.
+
+Cc: stable@vger.kernel.org
+Reported-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6d643ca..f7cc5b3 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -850,20 +850,15 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	enum ieee80211_band band;
+ 	unsigned int i = 0;
+ 	struct ath_softc __maybe_unused *sc = common->priv;
++	struct ath_hw *ah = sc->sc_ah;
+ 
+-	band = hw->conf.chandef.chan->band;
++	band = ah->curchan->chan->band;
+ 	sband = hw->wiphy->bands[band];
+ 
+-	switch (hw->conf.chandef.width) {
+-	case NL80211_CHAN_WIDTH_5:
++	if (IS_CHAN_QUARTER_RATE(ah->curchan))
+ 		rxs->flag |= RX_FLAG_5MHZ;
+-		break;
+-	case NL80211_CHAN_WIDTH_10:
++	else if (IS_CHAN_HALF_RATE(ah->curchan))
+ 		rxs->flag |= RX_FLAG_10MHZ;
+-		break;
+-	default:
+-		break;
+-	}
+ 
+ 	if (rx_stats->rs_rate & 0x80) {
+ 		/* HT rate */
+@@ -1078,6 +1073,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 
+ 	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
+ 
++	/*
++	 * This shouldn't happen, but have a safety check anyway.
++	 */
++	if (WARN_ON(!ah->curchan)) {
++		ret = -EINVAL;
++		goto exit;
++	}
++
+ 	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
+ 		ret =-EINVAL;
+ 		goto exit;
+@@ -1085,8 +1088,8 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 
+ 	ath9k_process_rssi(common, hw, rx_stats, rx_status);
+ 
+-	rx_status->band = hw->conf.chandef.chan->band;
+-	rx_status->freq = hw->conf.chandef.chan->center_freq;
++	rx_status->band = ah->curchan->chan->band;
++	rx_status->freq = ah->curchan->chan->center_freq;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+-- 
+1.8.5.2
+
