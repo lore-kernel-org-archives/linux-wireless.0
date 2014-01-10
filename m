@@ -1,55 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:59076 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710AbaATDie (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2384 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750793AbaAJDhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 22:38:34 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 9 Jan 2014 22:37:19 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: add USB8897 support
+Date: Thu, 9 Jan 2014 19:36:55 -0800
+Message-ID: <1389325015-20918-1-git-send-email-bzhao@marvell.com> (sfid-20140110_043724_431689_91763600)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21212.39163.788339.349498@gargle.gargle.HOWL> (sfid-20140120_043837_495847_EEB96CBE)
-Date: Mon, 20 Jan 2014 09:03:15 +0530
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-In-Reply-To: <52D8DC0E.40207@neratec.com>
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
-	<1384665016-12022-5-git-send-email-sujith@msujith.org>
-	<52CE934D.1020400@neratec.com>
-	<21198.40916.260973.48444@gargle.gargle.HOWL>
-	<52CEA5A3.2040308@neratec.com>
-	<21198.43395.235654.597422@gargle.gargle.HOWL>
-	<52CEAB24.5090700@neratec.com>
-	<52D3F962.1010302@neratec.com>
-	<21204.319.492595.58625@gargle.gargle.HOWL>
-	<52D402C3.3070606@neratec.com>
-	<21204.1991.201080.986559@gargle.gargle.HOWL>
-	<21204.2384.710460.402183@gargle.gargle.HOWL>
-	<21204.3832.404821.109119@gargle.gargle.HOWL>
-	<52D63EBB.7020607@neratec.com>
-	<21206.17284.157496.206327@gargle.gargle.HOWL>
-	<52D6472B.2060207@neratec.com>
-	<21207.48441.292580.481850@gargle.gargle.HOWL>
-	<21207.49245.151249.759167@gargle.gargle.HOWL>
-	<52D7C62F.2030307@neratec.com>
-	<21208.20686.79159.966434@gargle.gargle.HOWL>
-	<52D8DC0E.40207@neratec.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik wrote:
-> I agree it's more of a workaround because there can be situations
-> where measured value is far from calibrated. In my setup it
-> helps but I haven't yet tested what happens in the noisy environment.
-> 
-> Do you know a better way to fix this? I am not so deep into calibration
-> tasks but I have a working setup so I could spend more time on that.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Well, like I mentioned before, I am not sure if this needs to be fixed.
-The calibration history is cleared only once on association, anyway.
+Adding new device IDs and assigning generic function/variable
+names instead of using device-id specific names.
 
-If this happens when running background scans when associated, we can
-try to fix it. But, I have not seen such behavior, so it would be good
-to have logs that show abnormal rssi during scan.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+---
+ drivers/net/wireless/mwifiex/Kconfig |  4 +--
+ drivers/net/wireless/mwifiex/usb.c   | 54 +++++++++++++++++++++++++++---------
+ drivers/net/wireless/mwifiex/usb.h   | 12 +++++---
+ 3 files changed, 51 insertions(+), 19 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
+index f7ff472..ecdf345 100644
+--- a/drivers/net/wireless/mwifiex/Kconfig
++++ b/drivers/net/wireless/mwifiex/Kconfig
+@@ -31,12 +31,12 @@ config MWIFIEX_PCIE
+ 	  mwifiex_pcie.
+ 
+ config MWIFIEX_USB
+-	tristate "Marvell WiFi-Ex Driver for USB8797"
++	tristate "Marvell WiFi-Ex Driver for USB8797/8897"
+ 	depends on MWIFIEX && USB
+ 	select FW_LOADER
+ 	---help---
+ 	  This adds support for wireless adapters based on Marvell
+-	  Avastar 88W8797 chipset with USB interface.
++	  8797/8897 chipset with USB interface.
+ 
+ 	  If you choose to build it as a module, it will be called
+ 	  mwifiex_usb.
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index a9240a2..e8ebbd4 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -22,15 +22,21 @@
+ 
+ #define USB_VERSION	"1.0"
+ 
+-static const char usbdriver_name[] = "usb8797";
++static const char usbdriver_name[] = "usb8xxx";
+ 
+ static struct mwifiex_if_ops usb_ops;
+ static struct semaphore add_remove_card_sem;
+ static struct usb_card_rec *usb_card;
+ 
+ static struct usb_device_id mwifiex_usb_table[] = {
+-	{USB_DEVICE(USB8797_VID, USB8797_PID_1)},
+-	{USB_DEVICE_AND_INTERFACE_INFO(USB8797_VID, USB8797_PID_2,
++	/* 8797 */
++	{USB_DEVICE(USB8XXX_VID, USB8797_PID_1)},
++	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8797_PID_2,
++				       USB_CLASS_VENDOR_SPEC,
++				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
++	/* 8897 */
++	{USB_DEVICE(USB8XXX_VID, USB8897_PID_1)},
++	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8897_PID_2,
+ 				       USB_CLASS_VENDOR_SPEC,
+ 				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
+ 	{ }	/* Terminating entry */
+@@ -343,10 +349,20 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 		 id_vendor, id_product, bcd_device);
+ 
+ 	/* PID_1 is used for firmware downloading only */
+-	if (id_product == USB8797_PID_1)
+-		card->usb_boot_state = USB8797_FW_DNLD;
+-	else
+-		card->usb_boot_state = USB8797_FW_READY;
++	switch (id_product) {
++	case USB8797_PID_1:
++	case USB8897_PID_1:
++		card->usb_boot_state = USB8XXX_FW_DNLD;
++		break;
++	case USB8797_PID_2:
++	case USB8897_PID_2:
++		card->usb_boot_state = USB8XXX_FW_READY;
++		break;
++	default:
++		pr_warning("unknown id_product %#x\n", id_product);
++		card->usb_boot_state = USB8XXX_FW_DNLD;
++		break;
++	}
+ 
+ 	card->udev = udev;
+ 	card->intf = intf;
+@@ -755,9 +771,20 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 
+ 	card->adapter = adapter;
+ 	adapter->dev = &card->udev->dev;
+-	strcpy(adapter->fw_name, USB8797_DEFAULT_FW_NAME);
+ 	usb_card = card;
+ 
++	switch (le16_to_cpu(card->udev->descriptor.idProduct)) {
++	case USB8897_PID_1:
++	case USB8897_PID_2:
++		strcpy(adapter->fw_name, USB8897_DEFAULT_FW_NAME);
++		break;
++	case USB8797_PID_1:
++	case USB8797_PID_2:
++	default:
++		strcpy(adapter->fw_name, USB8797_DEFAULT_FW_NAME);
++		break;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -773,7 +800,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ {
+ 	int ret = 0;
+ 	u8 *firmware = fw->fw_buf, *recv_buff;
+-	u32 retries = USB8797_FW_MAX_RETRY, dlen;
++	u32 retries = USB8XXX_FW_MAX_RETRY, dlen;
+ 	u32 fw_seqnum = 0, tlen = 0, dnld_cmd = 0;
+ 	struct fw_data *fwdata;
+ 	struct fw_sync_header sync_fw;
+@@ -875,7 +902,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 				continue;
+ 			}
+ 
+-			retries = USB8797_FW_MAX_RETRY;
++			retries = USB8XXX_FW_MAX_RETRY;
+ 			break;
+ 		}
+ 		fw_seqnum++;
+@@ -899,13 +926,13 @@ static int mwifiex_usb_dnld_fw(struct mwifiex_adapter *adapter,
+ 	int ret;
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 
+-	if (card->usb_boot_state == USB8797_FW_DNLD) {
++	if (card->usb_boot_state == USB8XXX_FW_DNLD) {
+ 		ret = mwifiex_prog_fw_w_helper(adapter, fw);
+ 		if (ret)
+ 			return -1;
+ 
+ 		/* Boot state changes after successful firmware download */
+-		if (card->usb_boot_state == USB8797_FW_DNLD)
++		if (card->usb_boot_state == USB8XXX_FW_DNLD)
+ 			return -1;
+ 	}
+ 
+@@ -1039,4 +1066,5 @@ MODULE_AUTHOR("Marvell International Ltd.");
+ MODULE_DESCRIPTION("Marvell WiFi-Ex USB Driver version" USB_VERSION);
+ MODULE_VERSION(USB_VERSION);
+ MODULE_LICENSE("GPL v2");
+-MODULE_FIRMWARE("mrvl/usb8797_uapsta.bin");
++MODULE_FIRMWARE(USB8797_DEFAULT_FW_NAME);
++MODULE_FIRMWARE(USB8897_DEFAULT_FW_NAME);
+diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
+index 98c4316..15b73d1 100644
+--- a/drivers/net/wireless/mwifiex/usb.h
++++ b/drivers/net/wireless/mwifiex/usb.h
+@@ -22,19 +22,23 @@
+ 
+ #include <linux/usb.h>
+ 
+-#define USB8797_VID		0x1286
++#define USB8XXX_VID		0x1286
++
+ #define USB8797_PID_1		0x2043
+ #define USB8797_PID_2		0x2044
++#define USB8897_PID_1		0x2045
++#define USB8897_PID_2		0x2046
+ 
+-#define USB8797_FW_DNLD		1
+-#define USB8797_FW_READY	2
+-#define USB8797_FW_MAX_RETRY	3
++#define USB8XXX_FW_DNLD		1
++#define USB8XXX_FW_READY	2
++#define USB8XXX_FW_MAX_RETRY	3
+ 
+ #define MWIFIEX_TX_DATA_URB	6
+ #define MWIFIEX_RX_DATA_URB	6
+ #define MWIFIEX_USB_TIMEOUT	100
+ 
+ #define USB8797_DEFAULT_FW_NAME	"mrvl/usb8797_uapsta.bin"
++#define USB8897_DEFAULT_FW_NAME	"mrvl/usb8897_uapsta.bin"
+ 
+ #define FW_DNLD_TX_BUF_SIZE	620
+ #define FW_DNLD_RX_BUF_SIZE	2048
+-- 
+1.8.2.3
+
