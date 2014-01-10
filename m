@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1551 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751425AbaA0IlN convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65489 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750800AbaAJDsS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 03:41:13 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v2 3/6] cfg80211: Enable GO operation on additional
- channels
-Date: Mon, 27 Jan 2014 08:41:09 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03336BEC2@HASMSX106.ger.corp.intel.com> (sfid-20140127_094146_038378_3EF100D1)
-References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
- <1389801162-14488-4-git-send-email-ilan.peer@intel.com>
- <20140125000901.GA28512@garbanzo.do-not-panic.com>
-In-Reply-To: <20140125000901.GA28512@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 9 Jan 2014 22:48:18 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: <linux-wireless@vger.kernel.org>,
+	<linux-bluetooth@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
+Date: Thu, 9 Jan 2014 19:48:11 -0800
+Message-ID: <1389325691-21371-1-git-send-email-bzhao@marvell.com> (sfid-20140110_044824_226941_10E64F43)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+The following changes since commit 52d77db9f133afe4d2b26aeccfd603745f45fda1:
 
-Adding the link to the latest definitions of FCC's 5GHz unlicensed spectrum.
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware (2013-12-30 15:22:40 +0100)
 
-Regards,
+are available in the git repository at:
 
-Ilan.
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
-> Rodriguez
-> Sent: Saturday, January 25, 2014 02:09
-> To: Peer, Ilan
-> Cc: linux-wireless@vger.kernel.org; wireless-regdb@lists.infradead.org
-> Subject: Re: [PATCH v2 3/6] cfg80211: Enable GO operation on additional
-> channels
-> 
-...
+  git://git.marvell.com/mwifiex-firmware.git master
 
-> > + * @freq: the frequency for which we want to get the UNII band.
-> > +
-> > + * U-NII bands are defined by the FCC in C.F.R 47 part 15.
-> > + *
-> > + * Returns -EINVAL if freq is invalid, 1 for UNII-1, 2 for UNII-2,
-> > + * 3 for UNII-2e, 4 for UNII-3.
-> 
-> What's your source for UNII definition? Can you provide a URL?
-> 
+for you to fetch changes up to 2d4aa2037a7015c4d78cde40006f80b8012537a6:
 
-http://www.fcc.gov/document/5-ghz-unlicensed-spectrum-unii
+  linux-firmware: add Marvell USB8897-B0 firmware combo image (2014-01-09 19:17:35 -0800)
 
-http://hraunfoss.fcc.gov/edocs_public/attachmatch/FCC-13-22A1.pdf
+----------------------------------------------------------------
+Bing Zhao (3):
+      linux-firmware: update Marvell USB8797-B0 firmware image
+      linux-firmware: update Marvell SD8897-B0 firmware combo image
+      linux-firmware: add Marvell USB8897-B0 firmware combo image
 
+ WHENCE                  |   7 +++++--
+ mrvl/sd8897_uapsta.bin  | Bin 639012 -> 668028 bytes
+ mrvl/usb8797_uapsta.bin | Bin 508372 -> 541048 bytes
+ mrvl/usb8897_uapsta.bin | Bin 0 -> 705364 bytes
+ 4 files changed, 5 insertions(+), 2 deletions(-)
+ create mode 100644 mrvl/usb8897_uapsta.bin
+
+diff --git a/WHENCE b/WHENCE
+index 4f87d8a..23faafa 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -730,10 +730,13 @@ File: mrvl/sd8797_uapsta.bin
+ Version: 14.66.11.p151
+ 
+ File: mrvl/sd8897_uapsta.bin
+-Version: 15.69.2.p11
++Version: 15.68.201.p113
+ 
+ File: mrvl/usb8797_uapsta.bin
+-Version: 14.69.11.p179
++Version: 14.68.29.p26
++
++File: mrvl/usb8897_uapsta.bin
++Version: 15.68.201.p113
+ 
+ File: mrvl/pcie8897_uapsta.bin
+ Version: 15.69.2.p11
+diff --git a/mrvl/sd8897_uapsta.bin b/mrvl/sd8897_uapsta.bin
+index 70732a6..e68a049 100644
+Binary files a/mrvl/sd8897_uapsta.bin and b/mrvl/sd8897_uapsta.bin differ
+diff --git a/mrvl/usb8797_uapsta.bin b/mrvl/usb8797_uapsta.bin
+index bd7c07c..1963798 100644
+Binary files a/mrvl/usb8797_uapsta.bin and b/mrvl/usb8797_uapsta.bin differ
+diff --git a/mrvl/usb8897_uapsta.bin b/mrvl/usb8897_uapsta.bin
+new file mode 100644
+index 0000000..59aef78
+Binary files /dev/null and b/mrvl/usb8897_uapsta.bin differ
