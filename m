@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462AbaAFLXI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15613 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbaAJJqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:23:08 -0500
-Message-ID: <1389007385.5891.9.camel@jlt4.sipsolutions.net> (sfid-20140106_122312_850698_1FE5EE59)
-Subject: Re: Exporting the TSF to userland
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pierre Bourdon <delroth@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Jan 2014 12:23:05 +0100
-In-Reply-To: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com> (sfid-20131231_052532_890939_E8ECD40B)
-References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-	 (sfid-20131231_052532_890939_E8ECD40B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 10 Jan 2014 04:46:25 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: disable STA KICKOUT in FW
+References: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Fri, 10 Jan 2014 11:45:54 +0200
+In-Reply-To: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Mon, 30 Dec 2013 09:07:51 +0100")
+Message-ID: <87wqi89nl9.fsf@kamboji.qca.qualcomm.com> (sfid-20140110_104631_089057_BCD8B547)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-31 at 05:24 +0100, Pierre Bourdon wrote:
-> Hello linux-wireless,
-> 
-> I'm a developer of libdrc, a project that allows Linux computers to
-> control a Wii U GamePad. Because of how the device operates, our
-> library needs to be able to read the TSF value of the access point
-> device from userland.
-> 
-> We currently have a hacky patch that works for our use cases, but it
-> would be a lot more convenient if that feature could be upstreamed.
-> What would be the best way to proceed?
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-That patch ... let's say I think "hacky" is almost lauding it. :)
+> Currently ath10k is not using STA KICKOUT firmware functionality.
+> In order to avoid unwanted FW events this functionality should be
+> disabled when not used.
+>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-sysfs is a really bad place for this too, no other wireless APIs use
-sysfs.
+Thanks, applied. I did minor changes to the commit log based on
+the feedback:
 
-johannes
+    ath10k: disable STA kickout in FW
+    
+    Currently ath10k is not using STA KICKOUT firmware functionality.
+    In order to avoid unwanted WMI_PEER_STA_KICKOUT_EVENT event this functionality
+    should be disabled when not used.
+    
+    Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>  	}
+>  
+>  	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+> +		u32 param_id;
+> +
+
+Also I moved this to the beginning of the function.
+
+-- 
+Kalle Valo
