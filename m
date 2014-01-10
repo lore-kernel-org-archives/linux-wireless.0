@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:53652 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbaA2TFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:05:32 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0M4Gup-1VI8WQ2JQx-00rrQo for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:05:29 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 01/13] ath: add last_rssi to ath_common
-Date: Wed, 29 Jan 2014 20:05:03 +0100
-Message-Id: <1391022315-20946-2-git-send-email-linux@rempel-privat.de> (sfid-20140129_200534_838068_0F7AA765)
-In-Reply-To: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41516 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbaAJSVv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jan 2014 13:21:51 -0500
+Date: Fri, 10 Jan 2014 13:21:48 -0500 (EST)
+Message-Id: <20140110.132148.1970065851413556681.davem@davemloft.net> (sfid-20140110_192154_558659_727EE98B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-01-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140109153317.GA2131@tuxdriver.com>
+References: <20140109153317.GA2131@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we need access to this variable from common functions.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 9 Jan 2014 10:33:17 -0500
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath.h | 2 ++
- 1 file changed, 2 insertions(+)
+> I know that this is late in the process.  But, Linus did say he was
+> doing an -rc8 no matter what!
+> 
+> For the mac80211 bits, Johannes says:
+> 
+> "I have a fix from Javier for mac80211_hwsim when used with wmediumd
+> userspace, and a fix from Felix for buffering in AP mode."
+> 
+> For the NFC bits, Samuel says:
+> 
+> "This pull request only contains one fix for a regression introduced with
+> commit e29a9e2ae165620d. Without this fix, we can not establish a p2p link
+> in target mode. Only initiator mode works."
+> 
+> For the iwlwifi bits, Emmanuel says:
+> 
+> "It only includes new device IDs so it's not vital. If you have a pull
+> request to net.git anyway, I'd happy to have this in."
+> 
+> Please let me know if there are problems!  If you don't want to pull
+> this one for 3.13 then I'll just roll it into the wireless-next tree...
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index b59cfbe..6260b83 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -161,6 +161,8 @@ struct ath_common {
- 	bool btcoex_enabled;
- 	bool disable_ani;
- 	bool bt_ant_diversity;
-+
-+	int last_rssi;
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
--- 
-1.8.5.3
-
+Pulled, thanks John.
