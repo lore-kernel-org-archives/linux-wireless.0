@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58162 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259AbaAOPpw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59930 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbaAJNEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 10:45:52 -0500
-Message-ID: <52D6AD19.9070307@broadcom.com> (sfid-20140115_164603_533184_9AFF479A)
-Date: Wed, 15 Jan 2014 16:45:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11
- and CR4 cores
-References: <1389648029-23560-1-git-send-email-arend@broadcom.com>	<1389648029-23560-4-git-send-email-arend@broadcom.com>	<CACna6ryGU_Rc-iJDJWAjjrKLteg7eyPVorasB-cR4sDhE8o8dw@mail.gmail.com>	<52D56065.8060007@broadcom.com> <CACna6rwEpq2R2v6wMO8n43bO=0cMPn+q4jZ7FMoZx0XkAt0rUA@mail.gmail.com>
-In-Reply-To: <CACna6rwEpq2R2v6wMO8n43bO=0cMPn+q4jZ7FMoZx0XkAt0rUA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 10 Jan 2014 08:04:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/13] mac80211_hwsim: verify wmediumd socket
+Date: Fri, 10 Jan 2014 13:51:07 +0100
+Message-Id: <1389358270-20901-11-git-send-email-johannes@sipsolutions.net> (sfid-20140110_140450_920468_7AD14F1C)
+In-Reply-To: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
+References: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/14/2014 08:25 PM, Rafał Miłecki wrote:
-> 2014/1/14 Arend van Spriel <arend@broadcom.com>:
->> On 01/14/2014 07:29 AM, Rafał Miłecki wrote:
->>> 2014/1/13 Arend van Spriel <arend@broadcom.com>:
->>>> The IOCTL register in the agent/wrapper contains additional bits
->>>> that are core specific and use in the core reset sequence.
->>>
->>> I'm not sure about this. I don't think we want to keep device-specific
->>> bits in a commond (bcma's) code.
->>
->> True. We can put these in brcm80211 includes so both brcmfmac and
->> brcmsmac can use it. That said the bcma_core_disable() and
->> bcma_core_enable() do need to be corrected to be reliable. Patch #2 in
->> this series show what needs to be changed.
-> 
-> I'm looking at
-> [PATCH 2/8] brcmfmac: update core reset and disable routines.
-> and it's unclear for me, what needs to be changed in
-> bcma_core_[enable|disable]. Could you specify, please?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Basically, the whole sequence in bcma_core_enable() and disable() is
-derived from aiutils.c in the original brcmsmac mainline patch (or at
-least it has very, very close resemblance). It turned out this sequence
-was cooked up by software devs, but the hardware documentation states
-another sequence, which is what Patch #2 implements. For this it needs
-additional parameters. You know what, I will create a patch for this.
+There can't be two wmediumd instances controlling hwsim,
+so reject registration from a second one and verify in
+the commands that it's the correct instance calling.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 1c51c33..4ee88a9 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2112,6 +2112,9 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	int i;
+ 	bool found = false;
+ 
++	if (info->snd_portid != wmediumd_portid)
++		return -EINVAL;
++
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
+ 	    !info->attrs[HWSIM_ATTR_FLAGS] ||
+ 	    !info->attrs[HWSIM_ATTR_COOKIE] ||
+@@ -2185,6 +2188,9 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	void *frame_data;
+ 	struct sk_buff *skb = NULL;
+ 
++	if (info->snd_portid != wmediumd_portid)
++		return -EINVAL;
++
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
+ 	    !info->attrs[HWSIM_ATTR_FRAME] ||
+ 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
+@@ -2237,6 +2243,9 @@ out:
+ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ 				      struct genl_info *info)
+ {
++	if (wmediumd_portid)
++		return -EBUSY;
++
+ 	wmediumd_portid = info->snd_portid;
+ 
+ 	printk(KERN_DEBUG "mac80211_hwsim: received a REGISTER, "
+-- 
+1.8.5.1
 
