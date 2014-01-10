@@ -1,48 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:54657 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883AbaAFPHw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58912 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbaAJImX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 10:07:52 -0500
-Received: by mail-we0-f181.google.com with SMTP id x55so15440856wes.26
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 07:07:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389020664.5891.18.camel@jlt4.sipsolutions.net>
-References: <82A67CC48AF04D43A69EB66645975134107C6285@hbmail01.hb.imgtec.org> <1389020664.5891.18.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 6 Jan 2014 20:37:30 +0530
-Message-ID: <CABPxzYKhqMoMS=ONT42-qQ7SBzxViRFtYmn9yahF0-skj9Cedw@mail.gmail.com> (sfid-20140106_160755_223855_93C64C67)
-Subject: Re: [PATCH] mac80211: Return untuned timestamp in case of invalid bitrates
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chaitanya Tata <Chaitanya.Tata@imgtec.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 10 Jan 2014 03:42:23 -0500
+Message-ID: <1389343340.4507.1.camel@jlt4.sipsolutions.net> (sfid-20140110_094225_810158_32E67B5A)
+Subject: Re: [PATCH] ieee80211: add definition for TDLS wide band extended
+ capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>
+Date: Fri, 10 Jan 2014 09:42:20 +0100
+In-Reply-To: <1389309777-19113-2-git-send-email-bzhao@marvell.com>
+References: <1389309777-19113-1-git-send-email-bzhao@marvell.com>
+	 <1389309777-19113-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 6, 2014 at 8:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-26 at 13:42 +0000, Chaitanya Tata wrote:
->> In case the driver sends MCS9 and doesn't advertise CBW
->> (or) advertises 20MHz bandwidth, return the timestamp As is,
->> instead of returning 0 as timestamp.
->>
->> Signed-off-by: Chaitanya T K <Chaitanya.mgit@gmail.com>
->> ---
->> net/mac80211/util.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/net/mac80211/util.c b/net/mac80211/util.c index 06265d7..bc92b25 100644
->> --- a/net/mac80211/util.c
->> +++ b/net/mac80211/util.c
->> @@ -2265,7 +2265,7 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
->>       if (WARN_ONCE(!rate,
->>                     "Invalid bitrate: flags=0x%x, idx=%d, vht_nss=%d\n",
->>                     status->flag, status->rate_idx, status->vht_nss))
->> -             return 0;
->> +             return ts;
->
-> I think this is wrong - we've already warned, we know we have no usable
-> timestamp, and this should never happen anyway.
+On Thu, 2014-01-09 at 15:22 -0800, Bing Zhao wrote:
+> From: Avinash Patil <patila@marvell.com>
+> 
+> Seventh bit of 8th byte of extended capabilities specifies wide
+> bandwidth support for TDLS links. Add this definition to ieee80211.
 
-Timestamp is just off by packet length (as we dont have proper MCS rates),
-but still we can use it as un-rewinded timestamp.
+Applied.
+
+johannes
+
