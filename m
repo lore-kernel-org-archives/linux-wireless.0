@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43785 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979AbaAFTLZ (ORCPT
+Received: from mail-qe0-f47.google.com ([209.85.128.47]:35353 "EHLO
+	mail-qe0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbaAJUVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 14:11:25 -0500
-Message-ID: <1389035483.5891.43.camel@jlt4.sipsolutions.net> (sfid-20140106_201127_671824_2E4D31F1)
-Subject: Re: [PATCH v3 2/2] mac80211: sync dtim_count to TSF
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <twpedersen@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Mon, 06 Jan 2014 20:11:23 +0100
-In-Reply-To: <1387477515-3583-2-git-send-email-twpedersen@gmail.com> (sfid-20131219_192632_987010_6A31AF09)
-References: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
-	 <1387477515-3583-2-git-send-email-twpedersen@gmail.com>
-	 (sfid-20131219_192632_987010_6A31AF09)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 10 Jan 2014 15:21:24 -0500
+Received: by mail-qe0-f47.google.com with SMTP id 5so4838084qeb.6
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2014 12:21:23 -0800 (PST)
+From: Alex Gal <a.gal@motsai.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Alex Gal <a.gal@motsai.com>
+Subject: [PATCH v5] wl12xx: fix tx power setting
+Date: Fri, 10 Jan 2014 15:21:13 -0500
+Message-Id: <1389385273-1322-1-git-send-email-a.gal@motsai.com> (sfid-20140110_212129_433831_3BAD5CCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-19 at 10:25 -0800, Thomas Pedersen wrote:
-> On starting a mesh or AP BSS, the interface dtim_count
-> countdown should match that of the driver TSF.
+The driver ignores BSS_CHANGED_TXPOWER changes.
+Fix this by calling ACX_TX_POWER when appropriate.
 
-Applied, though I think it's futile to really try to do this without
-supporting multiple TSF timers :)
+Signed-off-by: Alex Gal <a.gal@motsai.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index e9da47c..89d2310 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4457,6 +4457,16 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if ((changed & BSS_CHANGED_TXPOWER) &&
++	    bss_conf->txpower != wlvif->power_level) {
++
++		ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
++		if (ret < 0)
++			goto out;
++
++		wlvif->power_level = bss_conf->txpower;
++	}
++
+ 	if (is_ap)
+ 		wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
+ 	else
+-- 
+1.8.5.2
 
