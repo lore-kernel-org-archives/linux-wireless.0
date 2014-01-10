@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35277 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751594AbaAMIvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 03:51:13 -0500
-Received: from mail-pb0-f46.google.com (mail-pb0-f46.google.com [209.85.160.46])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id E5D968812E
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 16:51:11 +0800 (CST)
-Received: by mail-pb0-f46.google.com with SMTP id ma3so1519188pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 00:51:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
- <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
- <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
- <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
- <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
- <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
- <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Mon, 13 Jan 2014 16:50:56 +0800
-Message-ID: <CALkVjQYSHb-dYckxeq2t4yj3DY8n=j-RrtrB53+ddJstS_qXUw@mail.gmail.com> (sfid-20140113_095116_934578_B8DC6256)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from toroondcmxomta02.srvr.bell.ca ([67.69.168.81]:37657 "EHLO
+	toroondcmxzomta02-srv.bellnexxia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751303AbaAKDpw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jan 2014 22:45:52 -0500
+Received: from toroondcocmrk06.srvr.bell.ca ([67.69.240.183])
+          by toroondcmxzomta03-srv.bellnexxia.net
+          (InterMail vM.8.01.05.13 201-2260-151-135-20130320) with ESMTP
+          id <20140110195315.DTFR17063.toroondcmxzomta03-srv.bellnexxia.net@toroondcocmrk06.srvr.bell.ca>
+          for <linux-wireless@vger.kernel.org>;
+          Fri, 10 Jan 2014 14:53:15 -0500
+From: Alex Gal <a.gal@motsai.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi,
+	Alex Gal <a.gal@motsai.com>
+Subject: [PATCH v5] wl12xx: fix tx power setting
+Date: Fri, 10 Jan 2014 14:52:52 -0500
+Message-Id: <1389383572-1112-1-git-send-email-a.gal@motsai.com> (sfid-20140111_044619_766631_A654E6E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
-> Are you sure about step 1 and 5?
-> It seems completely weird that an existing file with a line commented out have any impact.
-> Can you please send the output of:
->         cat /sys/module/iwlmvm/parameters/power_scheme
-> in both cases.
->
+The driver ignores BSS_CHANGED_TXPOWER changes.
+Fix this by calling ACX_TX_POWER when appropriate.
 
-Hi, the point is:
+Signed-off-by: Alex Gal <a.gal@motsai.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-* With "options iwlmvm power_scheme=1" -> everything's fine
-* Without "options iwlmvm power_scheme=1" -> network is bad
-
-Absense of the modconf file and a modconf with only one comment line
-have the *same* effect - network is bad.
-
-cat /sys/module/iwlmvm/parameters/power_scheme now returns 1, and the
-network is good.
-
-> Also - what code base are you using?
-
-What is "code base"...?
-
-> Since  this is surely not related to PCI, please remove them in your reply.
-> (I keep them here to have them see my mail :))
-
-Done. :-)
-
-
-
-English is not my native language so I checked if I misuse the phrase
-"comment out": http://english.stackexchange.com/questions/33483/when-i-say-comment-out-does-it-mean-to-uncomment-something-or-comment-it
-
-Seems not...
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index e9da47c..89d2310 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4457,6 +4457,16 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if ((changed & BSS_CHANGED_TXPOWER) &&
++	    bss_conf->txpower != wlvif->power_level) {
++
++		ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
++		if (ret < 0)
++			goto out;
++
++		wlvif->power_level = bss_conf->txpower;
++	}
++
+ 	if (is_ap)
+ 		wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
+ 	else
 -- 
-wzyboy
+1.8.5.2
+
