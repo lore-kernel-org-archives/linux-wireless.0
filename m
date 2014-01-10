@@ -1,54 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:39293 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752064AbaAQJsX convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59838 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409AbaAJMvQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 04:48:23 -0500
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 02145-04 for <linux-wireless@vger.kernel.org>;
- Fri, 17 Jan 2014 09:48:21 +0000 (GMT)
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Chen-Yu Tsai' <wens@csie.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-sunxi@googlegroups.com" <linux-sunxi@googlegroups.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH RFC 1/6] net: rfkill: gpio: fix gpio name buffer size
- off by 1
-Date: Fri, 17 Jan 2014 09:46:08 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D45EA9D@AcuExch.aculab.com> (sfid-20140117_104848_676561_F3A9FF82)
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
- <1389941251-32692-2-git-send-email-wens@csie.org>
-In-Reply-To: <1389941251-32692-2-git-send-email-wens@csie.org>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+	Fri, 10 Jan 2014 07:51:16 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:RSA_AES_128_CBC_SHA256:128)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W1bYP-0006wf-EI
+	for linux-wireless@vger.kernel.org; Fri, 10 Jan 2014 13:51:13 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/13] mac80211_hwsim: dynamic radios
+Date: Fri, 10 Jan 2014 13:50:57 +0100
+Message-Id: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net> (sfid-20140110_135133_885791_A275CC0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chen-Yu Tsai
-> snprintf should be passed the complete size of the buffer, including
-> the space for '\0'. The previous code resulted in the *_reset and
-> *_shutdown strings being truncated.
-...
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-...
-> -	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
-> -	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
-> +	snprintf(rfkill->reset_name, len + 7 , "%s_reset", rfkill->name);
-> +	snprintf(rfkill->shutdown_name, len + 10, "%s_shutdown", rfkill->name);
+This is a new version of the previous patchset, now tested and with
+regulatory testing functionality restored.
 
-I can't find the context for the above, but they look very dubious.
-I'd expect: snprintf(foo, sizeof foo, ...).
-If you are trying to truncate rfkill->name you need to use %.*s.
-
-	David
-
-
+johannes
 
