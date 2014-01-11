@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cock.li ([75.102.27.230]:52255 "EHLO cock.li"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751709AbaAPXhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 18:37:35 -0500
-Message-ID: <52D86B09.2040200@cock.li> (sfid-20140117_003738_411647_7C82920A)
-Date: Fri, 17 Jan 2014 00:28:09 +0100
-From: Athul <breakmy@cock.li>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Building failed
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:49305 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbaAKTsm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jan 2014 14:48:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/3] Fixes for b43 and b43legacy
+Date: Sat, 11 Jan 2014 13:48:31 -0600
+Message-Id: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_204848_022733_3973DBE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I had an issue while building the driver. When I ran make it 
-returned this:
+These 3 fixes should be applied as soon as possible. I understand that 3.13
+will be released soon. As all 3 are marked for stable, inclusion in 3.14
+will be satisfactory.
 
+Larry
+ 
 
-CC [M] /home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/eeprom.o
-In file included from 
-/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/r92su.h:51:0,
-from /home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/eeprom.c:34:
-/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/sta.h:120:26: 
-error: ‘IEEE80211_NUM_TIDS’ undeclared here (not in a function)
-In file included from 
-/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/eeprom.c:34:0:
-/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/r92su.h:229:22: 
-error: variably modified ‘tx_tid’ at file scope
-make[4]: *** 
-[/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su/eeprom.o] 
-Error 1
-make[3]: *** 
-[_module_/home/athulcb/downloads/rtlfirmware/rtl8192su-master/r92su] Error 2
-make[2]: *** [sub-make] Error 2
-make[1]: *** [all] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-3.2.0-4-amd64'
-make: *** [all] Error 2
+Larry Finger (3):
+  b43: Fix lockdep splat
+  b43: Fix oops if firmware is not available
+  b43legacy: Fix oops if firmware is not available
 
+ drivers/net/wireless/b43/main.c       | 24 +++++++++++++++---------
+ drivers/net/wireless/b43legacy/main.c |  5 +++--
+ 2 files changed, 18 insertions(+), 11 deletions(-)
 
-I'm not sure if this is the right place to submit something like this 
-but I though it would be worth a try.
+-- 
+1.8.4
 
-Thanks in advance.
