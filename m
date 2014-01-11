@@ -1,66 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42173 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbaAFKSM (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:41415 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbaAKT5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 05:18:12 -0500
-Message-ID: <1389003467.5891.5.camel@jlt4.sipsolutions.net> (sfid-20140106_111830_516062_C92AF75D)
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Joe Perches <joe@perches.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 11:17:47 +0100
-In-Reply-To: <alpine.DEB.2.10.1401061007160.2079@hadrien>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-	   <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
-	   <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-	   <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
-	   <1388438724.4573.2.camel@jlt4.sipsolutions.net>
-	   <20131230215701.GA4938@khazad-dum.debian.net>
-	   <1388445188.18164.0.camel@jlt4.sipsolutions.net>
-	  <1388445422.26796.38.camel@joe-AO722>
-	  <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6>
-	  <52C2E8BA.6000800@candelatech.com>
-	  <alpine.DEB.2.10.1312311704320.2074@hadrien>
-	  <52C2F056.1020005@candelatech.com>
-	  <alpine.DEB.2.10.1312311732080.2074@hadrien>
-	 <1388999147.5891.2.camel@jlt4.sipsolutions.net>
-	 <alpine.DEB.2.10.1401061007160.2079@hadrien>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 11 Jan 2014 14:57:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/3 RESUBMIT 2nd time] b43: Fix lockdep splat
+Date: Sat, 11 Jan 2014 13:57:46 -0600
+Message-Id: <1389470266-13150-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_205800_248083_76ECEAB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 10:09 +0100, Julia Lawall wrote:
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-> > BUILD_BUG_ON(sizeof(struct foo) - offsetof(struct foo, addr) < 8);
-> >
-> > with the user(s?) and that should catch the scenario I was worrying
-> > about?
-> 
-> OK, thanks.  That is what I had in mind.  But I was hoping to be able to
-> put it with the structure.  
+In https://bugzilla.kernel.org/show_bug.cgi?id=67561, a locking dependency is reported
+when b43 is used with hostapd, and rfkill is used to kill the radio output.
 
-Right - you might be able to do that with BUILD_BUG_ON_ZERO() as you
-pointed out, I haven't looked at these macros in a while.
+The lockdep splat (in part) is as follows:
 
-> Perhaps there is a way to make a macro that
-> expands to a dummy function that contains the BUILD_BUG_ON?  But I guess
-> that would waste space?
-> 
-> I think that 8 should be 16?
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.12.0 #1 Not tainted
+-------------------------------------------------------
+rfkill/10040 is trying to acquire lock:
+ (rtnl_mutex){+.+.+.}, at: [<ffffffff8146f282>] rtnl_lock+0x12/0x20
 
-No, that should be ETH_ALEN+2 really, I guess - it's not taking into
-account the size of the address member itself at all.
+but task is already holding lock:
+ (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa04832ca>] rfkill_fop_write+0x6a/0x170 [rfkill]
 
-johannes
+--snip--
 
+Chain exists of:
+  rtnl_mutex --> misc_mtx --> rfkill_global_mutex
+
+The fix is to move the initialization of the hardware random number generator
+outside the code range covered by the rtnl_mutex.
+
+Reported-by: yury <urykhy@gmail.com>
+Tested-by: yury <urykhy@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+This patch was resubmitted because there was a typo in Stanislaw's address.
+
+Larry
+---
+drivers/net/wireless/b43/main.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ccd24f0a..86b2030 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2424,6 +2424,7 @@ error:
+ 
+ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
+ static void b43_one_core_detach(struct b43_bus_dev *dev);
++static int b43_rng_init(struct b43_wl *wl);
+ 
+ static void b43_request_firmware(struct work_struct *work)
+ {
+@@ -2475,6 +2476,10 @@ start_ieee80211:
+ 		goto err_one_core_detach;
+ 	wl->hw_registred = true;
+ 	b43_leds_register(wl->current_dev);
++
++	/* Register HW RNG driver */
++	b43_rng_init(wl);
++
+ 	goto out;
+ 
+ err_one_core_detach:
+@@ -4636,9 +4641,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
+ 
+-	/* Unregister HW RNG driver */
+-	b43_rng_exit(dev->wl);
+-
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+ 	/* Stop the microcode PSM. */
+@@ -4795,9 +4797,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+-	/* Register HW RNG driver */
+-	b43_rng_init(dev->wl);
+-
+ out:
+ 	return err;
+ 
+@@ -5464,6 +5463,9 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 
+ 	b43_one_core_detach(wldev->dev);
+ 
++	/* Unregister HW RNG driver */
++	b43_rng_exit(wl);
++
+ 	b43_leds_unregister(wl);
+ 
+ 	ieee80211_free_hw(wl->hw);
+@@ -5541,6 +5543,9 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 
+ 	b43_one_core_detach(dev);
+ 
++	/* Unregister HW RNG driver */
++	b43_rng_exit(wl);
++
+ 	if (list_empty(&wl->devlist)) {
+ 		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+-- 
+1.8.4
 
