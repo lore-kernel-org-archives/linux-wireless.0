@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:53330 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbaAOMQp (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:32795 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbaAKTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 07:16:45 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so820611eek.16
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:16:44 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 1/9] mac80211: fix possible memory leak on AP CSA failure
-Date: Wed, 15 Jan 2014 13:04:46 +0100
-Message-Id: <1389787494-7361-2-git-send-email-michal.kazior@tieto.com> (sfid-20140115_131649_916537_EA527EE4)
-In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 11 Jan 2014 14:48:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 2/3] b43: Fix oops if firmware is not available
+Date: Sat, 11 Jan 2014 13:48:33 -0600
+Message-Id: <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_204856_406600_769A9CA0)
+In-Reply-To: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If CSA for AP interface failed and the interface
-was not stopped afterwards another CSA request
-would leak sdata->u.ap.next_beacon.
+On openSUSE systems, the script that installs the firmware for b43 also
+unloads and reloads the driver. When the firmware was not previously
+available, the driver has stalled at a wait_for_completion(). When the
+unload routine releases that hold, the driver encounters structures
+that have already been deleted and generates a fatal condition. When
+the user does a manual restart, the file system cleanup frequently
+results in the firmware files being deleted and the user is never able
+to install the firmware. The fix is to change the wait_for_completion()
+with a wait_for_completion_timeout() with a 60 second wait period.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+There is a potential race condition; however, the chances that less
+than a minute has elapsed between the initial driver load and a
+subsequent unload is very unlikely.
+
+This patch also fixes a typo in a comment.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
 ---
- net/mac80211/cfg.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ drivers/net/wireless/b43/main.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 543b18f..8c78572 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2987,6 +2987,21 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- 	return new_beacon;
- }
- 
-+static int ieee80211_ap_finish_csa(struct ieee80211_sub_if_data *sdata)
-+{
-+	int err;
-+
-+	err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
-+	kfree(sdata->u.ap.next_beacon);
-+	sdata->u.ap.next_beacon = NULL;
-+
-+	if (err < 0)
-+		return err;
-+
-+	ieee80211_bss_info_change_notify(sdata, err);
-+	return 0;
-+}
-+
- void ieee80211_csa_finalize_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -3020,15 +3035,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	sdata->vif.csa_active = false;
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
--		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
-+		err = ieee80211_ap_finish_csa(sdata);
- 		if (err < 0)
- 			goto unlock;
--
--		changed |= err;
--		kfree(sdata->u.ap.next_beacon);
--		sdata->u.ap.next_beacon = NULL;
--
--		ieee80211_bss_info_change_notify(sdata, err);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		ieee80211_ibss_finish_csa(sdata);
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 86b2030..5ce9ecb 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2150,12 +2150,13 @@ int b43_do_request_fw(struct b43_request_fw_context *ctx,
+ 			pr_err("Unable to load firmware\n");
+ 			return err;
+ 		}
+-		/* stall here until fw ready */
+-		wait_for_completion(&ctx->fw_load_complete);
++		/* stall here until fw ready or 60 sec elapses */
++		wait_for_completion_timeout(&ctx->fw_load_complete,
++					    msecs_to_jiffies(60000));
+ 		if (ctx->blob)
+ 			goto fw_ready;
+ 	/* On some ARM systems, the async request will fail, but the next sync
+-	 * request works. For this reason, we dall through here
++	 * request works. For this reason, we fall through here
+ 	 */
+ 	}
+ 	err = request_firmware(&ctx->blob, ctx->fwname,
 -- 
-1.8.4.rc3
+1.8.4
 
