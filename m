@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:57987 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbaAVSqy (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31511 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbaALIlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 13:46:54 -0500
-Received: by mail-qa0-f44.google.com with SMTP id w5so943202qac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 10:46:53 -0800 (PST)
+	Sun, 12 Jan 2014 03:41:21 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 2/3] wil6210: Fix IP version indication for Tx csum offload
+Date: Sun, 12 Jan 2014 10:41:03 +0200
+Message-ID: <1389516065-19515-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140112_094131_297552_5C7C1201)
+In-Reply-To: <1389516065-19515-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1389516065-19515-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1390415331.4334.37.camel@jlt4.sipsolutions.net>
-References: <1390382185.4334.19.camel@jlt4.sipsolutions.net>
- <CAHmEv86saxzZzy-qS6C_6k48EXFh2GVb8gVEcwJcBKQtj1Cv7Q@mail.gmail.com> <1390415331.4334.37.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <twpedersen@gmail.com>
-Date: Wed, 22 Jan 2014 10:46:32 -0800
-Message-ID: <CAHmEv85Q2neJJchxx3783_kcfNcSfrkQ3D9LVvWrK_uwYo3Fyg@mail.gmail.com> (sfid-20140122_194657_722900_1E425876)
-Subject: Re: [PATCH] nl80211: check channel switch validity better
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 10:28 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2014-01-22 at 10:02 -0800, Thomas Pedersen wrote:
->
->> > --- a/net/wireless/nl80211.c
->> > +++ b/net/wireless/nl80211.c
->> > @@ -5799,10 +5799,15 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
->
->> >         case NL80211_IFTYPE_MESH_POINT:
->> > +               if (!wdev->mesh_id_len)
->> > +                       return -ENOTCONN;
->>
->> Hmmm. I'm pretty sure there are some users which set the channel prior
->> to mesh join. This would break that and only allow sending the channel
->> with mesh join?
->
-> I don't think channel_switch() is invoked for that? That's done only for
-> run-time switching of the channel with CSA etc.
+Bit DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS should be set for IPv4
+only. Don't set it for IPv6
 
-Oh right, that was a special case then.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
-Thomas
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index d505b26..18003c0 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -673,9 +673,12 @@ static int wil_tx_desc_offload_cksum_set(struct wil6210_priv *wil,
+ 	if (skb->ip_summed != CHECKSUM_PARTIAL)
+ 		return 0;
+ 
++	d->dma.b11 = ETH_HLEN; /* MAC header length */
++
+ 	switch (skb->protocol) {
+ 	case cpu_to_be16(ETH_P_IP):
+ 		protocol = ip_hdr(skb)->protocol;
++		d->dma.b11 |= BIT(DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS);
+ 		break;
+ 	case cpu_to_be16(ETH_P_IPV6):
+ 		protocol = ipv6_hdr(skb)->nexthdr;
+@@ -701,8 +704,6 @@ static int wil_tx_desc_offload_cksum_set(struct wil6210_priv *wil,
+ 	}
+ 
+ 	d->dma.ip_length = skb_network_header_len(skb);
+-	d->dma.b11 = ETH_HLEN; /* MAC header length */
+-	d->dma.b11 |= BIT(DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS);
+ 	/* Enable TCP/UDP checksum */
+ 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_TCP_UDP_CHECKSUM_EN_POS);
+ 	/* Calculate pseudo-header */
+-- 
+1.8.3.2
+
