@@ -1,976 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:25860 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292AbaAaHpx (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39583 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750958AbaALEYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 02:45:53 -0500
-Message-ID: <52EB54B7.7060503@redpinesignals.com> (sfid-20140131_084616_537552_81B8CA9E)
-Date: Fri, 31 Jan 2014 13:15:59 +0530
-From: Jahnavi <jahnavi.meher@redpinesignals.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.13.1 5/9] rsi: SDIO functionality
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 11 Jan 2014 23:24:25 -0500
+Message-ID: <1389500647.3720.51.camel@deadeye.wl.decadent.org.uk> (sfid-20140112_052455_040829_49454E3C)
+Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Date: Sun, 12 Jan 2014 04:24:07 +0000
+In-Reply-To: <52D21226.4070306@lwfinger.net>
+References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
+		 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
+	 <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
+	 <52D21226.4070306@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-AjZGN/7EuVBP0FVQPOrk"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 
-This file adds the rsi_sdio module, enabling the SDIO interface for
-the 91x chipsets.
+--=-AjZGN/7EuVBP0FVQPOrk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
----
+On Sat, 2014-01-11 at 21:55 -0600, Larry Finger wrote:
+> On 01/11/2014 09:27 PM, Ben Hutchings wrote:
+> > On Sat, 2014-01-11 at 13:48 -0600, Larry Finger wrote:
+> >> On openSUSE systems, the script that installs the firmware for b43 als=
+o
+> >> unloads and reloads the driver. When the firmware was not previously
+> >> available, the driver has stalled at a wait_for_completion(). When the
+> >> unload routine releases that hold, the driver encounters structures
+> >> that have already been deleted and generates a fatal condition. When
+> >> the user does a manual restart, the file system cleanup frequently
+> >> results in the firmware files being deleted and the user is never able
+> >> to install the firmware. The fix is to change the wait_for_completion(=
+)
+> >> with a wait_for_completion_timeout() with a 60 second wait period.
+> >>
+> >> There is a potential race condition; however, the chances that less
+> >> than a minute has elapsed between the initial driver load and a
+> >> subsequent unload is very unlikely.
+> >
+> > A minute-long race is 'unlikely' to be hit?  Seriously?!
+>=20
+> Ben,
+>=20
+> If you force a reboot before the minute expires, nothing weird happens. T=
+he only=20
+> race condition happens when the user has to
 
-rsi_sdio.c |  941 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-1 file changed, 941 insertions(+)
+...remove the module.  Exactly how the bug reporter triggered module
+removal seems irrelevant.
 
-diff -uprN a/drivers/net/wireless/rsi/common/rsi_sdio.c b/drivers/net/wireless/rsi/common/rsi_sdio.c
---- a/drivers/net/wireless/rsi/common/rsi_sdio.c	1970-01-01 05:30:00.000000000 +0530
-+++ b/drivers/net/wireless/rsi/common/rsi_sdio.c	2014-01-30 16:24:33.180361123 +0530
-@@ -0,0 +1,941 @@
-+/**
-+ * @file rsi_sdio.c
-+ * @author
-+ * @version 1.0
-+ *
-+ * @section LICENSE
-+ * Copyright (c) 2013 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
-+ * @section DESCRIPTION
-+ *
-+ * The file contains Generic HAL layer for SDIO.
-+ */
-+
-+#include "../include/rsi_main.h"
-+#include "../include/rsi_hw_intf.h"
-+#include "../include/rsi_device_ops.h"
-+
-+/**
-+ * This function prepares cmd 52 read/write arg
-+ *
-+ * @param  rw Read/write
-+ * @param  func function number
-+ * @param  raw indicates whether to perform read after write
-+ * @param  address address to which to read/write
-+ * @param  writedata data to write
-+ * @return argument
-+ */
-+static unsigned long rsi_sdio_set_cmd52_arg(bool rw,
-+					    unsigned char func,
-+					    unsigned char raw,
-+					    unsigned int address,
-+					    unsigned char writedata)
-+{
-+	return ((rw & 1) << 31) | ((func & 0x7) << 28) |
-+		((raw & 1) << 27) | (1 << 26) |
-+		((address & 0x1FFFF) << 9) | (1 << 8) |
-+		(writedata & 0xFF);
-+}
-+
-+/**
-+ * This function issues cmd52 byte write onto the card.
-+ *
-+ * @param  card Pointer to the mmc_card.
-+ * @param  address Address to write.
-+ * @param  byte Data to write.
-+ * @return Write status.
-+ */
-+static int rsi_cmd52writebyte(struct mmc_card *card,
-+			      unsigned int address,
-+			      unsigned char byte)
-+{
-+	struct mmc_command io_cmd;
-+	unsigned long arg;
-+
-+	memset(&io_cmd, 0, sizeof(io_cmd));
-+	arg = rsi_sdio_set_cmd52_arg(1, 0, 0, address, byte);
-+	io_cmd.opcode = SD_IO_RW_DIRECT;
-+	io_cmd.arg = arg;
-+	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
-+
-+	return mmc_wait_for_cmd(card->host, &io_cmd, 0);
-+}
-+
-+/**
-+ * This function issues cmd52 byte read onto the card.
-+ *
-+ * @param  card Pointer to the mmc_card.
-+ * @param  address Address to read from.
-+ * @param  byte Variable to store read value.
-+ * @return Read status.
-+ */
-+static int rsi_cmd52readbyte(struct mmc_card *card,
-+			     unsigned int address,
-+			     unsigned char *byte)
-+{
-+	struct mmc_command io_cmd;
-+	unsigned long arg;
-+	int err;
-+
-+	memset(&io_cmd, 0, sizeof(io_cmd));
-+	arg = rsi_sdio_set_cmd52_arg(0, 0, 0, address, 0);
-+	io_cmd.opcode = SD_IO_RW_DIRECT;
-+	io_cmd.arg = arg;
-+	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
-+
-+	err = mmc_wait_for_cmd(card->host, &io_cmd, 0);
-+	if ((!err) && (byte))
-+		*byte =  io_cmd.resp[0] & 0xFF;
-+	return err;
-+}
-+
-+/**
-+ * This function issues sdio commands.
-+ *
-+ * @param  func Pointer to the sdio_func structure.
-+ * @param  opcode Opcode value.
-+ * @param  arg Arguments to pass.
-+ * @param  flags Flags which are set.
-+ * @param  resp Pointer to store response.
-+ * @return err: command status as 0 or -1.
-+ */
-+static int rsi_issue_sdiocommand(struct sdio_func *func,
-+				 unsigned int opcode,
-+				 unsigned int arg,
-+				 unsigned int flags,
-+				 unsigned int *resp)
-+{
-+	struct mmc_command cmd;
-+	int err;
-+	struct mmc_host *host;
-+
-+	host = func->card->host;
-+
-+	memset(&cmd, 0, sizeof(struct mmc_command));
-+	cmd.opcode = opcode;
-+	cmd.arg = arg;
-+	cmd.flags = flags;
-+	err = mmc_wait_for_cmd(host, &cmd, 3);
-+
-+	if ((!err) && (resp))
-+		*resp = cmd.resp[0];
-+
-+	return err;
-+}
-+
-+/**
-+ * This function is called upon the occurence of an interrupt.
-+ *
-+ * @param  function Pointer to the sdio_func structure.
-+ * @return None.
-+ */
-+static void rsi_handle_interrupt(struct sdio_func *function)
-+{
-+	struct rsi_hw *adapter = sdio_get_drvdata(function);
-+
-+	sdio_release_host(function);
-+	rsi_interrupt_handler(adapter->priv);
-+	sdio_claim_host(function);
-+
-+	return;
-+}
-+
-+/**
-+ * This function resets and re-initializes the card.
-+ *
-+ * @param  pfunction Pointer to the sdio_func structure.
-+ * @return None.
-+ */
-+static void rsi_reset_card(struct sdio_func *pfunction)
-+{
-+	int ret = 0;
-+	int err;
-+	struct mmc_card *card = pfunction->card;
-+	struct mmc_host *host = card->host;
-+	unsigned char cmd52_resp;
-+	unsigned int clock;
-+	unsigned int resp, i;
-+	unsigned short rca;
-+	int bit = (fls(host->ocr_avail) - 1);
-+
-+	/* Reset 9110 chip */
-+	ret = rsi_cmd52writebyte(pfunction->card,
-+				 SDIO_CCCR_ABORT,
-+				 (1 << 3));
-+
-+	/* Card will not send any response as it is getting reset immediately
-+	 * Hence expect a timeout status from host controller
-+	 */
-+	if (ret != -ETIMEDOUT)
-+		rsi_dbg(ERR_ZONE, "%s: Reset failed : %d\n", __func__, ret);
-+
-+	/* Wait for few milli seconds to get rid of residue charges if any */
-+	msleep(20);
-+
-+	/* Initialize the SDIO card */
-+	host->ios.vdd = bit;
-+	host->ios.chip_select = MMC_CS_DONTCARE;
-+	host->ios.bus_mode = MMC_BUSMODE_OPENDRAIN;
-+	host->ios.power_mode = MMC_POWER_UP;
-+	host->ios.bus_width = MMC_BUS_WIDTH_1;
-+	host->ios.timing = MMC_TIMING_LEGACY;
-+	host->ops->set_ios(host, &host->ios);
-+
-+	/**
-+	 * This delay should be sufficient to allow the power supply
-+	 * to reach the minimum voltage.
-+	 */
-+	msleep(20);
-+
-+	host->ios.clock = host->f_min;
-+	host->ios.power_mode = MMC_POWER_ON;
-+	host->ops->set_ios(host, &host->ios);
-+
-+	/**
-+	 * This delay must be at least 74 clock sizes, or 1 ms, or the
-+	 * time required to reach a stable voltage.
-+	 */
-+	msleep(20);
-+
-+	/* Issue CMD0. Goto idle state */
-+	host->ios.chip_select = MMC_CS_HIGH;
-+	host->ops->set_ios(host, &host->ios);
-+	msleep(20);
-+	err = rsi_issue_sdiocommand(pfunction,
-+				    MMC_GO_IDLE_STATE,
-+				    0,
-+				    (MMC_RSP_NONE | MMC_CMD_BC),
-+				    NULL);
-+	host->ios.chip_select = MMC_CS_DONTCARE;
-+	host->ops->set_ios(host, &host->ios);
-+	msleep(20);
-+	host->use_spi_crc = 0;
-+
-+	if (err)
-+		rsi_dbg(ERR_ZONE, "%s: CMD0 failed : %d\n", __func__, err);
-+
-+	if (!host->ocr_avail) {
-+		/* Issue CMD5, arg = 0 */
-+		err = rsi_issue_sdiocommand(pfunction,
-+					    SD_IO_SEND_OP_COND,
-+					    0,
-+					    (MMC_RSP_R4 | MMC_CMD_BCR),
-+					    &resp);
-+		if (err) {
-+			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
-+				__func__, err);
-+		}
-+		host->ocr_avail = resp;
-+	}
-+
-+	/* Issue CMD5, arg = ocr. Wait till card is ready  */
-+	for (i = 0; i < 100; i++) {
-+		err = rsi_issue_sdiocommand(pfunction,
-+					    SD_IO_SEND_OP_COND,
-+					    host->ocr_avail,
-+					    (MMC_RSP_R4 | MMC_CMD_BCR),
-+					    &resp);
-+		if (err) {
-+			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
-+				__func__, err);
-+			break;
-+		}
-+
-+		if (resp & MMC_CARD_BUSY)
-+			break;
-+		msleep(20);
-+	}
-+
-+	if ((i == 100) || (err)) {
-+		rsi_dbg(ERR_ZONE, "%s: card in not ready : %d %d\n",
-+			__func__, i, err);
-+		return;
-+	}
-+
-+	/* Issue CMD3, get RCA */
-+	err = rsi_issue_sdiocommand(pfunction,
-+				    SD_SEND_RELATIVE_ADDR,
-+				    0,
-+				    (MMC_RSP_R6 | MMC_CMD_BCR),
-+				    &resp);
-+	if (err) {
-+		rsi_dbg(ERR_ZONE, "%s: CMD3 failed : %d\n", __func__, err);
-+		return;
-+	}
-+	rca = resp >> 16;
-+	host->ios.bus_mode = MMC_BUSMODE_PUSHPULL;
-+	host->ops->set_ios(host, &host->ios);
-+
-+	/* Issue CMD7, select card  */
-+	err = rsi_issue_sdiocommand(pfunction,
-+				    MMC_SELECT_CARD,
-+				    (rca << 16),
-+				    (MMC_RSP_R1 | MMC_CMD_AC),
-+				    NULL);
-+	if (err) {
-+		rsi_dbg(ERR_ZONE, "%s: CMD7 failed : %d\n", __func__, err);
-+		return;
-+	}
-+
-+	/* Enable high speed */
-+	if (card->host->caps & MMC_CAP_SD_HIGHSPEED) {
-+		rsi_dbg(ERR_ZONE, "%s: Set high speed mode\n", __func__);
-+		err = rsi_cmd52readbyte(card, SDIO_CCCR_SPEED, &cmd52_resp);
-+		if (err) {
-+			rsi_dbg(ERR_ZONE, "%s: CCCR speed reg read failed: %d\n",
-+				__func__, err);
-+			card->state &= ~MMC_STATE_HIGHSPEED;
-+		} else {
-+			err = rsi_cmd52writebyte(card,
-+						 SDIO_CCCR_SPEED,
-+						 (cmd52_resp | SDIO_SPEED_EHS));
-+			if (err) {
-+				rsi_dbg(ERR_ZONE,
-+					"%s: CCR speed regwrite failed %d\n",
-+					__func__, err);
-+				return;
-+			}
-+			mmc_card_set_highspeed(card);
-+			host->ios.timing = MMC_TIMING_SD_HS;
-+			host->ops->set_ios(host, &host->ios);
-+		}
-+	}
-+
-+	/* Set clock */
-+	if (mmc_card_highspeed(card))
-+		clock = 50000000;
-+	else
-+		clock = card->cis.max_dtr;
-+
-+	if (clock > host->f_max)
-+		clock = host->f_max;
-+
-+	host->ios.clock = clock;
-+	host->ops->set_ios(host, &host->ios);
-+
-+	if (card->host->caps & MMC_CAP_4_BIT_DATA) {
-+		/* CMD52: Set bus width & disable card detect resistor */
-+		err = rsi_cmd52writebyte(card,
-+					 SDIO_CCCR_IF,
-+					 (SDIO_BUS_CD_DISABLE |
-+					  SDIO_BUS_WIDTH_4BIT));
-+		if (err) {
-+			rsi_dbg(ERR_ZONE, "%s: Set bus mode failed : %d\n",
-+				__func__, err);
-+			return;
-+		}
-+		host->ios.bus_width = MMC_BUS_WIDTH_4;
-+		host->ops->set_ios(host, &host->ios);
-+	}
-+	return;
-+}
-+
-+/**
-+ * This function sets the clock frequency
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  freq Clock frequency.
-+ * @return 0 on success.
-+ */
-+static int rsi_setclock(struct rsi_hw *adapter, unsigned int freq)
-+{
-+	unsigned int clock;
-+	struct mmc_host *host = adapter->pfunction->card->host;
-+
-+	clock = freq * 1000;
-+	if (clock > host->f_max)
-+		clock = host->f_max;
-+	host->ios.clock = clock;
-+	host->ops->set_ios(host, &host->ios);
-+	return 0;
-+}
-+
-+/**
-+ * This function sets the host block length.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  length Block length to be set.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_setblocklength(struct rsi_hw *adapter, unsigned int length)
-+{
-+	int status;
-+	rsi_dbg(INIT_ZONE, "%s: Setting the block length\n", __func__);
-+
-+	status = sdio_set_block_size(adapter->pfunction, length);
-+	adapter->pfunction->max_blksize = 256;
-+
-+	rsi_dbg(INFO_ZONE,
-+		"%s: Operational blk length is %d\n", __func__, length);
-+	return status;
-+}
-+
-+/**
-+ * This function queries and sets the card's features.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_setupcard(struct rsi_hw *adapter)
-+{
-+	int status = 0;
-+
-+	if (rsi_setclock(adapter, 50000)) {
-+		rsi_dbg(INFO_ZONE,
-+			"%s: Unsuccessful at setting clk\n", __func__);
-+		return -1;
-+	}
-+
-+	adapter->tx_blk_size = 256;
-+	adapter->rx_blk_size = 256;
-+	status = rsi_setblocklength(adapter, adapter->tx_blk_size);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Unable to set block length\n", __func__);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function does the actual initialization of SDBUS slave registers.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_init_sdio_slave_regs(struct rsi_hw *adapter)
-+{
-+	unsigned char function = 0;
-+	unsigned char byte;
-+	int status = 0;
-+
-+	if (adapter->next_read_delay) {
-+		byte = adapter->next_read_delay;
-+		status = rsi_write_register(adapter,
-+					    function,
-+					    SDIO_NXT_RD_DELAY2,
-+					    &byte);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to write SDIO_NXT_RD_DELAY2\n",
-+				__func__);
-+			return -1;
-+		}
-+	}
-+
-+	if (adapter->sdio_high_speed_enable) {
-+		rsi_dbg(INIT_ZONE, "%s: Enabling SDIO High speed\n", __func__);
-+		byte = 0x3;
-+
-+		status = rsi_write_register(adapter,
-+					    function,
-+					    SDIO_REG_HIGH_SPEED,
-+					    &byte);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to enable SDIO high speed\n",
-+				__func__);
-+			return -1;
-+		}
-+	}
-+
-+	/* This tells SDIO FIFO when to start read to host */
-+	rsi_dbg(INIT_ZONE, "%s: Initialzing SDIO read start level\n", __func__);
-+	byte = 0x24;
-+
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_READ_START_LVL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_READ_START_LVL\n", __func__);
-+		return -1;
-+	}
-+
-+	rsi_dbg(INIT_ZONE, "%s: Initialzing FIFO ctrl registers\n", __func__);
-+	byte = (128 - 32);
-+
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_READ_FIFO_CTL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_READ_FIFO_CTL\n", __func__);
-+		return -1;
-+	}
-+
-+	byte = 32;
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_WRITE_FIFO_CTL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_WRITE_FIFO_CTL\n", __func__);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rsi_init_sdio_interface(struct rsi_hw *adapter,
-+				   struct sdio_func *pfunction)
-+{
-+	int status = 0;
-+	sdio_claim_host(pfunction);
-+
-+	pfunction->enable_timeout = 100;
-+	status = sdio_enable_func(pfunction);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to enable interface\n", __func__);
-+		sdio_release_host(pfunction);
-+		return status;
-+	}
-+
-+	rsi_dbg(INIT_ZONE, "%s: Enabled the interface\n", __func__);
-+
-+	adapter->pfunction = pfunction;
-+	adapter->device = &pfunction->dev;
-+
-+	sdio_set_drvdata(pfunction, adapter);
-+
-+	status = rsi_setupcard(adapter);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to setup card\n", __func__);
-+		goto fail;
-+	}
-+
-+	rsi_dbg(INIT_ZONE, "%s: Setup card succesfully\n", __func__);
-+
-+	status = rsi_init_sdio_slave_regs(adapter);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to init slave regs\n", __func__);
-+		goto fail;
-+	}
-+	sdio_release_host(pfunction);
-+	return status;
-+fail:
-+	sdio_disable_func(pfunction);
-+	sdio_release_host(pfunction);
-+	return status;
-+}
-+
-+/**
-+ * This function registers the client driver's interrupt handler
-+ * with the bus driver.
-+ *
-+ * @param  pfunction Pointer to the sdio_func structure.
-+ * @param  interrupt_handler Pointer to the interrupt handler.
-+ * @param  pContext Pointer to context of interrupt.
-+ * @return None.
-+ */
-+static int rsi_request_interrupt_handler(struct sdio_func *pfunction,
-+					 SD_INTERRUPT interrupt_handler)
-+{
-+	int status;
-+
-+	status = sdio_claim_irq(pfunction,
-+				(sdio_irq_handler_t *)interrupt_handler);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to request IRQ %d\n", __func__,
-+			status);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function acks the interrupt received.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  int_bit Interrupt bit to write into register.
-+ * @return Void.
-+ */
-+void rsi_ack_interrupt(struct rsi_hw *adapter, unsigned char int_bit)
-+{
-+	int status;
-+	status = rsi_write_register(adapter,
-+				    1,
-+				    (SDIO_FUN1_INTR_CLR_REG |
-+				     SD_REQUEST_MASTER),
-+				    &int_bit);
-+	if (status)
-+		rsi_dbg(ERR_ZONE, "%s: unable to send ack\n", __func__);
-+	return;
-+}
-+
-+/**
-+ * This function reads one byte of information from a register.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  addr Address of the register.
-+ * @param  data Pointer to the data that stores the data read.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_read_register(struct rsi_hw *adapter,
-+		      unsigned int addr,
-+		      unsigned char *data)
-+{
-+	unsigned char fun_num = 0;
-+	int status;
-+
-+	sdio_claim_host(adapter->pfunction);
-+
-+	if (fun_num == 0)
-+		*data = sdio_f0_readb(adapter->pfunction, addr, &status);
-+	else
-+		*data = sdio_readb(adapter->pfunction, addr, &status);
-+
-+	sdio_release_host(adapter->pfunction);
-+
-+	if (status)
-+		return -1;
-+	else
-+		return 0;
-+}
-+
-+/**
-+ * This function writes one byte of information into a register.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  function Function Number.
-+ * @param  addr Address of the register.
-+ * @param  data Pointer to the data tha has to be written.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_write_register(struct rsi_hw *adapter,
-+		       unsigned char function,
-+		       unsigned int addr,
-+		       unsigned char *data)
-+{
-+	int status = 0;
-+
-+	sdio_claim_host(adapter->pfunction);
-+
-+	if (function == 0)
-+		sdio_f0_writeb(adapter->pfunction, *data, addr, &status);
-+	else
-+		sdio_writeb(adapter->pfunction, *data, addr, &status);
-+
-+	sdio_release_host(adapter->pfunction);
-+
-+	if (status)
-+		return -1;
-+	else
-+		return 0;
-+}
-+
-+/**
-+ * This function read multiple bytes of information from the SD card.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  addr Address of the register.
-+ * @param  count Number of multiple bytes to be read.
-+ * @param  data Pointer to the read data.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_read_register_multiple(struct rsi_hw *adapter,
-+			       unsigned int addr,
-+			       unsigned int count,
-+			       unsigned char *data)
-+{
-+	unsigned int status;
-+
-+	sdio_claim_host(adapter->pfunction);
-+
-+	status =  sdio_readsb(adapter->pfunction, data, addr, count);
-+
-+	sdio_release_host(adapter->pfunction);
-+
-+	if (status != 0)
-+		rsi_dbg(ERR_ZONE, "%s: Synch Cmd53 read failed\n", __func__);
-+	return status;
-+}
-+
-+/**
-+ * This function writes multiple bytes of information to the SD card.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  addr Address of the register.
-+ * @param  Pointer to the data that has to be written.
-+ * @param  count Number of multiple bytes to be written.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_write_register_multiple(struct rsi_hw *adapter,
-+				unsigned int addr,
-+				unsigned char *data,
-+				unsigned int count)
-+{
-+	int status = 0;
-+
-+	if (adapter->stop_card_write == 2) {
-+		rsi_dbg(ERR_ZONE, "%s: Stopping card writes\n", __func__);
-+		return 0;
-+	} else if (adapter->stop_card_write == 1) {
-+		rsi_dbg(ERR_ZONE, "%s: Continue card writes\n", __func__);
-+		adapter->stop_card_write++;
-+	}
-+
-+	sdio_claim_host(adapter->pfunction);
-+
-+	status = sdio_writesb(adapter->pfunction, addr, data, count);
-+
-+	sdio_release_host(adapter->pfunction);
-+
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Synch Cmd53 write failed %d\n",
-+			__func__, status);
-+		adapter->stop_card_write = 2;
-+		rsi_print(ERR_ZONE, adapter->prev_desc, FRAME_DESC_SZ);
-+	} else {
-+		memcpy(adapter->prev_desc, data, FRAME_DESC_SZ);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function writes the packet to the device.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  pkt Pointer to the data to be written on to the device.
-+ * @param  len length of the data to be written on to the device.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_host_intf_write_pkt(struct rsi_hw *adapter,
-+			unsigned char *pkt,
-+			unsigned int len)
-+{
-+	unsigned int block_size = adapter->tx_blk_size;
-+	unsigned int num_blocks, address, length;
-+	unsigned int queueno;
-+	int status = 0;
-+
-+	queueno = ((pkt[1] >> 4) & 0xf);
-+
-+	if ((!len)  && (queueno == RSI_WIFI_DATA_Q)) {
-+		rsi_dbg(ERR_ZONE, "%s: Wrong length\n", __func__);
-+		return -1;
-+	}
-+
-+	num_blocks = len / block_size;
-+
-+	if (len % block_size)
-+		num_blocks++;
-+
-+	if ((cpu_to_le16(*(unsigned short *)pkt) < 14) &&
-+	    (queueno == RSI_WIFI_DATA_Q)) {
-+		rsi_dbg(ERR_ZONE, "%s:Small pkt sending@@@\n", __func__);
-+		return -1;
-+	}
-+
-+	address = (num_blocks * block_size | (queueno << 12));
-+	length  = num_blocks * block_size;
-+
-+	status = rsi_write_register_multiple(adapter,
-+					     address,
-+					     (unsigned char *)pkt,
-+					     length);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Unable to write onto the card: %d\n",
-+			__func__, status);
-+	}
-+	rsi_dbg(DATA_TX_ZONE, "%s: Successfully written onto card\n", __func__);
-+	return status;
-+}
-+
-+/**
-+ * This function reads the packet from the SD card.
-+ *
-+ * @param  adapter Pointer to the adapter data structure.
-+ * @param  pkt Pointer to the packet data to be read from the the device.
-+ * @param  length Length of the data to be read from the device.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_host_intf_read_pkt(struct rsi_hw *adapter,
-+			   unsigned char *pkt,
-+			   unsigned int length)
-+{
-+	int status  = 0;
-+
-+	if (!length) {
-+		rsi_dbg(ERR_ZONE, "%s: Pkt size is zero\n", __func__);
-+		return status;
-+	}
-+
-+	status = rsi_read_register_multiple(adapter,
-+					    length,
-+					    length, /*num of bytes*/
-+					    (unsigned char *)pkt);
-+
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to read frame: %d\n", __func__,
-+			status);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function is called by kernel when the driver provided
-+ * Vendor and device IDs are matched. All the initialization
-+ * work is done here.
-+ *
-+ * @param  pfunction Pointer to the sdio_func structure.
-+ * @param  id Pointer to sdio_device_id structure.
-+ * @return 0 on success, 1 on failure.
-+ */
-+static int rsi_probe(struct sdio_func *pfunction,
-+		     const struct sdio_device_id *id)
-+{
-+	struct rsi_hw *adapter;
-+
-+	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
-+
-+	adapter = rsi_init_os_intf_ops();
-+	if (!adapter) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
-+			__func__);
-+		return 1;
-+	}
-+
-+	if (rsi_init_sdio_interface(adapter, pfunction)) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to init sdio interface\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	if (rsi_device_init(adapter->priv, 0)) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed in device init\n", __func__);
-+		sdio_claim_host(pfunction);
-+		sdio_disable_func(pfunction);
-+		sdio_release_host(pfunction);
-+		goto fail;
-+	}
-+
-+	sdio_claim_host(pfunction);
-+	if (rsi_request_interrupt_handler(pfunction,
-+					  (SD_INTERRUPT)rsi_handle_interrupt)) {
-+		sdio_release_host(pfunction);
-+		goto fail;
-+	}
-+
-+	sdio_release_host(pfunction);
-+	rsi_dbg(INIT_ZONE, "%s: Registered Interrupt handler\n", __func__);
-+
-+	return 0;
-+fail:
-+	rsi_deinit_os_intf_ops(adapter);
-+	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
-+	return 1;
-+}
-+
-+/**
-+ * This function performs the reverse of the probe function.
-+ *
-+ * @param  pfunction Pointer to the sdio_func structure.
-+ * @return void.
-+ */
-+static void rsi_disconnect(struct sdio_func *pfunction)
-+{
-+	struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
-+
-+	if (!adapter)
-+		return;
-+
-+	adapter->stop_card_write = 2;
-+	rsi_device_deinit(adapter);
-+
-+	sdio_claim_host(pfunction);
-+	sdio_release_irq(pfunction);
-+	sdio_disable_func(pfunction);
-+	rsi_deinit_os_intf_ops(adapter);
-+	rsi_reset_card(pfunction);
-+	sdio_release_host(pfunction);
-+
-+	return;
-+}
-+
-+#ifdef CONFIG_PM
-+static int rsi_suspend(struct device *dev)
-+{
-+	/* Not yet implemented */
-+	return -ENOSYS;
-+}
-+
-+static int rsi_resume(struct device *dev)
-+{
-+	/* Not yet implemented */
-+	return -ENOSYS;
-+}
-+
-+static const struct dev_pm_ops rsi_pm_ops = {
-+	.suspend = rsi_suspend,
-+	.resume = rsi_resume,
-+};
-+#endif
-+
-+static const struct sdio_device_id rsi_dev_table[] =  {
-+	{ SDIO_DEVICE(0x303, 0x100) },
-+	{ SDIO_DEVICE(0x041B, 0x0301) },
-+	{ SDIO_DEVICE(0x041B, 0x0201) },
-+	{ SDIO_DEVICE(0x041B, 0x9330) },
-+	{ /* Blank */},
-+};
-+
-+static struct sdio_driver rsi_driver = {
-+	.name       = "RSI-SDIO WLAN",
-+	.probe      = rsi_probe,
-+	.remove     = rsi_disconnect,
-+	.id_table   = rsi_dev_table,
-+#ifdef CONFIG_PM
-+	.drv = {
-+		.pm = &rsi_pm_ops,
-+	}
-+#endif
-+};
-+
-+/**
-+ * This function registers the sdio module.
-+ *
-+ * @param  Void.
-+ * @return 0 on success.
-+ */
-+static int rsi_module_init(void)
-+{
-+	sdio_register_driver(&rsi_driver);
-+	rsi_dbg(INIT_ZONE, "%s: Registering driver\n", __func__);
-+	return 0;
-+}
-+
-+/**
-+ * This function unregisters the sdio module.
-+ *
-+ * @param  Void.
-+ * @return None.
-+ */
-+static void rsi_module_exit(void)
-+{
-+	sdio_unregister_driver(&rsi_driver);
-+	rsi_dbg(INFO_ZONE, "%s: Unregistering driver\n", __func__);
-+	return;
-+}
-+
-+module_init(rsi_module_init);
-+module_exit(rsi_module_exit);
-+
-+MODULE_AUTHOR("Redpine Signals Inc");
-+MODULE_DESCRIPTION("Common layer for RSI drivers");
-+MODULE_SUPPORTED_DEVICE("RSI-91x");
-+MODULE_VERSION("0.1");
-+MODULE_LICENSE("GPL");
+> log in, open a terminal, run a=20
+> script that downloads 13.5 MiB of files from the Internet, and then execu=
+tes the=20
+> firmware extraction program. On my 10 Mbps external line and a 2 GHz CPU,=
+ that=20
+> takes 32 s, plus any time to enter the password for a sudo operation. Tha=
+t was=20
+> the basis for my conclusion that a race is unlikely.
+>=20
+> What is the minimum time that should be allowed for a request_firmware_no=
+wait()=20
+> to respond? I know we had to go to asynchronous fw loading because the=
+=20
+> synchronous  version would timeout at 30 s.
 
+You could switch back to synchronous firmware loading soon, as it's not
+going to support a usermode helper any more.
 
+But until then, the proper fix for this is going to be to cancel the
+waiter earlier in teardown.
 
+Ben.
 
+--=20
+Ben Hutchings
+Quantity is no substitute for quality, but it's the only one we've got.
+
+--=-AjZGN/7EuVBP0FVQPOrk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIVAwUAUtIY5+e/yOyVhhEJAQrOQQ/9E86PPU8EKcXWSzY/zA+uJutO6AuhVWf4
+1dDD+0GO2PdHTZA0Z0k1sFCq1knB+p9oX4VZWiPIPCatJX/L0s5POpGSFi6lcYKz
+4a3RdSVhtvLa7Q7T5MIi7DUXT2i1zlPi8T+dr+5WoUAGyin8vWJeWYaBdroRRWGb
+pT6q7RjE01l1K1aZB+JuYLLMkPZBXX18NjtlwBk//gYvCkFd+kgFGuWN4INbviXj
+TwWQgB3OjsyWhIvhdBhVmj+l7yOtEYAYWTpMQeMWQ9OYqElZbrrEdO34TdGBzY/l
+hHcrsLaZpmVmve6OsF6gKIzTdW7u/GrNrUqD8uWGo1OPc6VCMEjtsR7JikKGwSZ5
+A7R39hDxASInKBTSUF3CKgBy2vz4CbRcY6lbhx3XSkevCDJcHngY5vPSTZfSlsb6
+xhXWiBHCPVoRE+SFnEhCgJFPhZW//NJjdnQG84WEFC+/3fEsKE8z+r6islt6e/Xy
+BYsQHiPi+S25E9ZXSXtxZw5/OeDgJi6Z1vvbB3SR4mItdPxAWNGM/RX+w+znzhfH
+Y48uwuB0xb2+dtSxTrtQ3wxXfFib8B16QjmkowfcVbIMFF82FAUc8jCF2IMAM3wq
+CtbPbXcZb2IWzDC+kQBz/Us+VoOb5gTEjT7Tib0RCzb/CCxSnVWrwbWsUCBfnuTO
+TeoTL/DgpvU=
+=X3j3
+-----END PGP SIGNATURE-----
+
+--=-AjZGN/7EuVBP0FVQPOrk--
