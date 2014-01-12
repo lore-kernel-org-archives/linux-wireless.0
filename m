@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:50019 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaAVGpf (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:51474 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958AbaALDzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 01:45:35 -0500
-Received: by mail-oa0-f52.google.com with SMTP id i4so3752416oah.39
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 22:45:34 -0800 (PST)
+	Sat, 11 Jan 2014 22:55:20 -0500
+Message-ID: <52D21226.4070306@lwfinger.net> (sfid-20140112_045551_987547_E28940F2)
+Date: Sat, 11 Jan 2014 21:55:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1390334699.6199.67.camel@jlt4.sipsolutions.net>
-References: <1390334699.6199.67.camel@jlt4.sipsolutions.net>
-Date: Wed, 22 Jan 2014 14:45:34 +0800
-Message-ID: <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com> (sfid-20140122_074538_973347_C18D8DA3)
-Subject: Re: [PATCH] mac80211: mesh: fix mesh_id check
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
+References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>	 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net> <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
-
-Thanks for pointing out.
-
-> @@ -866,7 +866,7 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
->         if (sdata->vif.csa_active)
->                 return true;
+On 01/11/2014 09:27 PM, Ben Hutchings wrote:
+> On Sat, 2014-01-11 at 13:48 -0600, Larry Finger wrote:
+>> On openSUSE systems, the script that installs the firmware for b43 also
+>> unloads and reloads the driver. When the firmware was not previously
+>> available, the driver has stalled at a wait_for_completion(). When the
+>> unload routine releases that hold, the driver encounters structures
+>> that have already been deleted and generates a fatal condition. When
+>> the user does a manual restart, the file system cleanup frequently
+>> results in the firmware files being deleted and the user is never able
+>> to install the firmware. The fix is to change the wait_for_completion()
+>> with a wait_for_completion_timeout() with a 60 second wait period.
+>>
+>> There is a potential race condition; however, the chances that less
+>> than a minute has elapsed between the initial driver load and a
+>> subsequent unload is very unlikely.
 >
-> -       if (!ifmsh->mesh_id)
-> +       if (!ifmsh->mesh_id_len)
+> A minute-long race is 'unlikely' to be hit?  Seriously?!
 
-I don't see this in mac80211-next. Anyway, I think that this is not
-needed since the checking (sdata->wdev.mesh_id_len) is done at
-ieee80211_mesh_rx_queued_mgmt prior to
-ieee80211_mesh_process_chnswitch.
+Ben,
 
----
-Chun-Yeow
+If you force a reboot before the minute expires, nothing weird happens. The only 
+race condition happens when the user has to log in, open a terminal, run a 
+script that downloads 13.5 MiB of files from the Internet, and then executes the 
+firmware extraction program. On my 10 Mbps external line and a 2 GHz CPU, that 
+takes 32 s, plus any time to enter the password for a sudo operation. That was 
+the basis for my conclusion that a race is unlikely.
+
+What is the minimum time that should be allowed for a request_firmware_nowait() 
+to respond? I know we had to go to asynchronous fw loading because the 
+synchronous  version would timeout at 30 s.
+
+Larry
+
+
