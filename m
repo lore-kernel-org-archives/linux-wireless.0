@@ -1,36 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58579 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482AbaAWMyj (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39480 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751198AbaALD2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 07:54:39 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: enable firmware STA quick kickout
-References: <20140120090146.5500.12995.stgit@potku.adurom.net>
-Date: Thu, 23 Jan 2014 14:54:33 +0200
-In-Reply-To: <20140120090146.5500.12995.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Mon, 20 Jan 2014 11:01:46 +0200")
-Message-ID: <87ob325052.fsf@kamboji.qca.qualcomm.com> (sfid-20140123_135443_660188_F21B18C4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 11 Jan 2014 22:28:08 -0500
+Message-ID: <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk> (sfid-20140112_042818_121824_13B822F8)
+Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Date: Sun, 12 Jan 2014 03:27:31 +0000
+In-Reply-To: <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
+References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-h5E30VfmgxRtEynJS4Zt"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Firmware has a feature to track if the associated STA is not acking the frames.
-> When that happens, the firmware sends WMI_PEER_STA_KICKOUT_EVENTID event to the
-> host. Enable that to faster detect when a STA has left BSS without sending a
-> deauth frame.
->
-> Also set huge keepalive timeouts to avoid using the keepalive functionality in
-> the firmware.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+--=-h5E30VfmgxRtEynJS4Zt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Applied.
+On Sat, 2014-01-11 at 13:48 -0600, Larry Finger wrote:
+> On openSUSE systems, the script that installs the firmware for b43 also
+> unloads and reloads the driver. When the firmware was not previously
+> available, the driver has stalled at a wait_for_completion(). When the
+> unload routine releases that hold, the driver encounters structures
+> that have already been deleted and generates a fatal condition. When
+> the user does a manual restart, the file system cleanup frequently
+> results in the firmware files being deleted and the user is never able
+> to install the firmware. The fix is to change the wait_for_completion()
+> with a wait_for_completion_timeout() with a 60 second wait period.
+>=20
+> There is a potential race condition; however, the chances that less
+> than a minute has elapsed between the initial driver load and a
+> subsequent unload is very unlikely.
 
--- 
-Kalle Valo
+A minute-long race is 'unlikely' to be hit?  Seriously?!
+
+Ben.
+
+> This patch also fixes a typo in a comment.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+>  drivers/net/wireless/b43/main.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
+ain.c
+> index 86b2030..5ce9ecb 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2150,12 +2150,13 @@ int b43_do_request_fw(struct b43_request_fw_conte=
+xt *ctx,
+>  			pr_err("Unable to load firmware\n");
+>  			return err;
+>  		}
+> -		/* stall here until fw ready */
+> -		wait_for_completion(&ctx->fw_load_complete);
+> +		/* stall here until fw ready or 60 sec elapses */
+> +		wait_for_completion_timeout(&ctx->fw_load_complete,
+> +					    msecs_to_jiffies(60000));
+>  		if (ctx->blob)
+>  			goto fw_ready;
+>  	/* On some ARM systems, the async request will fail, but the next sync
+> -	 * request works. For this reason, we dall through here
+> +	 * request works. For this reason, we fall through here
+>  	 */
+>  	}
+>  	err =3D request_firmware(&ctx->blob, ctx->fwname,
+
+--=20
+Ben Hutchings
+Quantity is no substitute for quality, but it's the only one we've got.
+
+--=-h5E30VfmgxRtEynJS4Zt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIVAwUAUtILo+e/yOyVhhEJAQoqnQ/8CFqzxECNCg3DCMFUW/qySLJfYjaR6v0/
+OUYcQB8a8QPi7h2HG8YSpcTPD5SX1Kg67ARbaI1I/0bLcLJQbmyItQ6ISdYtkiAs
+PrCCSjTdEKLxbubgaQzIoH7jaD8yf1SbEPKZlb9cByNnWqIwZhib6oHhG+oYphC8
+Hysb6LHx71iKbB+mcfO/nBZ2vRLbJAbdv2n0OJhO24DKR5CVXDM6MRqAalvNcFz9
+ObYg5LvDlsYXiXgxHp5I8LSjVqcLk7Opw6JZeP/HcUhmTIsSl6kG50AH70jHr+Vl
+jkvvC5gjk+fpvTmnC/NSmW14pwinsTT/T9tWaB7apugxllPP4TocqhoxyXtJDsPi
+JBAw0RS+kangAKYdvRWgebQeCorfARkWq1ov/69a6vubm6m+IVxBqRQy6JLApMHL
+FdWhERb50ftQ5r1J10rUCBr/bGWVrSVxaqS9IgoG/t+E6dAFH+2TFy6C0Uk3OfQO
+/agCet4eUrc4azoNrvISQiJgB1A8GhXI0ZBFxekfwXoSCgR6/JxsDDqQrH91X+Ts
+zKE7KIM/e3uuUX+sqCMEOp8mJjAqIEW5orekcK2mI2D4w2pm0OExSc86uO4Gl3R8
+3uMBdhH7Lpiz7YIEcob0QRMFUCkZK+oHJ4u6HA7ol43s+dODtB1+o79PW4Dr3+Ly
+UnH2MIz0nvM=
+=s/K6
+-----END PGP SIGNATURE-----
+
+--=-h5E30VfmgxRtEynJS4Zt--
