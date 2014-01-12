@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:64018 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbaAQQSM (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:52961 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbaALJGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 11:18:12 -0500
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: [PATCH v4 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
-Date: Sat, 18 Jan 2014 00:17:38 +0800
-Message-Id: <d4d1340a176aee1e58ffe80e83ddc3394f2829e3.1389975095.git.gamerh2o@gmail.com> (sfid-20140117_171816_222299_59D26795)
+	Sun, 12 Jan 2014 04:06:43 -0500
+Received: by mail-ee0-f44.google.com with SMTP id b57so2639319eek.3
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jan 2014 01:06:42 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: move roc cookie assignment earlier
+Date: Sun, 12 Jan 2014 11:06:37 +0200
+Message-Id: <1389517597-3865-1-git-send-email-eliad@wizery.com> (sfid-20140112_100819_604406_727A42BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the right function to update frequency value.
+ieee80211_start_roc_work() might add a new roc
+to existing roc, and tell cfg80211 it has already
+started.
 
-If rx skb is probe response or beacon, the wrong frequency value can
-cause problem that bss info can't be updated when it should be.
+However, this might happen before the roc cookie
+was set, resulting in REMAIN_ON_CHANNEL (started)
+event with null cookie. Consequently, it can make
+wpa_supplicant go out of sync.
 
-Cc: <stable@vger.kernel.org>
-Fixes: 8318d78a44d4 ("cfg80211 API for channels/bitrates, mac80211
-and driver conversion")
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
+Fix it by setting the roc cookie earlier.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
-v4: change commit message
-    suggested by Johannes Berg
+ net/mac80211/cfg.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
- drivers/net/wireless/b43/xmit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 4ae63f4..50e5ddb 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		 * channel number in b43. */
- 		if (chanstat & B43_RX_CHAN_5GHZ) {
- 			status.band = IEEE80211_BAND_5GHZ;
--			status.freq = b43_freq_to_channel_5ghz(chanid);
-+			status.freq = b43_channel_to_freq_5ghz(chanid);
- 		} else {
- 			status.band = IEEE80211_BAND_2GHZ;
--			status.freq = b43_freq_to_channel_2ghz(chanid);
-+			status.freq = b43_channel_to_freq_2ghz(chanid);
- 		}
- 		break;
- 	default:
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f9ae9b8..94b4acb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2638,6 +2638,24 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	INIT_DELAYED_WORK(&roc->work, ieee80211_sw_roc_work);
+ 	INIT_LIST_HEAD(&roc->dependents);
+ 
++	/*
++	 * cookie is either the roc cookie (for normal roc)
++	 * or the SKB (for mgmt TX)
++	 */
++	if (!txskb) {
++		/* local->mtx protects this */
++		local->roc_cookie_counter++;
++		roc->cookie = local->roc_cookie_counter;
++		/* wow, you wrapped 64 bits ... more likely a bug */
++		if (WARN_ON(roc->cookie == 0)) {
++			roc->cookie = 1;
++			local->roc_cookie_counter++;
++		}
++		*cookie = roc->cookie;
++	} else {
++		*cookie = (unsigned long)txskb;
++	}
++
+ 	/* if there's one pending or we're scanning, queue this one */
+ 	if (!list_empty(&local->roc_list) ||
+ 	    local->scanning || local->radar_detect_enabled)
+@@ -2772,24 +2790,6 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	if (!queued)
+ 		list_add_tail(&roc->list, &local->roc_list);
+ 
+-	/*
+-	 * cookie is either the roc cookie (for normal roc)
+-	 * or the SKB (for mgmt TX)
+-	 */
+-	if (!txskb) {
+-		/* local->mtx protects this */
+-		local->roc_cookie_counter++;
+-		roc->cookie = local->roc_cookie_counter;
+-		/* wow, you wrapped 64 bits ... more likely a bug */
+-		if (WARN_ON(roc->cookie == 0)) {
+-			roc->cookie = 1;
+-			local->roc_cookie_counter++;
+-		}
+-		*cookie = roc->cookie;
+-	} else {
+-		*cookie = (unsigned long)txskb;
+-	}
+-
+ 	return 0;
+ }
+ 
 -- 
-1.8.4.2
+1.8.5.2.229.g4448466.dirty
 
