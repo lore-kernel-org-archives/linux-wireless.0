@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48657 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064AbaA3RhX (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:50519 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbaALVLu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 12:37:23 -0500
-Message-ID: <1391103440.4323.24.camel@jlt4.sipsolutions.net> (sfid-20140130_183726_136108_A68FBBD5)
-Subject: Re: [PATCH 3.13.1 3/9] rsi: Packet queueing/dequeueing to device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jahnavi <jahnavi.meher@redpinesignals.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 30 Jan 2014 18:37:20 +0100
-In-Reply-To: <52EA75B5.5040002@redpinesignals.com> (sfid-20140130_170030_682221_D838173E)
-References: <52EA75B5.5040002@redpinesignals.com>
-	 (sfid-20140130_170030_682221_D838173E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 12 Jan 2014 16:11:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/3 V2] iFixes for b43 and b43legacy
+Date: Sun, 12 Jan 2014 15:11:36 -0600
+Message-Id: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140112_221159_557990_F2F5519D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-30 at 21:24 +0530, Jahnavi wrote:
+These 3 fixes should be applied as soon as possible. I understand that 3.13
+will be released soon. As all 3 are marked for stable, inclusion in 3.14
+will be satisfactory.
 
-> +#include "../include/rsi_main.h"
-> +#include "../include/rsi_device_ops.h"
-> +#include "../include/rsi_hw_intf.h"
+V2 - Patch 1 is unchanged, but 2 and 3 are fixed to remove any race conditions.
 
-That also seems a bit odd.
+Larry
 
-johannes
+
+Larry Finger (3):
+  b43: Fix lockdep splat
+  b43: Fix unload oops if firmware is not available
+  b43legacy: Fix unload oops if firmware is not available
+
+ drivers/net/wireless/b43/b43.h        |  4 ++--
+ drivers/net/wireless/b43/main.c       | 27 ++++++++++++++++-----------
+ drivers/net/wireless/b43legacy/main.c |  1 +
+ 3 files changed, 19 insertions(+), 13 deletions(-)
+
+-- 
+1.8.4
 
