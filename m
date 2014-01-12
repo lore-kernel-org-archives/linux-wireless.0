@@ -1,100 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22541 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857AbaAFLlB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44909 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114AbaALIlS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:41:01 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/15] brcmfmac: cleanup helper functions in sdio remove path
-Date: Mon, 6 Jan 2014 12:40:39 +0100
-Message-ID: <1389008450-28529-5-git-send-email-arend@broadcom.com> (sfid-20140106_124116_874633_760F85A7)
-In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+	Sun, 12 Jan 2014 03:41:18 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 0/3] wil6210 patches
+Date: Sun, 12 Jan 2014 10:41:01 +0200
+Message-ID: <1389516065-19515-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140112_094129_835304_E2065A69)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two helper functions in the sdio remove path were very thin and
-only used once. So its code is moved to the calling function.
+in the previour submission, bug was found by kbuild, see below.
+It is about incorrect #include, one I used do not work for the
+architectures lacking native prefetch().
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   39 +++++---------------
- 1 file changed, 10 insertions(+), 29 deletions(-)
+Re-submitting all series.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index f214510..27fbcbf 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3750,15 +3750,6 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
- 	}
- }
- 
--static void brcmf_sdio_release_malloc(struct brcmf_sdio *bus)
--{
--	brcmf_dbg(TRACE, "Enter\n");
--
--	kfree(bus->rxbuf);
--	bus->rxctl = bus->rxbuf = NULL;
--	bus->rxlen = 0;
--}
--
- static bool brcmf_sdio_probe_malloc(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
-@@ -3955,24 +3946,6 @@ brcmf_sdio_watchdog(unsigned long data)
- 	}
- }
- 
--static void brcmf_sdio_release_dongle(struct brcmf_sdio *bus)
--{
--	brcmf_dbg(TRACE, "Enter\n");
--
--	if (bus->ci) {
--		sdio_claim_host(bus->sdiodev->func[1]);
--		brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
--		brcmf_sdio_clkctl(bus, CLK_NONE, false);
--		sdio_release_host(bus->sdiodev->func[1]);
--		brcmf_sdio_chip_detach(&bus->ci);
--		if (bus->vars && bus->varsz)
--			kfree(bus->vars);
--		bus->vars = NULL;
--	}
--
--	brcmf_dbg(TRACE, "Disconnected\n");
--}
--
- static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
- 	.stop = brcmf_sdio_bus_stop,
- 	.preinit = brcmf_sdio_bus_preinit,
-@@ -4108,12 +4081,20 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 
- 		if (bus->sdiodev->bus_if->drvr) {
- 			brcmf_detach(bus->sdiodev->dev);
--			brcmf_sdio_release_dongle(bus);
-+		}
-+
-+		if (bus->ci) {
-+			sdio_claim_host(bus->sdiodev->func[1]);
-+			brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
-+			brcmf_sdio_clkctl(bus, CLK_NONE, false);
-+			sdio_release_host(bus->sdiodev->func[1]);
-+			brcmf_sdio_chip_detach(&bus->ci);
- 		}
- 
- 		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
--		brcmf_sdio_release_malloc(bus);
-+		kfree(bus->rxbuf);
- 		kfree(bus->hdrbuf);
-+		kfree(bus->vars);
- 		kfree(bus);
- 	}
- 
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+head:   1e2f9295f4c657500111514f92a3d3894d0e05b4
+commit: 1cbbcb08c786964a16773c39f2536f1923c73c58 [135/140] wil6210: prefetch head of packet
+config: make ARCH=microblaze allyesconfig
+
+All error/warnings:
+
+   drivers/net/wireless/ath/wil6210/txrx.c: In function 'wil_vring_reap_rx':
+>> drivers/net/wireless/ath/wil6210/txrx.c:381:2: error: implicit declaration of function 'prefetch' [-Werror=implicit-function-declaration]
+     prefetch(skb->data);
+     ^
+   cc1: some warnings being treated as errors
+
+vim +/prefetch +381 drivers/net/wireless/ath/wil6210/txrx.c
+
+   375                  wil_err(wil, "Rx size too large: %d bytes!\n", dmalen);
+   376                  kfree_skb(skb);
+   377                  return NULL;
+   378          }
+   379          skb_trim(skb, dmalen);
+   380  
+ > 381          prefetch(skb->data);
+   382  
+   383          wil_hex_dump_txrx("Rx ", DUMP_PREFIX_OFFSET, 16, 1,
+   384                            skb->data, skb_headlen(skb), false);
+
+Vladimir Kondratiev (3):
+  wil6210: interrupt moderation
+  wil6210: Fix IP version indication for Tx csum offload
+  wil6210: prefetch head of packet
+
+ drivers/net/wireless/ath/wil6210/interrupt.c | 13 +++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c      |  8 ++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  1 +
+ 3 files changed, 20 insertions(+), 2 deletions(-)
+
 -- 
-1.7.10.4
+1.8.3.2
 
