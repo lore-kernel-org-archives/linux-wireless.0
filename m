@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:56779 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbaAXWrD (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28256 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbaALOdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 17:47:03 -0500
-Received: by mail-pd0-f178.google.com with SMTP id y13so3627791pdi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:47:02 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 05/11] rel-html: use system's date to determine current year
-Date: Fri, 24 Jan 2014 14:46:27 -0800
-Message-Id: <1390603593-27728-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20140124_234707_579448_567B96FD)
-In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 12 Jan 2014 09:33:36 -0500
+Message-ID: <52D2A7B5.2030003@broadcom.com> (sfid-20140112_153339_649230_4CE2B206)
+Date: Sun, 12 Jan 2014 15:33:25 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Naughtboy <skylvlinux@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
+References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>	<52B2E638.8060906@hauke-m.de>	<CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com>	<52B300FC.7070204@hauke-m.de>	<52B31392.2070705@broadcom.com>	<CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com>	<52B43718.504@broadcom.com> <CACna6rx_6yyJ88YZ2A5=XjK61xC=F2fX9B54MQcuzcZBOotOrg@mail.gmail.com>
+In-Reply-To: <CACna6rx_6yyJ88YZ2A5=XjK61xC=F2fX9B54MQcuzcZBOotOrg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is used for the software that does snapshot / next type of
-releases based on dates.
+On 01/12/2014 03:17 PM, Rafał Miłecki wrote:
+> 2013/12/20 Arend van Spriel <arend@broadcom.com>:
+>> On 12/20/2013 08:57 AM, Rafał Miłecki wrote:
+>>> 2013/12/19 Arend van Spriel <arend@broadcom.com>:
+>>>> It is in the kernel tree under
+>>>> 'drivers/net/wireless/brcm80211/brcmfmac'. We only support rev 3 because
+>>>> rev 2 and earlier do not have enough memory to run fullmac firmware.
+>>>> However, I have not found any rev 3 on the market. If you have please
+>>>> let me know.
+>>>
+>>> Could you say something more about rev 2? How does it work with
+>>> internal Broadcom driver? Is the firmware stored somewhere else? Does
+>>> it have some another kind of memory?
+>>
+>> It has a split-mac design. So at one end the spectrum there is
+>> mac80211-type drivers and at the other side are fullmac drivers like
+>> brcmfmac. rev 2 driver sits right in the middle of that with part of the
+>> 802.11 stack running on the host and part on the device. This device has
+>> not enough memory to run the fullmac firmware.
+> 
+> Thanks for your explanation. I think I understand now what means
+> WLC_HIGH, WLC_LOW, WLC_SPLIT you can see in
+> 0001-Staging-Add-initial-release-of-brcm80211-Broadcom-80.patch. I
+> guess that softmac devices need WLC_HIGH and WLC_LOW, split devices
+> (like BCM43231) need WLC_HIGH (because LOW is implemented in firmware)
+> and full MAC devices need none of above.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- rel-html.py | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Yeah. The brcmfmac driver for fullmac devices is a separate driver
+design based on bcmdhd.
 
-diff --git a/rel-html.py b/rel-html.py
-index d787b92..ae61187 100755
---- a/rel-html.py
-+++ b/rel-html.py
-@@ -3,7 +3,7 @@
- # Provided an index URL and a few project hints page this
- # will spit out a shiny HTML 5 W3C compliant releases page.
- 
--# Copyright (C) 2012-2013 Luis R. Rodriguez <mcgrof@do-not-panic.com>
-+# Copyright (C) 2012-2014 Luis R. Rodriguez <mcgrof@do-not-panic.com>
- #
- # This program is free software: you can redistribute it and/or modify
- # it under the terms of the GNU Affero General Public License as
-@@ -27,13 +27,14 @@ import sys
- import os
- import getopt
- from operator import itemgetter
-+from datetime import date
- 
- debug = 0
- 
- 
- def rel_html_license_verbose():
-     print '-----------------------------------------------------------------------'
--    print 'Copyright (C) 2012-2013 Luis R. Rodriguez <mcgrof@do-not-panic.com>'
-+    print 'Copyright (C) 2012-2014 Luis R. Rodriguez <mcgrof@do-not-panic.com>'
-     print ''
-     print 'This program is free software: you can redistribute it and/or modify'
-     print 'it under the terms of the GNU Affero General Public License as'
-@@ -859,8 +860,7 @@ class index_parser(HTMLParser):
-             url + self.next_rel_month)
-         self.next_rel_url   = url + \
-             self.next_rel_month + '/' + self.next_rel_day
--        # XXX: automatically look for the largest year
--        self.next_rel_date_rfc3339  = '2013' + '-' + \
-+        self.next_rel_date_rfc3339  = str(date.today().year) + '-' + \
-             self.next_rel_month + '-' + self.next_rel_day
-         self.next_rel_date = self.next_rel_date_rfc3339.replace("-", "")
-         self.next_rel_dates.append(self.next_rel_date_rfc3339)
-@@ -884,7 +884,7 @@ class index_parser(HTMLParser):
-             if url.endswith('stable/'):
-                 self.get_stable_ext_urls(url)
-                 self.evaluate_stable_ext_urls()
--            elif url.endswith('2013/'):
-+            elif url.endswith(str(date.today().year) + '/'):
-                 self.get_next_url(url)
-                 self.evaluate_next_url()
-             else:
--- 
-1.8.5.2
+> As questions about these chipset come over and over, I added a new
+> section to the brcm80211 wiki page:
+> http://wireless.kernel.org/en/users/Drivers/brcm80211#Unsupported_Chips
+> I hope it's OK for you.
 
+Fine and thanks. Let's see how often another such question pops up.
+
+> Btw. if anyone is interested, I've written a minimal user-space app to
+> read device info (DL_GETVER) from Broadcom USB dongle.
+> gcc -lusb-1.0 main.c -o bcmid
+
+I see fixed definition for vendor and device id. Given that they differ
+from what we have in brcmfmac it may be good to use command line
+argument(s) for these.
+
+Regards,
+Arend
