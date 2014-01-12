@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57464 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbaABV0J (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45960 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbaALIlT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 16:26:09 -0500
-Received: by mail-pb0-f46.google.com with SMTP id md12so14993139pbc.33
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 13:26:08 -0800 (PST)
-Message-ID: <52C5D96E.7060306@lwfinger.net> (sfid-20140102_222613_044099_4DCC8936)
-Date: Thu, 02 Jan 2014 15:26:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 12 Jan 2014 03:41:19 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 1/3] wil6210: interrupt moderation
+Date: Sun, 12 Jan 2014 10:41:02 +0200
+Message-ID: <1389516065-19515-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140112_094130_587465_1E907C46)
+In-Reply-To: <1389516065-19515-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1389516065-19515-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Chris Taylor <chris.taylor@cantab.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8723ae PCI Driver update
-References: <CAC94StQ0EQYDxUQR6jNLEpJjB+tpR9ue2rzesz8uT6cmRTkQ8A@mail.gmail.com>	<52C5A8DB.2090506@lwfinger.net> <CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
-In-Reply-To: <CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2014 02:44 PM, Chris Taylor wrote:
-> Larry,
->
-> Thank you for your reply and filling me on the correct netiquette re: driver
-> mailing lists.
->
-> The PCI ID I have is 10ec:8723, but the built-in version seems to suffer from
-> the slow data rates, poor signal reception and regular dropouts that many users
-> seems to be experiencing with this chipset (at least going by e.g. the Ubuntu
-> forums). I wanted to try compiling my own module from the Realtek source but I
-> think I need a patch to get that to work in kernel 3.11? But I also wondered if
-> it were worth trying a later kernel to see if any of the regular updates have
-> improved things?
+Use hardware capabilities to limit IRQ generation to about 15 per msec
+It corresponds to about 7 packets/IRQ when running iperf with default
+parameters at 1.3Gbps
 
-As I cannot duplicate the results that Ubuntu users seem to have, I don't know 
-if there are changes that will help.
+Do not enable this feature in the sniffer (monitor)  mode, because
+interrupt moderation cause timestamp accuracy deterioration.
+For the sniffer flow, it is important to get precise timestamp.
 
-It seems to me that there is something in the Ubuntu user code that is having 
-problems. I run openSUSE KDE with NetworkManages, and I never have any of those 
-difficulties.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 13 +++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  1 +
+ 2 files changed, 14 insertions(+)
 
-Although no changes in rtl8723ae come to mind, there are many changes in the 
-mca80211 stack. It is always worthwhile to try a newer kernel, or the backports 
-source if you do not want to build a whole new kernel.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 8205d3e..10919f9 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -156,6 +156,19 @@ void wil6210_enable_irq(struct wil6210_priv *wil)
+ 	iowrite32(WIL_ICR_ICC_VALUE, wil->csr + HOSTADDR(RGF_DMA_EP_MISC_ICR) +
+ 		  offsetof(struct RGF_ICR, ICC));
+ 
++	/* interrupt moderation parameters */
++	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR) {
++		/* disable interrupt moderation for monitor
++		 * to get better timestamp precision
++		 */
++		iowrite32(0, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
++	} else {
++		iowrite32(WIL6210_ITR_TRSH,
++			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
++		iowrite32(BIT_DMA_ITR_CNT_CRL_EN,
++			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
++	}
++
+ 	wil6210_unmask_irq_pseudo(wil);
+ 	wil6210_unmask_irq_tx(wil);
+ 	wil6210_unmask_irq_rx(wil);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index c4a5163..1f91eaf 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -39,6 +39,7 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
+ #define WIL6210_MAX_CID		(8) /* HW limit */
+ #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
++#define WIL6210_ITR_TRSH	(10000) /* arbitrary - about 15 IRQs/msec */
+ 
+ /* Hardware definitions begin */
+ 
+-- 
+1.8.3.2
 
