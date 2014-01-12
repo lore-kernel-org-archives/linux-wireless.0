@@ -1,89 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f48.google.com ([209.85.212.48]:55999 "EHLO
-	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbaAHJYM (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:42480 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbaALVL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:24:12 -0500
-Received: by mail-vb0-f48.google.com with SMTP id q12so934874vbe.7
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2014 01:24:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52CD12D4.5030008@broadcom.com>
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
- <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
- <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
- <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
- <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
- <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com>
- <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
- <52CD12D4.5030008@broadcom.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 8 Jan 2014 17:23:50 +0800
-Message-ID: <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> (sfid-20140108_102418_057282_F1B8B7F3)
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-sunxi <linux-sunxi@googlegroups.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 12 Jan 2014 16:11:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/3 V2] b43: Fix lockdep splat
+Date: Sun, 12 Jan 2014 15:11:37 -0600
+Message-Id: <1389561099-17181-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140112_221202_497713_0D8A946A)
+In-Reply-To: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 8, 2014 at 4:56 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 12/27/2013 01:36 PM, Chen-Yu Tsai wrote:
->>>> >> Working tree:
->>>> >>
->>>> >>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
->>>> >>
->>>> >> Comments welcome :)
->>> >
->>> > No comment, but: Nice work!
->> Thanks. BTW, who should submit the patch? :)
->
-> Hi Chen-Yu
->
-> I will submit the patch today.
+In https://bugzilla.kernel.org/show_bug.cgi?id=67561, a locking dependency is reported
+when b43 is used with hostapd, and rfkill is used to kill the radio output.
 
-Great!
+The lockdep splat (in part) is as follows:
 
-I added device tree support for brcmfmac SDIO devices,
-to be able to specify external out-of-band interrupts.
-Unfortunately it's not working. I get the following output:
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.12.0 #1 Not tainted
+-------------------------------------------------------
+rfkill/10040 is trying to acquire lock:
+ (rtnl_mutex){+.+.+.}, at: [<ffffffff8146f282>] rtnl_lock+0x12/0x20
 
-brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
-brcmfmac: brcmf_fil_cmd_data: Failed err=-110
-brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -110
-brcmfmac: brcmf_bus_start: failed: -110
-brcmfmac: brcmf_sdbrcm_probe: dongle is not responding
-brcmfmac: brcmf_sdio_probe: device attach failed
-brcmfmac: brcmf_ops_sdio_probe: F2 error, probe failed -19...
+but task is already holding lock:
+ (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa04832ca>] rfkill_fop_write+0x6a/0x170 [rfkill]
 
-Should we add device tree support for the brcmf platform driver,
-so we can enable power, clocks, etc. before the SDIO driver is probed?
+--snip--
 
-Not sure if this is the right way. Maxime mentioned on IRC that some
-mmc host drivers take a vmmc regulator property.
+Chain exists of:
+  rtnl_mutex --> misc_mtx --> rfkill_global_mutex
 
-Currently I am using rfkill-gpio to do this. But brcmfmac also
-registers an rfkill of its own.
+The fix is to move the initialization of the hardware random number generator
+outside the code range covered by the rtnl_mutex.
 
-Also, I have bluetooth working. Turns out it was a wrong pinctrl
-setting in my dt. For those who want to try:
+Reported-by: yury <urykhy@gmail.com>
+Tested-by: yury <urykhy@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
 
-  Get and compile brcm_patchram_plus from
-  http://code.google.com/p/broadcom-bluetooth/
+V2 is identical to V1.
 
-  Run brcm_patchram_plus --patchram bcm20710a1.hcd --no2bytes /dev/ttyS1
-  and hciattach /dev/ttyS1
+ drivers/net/wireless/b43/main.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-  If brcm_patchram_plus hangs, you may need to reset the controller
-  by blocking then unblocking the bluetooth rfkill switch.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ccd24f0a..86b2030 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2424,6 +2424,7 @@ error:
+ 
+ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
+ static void b43_one_core_detach(struct b43_bus_dev *dev);
++static int b43_rng_init(struct b43_wl *wl);
+ 
+ static void b43_request_firmware(struct work_struct *work)
+ {
+@@ -2475,6 +2476,10 @@ start_ieee80211:
+ 		goto err_one_core_detach;
+ 	wl->hw_registred = true;
+ 	b43_leds_register(wl->current_dev);
++
++	/* Register HW RNG driver */
++	b43_rng_init(wl);
++
+ 	goto out;
+ 
+ err_one_core_detach:
+@@ -4636,9 +4641,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
+ 
+-	/* Unregister HW RNG driver */
+-	b43_rng_exit(dev->wl);
+-
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+ 	/* Stop the microcode PSM. */
+@@ -4795,9 +4797,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+-	/* Register HW RNG driver */
+-	b43_rng_init(dev->wl);
+-
+ out:
+ 	return err;
+ 
+@@ -5464,6 +5463,9 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 
+ 	b43_one_core_detach(wldev->dev);
+ 
++	/* Unregister HW RNG driver */
++	b43_rng_exit(wl);
++
+ 	b43_leds_unregister(wl);
+ 
+ 	ieee80211_free_hw(wl->hw);
+@@ -5541,6 +5543,9 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 
+ 	b43_one_core_detach(dev);
+ 
++	/* Unregister HW RNG driver */
++	b43_rng_exit(wl);
++
+ 	if (list_empty(&wl->devlist)) {
+ 		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+-- 
+1.8.4
 
-I pushed all my work out already. Here's the link again:
-
-  https://github.com/wens/linux/tree/wip/sunxi-next-wifi
-
-
-Cheers
-ChenYu
