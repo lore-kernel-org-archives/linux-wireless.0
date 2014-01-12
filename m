@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53500 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbaAMXlg (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:60649 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaALUNH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 18:41:36 -0500
-Date: Mon, 13 Jan 2014 15:42:12 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/6] staging: vt6656:  sparse fixes: device_get_stats
-Message-ID: <20140113234212.GA3066@kroah.com> (sfid-20140114_004148_045083_66BC9F68)
-References: <1389629930.2590.1.camel@canaries32-MCP7A>
+	Sun, 12 Jan 2014 15:13:07 -0500
+Received: by mail-oa0-f42.google.com with SMTP id n16so7178880oag.1
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jan 2014 12:13:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389629930.2590.1.camel@canaries32-MCP7A>
+In-Reply-To: <52D2A7B5.2030003@broadcom.com>
+References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>
+	<52B2E638.8060906@hauke-m.de>
+	<CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com>
+	<52B300FC.7070204@hauke-m.de>
+	<52B31392.2070705@broadcom.com>
+	<CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com>
+	<52B43718.504@broadcom.com>
+	<CACna6rx_6yyJ88YZ2A5=XjK61xC=F2fX9B54MQcuzcZBOotOrg@mail.gmail.com>
+	<52D2A7B5.2030003@broadcom.com>
+Date: Sun, 12 Jan 2014 21:13:05 +0100
+Message-ID: <CACna6ryoCeEtCJdC4DKqXVQRVRtxC9s3mCho7wK4ba-ALKAzKA@mail.gmail.com> (sfid-20140112_211325_947450_F3950239)
+Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Naughtboy <skylvlinux@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 04:18:50PM +0000, Malcolm Priestley wrote:
-> sparse warning
-> main_usb.c:1442:44: warning: cast removes address space of expression
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> ---
->  drivers/staging/vt6656/main_usb.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-> index 4cb7aa7..59c2430 100644
-> --- a/drivers/staging/vt6656/main_usb.c
-> +++ b/drivers/staging/vt6656/main_usb.c
-> @@ -1418,8 +1418,9 @@ static void device_set_multi(struct net_device *dev)
->  static struct net_device_stats *device_get_stats(struct net_device *dev)
->  {
->  	struct vnt_private *pDevice = netdev_priv(dev);
-> +	struct net_device_stats *stats = &pDevice->stats;
->  
-> -	return &pDevice->stats;
-> +	return stats;
+2014/1/12 Arend van Spriel <arend@broadcom.com>:
+>> Btw. if anyone is interested, I've written a minimal user-space app to
+>> read device info (DL_GETVER) from Broadcom USB dongle.
+>> gcc -lusb-1.0 main.c -o bcmid
+>
+> I see fixed definition for vendor and device id. Given that they differ
+> from what we have in brcmfmac it may be good to use command line
+> argument(s) for these.
 
-This change makes no sense to me.  Why is sparse complaining about this?
+I don't see any real usage possibilities for this app, I just wanted
+to see how "libusb" works and see what's really inside of my WNA3100.
+I don't think anyone is really going to use it ;) Just shared it since
+I already got it ;)
 
-Is this a bug in sparse, or am I missing something obvious here?
-
-thanks,
-
-greg k-h
+-- 
+Rafał
