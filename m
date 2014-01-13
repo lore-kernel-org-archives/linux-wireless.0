@@ -1,125 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:47533 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778AbaAVGgU convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18563 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223AbaAMMAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 01:36:20 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so4309219eaj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 22:36:18 -0800 (PST)
+	Mon, 13 Jan 2014 07:00:34 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Pull request: ath 20140113
+Date: Mon, 13 Jan 2014 14:00:28 +0200
+Message-ID: <87fvos3xcz.fsf@kamboji.qca.qualcomm.com> (sfid-20140113_130056_964679_B0387B47)
 MIME-Version: 1.0
-In-Reply-To: <1390319550.6199.59.camel@jlt4.sipsolutions.net>
-References: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com>
-	<1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
-	<1390319550.6199.59.camel@jlt4.sipsolutions.net>
-Date: Wed, 22 Jan 2014 07:36:18 +0100
-Message-ID: <CA+BoTQ=sWMSN5NveRf0aw98mMYWks2eXKWzZvk4NZgGLOctuQQ@mail.gmail.com> (sfid-20140122_073624_359003_A16909B4)
-Subject: Re: [PATCH 3/3] cfg80211: implement multi-interface CSA
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 January 2014 16:52, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2014-01-20 at 15:09 +0100, Michal Kazior wrote:
->
->> @@ -2583,6 +2588,7 @@ enum wiphy_flags {
->>       WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL        = BIT(21),
->>       WIPHY_FLAG_SUPPORTS_5_10_MHZ            = BIT(22),
->>       WIPHY_FLAG_HAS_CHANNEL_SWITCH           = BIT(23),
->> +     WIPHY_FLAG_HAS_MULTI_IF_CHSWITCH        = BIT(24),
->>  };
->
-> You could probably use an nl80211 feature flag directly, see e.g.
-> NL80211_FEATURE_HT_IBSS (enum nl80211_feature_flags) and save the code
-> to set the extra flag attribute.
->
->> + * @NL80211_ATTR_CH_SWITCH_IFACES: Nested attribute with channel switch
->> + *   settings in each entry (ifindex, frequency, beacon IEs). Also used as a
->> + *   device capability flag in nl80211_send_wiphy().
->
-> Which would obviously change this.
->
->> +int ieee80211_channel_switch(struct wiphy *wiphy,
->> +                          struct cfg80211_csa_settings *params,
->> +                          int num_params)
->> +{
->> +     struct ieee80211_sub_if_data *sdata;
->> +     int err;
->> +
->> +     /* multi-vif CSA is not implemented */
->> +     if (num_params > 1)
->> +             return -EOPNOTSUPP;
->
-> The capability flag should be checked in cfg80211, so this shouldn't be
-> needed?
+Hi John,
 
-Okay.
+here's another ath10k pull request. Major changes are:
 
+Janusz added Kconfig option for DFS. The DFS code was there already, but
+after fixes to mac80211 we can now enable it.
 
->> +int ieee80211_channel_switch(struct wiphy *wiphy,
->> +                          struct cfg80211_csa_settings *params,
->> +                          int num_params);
->
-> This function can be static now as the other places call the __ version
-> now. Careful with locking though - you just moved it as well, won't the
-> callers have to be updated?
+Bartosz added a runtime firmware feature flag to disable P2P. Our 10.1
+firmware branch doesn't support P2P and ath10k can now disable that. He
+also added a limit for how many clients can connect to ath10k AP.
 
-Good point. I'll make it static.
+Michal fixed WEP shared authentication, in case someone still uses it.
+And I added firmware debug log to help the firmware engineers.
 
-ieee80211_channel_switch() was always called with the assumption
-wdev->mtx is held. Only cfg80211_channel_switch() caller is changed
-wrt to locking of wdev->mtx (since you can't take a bunch of wdev
-locks just like that..). That's why other callers use __ version now.
+Please let me know if there any problems.
 
+The following changes since commit 39731b78b4afebb7501c05b68e2443a1b250b41c:
 
->> +     /* static variables avoid waste of stack size - this
->>        * function is called under RTNL lock, so this should not be a problem.
->>        */
->>       static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
->
-> Technically we could even just reuse family->attrs since we're also
-> under genl_lock :)
->
->> -     u8 radar_detect_width = 0;
->> +     struct net_device *dev = NULL;
->> +     struct wireless_dev *wdev;
->>       int err;
->>       bool need_new_beacon = false;
->>
->> -     if (!rdev->ops->channel_switch ||
->> -         !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
->> -             return -EOPNOTSUPP;
->> +     ASSERT_RTNL();
->> +
->> +     if (!attrs[NL80211_ATTR_IFINDEX])
->> +             return -EINVAL;
->
-> Hmm, shouldn't you use the ifindex from the csa_attrs? Or are you
-> requiring one to be in the outer data to identify the wiphy? But that
-> seems odd too, you can just get the wiphy in whatever way by asking the
-> pre_doit for that?
+  ath9k: simplify/fix tx packet TID handling (2013-12-19 14:41:57 -0500)
 
-I'm not sure I understand you.
+are available in the git repository at:
 
-There are two command variants now:
+  git://github.com/kvalo/ath.git for-linville
 
-1: the old one, which has ifindex in the root
-2: the new one, which has wiphy in the root, and an array of (1)
-within CH_SWITCH_IFACES (and each entry has ifindex at its root)
+for you to fetch changes up to 51ab1a0a09a894442e8b091d57222c5425b6d700:
 
+  ath10k: add set_bitrate_mask callback (2014-01-10 11:54:49 +0200)
 
->> +             nla_for_each_nested(attrs,
->> +                                 info->attrs[NL80211_ATTR_CH_SWITCH_IFACES],
->> +                                 tmp) {
->> +                     nla_parse(csa_attrs, NL80211_ATTR_MAX, nla_data(attrs),
->> +                               nla_len(attrs), nl80211_policy);
->
-> I think nla_parse() can fail, you should check that, otherwise there's
-> no full validity checking of the attributes contained in it I believe.
+----------------------------------------------------------------
+Bartosz Markowski (3):
+      ath10k: split the if_limits and if_comb
+      ath10k: introduce NO_P2P fw feature flag
+      ath10k: track number of existing peers
 
-Good point. I'll fix that.
+Janusz Dziedzic (3):
+      ath10k: handle TKIP MIC error correctly
+      ath10k: add DFS_CERTIFIED option
+      ath10k: add set_bitrate_mask callback
 
+Kalle Valo (4):
+      Merge remote-tracking branch 'wireless-next/master' into ath-next
+      ath10k: handle WMI debug print events
+      ath10k: add trace event for WMI_DEBUG_MESG_EVENTID
+      ath10k: add debugfs file to control firmware dbglog
 
-Michał
+Marek Puzyniak (1):
+      ath10k: disable STA kickout in FW
+
+Michal Kazior (2):
+      ath10k: fix WEP Shared authentication
+      ath10k: fix band reporting for mgmt CCK frames on 5GHz
+
+ drivers/net/wireless/ath/ath10k/Kconfig  |    7 +
+ drivers/net/wireless/ath/ath10k/core.h   |   11 +
+ drivers/net/wireless/ath/ath10k/debug.c  |   66 ++++++
+ drivers/net/wireless/ath/ath10k/htt.h    |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   15 ++
+ drivers/net/wireless/ath/ath10k/hw.h     |    1 +
+ drivers/net/wireless/ath/ath10k/mac.c    |  374 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/trace.h  |   21 ++
+ drivers/net/wireless/ath/ath10k/txrx.c   |    2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c    |  106 ++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h    |   61 +++++
+ 11 files changed, 642 insertions(+), 23 deletions(-)
+
+-- 
+Kalle Valo
