@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:65057 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbaAaJff (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58770 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752558AbaAMRnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 04:35:35 -0500
-Date: Fri, 31 Jan 2014 04:35:31 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zoran Markovic <zoran.markovic@linaro.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to power
- efficient workqueue
-Message-ID: <20140131093531.GA25559@mtj.dyndns.org> (sfid-20140131_103541_923401_90A479EB)
-References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
- <1391160084.4141.1.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391160084.4141.1.camel@jlt4.sipsolutions.net>
+	Mon, 13 Jan 2014 12:43:07 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v11 2/3] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_assign_beacon()
+Date: Mon, 13 Jan 2014 19:42:59 +0200
+Message-Id: <1389634980-12584-3-git-send-email-luca@coelho.fi> (sfid-20140113_184316_965226_28B2F634)
+In-Reply-To: <1389634980-12584-1-git-send-email-luca@coelho.fi>
+References: <1389634980-12584-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-On Fri, Jan 31, 2014 at 10:21:24AM +0100, Johannes Berg wrote:
-> I'm not sure if this is part of a larger patchset actually adding that
-> "system_power_efficient_wq", but maybe it'd be better to expose a
-> function as an API rather than the wq struct?
-> 
-> Something like
-> 
-> scheduled_delayed_work_pwr_efficient(...)?
+The return value of ieee80211_mesh_csa_beacon is not aligned with the
+return value of ieee80211_assign_beacon() and
+ieee80211_ibss_csa_beacon().  For consistency and to be able to use
+both functions with similar code, change ieee80211_mesh_csa_beacon()
+not to send the bss changed notification itself, but return what has
+changed so the caller can send the notification instead.
 
-While there are some benefits to using dedicated functions for
-specific workqueues, I don't think it brings enough benefits to
-justify adding dedicated API and am unlikely to add new ones.
+Tested by: Simon Wunderlich <sw@simonwunderlich.de>
+Acked by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/mesh.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Thanks.
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 319adf4..b421993 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1104,12 +1104,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		return ret;
+ 	}
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+-
+ 	if (csa_action)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	return 0;
++	return BSS_CHANGED_BEACON;
+ }
+ 
+ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
 -- 
-tejun
+1.8.5.2
+
