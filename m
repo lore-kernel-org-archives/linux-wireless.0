@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:40092 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbaATSsp (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:46918 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbaAMUW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 13:48:45 -0500
-Received: by mail-lb0-f173.google.com with SMTP id y6so5175239lbh.4
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 10:48:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8738kilhbx.fsf@kamboji.qca.qualcomm.com>
-References: <1390234821-4405-1-git-send-email-janusz.dziedzic@tieto.com>
-	<8738kilhbx.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 20 Jan 2014 19:48:44 +0100
-Message-ID: <CALhHN=pTEBd5P-weZSxSou3gQmb=wE4fAHTECU6oJ1PSMvfWoQ@mail.gmail.com> (sfid-20140120_194848_664578_A3E5C0B0)
-Subject: Re: [PATCH] ath10k: AP mode, set UAPSD params correctly
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 13 Jan 2014 15:22:28 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c41so800026eek.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:27 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/18] iwlwifi: mvm: don't use highest rate in VHT MCS Set
+Date: Mon, 13 Jan 2014 22:21:57 +0200
+Message-Id: <1389644517-22807-18-git-send-email-egrumbach@gmail.com> (sfid-20140113_213436_230735_7E5CAA93)
+In-Reply-To: <52D44A46.4000805@gmail.com>
+References: <52D44A46.4000805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 January 2014 17:59, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->
->> Move UAPSD params settings after peer assoc
->> command. This is required to setup UAPSD
->> params correctly.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
-> This is a pretty vague description. What is correct today can be totally
-> wrong tomorrow :)
->
-> So I would prefer that you describe a bit more about this change. At
-> least describe the bug you are fixing (or mention the motivation behind
-> the change).
+From: Eyal Shapira <eyal@wizery.com>
 
-ath10k handles UAPSD completly in the firmware.
-When works in AP mode we have to configure
-UAPSD params for each station. Without this
-patch we configure UAPSD params before we
-send peer assoc command to the FW, which was
-wrong. Next FW didn't know what should be trigger
-frame, couse UAPSD didn't work correctly in AP mode.
-To configure UAPSD params correctly we have to
-send them after peer assoc command.
+Keeping this as 0 is ok according to spec section 9.7.11
+as this means the limits are according to the Tx/Rx
+supported MCS x NSS bitmap. Initially we've set these as
+there were concerns of interop issues but these turned out
+to be false.
 
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-BR
-Janusz
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index 0c677b4..f06f4cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -289,9 +289,6 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
+ 
+-	/* Max rate for Long GI NSS=2 80Mhz is 780Mbps */
+-	vht_cap->vht_mcs.rx_highest = cpu_to_le16(780);
+-
+ 	if (num_ants == 1 ||
+ 	    cfg->rx_with_siso_diversity) {
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
+@@ -299,12 +296,9 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 		/* this works because NOT_SUPPORTED == 3 */
+ 		vht_cap->vht_mcs.rx_mcs_map |=
+ 			cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << 2);
+-		/* Max rate for Long GI NSS=1 80Mhz is 390Mbps */
+-		vht_cap->vht_mcs.rx_highest = cpu_to_le16(390);
+ 	}
+ 
+ 	vht_cap->vht_mcs.tx_mcs_map = vht_cap->vht_mcs.rx_mcs_map;
+-	vht_cap->vht_mcs.tx_highest = vht_cap->vht_mcs.rx_highest;
+ }
+ 
+ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+-- 
+1.7.9.5
+
