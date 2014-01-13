@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20337 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758302AbaAJWbA (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:64581 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416AbaAMMlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 17:31:00 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13] mwifiex: add missing endian conversion for fw_tsf
-Date: Fri, 10 Jan 2014 14:30:41 -0800
-Message-ID: <1389393041-23606-1-git-send-email-bzhao@marvell.com> (sfid-20140110_233108_916468_0F9F00C0)
+	Mon, 13 Jan 2014 07:41:51 -0500
+Received: by mail-we0-f170.google.com with SMTP id u57so6378418wes.15
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 04:41:50 -0800 (PST)
+Date: Mon, 13 Jan 2014 13:41:10 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+Message-ID: <20140113124049.GA5796@magnum.frso.rivierawaves.com> (sfid-20140113_134155_115414_6D8A4154)
+References: <52B0B72A.5070704@gmail.com>
+ <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+ <20140113111357.GA4611@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Mon, Jan 13, 2014 at 11:15:53AM +0000, Grumbach, Emmanuel wrote:
+> > >
+> > > FW still does not support power management on multiple MAC interfaces.
+> > > Currently the driver enforce this limitation by disabling PM if second
+> > > interface is added. Change this behavior to allow PM on a single
+> > > interface even if other interfaces exist but not bound to any specific PHY.
+> > > PM will be enabled if only one single interface is bound.
+> > >
+> > > Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+> > > Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+> > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > 
+> > Hi,
+> > 
+> > This broke monitor mode:
+> > (unsetting .power_update_binding does not hang)
+> > 
+> > modprobe iwlmvm
+> > iw dev wlan0 set type monitor
+> > iw dev wlan0 set freq 5180 40 5190  # hangs
+> > 
+> > Can you reproduce it easily or do you need me to post further dbg info ?
+> > 
+> 
+> We have an open bug on this internally - thanks for reporting.
 
-It is u64 data received from firmware. Little endian to cpu
-conversion is required here.
+OK, BTW I have errors like
+- "Microcode SW error detected." upon monitor up
+- "iwlwifi 0000:02:00.0: FW error in SYNC CMD TXPATH_FLUSH" sometimes
+after the subsequent ieee80211_restart_hw
+- "WARNING: ... iwlwifi/mvm/binding.c:201 iwl_mvm_binding_remove_vif"
+  when removing a monitor iface
 
-Cc: <stable@vger.kernel.org> # 3.5+
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+You must have seen those too. I will avoid this tree with iwlwifi then.
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 0ed0664..0a8a26e 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1681,7 +1681,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		const u8 *ie_buf;
- 		size_t ie_len;
- 		u16 channel = 0;
--		u64 fw_tsf = 0;
-+		__le64 fw_tsf = 0;
- 		u16 beacon_size = 0;
- 		u32 curr_bcn_bytes;
- 		u32 freq;
-@@ -1815,7 +1815,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					      ie_buf, ie_len, rssi, GFP_KERNEL);
- 				bss_priv = (struct mwifiex_bss_priv *)bss->priv;
- 				bss_priv->band = band;
--				bss_priv->fw_tsf = fw_tsf;
-+				bss_priv->fw_tsf = le64_to_cpu(fw_tsf);
- 				if (priv->media_connected &&
- 				    !memcmp(bssid,
- 					    priv->curr_bss_params.bss_descriptor
--- 
-1.8.2.3
-
+ 
+Karl
