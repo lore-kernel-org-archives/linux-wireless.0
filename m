@@ -1,81 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:42861 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978AbaAATVH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jan 2014 14:21:07 -0500
-Received: by mail-wg0-f52.google.com with SMTP id x13so11968851wgg.7
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jan 2014 11:21:05 -0800 (PST)
-Message-ID: <1388604040.29916.6.camel@canaries32-MCP7A> (sfid-20140101_202110_398524_46661057)
-Subject: [PATCH 2/2] staging: vt6656: CARDqGetNextTBTT replace code using
- do_div.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 01 Jan 2014 19:20:40 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mantis.wzyboy.im ([199.83.51.51]:35277 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751594AbaAMIvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 03:51:13 -0500
+Received: from mail-pb0-f46.google.com (mail-pb0-f46.google.com [209.85.160.46])
+	by mantis.wzyboy.im (Postfix) with ESMTPSA id E5D968812E
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 16:51:11 +0800 (CST)
+Received: by mail-pb0-f46.google.com with SMTP id ma3so1519188pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 00:51:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+ <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
+ <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
+ <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Mon, 13 Jan 2014 16:50:56 +0800
+Message-ID: <CALkVjQYSHb-dYckxeq2t4yj3DY8n=j-RrtrB53+ddJstS_qXUw@mail.gmail.com> (sfid-20140113_095116_934578_B8DC6256)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-uBeaconInterval becomes u32
+2014/1/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+> Are you sure about step 1 and 5?
+> It seems completely weird that an existing file with a line commented out have any impact.
+> Can you please send the output of:
+>         cat /sys/module/iwlmvm/parameters/power_scheme
+> in both cases.
+>
 
-get next TBTT value using vendor's equation as shown.
+Hi, the point is:
 
-This patch was checked against the original code
-and yields exactly the same value.
+* With "options iwlmvm power_scheme=1" -> everything's fine
+* Without "options iwlmvm power_scheme=1" -> network is bad
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/card.c | 30 +++++++++++-------------------
- 1 file changed, 11 insertions(+), 19 deletions(-)
+Absense of the modconf file and a modconf with only one comment line
+have the *same* effect - network is bad.
 
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index ce7ee45..0d87728 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -720,28 +720,20 @@ bool CARDbClearCurrentTSF(struct vnt_private *pDevice)
-  */
- u64 CARDqGetNextTBTT(u64 qwTSF, u16 wBeaconInterval)
- {
-+	u32 uBeaconInterval;
- 
--    unsigned int    uLowNextTBTT;
--    unsigned int    uHighRemain, uLowRemain;
--    unsigned int    uBeaconInterval;
-+	uBeaconInterval = wBeaconInterval * 1024;
- 
--    uBeaconInterval = wBeaconInterval * 1024;
--    // Next TBTT = ((local_current_TSF / beacon_interval) + 1 ) * beacon_interval
--	uLowNextTBTT = ((qwTSF & 0xffffffffULL) >> 10) << 10;
--	uLowRemain = (uLowNextTBTT) % uBeaconInterval;
--	uHighRemain = ((0x80000000 % uBeaconInterval) * 2 * (u32)(qwTSF >> 32))
--		% uBeaconInterval;
--	uLowRemain = (uHighRemain + uLowRemain) % uBeaconInterval;
--	uLowRemain = uBeaconInterval - uLowRemain;
--
--    // check if carry when add one beacon interval
--	if ((~uLowNextTBTT) < uLowRemain)
--		qwTSF = ((qwTSF >> 32) + 1) << 32;
--
--	qwTSF = (qwTSF & 0xffffffff00000000ULL) |
--		(u64)(uLowNextTBTT + uLowRemain);
-+	/* Next TBTT =
-+	*	((local_current_TSF / beacon_interval) + 1) * beacon_interval
-+	*/
-+	if (uBeaconInterval) {
-+		do_div(qwTSF, uBeaconInterval);
-+		qwTSF += 1;
-+		qwTSF *= uBeaconInterval;
-+	}
- 
--    return (qwTSF);
-+	return qwTSF;
- }
- 
- /*
+cat /sys/module/iwlmvm/parameters/power_scheme now returns 1, and the
+network is good.
+
+> Also - what code base are you using?
+
+What is "code base"...?
+
+> Since  this is surely not related to PCI, please remove them in your reply.
+> (I keep them here to have them see my mail :))
+
+Done. :-)
+
+
+
+English is not my native language so I checked if I misuse the phrase
+"comment out": http://english.stackexchange.com/questions/33483/when-i-say-comment-out-does-it-mean-to-uncomment-something-or-comment-it
+
+Seems not...
+
 -- 
-1.8.5.2
-
-
-
+wzyboy
