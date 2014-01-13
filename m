@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51877 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbaAXXhQ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42707 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbaAMPND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 18:37:16 -0500
-Message-ID: <1390606622.25802.0.camel@jlt4.sipsolutions.net> (sfid-20140125_003721_491679_D7355A09)
-Subject: Re: [RFC 3/5] cfg80211: add regulatory quiescing support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Jouni Malinen <j@w1.fi>, sunitb <sunitb@qca.qualcomm.com>,
-	rsunki <rsunki@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sat, 25 Jan 2014 00:37:02 +0100
-In-Reply-To: <CAB=NE6XOk+KYW7OyKpYvnDsxTtj7YcT1p=w49mC4tJuA5bAWcg@mail.gmail.com> (sfid-20140125_003610_311410_0BC460F7)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com>
-	 <1384377738.28806.15.camel@jlt4.sipsolutions.net>
-	 <20131114141105.GB19070@garbanzo.do-not-panic.com>
-	 <1384440286.13941.27.camel@jlt4.sipsolutions.net>
-	 <20131114151809.GB29954@garbanzo.do-not-panic.com>
-	 <1385395140.4443.28.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6XOk+KYW7OyKpYvnDsxTtj7YcT1p=w49mC4tJuA5bAWcg@mail.gmail.com>
-	 (sfid-20140125_003610_311410_0BC460F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 13 Jan 2014 10:13:03 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21204.319.492595.58625@gargle.gargle.HOWL> (sfid-20140113_161307_178543_9DD0353E)
+Date: Mon, 13 Jan 2014 20:37:43 +0530
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+In-Reply-To: <52D3F962.1010302@neratec.com>
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
+	<1384665016-12022-5-git-send-email-sujith@msujith.org>
+	<52CE934D.1020400@neratec.com>
+	<21198.40916.260973.48444@gargle.gargle.HOWL>
+	<52CEA5A3.2040308@neratec.com>
+	<21198.43395.235654.597422@gargle.gargle.HOWL>
+	<52CEAB24.5090700@neratec.com>
+	<52D3F962.1010302@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-24 at 15:35 -0800, Luis R. Rodriguez wrote:
-> On Mon, Nov 25, 2013 at 7:59 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > At least we should then also have that patch that QCA has somewhere
-> > about reporting to userspace that AP was stopped :P
+Wojciech Dubowik wrote:
+> I have done some tests with latest wireless testing and our own rf card. 
+> It seems
+> that 13-15dB is the difference between nominal NF(-115) and measured -101.
+> When device goes scanning and it returns back to the channel it 
+> "forgets" about
+> old noise histogram and sets it to default. Then all the packets will 
+> have wrong
+> rssi until next noise floor calibration occurs.
+> Below I have a log with custom printk to show the problem.
 
-FWIW, I did the above today.
+Is this how you see the issue ?
 
-johannes
+* In station mode, associate.
+* Run a scan.
+* When we come back to the operating channel, reported rssi
+  appears to be incorrect until a NF cal is done.
 
+Or is it something else ?
+
+SUjith
