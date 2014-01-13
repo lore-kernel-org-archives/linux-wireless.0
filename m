@@ -1,92 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:53745 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456AbaAHJdJ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:64600 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbaAMVUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:33:09 -0500
-Message-ID: <52CD1B52.5000101@broadcom.com> (sfid-20140108_103329_524464_2A857583)
-Date: Wed, 8 Jan 2014 10:33:06 +0100
+	Mon, 13 Jan 2014 16:20:41 -0500
 From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 6/8] brcmfmac: rename chip and core related structures
+Date: Mon, 13 Jan 2014 22:20:27 +0100
+Message-ID: <1389648029-23560-7-git-send-email-arend@broadcom.com> (sfid-20140113_222051_866851_48481ED3)
+In-Reply-To: <1389648029-23560-1-git-send-email-arend@broadcom.com>
+References: <1389648029-23560-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Chen-Yu Tsai <wens@csie.org>
-CC: linux-sunxi <linux-sunxi@googlegroups.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>,
-	<benn@cubietech.com>
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com>
-In-Reply-To: <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2014 10:23 AM, Chen-Yu Tsai wrote:
-> On Wed, Jan 8, 2014 at 4:56 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 12/27/2013 01:36 PM, Chen-Yu Tsai wrote:
->>>>>>> Working tree:
->>>>>>>
->>>>>>>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
->>>>>>>
->>>>>>> Comments welcome :)
->>>>>
->>>>> No comment, but: Nice work!
->>> Thanks. BTW, who should submit the patch? :)
->>
->> Hi Chen-Yu
->>
->> I will submit the patch today.
-> 
-> Great!
-> 
-> I added device tree support for brcmfmac SDIO devices,
-> to be able to specify external out-of-band interrupts.
-> Unfortunately it's not working. I get the following output:
-> 
-> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
-> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
-> brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -110
-> brcmfmac: brcmf_bus_start: failed: -110
-> brcmfmac: brcmf_sdbrcm_probe: dongle is not responding
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   54 ++++++++++----------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |   27 +++++-----
+ 3 files changed, 41 insertions(+), 42 deletions(-)
 
-This is typeical behaviour when interrupt is not picked up.
-
-> brcmfmac: brcmf_sdio_probe: device attach failed
-> brcmfmac: brcmf_ops_sdio_probe: F2 error, probe failed -19...
-> 
-> Should we add device tree support for the brcmf platform driver,
-> so we can enable power, clocks, etc. before the SDIO driver is probed?
-
-How does the device-tree change for oob interrupt look like.
-
-> Not sure if this is the right way. Maxime mentioned on IRC that some
-> mmc host drivers take a vmmc regulator property.
-> 
-> Currently I am using rfkill-gpio to do this. But brcmfmac also
-> registers an rfkill of its own.
-
-Not sure what you mean here. The only thing I am aware of is that
-cfg80211 registers brcmfmac as wifi transmitter in the rfkill framework,
-which is unrelated to gpio's.
-
-> Also, I have bluetooth working. Turns out it was a wrong pinctrl
-> setting in my dt. For those who want to try:
-> 
->   Get and compile brcm_patchram_plus from
->   http://code.google.com/p/broadcom-bluetooth/
-> 
->   Run brcm_patchram_plus --patchram bcm20710a1.hcd --no2bytes /dev/ttyS1
->   and hciattach /dev/ttyS1
-> 
->   If brcm_patchram_plus hangs, you may need to reset the controller
->   by blocking then unblocking the bluetooth rfkill switch.
-> 
-> I pushed all my work out already. Here's the link again:
-> 
->   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
-
-I will take a look.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index b9d5f73..ef24a1b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -369,7 +369,7 @@ struct brcmf_sdio_hdrinfo {
+ /* Private data for SDIO bus interaction */
+ struct brcmf_sdio {
+ 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
+-	struct chip_info *ci;	/* Chip info struct */
++	struct brcmf_chip *ci;	/* Chip info struct */
+ 
+ 	u32 ramsize;		/* Size of RAM in SOCRAM (bytes) */
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index fb2f918..70bfeb86 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -111,7 +111,7 @@ static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
+ };
+ 
+ u8
+-brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid)
++brcmf_sdio_chip_getinfidx(struct brcmf_chip *ci, u16 coreid)
+ {
+ 	u8 idx;
+ 
+@@ -124,7 +124,7 @@ brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid)
+ 
+ static u32
+ brcmf_sdio_sb_corerev(struct brcmf_sdio_dev *sdiodev,
+-		      struct chip_info *ci, u16 coreid)
++		      struct brcmf_chip *ci, u16 coreid)
+ {
+ 	u32 regdata;
+ 	u8 idx;
+@@ -139,7 +139,7 @@ brcmf_sdio_sb_corerev(struct brcmf_sdio_dev *sdiodev,
+ 
+ static u32
+ brcmf_sdio_ai_corerev(struct brcmf_sdio_dev *sdiodev,
+-		      struct chip_info *ci, u16 coreid)
++		      struct brcmf_chip *ci, u16 coreid)
+ {
+ 	u8 idx;
+ 
+@@ -150,7 +150,7 @@ brcmf_sdio_ai_corerev(struct brcmf_sdio_dev *sdiodev,
+ 
+ static bool
+ brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
+-		       struct chip_info *ci, u16 coreid)
++		       struct brcmf_chip *ci, u16 coreid)
+ {
+ 	u32 regdata;
+ 	u8 idx;
+@@ -169,7 +169,7 @@ brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
+ 
+ static bool
+ brcmf_sdio_ai_iscoreup(struct brcmf_sdio_dev *sdiodev,
+-		       struct chip_info *ci, u16 coreid)
++		       struct brcmf_chip *ci, u16 coreid)
+ {
+ 	u32 regdata;
+ 	u8 idx;
+@@ -193,7 +193,7 @@ brcmf_sdio_ai_iscoreup(struct brcmf_sdio_dev *sdiodev,
+ 
+ static void
+ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
+-			  struct chip_info *ci, u16 coreid, u32 pre_resetbits,
++			  struct brcmf_chip *ci, u16 coreid, u32 pre_resetbits,
+ 			  u32 in_resetbits)
+ {
+ 	u32 regdata, base;
+@@ -280,7 +280,7 @@ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
+ 
+ static void
+ brcmf_sdio_ai_coredisable(struct brcmf_sdio_dev *sdiodev,
+-			  struct chip_info *ci, u16 coreid, u32 pre_resetbits,
++			  struct brcmf_chip *ci, u16 coreid, u32 pre_resetbits,
+ 			  u32 in_resetbits)
+ {
+ 	u8 idx;
+@@ -320,7 +320,7 @@ brcmf_sdio_ai_coredisable(struct brcmf_sdio_dev *sdiodev,
+ 
+ static void
+ brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
+-			struct chip_info *ci, u16 coreid,  u32 pre_resetbits,
++			struct brcmf_chip *ci, u16 coreid,  u32 pre_resetbits,
+ 			u32 in_resetbits, u32 post_resetbits)
+ {
+ 	u32 regdata;
+@@ -388,7 +388,7 @@ brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 
+ static void
+ brcmf_sdio_ai_resetcore(struct brcmf_sdio_dev *sdiodev,
+-			struct chip_info *ci, u16 coreid, u32 pre_resetbits,
++			struct brcmf_chip *ci, u16 coreid, u32 pre_resetbits,
+ 			u32 in_resetbits, u32 post_resetbits)
+ {
+ 	u8 idx;
+@@ -418,7 +418,7 @@ brcmf_sdio_ai_resetcore(struct brcmf_sdio_dev *sdiodev,
+ 
+ #ifdef DEBUG
+ /* safety check for chipinfo */
+-static int brcmf_sdio_chip_cichk(struct chip_info *ci)
++static int brcmf_sdio_chip_cichk(struct brcmf_chip *ci)
+ {
+ 	u8 core_idx;
+ 
+@@ -445,14 +445,14 @@ static int brcmf_sdio_chip_cichk(struct chip_info *ci)
+ 	return 0;
+ }
+ #else	/* DEBUG */
+-static inline int brcmf_sdio_chip_cichk(struct chip_info *ci)
++static inline int brcmf_sdio_chip_cichk(struct brcmf_chip *ci)
+ {
+ 	return 0;
+ }
+ #endif
+ 
+ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+-				       struct chip_info *ci)
++				       struct brcmf_chip *ci)
+ {
+ 	u32 regdata;
+ 	u32 socitype;
+@@ -701,7 +701,7 @@ brcmf_sdio_chip_buscoreprep(struct brcmf_sdio_dev *sdiodev)
+ 
+ static void
+ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+-			     struct chip_info *ci)
++			     struct brcmf_chip *ci)
+ {
+ 	u32 base = ci->c_inf[0].base;
+ 
+@@ -736,15 +736,14 @@ brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
+ }
+ 
+ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+-			   struct chip_info **ci_ptr)
++			   struct brcmf_chip **ci_ptr)
+ {
+ 	int ret;
+-	struct chip_info *ci;
++	struct brcmf_chip *ci;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	/* alloc chip_info_t */
+-	ci = kzalloc(sizeof(struct chip_info), GFP_ATOMIC);
++	ci = kzalloc(sizeof(*ci), GFP_ATOMIC);
+ 	if (!ci)
+ 		return -ENOMEM;
+ 
+@@ -772,7 +771,7 @@ err:
+ }
+ 
+ void
+-brcmf_sdio_chip_detach(struct chip_info **ci_ptr)
++brcmf_sdio_chip_detach(struct brcmf_chip **ci_ptr)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -791,7 +790,7 @@ static char *brcmf_sdio_chip_name(uint chipid, char *buf, uint len)
+ 
+ void
+ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+-				  struct chip_info *ci, u32 drivestrength)
++				  struct brcmf_chip *ci, u32 drivestrength)
+ {
+ 	const struct sdiod_drive_str *str_tab = NULL;
+ 	u32 str_mask;
+@@ -863,7 +862,7 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+ 
+ static void
+ brcmf_sdio_chip_cm3_enterdl(struct brcmf_sdio_dev *sdiodev,
+-			    struct chip_info *ci)
++			    struct brcmf_chip *ci)
+ {
+ 	ci->coredisable(sdiodev, ci, BCMA_CORE_ARM_CM3, 0, 0);
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_80211,
+@@ -872,8 +871,8 @@ brcmf_sdio_chip_cm3_enterdl(struct brcmf_sdio_dev *sdiodev,
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_INTERNAL_MEM, 0, 0, 0);
+ }
+ 
+-static bool
+-brcmf_sdio_chip_cm3_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci)
++static bool brcmf_sdio_chip_cm3_exitdl(struct brcmf_sdio_dev *sdiodev,
++				       struct brcmf_chip *ci)
+ {
+ 	u8 core_idx;
+ 	u32 reg_addr;
+@@ -896,7 +895,7 @@ brcmf_sdio_chip_cm3_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci)
+ 
+ static inline void
+ brcmf_sdio_chip_cr4_enterdl(struct brcmf_sdio_dev *sdiodev,
+-			    struct chip_info *ci)
++			    struct brcmf_chip *ci)
+ {
+ 	u8 idx;
+ 	u32 regdata;
+@@ -917,9 +916,8 @@ brcmf_sdio_chip_cr4_enterdl(struct brcmf_sdio_dev *sdiodev,
+ 		      BCMA_IOCTL_80211_PHYCLOCKEN, BCMA_IOCTL_80211_PHYCLOCKEN);
+ }
+ 
+-static bool
+-brcmf_sdio_chip_cr4_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
+-			   u32 rstvec)
++static bool brcmf_sdio_chip_cr4_exitdl(struct brcmf_sdio_dev *sdiodev,
++				       struct brcmf_chip *ci, u32 rstvec)
+ {
+ 	u8 core_idx;
+ 	u32 reg_addr;
+@@ -942,7 +940,7 @@ brcmf_sdio_chip_cr4_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
+ }
+ 
+ void brcmf_sdio_chip_enter_download(struct brcmf_sdio_dev *sdiodev,
+-				    struct chip_info *ci)
++				    struct brcmf_chip *ci)
+ {
+ 	u8 arm_core_idx;
+ 
+@@ -956,7 +954,7 @@ void brcmf_sdio_chip_enter_download(struct brcmf_sdio_dev *sdiodev,
+ }
+ 
+ bool brcmf_sdio_chip_exit_download(struct brcmf_sdio_dev *sdiodev,
+-				   struct chip_info *ci, u32 rstvec)
++				   struct brcmf_chip *ci, u32 rstvec)
+ {
+ 	u8 arm_core_idx;
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index a1aadf4..fb06143 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -54,7 +54,7 @@
+ 
+ #define BRCMF_MAX_CORENUM	6
+ 
+-struct chip_core_info {
++struct brcmf_core {
+ 	u16 id;
+ 	u16 rev;
+ 	u32 base;
+@@ -63,27 +63,27 @@ struct chip_core_info {
+ 	u32 cib;
+ };
+ 
+-struct chip_info {
++struct brcmf_chip {
+ 	u32 chip;
+ 	u32 chiprev;
+ 	/* core info */
+ 	/* always put chipcommon core at 0, bus core at 1 */
+-	struct chip_core_info c_inf[BRCMF_MAX_CORENUM];
++	struct brcmf_core c_inf[BRCMF_MAX_CORENUM];
+ 	u32 pmurev;
+ 	u32 pmucaps;
+ 	u32 ramsize;
+ 	u32 rambase;
+ 	u32 rst_vec;	/* reset vertor for ARM CR4 core */
+ 
+-	bool (*iscoreup)(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
++	bool (*iscoreup)(struct brcmf_sdio_dev *sdiodev, struct brcmf_chip *ci,
+ 			 u16 coreid);
+-	u32 (*corerev)(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci,
++	u32 (*corerev)(struct brcmf_sdio_dev *sdiodev, struct brcmf_chip *ci,
+ 			 u16 coreid);
+ 	void (*coredisable)(struct brcmf_sdio_dev *sdiodev,
+-			struct chip_info *ci, u16 coreid, u32 pre_resetbits,
++			struct brcmf_chip *ci, u16 coreid, u32 pre_resetbits,
+ 			u32 in_resetbits);
+ 	void (*resetcore)(struct brcmf_sdio_dev *sdiodev,
+-			struct chip_info *ci, u16 coreid, u32 pre_resetbits,
++			struct brcmf_chip *ci, u16 coreid, u32 pre_resetbits,
+ 			u32 in_resetbits, u32 post_resetbits);
+ };
+ 
+@@ -217,14 +217,15 @@ struct sdpcmd_regs {
+ };
+ 
+ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
+-			   struct chip_info **ci_ptr);
+-void brcmf_sdio_chip_detach(struct chip_info **ci_ptr);
++			   struct brcmf_chip **ci_ptr);
++void brcmf_sdio_chip_detach(struct brcmf_chip **ci_ptr);
+ void brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+-				       struct chip_info *ci, u32 drivestrength);
+-u8 brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid);
++				       struct brcmf_chip *ci,
++				       u32 drivestrength);
++u8 brcmf_sdio_chip_getinfidx(struct brcmf_chip *ci, u16 coreid);
+ void brcmf_sdio_chip_enter_download(struct brcmf_sdio_dev *sdiodev,
+-				    struct chip_info *ci);
++				    struct brcmf_chip *ci);
+ bool brcmf_sdio_chip_exit_download(struct brcmf_sdio_dev *sdiodev,
+-				   struct chip_info *ci, u32 rstvec);
++				   struct brcmf_chip *ci, u32 rstvec);
+ 
+ #endif		/* _BRCMFMAC_SDIO_CHIP_H_ */
+-- 
+1.7.10.4
 
