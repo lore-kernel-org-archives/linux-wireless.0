@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59828 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbaAJMvP (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:49695 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbaAMUWT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 07:51:15 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 13 Jan 2014 15:22:19 -0500
+Received: by mail-ee0-f44.google.com with SMTP id c13so418155eek.17
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:19 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/13] mac80211_hwsim: clean up netlink exit code
-Date: Fri, 10 Jan 2014 13:50:58 +0100
-Message-Id: <1389358270-20901-2-git-send-email-johannes@sipsolutions.net> (sfid-20140110_135121_996747_9E1E3B32)
-In-Reply-To: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
-References: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/18] iwlwifi: mvm: reset Thermal Throttling's SMPS request upon disassociation
+Date: Mon, 13 Jan 2014 22:21:52 +0200
+Message-Id: <1389644517-22807-13-git-send-email-egrumbach@gmail.com> (sfid-20140113_212227_501399_B33D7E62)
+In-Reply-To: <52D44A46.4000805@gmail.com>
+References: <52D44A46.4000805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-There's no need to print a message, and genl_unregister_family()
-can't really fail so remove the error message there as well.
+The request of SMPS issued by the Thermal Throttling code
+was not reset when we disassociated - fix that.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 59c65c3..03d7b1d 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2180,20 +2180,14 @@ failure:
- 
- static void hwsim_exit_netlink(void)
- {
--	int ret;
--
- 	/* userspace test API hasn't been adjusted for multi-channel */
- 	if (channels > 1)
- 		return;
- 
--	printk(KERN_INFO "mac80211_hwsim: closing netlink\n");
- 	/* unregister the notifier */
- 	netlink_unregister_notifier(&hwsim_netlink_notifier);
- 	/* unregister the family */
--	ret = genl_unregister_family(&hwsim_genl_family);
--	if (ret)
--		printk(KERN_DEBUG "mac80211_hwsim: "
--		       "unregister family %i\n", ret);
-+	genl_unregister_family(&hwsim_genl_family);
- }
- 
- static const struct ieee80211_iface_limit hwsim_if_limits[] = {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 797b4d9..e843080 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -944,6 +944,8 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 				IWL_ERR(mvm, "failed to update power mode\n");
+ 		}
+ 		iwl_mvm_bt_coex_vif_change(mvm);
++		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_TT,
++				    IEEE80211_SMPS_AUTOMATIC);
+ 	} else if (changes & BSS_CHANGED_BEACON_INFO) {
+ 		/*
+ 		 * We received a beacon _after_ association so
 -- 
-1.8.5.1
+1.7.9.5
 
