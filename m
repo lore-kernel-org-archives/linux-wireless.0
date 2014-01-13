@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:51271 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750903AbaAYAJf (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:42229 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbaAMUWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 19:09:35 -0500
-Date: Fri, 24 Jan 2014 16:09:29 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sebastian Reichel <sre@ring0.de>, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org
-Subject: Re: [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140125000929.GD25488@atomide.com> (sfid-20140125_010939_952419_62319C36)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
- <20140106225709.GA23070@earth.universe>
- <20140117014514.GA604@earth.universe>
- <20140117150127.GA15145@tuxdriver.com>
- <20140117174415.GG7993@atomide.com>
- <20140117192204.GB15145@tuxdriver.com>
- <20140118174705.GE7235@atomide.com>
- <20140124215321.GA25727@earth.universe>
- <20140124235656.GM4309@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140124235656.GM4309@tuxdriver.com>
+	Mon, 13 Jan 2014 15:22:07 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so3576426eaj.12
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:06 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/18] iwlwifi: mvm: fix missing cleanup in .start() error path
+Date: Mon, 13 Jan 2014 22:21:42 +0200
+Message-Id: <1389644517-22807-3-git-send-email-egrumbach@gmail.com> (sfid-20140113_212217_044265_BD47FA79)
+In-Reply-To: <52D44A46.4000805@gmail.com>
+References: <52D44A46.4000805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [140124 16:03]:
-> On Fri, Jan 24, 2014 at 10:53:22PM +0100, Sebastian Reichel wrote:
-> > On Sat, Jan 18, 2014 at 09:47:06AM -0800, Tony Lindgren wrote:
-> > > [...]
-> > > 
-> > > The reason was for keeping things building and git bisect working.
-> > > 
-> > > I do have wl1251-pdata-signed as the base for branch
-> > > omap-for-v3.14/omap3-board-removal. However the board removal was
-> > > considered too early for v3.14, so that's been postponed. This is
-> > > because people are still updating their systems to device tree
-> > > based booting. So I can redo my omap-for-v3.14/omap3-board-removal
-> > > against v3.14.
-> > > 
-> > > So if you want to, feel free to pick all the wl12xx patches to your
-> > > wireless tree. AFAIK my omap-for-v3.14/omap3-board-removal is the
-> > > only other user for those patches, and that I can redo that on
-> > > v3.14.
-> > > 
-> > > So for the arch/arm/*omap* touching patches, feel free to add:
-> > > 
-> > > Acked-by: Tony Lindgren <tony@atomide.com>
-> > 
-> > Another ping. If this does not go into 3.14 via wireless tree
-> > it will become complicated for 3.15 again.
-> 
-> It's too late for new networking features in 3.14.  Why wouldn't Tony
-> send it via his tree?
+From: Eliad Peller <eliadx.peller@intel.com>
 
-It's mostly drivers/net/wireless related to patch the wl12xx driver
-further.
+Cleanup of iwl_mvm_leds was missing in case of error,
+resulting in the following warning:
+
+WARNING: at lib/kobject.c:196 kobject_add_internal+0x1f4/0x210()
+kobject_add_internal failed for phy0-led with -EEXIST, don't try to register things with the same name in the same directory.
+
+which prevents further reloads of the driver.
+
+Cc: stable@vger.kernel.org [3.10+]
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 552c76a..2437a06 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -472,6 +472,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
  
-> At any rate, I don't have the patches.  If you still want them through
-> the wireless tree (for 3.15) then you'll need to resend them.
+  out_unregister:
+ 	ieee80211_unregister_hw(mvm->hw);
++	iwl_mvm_leds_exit(mvm);
+  out_free:
+ 	iwl_phy_db_free(mvm->phy_db);
+ 	kfree(mvm->scan_cmd);
+-- 
+1.7.9.5
 
-Sebastian, please resend the whole series to John and feel free
-to add my acks. It's best that John picks them all up, otherwise
-we'll have the same issue for v3.15. It seems that we should have
-just taken the merge conflict rather than going back and forth
-with this.
-
-Cheers,
-
-Tony
