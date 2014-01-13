@@ -1,170 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:43485 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755322AbaAHCy6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:54:58 -0500
-Message-ID: <52CCBDE2.6010506@huawei.com> (sfid-20140108_035625_703854_6D0F306F)
-Date: Wed, 8 Jan 2014 10:54:26 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
+Received: from mga02.intel.com ([134.134.136.20]:11659 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbaAMI0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 03:26:15 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Mon, 13 Jan 2014 08:26:09 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com> (sfid-20140113_092620_090504_E49649B7)
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com>
+ <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+ <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
+ <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
+ <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com>
+In-Reply-To: <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.6 19/19] wireless: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal or
-ether_addr_equal_unaligned instead of memcmp.
-
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/net/wireless/adm8211.c                | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 7 +++----
- drivers/net/wireless/hostap/hostap_80211_rx.c | 8 ++++----
- drivers/net/wireless/prism54/isl_ioctl.c      | 3 ++-
- drivers/net/wireless/ti/wl1251/main.c         | 2 +-
- drivers/net/wireless/wl3501_cs.c              | 4 ++--
- 6 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index cfce83e..1d40c69 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1314,7 +1314,7 @@ static void adm8211_bss_info_changed(struct ieee80211_hw *dev,
- 	if (!(changes & BSS_CHANGED_BSSID))
- 		return;
- 
--	if (memcmp(conf->bssid, priv->bssid, ETH_ALEN)) {
-+	if (!ether_addr_equal(conf->bssid, priv->bssid)) {
- 		adm8211_set_bssid(dev, conf->bssid);
- 		memcpy(priv->bssid, conf->bssid, ETH_ALEN);
- 	}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index d318036..185af8a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1243,7 +1243,7 @@ bool brcmf_p2p_scan_finding_common_channel(struct brcmf_cfg80211_info *cfg,
- 					    IEEE80211_P2P_ATTR_DEVICE_ID,
- 					    p2p_dev_addr, sizeof(p2p_dev_addr));
- 	if ((err >= 0) &&
--	    (!memcmp(p2p_dev_addr, afx_hdl->tx_dst_addr, ETH_ALEN))) {
-+	    (ether_addr_equal(p2p_dev_addr, afx_hdl->tx_dst_addr))) {
- 		if (!bi->ctl_ch) {
- 			ch.chspec = le16_to_cpu(bi->chanspec);
- 			cfg->d11inf.decchspec(&ch);
-@@ -1380,8 +1380,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 		    (brcmf_p2p_gon_req_collision(p2p, (u8 *)e->addr))) {
- 			if (test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
- 				     &p2p->status) &&
--			    (memcmp(afx_hdl->tx_dst_addr, e->addr,
--				    ETH_ALEN) == 0)) {
-+			    (ether_addr_equal(afx_hdl->tx_dst_addr, e->addr))) {
- 				afx_hdl->peer_chan = ch.chnum;
- 				brcmf_dbg(INFO, "GON request: Peer found, channel=%d\n",
- 					  afx_hdl->peer_chan);
-@@ -1865,7 +1864,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	cfg->d11inf.decchspec(&ch);
- 
- 	if (test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL, &p2p->status) &&
--	    (memcmp(afx_hdl->tx_dst_addr, e->addr, ETH_ALEN) == 0)) {
-+	    (ether_addr_equal(afx_hdl->tx_dst_addr, e->addr))) {
- 		afx_hdl->peer_chan = ch.chnum;
- 		brcmf_dbg(INFO, "PROBE REQUEST: Peer found, channel=%d\n",
- 			  afx_hdl->peer_chan);
-diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
-index d39e3e2..599f30f 100644
---- a/drivers/net/wireless/hostap/hostap_80211_rx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
-@@ -563,7 +563,7 @@ hostap_rx_frame_wds(local_info_t *local, struct ieee80211_hdr *hdr, u16 fc,
- 
- 	/* Possible WDS frame: either IEEE 802.11 compliant (if FromDS)
- 	 * or own non-standard frame with 4th address after payload */
--	if (memcmp(hdr->addr1, local->dev->dev_addr, ETH_ALEN) != 0 &&
-+	if (!ether_addr_equal(hdr->addr1, local->dev->dev_addr) &&
- 	    (hdr->addr1[0] != 0xff || hdr->addr1[1] != 0xff ||
- 	     hdr->addr1[2] != 0xff || hdr->addr1[3] != 0xff ||
- 	     hdr->addr1[4] != 0xff || hdr->addr1[5] != 0xff)) {
-@@ -622,12 +622,12 @@ static int hostap_is_eapol_frame(local_info_t *local, struct sk_buff *skb)
- 	/* check that the frame is unicast frame to us */
- 	if ((fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
- 	    IEEE80211_FCTL_TODS &&
--	    memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0 &&
--	    memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN) == 0) {
-+	    ether_addr_equal(hdr->addr1, dev->dev_addr) &&
-+	    ether_addr_equal(hdr->addr3, dev->dev_addr)) {
- 		/* ToDS frame with own addr BSSID and DA */
- 	} else if ((fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
- 		   IEEE80211_FCTL_FROMDS &&
--		   memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
-+		   ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 		/* FromDS frame with own addr as DA */
- 	} else
- 		return 0;
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index df784fe..78fa64d 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -24,6 +24,7 @@
- #include <linux/if_arp.h>
- #include <linux/slab.h>
- #include <linux/pci.h>
-+#include <linux/etherdevice.h>
- 
- #include <asm/uaccess.h>
- 
-@@ -1860,7 +1861,7 @@ prism54_del_mac(struct net_device *ndev, struct iw_request_info *info,
- 	if (mutex_lock_interruptible(&acl->lock))
- 		return -ERESTARTSYS;
- 	list_for_each_entry(entry, &acl->mac_list, _list) {
--		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(entry->addr, addr->sa_data)) {
- 			list_del(&entry->_list);
- 			acl->size--;
- 			kfree(entry);
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 3291ffa..b8a360b 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -521,7 +521,7 @@ static int wl1251_op_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	if (memcmp(wl->mac_addr, vif->addr, ETH_ALEN)) {
-+	if (!ether_addr_equal_unaligned(wl->mac_addr, vif->addr)) {
- 		memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
- 		SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
- 		ret = wl1251_acx_station_id(wl);
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index 38d2089..1477d7f 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -44,6 +44,7 @@
- #include <linux/string.h>
- #include <linux/wireless.h>
- #include <linux/ieee80211.h>
-+#include <linux/etherdevice.h>
- 
- #include <net/iw_handler.h>
- 
-@@ -673,8 +674,7 @@ static void wl3501_mgmt_scan_confirm(struct wl3501_card *this, u16 addr)
- 				matchflag = 1;
- 			if (matchflag) {
- 				for (i = 0; i < this->bss_cnt; i++) {
--					if (!memcmp(this->bss_set[i].bssid,
--						    sig.bssid, ETH_ALEN)) {
-+					if (ether_addr_equal_unaligned(this->bss_set[i].bssid, sig.bssid)) {
- 						matchflag = 0;
- 						break;
- 					}
--- 
-1.8.0
-
-
+PiBIaSwNCj4gDQo+IEkgYW0gc29ycnkgYnV0IGhlcmUgaXMgYmFkIG5ld3MuDQo+IA0KPiBEdXJp
+bmcgcHJldmlvdXMgZGVidWdnaW5nIHByb2Nlc3MsIEkgaGF2ZSBhIG1vZGNvbmYgZmlsZQ0KPiAv
+ZXRjL21vZHByb2JlLmQvaXdsd2lmaS5jb25mLCBjb250YWluaW5nICJvcHRpb25zIGl3bG12bQ0K
+PiBwb3dlcl9zY2hlbWU9MSIuIEkgcmVtb3ZlZCBpdCBqdXN0IG5vdyAoRW1tYW51ZWwgc2F5cyBJ
+IGNhbiByZW1vdmUgaXQNCj4gbm93KSBhbmQgZW5jb3VudGVyZWQgKG1heWJlKSBuZXcgYnVncy4g
+SGVyZSBpcyB3aGF0IEkgZGlkIGp1c3Qgbm93Og0KPiANCj4gMC4gQ3VycmVudCBrZXJuZWw6IHBh
+dGNoZWQgd2l0aA0KPiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvYXR0YWNobWVudC5jZ2k/
+aWQ9MTIxNjcxJmFjdGlvbj1kaWZmIDsNCj4gc2V0cGNpIHRyaWNrOiBub25lIDsgTklDIHN0YXR1
+czogd29ya3MgbmljZSBhZnRlciB+MTYgaG91cnMgaGVhdnkNCj4gdXNhZ2UuDQo+IDEuIERlbGV0
+ZSB0aGF0IG1vZGNvbmYgZmlsZSwgcmVib290Lg0KPiAyLiBOZXR3b3JrIGNvbm5lY3Rpb24gYmVj
+b21lcyBwYWluZnVsbHkgbGFnZ3kgYW5kIGxvc3N5Lg0KPiAzLiBSZS1jcmVhdGUgdGhhdCBtb2Rj
+b25mIGZpbGUsIHJlYm9vdC4NCj4gNC4gTmV0d29yayBjb25uZWN0aW9uIHdvcmtzIGZpbmUuDQo+
+IDUuIENvbW1lbnQgb3V0IHRoYXQgbGluZSwgcmVib290Lg0KPiA2LiBOZXR3b3JrIGNvbm5lY3Rp
+b24gYmVjb21lcyBwYWluZnVsbHkgbGFnZ3kgYW5kIGxvc3N5Lg0KPiA3LiBVbmNvbW1lbnQgdGhh
+dCBsaW5lLCByZWJvb3QuDQo+IDguIE5ldHdvcmsgY29ubmVjdGlvbiB3b3JrcyBmaW5lLg0KPiAN
+Cj4gV2hhdCBJIG1lYW4gInBhaW5mdWxseSBsYWdneSBhbmQgbG9zc3kiIGlzIHRoYXQsIHRvIHdo
+b21ldmVyIEkgInBpbmciDQo+IChHb29nbGUsIDguOC44LjgsIGxvY2FsIEROUyBzZXJ2ZXIuLi4p
+LCB0aGUgUlRUIGlzIHJhdGhlciBoaWdoIHRoYW4NCj4gbm9ybWFsLCBhbmQgcGFja2V0IGxvc3Mg
+cmF0ZSBpcyBhYm92ZSA5MCUgKHNvbWUgYWRkcmVzc2VzIDEwMCUgbG9zcykuDQo+IFdoaWxlIGF0
+IHRoZSBzYW1lIHRpbWUsIG90aGVyIG5ldHdvcmsgZGV2aWNlIGluIHRoZSBzYW1lIExBTiB3b3Jr
+cw0KPiBmaW5lLg0KPiANCj4gSSd2ZSBhdHRhY2hlZCBkbWVzZyBhbmQgbHNwY2kgb3V0cHV0IGF0
+IHN0ZXAgNiBhbmQgOC4NCj4gDQoNCkFyZSB5b3Ugc3VyZSBhYm91dCBzdGVwIDEgYW5kIDU/DQpJ
+dCBzZWVtcyBjb21wbGV0ZWx5IHdlaXJkIHRoYXQgYW4gZXhpc3RpbmcgZmlsZSB3aXRoIGEgbGlu
+ZSBjb21tZW50ZWQgb3V0IGhhdmUgYW55IGltcGFjdC4NCkNhbiB5b3UgcGxlYXNlIHNlbmQgdGhl
+IG91dHB1dCBvZjoNCgljYXQgL3N5cy9tb2R1bGUvaXdsbXZtL3BhcmFtZXRlcnMvcG93ZXJfc2No
+ZW1lDQppbiBib3RoIGNhc2VzLg0KDQpBbHNvIC0gd2hhdCBjb2RlIGJhc2UgYXJlIHlvdSB1c2lu
+Zz8NClNpbmNlICB0aGlzIGlzIHN1cmVseSBub3QgcmVsYXRlZCB0byBQQ0ksIHBsZWFzZSByZW1v
+dmUgdGhlbSBpbiB5b3VyIHJlcGx5Lg0KKEkga2VlcCB0aGVtIGhlcmUgdG8gaGF2ZSB0aGVtIHNl
+ZSBteSBtYWlsIDopKQ0K
