@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:33223 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753349AbaATOZo (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53500 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbaAMXlg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 09:25:44 -0500
-Received: by mail-ea0-f173.google.com with SMTP id d10so350245eaj.18
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:41 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/7] mac80211: fix sdata->radar_required locking
-Date: Mon, 20 Jan 2014 15:21:07 +0100
-Message-Id: <1390227670-19030-5-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152555_016316_1A177AB8)
-In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 13 Jan 2014 18:41:36 -0500
+Date: Mon, 13 Jan 2014 15:42:12 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/6] staging: vt6656:  sparse fixes: device_get_stats
+Message-ID: <20140113234212.GA3066@kroah.com> (sfid-20140114_004148_045083_66BC9F68)
+References: <1389629930.2590.1.camel@canaries32-MCP7A>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389629930.2590.1.camel@canaries32-MCP7A>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-radar_required setting wasn't protected by
-local->mtx in some places. This should prevent
-from scanning/radar detection/roc colliding.
+On Mon, Jan 13, 2014 at 04:18:50PM +0000, Malcolm Priestley wrote:
+> sparse warning
+> main_usb.c:1442:44: warning: cast removes address space of expression
+> 
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> ---
+>  drivers/staging/vt6656/main_usb.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+> index 4cb7aa7..59c2430 100644
+> --- a/drivers/staging/vt6656/main_usb.c
+> +++ b/drivers/staging/vt6656/main_usb.c
+> @@ -1418,8 +1418,9 @@ static void device_set_multi(struct net_device *dev)
+>  static struct net_device_stats *device_get_stats(struct net_device *dev)
+>  {
+>  	struct vnt_private *pDevice = netdev_priv(dev);
+> +	struct net_device_stats *stats = &pDevice->stats;
+>  
+> -	return &pDevice->stats;
+> +	return stats;
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c  | 4 ++--
- net/mac80211/ibss.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+This change makes no sense to me.  Why is sparse complaining about this?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 76fe1f90..ddb1c4d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -970,9 +970,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	/* TODO: make hostapd tell us what it wants */
- 	sdata->smps_mode = IEEE80211_SMPS_OFF;
- 	sdata->needed_rx_chains = sdata->local->rx_chains;
--	sdata->radar_required = params->radar_required;
- 
- 	mutex_lock(&local->mtx);
-+	sdata->radar_required = params->radar_required;
- 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
- 					IEEE80211_CHANCTX_SHARED);
- 	mutex_unlock(&local->mtx);
-@@ -3017,8 +3017,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	int err, changed = 0;
- 
--	sdata->radar_required = sdata->csa_radar_required;
- 	mutex_lock(&local->mtx);
-+	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	mutex_unlock(&local->mtx);
- 	if (WARN_ON(err < 0))
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5ca5834..4854800 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -303,6 +303,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		mutex_unlock(&local->mtx);
- 		return;
- 	}
-+	sdata->radar_required = radar_required;
- 	mutex_unlock(&local->mtx);
- 
- 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
-@@ -318,7 +319,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	rcu_assign_pointer(ifibss->presp, presp);
- 	mgmt = (void *)presp->head;
- 
--	sdata->radar_required = radar_required;
- 	sdata->vif.bss_conf.enable_beacon = true;
- 	sdata->vif.bss_conf.beacon_int = beacon_int;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
--- 
-1.8.4.rc3
+Is this a bug in sparse, or am I missing something obvious here?
 
+thanks,
+
+greg k-h
