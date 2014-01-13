@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:52337 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933256AbaAFW5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 17:57:15 -0500
-Date: Mon, 6 Jan 2014 23:57:09 +0100
-From: Sebastian Reichel <sre@ring0.de>
-To: Luciano Coelho <luca@coelho.fi>, Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140106225709.GA23070@earth.universe> (sfid-20140106_235746_010725_9054CE43)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:63514 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034AbaAMUWR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 15:22:17 -0500
+Received: by mail-ea0-f175.google.com with SMTP id z10so3558109ead.34
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:16 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/18] iwlwifi: mvm: use array indexing instead of treating it as a pointer
+Date: Mon, 13 Jan 2014 22:21:50 +0200
+Message-Id: <1389644517-22807-11-git-send-email-egrumbach@gmail.com> (sfid-20140113_212226_486955_FC7882B1)
+In-Reply-To: <52D44A46.4000805@gmail.com>
+References: <52D44A46.4000805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It's a bit strange to treat an array as a pointer, so use proper
+array indexing instead.
 
-Hi John,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> The following patchset adds device tree support to
-> the spi variant of the wl1251 driver.
->
-> Luciano Coelho (1):
->   wl1251: split wl251 platform data to a separate structure
->=20
-> Sebastian Reichel (4):
->   wl1251: move power GPIO handling into the driver
->   wl1251: spi: add vio regulator support
->   wl1251: spi: add device tree support
->   Documentation: dt: wireless: Add wl1251
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 208771a..797b4d9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -262,9 +262,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+ 
+ 	/* currently FW API supports only one optional cipher scheme */
+-	if (mvm->fw->cs->cipher) {
++	if (mvm->fw->cs[0].cipher) {
+ 		mvm->hw->n_cipher_schemes = 1;
+-		mvm->hw->cipher_schemes = mvm->fw->cs;
++		mvm->hw->cipher_schemes = &mvm->fw->cs[0];
+ 	}
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+1.7.9.5
 
-What's the status of this patchset? Tony prepared an immutable
-branch for patches 1+2 [0]. I think the other patches are also ok
-(at least there were no more complains from the DT binding
-maintainers). It would be nice to have wl1251 DT support in 3.14.
-
-[0] http://www.spinics.net/lists/linux-omap/msg101165.html
-
--- Sebastian
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSyzTEAAoJENju1/PIO/qaoSsP/2A++jAylp/9jdo77OoJl50B
-s2Bk6i+g3G/G0ZF5prK/eRRDW6anfU7rzrqNowO0RXkEufRn+vviKaKwXGdCtHmJ
-Oa3fi4clbsrFZKvRQjKNdhX8NAoiZsd8wdhXQJXkhS8htenfiGL0Uh7Bs+gVKfyf
-1UVsb1nMvBR+MKRdKKNTO59Odm6NCtzZD+WIL0zAzN684vaYTYaV5dNVGsqt+82P
-+WPxhqZQPuObRb4HWRm1+HDFWs/zVIXgw6HJPZOeKuSN7bYwNtHstC/s76q7SBBR
-m3nkfqOsaAwfiVUVmqla9pac83Gf/2LXdmu8C12Qr4edix1E0KhXTQjVj1MWuR4q
-hzqhGVX1GD9pSbWZFxytf0m4Cl52HTvolj7T1zJyKtC95A4fobQQdqEeWoWy98JO
-j+iojeGq4bWcMcST7UR7rqK26DKFccm4+E6UQHEFtJDRrsjaojT/qM0UUrPnn5d2
-nmseSd9BfC+XGG8Ll6cny1//luCJp9gY4nwg6r/q2mNWaZslTdxKvdmkuP4UsS4m
-4DIpB4mTgKtcwfrt3Ba5T4oLuSpiSFmaZPynb3FekInpXhlkQ0731RZ0pAQANhGY
-IviRwgCYDU6pawzSXpuwaYW/MQPCpbsGXwQlgSUhKPnVK4YHDpRDjy10e7mFtrbD
-119RrTc5DfF/tzCdzboH
-=nadp
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
