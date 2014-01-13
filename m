@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51320 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636AbaABSbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 13:31:46 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] ssb: fix sparse warnings in driver_chipcommon_sflash.c
-Date: Thu,  2 Jan 2014 19:31:37 +0100
-Message-Id: <1388687497-8645-2-git-send-email-hauke@hauke-m.de> (sfid-20140102_193154_726353_46AEF5E0)
-In-Reply-To: <1388687497-8645-1-git-send-email-hauke@hauke-m.de>
-References: <1388687497-8645-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:21224 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751256AbaAMKnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 05:43:47 -0500
+Date: Mon, 13 Jan 2014 11:45:30 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/3 RESUBMIT 2nd time] b43: Fix lockdep splat
+Message-ID: <20140113104529.GA1809@redhat.com> (sfid-20140113_114352_045784_FC4351DB)
+References: <1389470266-13150-1-git-send-email-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389470266-13150-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   drivers/ssb/driver_chipcommon_sflash.c
-drivers/ssb/driver_chipcommon_sflash.c:40:11: warning: Using plain integer as NULL pointer
-drivers/ssb/driver_chipcommon_sflash.c:58:11: warning: Using plain integer as NULL pointer
-drivers/ssb/driver_chipcommon_sflash.c:69:11: warning: Using plain integer as NULL pointer
+On Sat, Jan 11, 2014 at 01:57:46PM -0600, Larry Finger wrote:
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_chipcommon_sflash.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Just friendly remark that from formal linux patch posting rules point
+of view you can not post patch authored by me without my Signed-off-by.
+Sorry for not spot this earlier.
 
-diff --git a/drivers/ssb/driver_chipcommon_sflash.c b/drivers/ssb/driver_chipcommon_sflash.c
-index 50328de..937fc31 100644
---- a/drivers/ssb/driver_chipcommon_sflash.c
-+++ b/drivers/ssb/driver_chipcommon_sflash.c
-@@ -37,7 +37,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_st_tbl[] = {
- 	{ "M25P32", 0x15, 0x10000, 64, },
- 	{ "M25P64", 0x16, 0x10000, 128, },
- 	{ "M25FL128", 0x17, 0x10000, 256, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static const struct ssb_sflash_tbl_e ssb_sflash_sst_tbl[] = {
-@@ -55,7 +55,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_sst_tbl[] = {
- 	{ "SST25VF016", 0x41, 0x1000, 512, },
- 	{ "SST25VF032", 0x4a, 0x1000, 1024, },
- 	{ "SST25VF064", 0x4b, 0x1000, 2048, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static const struct ssb_sflash_tbl_e ssb_sflash_at_tbl[] = {
-@@ -66,7 +66,7 @@ static const struct ssb_sflash_tbl_e ssb_sflash_at_tbl[] = {
- 	{ "AT45DB161", 0x2c, 512, 4096, },
- 	{ "AT45DB321", 0x34, 512, 8192, },
- 	{ "AT45DB642", 0x3c, 1024, 8192, },
--	{ 0 },
-+	{ NULL },
- };
- 
- static void ssb_sflash_cmd(struct ssb_chipcommon *cc, u32 opcode)
--- 
-1.7.10.4
+Anyway, further patch V2 posted on mailing list is fine. Please don't
+change it :-)
 
+On the future, you can use rarely used "Originally-from:" mark for
+posting not signed patches from others, like I did on commit 55eaa7c1f
+where I sent Linus' code.
+
+Thanks
+Stanislaw
