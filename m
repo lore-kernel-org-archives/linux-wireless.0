@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:37098 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752977AbaADUIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jan 2014 15:08:22 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Thierry Escande <thierry.escande@linux.intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] NFC: port100: fix leak of usb_device
-Date: Sun,  5 Jan 2014 00:08:05 +0400
-Message-Id: <1388866085-11007-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140104_210908_608562_829BFB32)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54588 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbaAMUWJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 15:22:09 -0500
+Received: by mail-ee0-f46.google.com with SMTP id d49so3395699eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:07 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/18] iwlwifi: mvm: rs: fix handling of column switch error
+Date: Mon, 13 Jan 2014 22:21:43 +0200
+Message-Id: <1389644517-22807-4-git-send-email-egrumbach@gmail.com> (sfid-20140113_212224_902752_348ED7F5)
+In-Reply-To: <52D44A46.4000805@gmail.com>
+References: <52D44A46.4000805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-port100_probe() calls usb_get_dev(), but there is no usb_put_dev()
-in port100_disconnect(). The patch adds one.
+From: Eyal Shapira <eyal@wizery.com>
 
-Found by Linux Driver Verification project (linuxtesting.org).
+If we can't switch to a column because no rates are supported
+in that column this led to a state where the search cycle
+got stuck and never ended. This in turn also led to aggregation
+not being turned on. Fix this by marking a column as
+visited if we can't switch to it.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Reported-and-tested-by: Karl Beldan <karl.beldan@gmail.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/nfc/port100.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/iwlwifi/mvm/rs.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
-index 8a0571eb2627..a8555f81cbba 100644
---- a/drivers/nfc/port100.c
-+++ b/drivers/nfc/port100.c
-@@ -1509,6 +1509,7 @@ static void port100_disconnect(struct usb_interface *interface)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index c9ff41c..54887b9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1591,6 +1591,8 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 	search_tbl->column = col_id;
+ 	rs_set_expected_tpt_table(lq_sta, search_tbl);
  
- 	usb_free_urb(dev->in_urb);
- 	usb_free_urb(dev->out_urb);
-+	usb_put_dev(dev->udev);
++	lq_sta->visited_columns |= BIT(col_id);
++
+ 	/* Get the best matching rate if we're changing modes. e.g.
+ 	 * SISO->MIMO, LEGACY->SISO, MIMO->SISO
+ 	 */
+@@ -1614,7 +1616,6 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 	IWL_DEBUG_RATE(mvm, "Switched to column %d: Index %d\n",
+ 		       col_id, rate->index);
  
- 	kfree(dev->cmd);
+-	lq_sta->visited_columns |= BIT(col_id);
+ 	return 0;
  
+ err:
 -- 
-1.8.3.2
+1.7.9.5
 
