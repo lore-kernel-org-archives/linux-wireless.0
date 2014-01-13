@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52368 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757266AbaAHXqV (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:42618 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbaAMTEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 18:46:21 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: fix potential buffer overflow in dt configuration
-Date: Wed, 8 Jan 2014 15:45:56 -0800
-Message-ID: <1389224757-14339-1-git-send-email-bzhao@marvell.com> (sfid-20140109_004624_880853_6534FC9C)
+	Mon, 13 Jan 2014 14:04:53 -0500
+Received: by mail-la0-f54.google.com with SMTP id y1so1450827lam.41
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 11:04:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1389633805.5008.13.camel@jlt4.sipsolutions.net>
+References: <1389385273-1322-1-git-send-email-a.gal@motsai.com>
+	<1389620141.5008.8.camel@jlt4.sipsolutions.net>
+	<CAN44aq1hrya4B4X4xTi4Aphb9QDBiQ9813kT6vhxtDCzBRoNhQ@mail.gmail.com>
+	<1389633805.5008.13.camel@jlt4.sipsolutions.net>
+Date: Mon, 13 Jan 2014 14:04:52 -0500
+Message-ID: <CAN44aq2CAuF=Yx3YUvesagxSod=rNHq0sV98jeTQFoY1tHhFRg@mail.gmail.com> (sfid-20140113_200456_652152_09740072)
+Subject: Re: [PATCH v5] wl12xx: fix tx power setting
+From: Alex Gal <a.gal@motsai.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Luca Coelho <luca@coelho.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If cfgdata length exceeds the command buffer size we will end up
-getting buffer overflow problem. Fix it by checking the buffer
-size less the command header length.
+> Oh, really? Ok. I didn't think that driver supported channel contexts.
+> In that case your patch is right but incomplete - you should remove the
+> CONF_CHANGE_POWER handling.
 
-Reviewed-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_cmd.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I think wlcore is used by both wl12xx and wl18xx.
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 9c2404c..9208a88 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -1170,8 +1170,9 @@ int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
- 		    strncmp(prop->name, prefix, len))
- 			continue;
- 
--		/* property header is 6 bytes */
--		if (prop && prop->value && prop->length > 6) {
-+		/* property header is 6 bytes, data must fit in cmd buffer */
-+		if (prop && prop->value && prop->length > 6 &&
-+		    prop->length <= MWIFIEX_SIZE_OF_CMD_BUFFER - S_DS_GEN) {
- 			ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_CFG_DATA,
- 						    HostCmd_ACT_GEN_SET, 0,
- 						    prop);
--- 
-1.8.2.3
+It looks like wl18xx supports multiple channels and perhaps channel
+contexts (?) while the wl12xx does not.
 
+Luca, who is no longer the driver maintainer, might shed some light on this :)
+
+I will recreate the patch afterwards by removing the CONF_CHANGE_POWER handling.
+
+Thank you
