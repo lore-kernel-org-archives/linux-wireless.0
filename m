@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:5925 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754970AbaA1QBl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56348 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037AbaAMTpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 11:01:41 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Antonio Quartulli <antonio@meshcoding.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: removed useless ibss_joined notification on ibss_leave
-Date: Tue, 28 Jan 2014 17:00:14 +0100
-Message-Id: <1390924815-3714-1-git-send-email-antonio@meshcoding.com> (sfid-20140128_170144_804034_9192D6B7)
+	Mon, 13 Jan 2014 14:45:14 -0500
+Date: Mon, 13 Jan 2014 14:39:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.14] NFC update
+Message-ID: <20140113193920.GC14400@tuxdriver.com> (sfid-20140113_204520_212108_AE2A4920)
+References: <20140109231546.GA11700@zurbaran>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140109231546.GA11700@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When leaving an IBSS there is no need to send cfg80211 a
-fake notification about "having joined a cell with zero
-BSSID".
-This operation has the only effect to create a BSS object
-that is not going to be used.
+On Fri, Jan 10, 2014 at 12:15:46AM +0100, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the first NFC pull request for 3.14
+> 
+> It includes:
+> 
+> * A new NFC driver for Marvell's 8897, and a few NCI fixes and
+>   improvements needed to support this chipset.
+> 
+> * An LLCP fix for how we were setting the default MIU on a p2p link. If
+>   there is no explicit MIU extension announced at connection time, we
+>   must use the default one and not the one announced at LLCP link
+>   establishement time.
+> 
+> * A pn544 EEPROM config update. Some of the currently EEPROM configured
+>   values are overwriting the firmware ones while other should not be set
+>   by the driver itself.
+> 
+> * Some NFC digital stack fixes and improvements. Asynchronous functions
+>   are better documented, RF technologies and CRC functions are set upon
+>   PSL_REQ reception, and a few minor bugs are fixed.
+> 
+> * Minor and miscelaneous pn533, mei_phy and port100 fixes.
+> 
+> Thanks in advance for pulling those bits in.
+> 
+> The following changes since commit c8bf40ad4f8f5d26f6744020ad51be420a707385:
+> 
+>   wireless: delete non-required instances of include <linux/init.h> (2014-01-03 15:37:01 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.14-1
+> 
+> for you to fetch changes up to bb55dc2ae4367b8f711d43a2f8668a6ed42c4fd3:
+> 
+>   NFC: nfcmrvl: Fix possible memory leak issue (2014-01-09 01:27:20 +0100)
 
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+Pulling now...
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index eba32f5..8ce1ce5 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -790,7 +790,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
- 	if (nw_type & ADHOC_NETWORK) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
- 			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
--		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
- 		cfg80211_put_bss(ar->wiphy, bss);
- 		return;
- 	}
 -- 
-1.8.5.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
