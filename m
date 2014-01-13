@@ -1,66 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:46918 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbaAMUW2 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:62369 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbaAMVUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:28 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so800026eek.2
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:27 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/18] iwlwifi: mvm: don't use highest rate in VHT MCS Set
-Date: Mon, 13 Jan 2014 22:21:57 +0200
-Message-Id: <1389644517-22807-18-git-send-email-egrumbach@gmail.com> (sfid-20140113_213436_230735_7E5CAA93)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+	Mon, 13 Jan 2014 16:20:41 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11 and CR4 cores
+Date: Mon, 13 Jan 2014 22:20:24 +0100
+Message-ID: <1389648029-23560-4-git-send-email-arend@broadcom.com> (sfid-20140113_222051_265191_0CB273CB)
+In-Reply-To: <1389648029-23560-1-git-send-email-arend@broadcom.com>
+References: <1389648029-23560-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+The IOCTL register in the agent/wrapper contains additional bits
+that are core specific and use in the core reset sequence.
 
-Keeping this as 0 is ok according to spec section 9.7.11
-as this means the limits are according to the Tx/Rx
-supported MCS x NSS bitmap. Initially we've set these as
-there were concerns of interop issues but these turned out
-to be false.
-
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    6 ------
- 1 file changed, 6 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   22 +++++++-------------
+ include/linux/bcma/bcma_regs.h                     |    5 ++++-
+ 2 files changed, 12 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 0c677b4..f06f4cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -289,9 +289,6 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index 4342976..a002af9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -66,13 +66,6 @@
+ #define CIB_REV_MASK		0xff000000
+ #define CIB_REV_SHIFT		24
  
--	/* Max rate for Long GI NSS=2 80Mhz is 780Mbps */
--	vht_cap->vht_mcs.rx_highest = cpu_to_le16(780);
+-/* ARM CR4 core specific control flag bits */
+-#define ARMCR4_BCMA_IOCTL_CPUHALT	0x0020
 -
- 	if (num_ants == 1 ||
- 	    cfg->rx_with_siso_diversity) {
- 		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
-@@ -299,12 +296,9 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 		/* this works because NOT_SUPPORTED == 3 */
- 		vht_cap->vht_mcs.rx_mcs_map |=
- 			cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << 2);
--		/* Max rate for Long GI NSS=1 80Mhz is 390Mbps */
--		vht_cap->vht_mcs.rx_highest = cpu_to_le16(390);
- 	}
- 
- 	vht_cap->vht_mcs.tx_mcs_map = vht_cap->vht_mcs.rx_mcs_map;
--	vht_cap->vht_mcs.tx_highest = vht_cap->vht_mcs.rx_highest;
+-/* D11 core specific control flag bits */
+-#define D11_BCMA_IOCTL_PHYCLOCKEN	0x0004
+-#define D11_BCMA_IOCTL_PHYRESET		0x0008
+-
+ #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
+ /* SDIO Pad drive strength to select value mappings */
+ struct sdiod_drive_str {
+@@ -873,8 +866,8 @@ brcmf_sdio_chip_cm3_enterdl(struct brcmf_sdio_dev *sdiodev,
+ {
+ 	ci->coredisable(sdiodev, ci, BCMA_CORE_ARM_CM3, 0, 0);
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_80211,
+-		      D11_BCMA_IOCTL_PHYRESET | D11_BCMA_IOCTL_PHYCLOCKEN,
+-		      D11_BCMA_IOCTL_PHYCLOCKEN, D11_BCMA_IOCTL_PHYCLOCKEN);
++		      BCMA_IOCTL_80211_PHYCLOCKEN | BCMA_IOCTL_80211_PHYRESET,
++		      BCMA_IOCTL_80211_PHYCLOCKEN, BCMA_IOCTL_80211_PHYCLOCKEN);
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_INTERNAL_MEM, 0, 0, 0);
  }
  
- static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+@@ -913,13 +906,14 @@ brcmf_sdio_chip_cr4_enterdl(struct brcmf_sdio_dev *sdiodev,
+ 		return;
+ 
+ 	wrapbase = ci->c_inf[idx].wrapbase;
++	/* clear all IOCTL bits except HALT bit */
+ 	regdata = brcmf_sdiod_regrl(sdiodev, wrapbase + BCMA_IOCTL, NULL);
+-	regdata &= ARMCR4_BCMA_IOCTL_CPUHALT;
++	regdata &= BCMA_IOCTL_ARMCR4_HALT;
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, regdata,
+-		      ARMCR4_BCMA_IOCTL_CPUHALT, ARMCR4_BCMA_IOCTL_CPUHALT);
++		      BCMA_IOCTL_ARMCR4_HALT, BCMA_IOCTL_ARMCR4_HALT);
+ 	ci->resetcore(sdiodev, ci, BCMA_CORE_80211,
+-		      D11_BCMA_IOCTL_PHYRESET | D11_BCMA_IOCTL_PHYCLOCKEN,
+-		      D11_BCMA_IOCTL_PHYCLOCKEN, D11_BCMA_IOCTL_PHYCLOCKEN);
++		      BCMA_IOCTL_80211_PHYCLOCKEN | BCMA_IOCTL_80211_PHYRESET,
++		      BCMA_IOCTL_80211_PHYCLOCKEN, BCMA_IOCTL_80211_PHYCLOCKEN);
+ }
+ 
+ static bool
+@@ -939,7 +933,7 @@ brcmf_sdio_chip_cr4_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci)
+ 			  sizeof(ci->rst_vec));
+ 
+ 	/* restore ARM */
+-	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, ARMCR4_BCMA_IOCTL_CPUHALT,
++	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, BCMA_IOCTL_ARMCR4_HALT,
+ 		      0, 0);
+ 
+ 	return true;
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index 917dcd7..7f0edf2 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -22,10 +22,13 @@
+ #define  BCMA_CLKCTLST_4328A0_HAVEHT	0x00010000 /* 4328a0 has reversed bits */
+ #define  BCMA_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
+ 
+-/* Agent registers (common for every core) */
++/* Agent registers (common unless indicated) */
+ #define BCMA_IOCTL			0x0408 /* IO control */
+ #define  BCMA_IOCTL_CLK			0x0001
+ #define  BCMA_IOCTL_FGC			0x0002
++#define  BCMA_IOCTL_80211_PHYCLOCKEN	0x0004 /* for 80211 core */
++#define  BCMA_IOCTL_80211_PHYRESET	0x0008 /* for 80211 core */
++#define  BCMA_IOCTL_ARMCR4_HALT		0x0020 /* for ARM CR4 core */
+ #define  BCMA_IOCTL_CORE_BITS		0x3FFC
+ #define  BCMA_IOCTL_PME_EN		0x4000
+ #define  BCMA_IOCTL_BIST_EN		0x8000
 -- 
-1.7.9.5
+1.7.10.4
 
