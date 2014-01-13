@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:38516 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaANRaf (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:35900 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbaAMCQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 12:30:35 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so370156eek.16
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 09:30:34 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC] iw: handle DFS CAC time param
-Date: Tue, 14 Jan 2014 18:30:24 +0100
-Message-Id: <1389720624-2497-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_183041_189184_E21FA9D2)
+	Sun, 12 Jan 2014 21:16:11 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 5/5] ath9k: Remove debug print in ISR
+Date: Mon, 13 Jan 2014 07:40:56 +0530
+Message-Id: <1389579056-13441-1-git-send-email-sujith@msujith.org> (sfid-20140113_031634_547442_190A9E36)
+In-Reply-To: <1389578371-23943-5-git-send-email-sujith@msujith.org>
+References: <1389578371-23943-5-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle DFS CAC time param for
-iw list/info, iw reg get
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+There is no need to do this and we can avoid
+an unused variable warning when CONFIG_ATH9K_WOW is
+not selected.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- info.c |    3 +++
- reg.c  |    6 ++++++
- 2 files changed, 9 insertions(+)
+v2 - s/at9hk/ath9k in subject
 
-diff --git a/info.c b/info.c
-index b2eef15..021b634 100644
---- a/info.c
-+++ b/info.c
-@@ -199,6 +199,9 @@ next:
- 							printf(" (for %lu sec)", time/1000);
- 						}
- 						printf("\n");
-+						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME])
-+							printf("\t\t\t  DFS CAC time: %d sec\n",
-+							       nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME]));
- 					}
+ drivers/net/wireless/ath/ath9k/main.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 07fcf16..ca8aff1 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -542,7 +542,6 @@ irqreturn_t ath_isr(int irq, void *dev)
  
- 				}
-diff --git a/reg.c b/reg.c
-index f2481fe..4937a66 100644
---- a/reg.c
-+++ b/reg.c
-@@ -134,6 +134,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_ATTR_FREQ_RANGE_MAX_BW]	= { .type = NLA_U32 },
- 		[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN]	= { .type = NLA_U32 },
- 		[NL80211_ATTR_POWER_RULE_MAX_EIRP]	= { .type = NLA_U32 },
-+		[NL80211_ATTR_DFS_CAC_TIME]		= { .type = NLA_U32 },
- 	};
- 
- 	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-@@ -181,6 +182,11 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 
- 		printf(", %d)", MBM_TO_DBM(max_eirp_mbm));
- 
-+		if ((flags & NL80211_RRF_DFS) && tb_rule[NL80211_ATTR_DFS_CAC_TIME])
-+			printf(", (%u sec)", nla_get_u32(tb_rule[NL80211_ATTR_DFS_CAC_TIME]));
-+		else
-+			printf(", (N/A)");
-+
- 		if (!flags) {
- 			printf("\n");
- 			continue;
+ 	struct ath_softc *sc = dev;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+ 	enum ath9k_int status;
+ 	u32 sync_cause = 0;
+ 	bool sched = false;
+@@ -603,7 +602,6 @@ irqreturn_t ath_isr(int irq, void *dev)
+ #ifdef CONFIG_ATH9K_WOW
+ 	if (status & ATH9K_INT_BMISS) {
+ 		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
+-			ath_dbg(common, ANY, "during WoW we got a BMISS\n");
+ 			atomic_inc(&sc->wow_got_bmiss_intr);
+ 			atomic_dec(&sc->wow_sleep_proc_intr);
+ 		}
 -- 
-1.7.9.5
+1.8.5.2
 
