@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:43488 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327AbaAHCy7 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:39846 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbaAMQL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:54:59 -0500
-Message-ID: <52CCBDDF.4050301@huawei.com> (sfid-20140108_035624_853067_4B3B228F)
-Date: Wed, 8 Jan 2014 10:54:23 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
+	Mon, 13 Jan 2014 11:11:27 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.6 18/19] rtlwifi: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21204.3832.404821.109119@gargle.gargle.HOWL> (sfid-20140113_171134_884700_55566E38)
+Date: Mon, 13 Jan 2014 21:36:16 +0530
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+In-Reply-To: <21204.2384.710460.402183@gargle.gargle.HOWL>
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
+	<1384665016-12022-5-git-send-email-sujith@msujith.org>
+	<52CE934D.1020400@neratec.com>
+	<21198.40916.260973.48444@gargle.gargle.HOWL>
+	<52CEA5A3.2040308@neratec.com>
+	<21198.43395.235654.597422@gargle.gargle.HOWL>
+	<52CEAB24.5090700@neratec.com>
+	<52D3F962.1010302@neratec.com>
+	<21204.319.492595.58625@gargle.gargle.HOWL>
+	<52D402C3.3070606@neratec.com>
+	<21204.1991.201080.986559@gargle.gargle.HOWL>
+	<21204.2384.710460.402183@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal_unaligned
-instead of memcmp.
+Sujith Manoharan wrote:
+> > I used this patch:
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> > index 5bf3243..c85be42 100644
+> > --- a/drivers/net/wireless/ath/ath9k/recv.c
+> > +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> > @@ -1088,6 +1088,9 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+> >  
+> >  	ath9k_process_rssi(common, hw, rx_stats, rx_status);
+> >  
+> > +	printk("NOISE/RSSI/SIGNAL for %pM: %d/%d/%d\n",
+> > +	       hdr->addr3, ah->noise, rx_stats->rs_rssi, rx_status->signal);
+> > +
+> >  	rx_status->band = ah->curchan->chan->band;
+> >  	rx_status->freq = ah->curchan->chan->center_freq;
+> >  	rx_status->antenna = rx_stats->rs_antenna;
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/net/wireless/rtlwifi/cam.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+With this patch, can you please post the kernel log with debug=0x749 ?
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 0e510f7..0276153 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -295,7 +295,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	/* Does STA already exist? */
- 	for (i = 4; i < TOTAL_CAM_ENTRY; i++) {
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
--		if (memcmp(addr, sta_addr, ETH_ALEN) == 0)
-+		if (ether_addr_equal_unaligned(addr, sta_addr))
- 			return i;
- 	}
- 	/* Get a free CAM entry. */
-@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
- 		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
- 		if (((bitmap & BIT(0)) == BIT(0)) &&
--		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
- 			/* Remove from HW Security CAM */
- 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
- 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
--- 
-1.8.0
-
-
+Sujith
