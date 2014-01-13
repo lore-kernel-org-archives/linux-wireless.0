@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45793 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbaAWP7F (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56350 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbaAMTpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 10:59:05 -0500
-Message-ID: <1390492742.4142.35.camel@jlt4.sipsolutions.net> (sfid-20140123_165910_256894_B0A4458F)
-Subject: Re: Issue with authentication to Aerohive APs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Bateman <steven@fndtn.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Jan 2014 16:59:02 +0100
-In-Reply-To: <CF02A704.17362%steven@fndtn.com>
-References: <CF02A704.17362%steven@fndtn.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 13 Jan 2014 14:45:16 -0500
+Date: Mon, 13 Jan 2014 14:40:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: Pull request: ath 20140113
+Message-ID: <20140113194024.GD14400@tuxdriver.com> (sfid-20140113_204521_430488_C2A3695F)
+References: <87fvos3xcz.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fvos3xcz.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-20 at 16:27 +0000, Steven Bateman wrote:
-> You're right, I did accidentally filter out acks. I have an updated
-> filtered capture attached.
+On Mon, Jan 13, 2014 at 02:00:28PM +0200, Kalle Valo wrote:
+> Hi John,
 > 
-> It could be either, but I'm going off of wpa_supplicant instructing to
-> transmit the 2nd EAPOL frame, but it never showing up in the air. The
-> consultations I've received so far indicated that it would more likely be
-> a driver/firmware issue, but I don't have enough experience with Linux
-> supplicants to be sure about that.
+> here's another ath10k pull request. Major changes are:
+> 
+> Janusz added Kconfig option for DFS. The DFS code was there already, but
+> after fixes to mac80211 we can now enable it.
+> 
+> Bartosz added a runtime firmware feature flag to disable P2P. Our 10.1
+> firmware branch doesn't support P2P and ath10k can now disable that. He
+> also added a limit for how many clients can connect to ath10k AP.
+> 
+> Michal fixed WEP shared authentication, in case someone still uses it.
+> And I added firmware debug log to help the firmware engineers.
+> 
+> Please let me know if there any problems.
+> 
+> The following changes since commit 39731b78b4afebb7501c05b68e2443a1b250b41c:
+> 
+>   ath9k: simplify/fix tx packet TID handling (2013-12-19 14:41:57 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git for-linville
+> 
+> for you to fetch changes up to 51ab1a0a09a894442e8b091d57222c5425b6d700:
+> 
+>   ath10k: add set_bitrate_mask callback (2014-01-10 11:54:49 +0200)
 
-Ohh. Ok. Yeah then it's most likely a driver bug. Hmm. I vaguely
-remember bugs like this but I thought they were all fixed.
+Pulling now...
 
-Is there any chance you could try to put the particular AP into 2.4 GHz?
-Although I guess you have similar APs on 2.4 GHz channels that work?
-Could you (or the user actually running into the problem) collect
-tracing maybe?
-http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
