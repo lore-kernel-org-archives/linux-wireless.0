@@ -1,160 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:45770 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751659AbaANWAu (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53509 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbaAMXph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 17:00:50 -0500
-Date: Wed, 15 Jan 2014 00:00:47 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 13 Jan 2014 18:45:37 -0500
+Date: Mon, 13 Jan 2014 15:46:14 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Malcolm Priestley <tvboxspy@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] cfg80211: Allow BSS hint to be provided for connect
-Message-ID: <20140114220047.GA19671@w1.fi> (sfid-20140114_230054_293908_EB3605A0)
+Subject: Re: [PATCH 6/6] staging: vt6656: sparse fixes: aes_ccmp.c missing
+ header.
+Message-ID: <20140113234614.GA16467@kroah.com> (sfid-20140114_004540_919149_5FCFE1B6)
+References: <1389630555.2590.6.camel@canaries32-MCP7A>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389630555.2590.6.camel@canaries32-MCP7A>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This clarifies the expected driver behavior on the older
-NL80211_ATTR_MAC and NL80211_ATTR_WIPHY_FREQ attributes and adds a new
-set of similar attributes with _HINT postfix to enable use of a
-recommendation of the initial BSS to choose. This can be helpful for
-some drivers that can avoid an additional full scan on connection
-request if the information is provided to them (user space tools like
-wpa_supplicant already has that information available based on earlier
-scans).
+On Mon, Jan 13, 2014 at 04:29:15PM +0000, Malcolm Priestley wrote:
+> Add missing aes_ccmp.h header and move device.h to
+> aes_ccmp.h
 
-In addition, this can be used to get more expected behavior for cases
-where a specific BSS should be picked first based on operations like
-Interworking network selection or WPS. These cases were already easily
-addressed with drivers that leave BSS selection to user space, but there
-was no convenient way to do this with drivers that take care of BSS
-selection internally without using the NL80211_ATTR_MAC which is not
-really desired since it is needed for other purposes to force the
-association to remain with the same BSS.
+Why move device.h?
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
----
- include/net/cfg80211.h       |    8 ++++++++
- include/uapi/linux/nl80211.h |   20 ++++++++++++++++++--
- net/wireless/nl80211.c       |   13 +++++++++++++
- 3 files changed, 39 insertions(+), 2 deletions(-)
+That shouldn't be needed to fix this issue.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b1f84b0..77424f1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1701,8 +1701,14 @@ struct cfg80211_ibss_params {
-  *
-  * @channel: The channel to use or %NULL if not specified (auto-select based
-  *	on scan results)
-+ * @channel_hint: The channel of the recommended BSS for initial connection or
-+ *	%NULL if not specified
-  * @bssid: The AP BSSID or %NULL if not specified (auto-select based on scan
-  *	results)
-+ * @bssid_hint: The recommended AP BSSID for initial connection to the BSS or
-+ *	%NULL if not specified. Unlike the @bssid parameter, the driver is
-+ *	allowed to ignore this @bssid_hint if it has knowledge of a better BSS
-+ *	to use.
-  * @ssid: SSID
-  * @ssid_len: Length of ssid in octets
-  * @auth_type: Authentication type (algorithm)
-@@ -1725,7 +1731,9 @@ struct cfg80211_ibss_params {
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-+	struct ieee80211_channel *channel_hint;
- 	u8 *bssid;
-+	u8 *bssid_hint;
- 	u8 *ssid;
- 	size_t ssid_len;
- 	enum nl80211_auth_type auth_type;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 91054fd..e57de33 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -418,8 +418,18 @@
-  *	%NL80211_ATTR_SSID attribute, and can optionally specify the association
-  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
-  *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
-- *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
-- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
-+ *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
-+ *	%NL80211_ATTR_WIPHY_FREQ_HINT.
-+ *	If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
-+ *	restrictions on BSS selection, i.e., they effectively prevent roaming
-+ *	within the ESS. %NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT
-+ *	can be included to provide a recommendation of the initial BSS while
-+ *	allowing the driver to roam to other BSSes within the ESS and also to
-+ *	ignore this recommendation if the indicated BSS is not ideal. Only one
-+ *	set of BSSID,frequency parameters is used (i.e., either the enforcing
-+ *	%NL80211_ATTR_MAC,%NL80211_ATTR_WIPHY_FREQ or the less strict
-+ *	%NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT).
-  *	Background scan period can optionally be
-  *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
-  *	if not specified default background scan configuration
-@@ -1555,6 +1565,9 @@ enum nl80211_commands {
-  *	data is in the format defined for the payload of the QoS Map Set element
-  *	in IEEE Std 802.11-2012, 8.4.2.97.
-  *
-+ * @NL80211_ATTR_MAC_HINT: MAC address recommendation as initial BSS
-+ * @NL80211_ATTR_WIPHY_FREQ_HINT: frequency of the recommended initial BSS
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1883,6 +1896,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_QOS_MAP,
- 
-+	NL80211_ATTR_MAC_HINT,
-+	NL80211_ATTR_WIPHY_FREQ_HINT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0afd82..a3bbcb0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -384,6 +384,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_VENDOR_DATA] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_QOS_MAP] = { .type = NLA_BINARY,
- 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
-+	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -7012,6 +7014,9 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		connect.bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	else if (info->attrs[NL80211_ATTR_MAC_HINT])
-+		connect.bssid_hint =
-+			nla_data(info->attrs[NL80211_ATTR_MAC_HINT]);
- 	connect.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
- 	connect.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
- 
-@@ -7036,6 +7041,14 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		if (!connect.channel ||
- 		    connect.channel->flags & IEEE80211_CHAN_DISABLED)
- 			return -EINVAL;
-+	} else if (info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]) {
-+		connect.channel_hint =
-+			ieee80211_get_channel(wiphy,
-+			    nla_get_u32(
-+				    info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]));
-+		if (!connect.channel_hint ||
-+		    connect.channel_hint->flags & IEEE80211_CHAN_DISABLED)
-+			return -EINVAL;
- 	}
- 
- 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
--- 
-1.7.9.5
+> sparse warning
+> aes_ccmp.c:221:6: warning: symbol 'AESbGenCCMP' was not declared. Should it be static?
+> 
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> ---
+>  drivers/staging/vt6656/aes_ccmp.c | 2 +-
+>  drivers/staging/vt6656/aes_ccmp.h | 2 ++
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/vt6656/aes_ccmp.c b/drivers/staging/vt6656/aes_ccmp.c
+> index 61b9f7b..3dbf458 100644
+> --- a/drivers/staging/vt6656/aes_ccmp.c
+> +++ b/drivers/staging/vt6656/aes_ccmp.c
+> @@ -30,7 +30,7 @@
+>   * Revision History:
+>   */
+>  
+> -#include "device.h"
+> +#include "aes_ccmp.h"
+>  #include "80211hdr.h"
+>  
+>  /*
+> diff --git a/drivers/staging/vt6656/aes_ccmp.h b/drivers/staging/vt6656/aes_ccmp.h
+> index ed6a9ae..4cac3ec 100644
+> --- a/drivers/staging/vt6656/aes_ccmp.h
+> +++ b/drivers/staging/vt6656/aes_ccmp.h
+> @@ -30,6 +30,8 @@
+>  #ifndef __AES_H__
+>  #define __AES_H__
+>  
+> +#include "device.h"
 
+If you can prevent it, keeping .h files from having to include other .h
+files is a good thing.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+thanks,
+
+greg k-h
