@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16491 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754416AbaAEAIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jan 2014 19:08:24 -0500
-Date: Sun, 5 Jan 2014 01:08:04 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Thierry Escande <thierry.escande@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: Re: [PATCH] NFC: port100: fix leak of usb_device
-Message-ID: <20140105000804.GD6003@zurbaran> (sfid-20140105_010906_064804_66297884)
-References: <1388866085-11007-1-git-send-email-khoroshilov@ispras.ru>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56347 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbaAMTpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 14:45:14 -0500
+Date: Mon, 13 Jan 2014 14:41:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2014-01-13
+Message-ID: <20140113194154.GE14400@tuxdriver.com> (sfid-20140113_204517_911490_731C4BAC)
+References: <1389620906.5008.12.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1388866085-11007-1-git-send-email-khoroshilov@ispras.ru>
+In-Reply-To: <1389620906.5008.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexey,
-
-On Sun, Jan 05, 2014 at 12:08:05AM +0400, Alexey Khoroshilov wrote:
-> port100_probe() calls usb_get_dev(), but there is no usb_put_dev()
-> in port100_disconnect(). The patch adds one.
+On Mon, Jan 13, 2014 at 02:48:26PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Found by Linux Driver Verification project (linuxtesting.org).
+> I'm hoping this pull request will still make it for 3.14, but I guess
+> it's not a huge loss if it doesn't, I'd just have to rebase around to
+> get things reorganised properly.
 > 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> This tim eI have uAPSD fixes since I was working on that, hwsim
+> improvements to make dynamic radios possible for the test suite, the
+> evidently long-overdue channel_change_time removal and a few other small
+> collected fix and improvements.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
 > ---
->  drivers/nfc/port100.c | 1 +
->  1 file changed, 1 insertion(+)
-Patch applied to nfc-next, thanks.
-I wonder if we really need to refcount the port100 USB interface, but
-dev->in_urb does reference it for the whole driver life cycle, so I
-think it all makes sense.
+> 
+> The following changes since commit 32db6b54dfba38aa8fa4072b2a3fc6425139166a:
+> 
+>   mac80211: Add support for QoS mapping (2013-12-19 16:30:58 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 26b0e411d37a2ca5992d02884dc3fa4e1907e598:
+> 
+>   mac80211_hwsim: restore regulatory testing functionality (2014-01-10 20:12:59 +0100)
 
-Cheers,
-Samuel.
+Pulling now...
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
