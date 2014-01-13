@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43166 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:45007 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592AbaAFPy3 (ORCPT
+	with ESMTP id S1751624AbaAMRXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 10:54:29 -0500
-Message-ID: <1389023662.5891.30.camel@jlt4.sipsolutions.net> (sfid-20140106_165433_890387_16AE18E0)
-Subject: Re: Is there any possibility to update a commit message?
+	Mon, 13 Jan 2014 12:23:32 -0500
+Message-ID: <1389633805.5008.13.camel@jlt4.sipsolutions.net> (sfid-20140113_182335_770821_FEA02C52)
+Subject: Re: [PATCH v5] wl12xx: fix tx power setting
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ujjal Roy <royujjal@gmail.com>
+To: Alex Gal <a.gal@motsai.com>
 Cc: John Linville <linville@tuxdriver.com>,
-	Kernel <linux-wireless@vger.kernel.org>
-Date: Mon, 06 Jan 2014 16:54:22 +0100
-In-Reply-To: <CAE2MWkk3WMFfu0WtJ5bccwwX5BNNLak6YjyuyhN_Y1h1OaH5GA@mail.gmail.com> (sfid-20140106_162252_657526_D4C1F576)
-References: <CAE2MWkk3WMFfu0WtJ5bccwwX5BNNLak6YjyuyhN_Y1h1OaH5GA@mail.gmail.com>
-	 (sfid-20140106_162252_657526_D4C1F576)
+	linux-wireless@vger.kernel.org
+Date: Mon, 13 Jan 2014 18:23:25 +0100
+In-Reply-To: <CAN44aq1hrya4B4X4xTi4Aphb9QDBiQ9813kT6vhxtDCzBRoNhQ@mail.gmail.com> (sfid-20140113_181432_014011_0995EE3B)
+References: <1389385273-1322-1-git-send-email-a.gal@motsai.com>
+	 <1389620141.5008.8.camel@jlt4.sipsolutions.net>
+	 <CAN44aq1hrya4B4X4xTi4Aphb9QDBiQ9813kT6vhxtDCzBRoNhQ@mail.gmail.com>
+	 (sfid-20140113_181432_014011_0995EE3B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 20:52 +0530, Ujjal Roy wrote:
-> Hi Johannes,
-> 
-> Just an inquiry, is that possible to update a commit message of a
-> patch which is previously submitted and applied?
+On Mon, 2014-01-13 at 12:14 -0500, Alex Gal wrote:
 
-No.
+> > This doesn't really make sense since the driver handles
+> > IEEE80211_CONF_CHANGE_POWER. If there's something wrong with that, maybe
+> > that should be fixed?
+
+> The IEEE80211_CONF_CHANGE_POWER never reaches the driver since in
+> /net/mac80211/main.c:ieee80211_hw_config:
+> 
+>     if (!local->use_chanctx)
+>         changed |= ieee80211_hw_conf_chan(local);
+>     else
+>         changed &= ~(IEEE80211_CONF_CHANGE_CHANNEL |
+>                  IEEE80211_CONF_CHANGE_POWER);
+> 
+> only the else statement is executed.
+
+Oh, really? Ok. I didn't think that driver supported channel contexts.
+In that case your patch is right but incomplete - you should remove the
+CONF_CHANGE_POWER handling.
 
 johannes
 
