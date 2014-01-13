@@ -1,109 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:61578 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408AbaAVKyy convert rfc822-to-8bit (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:35743 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751527AbaAMSTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 05:54:54 -0500
-From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH] mac80211_hwsim: add channel switch support
-Date: Wed, 22 Jan 2014 10:54:50 +0000
-Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C3396@ALA-MBB.corp.ad.wrs.com> (sfid-20140122_115457_445651_07D81517)
-References: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 13 Jan 2014 13:19:03 -0500
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 0F8F620ADE
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 13:18:58 -0500 (EST)
+Message-Id: <1389637138.15239.70208649.23172696@webmail.messagingengine.com> (sfid-20140113_191908_654061_72262548)
+From: "Nikita N." <nikitan@operamail.com>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <52D41306.5060106@broadcom.com>
+References: <1389605447.17065.70000145.1A7719E9@webmail.messagingengine.com>
+ <52D41306.5060106@broadcom.com>
+Subject: Re: brcmsmac on BCM4313: frames 11n not shown in monitor mode
+Date: Mon, 13 Jan 2014 10:18:58 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes:
+Yes Arend, I confirm, 802.11 frames transmitted at 11n bitrate.
+The card looks 11n capable, as it handshakes allright from Windows with
+my router set to 11n only (beacon frames contain all HT tags as normal)
+But when I flip in monitor mode under Linux, only 11b/g frames are shown
+(Wireshark,no filter)
+Yes of course I can send you a capture, any particular frames do you
+want inside?
+Regards
 
-Very glad to mail you , and I just found the latest kernel version can't support the wifi Mode A by AP Mode.
+On Mon, Jan 13, 2014, at 08:23 AM, Arend van Spriel wrote:
+> On 01/13/2014 10:30 AM, Nikita N. wrote:
+> > Hi All :) an issue for the maintainers of brcmsmac, or anybody who
+> > knows.
+> > Using module brcmsmac, when I flip my BCM4313 in monitor mode, it shows
+> > allright all frames sent in 11b and 11g mode, but the *11n* ones are NOT
+> > shown, maybe filtered out or not detected.
+> > Is that a known bug?
+> > If not, how can I set brcmsmac to show also 11n frames?
+> 
+> What do you mean by 11n frames? Do you mean 802.11 frames transmitted at
+> a 11n bitrate? Can you share a capture?
+> 
+> Regards,
+> Arend
 
-Our chip is:
+-- 
+http://www.fastmail.fm - Faster than the air-speed velocity of an
+                          unladen european swallow
 
-01:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 [Taylor Peak] (rev 34)
-        Subsystem: Intel Corporation Centrino Advanced-N 6205 AGN
-
-iwconfig wlan0
-wlan0     IEEE 802.11abg  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=15 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-
-Have you ever met such problem?
-
-
-
-
-Best Regards.
---------------------------------------
-Bopeng Liu
-WIND RIVER | China Development Center
-Phone: 8610-6483-5012
-
-
-
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Johannes Berg [johannes@sipsolutions.net]
-Sent: Wednesday, January 22, 2014 6:51 PM
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski
-Subject: [PATCH] mac80211_hwsim: add channel switch support
-
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-
-Advertise to mac80211 that we can do channel switch both
-for STA and AP/GO.
-After each beacon transmission check if CSA is done and
-call ieee80211_csa_finish if needed.
-
-Change-Id: I1cb34c04f533275522236381ae14b624bec35418
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4950359..5268ede 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1307,6 +1307,9 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
-
-        mac80211_hwsim_tx_frame(hw, skb,
-                                rcu_dereference(vif->chanctx_conf)->def.chan);
-+
-+       if (vif->csa_active && ieee80211_csa_is_complete(vif))
-+               ieee80211_csa_finish(vif);
- }
-
- static enum hrtimer_restart
-@@ -2109,13 +2112,15 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
-                    IEEE80211_HW_AMPDU_AGGREGATION |
-                    IEEE80211_HW_WANT_MONITOR_VIF |
-                    IEEE80211_HW_QUEUE_CONTROL |
--                   IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
-+                   IEEE80211_HW_SUPPORTS_HT_CCK_RATES |
-+                   IEEE80211_HW_CHANCTX_STA_CSA;
-        if (rctbl)
-                hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
-
-        hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
-                            WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--                           WIPHY_FLAG_AP_UAPSD;
-+                           WIPHY_FLAG_AP_UAPSD |
-+                           WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-        hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
-
-        /* ask mac80211 to reserve space for magic */
---
-1.8.5.1
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
