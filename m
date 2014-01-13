@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:59949 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbaAUH42 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:63027 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbaAMQ31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 02:56:28 -0500
-Received: by mail-la0-f45.google.com with SMTP id b8so6290900lan.18
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 23:56:27 -0800 (PST)
-From: dubtsov@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Roman Dubtsov <dubtsov@gmail.com>
-Subject: [PATCH] rt2x00: rt2800usb: mark D-Link DWA-137 as supported
-Date: Tue, 21 Jan 2014 14:49:18 +0700
-Message-Id: <1390290558-6265-1-git-send-email-dubtsov@gmail.com> (sfid-20140121_085632_995329_128DC504)
+	Mon, 13 Jan 2014 11:29:27 -0500
+Received: by mail-wi0-f169.google.com with SMTP id e4so1382566wiv.4
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 08:29:25 -0800 (PST)
+Message-ID: <1389630555.2590.6.camel@canaries32-MCP7A> (sfid-20140113_172937_639990_1B187FA1)
+Subject: [PATCH 6/6] staging: vt6656: sparse fixes: aes_ccmp.c missing
+ header.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 13 Jan 2014 16:29:15 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roman Dubtsov <dubtsov@gmail.com>
+Add missing aes_ccmp.h header and move device.h to
+aes_ccmp.h
 
-Signed-off-by: Roman Dubtsov <dubtsov@gmail.com>
+sparse warning
+aes_ccmp.c:221:6: warning: symbol 'AESbGenCCMP' was not declared. Should it be static?
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/vt6656/aes_ccmp.c | 2 +-
+ drivers/staging/vt6656/aes_ccmp.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a81ceb6..ea619c2 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -992,6 +992,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x07d1, 0x3c15) },
- 	{ USB_DEVICE(0x07d1, 0x3c16) },
- 	{ USB_DEVICE(0x07d1, 0x3c17) },
-+	{ USB_DEVICE(0x2001, 0x3317) },
- 	{ USB_DEVICE(0x2001, 0x3c1b) },
- 	/* Draytek */
- 	{ USB_DEVICE(0x07fa, 0x7712) },
+diff --git a/drivers/staging/vt6656/aes_ccmp.c b/drivers/staging/vt6656/aes_ccmp.c
+index 61b9f7b..3dbf458 100644
+--- a/drivers/staging/vt6656/aes_ccmp.c
++++ b/drivers/staging/vt6656/aes_ccmp.c
+@@ -30,7 +30,7 @@
+  * Revision History:
+  */
+ 
+-#include "device.h"
++#include "aes_ccmp.h"
+ #include "80211hdr.h"
+ 
+ /*
+diff --git a/drivers/staging/vt6656/aes_ccmp.h b/drivers/staging/vt6656/aes_ccmp.h
+index ed6a9ae..4cac3ec 100644
+--- a/drivers/staging/vt6656/aes_ccmp.h
++++ b/drivers/staging/vt6656/aes_ccmp.h
+@@ -30,6 +30,8 @@
+ #ifndef __AES_H__
+ #define __AES_H__
+ 
++#include "device.h"
++
+ bool AESbGenCCMP(u8 * pbyRxKey, u8 * pbyFrame, u16 wFrameSize);
+ 
+ #endif /* __AES_CCMP_H__ */
 -- 
-1.8.5.3
+1.8.5.2
 
