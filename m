@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41926 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:34302 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbaAFJHL (ORCPT
+	with ESMTP id S1751413AbaANQVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 04:07:11 -0500
-Message-ID: <1388999220.5891.3.camel@jlt4.sipsolutions.net> (sfid-20140106_100749_851549_63D9AA9B)
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+	Tue, 14 Jan 2014 11:21:06 -0500
+Message-ID: <1389716461.32635.15.camel@jlt4.sipsolutions.net> (sfid-20140114_172111_556794_EFF0C58D)
+Subject: Re: [RFC 4/4] cfg80211: implement multi-BSS CSA
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Joe Perches <joe@perches.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 10:07:00 +0100
-In-Reply-To: <alpine.DEB.2.10.1401061001340.2079@hadrien>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-	  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
-	  <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-	  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
-	  <1388438724.4573.2.camel@jlt4.sipsolutions.net>
-	  <20131230215701.GA4938@khazad-dum.debian.net>
-	  <1388445188.18164.0.camel@jlt4.sipsolutions.net>
-	  <1388445422.26796.38.camel@joe-AO722>
-	  <alpine.DEB.2.10.1401060947550.2079@hadrien>
-	 <1388998750.5808.43.camel@joe-AO722>
-	 <alpine.DEB.2.10.1401061001340.2079@hadrien>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Jan 2014 17:21:01 +0100
+In-Reply-To: <1389194818-7864-5-git-send-email-michal.kazior@tieto.com> (sfid-20140108_163118_648639_B6C7553E)
+References: <1389194818-7864-1-git-send-email-michal.kazior@tieto.com>
+	 <1389194818-7864-5-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140108_163118_648639_B6C7553E)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 10:04 +0100, Julia Lawall wrote:
+On Wed, 2014-01-08 at 16:26 +0100, Michal Kazior wrote:
+> This extends NL80211_CMD_CHANNEL_SWITCH by adding
+> a new attribute NL80211_ATTR_SWITCH_NEXT. The
+> attribute holds nested channel switch attributes
+> (including itself) allowing
+> multi-interface/chained CSA.
 
-> OK, the question was expressed badly.  Is there any way to use the value
-> to trigger an action at build time?  The only way I kow to trigger an
-> action is with #error, but #error is processed by cpp, which doesn't know
-> about the size of types.
+That's ... creative? Interesting? I'm not sure I like that API much.
 
-That's exactly BUILD_BUG_ON(), I believe.
+OTOH, it's a neat way of reusing all the attributes that we have, etc.
+
+However, I think it'd be easier to implement on both sides of the fence
+if we structured this differently and made the "more vifs" to be a
+nested attribute with data inside each one of them.
+
+Actually, I'd suggest that in the multi-vif case all of the attributes
+should be inside the list, like this:
+
+ wiphy, chswitch=[1=[ifidx,...], 2=[ifidx,...], 3=[ifidx,...]]
+
+alternatively, maybe something that would be nice would be
+
+ wiphy, chswitch=[ifidx1=[...], ifidx2=[...], ifidx3=[...]]
+
+but the common way would be to ignore the array index completely.
+
+Today you get
+
+ wiphy, ifidx, ..., next=[ifidx, ..., next=[ifidx, ..., next=[...]]]
+
+and I don't really like the deep nesting.
+
+I would also argue that doing
+ wiphy, ifidx1, ..., more=[1=[ifidx2, ...], ...]
+or
+ wiphy, ifidx1, ..., next=[...]
+
+is more error prone as it would allow older kernels to parse the whole
+thing while ignoring the next/more/whatever, so you'd get some weird
+subset of the intended behaviour. Forcing *all* interfaces into the
+sub-attribute when more than one is desired (or in fact for a single
+one, if you're ok with requiring a kernel with support) would IMHO be
+less error prone.
+
+Haven't looked over the code in much detail, but a few small comments:
+ * I think you should preserve tracing, it has facilities for arrays too
+ * hard-coding a limit of 8 vifs seems pointless, you can easily
+allocate dynamic
+   memory, no?
 
 johannes
-
 
