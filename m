@@ -1,28 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:62690 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbaAGJ1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:27:53 -0500
-Message-ID: <52CBC88C.90706@lri.fr> (sfid-20140107_102757_375612_D28F0EB6)
-Date: Tue, 07 Jan 2014 10:27:40 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from mga09.intel.com ([134.134.136.24]:50915 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342AbaANOlf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jan 2014 09:41:35 -0500
+Date: Tue, 14 Jan 2014 16:41:30 +0200
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: net: rfkill: gpio: convert to descriptor-based GPIO interface
+Message-ID: <20140114144130.GC21169@xps8300> (sfid-20140114_154138_837110_8737A349)
+References: <20140108152837.GA3017@elgon.mountain>
 MIME-Version: 1.0
-To: Andreas Mohr <andi@lisas.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, openwrt-devel@lists.openwrt.org
-Subject: Re: OpenWrt kernel_menuconfig issue?
-References: <20140106140103.GA24241@rhlx01.hs-esslingen.de> <1389017367.5891.13.camel@jlt4.sipsolutions.net> <20140106191808.GA7179@rhlx01.hs-esslingen.de>
-In-Reply-To: <20140106191808.GA7179@rhlx01.hs-esslingen.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140108152837.GA3017@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2014 20:18, Andreas Mohr wrote:
-> Can someone else confirm and/or elaborate on this improper visibility problem
-> which seems to be specific to OpenWrt's kernel configuration management?
-> (which does do certain config things in a rather custom way, I might add)
+Hi,
 
-This patch explains it all:
+On Wed, Jan 08, 2014 at 06:28:38PM +0300, Dan Carpenter wrote:
+> Hello Heikki Krogerus,
+> 
+> This is a semi-automatic email about new static checker warnings.
+> 
+> The patch 2111cad655e3: "net: rfkill: gpio: convert to
+> descriptor-based GPIO interface" from Nov 26, 2013, leads to the
+> following Smatch complaint:
+> 
+> net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
+> 	 warn: variable dereferenced before check 'rfkill->name' (see line 144)
+> 
+> net/rfkill/rfkill-gpio.c
+>    111          len = strlen(rfkill->name);
+>                              ^^^^^^^^^^^^
+> Dereference.
+> 
+>    112          rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
+>    113          if (!rfkill->reset_name)
+>    114                  return -ENOMEM;
+>    115  
+>    116          rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
+>    117          if (!rfkill->shutdown_name)
+>    118                  return -ENOMEM;
+>    119  
+>    120          snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+>    121          snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+>    122  
+>    123          rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
+>    124  
+>    125          gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+>    126          if (!IS_ERR(gpio)) {
+>    127                  ret = gpiod_direction_output(gpio, 0);
+>    128                  if (ret)
+>    129                          return ret;
+>    130                  rfkill->reset_gpio = gpio;
+>    131          }
+>    132  
+>    133          gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
+>    134          if (!IS_ERR(gpio)) {
+>    135                  ret = gpiod_direction_output(gpio, 0);
+>    136                  if (ret)
+>    137                          return ret;
+>    138                  rfkill->shutdown_gpio = gpio;
+>    139          }
+>    140  
+>    141          /* Make sure at-least one of the GPIO is defined and that
+>    142           * a name is specified for this instance
+>    143		 */
+>    144		if ((!rfkill->reset_gpio && !rfkill->shutdown_gpio) || !rfkill->name) {
+>                                                                         ^^^^^^^^^^^^
+> The check was originally before the dereference, but the patch moves it
+> after the dereference.
+> 
+>    145			dev_err(&pdev->dev, "invalid platform data\n");
+>    146			return -EINVAL;
 
-https://dev.openwrt.org/browser/trunk/target/linux/generic/patches-3.12/255-lib80211_kconfig_hacks.patch
+OK, this needs to be fixed.
+
+Thanks!
+
+-- 
+heikki
