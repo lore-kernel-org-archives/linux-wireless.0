@@ -1,40 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:64963 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbaAITwk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 14:52:40 -0500
-Received: by mail-pd0-f172.google.com with SMTP id g10so3585158pdj.31
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2014 11:52:40 -0800 (PST)
-Message-ID: <52CEFE05.7070501@lwfinger.net> (sfid-20140109_205243_869714_40B96C01)
-Date: Thu, 09 Jan 2014 13:52:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Steven Bateman <steven@fndtn.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with authentication to Aerohive APs
-References: <CEF45512.1681C%steven@fndtn.com>
-In-Reply-To: <CEF45512.1681C%steven@fndtn.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:30603 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751318AbaANNPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jan 2014 08:15:34 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH] cfg80211: fix few minor issues in reg_process_hint()
+Date: Tue, 14 Jan 2014 15:17:23 +0200
+Message-Id: <1389705443-23410-1-git-send-email-ilan.peer@intel.com> (sfid-20140114_141537_791569_4F9CE0C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2014 01:36 PM, Steven Bateman wrote:
-> For the client that I have in that thread, the info is the following:
->
-> Intel Centrino Advanced-N 6235
-> iwlwifi with iwlwifi-6000g2b-6 firmware
-> kernel is 3.11
->
-> The other user I'm working with I know the chipset is an Intel Centrino
-> Advanced-N 6200 with iwlwifi, but I don't know the firmware and kernel
-> version. I can request that info from the user if you deem it relevant.
+Fix the following issues in reg_process_hint():
 
-I'll let the Intel guys decide if that is necessary. I was mostly interested if 
-the driver was one that I maintain.
+1. Add verification that wiphy is valid before processing
+   NL80211_REGDOMAIN_SET_BY_COUNTRY_IE.
+2. Free the request in case of invalid initiator.
+3. Remove WARN_ON check on reg_request->alpha2 as it is not a
+   pointer.
 
-Thanks,
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/reg.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-Larry
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b897fc..484facf 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1683,17 +1683,9 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
+ 
+-	if (WARN_ON(!reg_request->alpha2))
+-		return;
+-
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+ 
+-	if (reg_request->initiator == NL80211_REGDOM_SET_BY_DRIVER && !wiphy) {
+-		kfree(reg_request);
+-		return;
+-	}
+-
+ 	switch (reg_request->initiator) {
+ 	case NL80211_REGDOM_SET_BY_CORE:
+ 		reg_process_hint_core(reg_request);
+@@ -1706,20 +1698,29 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
++		if (!wiphy)
++			goto out_free;
+ 		treatment = reg_process_hint_driver(wiphy, reg_request);
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		if (!wiphy)
++			goto out_free;
+ 		treatment = reg_process_hint_country_ie(wiphy, reg_request);
+ 		break;
+ 	default:
+ 		WARN(1, "invalid initiator %d\n", reg_request->initiator);
+-		return;
++		goto out_free;
+ 	}
+ 
+ 	/* This is required so that the orig_* parameters are saved */
+ 	if (treatment == REG_REQ_ALREADY_SET && wiphy &&
+ 	    wiphy->regulatory_flags & REGULATORY_STRICT_REG)
+ 		wiphy_update_regulatory(wiphy, reg_request->initiator);
++
++	return;
++
++out_free:
++	kfree(reg_request);
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
