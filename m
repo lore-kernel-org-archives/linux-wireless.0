@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56347 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbaAMTpO (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3729 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbaANSbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 14:45:14 -0500
-Date: Mon, 13 Jan 2014 14:41:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-01-13
-Message-ID: <20140113194154.GE14400@tuxdriver.com> (sfid-20140113_204517_911490_731C4BAC)
-References: <1389620906.5008.12.camel@jlt4.sipsolutions.net>
+	Tue, 14 Jan 2014 13:31:39 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH] wil6210: correct #include for prefetch()
+Date: Tue, 14 Jan 2014 20:31:26 +0200
+Message-ID: <1389724286-12175-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140114_193142_913794_2B2ABC8E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389620906.5008.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 02:48:26PM +0100, Johannes Berg wrote:
-> John,
-> 
-> I'm hoping this pull request will still make it for 3.14, but I guess
-> it's not a huge loss if it doesn't, I'd just have to rebase around to
-> get things reorganised properly.
-> 
-> This tim eI have uAPSD fixes since I was working on that, hwsim
-> improvements to make dynamic radios possible for the test suite, the
-> evidently long-overdue channel_change_time removal and a few other small
-> collected fix and improvements.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> ---
-> 
-> The following changes since commit 32db6b54dfba38aa8fa4072b2a3fc6425139166a:
-> 
->   mac80211: Add support for QoS mapping (2013-12-19 16:30:58 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 26b0e411d37a2ca5992d02884dc3fa4e1907e598:
-> 
->   mac80211_hwsim: restore regulatory testing functionality (2014-01-10 20:12:59 +0100)
+This fixes bug found by the kbuild test robot:
 
-Pulling now...
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+head:   1e2f9295f4c657500111514f92a3d3894d0e05b4
+commit: 1cbbcb08c786964a16773c39f2536f1923c73c58 [135/140] wil6210: prefetch head of packet
+config: make ARCH=microblaze allyesconfig
 
+All error/warnings:
+
+   drivers/net/wireless/ath/wil6210/txrx.c: In function 'wil_vring_reap_rx':
+>> drivers/net/wireless/ath/wil6210/txrx.c:381:2: error: implicit declaration of function 'prefetch' [-Werror=implicit-function-declaration]
+     prefetch(skb->data);
+     ^
+   cc1: some warnings being treated as errors
+
+vim +/prefetch +381 drivers/net/wireless/ath/wil6210/txrx.c
+
+   375                  wil_err(wil, "Rx size too large: %d bytes!\n", dmalen);
+   376                  kfree_skb(skb);
+   377                  return NULL;
+   378          }
+   379          skb_trim(skb, dmalen);
+   380
+ > 381          prefetch(skb->data);
+   382
+   383          wil_hex_dump_txrx("Rx ", DUMP_PREFIX_OFFSET, 16, 1,
+   384                            skb->data, skb_headlen(skb), false);
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 9b88440..0b0975d 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -21,7 +21,7 @@
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
+ #include <net/ipv6.h>
+-#include <asm/processor.h>
++#include <linux/prefetch.h>
+ 
+ #include "wil6210.h"
+ #include "wmi.h"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.3.2
+
