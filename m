@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44374 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101AbaAWIT4 (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:50066 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918AbaANG3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:19:56 -0500
-Message-ID: <1390465191.4142.2.camel@jlt4.sipsolutions.net> (sfid-20140123_091959_888693_9A1F987C)
-Subject: Re: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 23 Jan 2014 09:19:51 +0100
-In-Reply-To: <52E05CB1.80308@candelatech.com>
-References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
-	  <1390431296-20568-2-git-send-email-greearb@candelatech.com>
-	  (sfid-20140122_235550_068991_E5B7233B) <1390432245.20070.0.camel@jlt4.sipsolutions.net>
-	 <52E05CB1.80308@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 14 Jan 2014 01:29:37 -0500
+Received: by mail-ob0-f182.google.com with SMTP id wn1so6925945obc.27
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 22:29:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389648029-23560-4-git-send-email-arend@broadcom.com>
+References: <1389648029-23560-1-git-send-email-arend@broadcom.com>
+	<1389648029-23560-4-git-send-email-arend@broadcom.com>
+Date: Tue, 14 Jan 2014 07:29:36 +0100
+Message-ID: <CACna6ryGU_Rc-iJDJWAjjrKLteg7eyPVorasB-cR4sDhE8o8dw@mail.gmail.com> (sfid-20140114_072939_717873_A5EF9EA6)
+Subject: Re: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11
+ and CR4 cores
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 16:05 -0800, Ben Greear wrote:
+2014/1/13 Arend van Spriel <arend@broadcom.com>:
+> The IOCTL register in the agent/wrapper contains additional bits
+> that are core specific and use in the core reset sequence.
 
-> >> + * @IEEE80211_KEY_FLAG_SW_RX_CRYPT: This flag indicates hardware will not
-> >> + *	do any decrypt for received packets, though it may have uploaded
-> >> + *	the hardware key to be used for encrypting transmitted frames.
-> > 
-> > This isn't needed, all you need to do is return 0 from the set_key
-> > callback in the driver, without programming the key into the device. And
-> > then ignore tkip key updates for such a key.
-> 
-> I want and need to program the key into the device so that it can do the
-> encryption for transmit.  But, I need software to do full decryption on
-> receive.
+I'm not sure about this. I don't think we want to keep device-specific
+bits in a commond (bcma's) code.
 
-Ok so the "without programming the key into the device" part was iwlwifi
-specific (on TX the key is given explicitly with that device.) However,
-the same still applies - just replace that by "without enabling it for
-RX" or so.
+For example, I can't see PCI defines (like linux/pci_regs.h) having
+any device specific bits in this shared code.
 
-> That is the only way I could get ath10k to do any sort of software crypt,
-> and in fact, that is the most efficient way to get the features I need
-> so I might try getting ath9k to support the same mode some day...
-> 
-> I'll be posting ath10k patches to use this soon, but the dark magic
-> is down in the firmware in this case.
+Our case with bcma is a bit more tricky, because we have a single
+register with common and device-specific bits at the same time. So
+maybe I'll find another example.
 
-Ok, whatever, what I'm saying is that mac80211 doesn't care about
-whether you enabled the key for RX or not if you return 0 from
-set_key(). All it cares about it that if you return 0 the key must be
-available for TX. You therefore don't need to make any mac80211 changes.
-
-johannes
-
+What about USB? Let's say linux/usb/ch9.h. There is a struct
+usb_ctrlrequest that has bRequestType and bRequest.
+bRequestType accepts some common values like USB_DIR_IN,
+USB_RECIP_INTERFACE, etc. They are defined in the same file.
+bRequest values are device-specific and you don't have them defined in
+the above file.
+That makes pretty much sense for me.
