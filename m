@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26004 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755721AbaAHJv1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaANIrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:51:27 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 2/3] wil6210: Fix IP version indication for Tx csum offload
-Date: Wed, 8 Jan 2014 11:50:48 +0200
-Message-ID: <1389174649-14077-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140108_105130_908447_EBBBAB7B)
-In-Reply-To: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1389174649-14077-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 14 Jan 2014 03:47:05 -0500
+Message-ID: <1389689223.4333.2.camel@jlt4.sipsolutions.net> (sfid-20140114_094714_170422_F18563C0)
+Subject: Re: [PATCH] mac80211: add tracing for ieee80211_sta_set_buffered
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Jan 2014 09:47:03 +0100
+In-Reply-To: <1389689064.4333.0.camel@jlt4.sipsolutions.net> (sfid-20140114_094432_246368_B1B4B723)
+References: <1389006270-21768-1-git-send-email-johannes@sipsolutions.net>
+	 <87ob3fnkly.fsf@purkki.adurom.net>
+	 (sfid-20140114_072800_240207_84377A2B) <1389689064.4333.0.camel@jlt4.sipsolutions.net>
+	 (sfid-20140114_094432_246368_B1B4B723)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bit DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS should be set for IPv4
-only. Don't set it for IPv6
+On Tue, 2014-01-14 at 09:44 +0100, Johannes Berg wrote:
+> On Tue, 2014-01-14 at 08:27 +0200, Kalle Valo wrote:
+> > Johannes Berg <johannes@sipsolutions.net> writes:
+> > 
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > >
+> > > This is useful for debugging issues with drivers using this
+> > > function (erroneously), so add tracing for the API call.
+> > >
+> > > Change-Id: Ice9d7eabb8fecbac188f0a741920d3488de700ec
+> > 
+> > Extra change id.
+> > 
+> > (Sending just in case you missed it)
+> 
+> I did, yuck.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+However, too late, John already pulled it.
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index d505b26..18003c0 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -673,9 +673,12 @@ static int wil_tx_desc_offload_cksum_set(struct wil6210_priv *wil,
- 	if (skb->ip_summed != CHECKSUM_PARTIAL)
- 		return 0;
- 
-+	d->dma.b11 = ETH_HLEN; /* MAC header length */
-+
- 	switch (skb->protocol) {
- 	case cpu_to_be16(ETH_P_IP):
- 		protocol = ip_hdr(skb)->protocol;
-+		d->dma.b11 |= BIT(DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS);
- 		break;
- 	case cpu_to_be16(ETH_P_IPV6):
- 		protocol = ipv6_hdr(skb)->nexthdr;
-@@ -701,8 +704,6 @@ static int wil_tx_desc_offload_cksum_set(struct wil6210_priv *wil,
- 	}
- 
- 	d->dma.ip_length = skb_network_header_len(skb);
--	d->dma.b11 = ETH_HLEN; /* MAC header length */
--	d->dma.b11 |= BIT(DMA_CFG_DESC_TX_OFFLOAD_CFG_L3T_IPV4_POS);
- 	/* Enable TCP/UDP checksum */
- 	d->dma.d0 |= BIT(DMA_CFG_DESC_TX_0_TCP_UDP_CHECKSUM_EN_POS);
- 	/* Calculate pseudo-header */
--- 
-1.8.3.2
+johannes
 
