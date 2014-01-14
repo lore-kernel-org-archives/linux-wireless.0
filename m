@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:50564 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbaACBH3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:35614 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbaANR3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 20:07:29 -0500
-Received: by mail-ob0-f173.google.com with SMTP id gq1so15006494obb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 17:07:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Fri, 3 Jan 2014 02:07:08 +0100
-Message-ID: <CA+V6dmhE4GZhEthU08H+5CvKa0Z98mam4_dG-NEuwK4b5mkhaw@mail.gmail.com> (sfid-20140103_020732_205642_3F36A1D6)
-Subject: Re: Exporting the TSF to userland
+	Tue, 14 Jan 2014 12:29:47 -0500
+Received: by mail-ea0-f174.google.com with SMTP id b10so4102269eae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 09:29:46 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC 0/5] Implement DFS CAC time as regulatory param
+Date: Tue, 14 Jan 2014 18:29:25 +0100
+Message-Id: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182950_692362_02657532)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 31, 2013 at 5:24 AM, Pierre Bourdon <delroth@gmail.com> wrote:
-> Hello linux-wireless,
->
-> I'm a developer of libdrc, a project that allows Linux computers to
-> control a Wii U GamePad. Because of how the device operates, our
-> library needs to be able to read the TSF value of the access point
-> device from userland.
->
-> We currently have a hacky patch that works for our use cases, but it
-> would be a lot more convenient if that feature could be upstreamed.
-> What would be the best way to proceed?
->
-> Our current patch:
-> https://bitbucket.org/memahaxx/drc-mac80211/commits/4a9823cf2a6733bc15a05cffaebd8850d07451a7
+Implement DFS CAC time inside regulatory.
+Currently tested with internal regdb.
 
-To clarify: I have 0 experience developing "clean" stuff for the Linux
-driver (only hacky patches). A few simple questions that I have in
-order to make this patch more useful:
+Changed way we check rule is correct in first patch - check
+more rules if they are continous.
+Added parsing DFS CAC to genregdb.awk script. 
+Last patch is only an example I tested for PL regd.
+Implemented also iw patches for iw get regd/iw list
 
-* Is there some kind of "threshold" for features like this to be
-accepted upstream? How likely is it that this feature will get merged
-in the end?
+CRDA/wireless-regdb - this is still missing.
+Please review.
 
-* Is there any framework for exporting data from mac80211 drivers to a
-/sys or /proc file? There is code that exports data to debugfs, but
-that is usually not mounted by default or enabled by distributions.
-Our patch currently uses a /sys file, but I think nothing else in
-mac80211 does anything like that so far.
+Janusz Dziedzic (5):
+  cfg80211: regulatory rules, fix bw checking
+  cfg80211: regulatory, introduce DFS CAC time
+  cfg80211: parse DFS CAC time for internal regdb option
+  nl80211: add DFS CAC time option
+  cfg80211: setup CAC time in db.txt for PL
 
-* Should integer values be exported as human-readable ASCII base 10
-numbers in proc/sys files or is exporting the raw bytes as our patch
-currently does acceptable?
-
-Thanks,
+ include/net/cfg80211.h       |    2 +
+ include/net/regulatory.h     |   12 +++++
+ include/uapi/linux/nl80211.h |    5 +++
+ net/wireless/db.txt          |    6 ++-
+ net/wireless/genregdb.awk    |    8 +++-
+ net/wireless/nl80211.c       |   13 +++++-
+ net/wireless/reg.c           |  100 ++++++++++++++++++++++++++++++++++++------
+ 7 files changed, 128 insertions(+), 18 deletions(-)
 
 -- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
+1.7.9.5
+
