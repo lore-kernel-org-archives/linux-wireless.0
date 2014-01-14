@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:33790 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027AbaAQGz3 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:56603 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbaANPsq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 01:55:29 -0500
-From: Chen-Yu Tsai <wens@csie.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, netdev@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 0/6] net: rfkill: gpio: Add device tree support
-Date: Fri, 17 Jan 2014 14:47:25 +0800
-Message-Id: <1389941251-32692-1-git-send-email-wens@csie.org> (sfid-20140117_075545_304515_7D369539)
+	Tue, 14 Jan 2014 10:48:46 -0500
+Message-ID: <52D55C5C.8010402@broadcom.com> (sfid-20140114_164859_389054_8AD9D276)
+Date: Tue, 14 Jan 2014 16:48:44 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wpa_supplicant and driver reload
+References: <52A82A1D.80409@broadcom.com> <2323CBC6-B7B3-49FF-882F-66B9F0B9A879@w1.fi> <52AD7335.1090101@broadcom.com>
+In-Reply-To: <52AD7335.1090101@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+On 12/15/2013 10:15 AM, Arend van Spriel wrote:
+> On 12/15/2013 06:46 AM, Jouni Malinen wrote:
+>>
+>> On 11 Dec 2013, at 1:02 am, Arend van Spriel <arend@broadcom.com> wrote:
+>>
+>>> A basic questionIn my testing I normally stop wpa_supplicant when
+>>> reloading my driver and start it again, but I was wondering whether
+>>> this is needed. Can wpa_supplicant deal with interface index change
+>>> for the network interface?
+>>
+>> Yes, it can.
+>>
+>> (Did you not try it before asking? Or did it fail in some way?)
+> 
+> It failed. On my Ubuntu machine it works fine, but it seems
+> NetworkManager does give explicit RemoveInterface and CreateInterface
+> dbus primitives. When running wpa_supplicant without NetworkManager it
+> fails and it seems to be using the previous if_index. I will give
+> another stare the wpa_s log and send it out when I can not make sense of
+> it.
 
-This patch series adds device tree support to rfkill-gpio, and
-fixes some issues I ran into. This is so we can define and control
-RF devices through the device tree, such as the Broadcom BCM20710
-UART-based Bluetooth device found on the CubieTruck,
+Found the problem in the way brcmfmac does cleanup upon unload. With
+that fixed I notice some other behaviour. After 3 driver reloads (within
+1 minute) wpa_supplicant requests a scheduled scan. I fixed that by
+resetting wpa_s->normal_scans to zero upon entering
+WPA_INTERFACE_DISABLED state. The only thing left is that after each
+reload the delay before requesting a scan increases with 1 second. This
+is caused by the fact that in wpa_supplicant_driver_init() the delay is
+determined by a static counter that increments upon each call (if there
+are enabled networks). I think this is mainly intended for wpa_s startup
+so scans for each interface are not colliding. Not sure what the best
+way is to solve that.
 
-The CubieTruck uses a non-default clock rate oscillator for the
-BCM20710 device. As the datasheet states, a precise 32.768 KHz
-low power clock must be provided at power on for the device to
-detect the correct clock rate of the main oscillator. Hence the
-need for the "clock-frequency" property.
-
-The device tree bindings aren't pretty. They are the result of how
-gpiod_find was implemented: of_gpiod_find includes con_id in the
-DT property name; acpi_gpiod_find ignores it and only uses the index.
-A more elegant DT binding would mean splitting the gpio lookup code
-path in rfkill-gpio, which would be more like rfkill-gpio prior to
-the descriptor-based GPIO patch.
-
-I am aware there is a need for similar functionality for SDIO devices,
-which the CubieTruck has as well. A mail thread [1] started yesterday
-indicated that generic SDIO DT support was the way to go. I don't know
-if that could be applied to UART-based devices though.
-
-[1] http://www.spinics.net/lists/arm-kernel/msg301182.html
-
-The series depends on
-
-    [PATCH v3 2/6] net: rfkill: gpio: convert to descriptor-based GPIO interface
-
-which has been applied through the GPIO tree.
-
-The last patch depends on
-
-    ARM: dts: sun7i: add pin muxing options for UART2
-
-which I sent earlier this week.
-
-
-Comments, please?
-
-
-Cheers,
-ChenYu
-
-
-Chen-Yu Tsai (6):
-  net: rfkill: gpio: fix gpio name buffer size off by 1
-  net: rfkill: gpio: use clk_prepare_enable/clk_disable_unprepare
-  net: rfkill: gpio: fix reversed clock enable state
-  net: rfkill: gpio: add device tree support
-  net: rfkill: gpio: add clock-frequency device tree property
-  ARM: sun7i: cubietruck: enable bluetooth module
-
- .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 28 ++++++++++++++++
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts         | 37 ++++++++++++++++++++++
- net/rfkill/rfkill-gpio.c                           | 37 +++++++++++++++++++---
- 3 files changed, 97 insertions(+), 5 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
-
--- 
-1.8.5.2
-
+Regards,
+Arend
