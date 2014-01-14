@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:60649 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaALUNH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jan 2014 15:13:07 -0500
-Received: by mail-oa0-f42.google.com with SMTP id n16so7178880oag.1
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jan 2014 12:13:06 -0800 (PST)
+Received: from purkki.adurom.net ([80.68.90.206]:49145 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750918AbaANGgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jan 2014 01:36:37 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Pierre Bourdon <delroth@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Exporting the TSF to userland
+References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
+	<1389007385.5891.9.camel@jlt4.sipsolutions.net>
+	<CA+V6dmjoLx90vEwGZa8vRNHp0yWqKQnae+GcvEZHsCxR-oHnhg@mail.gmail.com>
+Date: Tue, 14 Jan 2014 08:36:36 +0200
+In-Reply-To: <CA+V6dmjoLx90vEwGZa8vRNHp0yWqKQnae+GcvEZHsCxR-oHnhg@mail.gmail.com>
+	(Pierre Bourdon's message of "Mon, 6 Jan 2014 12:37:34 +0100")
+Message-ID: <87k3e3nk7f.fsf@purkki.adurom.net> (sfid-20140114_073641_183911_7BF58A2E)
 MIME-Version: 1.0
-In-Reply-To: <52D2A7B5.2030003@broadcom.com>
-References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>
-	<52B2E638.8060906@hauke-m.de>
-	<CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com>
-	<52B300FC.7070204@hauke-m.de>
-	<52B31392.2070705@broadcom.com>
-	<CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com>
-	<52B43718.504@broadcom.com>
-	<CACna6rx_6yyJ88YZ2A5=XjK61xC=F2fX9B54MQcuzcZBOotOrg@mail.gmail.com>
-	<52D2A7B5.2030003@broadcom.com>
-Date: Sun, 12 Jan 2014 21:13:05 +0100
-Message-ID: <CACna6ryoCeEtCJdC4DKqXVQRVRtxC9s3mCho7wK4ba-ALKAzKA@mail.gmail.com> (sfid-20140112_211325_947450_F3950239)
-Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Naughtboy <skylvlinux@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/12 Arend van Spriel <arend@broadcom.com>:
->> Btw. if anyone is interested, I've written a minimal user-space app to
->> read device info (DL_GETVER) from Broadcom USB dongle.
->> gcc -lusb-1.0 main.c -o bcmid
->
-> I see fixed definition for vendor and device id. Given that they differ
-> from what we have in brcmfmac it may be good to use command line
-> argument(s) for these.
+Pierre Bourdon <delroth@gmail.com> writes:
 
-I don't see any real usage possibilities for this app, I just wanted
-to see how "libusb" works and see what's really inside of my WNA3100.
-I don't think anyone is really going to use it ;) Just shared it since
-I already got it ;)
+> On Mon, Jan 6, 2014 at 12:23 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2013-12-31 at 05:24 +0100, Pierre Bourdon wrote:
+>>> Hello linux-wireless,
+>>>
+>>> I'm a developer of libdrc, a project that allows Linux computers to
+>>> control a Wii U GamePad. Because of how the device operates, our
+>>> library needs to be able to read the TSF value of the access point
+>>> device from userland.
+>>>
+>>> We currently have a hacky patch that works for our use cases, but it
+>>> would be a lot more convenient if that feature could be upstreamed.
+>>> What would be the best way to proceed?
+>>
+>> That patch ... let's say I think "hacky" is almost lauding it. :)
+>>
+>> sysfs is a really bad place for this too, no other wireless APIs use
+>> sysfs.
+>
+> What do you recommend as the best place to export this kind of information?
+
+Either nl80211 or debugfs. Maybe debugfs is better because this is more
+or less a hack?
 
 -- 
-Rafał
+Kalle Valo
