@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbaA2MMb (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50497 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbaANTZu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 07:12:31 -0500
-Message-ID: <1390997543.4143.6.camel@jlt4.sipsolutions.net> (sfid-20140129_131234_975334_EC863D88)
-Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in
- IBSS join
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-	libertas-dev@lists.infradead.org
-Date: Wed, 29 Jan 2014 13:12:23 +0100
-In-Reply-To: <1390997455.4143.5.camel@jlt4.sipsolutions.net> (sfid-20140129_131112_961767_42774948)
-References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com>
-	 <1390997455.4143.5.camel@jlt4.sipsolutions.net>
-	 (sfid-20140129_131112_961767_42774948)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 14 Jan 2014 14:25:50 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wo20so67153obc.5
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 11:25:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52D56065.8060007@broadcom.com>
+References: <1389648029-23560-1-git-send-email-arend@broadcom.com>
+	<1389648029-23560-4-git-send-email-arend@broadcom.com>
+	<CACna6ryGU_Rc-iJDJWAjjrKLteg7eyPVorasB-cR4sDhE8o8dw@mail.gmail.com>
+	<52D56065.8060007@broadcom.com>
+Date: Tue, 14 Jan 2014 20:25:47 +0100
+Message-ID: <CACna6rwEpq2R2v6wMO8n43bO=0cMPn+q4jZ7FMoZx0XkAt0rUA@mail.gmail.com> (sfid-20140114_202553_852620_E560FE4D)
+Subject: Re: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11
+ and CR4 cores
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-29 at 13:10 +0100, Johannes Berg wrote:
-> On Tue, 2014-01-28 at 13:52 +0100, Antonio Quartulli wrote:
-> 
-> > When receiving an IBSS_JOINED event select the BSS object
-> > based on the {bssid, channel} couple rather than the bssid
-> > only.
-> 
-> Applied. I took it for mac80211-next since that's a rather special case.
-> I also squashed in the ij.bssid bugfix since it was in that area.
+2014/1/14 Arend van Spriel <arend@broadcom.com>:
+> On 01/14/2014 07:29 AM, Rafał Miłecki wrote:
+>> 2014/1/13 Arend van Spriel <arend@broadcom.com>:
+>>> The IOCTL register in the agent/wrapper contains additional bits
+>>> that are core specific and use in the core reset sequence.
+>>
+>> I'm not sure about this. I don't think we want to keep device-specific
+>> bits in a commond (bcma's) code.
+>
+> True. We can put these in brcm80211 includes so both brcmfmac and
+> brcmsmac can use it. That said the bcma_core_disable() and
+> bcma_core_enable() do need to be corrected to be reliable. Patch #2 in
+> this series show what needs to be changed.
 
-I take that back. Since I'm putting it only into -next, you can fix the
-documentation in the same patch. Also, you should update tracing to
-include the channel.
-
-johannes
-
+I'm looking at
+[PATCH 2/8] brcmfmac: update core reset and disable routines.
+and it's unclear for me, what needs to be changed in
+bcma_core_[enable|disable]. Could you specify, please?
