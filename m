@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:43402 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbaAJPla (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:37291 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaANIQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 10:41:30 -0500
-Received: by mail-lb0-f176.google.com with SMTP id l4so3427940lbv.21
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2014 07:41:29 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 10 Jan 2014 10:41:28 -0500
-Message-ID: <CAN44aq2=SLJz0e1JLEg+OmoQ8fxpmrbokvWyjW3MokLbbr1vKA@mail.gmail.com> (sfid-20140110_164135_522411_371DD129)
-Subject: [PATCH v4] wl12xx: fix tx power setting
-From: Alex Gal <a.gal@motsai.com>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Jan 2014 03:16:32 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH] ath9k: Fix possible overflow condition
+Date: Tue, 14 Jan 2014 13:41:17 +0530
+Message-Id: <1389687077-7551-1-git-send-email-sujith@msujith.org> (sfid-20140114_091635_780511_CDF70065)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My bad for the wrong format.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Fixes wl12xx tx power.
+Prevent a possible overflow condition which results in occasional
+bad IQ coefficients and EVM numbers.
 
-Signed-off-by: Alex Gal <a.gal@motsai.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c
-b/drivers/net/wireless/ti/wlcore/main.c
-index e9da47c..89d2310 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4457,6 +4457,16 @@ static void wl1271_op_bss_info_changed(struct
-ieee80211_hw *hw,
-    if (ret < 0)
-        goto out;
-
-+   if ((changed & BSS_CHANGED_TXPOWER) &&
-+       bss_conf->txpower != wlvif->power_level) {
-+
-+       ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
-+       if (ret < 0)
-+           goto out;
-+
-+       wlvif->power_level = bss_conf->txpower;
-+   }
-+
-    if (is_ap)
-        wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
-    else
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 4eb35aa..a352128 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -565,7 +565,7 @@ static bool ar9003_hw_solve_iq_cal(struct ath_hw *ah,
+ 	const s32 result_shift = 1 << 15;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	f2 = (f1 * f1 + f3 * f3) / result_shift;
++	f2 = ((f1 >> 3) * (f1 >> 3) + (f3 >> 3) * (f3 >> 3)) >> 9;
+ 
+ 	if (!f2) {
+ 		ath_dbg(common, CALIBRATE, "Divide by 0\n");
 -- 
 1.8.5.2
+
