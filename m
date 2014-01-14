@@ -1,92 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50777 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752052AbaAQJhX convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbaANIo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 04:37:23 -0500
-Received: by mail-ob0-f174.google.com with SMTP id wo20so4050174obc.33
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 01:37:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAAb+SYYyQF54Cib3Wae18orzH31RJ-vYoTEOBidMEPwVYYRv=g@mail.gmail.com>
-References: <a8aa052ea196de8256dcdc5b3ae81cfa64d3f9ff.1389935084.git.gamerh2o@gmail.com>
-	<1389939896.8062.53.camel@porter.coelho.fi>
-	<CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
-	<CAOiHx=nui0nVGiCLoukRovB3zY5jiKAt__Numo4y4bQv0dzOcQ@mail.gmail.com>
-	<1389949304.8062.55.camel@porter.coelho.fi>
-	<CAAb+SYYyQF54Cib3Wae18orzH31RJ-vYoTEOBidMEPwVYYRv=g@mail.gmail.com>
-Date: Fri, 17 Jan 2014 10:37:22 +0100
-Message-ID: <CACna6rzTF8Wpj+Bn40iwEsZ9Ca+gE1ydYz1cgonb4u1rQPGQgw@mail.gmail.com> (sfid-20140117_103738_018332_13FF2CFB)
-Subject: Re: [PATCH 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: ZHAO Gang <gamerh2o@gmail.com>
-Cc: Luca Coelho <luca@coelho.fi>, Jonas Gorski <jogo@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Jan 2014 03:44:29 -0500
+Message-ID: <1389689064.4333.0.camel@jlt4.sipsolutions.net> (sfid-20140114_094432_246368_B1B4B723)
+Subject: Re: [PATCH] mac80211: add tracing for ieee80211_sta_set_buffered
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Jan 2014 09:44:24 +0100
+In-Reply-To: <87ob3fnkly.fsf@purkki.adurom.net> (sfid-20140114_072800_240207_84377A2B)
+References: <1389006270-21768-1-git-send-email-johannes@sipsolutions.net>
+	 <87ob3fnkly.fsf@purkki.adurom.net> (sfid-20140114_072800_240207_84377A2B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/17 ZHAO Gang <gamerh2o@gmail.com>:
-> On Fri, Jan 17, 2014 at 5:01 PM, Luca Coelho <luca@coelho.fi> wrote:
->> On Fri, 2014-01-17 at 09:56 +0100, Jonas Gorski wrote:
->>> On Fri, Jan 17, 2014 at 8:11 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
->>> > 2014/1/17 Luca Coelho <luca@coelho.fi>:
->>> >> On Fri, 2014-01-17 at 13:27 +0800, ZHAO Gang wrote:
->>> >>> In following patch, replace b43 specific helper function with kernel
->>> >>> api to reduce code duplication.
->>> >>>
->>> >>> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
->>> >>> ---
->>> >>>  drivers/net/wireless/b43/xmit.c | 4 ++--
->>> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>> >>>
->>> >>> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
->>> >>> index 4ae63f4..50e5ddb 100644
->>> >>> --- a/drivers/net/wireless/b43/xmit.c
->>> >>> +++ b/drivers/net/wireless/b43/xmit.c
->>> >>> @@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->>> >>>                * channel number in b43. */
->>> >>>               if (chanstat & B43_RX_CHAN_5GHZ) {
->>> >>>                       status.band = IEEE80211_BAND_5GHZ;
->>> >>> -                     status.freq = b43_freq_to_channel_5ghz(chanid);
->>> >>> +                     status.freq = b43_channel_to_freq_5ghz(chanid);
->>> >>>               } else {
->>> >>>                       status.band = IEEE80211_BAND_2GHZ;
->>> >>> -                     status.freq = b43_freq_to_channel_2ghz(chanid);
->>> >>> +                     status.freq = b43_channel_to_freq_2ghz(chanid);
->>> >>>               }
->>> >>>               break;
->>> >>>       default:
->>> >>
->>> >> Why do you need this patch if you're going to remove these calls in the
->>> >> next patch anyway?
->>> >
->>> > I was thinking about this for a moment too. You could just make a one
->>> > patch and note in commit message that "translation" was reversed.
->>>
->>> That would mean mixing fixes and improvements, which is something you
->>> are not supposed to do, so IMHO having these split into two is
->>> correct. Think about stable maintainers wanting the fix but not the
->>> other change because it might introduce unknown side effects.
->>
->> Makes sense.  In such case, the first patch should be clearly marked as
->> a bug fix, so at least the commit message should be changed (ie.
->> mentioning the next patch in the series is useless).
->>
->
-> I am OK to send this fix either in one patch or two, actually I have
-> sent a version 2 which is a one patch version :-)
->
-> I'm not sure if this patch is needed for stable, yes, as you said, if
-> it's for stable, the commit message should be changed.
+On Tue, 2014-01-14 at 08:27 +0200, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > This is useful for debugging issues with drivers using this
+> > function (erroneously), so add tracing for the API call.
+> >
+> > Change-Id: Ice9d7eabb8fecbac188f0a741920d3488de700ec
+> 
+> Extra change id.
+> 
+> (Sending just in case you missed it)
 
-Thanks for your help guys.
+I did, yuck.
 
-I think it may be the best idea to send
-1/2 as fix (probably 3.14) + stable CC
-2/2 as improvement (for next)
-Does it make sense?
+johannes
 
--- 
-Rafał
+
