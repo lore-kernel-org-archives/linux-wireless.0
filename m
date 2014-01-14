@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:64689 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbaAWQT1 (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:41221 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681AbaANR3v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 11:19:27 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uy17so17376949igb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 08:19:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAKKnJbeVqvUUnW7E7yw3cvF_1DKw5_+xpYJ+jB3U-=VL=vQyVg@mail.gmail.com>
-References: <CAKKnJbe=eBMzB3Bp7qkYvwSTr0x=g-bZkz9dQ6HUihZE5rc5iw@mail.gmail.com>
-	<CAFED-jmUF9u=sLfVuCSy3rjmB4DM9x6BCLhJaq2CrY9MV6Wycg@mail.gmail.com>
-	<CAKKnJbeVqvUUnW7E7yw3cvF_1DKw5_+xpYJ+jB3U-=VL=vQyVg@mail.gmail.com>
-Date: Thu, 23 Jan 2014 11:19:24 -0500
-Message-ID: <CAKKnJbe+bqnTv3BOai3YoyMzNZ3w3gY460O0d1GiZDZaZYg5Uw@mail.gmail.com> (sfid-20140123_171930_977841_CF5BCB25)
-Subject: Re: wlcore-spi crash
-From: Charles <hobbesc7@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Jan 2014 12:29:51 -0500
+Received: by mail-ee0-f45.google.com with SMTP id b15so291699eek.32
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 09:29:49 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC 5/5] cfg80211: setup CAC time in db.txt for PL
+Date: Tue, 14 Jan 2014 18:29:30 +0100
+Message-Id: <1389720570-2430-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182957_005327_9C290031)
+In-Reply-To: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> When I modprobe wlcore-spi I get a kernel crash.  Has anyone
->>> encountered this?  I found a similar problem here:
->>> http://marc.info/?l=linux-wireless&m=135212370625698&w=2
->>>
->>> I tried adding the patch mentioned there to backports-3.12-1, but I
->>> get this build error: "error: 'struct wl1271' has no member named
->>> 'set_power'"
->>>
->>> Here's the crash:
->>>
->>> [   98.325693] Unable to handle kernel NULL pointer dereference at
->>> virtual address 00000000
->>> [   98.334171] pgd = c0004000
->>> [   98.337031] [00000000] *pgd=00000000
->>> [   98.340791] Internal error: Oops: 80000007 [#1]
->>> [   98.345524] Modules linked in: wlcore_spi(O) wl12xx(O) wlcore(O)
->>> mac80211(O) cfg80211(O) compat(O) autofs4
->>> [   98.355661] CPU: 0    Tainted: G           O  (3.2.0)
->>> [   98.364120] PC is at 0x0
->>> [   98.366846] LR is at wl12xx_set_power_on+0x30/0x150 [wlcore]
->>
->> I think this should help:
->> http://www.spinics.net/lists/linux-wireless/msg98589.html
->>
->
-> As I mentioned above, I get a compile error with that patch: the
-> wl1271 struct doesn't have "set_power".
+This is DFS CAC time setup for PL.
+We should do the same for all other
+countries that support DFS in wireless-regd.
+Here only as example, please don't merge.
 
-I got the patch to compile by adding "void (*set_power)(bool enable);"
-to the wl1271 struct in wlcore.h.  Now the driver loads without
-crashing, but I get a new error:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/db.txt |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-[   70.166191] wl1271_spi spi1.1: SPI read busy-word timeout!
-[   70.208452] wl1271_spi spi1.1: SPI read busy-word timeout!
-[   70.252324] wl1271_spi spi1.1: SPI read busy-word timeout!
-[   70.294749] wl1271_spi spi1.1: SPI read busy-word timeout!
-[   70.300515] wlcore: WARNING Top register access timed out.
-[   70.306260] wlcore: ERROR couldn't get hw info
+diff --git a/net/wireless/db.txt b/net/wireless/db.txt
+index 811eb5c..f3813a2 100644
+--- a/net/wireless/db.txt
++++ b/net/wireless/db.txt
+@@ -632,8 +632,10 @@ country PK:
+ country PL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 80), (N/A, 20)
+-	(5250 - 5330 @ 80), (N/A, 20), DFS
+-	(5490 - 5710 @ 80), (N/A, 27), DFS
++	(5250 - 5330 @ 80), (N/A, 20), (60), DFS
++	(5490 - 5590 @ 80), (N/A, 27), (60), DFS
++	(5590 - 5650 @ 80), (N/A, 27), (600), DFS
++	(5650 - 5710 @ 80), (N/A, 27), (60), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+-- 
+1.7.9.5
+
