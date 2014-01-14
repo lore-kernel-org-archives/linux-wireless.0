@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:26447 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193AbaAHI44 (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:52876 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbaANIef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 03:56:56 -0500
-Message-ID: <52CD12D4.5030008@broadcom.com> (sfid-20140108_095716_760221_44C27CA2)
-Date: Wed, 8 Jan 2014 09:56:52 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 14 Jan 2014 03:34:35 -0500
+Received: by mail-ig0-f179.google.com with SMTP id c10so979810igq.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 00:34:35 -0800 (PST)
 MIME-Version: 1.0
-To: Chen-Yu Tsai <wens@csie.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-CC: Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>,
-	<benn@cubietech.com>
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
-In-Reply-To: <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <87d2jvnf4l.fsf@purkki.adurom.net>
+References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
+	<1389007385.5891.9.camel@jlt4.sipsolutions.net>
+	<CA+V6dmjoLx90vEwGZa8vRNHp0yWqKQnae+GcvEZHsCxR-oHnhg@mail.gmail.com>
+	<87k3e3nk7f.fsf@purkki.adurom.net>
+	<CANq1E4SrMVmEyLA1J9kQA565AZHBvB=5C7r0GSuhoK6UO5OVkQ@mail.gmail.com>
+	<87d2jvnf4l.fsf@purkki.adurom.net>
+Date: Tue, 14 Jan 2014 09:34:35 +0100
+Message-ID: <CANq1E4SPwC5rDE8MKEdjNscuZHNZkdiNJFbQC-hgJ_fGLvxYkA@mail.gmail.com> (sfid-20140114_093439_468766_721380E5)
+Subject: Re: Exporting the TSF to userland
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Pierre Bourdon <delroth@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/27/2013 01:36 PM, Chen-Yu Tsai wrote:
->>> >> Working tree:
->>> >>
->>> >>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
->>> >>
->>> >> Comments welcome :)
->> >
->> > No comment, but: Nice work!
-> Thanks. BTW, who should submit the patch? :)
+Hi
 
-Hi Chen-Yu
+On Tue, Jan 14, 2014 at 9:26 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> David Herrmann <dh.herrmann@gmail.com> writes:
+>
+>>> Either nl80211 or debugfs. Maybe debugfs is better because this is more
+>>> or less a hack?
+>>
+>> It's supposed to be a real interface used to calculate timestamps for
+>> mpeg streams, iirc. So debugfs is no option here.
+>
+> And how is sysfs any better? If you use sysfs right now I don't see why
+> debugfs would be any worse. You just need to check from your application
+> that it's mounted and find the location.
 
-I will submit the patch today.
+We don't guarantee debugfs API stability across kernel-releases. At
+least my experience is that debugfs is highly discouraged to be used
+as stable API interface, except for debug-applications. Anyhow, if you
+have different rules in ./net/mac80211, feel free to put it there. At
+least it's better than having no interface at all.
 
-Regards,
-Arend
-
+Thanks
+David
