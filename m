@@ -1,105 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49924 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbaAXNPA (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:33858 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbaANVu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 08:15:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: send event when AP interface is stopped by kernel
-Date: Fri, 24 Jan 2014 14:14:56 +0100
-Message-Id: <1390569296-23030-1-git-send-email-johannes@sipsolutions.net> (sfid-20140124_141505_968865_65374E31)
+	Tue, 14 Jan 2014 16:50:57 -0500
+Received: by mail-ob0-f177.google.com with SMTP id va2so251362obc.8
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 13:50:56 -0800 (PST)
+Message-ID: <52D5B13C.3040006@lwfinger.net> (sfid-20140114_225101_098345_08A4C09D)
+Date: Tue, 14 Jan 2014 15:50:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: andrea.merello@gmail.com,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>
+CC: John Linville <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: RTL8187SE staging Linux driver
+References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>	<522F584E.6000806@lwfinger.net>	<CAN8YU5PCFj-gtQwuuR3fM52YAVTi_5NYPbDVj-KMSzMpXjvFWQ@mail.gmail.com> <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
+In-Reply-To: <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 01/14/2014 11:40 AM, Andrea Merello wrote:
+> Hello Bernhard,
+>
+> Are you still curious to test something ? :)
+> I attach a patch that should apply to wireless-testing..
+>
+> I still have several items pending on my TODO list, including things
+> to tidy/fix, and things that are currently missing, however  I'm
+> getting encouraging results on my setup..
+>
+> If this works for you, and if other people in CC here agree, I may
+> starting split this mega-patch in something more suitable for kernel
+> maintainers to merge (currently it even changes few misleading names
+> in the common register struct, affecting also rtl8187 driver)..
+>
+> Let me know if it works :)
 
-There are a few cases, e.g. suspend, where an AP interface is
-stopped by the kernel rather than by userspace request, most
-commonly when suspending. To let userspace know about this,
-send the NL80211_CMD_STOP_AP command as an event every time
-an AP interface is stopped. This also happens when userspace
-did in fact request the AP stop, but that's not a problem.
+Andrea,
 
-For full-MAC drivers this may need to be extended to also
-cover cases where the device stopped the AP operation for
-some reason, this a bit more complicated because then all
-cfg80211 state also needs to be reset; such API is not part
-of this patch.
+Building your version gets the following warning:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/ap.c      |  1 +
- net/wireless/nl80211.c | 29 +++++++++++++++++++++++++++++
- net/wireless/nl80211.h |  2 ++
- 3 files changed, 32 insertions(+)
+   CC [M]  drivers/net/wireless/rtl818x/rtl8187/rfkill.o
+drivers/net/wireless/rtl818x/rtl8187/dev.c: In function ‘rtl8187_set_anaparam’:
+drivers/net/wireless/rtl818x/rtl8187/dev.c:596:3: warning: passing argument 2 of 
+‘rtl818x_iowrite8’ from incompatible pointer type [enabled by default]
+In file included from drivers/net/wireless/rtl818x/rtl8187/dev.c:32:0:
+drivers/net/wireless/rtl818x/rtl8187/rtl8187.h:237:20: note: expected ‘u8 *’ but 
+argument is of type ‘__le16 *’
 
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 11ee4ed..4760d655 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -30,6 +30,7 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 		wdev->channel = NULL;
- 		wdev->ssid_len = 0;
- 		rdev_set_qos_map(rdev, dev, NULL);
-+		nl80211_send_ap_stopped(wdev);
- 	}
- 
- 	return err;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 36fb595..6753203 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -11757,6 +11757,35 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
- }
- EXPORT_SYMBOL(cfg80211_crit_proto_stopped);
- 
-+void nl80211_send_ap_stopped(struct wireless_dev *wdev)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_STOP_AP);
-+	if (!hdr)
-+		goto out;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->netdev->ifindex) ||
-+	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
-+		goto out;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, GFP_KERNEL);
-+	return;
-+ out:
-+	nlmsg_free(msg);
-+}
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index b1b2313..cb0216e 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -74,6 +74,8 @@ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
- 		     enum nl80211_radar_event event,
- 		     struct net_device *netdev, gfp_t gfp);
- 
-+void nl80211_send_ap_stopped(struct wireless_dev *wdev);
-+
- void cfg80211_rdev_free_coalesce(struct cfg80211_registered_device *rdev);
- 
- #endif /* __NET_WIRELESS_NL80211_H */
--- 
-1.8.5.2
+The easy fix is to change that to an ...iowrite16() call. So far, my testing to 
+see if writing that extra byte messes up the RTL8187B has not shown any 
+problems; however, I have not yet tested on a big-endian machine.
+
+Have you given any thought to renaming the driver? It seems to me that rtl8180 
+was probably not right when it drove both RTL8180 and RTL8185, and it is even 
+less appropriate today.
+
+The driver connects to the following APs:
+
+802.11n running WPA2
+802.11g running WPA1
+802.11g running WEP
+
+Looks good.
+
+Larry
+
+
+
 
