@@ -1,208 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48628 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbaAGXRA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 18:17:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 12/12] mac80211_hwsim: allow creating/destroying radios on the fly
-Date: Wed,  8 Jan 2014 00:15:17 +0100
-Message-Id: <1389136517-21216-13-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001704_057576_9DFE218B)
-In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
-References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+Received: from mantis.wzyboy.im ([199.83.51.51]:35376 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751924AbaAND42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jan 2014 22:56:28 -0500
+Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com [209.85.220.41])
+	by mantis.wzyboy.im (Postfix) with ESMTPSA id 7657F8812D
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 11:56:27 +0800 (CST)
+Received: by mail-pa0-f41.google.com with SMTP id fb1so6933586pad.14
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 19:56:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo64ttbB7-WYgg2B9seFu5tdSjZqrUSKBKx00GfXzoUDOw@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+ <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
+ <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
+ <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com> <CAErSpo64ttbB7-WYgg2B9seFu5tdSjZqrUSKBKx00GfXzoUDOw@mail.gmail.com>
+From: Sascha Weaver <wzyboy@wzyboy.org>
+Date: Tue, 14 Jan 2014 11:56:11 +0800
+Message-ID: <CALkVjQZJxPL=pq5jmOWjVsq8OX=GfuiqG93ANRjOg8yceuUCOQ@mail.gmail.com> (sfid-20140114_045632_317130_20040A38)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2014/1/14 Bjorn Helgaas <bhelgaas@google.com>:
+> It doesn't seem strange to me; maybe we're interpreting wzyboy's data
+> differently.  The way I read it, if /etc/modprobe.d/iwlwifi.conf
+> contains "options iwlmvm power_scheme=1", everything works fine (cases
+> 0, 4, 8).  If iwlwifi.conf does not exist or contains only a
+> commented-out line, he sees problems (cases 2, 6).
+>
 
-Add new commands to the hwsim generic netlink family to allow
-creating and destroying radios on the fly. The number of channels
-a radio supports can be specified when it's created, if it isn't
-the module parameter will be used as default.
+Yes, Bjorn got my point :-)
 
-This should be extended in the future to allow other parameters
-to be specified, e.g.
- * list of channels
- * interface combinations, particularly P2P_DEVICE support
- * regtest
- * and pretty much all other hardware capabilities
+With "options iwlmvm power_scheme=1" -> network is good
+Without "options iwlmvm power_scheme=1" -> network is bad
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 58 +++++++++++++++++++++++++++++++----
- drivers/net/wireless/mac80211_hwsim.h | 11 +++++++
- 2 files changed, 63 insertions(+), 6 deletions(-)
+Currently I am using Linux 3.12.7 with Emmanuel's patch, and without
+any setpci tricks.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e623a9e..d939a6f 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -273,7 +273,7 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_iface_combination if_combination;
- 
- 	struct mac_address addresses[2];
--	int channels;
-+	int channels, idx;
- 
- 	struct ieee80211_channel *tmp_chan;
- 	struct delayed_work roc_done;
-@@ -352,6 +352,8 @@ static struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 				 .len = IEEE80211_TX_MAX_RATES *
- 					sizeof(struct hwsim_tx_rate)},
- 	[HWSIM_ATTR_COOKIE] = { .type = NLA_U64 },
-+	[HWSIM_ATTR_CHANNELS] = { .type = NLA_U32 },
-+	[HWSIM_ATTR_RADIO_ID] = { .type = NLA_U32 },
- };
- 
- static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-@@ -1818,7 +1820,7 @@ static const struct ieee80211_ops mac80211_hwsim_ops = {
- 
- static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- 
--static int __init mac80211_hwsim_create_radio(void)
-+static int mac80211_hwsim_create_radio(int channels)
- {
- 	int err;
- 	u8 addr[ETH_ALEN];
-@@ -1873,6 +1875,7 @@ static int __init mac80211_hwsim_create_radio(void)
- 	hw->wiphy->addresses = data->addresses;
- 
- 	data->channels = channels;
-+	data->idx = idx;
- 
- 	if (data->channels > 1) {
- 		hw->wiphy->max_scan_ssids = 255;
-@@ -2023,7 +2026,7 @@ static int __init mac80211_hwsim_create_radio(void)
- 	list_add_tail(&data->list, &hwsim_radios);
- 	spin_unlock_bh(&hwsim_radio_lock);
- 
--	return 0;
-+	return idx;
- 
- failed_hw:
- 	device_unregister(data->dev);
-@@ -2267,6 +2270,39 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 	return 0;
- }
- 
-+static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
-+{
-+	unsigned int chans = channels;
-+
-+	if (info->attrs[HWSIM_ATTR_CHANNELS])
-+		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
-+
-+	return mac80211_hwsim_create_radio(chans);
-+}
-+
-+static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
-+{
-+	struct mac80211_hwsim_data *data, *tmp;
-+	int err = -ENODEV;
-+	int idx;
-+
-+	if (!info->attrs[HWSIM_ATTR_RADIO_ID])
-+		return -EINVAL;
-+	idx = nla_get_u32(info->attrs[HWSIM_ATTR_RADIO_ID]);
-+
-+	spin_lock_bh(&hwsim_radio_lock);
-+	list_for_each_entry_safe(data, tmp, &hwsim_radios, list) {
-+		if (data->idx != idx)
-+			continue;
-+		mac80211_hwsim_destroy_radio(data);
-+		err = 0;
-+		break;
-+	}
-+	spin_unlock_bh(&hwsim_radio_lock);
-+
-+	return err;
-+}
-+
- /* Generic Netlink operations array */
- static const struct genl_ops hwsim_ops[] = {
- 	{
-@@ -2285,6 +2321,16 @@ static const struct genl_ops hwsim_ops[] = {
- 		.policy = hwsim_genl_policy,
- 		.doit = hwsim_tx_info_frame_received_nl,
- 	},
-+	{
-+		.cmd = HWSIM_CMD_CREATE_RADIO,
-+		.policy = hwsim_genl_policy,
-+		.doit = hwsim_create_radio_nl,
-+	},
-+	{
-+		.cmd = HWSIM_CMD_DESTROY_RADIO,
-+		.policy = hwsim_genl_policy,
-+		.doit = hwsim_destroy_radio_nl,
-+	},
- };
- 
- static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
-@@ -2342,7 +2388,7 @@ static int __init init_mac80211_hwsim(void)
- {
- 	int i, err;
- 
--	if (radios < 1 || radios > 100)
-+	if (radios < 0 || radios > 100)
- 		return -EINVAL;
- 
- 	if (channels < 1)
-@@ -2377,8 +2423,8 @@ static int __init init_mac80211_hwsim(void)
- 	}
- 
- 	for (i = 0; i < radios; i++) {
--		err = mac80211_hwsim_create_radio();
--		if (err)
-+		err = mac80211_hwsim_create_radio(channels);
-+		if (err < 0)
- 			goto out_free_radios;
- 	}
- 
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index afaad5a..fb9920a 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -65,6 +65,9 @@ enum hwsim_tx_control_flags {
-  * kernel, uses:
-  *	%HWSIM_ATTR_ADDR_TRANSMITTER, %HWSIM_ATTR_FLAGS,
-  *	%HWSIM_ATTR_TX_INFO, %HWSIM_ATTR_SIGNAL, %HWSIM_ATTR_COOKIE
-+ * @HWSIM_CMD_CREATE_RADIO: create a new radio with the given parameters,
-+ *	returns the radio ID (>= 0) or negative on errors
-+ * @HWSIM_CMD_DESTROY_RADIO: destroy a radio
-  * @__HWSIM_CMD_MAX: enum limit
-  */
- enum {
-@@ -72,6 +75,8 @@ enum {
- 	HWSIM_CMD_REGISTER,
- 	HWSIM_CMD_FRAME,
- 	HWSIM_CMD_TX_INFO_FRAME,
-+	HWSIM_CMD_CREATE_RADIO,
-+	HWSIM_CMD_DESTROY_RADIO,
- 	__HWSIM_CMD_MAX,
- };
- #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
-@@ -94,6 +99,10 @@ enum {
- 	space
-  * @HWSIM_ATTR_TX_INFO: ieee80211_tx_rate array
-  * @HWSIM_ATTR_COOKIE: sk_buff cookie to identify the frame
-+ * @HWSIM_ATTR_CHANNELS: u32 attribute used with the %HWSIM_CMD_CREATE_RADIO
-+ *	command giving the number of channels supported by the new radio
-+ * @HWSIM_ATTR_RADIO_ID: u32 attribute used with %HWSIM_CMD_DESTROY_RADIO
-+ *	only to destroy a radio
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -108,6 +117,8 @@ enum {
- 	HWSIM_ATTR_SIGNAL,
- 	HWSIM_ATTR_TX_INFO,
- 	HWSIM_ATTR_COOKIE,
-+	HWSIM_ATTR_CHANNELS,
-+	HWSIM_ATTR_RADIO_ID,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+Emmanuel says a new firmware is available in 3.13 so I will follow up
+when 3.13 is released in my distro's repo.
+
+
+
 -- 
-1.8.5.1
-
+Sascha Weaver
