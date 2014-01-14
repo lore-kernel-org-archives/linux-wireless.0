@@ -1,65 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:32795 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091AbaAKTsp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 14:48:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 2/3] b43: Fix oops if firmware is not available
-Date: Sat, 11 Jan 2014 13:48:33 -0600
-Message-Id: <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_204856_406600_769A9CA0)
-In-Reply-To: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from isrv.corpit.ru ([86.62.121.231]:55691 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090AbaANI74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jan 2014 03:59:56 -0500
+Message-ID: <52D4FC8B.6090301@msgid.tls.msk.ru> (sfid-20140114_100000_620368_4DF15EAB)
+Date: Tue, 14 Jan 2014 12:59:55 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru>
+In-Reply-To: <52BEC2F6.7010505@msgid.tls.msk.ru>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On openSUSE systems, the script that installs the firmware for b43 also
-unloads and reloads the driver. When the firmware was not previously
-available, the driver has stalled at a wait_for_completion(). When the
-unload routine releases that hold, the driver encounters structures
-that have already been deleted and generates a fatal condition. When
-the user does a manual restart, the file system cleanup frequently
-results in the firmware files being deleted and the user is never able
-to install the firmware. The fix is to change the wait_for_completion()
-with a wait_for_completion_timeout() with a 60 second wait period.
+So, I returned from my newyear trip.  There, I tried to use this my laptop
+with many various wifi networks, in hotels, cafes and other places.  And
+it never worked.
 
-There is a potential race condition; however, the chances that less
-than a minute has elapsed between the initial driver load and a
-subsequent unload is very unlikely.
+So I bought an usb wifi adaptor, some cheap old orient model, which worked
+MUCH better than the built-in broadcom wifi. Except of 2 issues.
 
-This patch also fixes a typo in a comment.
+First, the antenna in this usb dongle is small, so signal quality isn't as
+good as for the built-in adaptor with good antenna.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/b43/main.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+And second, which is much more severe, it is an external adaptor plugged
+into an usb slot, so it isn't that easy as internal one, but it is very
+easy to BREAK the usb slot.  Which is what I did while sitting in a cafe
+and someone else walking by.  So now I've one usb port on my laptop broken
+now (with very unpleasant large crack on the laptop "body") and the usb
+wifi adaptor I bought is broken too.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 86b2030..5ce9ecb 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2150,12 +2150,13 @@ int b43_do_request_fw(struct b43_request_fw_context *ctx,
- 			pr_err("Unable to load firmware\n");
- 			return err;
- 		}
--		/* stall here until fw ready */
--		wait_for_completion(&ctx->fw_load_complete);
-+		/* stall here until fw ready or 60 sec elapses */
-+		wait_for_completion_timeout(&ctx->fw_load_complete,
-+					    msecs_to_jiffies(60000));
- 		if (ctx->blob)
- 			goto fw_ready;
- 	/* On some ARM systems, the async request will fail, but the next sync
--	 * request works. For this reason, we dall through here
-+	 * request works. For this reason, we fall through here
- 	 */
- 	}
- 	err = request_firmware(&ctx->blob, ctx->fwname,
--- 
-1.8.4
+I also tried to replace the internal wifi card with some non-broadcom
+model, but the laptop refused to _boot_ while the card is inserted
+(a so-called bios lock).
+
+So the question stands: what is the way to actually use the internal
+bcm card, without all those hassles I already encountered?
+
+So far, the expirience was that anything with broadcom inside should
+NOT be considered for a purchase, because the issues they gave you
+costs much more than a price difference for a different model without
+broadcom parts.
+
+Thanks,
+
+/mjt
+
+28.12.2013 16:24, Michael Tokarev wrote:
+> Thank you very much for the reply!
+> 
+> 28.12.2013 13:42, Arend van Spriel wrote:
+>> On 12/27/2013 09:58 PM, Michael Tokarev wrote:
+>>> Hello.
+>>>
+>>> Got a Lenovo Thinkpad notebook with the following wifi card:
+>>>
+>>> 03:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
+>>>     Subsystem: Broadcom Corporation Device [14e4:0608]
+>>>     Flags: bus master, fast devsel, latency 0, IRQ 17
+>>>     Memory at f1600000 (64-bit, non-prefetchable) [size=16K]
+>>>     Capabilities: [40] Power Management version 3
+>>>     Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>>>     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+>>>     Capabilities: [d0] Express Endpoint, MSI 00
+>>>     Capabilities: [100] Advanced Error Reporting
+>>>     Capabilities: [13c] Virtual Channel
+>>>     Capabilities: [160] Device Serial Number 00-00-24-ff-ff-fe-48-d2
+>>>     Capabilities: [16c] Power Budgeting <?>
+>>>     Kernel driver in use: bcma-pci-bridge
+> 
+> [wifi tx stalls after short usage, 3.12 kernel]
+> 
+>>> P.S. I tried to find archives of brcm80211 list, or a way to
+>>> subscribe to it before posting, but found neither.  Are there
+>>> archives?
+>>
+>> Nope. The brcm80211-dev-list is just a (hopefully) convenient way to get
+>> your message to the brcm80211 driver developer within Broadcom. So it is
+>> always best to Cc: the linux-wireless list as well.
+> 
+> Ah.  So the real archives should be for linux-wireless@ not for brcm..@ :)
+> Got it, thank you!
+> 
+>> Now about your card. I am not sure where to start, but can you dump
+>> contents for following debugfs file:
+>>
+>> /sys/kernel/debug/brcmsmac/bcma*/hardware
+> 
+> # cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+> board vendor: 14e4
+> board type: 608
+> board revision: 1109
+> board flags: 402201
+> board flags2: 884
+> firmware revision: 262032c
+> 
+>> Also a capture file would be great so if you have wireshark or dumpcap you can add monitor interface and capture 802.11 packets from connect up until the stalls. Commands for adding/enabling monitor interface (ass root/sudo):
+>>
+>> # iw dev wlan0 interface add mon0 type monitor
+>> # ifconfig mon0 up
+> 
+> Capture file made with tcpdump is attached (gzipped).  I started the
+> capture with wlan0 disabled, next I  used `nmcli con up id "wifi mjt"'
+> to connect to the AP (named, obviously, "mjt"), and next I tried to
+> d/load a file from my website (86.62.121.231).  It d/loaded about 27Kb
+> and stalled.  Next I tried to ping the AP (192.168.88.65), which also
+> didn't work.
+> 
+> That's quite a typical behavour of this whole thing.  Sometimes it
+> lasts a bit longer, but that's rather unusual and it ends up stalling
+> anyway.
+> 
+> Is it worth the effort to try 3.13-tobe kernel here?  I browsed changes
+> in there made in drivers/net/wireless/brcm80211/ compared with 3.12, but
+> there aren't many changes related to the softmac version, and most
+> looks rather cosmetic.
+> 
+> Thank you very much for the help!
+> 
+> /mjt
+> 
 
