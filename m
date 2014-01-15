@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:57074 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753081AbaA2TIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:08:09 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
- ESMTPSA (Nemesis) id 0MNO33-1WAVEH2SVt-006sqP for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:08 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 08/13] ath9k_htc: use ath9k_cmn_rx_accept
-Date: Wed, 29 Jan 2014 20:06:59 +0100
-Message-Id: <1391022424-21087-7-git-send-email-linux@rempel-privat.de> (sfid-20140129_200813_421036_CEECB99D)
-In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
- <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+Received: from s3.sipsolutions.net ([144.76.43.152]:38278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683AbaAONZc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 08:25:32 -0500
+Message-ID: <1389792328.4338.9.camel@jlt4.sipsolutions.net> (sfid-20140115_142534_646605_898F145F)
+Subject: Re: [RFC 4/5] nl80211: add DFS CAC time option
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Wed, 15 Jan 2014 14:25:28 +0100
+In-Reply-To: <1389720570-2430-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182949_423700_8DB6D80B)
+References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1389720570-2430-5-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140114_182949_423700_8DB6D80B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 45 +++++----------------------
- 1 file changed, 8 insertions(+), 37 deletions(-)
+On Tue, 2014-01-14 at 18:29 +0100, Janusz Dziedzic wrote:
+> Pass DFS CAC time to user mode (mainly
+> for iw reg get/iw list/iw info).
+> Allow setting DFS CAC time via CRDA.
+> 
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+>  include/uapi/linux/nl80211.h |    5 +++++
+>  net/wireless/nl80211.c       |   13 ++++++++++++-
+>  2 files changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 91054fd..65081e8 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -2304,6 +2304,7 @@ enum nl80211_band_attr {
+>   * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
+>   *	using this channel as the primary or any of the secondary channels
+>   *	isn't possible
+> + * @NL80211_FREQUENCY_ATTR_DFS_CAC_TIME: DFS CAC time in sec
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index de75224..e55659b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -973,6 +973,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct ath_htc_rx_status *rxstatus;
- 	struct ath_rx_status *rx_stats;
- 	int hdrlen, padsize;
-+	bool decrypt_error;
- 	__le16 fc;
- 
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
-@@ -1016,43 +1017,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	}
- 	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
- 
--	if (rxbuf->rxstatus.rs_status != 0) {
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_CRC)
--			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_PHY)
--			goto rx_next;
--
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT) {
--			/* FIXME */
--		} else if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_MIC) {
--			if (ieee80211_is_ctl(fc))
--				/*
--				 * Sometimes, we get invalid
--				 * MIC failures on valid control frames.
--				 * Remove these mic errors.
--				 */
--				rxbuf->rxstatus.rs_status &= ~ATH9K_RXERR_MIC;
--			else
--				rx_status->flag |= RX_FLAG_MMIC_ERROR;
--		}
--
--		/*
--		 * Reject error frames with the exception of
--		 * decryption and MIC failures. For monitor mode,
--		 * we also ignore the CRC error.
--		 */
--		if (priv->ah->opmode == NL80211_IFTYPE_MONITOR) {
--			if (rxbuf->rxstatus.rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
--			      ATH9K_RXERR_CRC))
--				goto rx_next;
--		} else {
--			if (rxbuf->rxstatus.rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
--				goto rx_next;
--			}
--		}
--	}
-+	/*
-+	 * everything but the rate is checked here, the rate check is done
-+	 * separately to avoid doing two lookups for a rate for each frame.
-+	 */
-+	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats,
-+			&decrypt_error, priv->rxfilter))
-+		goto rx_next;
- 
- 	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
- 		u8 keyix;
--- 
-1.8.5.3
+Why bother with seconds vs. milliseconds? It'd be easier to use the same
+units ...
+
+johannes
 
