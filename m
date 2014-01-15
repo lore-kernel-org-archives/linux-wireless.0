@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:35367 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbaAOQLO (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:61343 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343AbaAOQK1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 11:11:14 -0500
-Received: by mail-ob0-f182.google.com with SMTP id wn1so1384294obc.27
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 08:11:13 -0800 (PST)
-Message-ID: <52D6B31F.8080007@lwfinger.net> (sfid-20140115_171117_754078_ED06BDC6)
-Date: Wed, 15 Jan 2014 10:11:11 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 15 Jan 2014 11:10:27 -0500
+Received: by mail-lb0-f181.google.com with SMTP id z5so972618lbh.12
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 08:10:25 -0800 (PST)
 MIME-Version: 1.0
-To: andrea.merello@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL8187SE staging Linux driver
-References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>	<522F584E.6000806@lwfinger.net>	<CAN8YU5PCFj-gtQwuuR3fM52YAVTi_5NYPbDVj-KMSzMpXjvFWQ@mail.gmail.com> <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
-In-Reply-To: <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1389792475.4338.11.camel@jlt4.sipsolutions.net>
+References: <1389788210-7246-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1389788210-7246-2-git-send-email-janusz.dziedzic@tieto.com>
+	<1389792475.4338.11.camel@jlt4.sipsolutions.net>
+Date: Wed, 15 Jan 2014 17:10:25 +0100
+Message-ID: <CALhHN=q=r-X_tk56NFZSrhscvnFRhMzbUh41pEHThq4gKf7bYw@mail.gmail.com> (sfid-20140115_171035_094042_9243F250)
+Subject: Re: [RFC 2/2] cfg80211: DFS get CAC time from regulatory
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrea,
+On 15 January 2014 14:27, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-01-15 at 13:16 +0100, Janusz Dziedzic wrote:
+>
+>> @@ -3211,6 +3212,7 @@ struct wireless_dev {
+>>
+>>       bool cac_started;
+>>       unsigned long cac_start_time;
+>> +     unsigned int cac_time_ms;
+>
+> Why would that need to be stored here? Isn't it just a pretty much local
+> parameter of the radar detection startup?
+>
+Because of this WARN_ON
 
-Just a head's up, but I had a kernel panic overnight. This kernel (3.13-rc7 from 
-wireless testing) has been stable - the only thing new is the RTL8187SE. I have 
-no diagnostic information other than the blinking console lights. If/when I get 
-more info, I'll let you know.
+@@ -778,7 +778,7 @@ void cfg80211_cac_event(struct net_device *netdev,
+        switch (event) {
+        case NL80211_RADAR_CAC_FINISHED:
+                timeout = wdev->cac_start_time +
+-                         msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
++                         msecs_to_jiffies(wdev->cac_time_ms);
+                WARN_ON(!time_after_eq(jiffies, timeout));
 
-Larry
+We have to know this if we need this warning.
 
+BR
+Janusz
