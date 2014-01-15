@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22881 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753005AbaAJCIU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 21:08:20 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] ieee80211: add definition for WAPI key len
-Date: Thu, 9 Jan 2014 18:08:11 -0800
-Message-ID: <1389319691-19818-1-git-send-email-bzhao@marvell.com> (sfid-20140110_030824_553631_515B569A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:5806 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752187AbaAOPvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 10:51:03 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, wireless-regdb@lists.infradead.org,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 5/6] cfg80211: Enable GO operation on indoor channels
+Date: Wed, 15 Jan 2014 17:52:41 +0200
+Message-Id: <1389801162-14488-6-git-send-email-ilan.peer@intel.com> (sfid-20140115_165107_794540_E18C8882)
+In-Reply-To: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
+References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
-
-Add WAPI key length definition to ieee80211_key_len enum.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
-v2: correct the author of the patch
+ net/wireless/chan.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
- include/linux/ieee80211.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b382c7c..6a2cbf5 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1857,6 +1857,7 @@ enum ieee80211_key_len {
- 	WLAN_KEY_LEN_CCMP = 16,
- 	WLAN_KEY_LEN_TKIP = 32,
- 	WLAN_KEY_LEN_AES_CMAC = 16,
-+	WLAN_KEY_LEN_WAPI = 32,
- };
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index d47856b..36f2f5f 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -611,6 +611,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+  * associated to an AP on the same channel or on the same UNII band
+  * (assuming that the AP is an authorized master).
++ * In addition allow the GO to operate on a channel on which indoor operation is
++ * allowed, iff we are currently operating in an indoor environment.
+  */
+ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 					struct ieee80211_channel *chan)
+@@ -619,6 +621,9 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
  
- #define IEEE80211_WEP_IV_LEN		4
+ 	ASSERT_RTNL();
+ 
++	if (regulatory_ir_allowed(chan))
++		return true;
++
+ 	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+ 		return false;
+ 
 -- 
-1.8.2.3
+1.7.10.4
 
