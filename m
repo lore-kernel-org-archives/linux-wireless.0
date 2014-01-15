@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46861 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587AbaAYVx0 (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:49181 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259AbaAOQFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jan 2014 16:53:26 -0500
-Received: by mail-ob0-f174.google.com with SMTP id uy5so5011040obc.5
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 13:53:25 -0800 (PST)
+	Wed, 15 Jan 2014 11:05:35 -0500
+Received: by mail-la0-f51.google.com with SMTP id c6so1579239lan.38
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 08:05:34 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CADzE2xw0vpeOXxVLdvnfnX57+gRnthrrSnNy=S0HVhH19YS7bQ@mail.gmail.com>
-References: <CADzE2xw0vpeOXxVLdvnfnX57+gRnthrrSnNy=S0HVhH19YS7bQ@mail.gmail.com>
-Date: Sat, 25 Jan 2014 22:53:25 +0100
-Message-ID: <CACna6ryE1At0K9TPddN6T-ySPPK+RwCsMO60yUd_RAgQDdpY8w@mail.gmail.com> (sfid-20140125_225329_797779_63C08375)
-Subject: Re: I'm not sure which one of you to send this to, but I do have a
- bug to report.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Wyatt Ward <wyattfward@gmail.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1389792228.4338.7.camel@jlt4.sipsolutions.net>
+References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1389720570-2430-2-git-send-email-janusz.dziedzic@tieto.com>
+	<1389792228.4338.7.camel@jlt4.sipsolutions.net>
+Date: Wed, 15 Jan 2014 17:05:31 +0100
+Message-ID: <CALhHN=rpWARWuq4TUj2ZRnwUfRZzfs5=TLxj+7s9yaC36U7EOQ@mail.gmail.com> (sfid-20140115_170538_375579_2091110B)
+Subject: Re: [RFC 1/5] cfg80211: regulatory rules, fix bw checking
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/25 Wyatt Ward <wyattfward@gmail.com>:
-> The problem is that both  SSB  and BCMA are loading to support the b43
->  module, where I only want SSB to load. I had this issue in 3.11, and
-> my custom build of 3.13 worked, but I don't see any changes to b43 or
-> BCMA that would effect this. I think that it was my tweaking of the
-> compile options for BCMA fixed this, but in any case
+On 15 January 2014 14:23, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-01-14 at 18:29 +0100, Janusz Dziedzic wrote:
+>> Allow BW cross over REG_RULES if rules continous.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>> ---
+>> I am not sure about rule_intersect() here ...
 >
-> I believe that the SSB and BCMA modules are  interfering with each
-> other, killing my network speed seemingly at random.
+> I'm not sure about the whole thing ...
+>
+> We did discuss something like this previously (and see our todo list on
+> the wiki), but this isn't just some arbitrary internal change, it
+> completely changes the interpretation of the regulatory database.
+>
 
-Loading b43 (when compiled with BCMA support) will cause loading both:
-ssb and bcma. That's true, this is caused by symbols b43 uses. This is
-expected.
+We need this because of such split DFS REG_RULE for ETSI:
 
-Now look at drivers/bcma/host_pci.c and try to find a reference to
-0x4312 (since your card it 14e4:4312). Or try to find a sign of "bcma"
-in dmesg.
+-       (5250 - 5330 @ 80), (N/A, 20), DFS
+-       (5490 - 5710 @ 80), (N/A, 27), DFS
++       (5250 - 5330 @ 80), (N/A, 20), (60), DFS
++       (5490 - 5590 @ 80), (N/A, 27), (60), DFS
++       (5590 - 5650 @ 80), (N/A, 27), (600), DFS   // here different
+CAC time but still 80MHz should be available
++       (5650 - 5710 @ 80), (N/A, 27), (60), DFS
 
-bcma does not try to touch 14e4:4312 in any way. It gets loaded but
-does nothing.
+In the future could be also usefull for 160MHz:
+        (5170 - 5250 @ 160), (N/A, 20)
+        (5250 - 5330 @ 160), (N/A, 20), DFS
 
-There must be something else in your builds affecting performance. If
-you want to compare 2 kernels, remember to do cold boots. Some things
-in (WiFi) hardware configuration may survive reboot.
+eg. using channels 36 - 64 @ 160MHz (with current code this is not
+possible, due to BW check per single rule)
+I am not sure there is a card with 160MHz support on the market today,
+but who knows?
+
+We can implement CAC time as hardcoded (already send such patches some
+time ago) one but seems this is close connected with regulatory
+configuration and seems like good idea put this in regulatory db.
+
+> At a minimum, that means you need a big commit log discussing the impact
+> of the changes etc.
+>
+Because of that I send this RFC, I wasn't sure about all possible
+problems with that.
+I hope Luis could help here.
+
+BR
+Janusz
