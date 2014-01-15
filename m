@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0176.hostedemail.com ([216.40.44.176]:45438 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751218AbaAFI7O (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:46864 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbaAOHlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 03:59:14 -0500
-Message-ID: <1388998750.5808.43.camel@joe-AO722> (sfid-20140106_095934_012773_542155F4)
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-From: Joe Perches <joe@perches.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 00:59:10 -0800
-In-Reply-To: <alpine.DEB.2.10.1401060947550.2079@hadrien>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
-	 <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-	 <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
-	 <1388438724.4573.2.camel@jlt4.sipsolutions.net>
-	 <20131230215701.GA4938@khazad-dum.debian.net>
-	 <1388445188.18164.0.camel@jlt4.sipsolutions.net>
-	 <1388445422.26796.38.camel@joe-AO722>
-	 <alpine.DEB.2.10.1401060947550.2079@hadrien>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 15 Jan 2014 02:41:13 -0500
+Message-ID: <1389771669.8062.4.camel@porter.coelho.fi> (sfid-20140115_084116_336303_EF9AB6A0)
+Subject: Re: [PATCH v11 0/3] CSA beacon count changes
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com, yeohchunyeow@cozybit.com
+Date: Wed, 15 Jan 2014 09:41:09 +0200
+In-Reply-To: <1389694031.23430.0.camel@jlt4.sipsolutions.net>
+References: <1389634980-12584-1-git-send-email-luca@coelho.fi>
+	 (sfid-20140113_184311_104052_C65AF447) <1389694031.23430.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 09:48 +0100, Julia Lawall wrote:
-> Is there any way to get sizeof evaluated at build time?
+On Tue, 2014-01-14 at 11:07 +0100, Johannes Berg wrote:
+> On Mon, 2014-01-13 at 19:42 +0200, Luciano Coelho wrote:
+> > From: Luciano Coelho <luciano.coelho@intel.com>
+> > 
+> > Now rebased on top of the latest mac80211-next tree.
+> 
+> Applied, and I fixed the tested-by/acked-by tags.
 
-I'm confused a bit by what you want to accomplish.
+Argh, it took me some time to figure out what was wrong with my original
+tags... Silly me.  Thanks for fixing and applying!
 
-Except for variable length arrays, isn't sizeof always
-evaluated at build time?
-
-6.5.3.4 The sizeof operator
-Constraints
-[]
-2 The sizeof operator yields the size (in bytes) of its operand, which may be an
-expression or the parenthesized name of a type. The size is determined from the type of
-the operand. The result is an integer. If the type of the operand is a variable length array
-type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an
-integer constant.
-
+--
+Cheers,
+Luca.
 
