@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14021 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287AbaAMKwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 05:52:10 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Mon, 13 Jan 2014 10:51:43 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D3C43A@HASMSX103.ger.corp.intel.com> (sfid-20140113_115215_297490_941E62C1)
-References: <0BA3FCBA62E2DC44AF3030971E174FB303D3C2B9@HASMSX103.ger.corp.intel.com>
- <CALkVjQaW0HssouGrmTYygF6mykQy0Tqs=gj5p1AOwq=iB69DbQ@mail.gmail.com>
-In-Reply-To: <CALkVjQaW0HssouGrmTYygF6mykQy0Tqs=gj5p1AOwq=iB69DbQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1891 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750928AbaAODQo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jan 2014 22:16:44 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.14] mwifiex: fix wrong 11ac bits setting in fw_cap_info
+Date: Tue, 14 Jan 2014 19:16:34 -0800
+Message-ID: <1389755794-32449-1-git-send-email-bzhao@marvell.com> (sfid-20140115_041648_380715_E788A39A)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gMjAxNC8xLzEzIEdydW1iYWNoLCBFbW1hbnVlbCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50
-ZWwuY29tPjoNCj4gPiBXaGF0IGtlcm5lbCB2ZXJzaW9uIDopDQo+ID4gSWYgeW91IHVzZSAzLjEz
-LCB5b3UgY2FuIHRyeSBhIG5ld2VyIGZpcm13YXJlLg0KPiA+DQo+IA0KPiBJIGFwcGxpZWQgeW91
-ciBwYXRjaCBhZ2FpbnN0IEFyY2ggTGludXgncyBzdG9jayBrZXJuZWwgMy4xMi43LCB1c2luZyB0
-aGlzDQo+IFBLR0JVSUxEOg0KPiBodHRwczovL3Byb2plY3RzLmFyY2hsaW51eC5vcmcvc3ZudG9n
-aXQvcGFja2FnZXMuZ2l0L3RyZWUvdHJ1bmsvUEtHQlVJTEQ/DQo+IGg9cGFja2FnZXMvbGludXgm
-aWQ9NWUyZjNiMTBkYzRiZTQwZGE4ZjFmZTM1NWJjODcxZDc5MzZlYzJkOA0KPiANCj4gd3p5Ym95
-QHhlbmllbjp+JCB1bmFtZSAtYQ0KPiBMaW51eCB4ZW5pZW4ud3p5Ym95LmltIDMuMTIuNy0xLUFS
-Q0ggIzEgU01QIFBSRUVNUFQgU3VuIEphbiAxMg0KPiAyMDozODo1NSBDU1QgMjAxNCB4ODZfNjQg
-R05VL0xpbnV4DQo+IHd6eWJveUB4ZW5pZW46fiQgY2F0IC9wcm9jL3ZlcnNpb24NCj4gTGludXgg
-dmVyc2lvbiAzLjEyLjctMS1BUkNIICh3enlib3lAeGVuaWVuLnd6eWJveS5pbSkgKGdjYyB2ZXJz
-aW9uDQo+IDQuOC4yIDIwMTMxMjE5IChwcmVyZWxlYXNlKSAoR0NDKSApICMxIFNNUCBQUkVFTVBU
-IFN1biBKYW4gMTIgMjA6Mzg6NTUgQ1NUDQo+IDIwMTQNCj4gDQo+IA0KDQpBcmUgeW91IHVzaW5n
-IEJsdWV0b290aCBhdCB0aGUgc2FtZSB0aW1lPw0KQWxzbyAtIGl0IG1pZ2h0IGJlIHdvcnRoIHRv
-IHRyeSB3aXJlbGVzcy10ZXN0aW5nIGFuZCB0aGUgbGF0ZXN0IGZpcm13YXJlLg0KV2hpbGUgeW91
-IHNlZW0gdG8gYmUgdGhlIGZpcnN0IHRvIHJlcG9ydCBpc3N1ZXMgYWJvdXQgcG93ZXIgc2F2ZSBv
-biB0aGlzIGZpcm13YXJlLCB3ZSBrbm93IHRoYXQgYSBsb3Qgb2YgaXNzdWVzIGhhdmUgYmVlbiBm
-aXhlZCBpbiB0aGUgbGF0ZXN0IGZpcm13YXJlICgtOC51Y29kZSkgd2hpY2ggaXMgc3VwcG9ydGVk
-IGluIDMuMTMgb25seS4gQnV0IGlmIHlvdSBjaGFuZ2Uga2VybmVsLCBnbyBmb3Igd2lyZWxlc3Mt
-dGVzdGluZy4NClRoYW5rcy4NCg0KPiANCj4gLS0NCj4gd3p5Ym95DQo=
+bit 14 is actually reserved and bit 12 & 13 should be used for
+11ac capability in fw_cap_info.
+
+Cc: <stable@vger.kernel.org> # 3.9+
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index b474881..059bc16 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -226,7 +226,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ /* HW_SPEC fw_cap_info */
+ 
+-#define ISSUPP_11ACENABLED(fw_cap_info) (fw_cap_info & (BIT(13)|BIT(14)))
++#define ISSUPP_11ACENABLED(fw_cap_info) (fw_cap_info & (BIT(12)|BIT(13)))
+ 
+ #define GET_VHTCAP_CHWDSET(vht_cap_info)    ((vht_cap_info >> 2) & 0x3)
+ #define GET_VHTNSSMCS(mcs_mapset, nss) ((mcs_mapset >> (2 * (nss - 1))) & 0x3)
+-- 
+1.8.2.3
+
