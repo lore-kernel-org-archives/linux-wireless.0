@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36692 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100AbaAUPGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:06:13 -0500
-Message-ID: <1390316761.6199.27.camel@jlt4.sipsolutions.net> (sfid-20140121_160616_227518_C24FF281)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Jan 2014 16:06:01 +0100
-In-Reply-To: <1390227670-19030-6-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152543_208232_A074CFFE)
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140120_152543_208232_A074CFFE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.19]:50160 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752076AbaAOQiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 11:38:06 -0500
+Received: from ultralex.lan ([93.218.75.192]) by mail.gmx.com (mrgmx103) with
+ ESMTPSA (Nemesis) id 0Lskr7-1VNq6o0n4j-012ECP for
+ <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 17:38:05 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 1/5] ath: add common function ath_is_mybeacon
+Date: Wed, 15 Jan 2014 17:37:42 +0100
+Message-Id: <1389803862-9078-1-git-send-email-linux@rempel-privat.de> (sfid-20140115_173811_455473_6D7F8241)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
-> The patch improves channel switch related locking
-> (STA, IBSS, AP, mesh).
-> 
-> Now read access to sdata->vif.csa_active is
-> protected by wdev.mtx and local->mtx so holding
-> either is enough for read access but both are
-> required for write access. Keep in mind sdata lock
-> must be taken before local->mtx. Taking them in
-> reverse order creates a deadlock situation.
-> 
-> The only exception is ieee80211_beacon_get_tim()
-> but it's safe to leave it as is and it doesn't
-> influence mac80211 state in any way.
-> 
-> The patch adds a few lockdep assertions along for
-> easier code/locking maintenance.
+this function is used by most ath driver, so it can be moved here.
+
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
-> This also prepares for multi-interface CSA.
+ drivers/net/wireless/ath/ath.h  | 2 ++
+ drivers/net/wireless/ath/main.c | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
-There's only one or two lines for that preparation as far as I can tell,
-but I think you should separate it (or maybe make that part of another
-patch)... or did I miss something?
-
-I mean this:
-
-> +       sdata->csa_chandef = params.chandef;
-
-doesn't seem to belong here.
-
-
-It would also be good to explain why you're doing this?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index e0ba7cd..b59cfbe 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -17,6 +17,7 @@
+ #ifndef ATH_H
+ #define ATH_H
+ 
++#include <linux/etherdevice.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_ether.h>
+ #include <linux/spinlock.h>
+@@ -165,6 +166,7 @@ struct ath_common {
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+ 				u32 len,
+ 				gfp_t gfp_mask);
++bool ath_is_mybeacon(struct ath_common *common, struct ieee80211_hdr *hdr);
+ 
+ void ath_hw_setbssidmask(struct ath_common *common);
+ void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key);
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+index 8e99540..8b0ac14 100644
+--- a/drivers/net/wireless/ath/main.c
++++ b/drivers/net/wireless/ath/main.c
+@@ -59,6 +59,14 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+ }
+ EXPORT_SYMBOL(ath_rxbuf_alloc);
+ 
++bool ath_is_mybeacon(struct ath_common *common, struct ieee80211_hdr *hdr)
++{
++	return ieee80211_is_beacon(hdr->frame_control) &&
++		!is_zero_ether_addr(common->curbssid) &&
++		ether_addr_equal_64bits(hdr->addr3, common->curbssid);
++}
++EXPORT_SYMBOL(ath_is_mybeacon);
++
+ void ath_printk(const char *level, const struct ath_common* common,
+ 		const char *fmt, ...)
+ {
+-- 
+1.8.5.2
 
