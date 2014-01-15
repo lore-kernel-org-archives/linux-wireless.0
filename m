@@ -1,47 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:55117 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754741AbaAFLhz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:37:55 -0500
-Received: by mail-oa0-f41.google.com with SMTP id j17so19022764oag.0
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 03:37:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389007385.5891.9.camel@jlt4.sipsolutions.net>
-References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
- <1389007385.5891.9.camel@jlt4.sipsolutions.net>
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Mon, 6 Jan 2014 12:37:34 +0100
-Message-ID: <CA+V6dmjoLx90vEwGZa8vRNHp0yWqKQnae+GcvEZHsCxR-oHnhg@mail.gmail.com> (sfid-20140106_123801_484928_5CA66591)
-Subject: Re: Exporting the TSF to userland
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:5806 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751632AbaAOPuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 10:50:55 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, wireless-regdb@lists.infradead.org,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 0/6] Enable additional channels for use
+Date: Wed, 15 Jan 2014 17:52:36 +0200
+Message-Id: <1389801162-14488-1-git-send-email-ilan.peer@intel.com> (sfid-20140115_165058_178822_D2D57915)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 6, 2014 at 12:23 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2013-12-31 at 05:24 +0100, Pierre Bourdon wrote:
->> Hello linux-wireless,
->>
->> I'm a developer of libdrc, a project that allows Linux computers to
->> control a Wii U GamePad. Because of how the device operates, our
->> library needs to be able to read the TSF value of the access point
->> device from userland.
->>
->> We currently have a hacky patch that works for our use cases, but it
->> would be a lot more convenient if that feature could be upstreamed.
->> What would be the best way to proceed?
->
-> That patch ... let's say I think "hacky" is almost lauding it. :)
->
-> sysfs is a really bad place for this too, no other wireless APIs use
-> sysfs.
+Hi Luis,
 
-What do you recommend as the best place to export this kind of information?
+I'm resending this patch set. Any chance you could review it?
+
+Thanks in advance,
+
+Ilan.
+
+-----
+
+Sorry for the big delay between the previous series and this one ... seems
+that I was too hasty with the previous one ... hope I did a better work this
+time :)
+
+As before, this series addresses the option of enabling additional channels for
+use based on the following relaxations:
+
+1. Indoor operation, where a device can use channels requiring indoor
+   operation, subject to that it can guarantee indoor operation.
+2. Concurrent GO operation, where devices may instantiate a P2P GO
+   while they are under the guidance of an authorized master.
+
+The series includes:
+
+* Some clarification (mainly in documentation) about the intended usage of
+  channels marked as INDOOR_ONLY and CONCURRENT GO.
+* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
+* Support for a user hint that the platform is operating in an indoor
+  environment, i.e., channel marked as INDOOR_ONLY can be used.
+* Allow initiating radiation on channel marked with INDOOR_ONLY also
+  for scanning an frame injection in monitor mode.
+* Some additional fixes for comments I got.
+
+Following is an example of a possible channel map that can be used to allow
+the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
+
+* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
+  information about the current regulatory domain, these channels can be used
+  for GO instantiation based on the concurrent GO relaxation.
+* The above is also true for channels 149-165 (a.k.a U-NII 3).
+* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
+  indoor only. While the Concurrent GO can be used as described above, the
+  indoor only setting allows to use these channels given the platform is
+  identified as an indoor one, i.e., media server.
+
+ 2412 MHz [1] (16.0 dBm)
+ 2417 MHz [2] (16.0 dBm)
+ 2422 MHz [3] (16.0 dBm)
+ 2427 MHz [4] (16.0 dBm)
+ 2432 MHz [5] (16.0 dBm)
+ 2437 MHz [6] (16.0 dBm)
+ 2442 MHz [7] (16.0 dBm)
+ 2447 MHz [8] (16.0 dBm)
+ 2452 MHz [9] (16.0 dBm)
+ 2457 MHz [10] (16.0 dBm)
+ 2462 MHz [11] (16.0 dBm)
+ 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
+ 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
+ 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
+ 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
+ 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
+ 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
+ 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
+ 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
+ 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
+ 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
+ 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
+ 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
+ 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
+ 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
+ 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
+ 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
+ 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
+ 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
+ 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
+ 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
+ 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
+ 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
+ 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
+
+Thanks in advance,
+
+Ilan.
+
+David Spinadel (1):
+  cfg80211: Add indoor only and GO concurrent channel attributes
+
+Ilan Peer (5):
+  cfg80211: Add Kconfig option for cellular BS hints
+  cfg80211: Enable GO operation on additional channels
+  cfg80211: Add an option to hint indoor operation
+  cfg80211: Enable GO operation on indoor channels
+  mac80211: Enable initiating radiation on indoor channels
+
+ include/net/cfg80211.h       |   39 +++++++++++++++++++-
+ include/uapi/linux/nl80211.h |   10 +++++
+ net/mac80211/ibss.c          |    9 +++--
+ net/mac80211/scan.c          |    8 ++--
+ net/mac80211/tx.c            |    2 +-
+ net/wireless/Kconfig         |   16 ++++++++
+ net/wireless/chan.c          |   73 +++++++++++++++++++++++++++++++++++--
+ net/wireless/mesh.c          |    3 +-
+ net/wireless/nl80211.c       |   35 +++++++++++-------
+ net/wireless/reg.c           |   83 ++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/reg.h           |   13 +++++++
+ net/wireless/trace.h         |   11 ++++--
+ 12 files changed, 266 insertions(+), 36 deletions(-)
 
 -- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
+1.7.10.4
+
