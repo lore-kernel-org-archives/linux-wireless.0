@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7287 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751065AbaARSUn convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:53330 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbaAOMQp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 13:20:43 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: David Herrmann <dh.herrmann@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: iwlwifi: P2P group-formation timeout
-Date: Sat, 18 Jan 2014 18:20:37 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03335A169@HASMSX106.ger.corp.intel.com> (sfid-20140118_192046_850965_BF2E9456)
-References: <CANq1E4Rhja6XZPq9sXfycK_wWNB3nsjpQFr2XnzOXLHUnm__mw@mail.gmail.com>
-	<CANq1E4STKqci55ZbGP9Siorf3ABptHHTAuOg_4-bbbEiw93w+A@mail.gmail.com>
-	<CB3B3D4774441E42AA3EA0E1BA8230A0333565A8@HASMSX106.ger.corp.intel.com>
- <CANq1E4QmdmMsvXFonAmMYQ5X-r-GQDrPAsU9rYk49GgWMbF2bQ@mail.gmail.com>
-In-Reply-To: <CANq1E4QmdmMsvXFonAmMYQ5X-r-GQDrPAsU9rYk49GgWMbF2bQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 15 Jan 2014 07:16:45 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c41so820611eek.16
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:16:44 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/9] mac80211: fix possible memory leak on AP CSA failure
+Date: Wed, 15 Jan 2014 13:04:46 +0100
+Message-Id: <1389787494-7361-2-git-send-email-michal.kazior@tieto.com> (sfid-20140115_131649_916537_EA527EE4)
+In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+If CSA for AP interface failed and the interface
+was not stopped afterwards another CSA request
+would leak sdata->u.ap.next_beacon.
 
-Sorry for the late response. Hope the below can help :)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
-Regards,
-
-Ilan.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 543b18f..8c78572 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2987,6 +2987,21 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+ 	return new_beacon;
+ }
  
-> I tried again and masked the 5ghz channels (via "p2p_set", not "set" I
-> guess?), however, still almost exactly the same log but on a 2.4ghz
-> channel. I attached the full log to the email, I cut down all the
-> "p2p-scan" log messages and inlined most parts of the log below.
-> 
-> Another thing that I noticed is that I don't get any "P2P-XY" status
-> messages to wpa_cli. I need to run "tail -f wpa.log | grep ^P2P-" in a
-> separate session to actually see messages like P2P-DEVICE-FOUND,
-> P2P-GO-NEG-SUCCESS, .. I only got "P2P-GROUP-" related messages
-> directly forwarded to my wpa_cli. I really think this is all somehow
-> related to the bunch of errors I get during p2p-dev-wlan0 setup, which
-> you said you cannot reproduce.
->
-
->From the logs it looks like the wpa_supplicant tries to use the P2P Device interface for the GO instantiation (which is impossible since this is not a netdev but a P2P Device interface). Can you please try to invoke the wpa_supplicant with a global control interface and issue the P2P commands over the global control interface? Something like:
-
-wpa_supplicant -i wlan0 -c <conf> -p allow_p2p_device=1 -t -s -d -T -B -g /tmp/wpa_global -G <group>
-wpa_cli -g /tmp/wpa_global -G <group>
-
-See the following commit from Jouni: 78f79fe5fc251e3ababa2970956cc9a84f29f209
-
-    P2P: Do not add ctrl interface for P2P_DEVICE (p2p-dev-*)
-
-    Adding a new wpa_supplicant control interface for the dedicated
-    P2P_DEVICE would be quite confusing for programs that manage P2P
-    operations. Remove this control interface and require the global control
-    interface to be used since it will provide consistent interface for both
-    the new dedicated P2P_DEVICE (non-netdev) and old style P2P management
-    through a netdev.
-
-
-
-
-
++static int ieee80211_ap_finish_csa(struct ieee80211_sub_if_data *sdata)
++{
++	int err;
++
++	err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
++	kfree(sdata->u.ap.next_beacon);
++	sdata->u.ap.next_beacon = NULL;
++
++	if (err < 0)
++		return err;
++
++	ieee80211_bss_info_change_notify(sdata, err);
++	return 0;
++}
++
+ void ieee80211_csa_finalize_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -3020,15 +3035,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	sdata->vif.csa_active = false;
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+-		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
++		err = ieee80211_ap_finish_csa(sdata);
+ 		if (err < 0)
+ 			goto unlock;
+-
+-		changed |= err;
+-		kfree(sdata->u.ap.next_beacon);
+-		sdata->u.ap.next_beacon = NULL;
+-
+-		ieee80211_bss_info_change_notify(sdata, err);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ieee80211_ibss_finish_csa(sdata);
+-- 
+1.8.4.rc3
 
