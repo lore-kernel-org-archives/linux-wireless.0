@@ -1,75 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28125 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbaAHRlE (ORCPT
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:55077 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbaAOHbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 12:41:04 -0500
-Message-ID: <52CD8DAB.8040307@broadcom.com> (sfid-20140108_184108_651220_7C243459)
-Date: Wed, 8 Jan 2014 18:40:59 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 15 Jan 2014 02:31:04 -0500
+Received: by mail-pb0-f50.google.com with SMTP id rq2so769110pbb.23
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 23:31:04 -0800 (PST)
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>,
-	<linux-sunxi@googlegroups.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Chen-Yu Tsai <wens@csie.org>
-Subject: Re: [linux-sunxi] [PATCH] brcmfmac: add support for bcm43362 device
-References: <1389174573-5204-1-git-send-email-arend@broadcom.com> <CAGRGNgWySMpEecaPFL0NuynSwCik17xGRPk44z5cw+AAckaBvA@mail.gmail.com>
-In-Reply-To: <CAGRGNgWySMpEecaPFL0NuynSwCik17xGRPk44z5cw+AAckaBvA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CABkW7JP=cq4H+iRRLfHzChHHCrX5+pxEwQv7vpdXLTwXGY-qeg@mail.gmail.com>
+References: <CABkW7JP=cq4H+iRRLfHzChHHCrX5+pxEwQv7vpdXLTwXGY-qeg@mail.gmail.com>
+From: camden lindsay <camden.lindsay@gmail.com>
+Date: Tue, 14 Jan 2014 23:30:44 -0800
+Message-ID: <CABkW7JPzadqZhDdf6aUwOxYK17dSWDZEeZ8uRzcxz2dVZop+7w@mail.gmail.com> (sfid-20140115_083108_990602_9614B890)
+Subject: Re: iwlwifi + 6235 power management issues
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw <ilw@linux.inel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2014 01:49 PM, Julian Calaby wrote:
-> Hi Arend,
-> 
-> On Wed, Jan 8, 2014 at 8:49 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> This patch adds support for the bcm43362 1x1 11n chipset. This
->> chipset is used in AP6210 wifi module found on Cubieboard [1].
->>
->> [1] http://cubieboard.org/
->>
->> Reviewed-by: Franky Lin <frankyl@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> ---
->> Hi John,
->>
->> Here a straggler for new device support that people
->> playing with Cubieboards have been asking for. Intended
->> for v3.14 kernel.
->>
->> Regards,
->> Arend
->> ---
->>  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    1 +
->>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +++
->>  .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   33 ++++++++++++++++++++
->>  .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
->>  4 files changed, 40 insertions(+)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> index 2bf4757..9c7f08a 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> @@ -509,6 +509,8 @@ enum brcmf_sdio_frmtype {
->>  #define BCM4334_NVRAM_NAME             "brcm/brcmfmac4334-sdio.txt"
->>  #define BCM4335_FIRMWARE_NAME          "brcm/brcmfmac4335-sdio.bin"
->>  #define BCM4335_NVRAM_NAME             "brcm/brcmfmac4335-sdio.txt"
->> +#define BCM43362_FIRMWARE_NAME         "brcm/brcmfmac43362-sdio.bin"
->> +#define BCM43362_NVRAM_NAME            "brcm/brcmfmac43362-sdio.txt"
-> 
-> I haven't been following the discussion so this may be redundant, but
-> is this firmware is presently winging it's way towards Linux-firmware?
+Resend and plain-text to avoid being marked as spam by vger.kernel.org
 
-Hi Julian,
+I am a novice at this, so apologies in advance for anything I am overlooking.
 
-The patch for that still has to go out. I am looking whether we have a
-newer firmware release as the one found on cubieboard.org [1]. So the
-firmware did not set sail yet (expect it soon :-) ).
+The environment is as follows:
+Network Card:
+[dylan@zenbook linux]$ lspci | grep -i net
+02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 24)
 
-Regards,
-Arend
 
-[1] http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/
+Kernel:
+[dylan@zenbook ~]$ uname -a
+Linux zenbook 3.12.7-1-iwlwifidebug #1 SMP PREEMPT Sun Jan 12 12:26:28
+PST 2014 x86_64 GNU/Linux
+
+
+
+iwconfig
+[dylan@zenbook linux]$ iwconfig -v
+iwconfig  Wireless-Tools version 29
+          Compatible with Wireless Extension v11 to v22.
+
+Kernel    Currently compiled with Wireless Extension v22.
+
+wlan0     Recommend Wireless Extension v21 or later,
+          Currently compiled with Wireless Extension v22.
+
+
+
+When power management is off, everything seems ok:
+[dylan@zenbook ~]$ sudo iwconfig wlan0 | grep Management
+          Power Management:off
+[dylan@zenbook ~]$ ping -c 10 192.168.11.253
+PING 192.168.11.253 (192.168.11.253) 56(84) bytes of data.
+64 bytes from 192.168.11.253: icmp_seq=1 ttl=64 time=1.56 ms
+64 bytes from 192.168.11.253: icmp_seq=2 ttl=64 time=1.84 ms
+64 bytes from 192.168.11.253: icmp_seq=3 ttl=64 time=1.43 ms
+64 bytes from 192.168.11.253: icmp_seq=4 ttl=64 time=2.52 ms
+64 bytes from 192.168.11.253: icmp_seq=5 ttl=64 time=1.44 ms
+64 bytes from 192.168.11.253: icmp_seq=6 ttl=64 time=1.40 ms
+64 bytes from 192.168.11.253: icmp_seq=7 ttl=64 time=2.28 ms
+64 bytes from 192.168.11.253: icmp_seq=8 ttl=64 time=1.90 ms
+64 bytes from 192.168.11.253: icmp_seq=9 ttl=64 time=1.77 ms
+64 bytes from 192.168.11.253: icmp_seq=10 ttl=64 time=2.00 ms
+
+--- 192.168.11.253 ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9015ms
+rtt min/avg/max/mdev = 1.402/1.818/2.528/0.362 ms
+
+
+
+Howerver, when power save is turned on, the ping response latency goes
+through the roof:
+[dylan@zenbook ~]$ sudo iwconfig wlan0 power on
+[dylan@zenbook ~]$ sudo iwconfig wlan0 | grep Management
+          Power Management:on
+[dylan@zenbook ~]$
+
+[dylan@zenbook ~]$ ping -c 10 192.168.11.253
+PING 192.168.11.253 (192.168.11.253) 56(84) bytes of data.
+64 bytes from 192.168.11.253: icmp_seq=1 ttl=64 time=53.9 ms
+64 bytes from 192.168.11.253: icmp_seq=2 ttl=64 time=903 ms
+64 bytes from 192.168.11.253: icmp_seq=3 ttl=64 time=1133 ms
+64 bytes from 192.168.11.253: icmp_seq=4 ttl=64 time=138 ms
+64 bytes from 192.168.11.253: icmp_seq=5 ttl=64 time=463 ms
+64 bytes from 192.168.11.253: icmp_seq=6 ttl=64 time=794 ms
+64 bytes from 192.168.11.253: icmp_seq=7 ttl=64 time=1023 ms
+64 bytes from 192.168.11.253: icmp_seq=8 ttl=64 time=14.6 ms
+64 bytes from 192.168.11.253: icmp_seq=9 ttl=64 time=139 ms
+64 bytes from 192.168.11.253: icmp_seq=10 ttl=64 time=269 ms
+
+--- 192.168.11.253 ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9014ms
+rtt min/avg/max/mdev = 14.611/493.544/1133.541/409.156 ms, pipe 2
+[dylan@zenbook ~]$
+
+
+
+Disabling power save brings us back to the original state:
+[dylan@zenbook ~]$ sudo iwconfig wlan0 power off
+[dylan@zenbook ~]$ sudo iwconfig wlan0 | grep Management
+          Power Management:off
+[dylan@zenbook ~]$ ping -c 10 192.168.11.253
+PING 192.168.11.253 (192.168.11.253) 56(84) bytes of data.
+64 bytes from 192.168.11.253: icmp_seq=1 ttl=64 time=3.43 ms
+64 bytes from 192.168.11.253: icmp_seq=2 ttl=64 time=2.31 ms
+64 bytes from 192.168.11.253: icmp_seq=3 ttl=64 time=1.43 ms
+64 bytes from 192.168.11.253: icmp_seq=4 ttl=64 time=1.46 ms
+64 bytes from 192.168.11.253: icmp_seq=5 ttl=64 time=1.43 ms
+64 bytes from 192.168.11.253: icmp_seq=6 ttl=64 time=2.40 ms
+64 bytes from 192.168.11.253: icmp_seq=7 ttl=64 time=9.43 ms
+64 bytes from 192.168.11.253: icmp_seq=8 ttl=64 time=1.41 ms
+64 bytes from 192.168.11.253: icmp_seq=9 ttl=64 time=1.38 ms
+64 bytes from 192.168.11.253: icmp_seq=10 ttl=64 time=1.81 ms
+
+--- 192.168.11.253 ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9014ms
+rtt min/avg/max/mdev = 1.387/2.654/9.439/2.346 ms
+[dylan@zenbook ~]$
+
+
+I have debugfs enabled for 802.11 as well as iwlwifi.
+If there is any information I can provide to help find the issue, I
+would be happy to help.
+
+take care
+Camden
