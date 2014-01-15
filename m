@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbaAJMvQ (ORCPT
+Received: from p3plsmtpa06-10.prod.phx3.secureserver.net ([173.201.192.111]:42785
+	"EHLO p3plsmtpa06-10.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751843AbaAOBAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 07:51:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 06/13] mac80211_hwsim: minimize rctbl module parameter usage
-Date: Fri, 10 Jan 2014 13:51:03 +0100
-Message-Id: <1389358270-20901-7-git-send-email-johannes@sipsolutions.net> (sfid-20140110_135135_086836_1F341B52)
-In-Reply-To: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
-References: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 14 Jan 2014 20:00:24 -0500
+From: "Mark A. Greer" <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Thierry Escande <thierry.escande@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	"Mark A. Greer" <mgreer@animalcreek.com>
+Subject: [PATCH 3/3] NFC: iso15693 - Add netlink support for ISO/IEC 15693
+Date: Tue, 14 Jan 2014 17:52:11 -0700
+Message-Id: <1389747131-2577-4-git-send-email-mgreer@animalcreek.com> (sfid-20140115_020026_442859_54912A1D)
+In-Reply-To: <1389747131-2577-1-git-send-email-mgreer@animalcreek.com>
+References: <1389747131-2577-1-git-send-email-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add ISO/IEC 15693 support by having netlink push the
+1-byte DSFID and 8-byte UID tag information upstream.
 
-Check the flag that the module parameter sets instead, so
-later radios can use different parameters.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/nfc/netlink.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index cca5b3f..59caa10 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -802,7 +802,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	if (control->sta)
- 		hwsim_check_sta_magic(control->sta);
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index ebbf6fb..43cb1c1 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -94,6 +94,14 @@ static int nfc_genl_send_target(struct sk_buff *msg, struct nfc_target *target,
+ 		    target->sensf_res))
+ 		goto nla_put_failure;
  
--	if (rctbl)
-+	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
- 		ieee80211_get_tx_rates(txi->control.vif, control->sta, skb,
- 				       txi->control.rates,
- 				       ARRAY_SIZE(txi->control.rates));
-@@ -909,7 +909,7 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- {
- 	u32 _pid = ACCESS_ONCE(wmediumd_portid);
++	if (target->is_iso15693) {
++		if (nla_put_u8(msg, NFC_ATTR_TARGET_ISO15693_DSFID,
++			       target->iso15693_dsfid) ||
++		    nla_put(msg, NFC_ATTR_TARGET_ISO15693_UID,
++			    sizeof(target->iso15693_uid), target->iso15693_uid))
++			goto nla_put_failure;
++	}
++
+ 	return genlmsg_end(msg, hdr);
  
--	if (rctbl) {
-+	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE) {
- 		struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
- 		ieee80211_get_tx_rates(txi->control.vif, NULL, skb,
- 				       txi->control.rates,
-@@ -946,7 +946,7 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 	if (skb == NULL)
- 		return;
- 	info = IEEE80211_SKB_CB(skb);
--	if (rctbl)
-+	if (hw->flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
- 		ieee80211_get_tx_rates(vif, NULL, skb,
- 				       info->control.rates,
- 				       ARRAY_SIZE(info->control.rates));
+ nla_put_failure:
 -- 
-1.8.5.1
+1.8.3.4
 
