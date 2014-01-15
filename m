@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61189 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753460AbaARHTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 02:19:08 -0500
-Date: Sat, 18 Jan 2014 08:15:38 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Message-ID: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com> (sfid-20140118_081921_508643_63B29983)
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:37607 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbaAOJjK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 04:39:10 -0500
+Message-ID: <1389778744.4338.2.camel@jlt4.sipsolutions.net> (sfid-20140115_103914_748408_8CC93144)
+Subject: Re: [RFC 4/4] cfg80211: implement multi-BSS CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Jan 2014 10:39:04 +0100
+In-Reply-To: <CA+BoTQmrFARTcupjCFuz6V=c7fHHgiSurbCfnr79En=LozftFg@mail.gmail.com> (sfid-20140115_075217_586020_C5704A1F)
+References: <1389194818-7864-1-git-send-email-michal.kazior@tieto.com>
+	 <1389194818-7864-5-git-send-email-michal.kazior@tieto.com>
+	 <1389716461.32635.15.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmrFARTcupjCFuz6V=c7fHHgiSurbCfnr79En=LozftFg@mail.gmail.com>
+	 (sfid-20140115_075217_586020_C5704A1F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> > As the release is supposedly this weekend, do you prefer
-> > the patches to go to your tree or to individual trees after
-> > the release?
+On Wed, 2014-01-15 at 07:52 +0100, Michal Kazior wrote:
+
+> So you're basically saying the new attribute should be used as an
+> array attribute instead. Sounds good, but..
 > 
-> I'd be happy to merge them, except for the fact that they probably
-> wouldn't have any time in -next before I ask Linus to pull them.  So
-> how about if we wait until after the release, ask the area maintainers
-> to take them, and if they don't take them, I'll put them in my tree
-> for v3.15?
+> What about backward compatibility? Do we not care? Or should we
+> preserve old parsing for single-interface CSA (i.e. older hostapd)?
 
-Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-Whatever works for you ;)
+I think we have to preserve the old parsing if the new isn't present,
+but that shouldn't be all that difficult?
 
-I am only concerned with a regression fix "ahci: Fix broken fallback to
-single MSI mode" which would be nice to have in 3.14. But it seems pretty
-much too late.
+if (info->attrs[MULTI])
+  for_each_attr(a, info->attrs[MULTI])
+    parse_nested(a, attrs);
+    parse(attrs);
+else
+  parse(info->attrs);
 
-> Bjorn
+or something like that, right?
 
-Thanks!
+> > is more error prone as it would allow older kernels to parse the whole
+> > thing while ignoring the next/more/whatever, so you'd get some weird
+> > subset of the intended behaviour. Forcing *all* interfaces into the
+> > sub-attribute when more than one is desired (or in fact for a single
+> > one, if you're ok with requiring a kernel with support) would IMHO be
+> > less error prone.
+> 
+> From a practical point of view cfg80211 should deny such a request due
+> to multi-channel (interface combination) and by (the only CSA
+> implementator in upstream) mac80211 due to chanctx->refcount > 1.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Hmm, true. I'd still prefer the other version, the stacked/nested one
+kinda makes me uncomfortable ... It'll work, no doubt about it, but the
+deep nesting I'm not really happy with.
+
+johannes
+
