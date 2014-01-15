@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:55927 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbaAMUWT (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:42489 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbaAOMJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:19 -0500
-Received: by mail-ea0-f173.google.com with SMTP id o10so3573111eaj.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:17 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 15 Jan 2014 07:09:27 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so808615eek.37
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:09:26 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/18] iwlwifi: mvm: remove unused flags from add station command
-Date: Mon, 13 Jan 2014 22:21:51 +0200
-Message-Id: <1389644517-22807-12-git-send-email-egrumbach@gmail.com> (sfid-20140113_212225_827727_65E66991)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 2/9] mac80211: treat IBSS CSA finish failure seriously
+Date: Wed, 15 Jan 2014 13:04:47 +0100
+Message-Id: <1389787494-7361-3-git-send-email-michal.kazior@tieto.com> (sfid-20140115_130931_467842_501B2EDA)
+In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Other interface modes are checked against failure.
+This should avoid false-positive channel switch
+events where IBSS CSA actually failed.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h |    3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/cfg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-index 6bbbad4..1b60fdf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-@@ -97,9 +97,6 @@ enum iwl_sta_flags {
- 					   STA_FLG_FLG_ANT_B),
- 
- 	STA_FLG_PS			= BIT(8),
--	STA_FLG_INVALID			= BIT(9),
--	STA_FLG_DLP_EN			= BIT(10),
--	STA_FLG_SET_ALL_KEYS		= BIT(11),
- 	STA_FLG_DRAIN_FLOW		= BIT(12),
- 	STA_FLG_PAN			= BIT(13),
- 	STA_FLG_CLASS_AUTH		= BIT(14),
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8c78572..2ab5f49 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3040,7 +3040,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 			goto unlock;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		ieee80211_ibss_finish_csa(sdata);
++		err = ieee80211_ibss_finish_csa(sdata);
++		if (err < 0)
++			goto unlock;
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
 -- 
-1.7.9.5
+1.8.4.rc3
 
