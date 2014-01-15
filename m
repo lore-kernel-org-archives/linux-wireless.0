@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55331 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbaAIMv1 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:54137 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933AbaAOBLs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 07:51:27 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] mac80211: reset TX info flags when frame will be reprocessed
-Date: Thu,  9 Jan 2014 13:51:21 +0100
-Message-Id: <1389271882-15806-4-git-send-email-johannes@sipsolutions.net> (sfid-20140109_135132_217131_C7FB5878)
-In-Reply-To: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
-References: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 14 Jan 2014 20:11:48 -0500
+Date: Tue, 14 Jan 2014 17:11:48 -0800 (PST)
+Message-Id: <20140114.171148.1748943434970025200.davem@davemloft.net> (sfid-20140115_021206_857673_F8C6302C)
+To: geert@linux-m68k.org
+Cc: andy@greyhouse.net, trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, geert+renesas@linux-m68k.org
+Subject: Re: [PATCH TRIVIAL] net: Spelling s/transmition/transmission/
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1389531976-6350-1-git-send-email-geert@linux-m68k.org>
+References: <1389531976-6350-1-git-send-email-geert@linux-m68k.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Sun, 12 Jan 2014 14:06:16 +0100
 
-The temporary TX info flags need to be cleared if the frame will
-be processed through the TX handlers again, otherwise it can get
-messed up. This fixes a bug that happened when an aggregation
-session was stopped while the station was sleeping - some frames
-might get transmitted marked as aggregation erroneously without
-this fix.
+> From: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 377cf97..9f3cbf1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -500,6 +500,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		info->control.jiffies = jiffies;
- 		info->control.vif = &tx->sdata->vif;
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
- 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
- 
- 		if (!timer_pending(&local->sta_cleanup))
-@@ -1073,6 +1074,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 			queued = true;
- 			info->control.vif = &tx->sdata->vif;
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-+			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
- 			__skb_queue_tail(&tid_tx->pending, skb);
- 			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
- 				purge_skb = __skb_dequeue(&tid_tx->pending);
--- 
-1.8.5.1
-
+Applied.
