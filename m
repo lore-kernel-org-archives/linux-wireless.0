@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:36960 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbaAMUWK (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:43182 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbaAOMJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:10 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d49so3319295eek.18
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:09 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 15 Jan 2014 07:09:31 -0500
+Received: by mail-ea0-f173.google.com with SMTP id o10so418105eaj.4
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:09:28 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/18] iwlwifi: mvm: don't set the drain bit when we flush the AP station
-Date: Mon, 13 Jan 2014 22:21:44 +0200
-Message-Id: <1389644517-22807-5-git-send-email-egrumbach@gmail.com> (sfid-20140113_212215_363768_E8B15394)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 4/9] mac80211: fix sdata->radar_required locking
+Date: Wed, 15 Jan 2014 13:04:49 +0100
+Message-Id: <1389787494-7361-5-git-send-email-michal.kazior@tieto.com> (sfid-20140115_130943_770524_F6BD5B06)
+In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+radar_required setting wasn't protected by
+local->mtx in some places. This should prevent
+from scanning/radar detection/roc colliding.
 
-When we disassociate in managed mode, we flush the queues
-after mac80211 has already removed the station.
-During that time, the pointer to ieee80211_sta to the
-fw_id_to_mac_id map is -EINVAL. In that case we should not
-set the station as being drained when the last Tx of this
-station has exited the shared Tx queue since we are
-flushing all the queues anyway.
-The draining logic is meant to be used in GO / AP mode only.
-In GO / AP mode, we set -EBUSY in the fw_id_to_mac_id map.
-
-This is why testing the ieee80211_sta pointer in the
-fw_id_to_mac_id map with IS_ERR isn't enough to set the
-station as draining, we need to check that it is -EBUSY.
-
-The only impact of the bug was a print:
-
-Drained sta 1, but it is internal?
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/tx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c  | 4 ++--
+ net/mac80211/ibss.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 3c575a3..a4d3bce 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -704,7 +704,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			 */
- 			spin_lock_bh(&mvmsta->lock);
- 			sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
--			if (IS_ERR_OR_NULL(sta)) {
-+			if (!sta || PTR_ERR(sta) == -EBUSY) {
- 				/*
- 				 * Station disappeared in the meantime:
- 				 * so we are draining.
-@@ -713,7 +713,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 				schedule_work(&mvm->sta_drained_wk);
- 			}
- 			spin_unlock_bh(&mvmsta->lock);
--		} else if (!mvmsta) {
-+		} else if (!mvmsta && PTR_ERR(sta) == -EBUSY) {
- 			/* Tx response without STA, so we are draining */
- 			set_bit(sta_id, mvm->sta_drained);
- 			schedule_work(&mvm->sta_drained_wk);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 2ab5f49..ef679de 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -970,9 +970,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	/* TODO: make hostapd tell us what it wants */
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+-	sdata->radar_required = params->radar_required;
+ 
+ 	mutex_lock(&local->mtx);
++	sdata->radar_required = params->radar_required;
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
+ 	mutex_unlock(&local->mtx);
+@@ -3018,8 +3018,8 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	if (!ieee80211_sdata_running(sdata))
+ 		goto unlock;
+ 
+-	sdata->radar_required = sdata->csa_radar_required;
+ 	mutex_lock(&local->mtx);
++	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+ 	mutex_unlock(&local->mtx);
+ 	if (WARN_ON(err < 0))
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5b9c95a..d1dc641 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -303,6 +303,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		mutex_unlock(&local->mtx);
+ 		return;
+ 	}
++	sdata->radar_required = radar_required;
+ 	mutex_unlock(&local->mtx);
+ 
+ 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
+@@ -318,7 +319,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(ifibss->presp, presp);
+ 	mgmt = (void *)presp->head;
+ 
+-	sdata->radar_required = radar_required;
+ 	sdata->vif.bss_conf.enable_beacon = true;
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
+ 	sdata->vif.bss_conf.basic_rates = basic_rates;
 -- 
-1.7.9.5
+1.8.4.rc3
 
