@@ -1,87 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:59679 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbaACLso (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:61995 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbaAOMRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jan 2014 06:48:44 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so15944583ieb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 03:48:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+V6dmhE4GZhEthU08H+5CvKa0Z98mam4_dG-NEuwK4b5mkhaw@mail.gmail.com>
-References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-	<CA+V6dmhE4GZhEthU08H+5CvKa0Z98mam4_dG-NEuwK4b5mkhaw@mail.gmail.com>
-Date: Fri, 3 Jan 2014 12:48:44 +0100
-Message-ID: <CANq1E4RD=_y_TmTPsMsmZ4Jg628VmPWmz=EiByfAV5TxK3zV_w@mail.gmail.com> (sfid-20140103_124906_937543_1839BB71)
-Subject: Re: Exporting the TSF to userland
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Pierre Bourdon <delroth@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 15 Jan 2014 07:17:05 -0500
+Received: by mail-ea0-f177.google.com with SMTP id n15so417369ead.36
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:17:01 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC 1/2] cfg80211/mac80211: DFS pass CAC time as a parameter
+Date: Wed, 15 Jan 2014 13:16:49 +0100
+Message-Id: <1389788210-7246-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140115_131708_578330_9FF1A7A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pierre
+Send Channel Availability Check time as a parameter
+of start_radar_detection() callback.
+We could have different CAC time configuration for
+Off-channel CAC and for weather channels.
 
-On Fri, Jan 3, 2014 at 2:07 AM, Pierre Bourdon <delroth@gmail.com> wrote:
-> On Tue, Dec 31, 2013 at 5:24 AM, Pierre Bourdon <delroth@gmail.com> wrote:
->> Hello linux-wireless,
->>
->> I'm a developer of libdrc, a project that allows Linux computers to
->> control a Wii U GamePad. Because of how the device operates, our
->> library needs to be able to read the TSF value of the access point
->> device from userland.
->>
->> We currently have a hacky patch that works for our use cases, but it
->> would be a lot more convenient if that feature could be upstreamed.
->> What would be the best way to proceed?
->>
->> Our current patch:
->> https://bitbucket.org/memahaxx/drc-mac80211/commits/4a9823cf2a6733bc15a05cffaebd8850d07451a7
->
-> To clarify: I have 0 experience developing "clean" stuff for the Linux
-> driver (only hacky patches). A few simple questions that I have in
-> order to make this patch more useful:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+Based on patches: Implement DFS CAC time as regulatory param
 
-Usual procedure is to send the patch via git-send-email and people
-will comment on it. Even if it's a hack, please send the patch. And
-you might wanna CC the maintainers of the affected trees.
+ include/net/cfg80211.h |    3 ++-
+ net/mac80211/cfg.c     |    8 ++++----
+ net/wireless/nl80211.c |    3 ++-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-> * Is there some kind of "threshold" for features like this to be
-> accepted upstream? How likely is it that this feature will get merged
-> in the end?
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f756b94..71ca782 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2487,7 +2487,8 @@ struct cfg80211_ops {
+ 
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+-					 struct cfg80211_chan_def *chandef);
++					 struct cfg80211_chan_def *chandef,
++					 u32 cac_time_ms);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
+ 	int	(*crit_proto_start)(struct wiphy *wiphy,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 09d2e58..5c2b69c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2899,11 +2899,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 
+ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 					   struct net_device *dev,
+-					   struct cfg80211_chan_def *chandef)
++					   struct cfg80211_chan_def *chandef,
++					   u32 cac_time_ms)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	unsigned long timeout;
+ 	int err;
+ 
+ 	mutex_lock(&local->mtx);
+@@ -2922,9 +2922,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	if (err)
+ 		goto out_unlock;
+ 
+-	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	ieee80211_queue_delayed_work(&sdata->local->hw,
+-				     &sdata->dfs_cac_timer_work, timeout);
++				     &sdata->dfs_cac_timer_work,
++				     msecs_to_jiffies(cac_time_ms));
+ 
+  out_unlock:
+ 	mutex_unlock(&local->mtx);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 53b31f2..8bb2064 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5764,7 +5764,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
+-	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
++	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
++					       IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	if (!err) {
+ 		wdev->channel = chandef.chan;
+ 		wdev->cac_started = true;
+-- 
+1.7.9.5
 
-If there's a use-case, it is very likely get merged (unless another
-more appropriate API comes up). So just keep pushing on it, nobody
-minds if you resend the patch if it was unanswered for a week.
-
-> * Is there any framework for exporting data from mac80211 drivers to a
-> /sys or /proc file? There is code that exports data to debugfs, but
-> that is usually not mounted by default or enabled by distributions.
-> Our patch currently uses a /sys file, but I think nothing else in
-> mac80211 does anything like that so far.
-
->From inside of mac80211 we don't control any sysfs attributes, yet.
-Furthermore, device_create_file() is usually racy with device_add(),
-so you really should create global attributes via the .attr field of
-devices (or classes/types). See net/wireless/sysfs.c.
-But you probably don't want to introduce a reverse dependency on
-mac80211 from net/wireless/, I am not sure what to do here.. others
-should know better.
-
-> * Should integer values be exported as human-readable ASCII base 10
-> numbers in proc/sys files or is exporting the raw bytes as our patch
-> currently does acceptable?
-
-sysfs must be human-readable and 1-value-per-file. See
-Documentation/filesystems/sysfs.txt.
-So if there's no strong reason to change that, I'd say convert it to
-ASCII and you're fine. You can choose a suitable base yourself, but
-base-10 is a good default.
-
-Regarding your patch:
- - please adjust your coding-style to Documentation/CodingStyle
- - The drv_add_interface() hack looks really weird.. are you sure you
-don't wanna bail out instead?
-
-Thanks
-David
