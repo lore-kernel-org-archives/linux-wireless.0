@@ -1,155 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:37066 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752101AbaAWMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 07:30:12 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] mac80211: avoid deadlock revealed by lockdep
-Date: Thu, 23 Jan 2014 14:28:16 +0200
-Message-Id: <1390480096-15150-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140123_133037_251315_3E356FD5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([144.76.43.152]:38281 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502AbaAONZ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 08:25:56 -0500
+Message-ID: <1389792352.4338.10.camel@jlt4.sipsolutions.net> (sfid-20140115_142558_899122_6B92CC25)
+Subject: Re: [RFC 5/5] cfg80211: setup CAC time in db.txt for PL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Wed, 15 Jan 2014 14:25:52 +0100
+In-Reply-To: <1389720570-2430-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182950_657506_03BCBD9F)
+References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1389720570-2430-6-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140114_182950_657506_03BCBD9F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sdata->u.ap.request_smps_work can’t be flushed synchronously
-under wdev_lock(wdev) since ieee80211_request_smps_ap_work
-itself locks the same lock.
-While at it, reset the driver_smps_mode when the ap is
-stopped to its default: OFF.
+On Tue, 2014-01-14 at 18:29 +0100, Janusz Dziedzic wrote:
+> This is DFS CAC time setup for PL.
+> We should do the same for all other
+> countries that support DFS in wireless-regd.
+> Here only as example, please don't merge.
+> 
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+>  net/wireless/db.txt |    6 ++++--
 
-This solves:
+That file doesn't exist in the kernel tree anyway ...
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.12.0-ipeer+ #2 Tainted: G           O
--------------------------------------------------------
-rmmod/2867 is trying to acquire lock:
-  ((&sdata->u.ap.request_smps_work)){+.+...}, at: [<c105b8d0>] flush_work+0x0/0x90
-
-but task is already holding lock:
-  (&wdev->mtx){+.+.+.}, at: [<f9b32626>] cfg80211_stop_ap+0x26/0x230 [cfg80211]
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&wdev->mtx){+.+.+.}:
-        [<c10aefa9>] lock_acquire+0x79/0xe0
-        [<c1607a1a>] mutex_lock_nested+0x4a/0x360
-        [<fb06288b>] ieee80211_request_smps_ap_work+0x2b/0x50 [mac80211]
-        [<c105cdd8>] process_one_work+0x198/0x450
-        [<c105d469>] worker_thread+0xf9/0x320
-        [<c10669ff>] kthread+0x9f/0xb0
-        [<c1613397>] ret_from_kernel_thread+0x1b/0x28
-
--> #0 ((&sdata->u.ap.request_smps_work)){+.+...}:
-        [<c10ae9df>] __lock_acquire+0x183f/0x1910
-        [<c10aefa9>] lock_acquire+0x79/0xe0
-        [<c105b917>] flush_work+0x47/0x90
-        [<c105d867>] __cancel_work_timer+0x67/0xe0
-        [<c105d90f>] cancel_work_sync+0xf/0x20
-        [<fb0765cc>] ieee80211_stop_ap+0x8c/0x340 [mac80211]
-        [<f9b3268c>] cfg80211_stop_ap+0x8c/0x230 [cfg80211]
-        [<f9b0d8f9>] cfg80211_leave+0x79/0x100 [cfg80211]
-        [<f9b0da72>] cfg80211_netdev_notifier_call+0xf2/0x4f0 [cfg80211]
-        [<c160f2c9>] notifier_call_chain+0x59/0x130
-        [<c106c6de>] __raw_notifier_call_chain+0x1e/0x30
-        [<c106c70f>] raw_notifier_call_chain+0x1f/0x30
-        [<c14f8213>] call_netdevice_notifiers_info+0x33/0x70
-        [<c14f8263>] call_netdevice_notifiers+0x13/0x20
-        [<c14f82a4>] __dev_close_many+0x34/0xb0
-        [<c14f83fe>] dev_close_many+0x6e/0xc0
-        [<c14f9c77>] rollback_registered_many+0xa7/0x1f0
-        [<c14f9dd4>] unregister_netdevice_many+0x14/0x60
-        [<fb06f4d9>] ieee80211_remove_interfaces+0xe9/0x170 [mac80211]
-        [<fb055116>] ieee80211_unregister_hw+0x56/0x110 [mac80211]
-        [<fa3e9396>] iwl_op_mode_mvm_stop+0x26/0xe0 [iwlmvm]
-        [<f9b9d8ca>] _iwl_op_mode_stop+0x3a/0x70 [iwlwifi]
-        [<f9b9d96f>] iwl_opmode_deregister+0x6f/0x90 [iwlwifi]
-        [<fa405179>] __exit_compat+0xd/0x19 [iwlmvm]
-        [<c10b8bf9>] SyS_delete_module+0x179/0x2b0
-        [<c1613421>] sysenter_do_call+0x12/0x32
-
-Fixes: 687da132234f ("mac80211: implement SMPS for AP")
-Cc: <stable@vger.kernel.org> [3.13]
-Reported-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/cfg.c   |  3 +--
- net/mac80211/ht.c    |  4 +++-
- net/mac80211/iface.c | 15 +++++++++++----
- 3 files changed, 15 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2279258..53917b7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1090,8 +1090,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	kfree(sdata->u.ap.next_beacon);
- 	sdata->u.ap.next_beacon = NULL;
- 
--	cancel_work_sync(&sdata->u.ap.request_smps_work);
--
- 	/* turn off carrier for this interface and dependent VLANs */
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
- 		netif_carrier_off(vlan->dev);
-@@ -1103,6 +1101,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	kfree_rcu(old_beacon, rcu_head);
- 	if (old_probe_resp)
- 		kfree_rcu(old_probe_resp, rcu_head);
-+	sdata->u.ap.driver_smps_mode = IEEE80211_SMPS_OFF;
- 
- 	__sta_info_flush(sdata, true);
- 	ieee80211_free_keys(sdata, true);
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index fab7b91..70dd013 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -466,7 +466,9 @@ void ieee80211_request_smps_ap_work(struct work_struct *work)
- 			     u.ap.request_smps_work);
- 
- 	sdata_lock(sdata);
--	__ieee80211_request_smps_ap(sdata, sdata->u.ap.driver_smps_mode);
-+	if (sdata_dereference(sdata->u.ap.beacon, sdata))
-+		__ieee80211_request_smps_ap(sdata,
-+					    sdata->u.ap.driver_smps_mode);
- 	sdata_unlock(sdata);
- }
- 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6af9bbf..4fa8a5f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -770,12 +770,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_roc_purge(local, sdata);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
- 		ieee80211_mgd_stop(sdata);
--
--	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
- 		ieee80211_ibss_stop(sdata);
--
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		cancel_work_sync(&sdata->u.ap.request_smps_work);
-+		break;
-+	default:
-+		break;
-+	}
- 
- 	/*
- 	 * Remove all stations associated with this interface.
--- 
-1.8.3.2
+johannes
 
