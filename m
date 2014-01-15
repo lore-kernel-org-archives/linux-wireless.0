@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55305 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523AbaAHTAQ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56656 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751727AbaAODWe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 14:00:16 -0500
-Date: Wed, 8 Jan 2014 13:45:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-01-07
-Message-ID: <20140108184543.GE11076@tuxdriver.com> (sfid-20140108_200039_705713_75499AAE)
-References: <20140107152251.GA24183@joana>
+	Tue, 14 Jan 2014 22:22:34 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, Ujjal Roy <royujjal@gmail.com>
+Subject: [PATCH] mwifiex: export threshold value and retry limit to cfg80211
+Date: Tue, 14 Jan 2014 19:22:22 -0800
+Message-ID: <1389756142-32607-1-git-send-email-bzhao@marvell.com> (sfid-20140115_042237_473809_5E5C6DAA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140107152251.GA24183@joana>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 01:22:51PM -0200, Gustavo Padovan wrote:
-> Hi John,
-> 
-> More patches to 3.14. The bulk of changes here is the 6LoWPAN support for
-> Bluetooth LE Devices. The commits that touches net/ieee802154/ are already
-> acked by David Miller. Other than that we have some RFCOMM fixes and
-> improvements plus fixes and clean ups all over the tree.
-> 
-> Please pull, or let me know of any concerns you have.
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit 71fb419724fadab4efdf98210aa3fe053bd81d29:
-> 
->   Bluetooth: Fix handling of L2CAP Command Reject over LE (2013-12-10 01:15:44 -0800)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to e825eb1d7e06f616003c17e2e8e421c2e5e44142:
-> 
->   Bluetooth: Fix 6loWPAN peer lookup (2014-01-07 11:32:15 -0200)
+From: Ujjal Roy <royujjal@gmail.com>
 
-Pulling now...
+While registering the driver with cfg80211, update the threshold
+value and retry limit to cfg80211.
 
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index f3aa55a..aba6e46 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2679,6 +2679,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	struct wiphy *wiphy;
+ 	struct mwifiex_private *priv = adapter->priv[MWIFIEX_BSS_TYPE_STA];
+ 	u8 *country_code;
++	u32 thr, retry;
+ 
+ 	/* create a new wiphy for use with cfg80211 */
+ 	wiphy = wiphy_new(&mwifiex_cfg80211_ops,
+@@ -2768,6 +2769,19 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 				   country_code);
+ 	}
+ 
++	mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			      HostCmd_ACT_GEN_GET, FRAG_THRESH_I, &thr);
++	wiphy->frag_threshold = thr;
++	mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			      HostCmd_ACT_GEN_GET, RTS_THRESH_I, &thr);
++	wiphy->rts_threshold = thr;
++	mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			      HostCmd_ACT_GEN_GET, SHORT_RETRY_LIM_I, &retry);
++	wiphy->retry_short = (u8) retry;
++	mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			      HostCmd_ACT_GEN_GET, LONG_RETRY_LIM_I, &retry);
++	wiphy->retry_long = (u8) retry;
++
+ 	adapter->wiphy = wiphy;
+ 	return ret;
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.2.3
+
