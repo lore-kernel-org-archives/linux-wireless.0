@@ -1,56 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:64986 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094AbaAMUWV (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:64646 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957AbaAPJSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:21 -0500
-Received: by mail-ee0-f52.google.com with SMTP id e53so1296876eek.25
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:20 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/18] iwlwifi: change beamformee STS cap
-Date: Mon, 13 Jan 2014 22:21:53 +0200
-Message-Id: <1389644517-22807-14-git-send-email-egrumbach@gmail.com> (sfid-20140113_213436_072650_2AF84152)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+	Thu, 16 Jan 2014 04:18:37 -0500
+Received: by mail-pa0-f42.google.com with SMTP id kl14so2422864pab.15
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 01:18:36 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: set the AP keepalive timer
+Date: Thu, 16 Jan 2014 17:18:24 +0800
+Message-Id: <1389863904-7159-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140116_101843_266333_489BF9EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Set the AP keepalive timer as following:
+ap_keepalive_min_idle_inactive_time_secs to 60 seconds
+ap_keepalive_max_idle_inactive_time_secs to 120 seconds
+ap_keepalive_max_unresponsive_time_secs to 300 seconds
 
-All beamformee supporting chips have the ability to support
-VHT NDP in up to 4 STSs. So change the published beamformee
-STS cap accordingly to 3 as it should be Nsts-1.
+This ensure that the WMI_PEER_STA_KICKOUT_EVENTID is triggered
+by the FW only once the unresponsive timer is expired.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tested with firmware version 999.999.0.636 but the timer
+is still default to 100 seconds. Tested with firmware 
+version 10.1.467-1, the timer is set according to 
+ap_keepalive_max_unresponsive_time_secs.
+
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   22 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 1b61cb5..0c677b4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -264,14 +264,13 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 				  struct ieee80211_sta_vht_cap *vht_cap)
- {
- 	int num_ants = num_of_ant(data->valid_rx_ant);
--	int bf_sts_cap = num_ants - 1;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 776e364..2141034 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2313,6 +2313,28 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
+ 		if (ret)
+ 			ath10k_warn("Failed to disable STA KICKOUT\n");
++
++		/* Set the AP keepalive timer */
++		vdev_param =
++			ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++			WMI_VDEV_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS);
++		if (ret)
++			ath10k_warn("Failed to set keepalive min idle timer\n");
++
++		vdev_param =
++			ar->wmi.vdev_param->ap_keepalive_max_idle_inactive_time_secs;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++			WMI_VDEV_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS);
++		if (ret)
++			ath10k_warn("Failed to set keepalive max idle timer\n");
++
++		vdev_param =
++			ar->wmi.vdev_param->ap_keepalive_max_unresponsive_time_secs;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++			WMI_VDEV_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS);
++		if (ret)
++			ath10k_warn("Failed to set keepalive unresponsive timer\n");
+ 	}
  
- 	vht_cap->vht_supported = true;
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4b5e7d3..7ce002a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3080,6 +3080,9 @@ struct wmi_vdev_param_map {
+ };
  
- 	vht_cap->cap = IEEE80211_VHT_CAP_SHORT_GI_80 |
- 		       IEEE80211_VHT_CAP_RXSTBC_1 |
- 		       IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
--		       bf_sts_cap << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
-+		       3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
- 		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+ #define WMI_VDEV_PARAM_UNSUPPORTED 0
++#define WMI_VDEV_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS 60
++#define WMI_VDEV_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS 120
++#define WMI_VDEV_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS 300
  
- 	if (num_ants > 1)
+ /* the definition of different VDEV parameters */
+ enum wmi_vdev_param {
 -- 
 1.7.9.5
 
