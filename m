@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:43137 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669AbaAWMi2 convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42622 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbaAPNUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 07:38:28 -0500
-Received: by mail-bk0-f44.google.com with SMTP id mz12so332594bkb.31
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 04:38:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1390479620.4142.14.camel@jlt4.sipsolutions.net>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	<CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	<1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	<1390385995.4334.27.camel@jlt4.sipsolutions.net>
-	<1390394166.4189.28.camel@porter.coelho.fi>
-	<1390403432.4334.33.camel@jlt4.sipsolutions.net>
-	<1390403634.4189.39.camel@porter.coelho.fi>
-	<CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
-	<1390458664.4189.48.camel@porter.coelho.fi>
-	<CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
-	<1390462306.4189.56.camel@porter.coelho.fi>
-	<CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
-	<1390470648.4189.88.camel@porter.coelho.fi>
-	<CA+BoTQm768pE7w1x9p5dN+qTxYjzf8R5u4WASd4zEaQ=v717BQ@mail.gmail.com>
-	<1390479620.4142.14.camel@jlt4.sipsolutions.net>
-Date: Thu, 23 Jan 2014 13:38:26 +0100
-Message-ID: <CA+BoTQkd6XLYpJPAb-HLosbmT3duVCdpEStpxNCcHCGTx9djzw@mail.gmail.com> (sfid-20140123_133831_949040_1303257B)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Jan 2014 08:20:06 -0500
+Message-ID: <1389878403.4345.4.camel@jlt4.sipsolutions.net> (sfid-20140116_142010_824817_0242688C)
+Subject: Re: [PATCH] nl80211: Don't touch split_start when split dump is not
+ used
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 16 Jan 2014 14:20:03 +0100
+In-Reply-To: <52D7DC0B.9060206@gmail.com> (sfid-20140116_141810_941825_A906EE4C)
+References: <1389877607-3162-1-git-send-email-pontus.fuchs@gmail.com>
+		 (sfid-20140116_140701_812750_DB719CBA) <1389878160.4345.3.camel@jlt4.sipsolutions.net>
+	 <52D7DC0B.9060206@gmail.com> (sfid-20140116_141810_941825_A906EE4C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 January 2014 13:20, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-01-23 at 11:33 +0100, Michal Kazior wrote:
->
->> An extreme approach would to actually update AP IEs in mac80211. This
->> way it would be possible to pull any interface into CSA implicitly if
->> you're out of channels. This way single-channel multi-BSS AP could
->> probably switch atomically without races and your multi-channel
->> GO-possibly-follows-STA would still work.
->
-> I don't really like updating IEs in mac80211 much. Asking userspace
-> shouldn't be *that* much slower.
+On Thu, 2014-01-16 at 14:18 +0100, Pontus Fuchs wrote:
+> On 2014-01-16 14:16, Johannes Berg wrote:
+> > On Thu, 2014-01-16 at 14:06 +0100, Pontus Fuchs wrote:
+> >> When the netlink skb is exhausted split_start is left set. In the
+> >> subsequent retry, with a larger buffer, the dump is continued from the
+> >> failing point instead of from the beginning.
+> >
+> >> +static void split_start_inc(struct nl80211_dump_wiphy_state *state)
+> >> +{
+> >> +	if (state->split)
+> >> +		state->split_start++;
+> >> +}
+> >
+> > Wouldn't it be easier to just reset it in this case?
+> 
+> Sure. If you prefer that I can do that instead.
 
-I'm not really fond the idea either. Though it's not about being
-slower but about the 'dragging other interfaces along' being possibly
-automatic when you're out of channels.
+Just thinking that it'd be smaller and easier for stable, since it
+should probably be tagged for there.
 
+johannes
 
->> > The CAC might take too long.  If we have an AP1 and a STA and the STA
->> > gets the CSA from its AP2 with a short count, AP1 may not have the time
->> > to CAC.  In this case, AP1 have two choices: trust that AP2 is doing the
->> > right thing and moving to a usable DFS channel or shut itself down.
->>
->> That's the point. AP1 doesn't have time to perform CAC in this case,
->> but it should still be possible for AP1 to _just_ beacon CSA as it's
->> only a hint. AP1 could then be stopped to perform CAC, and once it's
->> completed restart the AP1.
->
-> I don't get this side discussion about CAC. There's no time to do CAC in
-> the middle of a CSA *anyway* since you can't be beaconing on the old
-> channel while doing CAC on the new channel, and if you stop beaconing
-> entirely for the time of the CAC then all clients will likely go away...
-
-You're right, but..
-
-
-> I'm not sure I understand how you can ever do a CSA to a radar channel
-> that would still need CAC?
-
-You're supposed to fulfil a uniform channel usage spread which
-includes "usable" DFS channels.
-
-With CSA you're at least able to tell stations to stop Tx and should
-wait for you (the AP) on a different channel.
-
-
-Michał
