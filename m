@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:51067 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285AbaACVOH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42715 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123AbaAPNxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jan 2014 16:14:07 -0500
-Received: by mail-lb0-f177.google.com with SMTP id q8so8265192lbi.22
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 13:14:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52C5D96E.7060306@lwfinger.net>
-References: <CAC94StQ0EQYDxUQR6jNLEpJjB+tpR9ue2rzesz8uT6cmRTkQ8A@mail.gmail.com>
-	<52C5A8DB.2090506@lwfinger.net>
-	<CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>
-	<52C5D96E.7060306@lwfinger.net>
-Date: Fri, 3 Jan 2014 21:14:06 +0000
-Message-ID: <CAC94StTgBSG927imnZi36b2jXZ4Wt_hQbQ3ceO0co6e_H49n2Q@mail.gmail.com> (sfid-20140103_221411_977794_4B61A5C4)
-Subject: Re: RTL8723ae PCI Driver update
-From: Chris Taylor <chris.taylor@cantab.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 16 Jan 2014 08:53:20 -0500
+Message-ID: <1389880396.4345.6.camel@jlt4.sipsolutions.net> (sfid-20140116_145323_179184_268ABD76)
+Subject: Re: [PATCH] nl80211: Reset split_start on error path when split
+ dump is not used
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 16 Jan 2014 14:53:16 +0100
+In-Reply-To: <52D7E3C1.4090308@gmail.com> (sfid-20140116_145102_990344_1690246A)
+References: <1389879279-20832-1-git-send-email-pontus.fuchs@gmail.com>
+		 (sfid-20140116_143453_482265_044A6882) <1389879668.4345.5.camel@jlt4.sipsolutions.net>
+	 <52D7E3C1.4090308@gmail.com> (sfid-20140116_145102_990344_1690246A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, I wasn't aware that it was only a Ubuntu issue. Sorry if it's
-sounded like I've criticised your work on the current driver - I
-assumed it was an issue affecting all. I've tried the 3.12.6 kernel
-but didn't notice any significant difference.
+On Thu, 2014-01-16 at 14:50 +0100, Pontus Fuchs wrote:
+> On 2014-01-16 14:41, Johannes Berg wrote:
+> > On Thu, 2014-01-16 at 14:34 +0100, Pontus Fuchs wrote:
+> >> When the netlink skb is exhausted split_start is left set. In the
+> >> subsequent retry, with a larger buffer, the dump is continued from the
+> >> failing point instead of from the beginning.
+> >
+> > Hmm. Maybe it should be like this instead?
+> >
+> > johannes
+> >
+> > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> > index 138dc3b..2e08af5 100644
+> > --- a/net/wireless/nl80211.c
+> > +++ b/net/wireless/nl80211.c
+> > @@ -1680,6 +1680,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+> >   				    !skb->len &&
+> >   				    cb->min_dump_alloc < 4096) {
+> >   					cb->min_dump_alloc = 4096;
+> > +					state->split_start = 0;
+> >   					rtnl_unlock();
+> >   					return 1;
+> >   				}
+> 
+> Will that not cause problem if split scan is in use and one of the split 
+> chunks needs to be resent due to EMSGSIZE?
 
-Would you recommend filing a bug report with Ubuntu? If so, do you
-have any inkling where the Ubuntu devs should start looking for the
-problem?
+That's not supposed to happen, and the "!skb->len" check should catch
+it.
 
-Thanks,
-Chris
+johannes
 
-
-On 2 January 2014 21:26, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 01/02/2014 02:44 PM, Chris Taylor wrote:
->>
->> Larry,
->>
->> Thank you for your reply and filling me on the correct netiquette re:
->> driver
->> mailing lists.
->>
->> The PCI ID I have is 10ec:8723, but the built-in version seems to suffer
->> from
->> the slow data rates, poor signal reception and regular dropouts that many
->> users
->> seems to be experiencing with this chipset (at least going by e.g. the
->> Ubuntu
->> forums). I wanted to try compiling my own module from the Realtek source
->> but I
->> think I need a patch to get that to work in kernel 3.11? But I also
->> wondered if
->> it were worth trying a later kernel to see if any of the regular updates
->> have
->> improved things?
->
->
-> As I cannot duplicate the results that Ubuntu users seem to have, I don't
-> know if there are changes that will help.
->
-> It seems to me that there is something in the Ubuntu user code that is
-> having problems. I run openSUSE KDE with NetworkManages, and I never have
-> any of those difficulties.
->
-> Although no changes in rtl8723ae come to mind, there are many changes in the
-> mca80211 stack. It is always worthwhile to try a newer kernel, or the
-> backports source if you do not want to build a whole new kernel.
->
-> Larry
->
->
