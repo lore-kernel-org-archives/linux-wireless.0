@@ -1,67 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:58083 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbaAWMl1 convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:46379 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaAPVjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 07:41:27 -0500
-Received: by mail-bk0-f54.google.com with SMTP id u14so334905bkz.27
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 04:41:26 -0800 (PST)
+	Thu, 16 Jan 2014 16:39:53 -0500
+Received: by mail-wg0-f51.google.com with SMTP id z12so3713347wgg.6
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 13:39:51 -0800 (PST)
+Date: Thu, 16 Jan 2014 22:43:57 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+Message-ID: <20140116214357.GA10376@gobelin> (sfid-20140116_224012_964091_8A7BDF64)
+References: <52B0B72A.5070704@gmail.com>
+ <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+ <20140113111357.GA4611@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+ <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+ <52D83C56.5010706@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1390478961.4142.12.camel@jlt4.sipsolutions.net>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	<CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	<1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	<CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	<1390385995.4334.27.camel@jlt4.sipsolutions.net>
-	<1390394166.4189.28.camel@porter.coelho.fi>
-	<1390403432.4334.33.camel@jlt4.sipsolutions.net>
-	<1390403634.4189.39.camel@porter.coelho.fi>
-	<CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
-	<1390458664.4189.48.camel@porter.coelho.fi>
-	<CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
-	<1390462306.4189.56.camel@porter.coelho.fi>
-	<CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
-	<1390478961.4142.12.camel@jlt4.sipsolutions.net>
-Date: Thu, 23 Jan 2014 13:41:26 +0100
-Message-ID: <CA+BoTQmGrx0Ko-E9N6ntzurGgZHK+nTyY78U43xXw8yctGbf4A@mail.gmail.com> (sfid-20140123_134131_670314_101F8549)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <52D83C56.5010706@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 January 2014 13:09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
->
->> This is actually the tricky part. How do you automatically switch an
->> AP interface? You should be able to at least generate CSA IE - true -
->> but what about beacon after CSA? You need to update HT IE and VHT IE
->> at least.
->>
->> Perhaps we could split CSA into two parts somehow and make it more
->> userspace coordinated. The first part of CSA - announcing it, is
->> trivial and can actually be done entirely within mac80211 if I'm not
->> mistaken. What needs userspace input is what happens after the
->> announcement. This would mean that there is a possible time gap
->> between announcement being completed and the actual channel switch &
->> operation resuming.
->
-> I believe that even announcing it isn't necessarily possible without
-> userspace involvement, particularly for things like 11ac's channel
-> switch wrapper IE and/or operating class changes.
+On Thu, Jan 16, 2014 at 10:08:54PM +0200, Emmanuel Grumbach wrote:
+> >>>
+> >>> Hi,
+> >>>
+> >>> This broke monitor mode:
+> >>> (unsetting .power_update_binding does not hang)
+> >>>
+> >>> modprobe iwlmvm
+> >>> iw dev wlan0 set type monitor
+> >>> iw dev wlan0 set freq 5180 40 5190  # hangs
+> >>>
+> >>> Can you reproduce it easily or do you need me to post further dbg info ?
+> >>>
+> >>
+> >> We have an open bug on this internally - thanks for reporting.
+> > 
+> > OK, BTW I have errors like
+> > - "Microcode SW error detected." upon monitor up
+> 
+> reading your mail again - is this related to monitor mode or not?
+> 
+Yes, at least that's part of what I meant by "upon monitor up", it seems
+to happen systematically when I bring a monitor iface up.
 
-Aww, too bad then.
+> > - "iwlwifi 0000:02:00.0: FW error in SYNC CMD TXPATH_FLUSH" sometimes
+> > after the subsequent ieee80211_restart_hw
+> > - "WARNING: ... iwlwifi/mvm/binding.c:201 iwl_mvm_binding_remove_vif"
+> >   when removing a monitor iface
+> > 
+> > You must have seen those too. I will avoid this tree with iwlwifi then.
+> > 
+> 
+> I probably misunderstood this last sentence?
 
-But splitting would still be useful (at least in some sense) if you
-consider CSA to "usable" DFS channels.
+I ecountered many problems with mvm in this tree, Eyal quickly fixed the
+rs unending search cycle, you told me the monitor deadlock was already
+filed internally on your side, the ones I mentioned in this thread, also
+it seems that with the 7260-8.ucode I don't get anything on a monitor
+iface except the mere traffic of another associated iface (when I have
+such one).
+Except maybe for the latter?, these bugs seem easy enough to trigger
+and alarming enough that I suspect you already must be on your way to
+fixing what you deem needs to .. and thus I did not feel bad not
+dissecting or reporting further and droping this tree with iwlwifi.
+I hope this clarifies the meaning and intention of the last sentence.
 
+I have been using the 7260 since last summer and, as I already mentioned
+to Johannes, found it very useful, and wouldn't mind giving some
+other out-of-tree patches a go.
 
-Michał
+ 
+Karl
