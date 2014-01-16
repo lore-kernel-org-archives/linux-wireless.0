@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbaANQVG (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42328 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaAPVlg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 11:21:06 -0500
-Message-ID: <1389716461.32635.15.camel@jlt4.sipsolutions.net> (sfid-20140114_172111_556794_EFF0C58D)
-Subject: Re: [RFC 4/4] cfg80211: implement multi-BSS CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Jan 2014 17:21:01 +0100
-In-Reply-To: <1389194818-7864-5-git-send-email-michal.kazior@tieto.com> (sfid-20140108_163118_648639_B6C7553E)
-References: <1389194818-7864-1-git-send-email-michal.kazior@tieto.com>
-	 <1389194818-7864-5-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140108_163118_648639_B6C7553E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 16 Jan 2014 16:41:36 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21208.20686.79159.966434@gargle.gargle.HOWL> (sfid-20140116_224139_261790_6C9AFC9A)
+Date: Fri, 17 Jan 2014 03:06:14 +0530
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+In-Reply-To: <52D7C62F.2030307@neratec.com>
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
+	<1384665016-12022-5-git-send-email-sujith@msujith.org>
+	<52CE934D.1020400@neratec.com>
+	<21198.40916.260973.48444@gargle.gargle.HOWL>
+	<52CEA5A3.2040308@neratec.com>
+	<21198.43395.235654.597422@gargle.gargle.HOWL>
+	<52CEAB24.5090700@neratec.com>
+	<52D3F962.1010302@neratec.com>
+	<21204.319.492595.58625@gargle.gargle.HOWL>
+	<52D402C3.3070606@neratec.com>
+	<21204.1991.201080.986559@gargle.gargle.HOWL>
+	<21204.2384.710460.402183@gargle.gargle.HOWL>
+	<21204.3832.404821.109119@gargle.gargle.HOWL>
+	<52D63EBB.7020607@neratec.com>
+	<21206.17284.157496.206327@gargle.gargle.HOWL>
+	<52D6472B.2060207@neratec.com>
+	<21207.48441.292580.481850@gargle.gargle.HOWL>
+	<21207.49245.151249.759167@gargle.gargle.HOWL>
+	<52D7C62F.2030307@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-08 at 16:26 +0100, Michal Kazior wrote:
-> This extends NL80211_CMD_CHANNEL_SWITCH by adding
-> a new attribute NL80211_ATTR_SWITCH_NEXT. The
-> attribute holds nested channel switch attributes
-> (including itself) allowing
-> multi-interface/chained CSA.
+Wojciech Dubowik wrote:
+> I guess I won't be able to reproduce bad scan results with wireless 
+> testing since I have
+> changed scan reporting to pure rssi in my openwrt compat.
+> In normal case you get a sum of rssi and noise floor and it will be 
+> correct i.e. when
+> NF is shifted by 14db so will be rssi.
+> So it's just my use case.
+> 
+> Anyway I have just solved the issue by applying calibrated noise floor 
+> values from eeprom
+> instead of nominal in nf_get functions and nf histogram. Now the rssi 
+> seems stable in my test
+> environment. I have just started testing but it looks promising.
 
-That's ... creative? Interesting? I'm not sure I like that API much.
+I don't see how that would fix the issue. The race still remains since
+there is a window between NF cal init and completion. The results
+of the calibration depends on the environment and using default values
+from the eeprom will not fix this, I think.
 
-OTOH, it's a neat way of reusing all the attributes that we have, etc.
-
-However, I think it'd be easier to implement on both sides of the fence
-if we structured this differently and made the "more vifs" to be a
-nested attribute with data inside each one of them.
-
-Actually, I'd suggest that in the multi-vif case all of the attributes
-should be inside the list, like this:
-
- wiphy, chswitch=[1=[ifidx,...], 2=[ifidx,...], 3=[ifidx,...]]
-
-alternatively, maybe something that would be nice would be
-
- wiphy, chswitch=[ifidx1=[...], ifidx2=[...], ifidx3=[...]]
-
-but the common way would be to ignore the array index completely.
-
-Today you get
-
- wiphy, ifidx, ..., next=[ifidx, ..., next=[ifidx, ..., next=[...]]]
-
-and I don't really like the deep nesting.
-
-I would also argue that doing
- wiphy, ifidx1, ..., more=[1=[ifidx2, ...], ...]
-or
- wiphy, ifidx1, ..., next=[...]
-
-is more error prone as it would allow older kernels to parse the whole
-thing while ignoring the next/more/whatever, so you'd get some weird
-subset of the intended behaviour. Forcing *all* interfaces into the
-sub-attribute when more than one is desired (or in fact for a single
-one, if you're ok with requiring a kernel with support) would IMHO be
-less error prone.
-
-Haven't looked over the code in much detail, but a few small comments:
- * I think you should preserve tracing, it has facilities for arrays too
- * hard-coding a limit of 8 vifs seems pointless, you can easily
-allocate dynamic
-   memory, no?
-
-johannes
-
+Sujith
