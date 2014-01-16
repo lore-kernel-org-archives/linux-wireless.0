@@ -1,105 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33383 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969AbaAWGJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 01:09:02 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Karl Beldan <karl.beldan@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: RE: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
- frames, as per spec
-Date: Thu, 23 Jan 2014 06:08:57 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D56A24@HASMSX103.ger.corp.intel.com> (sfid-20140123_070907_754104_E6568173)
-References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
- <1390394079.4334.30.camel@jlt4.sipsolutions.net>
- <20140122130924.GA18365@magnum.frso.rivierawaves.com>
- <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
- <20140122152845.GB18365@magnum.frso.rivierawaves.com>
- <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
- <20140122164122.GC18365@magnum.frso.rivierawaves.com>
- <1390416713.4334.46.camel@jlt4.sipsolutions.net>
- <20140122191610.GD18365@magnum.frso.rivierawaves.com>
- (sfid-20140122_201711_730750_BBD5790C)
- <1390418495.4334.49.camel@jlt4.sipsolutions.net>
- <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com>
-In-Reply-To: <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34255 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbaAPLlh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jan 2014 06:41:37 -0500
+Received: by mail-bk0-f46.google.com with SMTP id u15so1117119bkz.5
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 03:41:33 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAB3XZEe0yM2F4C5DbWE+BjDVn92Sv_=k5EiUpokZjF1QugdSWw@mail.gmail.com>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	<1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEe0yM2F4C5DbWE+BjDVn92Sv_=k5EiUpokZjF1QugdSWw@mail.gmail.com>
+Date: Thu, 16 Jan 2014 12:41:33 +0100
+Message-ID: <CA+BoTQnW+MRk-KQxkwHQ8WFhLERqTu98QWwKSw654FPAp0wBHg@mail.gmail.com> (sfid-20140116_124140_652455_029473B0)
+Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PiBzY2hyaWViOg0KPiA+
-T24gV2VkLCAyMDE0LTAxLTIyIGF0IDIwOjE2ICswMTAwLCBLYXJsIEJlbGRhbiB3cm90ZToNCj4g
-Pg0KPiA+PiA+IEdpdmVuIHRoZSBmYWN0IHRoYXQgd2Ugb25seSBzZW5kIHRoZSBmcmFtZSBmcm9t
-DQo+ID4+ID4gaWVlZTgwMjExX3N0b3BfdHhfYmFfY2IoKSBJIGRvbid0IHNlZSBhbnkgcHJvYmxl
-bS4gRXZlbiBpZiB3ZSB3ZXJlDQo+ID50bw0KPiA+PiA+IHNlbmQgdGhlIGZyYW1lIGRpcmVjdGx5
-IGFmdGVyIGNhbGxpbmcgdGhlIGFtcGR1X2FjdGlvbiwgaXQgc2VlbXMgaXQNCj4gPj4gPiB3b3Vs
-ZCBiZSBmaW5lLCBzaW5jZSB0aGUgY2FsbGJhY2sgKG5vdykgcmVxdWlyZXMgc2VuZGluZyB0aGUN
-Cj4gPnJlbWFpbmluZw0KPiA+PiA+IGZyYW1lcyB1bmFnZ3JlZ2F0ZWQuIChHaXZlbiB0aGF0LCBJ
-J20gbm90IGV2ZW4gc3VyZSB3aHkgd2UgcmVxdWlyZWQNCj4gPnRoZQ0KPiA+PiA+IHBhY2tldHMg
-dG8gYmUgc2VudCB1bmFnZ3JlZ2F0ZWQsIEVtbWFudWVsLCBkbyB5b3UgcmVtZW1iZXI/KQ0KPiA+
-PiA+DQo+ID4+IEknZCBleHBlY3QgbW9zdCBkZXZpY2UgdG8gbm90IGJsb2NrIGFjayBzdWNoIGZy
-YW1lcywgYW5kIHRoZXknZCBiZQ0KPiA+PiByaWdodCB0byBkbyBzbywgc2VuZGluZyB0aGVtIHVu
-YWdncmVnYXRlZCBzZWVtcyB0aGUgcmlnaHQgdGhpbmcgdG8NCj4gPmRvLg0KPiA+DQo+ID5PaCwg
-SSByb3VnaGx5IHJlbWVtYmVyIG5vdyAtIHdlIGRpZG4ndCB3YW50IHRvIHNlcGFyYXRlIHRoZSBj
-YXNlcyBvZiB1cw0KPiA+c2VuZGluZyBhIGRlbEJBIGFuZCB1cyByZWNlaXZpbmcgYSBkZWxCQS4g
-SWYgd2UgcmVjZWl2ZSBhIGRlbEJBLCB3ZQ0KPiA+c2hvdWxkIHN0b3Agc2VuZGluZyBhZ2dyZWdh
-dGVkIGZyYW1lcyBpbW1lZGlhdGVseSAoYWN0dWFsbHkgZm9yIGl3bHdpZmkNCj4gPnRoZSBmaXJt
-d2FyZSB3aWxsIGRvIHRoYXQpIG9yIGFzIHF1aWNrbHkgYXMgcG9zc2libGUsIGhlbmNlIHRoZQ0K
-PiA+cmVxdWlyZW1lbnQNCj4gPg0KPiA+SWYgd2UgZGVjaWRlIHRvIHRlYXIgZG93biB0aGUgc2Vz
-c2lvbiBvdXJzZWx2ZXMgdGhlbiB3ZSBjb3VsZCBjb250aW51ZQ0KPiA+c2VuZGluZyB1bnRpbCBs
-YXRlciwgYnV0IGl0J3Mgbm90IHdvcnRoIGl0Lg0KPiA+DQoNCkV4YWN0bHkgLSB3ZSB3YW50ZWQg
-dG8gdW5pZnkgdGhlIGluaXRpYXRvciAodGhlIFRYaW5nIHNpZGUgZGVjaWRlcyB0byBzdG9wIHRo
-ZSBCQSBhZ3JlZW1lbnQpIGFuZCB0aGUgcmVjaXBpZW50ICh0aGUgUlhpbmcgc2lkZSBkZWNpZGVz
-IHRvIHN0b3AgdGhlIEJBIGFncmVlbWVudCkgY2FzZXMuIFNvIGl0IGdvZXMgbGlrZSB0aGlzOg0K
-SWYgeW91IGdldCBhcmUgVFhpbmcgYW5kIHlvdSBnZXQgYSAocmVjaXBpZW50KSBERUxCQSwgdGhl
-biB5b3UgbmVlZCB0byBzdG9wIHNlbmRpbmcgQU1QRFVzIHN0cmFpZ2h0IGF3YXkuIFRoaXMgaXMg
-d2h5IEludGVsIGNhcmRzIGhhdmUgdGhlIGZpcm13YXJlIGRvIHRoaXMuIEJ1dCBzaW5jZSBpd2x3
-aWZpIHVzZXMgZGlmZmVyZW50IHF1ZXVlcyBmb3Igbm9uLWFnZ3JlZ2F0ZWQgdHJhZmZpYyBhbmQg
-QU1QRFVzLCB3ZSBtdXN0IHdhaXQgdW50aWwgYWxsIHRoZSBwYWNrZXRzIGluIHRoZSBBTVBEVSBx
-dWV1ZSB3aWxsIGRyYWluLCBhbmQgb25seSB0aGVuLCBhbGxvdyBtYWM4MDIxMSB0byBzZW5kIHBh
-Y2tldHMgdG8gdGhlIG5vbi1hZ2dyZWdhdGVkIHRyYWZmaWMgcXVldWUuIE5vdyAtIGV2ZW4gdmVu
-ZG9ycyB0aGF0IGRvbid0IHByZXZlbnQgdGhlIEFNUERVcyBpbiBmaXJtd2FyZSBzaG91bGQgc3Rp
-bGwgZG8gdGhlIHNhbWUgKHByb3ZpZGVkIHRoYXQgdGhleSB1c2UgZGlmZmVyZW50IHF1ZXVlcyBm
-b3IgQU1QRFUgYW5kIG5vbi1BTVBEVSB0cmFmZmljKS4gVGhpcyBpcyBub3QgdG8gcHJldmVudCBz
-ZW5kaW5nIEFNUERVcyBhZnRlciBERUxCQSwgYnV0IG1vcmUgdG8gcHJldmVudCBvdXQtb2Ytb3Jk
-ZXIgVFguDQpJbiB0aGUgY2FzZSBvZiBvcmlnaW5hdG9yIERFTEJBLCBpdCBpcyBzbGlnaHRseSBk
-aWZmZXJlbnQuIFdlIGNhbiBjaG9vc2Ugd2hlbiB0byBzZW5kIHRoZSBERUxCQSBhZnRlciBhbGwu
-IE9mIGNvdXJzZSB3ZSBzdGlsbCBoYXZlIHRoZSBvdXQtb2Ytb3JkZXIgdGhpbmcgdG8gdGFrZSBj
-YXJlIGFib3V0LCBidXQgYXQgbGVhc3QsIHdlIGNhbiBhdm9pZCB0aGUgIkFNUERVcyBhZnRlciBE
-RUxCQSIgZXZlbiB3aXRob3V0IGZpcm13YXJlIHN1cHBvcnQuDQpUaGUgb25seSB0aGluZyB5b3Ug
-aGF2ZSB0byBkbyBpcyB0byBtYWtlIHN1cmUgdGhhdCBpZWVlODAyMTFfc3RvcF90eF9iYV9jYiBp
-cyBjYWxsZWQgb25seSAqYWZ0ZXIqIHRoZSBkcml2ZXIgaXMgc3VyZSB0aGF0IGFsbCB0aGUgcGFj
-a2V0cyBpbiB0aGUgQU1QRFUgcXVldWUgYXJlIHNlbnQuIE1hYzgwMjExIHdvbid0IHNlbmQgdGhl
-IERFTEJBIGJlZm9yZSB0aGUgbG93IGxldmVsIGRyaXZlciBjYWxscyBpZWVlODAyMTFfc3RvcF90
-eF9iYV9jYi4gU28sIGlmIHRoZSBkcml2ZXIgaXMgYWJsZSB0byB0ZWxsIG1hYzgwMjExIHdoZW4g
-aXQgaXMgZmluaXNoZWQgd2l0aCB0aGUgQU1QRFUgcGFja2V0cywgeW91IGNhbiBzYWZlbHkgc2Vu
-ZCBpdCBpbiBWTyBhbmQgbm90IGZlYXIgYW55ICJBTVBEVSBhZnRlciBERUxCQSIgcHJvYmxlbS4N
-CkFub3RoZXIgKHNpZGUpIHBvaW50LiBFdmVuIGlmIHlvdSBjYW4gc3RvcCBzZW5kaW5nIEFNUERV
-cyBzdHJhaWdodCBhd2F5IChpd2x3aWZpIGNhbiBkbyB0aGF0IHdpdGggYSBjb21tYW5kIHRvIHRo
-ZSBmaXJtd2FyZSB0aGF0IHdpbGwgYmUgbXVjaCBmYXN0ZXIgdGhhbiB3YWl0aW5nIGZvciBxdWV1
-ZXMgdG8gZHJhaW4pLCB5b3Ugc3RpbGwgaGF2ZSB0aGUgVHggb3V0LW9mLW9yZGVyIHByb2JsZW0u
-DQpTbyB0aGF0IHRlY2huaWNhbGx5LCB3ZSBjb3VsZCBoYXZlIGEgbW9yZSBmaW5lIGdyYWluIHJl
-c29sdXRpb24gaW4gbWFjODAyMTEgdGhhdCBhbGxvd3MgdGhlIGxvdyBsZXZlbCBkcml2ZXIgdG8g
-aGF2ZSBtYWM4MDIxMSBzZW5kIHRoZSBERUxCQSBlYXJsaWVyLCBidXQgc3RpbGwgcHJldmVudHMg
-bWFjODAyMTEgZnJvbSBzZW5kaW5nIHBhY2tldHMgdG8gdGhlIGxvdyBsZXZlbCBkcml2ZXIgdW50
-aWwgdGhlIGFsbCB0aGUgcXVldWVzIGFyZSBkcmFpbmVkLg0KQnV0IHRoaXMgaXMgZGVmaW5pdGVs
-eSBub3Qgd29ydGggdGhlIGNvbXBsZXhpdHkgc2luY2UgZGVsYXlpbmcgdGhlIERFTEJBIGJ5IGEg
-Yml0IGRvZXNuJ3QgY29zdCBhbnl0aGluZy4NCg0KSG9wZSB0aGF0IGhlbHBzIDopDQoNCj4gPj4g
-U28sIEkgZ3Vlc3MgeW91IGFyZSB0YWtpbmcgd2hhdCBJIHNlbnQgPw0KPiA+DQo+ID5IYXZlbid0
-IHJlYWxseSBtYWRlIHVwIG15IG1pbmQgeWV0IC4uLiBJIHRoaW5rIGl0J3MgbW9yZSBjb3JyZWN0
-LCBzbyBJDQo+ID5zaG91bGQsIGJ1dCBJIGFsc28gZG9uJ3QgcmVhbGx5IHdhbnQgdG8gYnJlYWsg
-dGhlIHJhbGluayBkcml2ZXJzIG92ZXINCj4gPndoYXQgc2VlbXMgdG8gbWUgdG8gYmUgYSBmYWly
-bHkgc21hbGwgaXNzdWUuDQo+IA0KPiBJIHRoaW5rIEknbSBmaW5lIHdpdGggdGhpcyBub3cuIExl
-dCdzIGp1c3Qgc2VlIGlmIHNvbWVvbmUgZXhwZXJpZW5jZXMgYW55DQo+IGlzc3VlcyAuLi4NCj4g
-DQo+ICBGdXJ0aGVybW9yZSBJIHRoaW5rIGkgZXZlbiByZW1lbWJlciB0aGF0IHlvdSBjYW4gZm9y
-Y2UgcmFsaW5rIEhXIHRvIHN0b3AgYQ0KPiBCQSBzZXNzaW9uLiBCdXQgYWxsIGluIGFsbCBsZXRz
-IGJldHRlciBjb21wbHkgd2l0aCB0aGUgc3BlYyAuLi4NCg0KV2VsbCAtIHlvdSBuZWVkIHRvIHNl
-ZSB3aGF0ICJzdG9wIGEgQkEgc2Vzc2lvbiIgbWVhbi4gSWYgeW91IGFyZSBhYmxlIHRvIHRlbGwg
-dGhlIEhXIG5vIEFNUERVcyBhbnltb3JlICpub3cqLCB0aGVuIG9rIC0gYnV0IHlvdSBzdGlsbCBo
-YXZlIHRoZSBvdXQtb2Ytb3JkZXIgVFggcHJvYmxlbS4gVW5sZXNzIHlvdSB1c2UgdGhlIHNhbWUg
-VFggcXVldWUgZm9yIEFNUFVzIGFuZCBub24tQU1QRFVzIGFuZCBkb24ndCBmZWFyIHJlb3JkZXJp
-bmcgaXNzdWVzDQoNCj4gDQo+IEhlbG11dA0K
+On 16 January 2014 12:04, Eliad Peller <eliad@wizery.com> wrote:
+> On Wed, Jan 15, 2014 at 2:04 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> This implements a fairly simple multi-interface
+>> CSA. It doesn't support multiple channel
+>> contexts so it doesn't support multi-channel.
+>>
+>> Once a CSA is started other CSA requests are
+>> denied until the first one is completed. A single
+>> CSA may affect multiple interfaces. CSA can happen
+>> only if it all target CSA chandefs are compatible
+>> and it affects all interfaces are sharing a single
+>> channel context exclusively.
+>>
+>> A new worker is introduced: csa_complete_work
+>> which is used to account per-interface countdowns
+>> and issue the actual channel switch after last
+>> interface completes its CSA.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+> [...]
+>
+>>
+>> +static int ieee80211_ap_beacon_presp_backup(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +       struct beacon_data *beacon;
+>> +       struct probe_resp *probe_resp;
+>> +
+>> +       beacon = sdata_dereference(sdata->u.ap.beacon, sdata);
+>> +       if (beacon) {
+>> +               sdata->u.ap.prev_beacon = kmemdup(beacon, sizeof(beacon) +
+>> +                                                 beacon->head_len +
+>> +                                                 beacon->tail_len, GFP_KERNEL);
+>> +               if (!sdata->u.ap.prev_beacon)
+>> +                       return -ENOMEM;
+>> +       }
+>> +
+> you must also update the pointers here...
+
+You're right, thanks!
+
+
+Michał
