@@ -1,107 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:62455 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752360AbaA2THs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:07:48 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
- ESMTPSA (Nemesis) id 0LbxQO-1VRrks2nvY-00jI4C for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:07:46 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 05/13] ath9k_htc: add rx header converter to make it usable by ath9k
-Date: Wed, 29 Jan 2014 20:06:56 +0100
-Message-Id: <1391022424-21087-4-git-send-email-linux@rempel-privat.de> (sfid-20140129_200801_348663_965F7EE0)
-In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
- <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:56281 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaAPUI6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jan 2014 15:08:58 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hi8so2750385wib.14
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 12:08:57 -0800 (PST)
+Message-ID: <52D83C56.5010706@gmail.com> (sfid-20140116_210902_112039_6BBE6B9B)
+Date: Thu, 16 Jan 2014 22:08:54 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Karl Beldan <karl.beldan@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+References: <52B0B72A.5070704@gmail.com> <1387313079-28123-8-git-send-email-egrumbach@gmail.com> <20140113111357.GA4611@magnum.frso.rivierawaves.com> <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com> <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+In-Reply-To: <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 43 +++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+>>>
+>>> Hi,
+>>>
+>>> This broke monitor mode:
+>>> (unsetting .power_update_binding does not hang)
+>>>
+>>> modprobe iwlmvm
+>>> iw dev wlan0 set type monitor
+>>> iw dev wlan0 set freq 5180 40 5190  # hangs
+>>>
+>>> Can you reproduce it easily or do you need me to post further dbg info ?
+>>>
+>>
+>> We have an open bug on this internally - thanks for reporting.
+> 
+> OK, BTW I have errors like
+> - "Microcode SW error detected." upon monitor up
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 12e0f32..8a63f67 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -966,6 +966,38 @@ static void ath9k_process_rate(struct ieee80211_hw *hw,
- 
- }
- 
-+static inline void conver_htc_flag(struct ath_rx_status *rx_stats,
-+				   struct ath_htc_rx_status *rxstatus)
-+{
-+	if (rxstatus->rs_flags & ATH9K_RX_2040)
-+		rx_stats->flag |= RX_FLAG_40MHZ;
-+	if (rxstatus->rs_flags & ATH9K_RX_GI)
-+		rx_stats->flag |= RX_FLAG_SHORT_GI;
-+}
-+
-+static void rx_status_htc_to_ath(struct ath_rx_status *rx_stats,
-+				 struct ath_htc_rx_status *rxstatus)
-+{
-+	rx_stats->rs_datalen	= rxstatus->rs_datalen;
-+	rx_stats->rs_status	= rxstatus->rs_status;
-+	rx_stats->rs_phyerr	= rxstatus->rs_phyerr;
-+	rx_stats->rs_rssi	= rxstatus->rs_rssi;
-+	rx_stats->rs_keyix	= rxstatus->rs_keyix;
-+	rx_stats->rs_rate	= rxstatus->rs_rate;
-+	rx_stats->rs_antenna	= rxstatus->rs_antenna;
-+	rx_stats->rs_more	= rxstatus->rs_more;
-+
-+	memcpy(rx_stats->rs_rssi_ctl, rxstatus->rs_rssi_ctl,
-+		sizeof(rx_stats->rs_rssi_ctl));
-+	memcpy(rx_stats->rs_rssi_ext, rxstatus->rs_rssi_ext,
-+		sizeof(rx_stats->rs_rssi_ext));
-+
-+	rx_stats->rs_isaggr	= rxstatus->rs_isaggr;
-+	rx_stats->rs_moreaggr	= rxstatus->rs_moreaggr;
-+	rx_stats->rs_num_delims	= rxstatus->rs_num_delims;
-+	conver_htc_flag(rx_stats, rxstatus);
-+}
-+
- static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 			     struct ath9k_htc_rxbuf *rxbuf,
- 			     struct ieee80211_rx_status *rx_status)
-@@ -976,6 +1008,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct sk_buff *skb = rxbuf->skb;
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath_htc_rx_status *rxstatus;
-+	struct ath_rx_status *rx_stats;
- 	int hdrlen, padsize;
- 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	__le16 fc;
-@@ -1014,6 +1047,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
-+	rx_stats = kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
-+	if (unlikely(rx_stats == NULL)) {
-+		ath_err(common, "rx_stats allocation filed!\n");
-+		goto err_nofree;
-+	}
-+	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
-+
- 	if (rxbuf->rxstatus.rs_status != 0) {
- 		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_CRC)
- 			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-@@ -1094,9 +1134,12 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
- 	rx_status->flag |= RX_FLAG_MACTIME_END;
- 
-+	kfree(rx_stats);
- 	return true;
- 
- rx_next:
-+	kfree(rx_stats);
-+err_nofree:
- 	return false;
- }
- 
--- 
-1.8.5.3
+reading your mail again - is this related to monitor mode or not?
 
+> - "iwlwifi 0000:02:00.0: FW error in SYNC CMD TXPATH_FLUSH" sometimes
+> after the subsequent ieee80211_restart_hw
+> - "WARNING: ... iwlwifi/mvm/binding.c:201 iwl_mvm_binding_remove_vif"
+>   when removing a monitor iface
+> 
+> You must have seen those too. I will avoid this tree with iwlwifi then.
+> 
+
+I probably misunderstood this last sentence?
