@@ -1,255 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40833 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290AbaAHCyw (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:64120 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287AbaAPLQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:54:52 -0500
-Message-ID: <52CCBDD2.9060909@huawei.com> (sfid-20140108_035530_169450_614E0E26)
-Date: Wed, 8 Jan 2014 10:54:10 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.6 14/19] hostap: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 16 Jan 2014 06:16:37 -0500
+Received: by mail-wg0-f51.google.com with SMTP id z12so2952237wgg.18
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 03:16:35 -0800 (PST)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: patches@linaro.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH] mac80211: drop unused param 'encrypted' from ccmp_special_blocks()
+Date: Thu, 16 Jan 2014 12:16:30 +0100
+Message-Id: <1389870990-3735-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20140116_121640_417536_FD792BDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+Commit 7ec7c4a9a686 ("mac80211: port CCMP to cryptoapi's CCM driver")
+resulted in the 'encrypted' param of ccmp_special_blocks() to be no
+longer used so it can be dropped from the prototype.
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 ---
- drivers/net/wireless/hostap/hostap_80211_tx.c |  4 ++--
- drivers/net/wireless/hostap/hostap_ap.c       | 28 +++++++++++++--------------
- drivers/net/wireless/hostap/hostap_hw.c       |  2 +-
- drivers/net/wireless/hostap/hostap_ioctl.c    |  4 ++--
- drivers/net/wireless/hostap/hostap_main.c     |  8 +++-----
- 5 files changed, 22 insertions(+), 24 deletions(-)
+ net/mac80211/wpa.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_80211_tx.c b/drivers/net/wireless/hostap/hostap_80211_tx.c
-index 344a981..8bde776 100644
---- a/drivers/net/wireless/hostap/hostap_80211_tx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_tx.c
-@@ -1,5 +1,6 @@
- #include <linux/slab.h>
- #include <linux/export.h>
-+#include <linux/etherdevice.h>
- 
- #include "hostap_80211.h"
- #include "hostap_common.h"
-@@ -103,8 +104,7 @@ netdev_tx_t hostap_data_start_xmit(struct sk_buff *skb,
- 			return NETDEV_TX_OK;
- 		} else if (local->iw_mode == IW_MODE_INFRA &&
- 			   (local->wds_type & HOSTAP_WDS_AP_CLIENT) &&
--			   memcmp(skb->data + ETH_ALEN, dev->dev_addr,
--				  ETH_ALEN) != 0) {
-+			   !ether_addr_equal(skb->data + ETH_ALEN, dev->dev_addr)) {
- 			/* AP client mode: send frames with foreign src addr
- 			 * using 4-addr WDS frames */
- 			use_wds = WDS_COMPLIANT_FRAME;
-diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
-index d6033a8..d36e252 100644
---- a/drivers/net/wireless/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/hostap/hostap_ap.c
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/export.h>
- #include <linux/moduleparam.h>
-+#include <linux/etherdevice.h>
- 
- #include "hostap_wlan.h"
- #include "hostap.h"
-@@ -106,13 +107,12 @@ static void ap_sta_hash_del(struct ap_data *ap, struct sta_info *sta)
- 
- 	s = ap->sta_hash[STA_HASH(sta->addr)];
- 	if (s == NULL) return;
--	if (memcmp(s->addr, sta->addr, ETH_ALEN) == 0) {
-+	if (ether_addr_equal(s->addr, sta->addr)) {
- 		ap->sta_hash[STA_HASH(sta->addr)] = s->hnext;
- 		return;
- 	}
- 
--	while (s->hnext != NULL && memcmp(s->hnext->addr, sta->addr, ETH_ALEN)
--	       != 0)
-+	while (s->hnext != NULL && !ether_addr_equal(s->hnext->addr, sta->addr))
- 		s = s->hnext;
- 	if (s->hnext != NULL)
- 		s->hnext = s->hnext->hnext;
-@@ -435,7 +435,7 @@ int ap_control_del_mac(struct mac_restrictions *mac_restrictions, u8 *mac)
- 	     ptr != &mac_restrictions->mac_list; ptr = ptr->next) {
- 		entry = list_entry(ptr, struct mac_entry, list);
- 
--		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(entry->addr, mac)) {
- 			list_del(ptr);
- 			kfree(entry);
- 			mac_restrictions->entries--;
-@@ -459,7 +459,7 @@ static int ap_control_mac_deny(struct mac_restrictions *mac_restrictions,
- 
- 	spin_lock_bh(&mac_restrictions->lock);
- 	list_for_each_entry(entry, &mac_restrictions->mac_list, list) {
--		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(entry->addr, mac)) {
- 			found = 1;
- 			break;
- 		}
-@@ -957,7 +957,7 @@ static struct sta_info* ap_get_sta(struct ap_data *ap, u8 *sta)
- 	struct sta_info *s;
- 
- 	s = ap->sta_hash[STA_HASH(sta)];
--	while (s != NULL && memcmp(s->addr, sta, ETH_ALEN) != 0)
-+	while (s != NULL && !ether_addr_equal(s->addr, sta))
- 		s = s->hnext;
- 	return s;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index d65728220763..0781840c8415 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -301,8 +301,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
  }
-@@ -1391,7 +1391,7 @@ static void handle_authen(local_info_t *local, struct sk_buff *skb,
- 	status_code = __le16_to_cpu(*pos);
- 	pos++;
  
--	if (memcmp(dev->dev_addr, hdr->addr2, ETH_ALEN) == 0 ||
-+	if (ether_addr_equal(dev->dev_addr, hdr->addr2) ||
- 	    ap_control_mac_deny(&ap->mac_restrictions, hdr->addr2)) {
- 		txt = "authentication denied";
- 		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-@@ -1935,7 +1935,7 @@ static void handle_pspoll(local_info_t *local,
- 	PDEBUG(DEBUG_PS2, "handle_pspoll: BSSID=%pM, TA=%pM PWRMGT=%d\n",
- 	       hdr->addr1, hdr->addr2, !!ieee80211_has_pm(hdr->frame_control));
  
--	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP,
- 		       "handle_pspoll - addr1(BSSID)=%pM not own MAC\n",
- 		       hdr->addr1);
-@@ -2230,7 +2230,7 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
- 			goto done;
- 		}
- 
--		if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+		if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 			PDEBUG(DEBUG_AP, "handle_ap_item - addr1(BSSID)=%pM"
- 			       " not own MAC\n", hdr->addr1);
- 			goto done;
-@@ -2267,13 +2267,13 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
- 		goto done;
- 	}
- 
--	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP, "handle_ap_item - addr1(DA)=%pM"
- 		       " not own MAC\n", hdr->addr1);
- 		goto done;
- 	}
- 
--	if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr3, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP, "handle_ap_item - addr3(BSSID)=%pM"
- 		       " not own MAC\n", hdr->addr3);
- 		goto done;
-@@ -3035,7 +3035,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 		if (!wds) {
- 			/* FromDS frame - not for us; probably
- 			 * broadcast/multicast in another BSS - drop */
--			if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
-+			if (ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 				printk(KERN_DEBUG "Odd.. FromDS packet "
- 				       "received with own BSSID\n");
- 				hostap_dump_rx_80211(dev->name, skb, rx_stats);
-@@ -3044,7 +3044,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 			goto out;
- 		}
- 	} else if (stype == IEEE80211_STYPE_NULLFUNC && sta == NULL &&
--		   memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
-+		   ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 
- 		if (local->hostapd) {
- 			prism2_rx_80211(local->apdev, skb, rx_stats,
-@@ -3073,7 +3073,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 		/* If BSSID (Addr3) is foreign, this frame is a normal
- 		 * broadcast frame from an IBSS network. Drop it silently.
- 		 * If BSSID is own, report the dropping of this frame. */
--		if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(hdr->addr3, dev->dev_addr)) {
- 			printk(KERN_DEBUG "%s: dropped received packet from %pM"
- 			       " with no ToDS flag "
- 			       "(type=0x%02x, subtype=0x%02x)\n", dev->name,
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index c275dc1..6df3ee5 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -2175,7 +2175,7 @@ static void hostap_tx_callback(local_info_t *local,
- 	struct hostap_tx_callback_info *cb;
- 
- 	/* Make sure that frame was from us. */
--	if (memcmp(txdesc->addr2, local->dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(txdesc->addr2, local->dev->dev_addr)) {
- 		printk(KERN_DEBUG "%s: TX callback - foreign frame\n",
- 		       local->dev->name);
- 		return;
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index e509030..2454a74 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -655,7 +655,7 @@ static int hostap_join_ap(struct net_device *dev)
- 		if (!local->last_scan_results)
- 			break;
- 		entry = &local->last_scan_results[i];
--		if (memcmp(local->preferred_ap, entry->bssid, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(local->preferred_ap, entry->bssid)) {
- 			req.channel = entry->chid;
- 			break;
- 		}
-@@ -1978,7 +1978,7 @@ static inline int prism2_translate_scan(local_info_t *local,
- 		list_for_each(ptr, &local->bss_list) {
- 			struct hostap_bss_info *bss;
- 			bss = list_entry(ptr, struct hostap_bss_info, list);
--			if (memcmp(bss->bssid, scan->bssid, ETH_ALEN) == 0) {
-+			if (ether_addr_equal(bss->bssid, scan->bssid)) {
- 				bss->included = 1;
- 				current_ev = __prism2_translate_scan(
- 					local, info, scan, bss, current_ev,
-diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-index a1257c9..67db34e 100644
---- a/drivers/net/wireless/hostap/hostap_main.c
-+++ b/drivers/net/wireless/hostap/hostap_main.c
-@@ -155,8 +155,7 @@ int prism2_wds_add(local_info_t *local, u8 *remote_addr,
- 
- 		if (prism2_wds_special_addr(iface->u.wds.remote_addr))
- 			empty = iface;
--		else if (memcmp(iface->u.wds.remote_addr, remote_addr,
--				ETH_ALEN) == 0) {
-+		else if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
- 			match = iface;
- 			break;
- 		}
-@@ -214,8 +213,7 @@ int prism2_wds_del(local_info_t *local, u8 *remote_addr,
- 		if (iface->type != HOSTAP_INTERFACE_WDS)
- 			continue;
- 
--		if (memcmp(iface->u.wds.remote_addr, remote_addr,
--			   ETH_ALEN) == 0) {
-+		if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
- 			selected = iface;
- 			break;
- 		}
-@@ -1085,7 +1083,7 @@ int prism2_sta_deauth(local_info_t *local, u16 reason)
- 
- 	if (local->iw_mode != IW_MODE_INFRA ||
- 	    is_zero_ether_addr(local->bssid) ||
--	    memcmp(local->bssid, "\x44\x44\x44\x44\x44\x44", ETH_ALEN) == 0)
-+	    ether_addr_equal(local->bssid, "\x44\x44\x44\x44\x44\x44"))
+-static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
+-				int encrypted)
++static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
+ {
+ 	__le16 mask_fc;
+ 	int a4_included, mgmt;
+@@ -456,7 +455,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
  		return 0;
  
- 	ret = prism2_sta_send_mgmt(local, local->bssid, IEEE80211_STYPE_DEAUTH,
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+-	ccmp_special_blocks(skb, pn, b_0, aad, 0);
++	ccmp_special_blocks(skb, pn, b_0, aad);
+ 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+ 				  skb_put(skb, IEEE80211_CCMP_MIC_LEN));
+ 
+@@ -524,7 +523,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 		u8 aad[2 * AES_BLOCK_SIZE];
+ 		u8 b_0[AES_BLOCK_SIZE];
+ 		/* hardware didn't decrypt/verify MIC */
+-		ccmp_special_blocks(skb, pn, b_0, aad, 1);
++		ccmp_special_blocks(skb, pn, b_0, aad);
+ 
+ 		if (ieee80211_aes_ccm_decrypt(
+ 			    key->u.ccmp.tfm, b_0, aad,
 -- 
-1.8.0
-
+1.8.3.2
 
