@@ -1,102 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:52826 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbaA2Vob (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42742 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbaAPOEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 16:44:31 -0500
-Received: by mail-ie0-f175.google.com with SMTP id ar20so2595635iec.6
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 13:44:31 -0800 (PST)
-Date: Wed, 29 Jan 2014 14:37:16 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 9/9] wil6210: Use pci_enable_msi_range()
-Message-ID: <20140129213716.GD16825@google.com> (sfid-20140129_224439_079779_D937C386)
-References: <cover.1389904166.git.agordeev@redhat.com>
- <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
+	Thu, 16 Jan 2014 09:04:53 -0500
+Message-ID: <1389881089.4345.7.camel@jlt4.sipsolutions.net> (sfid-20140116_150456_635447_F1413670)
+Subject: Re: [PATCH] nl80211: Reset split_start when netlink skb is exhausted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 16 Jan 2014 15:04:49 +0100
+In-Reply-To: <1389880840-27863-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20140116_150056_741817_DE840D7C)
+References: <1389880840-27863-1-git-send-email-pontus.fuchs@gmail.com>
+	 (sfid-20140116_150056_741817_DE840D7C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 05:02:23PM +0100, Alexander Gordeev wrote:
-> As result deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+On Thu, 2014-01-16 at 15:00 +0100, Pontus Fuchs wrote:
+> When the netlink skb is exhausted split_start is left set. In the
+> subsequent retry, with a larger buffer, the dump is continued from the
+> failing point instead of from the beginning.
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> This was causing my rt28xx based USB dongle to now show up when
+> running "iw list" with an old iw version without split dump support.
 
-Applied to my pci/msi branch, thanks!
+Thanks, applied. I added Cc: stable and Fixes: tags as well as adding "!
+state->split" to the conditions.
 
-> ---
->  drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
->  1 files changed, 19 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> index eeceab3..4e1bf54 100644
-> --- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> @@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
->  	switch (use_msi) {
->  	case 3:
->  	case 1:
-> +		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-> +		break;
->  	case 0:
-> +		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
->  		break;
->  	default:
-> -		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
-> -			use_msi);
-> +		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
->  		use_msi = 1;
->  	}
-> -	wil->n_msi = use_msi;
-> -	if (wil->n_msi) {
-> -		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-> -		rc = pci_enable_msi_block(pdev, wil->n_msi);
-> -		if (rc && (wil->n_msi == 3)) {
-> -			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-> -			wil->n_msi = 1;
-> -			rc = pci_enable_msi_block(pdev, wil->n_msi);
-> -		}
-> -		if (rc) {
-> -			wil_err(wil, "pci_enable_msi failed, use INTx\n");
-> -			wil->n_msi = 0;
-> -		}
-> -	} else {
-> -		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-> +
-> +	switch (use_msi) {
-> +	case 3:
-> +		if (pci_enable_msi_range(pdev, 3, 3) > 0)
-> +			break;
-> +		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-> +		use_msi = 1;
-> +		/* fallthrough */
-> +	case 1:
-> +		if (!pci_enable_msi(pdev))
-> +			break;
-> +		wil_err(wil, "pci_enable_msi failed, use INTx\n");
-> +		use_msi = 0;
->  	}
->  
-> +	wil->n_msi = use_msi;
-> +
->  	rc = wil6210_init_irq(wil, pdev->irq);
->  	if (rc)
->  		goto stop_master;
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
