@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40036 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:41963 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbaAVJQ4 (ORCPT
+	with ESMTP id S1751591AbaAPJbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:16:56 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.82)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1W5tvb-0001Ue-9m
-	for linux-wireless@vger.kernel.org; Wed, 22 Jan 2014 10:16:55 +0100
-Message-ID: <1390382213.4334.20.camel@jlt4.sipsolutions.net> (sfid-20140122_101706_204583_550A83DC)
-Subject: [PATCH] mac80211: mesh: remove mesh_id check
+	Thu, 16 Jan 2014 04:31:52 -0500
+Message-ID: <1389864706.4345.1.camel@jlt4.sipsolutions.net> (sfid-20140116_103156_898120_58D2D232)
+Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 22 Jan 2014 10:16:53 +0100
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 16 Jan 2014 10:31:46 +0100
+In-Reply-To: <CA+BoTQ=UJNLD3dmzD4PDK1exSJFeWTdpkAHc2YvVbktugw_AyQ@mail.gmail.com> (sfid-20140116_102805_794169_3235EA94)
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	 <1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
+	 <1389792139.4338.6.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=UJNLD3dmzD4PDK1exSJFeWTdpkAHc2YvVbktugw_AyQ@mail.gmail.com>
+	 (sfid-20140116_102805_794169_3235EA94)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-01-16 at 10:28 +0100, Michal Kazior wrote:
+> On 15 January 2014 14:22, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Wed, 2014-01-15 at 13:04 +0100, Michal Kazior wrote:
+> >> This implements a fairly simple multi-interface
+> >> CSA. It doesn't support multiple channel
+> >> contexts so it doesn't support multi-channel.
+> >
+> > It seems that this also means that somewhere you need to advertise the
+> > multi-switch feature. I guess you need that anyway, but this makes it
+> > obvious.
+> 
+> I don't really understand. Do we really need it? You want to advertise
+> it just to cfg80211 or all the way up to userspace?
 
-The mesh_id is an array so can't ever be NULL, it looks
-like mesh_id_len check was intended instead. However,
-since the previous patch, cfg80211 does the check, so
-just remove it here.
+It seems it would be needed all the way to userspace so it knows whether
+it can expect multi-vif CSA to be available? Or would you just want to
+try & fail? Wouldn't that potentially impact channel selection since
+you'd want to not pick radar channels for multi-vif? Not really sure ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c | 3 ---
- 1 file changed, 3 deletions(-)
+Maybe the expectation is that internally there will be no drivers that
+don't support it, i.e. if a driver implements the cfg80211 API at all
+then it must support multi-vif CSA?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e948b38..cf961a5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3196,9 +3196,6 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	case NL80211_IFTYPE_MESH_POINT:
- 		ifmsh = &sdata->u.mesh;
- 
--		if (!ifmsh->mesh_id)
--			return -EINVAL;
--
- 		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
- 			return -EINVAL;
- 
--- 
-1.8.5.1
-
-
+johannes
 
