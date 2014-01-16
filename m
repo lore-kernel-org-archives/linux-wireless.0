@@ -1,202 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbaAIMv1 (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:52663 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbaAPMop (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 07:51:27 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] mac80211: release multiple ACs in uAPSD, fix more-data bug
-Date: Thu,  9 Jan 2014 13:51:20 +0100
-Message-Id: <1389271882-15806-3-git-send-email-johannes@sipsolutions.net> (sfid-20140109_135137_861087_7100A0F0)
-In-Reply-To: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
-References: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 16 Jan 2014 07:44:45 -0500
+Received: by mail-bk0-f42.google.com with SMTP id my12so1156184bkb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 04:44:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140116123336.24551.2629.stgit@potku.adurom.net>
+References: <20140116123336.24551.2629.stgit@potku.adurom.net>
+Date: Thu, 16 Jan 2014 20:44:43 +0800
+Message-ID: <CAEFj987MkPQgyTU=K64mXuzCnm7T3SsUOSXiHkAovTVz0_kqwg@mail.gmail.com> (sfid-20140116_134506_657816_0C059665)
+Subject: Re: [PATCH] ath10k: enable firmware STA quick kickout
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi, Kalle Valo
 
-When a response for PS-Poll or a uAPSD trigger frame is sent, the
-more-data bit should be set according to 802.11-2012 11.2.1.5 h),
-meaning that it should indicate more data on the relevant ACs
-(delivery-enabled or nondelivery-enabled for uAPSD or PS-Poll.)
+Just would like to know whether the STA is deleted by FW when the FW
+is sending the WMI_PEER_STA_KICKOUT_EVENTID to the host?
 
-In, for example, the following scenario:
- * 1 frame on VO queue (either in driver or in mac80211)
- * at least 1 frame on VI queue (in the driver)
- * both VO/VI are delivery-enabled
- * uAPSD trigger frame received
+Please advice. Thanks
 
-The more-data flag to the driver would not be set, even though
-it should be.
+Regard,
+Chun-Yeow
 
-While fixing this, I noticed that we should really release frames
-from multiple ACs where there's data buffered in the driver for
-the corresponding TIDs.
-
-To address all this, restructure the code a bit to consider all
-ACs if we only release driver frames or only buffered frames.
-This also addresses the more-data bug described above as now the
-TIDs will all be marked as released, so the driver will have to
-check the number of frames.
-
-While at it, clarify some code and comments and remove the found
-variable, replacing it with the appropriate sw/hw release check.
-
-Reported-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 82 ++++++++++++++++++++++++-------------------------
- 1 file changed, 40 insertions(+), 42 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 93bfd67..93e2157 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1245,7 +1245,6 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
--	bool found = false;
- 	bool more_data = false;
- 	int ac;
- 	unsigned long driver_release_tids = 0;
-@@ -1256,9 +1255,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 	__skb_queue_head_init(&frames);
- 
--	/*
--	 * Get response frame(s) and more data bit for it.
--	 */
-+	/* Get response frame(s) and more data bit for the last one. */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		unsigned long tids;
- 
-@@ -1267,33 +1264,17 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 		tids = ieee80211_tids_for_ac(ac);
- 
--		if (!found) {
--			driver_release_tids = sta->driver_buffered_tids & tids;
--			if (driver_release_tids) {
--				found = true;
--			} else {
--				struct sk_buff *skb;
--
--				while (n_frames > 0) {
--					skb = skb_dequeue(&sta->tx_filtered[ac]);
--					if (!skb) {
--						skb = skb_dequeue(
--							&sta->ps_tx_buf[ac]);
--						if (skb)
--							local->total_ps_buffered--;
--					}
--					if (!skb)
--						break;
--					n_frames--;
--					found = true;
--					__skb_queue_tail(&frames, skb);
--				}
--			}
-+		/* if we already have frames from software, then we can't also
-+		 * release from hardware queues
-+		 */
-+		if (skb_queue_empty(&frames))
-+			driver_release_tids |= sta->driver_buffered_tids & tids;
- 
--			/*
--			 * If the driver has data on more than one TID then
-+		if (driver_release_tids) {
-+			/* If the driver has data on more than one TID then
- 			 * certainly there's more data if we release just a
--			 * single frame now (from a single TID).
-+			 * single frame now (from a single TID). This will
-+			 * only happen for PS-Poll.
- 			 */
- 			if (reason == IEEE80211_FRAME_RELEASE_PSPOLL &&
- 			    hweight16(driver_release_tids) > 1) {
-@@ -1303,8 +1284,28 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 						driver_release_tids));
- 				break;
- 			}
-+		} else {
-+			struct sk_buff *skb;
-+
-+			while (n_frames > 0) {
-+				skb = skb_dequeue(&sta->tx_filtered[ac]);
-+				if (!skb) {
-+					skb = skb_dequeue(
-+						&sta->ps_tx_buf[ac]);
-+					if (skb)
-+						local->total_ps_buffered--;
-+				}
-+				if (!skb)
-+					break;
-+				n_frames--;
-+				__skb_queue_tail(&frames, skb);
-+			}
- 		}
- 
-+		/* If we have more frames buffered on this AC, then set the
-+		 * more-data bit and abort the loop since we can't send more
-+		 * data from other ACs before the buffered frames from this.
-+		 */
- 		if (!skb_queue_empty(&sta->tx_filtered[ac]) ||
- 		    !skb_queue_empty(&sta->ps_tx_buf[ac])) {
- 			more_data = true;
-@@ -1312,7 +1313,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		}
- 	}
- 
--	if (!found) {
-+	if (skb_queue_empty(&frames) && !driver_release_tids) {
- 		int tid;
- 
- 		/*
-@@ -1334,10 +1335,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		tid = 7 - ((ffs(~ignored_acs) - 1) << 1);
- 
- 		ieee80211_send_null_response(sdata, sta, tid, reason);
--		return;
--	}
--
--	if (!driver_release_tids) {
-+	} else if (!driver_release_tids) {
- 		struct sk_buff_head pending;
- 		struct sk_buff *skb;
- 		int num = 0;
-@@ -1403,12 +1401,12 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		/*
- 		 * We need to release a frame that is buffered somewhere in the
- 		 * driver ... it'll have to handle that.
--		 * Note that, as per the comment above, it'll also have to see
--		 * if there is more than just one frame on the specific TID that
--		 * we're releasing from, and it needs to set the more-data bit
--		 * accordingly if we tell it that there's no more data. If we do
--		 * tell it there's more data, then of course the more-data bit
--		 * needs to be set anyway.
-+		 * Note that the driver also has to check the number of frames
-+		 * on the TIDs we're releasing from - if there are more than
-+		 * n_frames it has to set the more-data bit (if we didn't ask
-+		 * it to set it anyway due to other buffered frames); if there
-+		 * are fewer than n_frames it has to make sure to adjust that
-+		 * to allow the service period to end properly.
- 		 */
- 		drv_release_buffered_frames(local, sta, driver_release_tids,
- 					    n_frames, reason, more_data);
-@@ -1416,9 +1414,9 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		/*
- 		 * Note that we don't recalculate the TIM bit here as it would
- 		 * most likely have no effect at all unless the driver told us
--		 * that the TID became empty before returning here from the
-+		 * that the TID(s) became empty before returning here from the
- 		 * release function.
--		 * Either way, however, when the driver tells us that the TID
-+		 * Either way, however, when the driver tells us that the TID(s)
- 		 * became empty we'll do the TIM recalculation.
- 		 */
- 	}
--- 
-1.8.5.1
-
+On Thu, Jan 16, 2014 at 8:33 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Firmware has a feature to track if the associated STA is not acking the frames.
+> When that happens, the firmware sends WMI_PEER_STA_KICKOUT_EVENTID event to the
+> host. Enable that to faster detect when a STA has left BSS without sending a
+> deauth frame.
+>
+> Also set huge keepalive timeouts to avoid using the keepalive functionality in
+> the firmware.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.h |   12 +++++++
+>  drivers/net/wireless/ath/ath10k/mac.c  |   55 ++++++++++++++++++++++++++++----
+>  drivers/net/wireless/ath/ath10k/wmi.c  |   22 ++++++++++++-
+>  drivers/net/wireless/ath/ath10k/wmi.h  |    4 ++
+>  4 files changed, 85 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index ade1781..e6308f4 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -46,6 +46,18 @@
+>
+>  #define ATH10K_MAX_NUM_MGMT_PENDING 128
+>
+> +/* number of failed packets */
+> +#define ATH10K_KICKOUT_THRESHOLD 50
+> +
+> +/*
+> + * Use insanely high numbers to make sure that the firmware implementation
+> + * won't start, we have the same functionality already in hostapd. Unit
+> + * is seconds.
+> + */
+> +#define ATH10K_KEEPALIVE_MIN_IDLE 3747
+> +#define ATH10K_KEEPALIVE_MAX_IDLE 3895
+> +#define ATH10K_KEEPALIVE_MAX_UNRESPONSIVE 3900
+> +
+>  struct ath10k;
+>
+>  struct ath10k_skb_cb {
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 7aa6c4d..f5f7c6a 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -339,6 +339,47 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+>         return 0;
+>  }
+>
+> +static int ath10k_mac_set_kickout(struct ath10k_vif *arvif)
+> +{
+> +       struct ath10k *ar = arvif->ar;
+> +       u32 param;
+> +       int ret;
+> +
+> +       param = ar->wmi.pdev_param->sta_kickout_th;
+> +       ret = ath10k_wmi_pdev_set_param(ar, param,
+> +                                       ATH10K_KICKOUT_THRESHOLD);
+> +       if (ret) {
+> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+> +               return ret;
+> +       }
+> +
+> +       param = ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
+> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+> +                                       ATH10K_KEEPALIVE_MIN_IDLE);
+> +       if (ret) {
+> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+> +               return ret;
+> +       }
+> +
+> +       param = ar->wmi.vdev_param->ap_keepalive_max_idle_inactive_time_secs;
+> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+> +                                       ATH10K_KEEPALIVE_MAX_IDLE);
+> +       if (ret) {
+> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+> +               return ret;
+> +       }
+> +
+> +       param = ar->wmi.vdev_param->ap_keepalive_max_unresponsive_time_secs;
+> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+> +                                       ATH10K_KEEPALIVE_MAX_UNRESPONSIVE);
+> +       if (ret) {
+> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+> +               return ret;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+>  static int  ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
+>  {
+>         struct ath10k *ar = arvif->ar;
+> @@ -2214,7 +2255,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>         struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+>         enum wmi_sta_powersave_param param;
+>         int ret = 0;
+> -       u32 value, param_id;
+> +       u32 value;
+>         int bit;
+>         u32 vdev_param;
+>
+> @@ -2307,12 +2348,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>                         goto err_vdev_delete;
+>                 }
+>
+> -               param_id = ar->wmi.pdev_param->sta_kickout_th;
+> -
+> -               /* Disable STA KICKOUT functionality in FW */
+> -               ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
+> -               if (ret)
+> -                       ath10k_warn("Failed to disable STA KICKOUT\n");
+> +               ret = ath10k_mac_set_kickout(arvif);
+> +               if (ret) {
+> +                       ath10k_warn("Failed to set kickout parameters: %d\n",
+> +                                   ret);
+> +                       goto err_peer_delete;
+> +               }
+>         }
+>
+>         if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index 712a606..0bc8543 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -1116,7 +1116,27 @@ static void ath10k_wmi_event_vdev_stopped(struct ath10k *ar,
+>  static void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar,
+>                                               struct sk_buff *skb)
+>  {
+> -       ath10k_dbg(ATH10K_DBG_WMI, "WMI_PEER_STA_KICKOUT_EVENTID\n");
+> +       struct wmi_peer_sta_kickout_event *ev;
+> +       struct ieee80211_sta *sta;
+> +
+> +       ev = (struct wmi_peer_sta_kickout_event *)skb->data;
+> +
+> +       ath10k_dbg(ATH10K_DBG_WMI, "wmi event peer sta kickout %pM\n",
+> +                  ev->peer_macaddr.addr);
+> +
+> +       rcu_read_lock();
+> +
+> +       sta = ieee80211_find_sta_by_ifaddr(ar->hw, ev->peer_macaddr.addr, NULL);
+> +       if (!sta) {
+> +               ath10k_warn("Spurious quick kickout for STA %pM\n",
+> +                           ev->peer_macaddr.addr);
+> +               goto exit;
+> +       }
+> +
+> +       ieee80211_report_low_ack(sta, 10);
+> +
+> +exit:
+> +       rcu_read_unlock();
+>  }
+>
+>  /*
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+> index 4b5e7d3..9dc90c5 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -4039,6 +4039,10 @@ struct wmi_chan_info_event {
+>         __le32 cycle_count;
+>  } __packed;
+>
+> +struct wmi_peer_sta_kickout_event {
+> +       struct wmi_mac_addr peer_macaddr;
+> +} __packed;
+> +
+>  #define WMI_CHAN_INFO_FLAG_COMPLETE BIT(0)
+>
+>  /* FIXME: empirically extrapolated */
+>
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
