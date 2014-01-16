@@ -1,105 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39480 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751198AbaALD2I (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:41645 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbaAPLLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 22:28:08 -0500
-Message-ID: <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk> (sfid-20140112_042818_121824_13B822F8)
-Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Date: Sun, 12 Jan 2014 03:27:31 +0000
-In-Reply-To: <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
-References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-h5E30VfmgxRtEynJS4Zt"
-Mime-Version: 1.0
+	Thu, 16 Jan 2014 06:11:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	 boundary="n17Fx5K8ID"
+Message-ID: <21207.48441.292580.481850@gargle.gargle.HOWL> (sfid-20140116_121150_418356_D92E0589)
+Date: Thu, 16 Jan 2014 16:36:33 +0530
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
+In-Reply-To: <52D6472B.2060207@neratec.com>
+References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
+	<1384665016-12022-5-git-send-email-sujith@msujith.org>
+	<52CE934D.1020400@neratec.com>
+	<21198.40916.260973.48444@gargle.gargle.HOWL>
+	<52CEA5A3.2040308@neratec.com>
+	<21198.43395.235654.597422@gargle.gargle.HOWL>
+	<52CEAB24.5090700@neratec.com>
+	<52D3F962.1010302@neratec.com>
+	<21204.319.492595.58625@gargle.gargle.HOWL>
+	<52D402C3.3070606@neratec.com>
+	<21204.1991.201080.986559@gargle.gargle.HOWL>
+	<21204.2384.710460.402183@gargle.gargle.HOWL>
+	<21204.3832.404821.109119@gargle.gargle.HOWL>
+	<52D63EBB.7020607@neratec.com>
+	<21206.17284.157496.206327@gargle.gargle.HOWL>
+	<52D6472B.2060207@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-h5E30VfmgxRtEynJS4Zt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+--n17Fx5K8ID
+Content-Type: text/plain; charset=us-ascii
+Content-Description: message body text
+Content-Transfer-Encoding: 7bit
 
-On Sat, 2014-01-11 at 13:48 -0600, Larry Finger wrote:
-> On openSUSE systems, the script that installs the firmware for b43 also
-> unloads and reloads the driver. When the firmware was not previously
-> available, the driver has stalled at a wait_for_completion(). When the
-> unload routine releases that hold, the driver encounters structures
-> that have already been deleted and generates a fatal condition. When
-> the user does a manual restart, the file system cleanup frequently
-> results in the firmware files being deleted and the user is never able
-> to install the firmware. The fix is to change the wait_for_completion()
-> with a wait_for_completion_timeout() with a 60 second wait period.
->=20
-> There is a potential race condition; however, the chances that less
-> than a minute has elapsed between the initial driver load and a
-> subsequent unload is very unlikely.
+Wojciech Dubowik wrote:
+> I have seen the wrong rssi in scan results but I just don't have yet 
+> have a proof on clean
+> wireless testing. It seems that when I put a lot of printk I don't see 
+> the problem because
+> maybe scanning/calibration/etc. is shifted more away. Anyway it's just a 
+> guess so I will dig
+> further.
 
-A minute-long race is 'unlikely' to be hit?  Seriously?!
+I think the initial skew in RSSI right after association happens because
+NF calibration hasn't completed yet. After doing the first scan, we reset
+to the home/operating channel before initiating the association procedure.
 
-Ben.
+When we do this, the history is reset for the operating channel using
+ath9k_init_nfcal_hist_buffer() and then after the chip/phy is reset, NF cal
+is started - at the end of ath9k_hw_reset() using ath9k_hw_start_nfcal().
 
-> This patch also fixes a typo in a comment.
->=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-> ---
->  drivers/net/wireless/b43/main.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
-ain.c
-> index 86b2030..5ce9ecb 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -2150,12 +2150,13 @@ int b43_do_request_fw(struct b43_request_fw_conte=
-xt *ctx,
->  			pr_err("Unable to load firmware\n");
->  			return err;
->  		}
-> -		/* stall here until fw ready */
-> -		wait_for_completion(&ctx->fw_load_complete);
-> +		/* stall here until fw ready or 60 sec elapses */
-> +		wait_for_completion_timeout(&ctx->fw_load_complete,
-> +					    msecs_to_jiffies(60000));
->  		if (ctx->blob)
->  			goto fw_ready;
->  	/* On some ARM systems, the async request will fail, but the next sync
-> -	 * request works. For this reason, we dall through here
-> +	 * request works. For this reason, we fall through here
->  	 */
->  	}
->  	err =3D request_firmware(&ctx->blob, ctx->fwname,
+But, we don't wait for the NF-cal to complete and neither do we poll for
+the calibration status. In this small window, any beacons that are received show
+a skewed RSSI. We receive about two beacons in this period, after
+which the RSSI becomes normal.
 
---=20
-Ben Hutchings
-Quantity is no substitute for quality, but it's the only one we've got.
+If we wait explicitly for NF-cal to complete, the issue is fixed and the
+reported RSSI is normal. (See the attached hacky patch).
 
---=-h5E30VfmgxRtEynJS4Zt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+For example, the current behavior is:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
 
-iQIVAwUAUtILo+e/yOyVhhEJAQoqnQ/8CFqzxECNCg3DCMFUW/qySLJfYjaR6v0/
-OUYcQB8a8QPi7h2HG8YSpcTPD5SX1Kg67ARbaI1I/0bLcLJQbmyItQ6ISdYtkiAs
-PrCCSjTdEKLxbubgaQzIoH7jaD8yf1SbEPKZlb9cByNnWqIwZhib6oHhG+oYphC8
-Hysb6LHx71iKbB+mcfO/nBZ2vRLbJAbdv2n0OJhO24DKR5CVXDM6MRqAalvNcFz9
-ObYg5LvDlsYXiXgxHp5I8LSjVqcLk7Opw6JZeP/HcUhmTIsSl6kG50AH70jHr+Vl
-jkvvC5gjk+fpvTmnC/NSmW14pwinsTT/T9tWaB7apugxllPP4TocqhoxyXtJDsPi
-JBAw0RS+kangAKYdvRWgebQeCorfARkWq1ov/69a6vubm6m+IVxBqRQy6JLApMHL
-FdWhERb50ftQ5r1J10rUCBr/bGWVrSVxaqS9IgoG/t+E6dAFH+2TFy6C0Uk3OfQO
-/agCet4eUrc4azoNrvISQiJgB1A8GhXI0ZBFxekfwXoSCgR6/JxsDDqQrH91X+Ts
-zKE7KIM/e3uuUX+sqCMEOp8mJjAqIEW5orekcK2mI2D4w2pm0OExSc86uO4Gl3R8
-3uMBdhH7Lpiz7YIEcob0QRMFUCkZK+oHJ4u6HA7ol43s+dODtB1+o79PW4Dr3+Ly
-UnH2MIz0nvM=
-=s/K6
------END PGP SIGNATURE-----
+[ 9071.755238] wlan0: Inserted STA 00:03:7f:42:08:56
+[ 9071.755242] wlan0: send auth to 00:03:7f:42:08:56 (try 1/3)
+[ 9071.756735] NF cal not completed
+[ 9071.756743] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -92/68/-24
+[ 9071.756829] wlan0: authenticated
+[ 9071.756836] wlan0: moving STA 00:03:7f:42:08:56 to state 2
+[ 9071.766123] wlan0: associate with 00:03:7f:42:08:56 (try 1/3)
+[ 9071.767920] NF cal not completed
+[ 9071.767925] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -92/68/-24
+[ 9071.767960] wlan0: RX AssocResp from 00:03:7f:42:08:56 (capab=0x401 status=0 aid=1)
+[ 9071.768399] wlan0: associated
 
---=-h5E30VfmgxRtEynJS4Zt--
+...
+
+[ 9071.777816] cfg80211: Regulatory domain changed to country: US
+[ 9071.777819] cfg80211:  DFS Master region: unset
+[ 9071.777821] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 9071.777825] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+[ 9071.777828] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 1700 mBm)
+[ 9071.777830] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2300 mBm)
+[ 9071.777833] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 3000 mBm)
+[ 9071.777836] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm)
+[ 9071.787601] NF cal completed
+[ 9071.787608] NOISE/RSSI/SIGNAL for 00:03:7f:46:06:49: -92/60/-32
+[ 9071.823292] NF cal completed
+[ 9071.823330] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -92/59/-33
+
+
+But, when we wait for NF-cal to complete after initiating it:
+
+
+[ 9140.932811] wlan0: Inserted STA 00:03:7f:42:08:56
+[ 9140.932814] wlan0: send auth to 00:03:7f:42:08:56 (try 1/3)
+[ 9140.934368] NF cal completed
+[ 9140.934403] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -94/60/-34
+[ 9140.934453] wlan0: authenticated
+[ 9140.934457] wlan0: moving STA 00:03:7f:42:08:56 to state 2
+[ 9140.940706] wlan0: associate with 00:03:7f:42:08:56 (try 1/3)
+[ 9140.942575] NF cal completed
+[ 9140.942588] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -94/61/-33
+[ 9140.942643] wlan0: RX AssocResp from 00:03:7f:42:08:56 (capab=0x401 status=0 aid=1)
+[ 9140.942728] wlan0: associated
+
+...
+
+[ 9140.948155] cfg80211: Regulatory domain changed to country: US
+[ 9140.948156] cfg80211:  DFS Master region: unset
+[ 9140.948158] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 9140.948160] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+[ 9140.948161] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 1700 mBm)
+[ 9140.948162] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2300 mBm)
+[ 9140.948164] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 3000 mBm)
+[ 9140.948165] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm)
+[ 9140.962224] NF cal completed
+[ 9140.962258] NOISE/RSSI/SIGNAL for 00:03:7f:46:06:49: -94/59/-35
+[ 9141.010795] NF cal completed
+[ 9141.010822] NOISE/RSSI/SIGNAL for 00:03:7f:42:08:56: -94/61/-33
+
+
+We could fix this by checking if we are initializing the history for the operating
+channel and waiting for NF-cal completion, but I am not sure if this needs
+to be done. The window is really small and subsequent NF calibrations using
+the ANI routine work properly.
+
+The only problem that I can see if running a scan when associated distorts the
+reported RSSI, but I can't see such an issue. If you can provide logs for this
+case, it would be helpful.
+
+Sujith
+
+
+--n17Fx5K8ID
+Content-Type: text/plain;
+	 name="rssi.patch"
+Content-Description: patch
+Content-Disposition: inline;
+	 filename="rssi.patch"
+Content-Transfer-Encoding: 7bit
+
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 278365b..84e93d5 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -218,6 +218,8 @@ EXPORT_SYMBOL(ath9k_hw_reset_calvalid);
+ 
+ void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update)
+ {
++	int j;
++
+ 	if (ah->caldata)
+ 		set_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
+ 
+@@ -232,6 +234,13 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update)
+ 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+ 
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++
++	for (j = 0; j < 10000; j++) {
++		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
++		     AR_PHY_AGC_CONTROL_NF) == 0)
++			break;
++		udelay(10);
++	}
+ }
+ 
+ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5bf3243..e017b01 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1088,6 +1088,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 
+ 	ath9k_process_rssi(common, hw, rx_stats, rx_status);
+ 
++	if ((REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) != 0)
++		printk("NF cal not completed\n");
++	else
++		printk("NF cal completed\n");
++
++	printk("NOISE/RSSI/SIGNAL for %pM: %d/%d/%d\n",
++	       hdr->addr3, ah->noise, rx_stats->rs_rssi, rx_status->signal);
++
+ 	rx_status->band = ah->curchan->chan->band;
+ 	rx_status->freq = ah->curchan->chan->center_freq;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+
+--n17Fx5K8ID--
