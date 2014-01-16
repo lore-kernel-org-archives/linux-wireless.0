@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754053AbaAUPAY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25935 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbaAPMu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:00:24 -0500
-Message-ID: <1390316421.6199.25.camel@jlt4.sipsolutions.net> (sfid-20140121_160028_164361_B7AB277D)
-Subject: Re: [PATCH 2/7] mac80211: treat IBSS CSA finish failure seriously
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Jan 2014 16:00:21 +0100
-In-Reply-To: <1390227670-19030-3-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152540_652074_76AA6981)
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	 <1390227670-19030-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140120_152540_652074_76AA6981)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 16 Jan 2014 07:50:28 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: enable firmware STA quick kickout
+References: <20140116123336.24551.2629.stgit@potku.adurom.net>
+	<CAEFj987MkPQgyTU=K64mXuzCnm7T3SsUOSXiHkAovTVz0_kqwg@mail.gmail.com>
+Date: Thu, 16 Jan 2014 14:50:22 +0200
+In-Reply-To: <CAEFj987MkPQgyTU=K64mXuzCnm7T3SsUOSXiHkAovTVz0_kqwg@mail.gmail.com>
+	(Yeoh Chun-Yeow's message of "Thu, 16 Jan 2014 20:44:43 +0800")
+Message-ID: <87ppnst7jl.fsf@kamboji.qca.qualcomm.com> (sfid-20140116_135032_476979_8934E426)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
-> Other interface modes are checked against failure.
-> This should avoid false-positive channel switch
-> events where IBSS CSA actually failed.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  net/mac80211/cfg.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 62bf6c4..76fe1f90 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -3039,7 +3039,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->  			return;
->  		break;
->  	case NL80211_IFTYPE_ADHOC:
-> -		ieee80211_ibss_finish_csa(sdata);
-> +		err = ieee80211_ibss_finish_csa(sdata);
-> +		if (err < 0)
-> +			return;
+Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
 
-Looks fine, though I suppose this should then perhaps also return a
-changed bitmap to be used later. Ditto for mesh, I guess.
+> Just would like to know whether the STA is deleted by FW when the FW
+> is sending the WMI_PEER_STA_KICKOUT_EVENTID to the host?
 
-johannes
+AFAICS the firmware just sends the event and assumes that the host
+deletes the peer. Luckily in thise case it doesn't seem to do any peer
+management on it's own.
 
+-- 
+Kalle Valo
