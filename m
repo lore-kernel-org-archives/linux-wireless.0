@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39829 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750702AbaAIHmY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 02:42:24 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 2/2] [RFC] mac80211: Add all enabled channels to the
- supported channels element
-Date: Thu, 9 Jan 2014 07:42:19 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333548CC@HASMSX106.ger.corp.intel.com> (sfid-20140109_084227_895933_34815A13)
-References: <1388503946-25862-1-git-send-email-ilan.peer@intel.com>
-	 <1388503946-25862-3-git-send-email-ilan.peer@intel.com>
-	 (sfid-20131231_163100_337930_7D3482AD)
- <1389108609.4645.10.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1389108609.4645.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52202 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751783AbaAPAVW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jan 2014 19:21:22 -0500
+Date: Thu, 16 Jan 2014 01:21:21 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
+Message-ID: <20140116002121.GA3726@amd.pavel.ucw.cz> (sfid-20140116_012141_621003_F5B86BFE)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <201312311047.30147@pali>
+ <20140106200050.GG10885@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20140106200050.GG10885@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+ICsgICAgICAgICAgICAgICAgICAgICAgIGNoYW4gPQ0KPiA+IGllZWU4MDIxMV9mcmVxdWVu
-Y3lfdG9fY2hhbm5lbChjZW50ZXJfZnJlcSk7DQo+ID4gKw0KPiA+ICsgICAgICAgICAgICAgICAg
-ICAgICAgIGlmIChmaXJzdF9jaGFuID09IDApIHsNCj4gPiArICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIC8qIGZpcnN0IHN1YmJhbmQgKi8NCj4gPiArICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGZpcnN0X2NoYW4gPSBjaGFuOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgY291bnQgPSAxOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIH0gZWxzZSBp
-ZiAoZmlyc3RfY2hhbiArIGNvdW50ID09IGNoYW4pIHsNCj4gPiArICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIC8qIGNvbnRpbnVlIHRoZSBzdWJiYW5kLg0KPiA+ICsgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICogVE9ETzogdGhpcyBpcyByZWFsbHkgb25seSB1c2VmdWwNCj4g
-PiBmb3IgMi40LA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICogbmVlZCB0
-byBhZGQgc3BhY2luZyBjb25zaWRlcmF0aW9ucyBmb3Igb3RoZXINCj4gPiArICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAqIGJhbmRzIGFzIHdlbGwgKHRoZSBkZWZpbml0aW9uIG9mIGEN
-Cj4gPiBzdWJiYW5kDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKiBpbiB0
-aGUgODAyLjExIHNwZWMuIGlzIGEgYml0DQo+ID4gdmFndWUpLg0KPiA+ICsgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICovDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICBjb3VudCsrOw0KPiANCj4gSSBhZ3JlZSB0aGlzIGlzIHZlcnkgdmFndWUgLSBhbnlvbmUgaGF2
-ZSBhIGdvb2QgaWRlYSB3aG8gdG8gYXNrPw0KPiANCj4gQXMgaXQgaXMgbm93LCBJJ20gbm90IHN1
-cmUgaXQncyBjb3JyZWN0IGF0IGFsbCwgZXZlbiBpbiB0aGUgdmVyc2lvbiB3ZSBoYXZlIHRvZGF5
-LA0KPiBzaW5jZSBkaWZmZXJlbnQgb3BlcmF0aW5nIGNsYXNzZXMgY291bGQgaGF2ZSBkaWZmZXJl
-bnQgcmVxdWlyZW1lbnRzLg0KPiBFc3BlY2lhbGx5IHNpbmNlIHdlIHN1cHBvcnQgNS8xMCBNSHog
-bm93LCBJIHN1c3BlY3QgZXZlbg0KPiBpZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwoKSBy
-ZWFsbHkgc2hvdWxkIGJlIHRhdWdodCBhYm91dCBvcGVyYXRpbmcNCj4gY2xhc3NlcyBpbiBzb21l
-IGZvcm0/DQo+IA0KPiA+ICsJLyogR2V0IHRoZSBudW1iZXIgb2YgZW5hYmxlZCBjaGFubmVscyBm
-b3Igc3BlY3RydW0gbWFuYWdlbWVudA0KPiAqLw0KPiA+ICsJbl9jaGFubmVscyA9IGllZWU4MDIx
-MV9nZXRfbnVtX2VuYWJsZWRfY2hhbm5lbHMobG9jYWwtDQo+ID5ody53aXBoeSk7DQo+IA0KPiBJ
-IHdvdWxkIHByZWZlciB5b3UgZGlkIHRoaXMgd2l0aCBhbiB1cHBlciBib3VuZCByYXRoZXIgdGhh
-biB0aGUgbnVtYmVyIG9mDQo+IGVuYWJsZWQgY2hhbm5lbHMgLSB3ZSBkb24ndCBuZWVkIGEgZ29v
-ZCBlc3RpbWF0ZSwgd29yc3QgY2FzZSB3ZSdsbCBhbGxvY2F0ZQ0KPiBhIGZldyBieXRlcyB0b28g
-bWFueSwgYnV0IGlmIHdlIGdldCBpdCBjb21wbGV0ZWx5IHdyb25nIGUuZy4NCj4gYmVjYXVzZSB0
-aGUgY2hhbm5lbCBmbGFncyBhcmUgYmVpbmcgY2hhbmdlZCwgdGhlbiB3ZSBjb3VsZCBvdmVycnVu
-IHRoZSBTS0INCj4gYWxsb2NhdGlvbiwgSSB0aGluaz8NCj4gDQo+IEl0J2QgYWxzbyBiZSBmYXN0
-ZXIgdG8gaXRlcmF0ZSBvbmx5IHRoZSBiYW5kcyBhbmQgYWRkIHVwIG5fY2hhbm5lbHMgcmF0aGVy
-DQo+IHRoYW4gY2hlY2tpbmcgZWFjaCBjaGFubmVsJ3MgZW5hYmxlZCBiaXQuDQo+DQoNClN1cmUu
-IEknbGwgbW9kaWZ5IHRoZSB1dGlsaXR5IGZ1bmN0aW9uIGFzIHRoZSBzYW1lIGxvZ2ljIHRoYXQg
-eW91IHN1Z2dlc3RlZCBpcyB1c2VkIGluIGEgY291cGxlIG9mIG90aGVyICBwbGFjZXMgaW4gdGhl
-IGNvZGUuDQoNCklsYW4uDQo=
+On Mon 2014-01-06 15:00:50, John W. Linville wrote:
+> On Tue, Dec 31, 2013 at 10:47:29AM +0100, Pali Rohár wrote:
+> > On Sunday 08 December 2013 10:24:58 Pali Rohár wrote:
+> > > Hello, I'm sending wl1251 patches from linux-n900 tree [1] for
+> > > comments. More patches come from David's monitor & packet
+> > > injection work. Patches are tested with 3.12 rc5 kernel on
+> > > Nokia N900.
+> > > 
+> > > Second version contains new patch for fixing NULL pointer
+> > > dereference which sometimes cause kernel panic and fixes code
+> > > suggested by Pavel Machek.
+>  
+> > So far, there are no new comments for patches 01, 03-13 and 16. 
+> > Are there any other problems with that patches or can be accepted 
+> > for upstream?
+>  
+> They are probably fine to merge now.  Of course, I was still deleting
+> wl12xx patches when they were originally posted, so I'll need someone
+> to resend the patches to me...
+
+Ping? Did they get merged? Did you receive the patches?
+
+Regards,
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
