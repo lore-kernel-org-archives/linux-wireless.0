@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22514 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754639AbaAWWkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 17:40:16 -0500
-Message-ID: <52E19A27.7000402@redhat.com> (sfid-20140123_234020_254628_4588BA8A)
-Date: Thu, 23 Jan 2014 23:39:35 +0100
-From: Hans de Goede <hdegoede@redhat.com>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:47097 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513AbaAPKd3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jan 2014 05:33:29 -0500
+Received: by mail-bk0-f42.google.com with SMTP id my12so1105005bkb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 02:33:27 -0800 (PST)
 MIME-Version: 1.0
-To: linux-sunxi@googlegroups.com, Arend van Spriel <arend@broadcom.com>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com>
-In-Reply-To: <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1389864706.4345.1.camel@jlt4.sipsolutions.net>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	<1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
+	<1389792139.4338.6.camel@jlt4.sipsolutions.net>
+	<CA+BoTQ=UJNLD3dmzD4PDK1exSJFeWTdpkAHc2YvVbktugw_AyQ@mail.gmail.com>
+	<1389864706.4345.1.camel@jlt4.sipsolutions.net>
+Date: Thu, 16 Jan 2014 11:33:27 +0100
+Message-ID: <CA+BoTQk62antiWbq7MxmjP_caj7xTOj699eiQO-TPFY32oX+5Q@mail.gmail.com> (sfid-20140116_113332_847518_1FDB65A6)
+Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 16 January 2014 10:31, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-01-16 at 10:28 +0100, Michal Kazior wrote:
+>> On 15 January 2014 14:22, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Wed, 2014-01-15 at 13:04 +0100, Michal Kazior wrote:
+>> >> This implements a fairly simple multi-interface
+>> >> CSA. It doesn't support multiple channel
+>> >> contexts so it doesn't support multi-channel.
+>> >
+>> > It seems that this also means that somewhere you need to advertise the
+>> > multi-switch feature. I guess you need that anyway, but this makes it
+>> > obvious.
+>>
+>> I don't really understand. Do we really need it? You want to advertise
+>> it just to cfg80211 or all the way up to userspace?
+>
+> It seems it would be needed all the way to userspace so it knows whether
+> it can expect multi-vif CSA to be available? Or would you just want to
+> try & fail? Wouldn't that potentially impact channel selection since
+> you'd want to not pick radar channels for multi-vif? Not really sure ...
+>
+> Maybe the expectation is that internally there will be no drivers that
+> don't support it, i.e. if a driver implements the cfg80211 API at all
+> then it must support multi-vif CSA?
 
-I've been working on updating sunxi-devel to include more
-recent versions if your gmac patches, as well as adding support
-for the wifi + bluetooth found on the cubietruck.
+Typically if you run more than one AP on a DFS channel and you detect
+a radar you want to move all APs - so you either succeed with
+multi-vif CSA or you fallback and re-start them.
 
-Here is my current work on this:
+If you assume a driver supports multi-channel but isn't capable of
+multi-interface CSA you'll be running into timing issues. After you
+detect radar you have a limited time to quiesce. You might end up
+exceeding that limit if you move APs one-by-one.
 
-https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+With my patches as they are new hostap will try sending new channel
+switch command but since it doesn't contain ifindex old kernel will
+respond with a -EINVAL and userspace has no way of knowing if the
+command was actually malformed or isn't supported. hostap could still,
+however, work in a best effort manner and fallback to the old command
+variant.
 
-It is close to working, but unfortunately it does not work,
-here is what I get in dmesg when I modprove the module:
 
-[   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
-[  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
-[  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
-[  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
-[  100.322508] usbcore: registered new interface driver brcmfmac
-[  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning already: status (1)
-[  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning already: status (1)
-[  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning already: status (1)
-...
-
-This is using the firmware + nvram found here:
-http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/
-
-Wens' can you give my tree a try? And which version of the firmware +
-nvram are you using ?
-
-Thanks & Regards,
-
-Hans
-
+Michał
