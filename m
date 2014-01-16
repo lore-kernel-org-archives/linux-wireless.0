@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22883 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752526AbaAIXXQ (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:60285 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbaAPJ2H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 18:23:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] ieee80211: add definition for TDLS wide band extended capability
-Date: Thu, 9 Jan 2014 15:22:57 -0800
-Message-ID: <1389309777-19113-2-git-send-email-bzhao@marvell.com> (sfid-20140110_002320_564162_95A0A8FA)
-In-Reply-To: <1389309777-19113-1-git-send-email-bzhao@marvell.com>
-References: <1389309777-19113-1-git-send-email-bzhao@marvell.com>
+	Thu, 16 Jan 2014 04:28:07 -0500
+Received: by mail-bk0-f42.google.com with SMTP id my12so1083874bkb.29
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 01:28:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1389792139.4338.6.camel@jlt4.sipsolutions.net>
+References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	<1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
+	<1389792139.4338.6.camel@jlt4.sipsolutions.net>
+Date: Thu, 16 Jan 2014 10:28:04 +0100
+Message-ID: <CA+BoTQ=UJNLD3dmzD4PDK1exSJFeWTdpkAHc2YvVbktugw_AyQ@mail.gmail.com> (sfid-20140116_102811_302012_160F79A8)
+Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 15 January 2014 14:22, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-01-15 at 13:04 +0100, Michal Kazior wrote:
+>> This implements a fairly simple multi-interface
+>> CSA. It doesn't support multiple channel
+>> contexts so it doesn't support multi-channel.
+>
+> It seems that this also means that somewhere you need to advertise the
+> multi-switch feature. I guess you need that anyway, but this makes it
+> obvious.
 
-Seventh bit of 8th byte of extended capabilities specifies wide
-bandwidth support for TDLS links. Add this definition to ieee80211.
+I don't really understand. Do we really need it? You want to advertise
+it just to cfg80211 or all the way up to userspace?
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/ieee80211.h | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 5c0b4b0..6a2cbf5 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1903,6 +1903,7 @@ enum ieee80211_tdls_actioncode {
- #define WLAN_EXT_CAPA5_TDLS_PROHIBITED	BIT(6)
- 
- #define WLAN_EXT_CAPA8_OPMODE_NOTIF	BIT(6)
-+#define WLAN_EXT_CAPA8_TDLS_WIDE_BW_ENABLED	BIT(7)
- 
- /* TDLS specific payload type in the LLC/SNAP header */
- #define WLAN_TDLS_SNAP_RFTYPE	0x2
--- 
-1.8.2.3
-
+Michał
