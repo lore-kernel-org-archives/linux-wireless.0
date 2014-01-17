@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:59020 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbaAFOGn (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:39293 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752064AbaAQJsX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 09:06:43 -0500
-Date: Mon, 6 Jan 2014 15:01:03 +0100
-From: Andreas Mohr <andi@lisas.de>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: BUG: build fail due to dependency issue (LIB80211_CRYPT_* failed to
- depend on LIB80211)
-Message-ID: <20140106140103.GA24241@rhlx01.hs-esslingen.de> (sfid-20140106_150647_318044_741BFBBB)
+	Fri, 17 Jan 2014 04:48:23 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 02145-04 for <linux-wireless@vger.kernel.org>;
+ Fri, 17 Jan 2014 09:48:21 +0000 (GMT)
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Chen-Yu Tsai' <wens@csie.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-sunxi@googlegroups.com" <linux-sunxi@googlegroups.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH RFC 1/6] net: rfkill: gpio: fix gpio name buffer size
+ off by 1
+Date: Fri, 17 Jan 2014 09:46:08 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D45EA9D@AcuExch.aculab.com> (sfid-20140117_104848_676561_F3A9FF82)
+References: <1389941251-32692-1-git-send-email-wens@csie.org>
+ <1389941251-32692-2-git-send-email-wens@csie.org>
+In-Reply-To: <1389941251-32692-2-git-send-email-wens@csie.org>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Chen-Yu Tsai
+> snprintf should be passed the complete size of the buffer, including
+> the space for '\0'. The previous code resulted in the *_reset and
+> *_shutdown strings being truncated.
+...
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+...
+> -	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+> -	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+> +	snprintf(rfkill->reset_name, len + 7 , "%s_reset", rfkill->name);
+> +	snprintf(rfkill->shutdown_name, len + 10, "%s_shutdown", rfkill->name);
 
-just had the following non-satisfactory build result here
-(read: caused sizeable waste of time):
+I can't find the context for the above, but they look very dubious.
+I'd expect: snprintf(foo, sizeof foo, ...).
+If you are trying to truncate rfkill->name you need to use %.*s.
 
-
-  SORTEX  vmlinux
-  SYSMAP  System.map
-  Building modules, stage 2.
-  MODPOST 210 modules
-ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_wep.ko] undefined!
-ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_wep.ko] undefined!
-ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_tkip.ko] undefined!
-ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_tkip.ko] undefined!
-ERROR: "lib80211_unregister_crypto_ops" [net/wireless/lib80211_crypt_ccmp.ko] undefined!
-ERROR: "lib80211_register_crypto_ops" [net/wireless/lib80211_crypt_ccmp.ko] undefined!
-make[5]: *** [__modpost] Error 1
-make[4]: *** [modules] Error 2
-
+	David
 
 
-This is due to net/wireless/Kconfig:
 
-
-config LIB80211
-        tristate
-        default n
-        help
-          This options enables a library of common routines used
-          by IEEE802.11 wireless LAN drivers.
-
-          Drivers should select this themselves if needed.
-
-config LIB80211_CRYPT_WEP
-        tristate
-
-config LIB80211_CRYPT_CCMP
-        tristate
-
-config LIB80211_CRYPT_TKIP
-        tristate
-
-config LIB80211_DEBUG
-        bool "lib80211 debugging messages"
-        depends on LIB80211
-        default n
-        ---help---
-          You can enable this if you want verbose debugging messages
-          from lib80211.
-
-
-A
-    make menuconfig
-showed these three crypt options rather very prominently,
-yet with entry of LIB80211 proper nowhere to be seen,
-thus it was very easy to fall into the trap of "enabling"
-various crypto options, thereby "enabling" nice ultimate build failure.
-
-And as you can see above as well, LIB80211_DEBUG decided to be
-a law-abiding citizen, by caring to announce a proper dependency on LIB80211.
-
-
-Happened on OpenWrt's 3.10.24, and verified Kconfig status to still be identical on linux trunk.
-
-Thanks,
-
-Andreas Mohr
-
--- 
-GNU/Linux. It's not the software that's free, it's you.
