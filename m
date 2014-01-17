@@ -1,46 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaAFOJa (ORCPT
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:45781 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701AbaAQJMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 09:09:30 -0500
-Message-ID: <1389017367.5891.13.camel@jlt4.sipsolutions.net> (sfid-20140106_150946_523453_B71385B4)
-Subject: Re: BUG: build fail due to dependency issue (LIB80211_CRYPT_*
- failed to depend on LIB80211)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Mohr <andi@lisas.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 15:09:27 +0100
-In-Reply-To: <20140106140103.GA24241@rhlx01.hs-esslingen.de> (sfid-20140106_150647_318044_741BFBBB)
-References: <20140106140103.GA24241@rhlx01.hs-esslingen.de>
-	 (sfid-20140106_150647_318044_741BFBBB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 04:12:19 -0500
+Received: by mail-pb0-f50.google.com with SMTP id rq2so3868244pbb.9
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 01:12:18 -0800 (PST)
+From: ZHAO Gang <gamerh2o@gmail.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Luca Coelho <luca@coelho.fi>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] b43: use kernel api to replace b43 specific helper function
+Date: Fri, 17 Jan 2014 17:11:46 +0800
+Message-Id: <8b96c31da0f8a23b8e99ed790e462bd933925041.1389947627.git.gamerh2o@gmail.com> (sfid-20140117_101226_442563_819466C8)
+In-Reply-To: <CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
+References: <CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 15:01 +0100, Andreas Mohr wrote:
+The b43_freq_to_channel_{2,5}ghz() should be changed to
+b43_channel_to_freq{2,5}ghz() if we want to use b43 helper function,
+but a better way is to use kernel api ieee80211_channel_to_frequency()
+and remove these unnecessary helper function.
 
-> config LIB80211
->         tristate
+Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
+---
+v2: combine two patches to one.
+    suggested by Luca Coelho and Rafał Miłecki
 
-> config LIB80211_CRYPT_WEP
->         tristate
-> 
-> config LIB80211_CRYPT_CCMP
->         tristate
-> 
-> config LIB80211_CRYPT_TKIP
->         tristate
+ drivers/net/wireless/b43/main.h | 35 -----------------------------------
+ drivers/net/wireless/b43/xmit.c | 12 ++++++------
+ 2 files changed, 6 insertions(+), 41 deletions(-)
 
->     make menuconfig
-> showed these three crypt options rather very prominently,
-
-Well, then your 'make menuconfig' is somehow broken - on mainline
-options that have no prompt are not shown, and indeed 'make menuconfig'
-on the current mainline kernel confirms that those options are not
-possible to select manually.
-
-johannes
-
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index abac25e..f476fc3 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -58,41 +58,6 @@ enum b43_verbosity {
+ #endif
+ };
+ 
+-
+-/* Lightweight function to convert a frequency (in Mhz) to a channel number. */
+-static inline u8 b43_freq_to_channel_5ghz(int freq)
+-{
+-	return ((freq - 5000) / 5);
+-}
+-static inline u8 b43_freq_to_channel_2ghz(int freq)
+-{
+-	u8 channel;
+-
+-	if (freq == 2484)
+-		channel = 14;
+-	else
+-		channel = (freq - 2407) / 5;
+-
+-	return channel;
+-}
+-
+-/* Lightweight function to convert a channel number to a frequency (in Mhz). */
+-static inline int b43_channel_to_freq_5ghz(u8 channel)
+-{
+-	return (5000 + (5 * channel));
+-}
+-static inline int b43_channel_to_freq_2ghz(u8 channel)
+-{
+-	int freq;
+-
+-	if (channel == 14)
+-		freq = 2484;
+-	else
+-		freq = 2407 + (5 * channel);
+-
+-	return freq;
+-}
+-
+ static inline int b43_is_cck_rate(int rate)
+ {
+ 	return (rate == B43_CCK_RATE_1MB ||
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 4ae63f4..218a0f3 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -806,7 +806,8 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 		B43_WARN_ON(1);
+ 		/* FIXME: We don't really know which value the "chanid" contains.
+ 		 *        So the following assignment might be wrong. */
+-		status.freq = b43_channel_to_freq_5ghz(chanid);
++		status.freq =
++			ieee80211_channel_to_frequency(chanid, status.band);
+ 		break;
+ 	case B43_PHYTYPE_G:
+ 		status.band = IEEE80211_BAND_2GHZ;
+@@ -819,13 +820,12 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	case B43_PHYTYPE_HT:
+ 		/* chanid is the SHM channel cookie. Which is the plain
+ 		 * channel number in b43. */
+-		if (chanstat & B43_RX_CHAN_5GHZ) {
++		if (chanstat & B43_RX_CHAN_5GHZ)
+ 			status.band = IEEE80211_BAND_5GHZ;
+-			status.freq = b43_freq_to_channel_5ghz(chanid);
+-		} else {
++		else
+ 			status.band = IEEE80211_BAND_2GHZ;
+-			status.freq = b43_freq_to_channel_2ghz(chanid);
+-		}
++		status.freq =
++			ieee80211_channel_to_frequency(chanid, status.band);
+ 		break;
+ 	default:
+ 		B43_WARN_ON(1);
+-- 
+1.8.4.2
 
