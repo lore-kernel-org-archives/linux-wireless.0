@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54530 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752793AbaAIJSJ (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:62854 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbaAQVAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 04:18:09 -0500
-Message-ID: <1389259081.4348.0.camel@jlt4.sipsolutions.net> (sfid-20140109_101814_449599_E46C7583)
-Subject: Re: [PATCH 1/2 v2] cfg80211: Add a function to get the number of
- supported channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 09 Jan 2014 10:18:01 +0100
-In-Reply-To: <1389259051-18072-1-git-send-email-ilan.peer@intel.com> (sfid-20140109_101612_081487_E0BEE015)
-References: <1388503946-25862-2-git-send-email-ilan.peer@intel.com>
-	 <1389259051-18072-1-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140109_101612_081487_E0BEE015)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 16:00:52 -0500
+Received: by mail-ie0-f172.google.com with SMTP id e14so6001227iej.17
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 13:00:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Jan 2014 14:00:32 -0700
+Message-ID: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com> (sfid-20140117_220136_952927_5D632506)
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-09 at 11:17 +0200, Ilan Peer wrote:
+On Fri, Jan 17, 2014 at 9:02 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> This series is against "next" branch in Bjorn's repo:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>
+> Changes from v1 to v2:
+>   - added a regression fix "ahci: Fix broken fallback to single
+>     MSI mode" as patch 1/9;
+>   - the series is reordered to move the regression fix in front;
+>   - at Bjorn's request pci_enable_msi() is un-deprecated;
+>   - as result, pci_enable_msi_range(pdev, 1, 1) styled calls
+>     rolled back to pci_enable_msi(pdev);
+>   - nvme bug fix moved out as a separate patch 5/9 "nvme: Fix
+>     invalid call to irq_set_affinity_hint()"
+>   - patches changelog elaborated a bit;
+>
+> Bjorn,
+>
+> As the release is supposedly this weekend, do you prefer
+> the patches to go to your tree or to individual trees after
+> the release?
 
+I'd be happy to merge them, except for the fact that they probably
+wouldn't have any time in -next before I ask Linus to pull them.  So
+how about if we wait until after the release, ask the area maintainers
+to take them, and if they don't take them, I'll put them in my tree
+for v3.15?
 
-> +	else
-> +		n_channles = ieee80211_get_num_supported_channels(wiphy);
-
-err ...
-
-johannes
-
+Bjorn
