@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39856 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:46515 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbaAVIVv (ORCPT
+	with ESMTP id S1750754AbaAQJvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 03:21:51 -0500
-Message-ID: <1390378907.4334.2.camel@jlt4.sipsolutions.net> (sfid-20140122_092200_769927_71F38F5B)
-Subject: Re: [PATCH] mac80211: mesh: fix mesh_id check
+	Fri, 17 Jan 2014 04:51:54 -0500
+Message-ID: <1389952310.6858.1.camel@jlt4.sipsolutions.net> (sfid-20140117_105158_973569_BADBD8D6)
+Subject: [PATCH] regdb: Republic of Korea: fix double rule
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Date: Wed, 22 Jan 2014 09:21:47 +0100
-In-Reply-To: <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com> (sfid-20140122_074536_150907_F7F99D56)
-References: <1390334699.6199.67.camel@jlt4.sipsolutions.net>
-	 <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com>
-	 (sfid-20140122_074536_150907_F7F99D56)
+To: wireless-regdb <wireless-regdb@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 17 Jan 2014 10:51:50 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 14:45 +0800, Chun-Yeow Yeoh wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > @@ -866,7 +866,7 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
-> >         if (sdata->vif.csa_active)
-> >                 return true;
-> >
-> > -       if (!ifmsh->mesh_id)
-> > +       if (!ifmsh->mesh_id_len)
-> 
-> I don't see this in mac80211-next. Anyway, I think that this is not
-> needed since the checking (sdata->wdev.mesh_id_len) is done at
-> ieee80211_mesh_rx_queued_mgmt prior to
-> ieee80211_mesh_process_chnswitch.
+There's no need to have a 20 MHz and a 40 MHz rule that are
+other wise completely the same, remove the 20 MHz one.
 
-Indeed, this part seems to only be in 3.13 - probably got cleaned up in
-somebody else's patches. I think though mac80211 should probably check
-ifmsh->mesh_id_len and not sdata->wdev.mesh_id_len? Also, cfg80211 seems
-to be missing this check in nl80211_channel_switch(), no?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ db.txt | 1 -
+ 1 file changed, 1 deletion(-)
 
-johannes
+diff --git a/db.txt b/db.txt
+index fcab208..bf99234 100644
+--- a/db.txt
++++ b/db.txt
+@@ -467,7 +467,6 @@ country KP: DFS-JP
+ 	(5735 - 5815 @ 80), (30)
+ 
+ country KR: DFS-JP
+-	(2402 - 2482 @ 20), (20)
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20)
+ 	(5250 - 5330 @ 80), (20), DFS
+-- 
+1.8.5.1
+
+
 
