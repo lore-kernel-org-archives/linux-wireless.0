@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56020 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbaAINP7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 08:15:59 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from ring0.de ([91.143.88.219]:51002 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751194AbaAQBpW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jan 2014 20:45:22 -0500
+Date: Fri, 17 Jan 2014 02:45:15 +0100
+From: Sebastian Reichel <sre@ring0.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org
+Subject: Re: [PATCHv2 0/5] wl1251 device tree support
+Message-ID: <20140117014514.GA604@earth.universe> (sfid-20140117_024527_729905_4AD1134D)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
+ <20140106225709.GA23070@earth.universe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21198.40916.260973.48444@gargle.gargle.HOWL> (sfid-20140109_141602_210602_4645E3DE)
-Date: Thu, 9 Jan 2014 18:40:44 +0530
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-In-Reply-To: <52CE934D.1020400@neratec.com>
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
-	<1384665016-12022-5-git-send-email-sujith@msujith.org>
-	<52CE934D.1020400@neratec.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="AhhlLboLdkugWU4S"
+In-Reply-To: <20140106225709.GA23070@earth.universe>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik wrote:
-> This code will always set run_agc to true. Does it mean you always have 
-> to run agc cal no matter what since default is anyway true or it's just a typo?
 
-That was the aim of the patch.
+--AhhlLboLdkugWU4S
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-When it has been decided to do TX IQ calibration, AGC cal has to be
-run. IQ cal can be done separately in the driver (pre-AR9485) or it
-can be taken care of by the HW when AGC cal is triggered.
+On Mon, Jan 06, 2014 at 11:57:09PM +0100, Sebastian Reichel wrote:
+> Hi John,
+>=20
+> > The following patchset adds device tree support to
+> > the spi variant of the wl1251 driver.
+> >
+> > Luciano Coelho (1):
+> >   wl1251: split wl251 platform data to a separate structure
+> >=20
+> > Sebastian Reichel (4):
+> >   wl1251: move power GPIO handling into the driver
+> >   wl1251: spi: add vio regulator support
+> >   wl1251: spi: add device tree support
+> >   Documentation: dt: wireless: Add wl1251
+>=20
+> What's the status of this patchset? Tony prepared an immutable
+> branch for patches 1+2 [0]. I think the other patches are also ok
+> (at least there were no more complains from the DT binding
+> maintainers). It would be nice to have wl1251 DT support in 3.14.
+>=20
+> [0] http://www.spinics.net/lists/linux-omap/msg101165.html
+>=20
+> -- Sebastian
 
-> The reason I am asking is that I have ran into problem with rssi reporting
-> when calibration is ongoing.  It looks like beacon received just after IQ
-> mismatch calibration is reported ~10-15 dB higher than it should. I have
-> verified power with wireshark and they are ok at antenna port.  Next beacons
-> are reported fine. I have tried to enable disable different antennas but it
-> doesn't seem to affect the results.
-> 
-> It doesn't happen all the time but since iq calibration is on every time we
-> are scanning it puts wrong rssi value in scan result entry. I don't have a
-> proof yet but it might affect probe responses as well.
+ping? I can't see it on wireless-next.
 
-Which chip ? Is this issue seen with an older snapshot of the driver ?
-(There is an IQ cal fix for AR955x which I haven't ported to ath9k yet).
+-- Sebastian
 
-Sujith
+--AhhlLboLdkugWU4S
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCAAGBQJS2IsqAAoJENju1/PIO/qabYMP/1n34ptjeFX78Jc4hL8iqoij
+HnYCknz4PL3ztSI49QpFSnEoPLBeQWFJoNhsKnG/yc4m7kdQJagyO7GmRIpzjHvi
+x8EtvQwv/D9xJiZ675xrd5//BvR09UtrnUo9EOb67zxXgoY9YdkCUr9Skz83nUoK
+dkaVIbP8CLcULdYeGOgTTaAsTWFXbJc4OcYE+HhmK7WJdRQaJqBrZw8cNu7RFUIA
+Ye4aMxoYX4g42kPGjwWmi8mep7nKoT0sUAgkNGMdVO2soFZyA0f/y4F9BMOljvTb
+LAHUQu7g+lDs8fnaaRMPEVVEf9dIKPH/a0+aconMO2YCSM4vW4wf5eWMMwGYY4KP
++tp6hHGrxFFN4oJ4rN+xdOpogNEqvDWD6jQprZGkONZ7cdNXCs1MhcgDEOMkCWCY
+NKK1UGVQNkw1h7+PiICmgv1Wugj0iLXGtgOHJT2g5gMgeFJEUoC33twZk9OZxol9
+AwKQM51ifkdRlW5mpo4ElPI3qABrNtOfMi+ycDHjgpZjREc5pnlIm1vmQYMofLDb
+465eMVAL/K7UOsRf0LJztCZ/L0Uel85V/zUqvsYIrHo9WBzHxGlcPr9YE9pZX/Fw
+OnkAn0evsNC5I7RBz8QSaFoIvHjd+ErtqGo7wNqWzr2iWQOVAM5ZngEHN84tk4FI
+L21XhFBzSgxhgNwD4Y5H
+=W7cO
+-----END PGP SIGNATURE-----
+
+--AhhlLboLdkugWU4S--
