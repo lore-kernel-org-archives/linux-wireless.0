@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59892 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754746AbaAWOot (ORCPT
+Received: from srv01.mrvanes.com ([94.103.150.236]:45548 "EHLO
+	zimbra.mrvanes.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbaAQNUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 09:44:49 -0500
-Message-ID: <52E12ADD.5070001@candelatech.com> (sfid-20140123_154454_405433_844FFC91)
-Date: Thu, 23 Jan 2014 06:44:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 17 Jan 2014 08:20:55 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by zimbra.mrvanes.com (Postfix) with ESMTP id ED29A402DE
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 14:12:33 +0100 (CET)
+Received: from zimbra.mrvanes.com ([127.0.0.1])
+	by localhost (zimbra.mrvanes.com [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id wFf-BNMJDQrR for <linux-wireless@vger.kernel.org>;
+	Fri, 17 Jan 2014 14:12:18 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by zimbra.mrvanes.com (Postfix) with ESMTP id BADDB42533
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 14:12:18 +0100 (CET)
+Received: from zimbra.mrvanes.com ([127.0.0.1])
+	by localhost (zimbra.mrvanes.com [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 19vQc9F1dS-Y for <linux-wireless@vger.kernel.org>;
+	Fri, 17 Jan 2014 14:12:18 +0100 (CET)
+Received: from minivanes.localnet (82-171-229-100.ip.telfort.nl [82.171.229.100])
+	by zimbra.mrvanes.com (Postfix) with ESMTPSA id 956D1402DE
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 14:12:18 +0100 (CET)
+From: Martin van Es <martin@mrvanes.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi + bluetooth mouse and legacy boot Dell XPS13
+Date: Fri, 17 Jan 2014 14:12:18 +0100
+Message-ID: <4562545.5AEVROSYYf@minivanes> (sfid-20140117_142059_616888_ED341DDC)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211:  Extra debug info for station cleanup case.
-References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>	  (sfid-20140122_235532_670534_4FD6E588) <1390432284.20070.1.camel@jlt4.sipsolutions.net>	 <52E05B2E.7030200@candelatech.com> <1390465244.4142.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1390465244.4142.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2014 12:20 AM, Johannes Berg wrote:
-> On Wed, 2014-01-22 at 15:58 -0800, Ben Greear wrote:
->
->>> You should put the string into the warning
->>>
->>> WARN_ONCE(ret, "sta-info-destroy: ...", ...)
->>
->> I wanted it to kernel splat once and print out a message, and after that, only print
->> messages.
->>
->> I think your suggestion will only splat _and_ print once?
->
-> Hm, that's true, but it shouldn't be happening anyway? So why would you
-> care about subsequent instances - even the first is a bug?
+Hi,
 
-Nice to know how often it happens, and under what (other) circumstances it might
-be happening.  As you know, these things are not always easy to fix even if you
-have a kernel splat....
+I'm having major problems keeping my wireless connection up and running, 
+together with bluetooth mouse on my Dell XPS13 (L322X, full-HD version).
 
-Thanks,
-Ben
+I'm seeing regular firmware and hardware resets. I'm on kernel 3.12.7 and 
+firmware loaded is 18.168.6.1. Hardware is Intel Corporation Centrino 
+Advanced-N 6235 (rev 24). Wireless network is 802.11b/g, WPA2.
 
->
-> johannes
->
+I've tried all possible combinations of module parameters without succes.
+
+Last thing that comes to my mind is my legacy BIOS. Could anyone on this list 
+either confirm or deny that instead booting the laptop in UEFI might help 
+resolve the problems? Is anyone using this laptop with wifi and bluetooth 
+mouse either using legacy or UEFI BIOS?
+
+I'm asking because switching from legacy to UEFI seems to be a bit daunting, 
+not in the least because the live CD's I tried have many problems recognising 
+either the display adapter on recent kernels (ubuntu 13.10 boot CD black 
+screen) or backlight seems to be broken (again) on 3.13.rc, using ubuntu 14.04 
+boot CD).
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Best regards,
+Martin van Es
