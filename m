@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:38597 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751678AbaAINjH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 08:39:07 -0500
-Message-ID: <52CEA5A3.2040308@neratec.com> (sfid-20140109_143911_770978_21949EFE)
-Date: Thu, 09 Jan 2014 14:35:31 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:33790 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbaAQGz3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jan 2014 01:55:29 -0500
+From: Chen-Yu Tsai <wens@csie.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, netdev@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>	<1384665016-12022-5-git-send-email-sujith@msujith.org>	<52CE934D.1020400@neratec.com> <21198.40916.260973.48444@gargle.gargle.HOWL>
-In-Reply-To: <21198.40916.260973.48444@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH RFC 0/6] net: rfkill: gpio: Add device tree support
+Date: Fri, 17 Jan 2014 14:47:25 +0800
+Message-Id: <1389941251-32692-1-git-send-email-wens@csie.org> (sfid-20140117_075545_304515_7D369539)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2014 02:10 PM, Sujith Manoharan wrote:
-> Wojciech Dubowik wrote:
->> This code will always set run_agc to true. Does it mean you always have
->> to run agc cal no matter what since default is anyway true or it's just a typo?
-> That was the aim of the patch.
->
-> When it has been decided to do TX IQ calibration, AGC cal has to be
-> run. IQ cal can be done separately in the driver (pre-AR9485) or it
-> can be taken care of by the HW when AGC cal is triggered.
-Ok
->> The reason I am asking is that I have ran into problem with rssi reporting
->> when calibration is ongoing.  It looks like beacon received just after IQ
->> mismatch calibration is reported ~10-15 dB higher than it should. I have
->> verified power with wireshark and they are ok at antenna port.  Next beacons
->> are reported fine. I have tried to enable disable different antennas but it
->> doesn't seem to affect the results.
->>
->> It doesn't happen all the time but since iq calibration is on every time we
->> are scanning it puts wrong rssi value in scan result entry. I don't have a
->> proof yet but it might affect probe responses as well.
-> Which chip ? Is this issue seen with an older snapshot of the driver ?
-> (There is an IQ cal fix for AR955x which I haven't ported to ath9k yet).
-AR9590 running on powerpc with latest openwrt i.e. 
-compat-wireless-2013-11-05 backported with
-your changes for split pci/soc IQ calibration.
+Hi everyone,
 
-I could try to reproduce it on my host with latest wireless testing if 
-you think
-it helps.
+This patch series adds device tree support to rfkill-gpio, and
+fixes some issues I ran into. This is so we can define and control
+RF devices through the device tree, such as the Broadcom BCM20710
+UART-based Bluetooth device found on the CubieTruck,
 
-Wojtek
->
-> Sujith
+The CubieTruck uses a non-default clock rate oscillator for the
+BCM20710 device. As the datasheet states, a precise 32.768 KHz
+low power clock must be provided at power on for the device to
+detect the correct clock rate of the main oscillator. Hence the
+need for the "clock-frequency" property.
+
+The device tree bindings aren't pretty. They are the result of how
+gpiod_find was implemented: of_gpiod_find includes con_id in the
+DT property name; acpi_gpiod_find ignores it and only uses the index.
+A more elegant DT binding would mean splitting the gpio lookup code
+path in rfkill-gpio, which would be more like rfkill-gpio prior to
+the descriptor-based GPIO patch.
+
+I am aware there is a need for similar functionality for SDIO devices,
+which the CubieTruck has as well. A mail thread [1] started yesterday
+indicated that generic SDIO DT support was the way to go. I don't know
+if that could be applied to UART-based devices though.
+
+[1] http://www.spinics.net/lists/arm-kernel/msg301182.html
+
+The series depends on
+
+    [PATCH v3 2/6] net: rfkill: gpio: convert to descriptor-based GPIO interface
+
+which has been applied through the GPIO tree.
+
+The last patch depends on
+
+    ARM: dts: sun7i: add pin muxing options for UART2
+
+which I sent earlier this week.
+
+
+Comments, please?
+
+
+Cheers,
+ChenYu
+
+
+Chen-Yu Tsai (6):
+  net: rfkill: gpio: fix gpio name buffer size off by 1
+  net: rfkill: gpio: use clk_prepare_enable/clk_disable_unprepare
+  net: rfkill: gpio: fix reversed clock enable state
+  net: rfkill: gpio: add device tree support
+  net: rfkill: gpio: add clock-frequency device tree property
+  ARM: sun7i: cubietruck: enable bluetooth module
+
+ .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 28 ++++++++++++++++
+ arch/arm/boot/dts/sun7i-a20-cubietruck.dts         | 37 ++++++++++++++++++++++
+ net/rfkill/rfkill-gpio.c                           | 37 +++++++++++++++++++---
+ 3 files changed, 97 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+
+-- 
+1.8.5.2
 
