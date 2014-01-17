@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbaAFU0N (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.10]:55748 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbaAQQs0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 15:26:13 -0500
-Message-ID: <1389039968.5891.44.camel@jlt4.sipsolutions.net> (sfid-20140106_212638_350919_EF415EC5)
-Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Date: Mon, 06 Jan 2014 21:26:08 +0100
-In-Reply-To: <20140106200050.GG10885@tuxdriver.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-	 <201312311047.30147@pali> <20140106200050.GG10885@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 11:48:26 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
+Date: Fri, 17 Jan 2014 17:47:45 +0100
+Cc: "Chen-Yu Tsai" <wens@csie.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	devicetree@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-sunxi@googlegroups.com,
+	linux-kernel@vger.kernel.org,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+References: <1389941251-32692-1-git-send-email-wens@csie.org> <1389941251-32692-5-git-send-email-wens@csie.org>
+In-Reply-To: <1389941251-32692-5-git-send-email-wens@csie.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401171747.46332.arnd@arndb.de> (sfid-20140117_174831_226855_A0285187)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 15:00 -0500, John W. Linville wrote:
-> On Tue, Dec 31, 2013 at 10:47:29AM +0100, Pali Rohár wrote:
-> > On Sunday 08 December 2013 10:24:58 Pali Rohár wrote:
-> > > Hello, I'm sending wl1251 patches from linux-n900 tree [1] for
-> > > comments. More patches come from David's monitor & packet
-> > > injection work. Patches are tested with 3.12 rc5 kernel on
-> > > Nokia N900.
-> > > 
-> > > Second version contains new patch for fixing NULL pointer
-> > > dereference which sometimes cause kernel panic and fixes code
-> > > suggested by Pavel Machek.
->  
-> > So far, there are no new comments for patches 01, 03-13 and 16. 
-> > Are there any other problems with that patches or can be accepted 
-> > for upstream?
->  
-> They are probably fine to merge now.  Of course, I was still deleting
-> wl12xx patches when they were originally posted, so I'll need someone
-> to resend the patches to me...
+On Friday 17 January 2014, Chen-Yu Tsai wrote:
+> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+> new file mode 100644
+> index 0000000..8a07ea4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+> @@ -0,0 +1,26 @@
+> +GPIO controlled RFKILL devices
+> +
+> +Required properties:
+> +- compatible   : Must be "rfkill-gpio".
+> +- rfkill-name  : Name of RFKILL device
+> +- rfkill-type  : Type of RFKILL device: 1 for WiFi, 2 for BlueTooth
+> +- NAME_shutdown-gpios  : GPIO phandle to shutdown control
+> +                         (phandle must be the second)
+> +- NAME_reset-gpios     : GPIO phandle to reset control
+> +
+> +NAME must match the rfkill-name property. NAME_shutdown-gpios or
+> +NAME_reset-gpios, or both, must be defined.
+> +
 
-But please please don't CC half the world again!
+I don't understand this part. Why do you include the name in the
+gpios property, rather than just hardcoding the property strings
+to "shutdown-gpios" and "reset-gpios"?
 
-johannes
+The description of hte "rfkill-name" property seems to suggest
+that you can only have one logical RFKILL device per device node,
+so he names would not be ambiguous.
 
+	Arnd
