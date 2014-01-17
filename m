@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:37453 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034AbaAMUWZ (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:49744 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbaAQIcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:25 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so3576541eaj.12
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:24 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 17 Jan 2014 03:32:16 -0500
+Received: by mail-ea0-f180.google.com with SMTP id f15so1587307eak.39
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 00:32:14 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/18] iwlwifi: mvm: fix theoretical uninitialized function return value
-Date: Mon, 13 Jan 2014 22:21:55 +0200
-Message-Id: <1389644517-22807-16-git-send-email-egrumbach@gmail.com> (sfid-20140113_213435_819880_BFCCB9A9)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 0/5] Regulatory, change maximum bandwidth checking
+Date: Fri, 17 Jan 2014 09:31:59 +0100
+Message-Id: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_093219_814883_F5FA07B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Introduce new way to calculate maximum available bandwidth.
+Before we get this form regulatory rule.
+Currently we calculate this from contiguous rules and base
+on such calculation we set correct channel BW flags (40, 80, 160MHz).
 
-If we try to write NVM that do not exist, the function will return
-uninitialized value. fixed.
+In case someone will need to use bandwidth defined in regulatory
+database only I also introduce new regulatory rule flag STRICT-BW.
+In such case maximum bandwidth from regulatory database will be
+used.
 
-Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/nvm.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Tested with hwsim.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index 9affd43..35b71af 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -392,7 +392,7 @@ out:
- /* Loads the NVM data stored in mvm->nvm_sections into the NIC */
- int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
- {
--	int i, ret;
-+	int i, ret = 0;
- 	struct iwl_nvm_section *sections = mvm->nvm_sections;
- 
- 	IWL_DEBUG_EEPROM(mvm->trans->dev, "'Write to NVM\n");
+Janusz Dziedzic (5):
+  cfg80211: don't check regulatory bandwidth
+  cfg80211: add helper reg_get_regdomain() function
+  cfg80211: fix maximum bandwidth calculation
+  cfg80211: introduce strict bandwidth regulatory flag
+  cfg80211: parse STRICT-BW flag for insternal regdb option
+
+ include/uapi/linux/nl80211.h |    2 +
+ net/wireless/genregdb.awk    |    2 +
+ net/wireless/reg.c           |  107 ++++++++++++++++++++++++++++++++++++------
+ 3 files changed, 96 insertions(+), 15 deletions(-)
+
 -- 
 1.7.9.5
 
