@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48613 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754454AbaAGXPX (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:61105 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbaAQIcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 18:15:23 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 17 Jan 2014 03:32:16 -0500
+Received: by mail-ea0-f182.google.com with SMTP id r15so745420ead.27
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 00:32:15 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 05/12] mac80211_hwsim: refactor radio cleanup
-Date: Wed,  8 Jan 2014 00:15:10 +0100
-Message-Id: <1389136517-21216-6-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001532_305116_6592D57A)
-In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
-References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/5] cfg80211: don't check regulatory bandwidth
+Date: Fri, 17 Jan 2014 09:32:00 +0100
+Message-Id: <1389947524-6102-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_093222_952069_DA9710BA)
+In-Reply-To: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Don't check regulatory bandwith base on
+single regulatory rule. There will be introduced
+new code that will calculate maximum bandwidth
+base on all contiguous rules.
 
-Refactor the radio cleanup into a new function to later
-allow deleting a single radio from the list.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 27 ++++++++++++++-------------
- 1 file changed, 14 insertions(+), 13 deletions(-)
+ net/wireless/reg.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 23fa6ee..421528e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1623,25 +1623,26 @@ static const struct ieee80211_ops mac80211_hwsim_ops = {
- 
- static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- 
-+static void mac80211_hwsim_destroy_radio(struct mac80211_hwsim_data *data)
-+{
-+	lockdep_assert_held(&hwsim_radio_lock);
-+	list_del(&data->list);
-+
-+	debugfs_remove_recursive(data->debugfs);
-+	ieee80211_unregister_hw(data->hw);
-+	device_release_driver(data->dev);
-+	device_unregister(data->dev);
-+	ieee80211_free_hw(data->hw);
-+}
-+
- static void mac80211_hwsim_free(void)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 7d20d84..89bfac1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -526,7 +526,6 @@ bool reg_is_valid_request(const char *alpha2)
+ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
  {
--	struct list_head tmplist, *i, *tmp;
- 	struct mac80211_hwsim_data *data, *tmpdata;
+ 	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
+-	u32 freq_diff;
  
--	INIT_LIST_HEAD(&tmplist);
--
- 	spin_lock_bh(&hwsim_radio_lock);
--	list_for_each_safe(i, tmp, &hwsim_radios)
--		list_move(i, &tmplist);
-+	list_for_each_entry_safe(data, tmpdata, &hwsim_radios, list)
-+		mac80211_hwsim_destroy_radio(data);
- 	spin_unlock_bh(&hwsim_radio_lock);
--
--	list_for_each_entry_safe(data, tmpdata, &tmplist, list) {
--		debugfs_remove_recursive(data->debugfs);
--		ieee80211_unregister_hw(data->hw);
--		device_release_driver(data->dev);
--		device_unregister(data->dev);
--		ieee80211_free_hw(data->hw);
--	}
- 	class_destroy(hwsim_class);
- }
+ 	if (freq_range->start_freq_khz <= 0 || freq_range->end_freq_khz <= 0)
+ 		return false;
+@@ -534,10 +533,7 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ 	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
+ 		return false;
  
+-	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+-
+-	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
+-	    freq_range->max_bandwidth_khz > freq_diff)
++	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
+ 		return false;
+ 
+ 	return true;
 -- 
-1.8.5.1
+1.7.9.5
 
