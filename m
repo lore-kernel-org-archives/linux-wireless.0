@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alt-proxy87.mail.unifiedlayer.com ([67.222.57.217]:54573 "HELO
-	alt-proxy87.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750899AbaAaFWx (ORCPT
+Received: from 0.mx.nanl.de ([217.115.11.12]:45975 "EHLO mail.nanl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751331AbaAQJGz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 00:22:53 -0500
-Message-ID: <1391145368.2436.249.camel@Wailaba2> (sfid-20140131_062350_075456_84DE6F45)
-Subject: Re: [PATCH] rtl8192ce is disabling the irqs for too long
-From: Olivier Langlois <olivier@trillion01.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mlang45@derytele.com
-Date: Fri, 31 Jan 2014 00:16:08 -0500
-In-Reply-To: <52EAB3E6.2060809@lwfinger.net>
-References: <1391062949-14502-1-git-send-email-olivier@trillion01.com>
-	 <52EAB3E6.2060809@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 04:06:55 -0500
+Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com [209.85.216.172])
+	by mail.nanl.de (Postfix) with ESMTPSA id E5C5F4607D
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 08:55:33 +0000 (UTC)
+Received: by mail-qc0-f172.google.com with SMTP id c9so3315322qcz.17
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 00:57:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
+References: <a8aa052ea196de8256dcdc5b3ae81cfa64d3f9ff.1389935084.git.gamerh2o@gmail.com>
+ <1389939896.8062.53.camel@porter.coelho.fi> <CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Fri, 17 Jan 2014 09:56:45 +0100
+Message-ID: <CAOiHx=nui0nVGiCLoukRovB3zY5jiKAt__Numo4y4bQv0dzOcQ@mail.gmail.com> (sfid-20140117_100701_833535_9D0B5332)
+Subject: Re: [PATCH 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Luca Coelho <luca@coelho.fi>, ZHAO Gang <gamerh2o@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-30 at 14:19 -0600, Larry Finger wrote:
-> On 01/30/2014 12:22 AM, Olivier Langlois wrote:
-> > Signed-off-by: Olivier Langlois <olivier@trillion01.com>
-> > ---
-> >   drivers/net/wireless/rtlwifi/ps.c           |  2 +-
-> >   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 18 ++++++++++++++++--
-> >   2 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> Olivier,
-> 
-> I like the fact that you have proposed a solution that has minimal effect on the 
-> other PCI drivers under rtlwifi. That certainly decreases the amount of testing 
-> needed. Of course, all of them may need the same kind of fix.
+On Fri, Jan 17, 2014 at 8:11 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> 2014/1/17 Luca Coelho <luca@coelho.fi>:
+>> On Fri, 2014-01-17 at 13:27 +0800, ZHAO Gang wrote:
+>>> In following patch, replace b43 specific helper function with kernel
+>>> api to reduce code duplication.
+>>>
+>>> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/xmit.c | 4 ++--
+>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+>>> index 4ae63f4..50e5ddb 100644
+>>> --- a/drivers/net/wireless/b43/xmit.c
+>>> +++ b/drivers/net/wireless/b43/xmit.c
+>>> @@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+>>>                * channel number in b43. */
+>>>               if (chanstat & B43_RX_CHAN_5GHZ) {
+>>>                       status.band = IEEE80211_BAND_5GHZ;
+>>> -                     status.freq = b43_freq_to_channel_5ghz(chanid);
+>>> +                     status.freq = b43_channel_to_freq_5ghz(chanid);
+>>>               } else {
+>>>                       status.band = IEEE80211_BAND_2GHZ;
+>>> -                     status.freq = b43_freq_to_channel_2ghz(chanid);
+>>> +                     status.freq = b43_channel_to_freq_2ghz(chanid);
+>>>               }
+>>>               break;
+>>>       default:
+>>
+>> Why do you need this patch if you're going to remove these calls in the
+>> next patch anyway?
+>
+> I was thinking about this for a moment too. You could just make a one
+> patch and note in commit message that "translation" was reversed.
 
-This has been done on purpose. I knew that you would appreciate. The
-problem is probably present with the other cards but since I could not
-validate or test the patch with them, I have left them unchanged. If you
-were to determine that it apply to all of them then maybe the patch
-could be moved to ps.c to wrap hw_init() call.
-
-> 
-> The changes are certainly minimal; however, I do need to test them before giving 
-> my Ack.
-> 
-> As the problem(s) fixed by this patch will affect stable kernels, you should add 
-> a "Cc: Stable <stable@vger.kernel.org>" patch.
-> 
-> Originally, I was going to have you add a comment to the commit message on why 
-> you were changing the return value in rtl_ps_enable_nic(), but now I am thinking 
-> that this should be a separate commit as it fixes a totally different bug. Yes 
-> it is involved with the callback to hw_init, but the bug is independent.
-
-done. I am about to resend the patch splitted into 2 commits.
-> 
-> Good work on finding this problem.
-> 
-my pleasure. it has been fun and gratifying.
+That would mean mixing fixes and improvements, which is something you
+are not supposed to do, so IMHO having these split into two is
+correct. Think about stable maintainers wanting the fix but not the
+other change because it might introduce unknown side effects.
 
 
+Jonas
+>
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
