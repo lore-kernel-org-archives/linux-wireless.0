@@ -1,33 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbaAVXL0 (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:46517 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbaAQNiB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 18:11:26 -0500
-Message-ID: <1390432284.20070.1.camel@jlt4.sipsolutions.net> (sfid-20140123_001129_102542_A71FA8B3)
-Subject: Re: [PATCH 1/2] mac80211:  Extra debug info for station cleanup
- case.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 23 Jan 2014 00:11:24 +0100
-In-Reply-To: <1390431296-20568-1-git-send-email-greearb@candelatech.com> (sfid-20140122_235532_670534_4FD6E588)
-References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20140122_235532_670534_4FD6E588)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 08:38:01 -0500
+Received: by mail-bk0-f54.google.com with SMTP id u14so1664869bkz.27
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 05:38:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
+Date: Fri, 17 Jan 2014 14:38:00 +0100
+Message-ID: <CA+BoTQmexjQy-+Bv-uofBa2Ndcu56yYOAEeNzdBSE3yMCQdZKw@mail.gmail.com> (sfid-20140117_143806_083620_A15583D9)
+Subject: Re: [PATCH v2] ath10k: fix the MAC address of peer statistic
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 14:54 -0800, greearb@candelatech.com wrote:
-> -		WARN_ON_ONCE(ret != 0);
-> +		if (WARN_ON_ONCE(ret != 0))
-> +			sdata_info(sdata, "sta-info-destroy: drv-sta-state error: %i, sta: %pM\n",
-> +				   ret, sta->sta.addr);
+On 10 January 2014 10:19, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+> Fix the MAC address of wmi_peer_stats so that it is
+> printed correctly. This is tested and verified using
+> firmware version 999.999.0.636.
+>
+> Based on the verification, maximum only 3 peer statistics including
+> self STA able to be printed out.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+> v2: offset the stats to ignore the first peer (Chun-Yeow)
+>
+>  drivers/net/wireless/ath/ath10k/debug.c |    4 ++++
+>  drivers/net/wireless/ath/ath10k/wmi.h   |   14 +++++++-------
+>  2 files changed, 11 insertions(+), 7 deletions(-)
+>
 
-You should put the string into the warning
+[...]
 
-WARN_ONCE(ret, "sta-info-destroy: ...", ...)
+> @@ -2820,9 +2820,9 @@ struct wmi_vdev_stats {
+>   * TODO: add more stats
+>   */
+>  struct wmi_peer_stats {
+> +       __le32 peer_tx_rate;    /* TBA */
+>         struct wmi_mac_addr peer_macaddr;
+>         __le32 peer_rssi;
+> -       __le32 peer_tx_rate;
+>  } __packed;
 
-johannes
+This looks wrong too. I've just checked it and it seems the
+`wal_dbg_tx_stats` is out of date. It's missing a `__le32
+stateless_tid_alloc_failure` that has been inserted at some point in
+time in the firmware between `pdev_resets` and `phy_underrun`. You
+should add this missing field instead of moving `peer_tx_rate`.
 
+Unfortunately AP firmware has even more fields inserted in
+`wmi_pdev_stats`. Making this work with both firmwares is a mess.
+
+
+Michał
