@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64744 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbaAUWbp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 17:31:45 -0500
-Date: Tue, 21 Jan 2014 23:31:39 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "Mark A. Greer" <mgreer@animalcreek.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Subject: Re: [PATCH 0/3] NFC: iso15693 - Add ISO/IEC 15693 support
-Message-ID: <20140121223139.GH19138@zurbaran> (sfid-20140121_233149_368328_9C276E7D)
-References: <1389747131-2577-1-git-send-email-mgreer@animalcreek.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:59523 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208AbaAQPTt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jan 2014 10:19:49 -0500
+From: ZHAO Gang <gamerh2o@gmail.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH v3 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
+Date: Fri, 17 Jan 2014 23:19:13 +0800
+Message-Id: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com> (sfid-20140117_161955_063280_BEA8D929)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389747131-2577-1-git-send-email-mgreer@animalcreek.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mark,
+Use the right function to update status.freq. The wrong frequency
+value can cause problem that bss info can't be updated when it
+should be.
 
-On Tue, Jan 14, 2014 at 05:52:08PM -0700, Mark A. Greer wrote:
-> This series of patches adds support for the ISO/IEC 15693 protocol
-> and Type V vicinity cards.
-The patches look good to me. I'll wait for a v2 that includes your
-changes for patch #2 and apply it.
+This bug is introduced by commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+"cfg80211 API for channels/bitrates, mac80211 and driver conversion".
 
-Cheers,
-Samuel.
+Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
+---
+v3: change commit log
+    suggested by Luca Coelho, Rafał Miłecki and Jonas Gorski
 
+I'm not very familiar with wireless subsystem yet. If commit message needs
+more changes, feel free to point it out.
+
+ drivers/net/wireless/b43/xmit.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 4ae63f4..50e5ddb 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 		 * channel number in b43. */
+ 		if (chanstat & B43_RX_CHAN_5GHZ) {
+ 			status.band = IEEE80211_BAND_5GHZ;
+-			status.freq = b43_freq_to_channel_5ghz(chanid);
++			status.freq = b43_channel_to_freq_5ghz(chanid);
+ 		} else {
+ 			status.band = IEEE80211_BAND_2GHZ;
+-			status.freq = b43_freq_to_channel_2ghz(chanid);
++			status.freq = b43_channel_to_freq_2ghz(chanid);
+ 		}
+ 		break;
+ 	default:
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.8.4.2
+
