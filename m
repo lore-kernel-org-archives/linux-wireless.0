@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:36575 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798AbaAEGmW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47800 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396AbaAQPPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jan 2014 01:42:22 -0500
-Received: by mail-la0-f49.google.com with SMTP id er20so8876709lab.8
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 22:42:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com>
-References: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com>
-Date: Sun, 5 Jan 2014 08:42:17 +0200
-Message-ID: <CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com> (sfid-20140105_074243_949359_C998ABEF)
-Subject: Re: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the
- interface loop.
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Chaitanya T K <chaitanya.mgit@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Fri, 17 Jan 2014 10:15:09 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] ath10k: add support for AP CSA
+References: <1389345563-3445-1-git-send-email-michal.kazior@tieto.com>
+	<87lhyercjd.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQktbmjYJA91mJ_EU=iTtCOFiPNPjjxRm=yxiwxposS-rA@mail.gmail.com>
+Date: Fri, 17 Jan 2014 17:15:03 +0200
+In-Reply-To: <CA+BoTQktbmjYJA91mJ_EU=iTtCOFiPNPjjxRm=yxiwxposS-rA@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 17 Jan 2014 14:46:39 +0100")
+Message-ID: <878uuer66g.fsf@kamboji.qca.qualcomm.com> (sfid-20140117_161517_045944_7D461EB6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 4, 2014 at 11:24 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
-> The interface loop identifies the no of static and dynamic
-> smps chains, but overwrites their values across the VIF's
-> (assuming there are more than one, in my case its AP and STA
-> loopback), so the driver might not intimated about this update
-> of SMPS mode, is the value is same.
->
-> So inform driver for every VIF.
->
-> For Ex: STA's SMPS state is changed, but in the loop AP appears
-> at the last, SMPS state of AP is unchanged hence not intimated
-> to the driver.
->
-> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> ---
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-But the dynamic / static chains number is a property of the channel
-context. If you have several vifs on the same channel context, the
-maximum number of dynamic / static chains will be assigned to the
-channel context. In short, I think that mac80211 already does the job
-of taking all the parameters into account and putting the right value
-into the channel context?
-I don't really see what bug you are trying to solve - could you please
-tell us exactly what is your configuration?
-What SMPS do you have for each interface and what dynamic / static
-chains settings does mac80211 end up with?
+> On 17 January 2014 13:57, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This patch implements Channel Switch Announcement
+>>> for AP mode. This allows for a smooth channel
+>>> switch for connected stations that support CSA
+>>> when radar is detected.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>>> @@ -414,6 +414,7 @@ struct ath10k {
+>>>       unsigned int filter_flags;
+>>>       unsigned long dev_flags;
+>>>       u32 dfs_block_radar_events;
+>>> +     struct ath10k_vif *csa_arvif;
+>>
+>> Please document how this is serialised.
+>
+> [...]
+>
+> I have a local patch capable of multi-interface CSA which basically
+> rewrites this patch entirely. Unless you want me send that as a follow
+> up patch later I'd like to drop this patch and send a completely new
+> one later.
+
+Yeah, let's then just drop this patch.
+
+-- 
+Kalle Valo
