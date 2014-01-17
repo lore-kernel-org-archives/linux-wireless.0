@@ -1,467 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:34167 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbaA2Ocg (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:44149 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbaAQIcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 09:32:36 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/14] brcmfmac: move SDIO specific functions
-Date: Wed, 29 Jan 2014 15:32:14 +0100
-Message-ID: <1391005944-3220-5-git-send-email-arend@broadcom.com> (sfid-20140129_160006_936560_8CD1D431)
-In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 17 Jan 2014 03:32:19 -0500
+Received: by mail-ea0-f179.google.com with SMTP id q10so843583ead.38
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 00:32:18 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 4/5] cfg80211: introduce strict bandwidth regulatory flag
+Date: Fri, 17 Jan 2014 09:32:03 +0100
+Message-Id: <1389947524-6102-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_093228_397224_8D1B51D5)
+In-Reply-To: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chip related functions will be made agnostic of the host
-interface. However, some functions in the source file are
-rather SDIO specific so better move it to the SDIO specific
-source file.
+Introduce NL80211_RRF_STRICT_BW regulatory rule flag.
+This mean we will check only banwidth defined in
+regulatory database and not check contiguous rules.
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  173 +++++++++++++++++++-
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  172 +------------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    3 -
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    1 +
- 4 files changed, 174 insertions(+), 175 deletions(-)
+ include/uapi/linux/nl80211.h |    2 ++
+ net/wireless/reg.c           |   18 ++++++++++++++++++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 98d0784..090ce18 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -494,6 +494,52 @@ enum brcmf_sdio_frmtype {
- 	BRCMF_SDIO_FT_SUB,
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 91054fd..6a4fa90 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2475,6 +2475,7 @@ enum nl80211_sched_scan_match_attr {
+  * @NL80211_RRF_PTP_ONLY: this is only for Point To Point links
+  * @NL80211_RRF_PTMP_ONLY: this is only for Point To Multi Point links
+  * @NL80211_RRF_NO_IR: no mechanisms that initiate radiation are allowed,
++ * @NL80211_RRF_STRICT_BW: strict BW setting
+  * 	this includes probe requests or modes of operation that require
+  * 	beaconing.
+  */
+@@ -2488,6 +2489,7 @@ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_PTMP_ONLY		= 1<<6,
+ 	NL80211_RRF_NO_IR		= 1<<7,
+ 	__NL80211_RRF_NO_IBSS		= 1<<8,
++	NL80211_RRF_STRICT_BW		= 1<<9,
  };
  
-+#define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
+ #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8165303..8c337f2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -549,6 +549,11 @@ static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 	const struct ieee80211_reg_rule *tmp;
+ 	u32 start_freq, end_freq, idx, no;
+ 
++	/* First check if STRICT_BW flag */
++	if (rule->flags & NL80211_RRF_STRICT_BW)
++		return freq_range->max_bandwidth_khz;
 +
-+/* SDIO Pad drive strength to select value mappings */
-+struct sdiod_drive_str {
-+	u8 strength;	/* Pad Drive Strength in mA */
-+	u8 sel;		/* Chip-specific select value */
-+};
++	/* Next check contiguous rules */
+ 	for (idx = 0; idx < rd->n_reg_rules; idx++)
+ 		if (rule == &rd->reg_rules[idx])
+ 			break;
+@@ -566,6 +571,9 @@ static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 		if (freq_range_tmp->end_freq_khz < freq_range->start_freq_khz)
+ 			break;
+ 
++		if (tmp->flags & NL80211_RRF_STRICT_BW)
++			break;
 +
-+/* SDIO Drive Strength to sel value table for PMU Rev 11 (1.8V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
-+	{32, 0x6},
-+	{26, 0x7},
-+	{22, 0x4},
-+	{16, 0x5},
-+	{12, 0x2},
-+	{8, 0x3},
-+	{4, 0x0},
-+	{0, 0x1}
-+};
+ 		freq_range = freq_range_tmp;
+ 	};
+ 
+@@ -582,6 +590,9 @@ static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 		if (freq_range_tmp->start_freq_khz > freq_range->end_freq_khz)
+ 			break;
+ 
++		if (tmp->flags & NL80211_RRF_STRICT_BW)
++			break;
 +
-+/* SDIO Drive Strength to sel value table for PMU Rev 13 (1.8v) */
-+static const struct sdiod_drive_str sdiod_drive_strength_tab5_1v8[] = {
-+	{6, 0x7},
-+	{5, 0x6},
-+	{4, 0x5},
-+	{3, 0x4},
-+	{2, 0x2},
-+	{1, 0x1},
-+	{0, 0x0}
-+};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 17 (1.8v) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab6_1v8[] = {
-+	{3, 0x3},
-+	{2, 0x2},
-+	{1, 0x1},
-+	{0, 0x0} };
-+
-+/* SDIO Drive Strength to sel value table for 43143 PMU Rev 17 (3.3V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
-+	{16, 0x7},
-+	{12, 0x5},
-+	{8,  0x3},
-+	{4,  0x1}
-+};
-+
- #define BCM43143_FIRMWARE_NAME		"brcm/brcmfmac43143-sdio.bin"
- #define BCM43143_NVRAM_NAME		"brcm/brcmfmac43143-sdio.txt"
- #define BCM43241B0_FIRMWARE_NAME	"brcm/brcmfmac43241b0-sdio.bin"
-@@ -3744,6 +3790,131 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
+ 		freq_range = freq_range_tmp;
  	}
- }
  
-+static char *brcmf_sdio_chip_name(uint chipid, char *buf, uint len)
-+{
-+	const char *fmt;
-+
-+	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
-+	snprintf(buf, len, fmt, chipid);
-+	return buf;
-+}
-+
-+static void
-+brcmf_sdio_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
-+				  struct brcmf_chip *ci, u32 drivestrength)
-+{
-+	const struct sdiod_drive_str *str_tab = NULL;
-+	u32 str_mask;
-+	u32 str_shift;
-+	char chn[8];
-+	u32 base = ci->c_inf[0].base;
-+	u32 i;
-+	u32 drivestrength_sel = 0;
-+	u32 cc_data_temp;
-+	u32 addr;
-+
-+	if (!(ci->c_inf[0].caps & CC_CAP_PMU))
-+		return;
-+
-+	switch (SDIOD_DRVSTR_KEY(ci->chip, ci->pmurev)) {
-+	case SDIOD_DRVSTR_KEY(BCM4330_CHIP_ID, 12):
-+		str_tab = sdiod_drvstr_tab1_1v8;
-+		str_mask = 0x00003800;
-+		str_shift = 11;
-+		break;
-+	case SDIOD_DRVSTR_KEY(BCM4334_CHIP_ID, 17):
-+		str_tab = sdiod_drvstr_tab6_1v8;
-+		str_mask = 0x00001800;
-+		str_shift = 11;
-+		break;
-+	case SDIOD_DRVSTR_KEY(BCM43143_CHIP_ID, 17):
-+		/* note: 43143 does not support tristate */
-+		i = ARRAY_SIZE(sdiod_drvstr_tab2_3v3) - 1;
-+		if (drivestrength >= sdiod_drvstr_tab2_3v3[i].strength) {
-+			str_tab = sdiod_drvstr_tab2_3v3;
-+			str_mask = 0x00000007;
-+			str_shift = 0;
-+		} else
-+			brcmf_err("Invalid SDIO Drive strength for chip %s, strength=%d\n",
-+				  brcmf_sdio_chip_name(ci->chip, chn, 8),
-+				  drivestrength);
-+		break;
-+	case SDIOD_DRVSTR_KEY(BCM43362_CHIP_ID, 13):
-+		str_tab = sdiod_drive_strength_tab5_1v8;
-+		str_mask = 0x00003800;
-+		str_shift = 11;
-+		break;
-+	default:
-+		brcmf_err("No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
-+			  brcmf_sdio_chip_name(ci->chip, chn, 8),
-+			  ci->chiprev, ci->pmurev);
-+		break;
-+	}
-+
-+	if (str_tab != NULL) {
-+		for (i = 0; str_tab[i].strength != 0; i++) {
-+			if (drivestrength >= str_tab[i].strength) {
-+				drivestrength_sel = str_tab[i].sel;
-+				break;
-+			}
-+		}
-+		addr = CORE_CC_REG(base, chipcontrol_addr);
-+		brcmf_sdiod_regwl(sdiodev, addr, 1, NULL);
-+		cc_data_temp = brcmf_sdiod_regrl(sdiodev, addr, NULL);
-+		cc_data_temp &= ~str_mask;
-+		drivestrength_sel <<= str_shift;
-+		cc_data_temp |= drivestrength_sel;
-+		brcmf_sdiod_regwl(sdiodev, addr, cc_data_temp, NULL);
-+
-+		brcmf_dbg(INFO, "SDIO: %d mA (req=%d mA) drive strength selected, set to 0x%08x\n",
-+			  str_tab[i].strength, drivestrength, cc_data_temp);
-+	}
-+}
-+
-+int brcmf_sdio_buscoreprep(struct brcmf_sdio_dev *sdiodev)
-+{
-+	int err = 0;
-+	u8 clkval, clkset;
-+
-+	/* Try forcing SDIO core to do ALPAvail request only */
-+	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_ALP_AVAIL_REQ;
-+	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
-+	if (err) {
-+		brcmf_err("error writing for HT off\n");
-+		return err;
-+	}
-+
-+	/* If register supported, wait for ALPAvail and then force ALP */
-+	/* This may take up to 15 milliseconds */
-+	clkval = brcmf_sdiod_regrb(sdiodev,
-+				   SBSDIO_FUNC1_CHIPCLKCSR, NULL);
-+
-+	if ((clkval & ~SBSDIO_AVBITS) != clkset) {
-+		brcmf_err("ChipClkCSR access: wrote 0x%02x read 0x%02x\n",
-+			  clkset, clkval);
-+		return -EACCES;
-+	}
-+
-+	SPINWAIT(((clkval = brcmf_sdiod_regrb(sdiodev,
-+					      SBSDIO_FUNC1_CHIPCLKCSR, NULL)),
-+			!SBSDIO_ALPAV(clkval)),
-+			PMU_MAX_TRANSITION_DLY);
-+	if (!SBSDIO_ALPAV(clkval)) {
-+		brcmf_err("timeout on ALPAV wait, clkval 0x%02x\n",
-+			  clkval);
-+		return -EBUSY;
-+	}
-+
-+	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_FORCE_ALP;
-+	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
-+	udelay(65);
-+
-+	/* Also, disable the extra SDIO pull-ups */
-+	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
-+
-+	return 0;
-+}
-+
- static bool
- brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+@@ -594,6 +605,7 @@ static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
  {
-@@ -3794,7 +3965,7 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 		drivestrength = bus->sdiodev->pdata->drive_strength;
- 	else
- 		drivestrength = DEFAULT_SDIO_DRIVE_STRENGTH;
--	brcmf_sdio_chip_drivestrengthinit(bus->sdiodev, bus->ci, drivestrength);
-+	brcmf_sdio_drivestrengthinit(bus->sdiodev, bus->ci, drivestrength);
+ 	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
++	u32 freq_diff;
  
- 	/* Get info on the SOCRAM cores... */
- 	bus->ramsize = bus->ci->ramsize;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 82bf3c5..1ce8cb7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -73,50 +73,6 @@
- #define D11_BCMA_IOCTL_PHYCLOCKEN	0x0004
- #define D11_BCMA_IOCTL_PHYRESET		0x0008
+ 	if (freq_range->start_freq_khz <= 0 || freq_range->end_freq_khz <= 0)
+ 		return false;
+@@ -604,6 +616,12 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ 	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
+ 		return false;
  
--#define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
--/* SDIO Pad drive strength to select value mappings */
--struct sdiod_drive_str {
--	u8 strength;	/* Pad Drive Strength in mA */
--	u8 sel;		/* Chip-specific select value */
--};
--/* SDIO Drive Strength to sel value table for PMU Rev 11 (1.8V) */
--static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
--	{32, 0x6},
--	{26, 0x7},
--	{22, 0x4},
--	{16, 0x5},
--	{12, 0x2},
--	{8, 0x3},
--	{4, 0x0},
--	{0, 0x1}
--};
--
--/* SDIO Drive Strength to sel value table for PMU Rev 13 (1.8v) */
--static const struct sdiod_drive_str sdiod_drive_strength_tab5_1v8[] = {
--        {6, 0x7},
--        {5, 0x6},
--        {4, 0x5},
--        {3, 0x4},
--        {2, 0x2},
--        {1, 0x1},
--        {0, 0x0}
--};
--
--/* SDIO Drive Strength to sel value table for PMU Rev 17 (1.8v) */
--static const struct sdiod_drive_str sdiod_drvstr_tab6_1v8[] = {
--	{3, 0x3},
--	{2, 0x2},
--	{1, 0x1},
--	{0, 0x0} };
--
--/* SDIO Drive Strength to sel value table for 43143 PMU Rev 17 (3.3V) */
--static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
--	{16, 0x7},
--	{12, 0x5},
--	{8,  0x3},
--	{4,  0x1}
--};
--
- u8
- brcmf_sdio_chip_getinfidx(struct brcmf_chip *ci, u16 coreid)
- {
-@@ -661,51 +617,6 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 	return brcmf_sdio_chip_cichk(ci);
++	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
++
++	if ((rule->flags & NL80211_RRF_STRICT_BW) &&
++	    freq_range->max_bandwidth_khz > freq_diff)
++		return false;
++
+ 	return true;
  }
  
--static int
--brcmf_sdio_chip_buscoreprep(struct brcmf_sdio_dev *sdiodev)
--{
--	int err = 0;
--	u8 clkval, clkset;
--
--	/* Try forcing SDIO core to do ALPAvail request only */
--	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_ALP_AVAIL_REQ;
--	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
--	if (err) {
--		brcmf_err("error writing for HT off\n");
--		return err;
--	}
--
--	/* If register supported, wait for ALPAvail and then force ALP */
--	/* This may take up to 15 milliseconds */
--	clkval = brcmf_sdiod_regrb(sdiodev,
--				   SBSDIO_FUNC1_CHIPCLKCSR, NULL);
--
--	if ((clkval & ~SBSDIO_AVBITS) != clkset) {
--		brcmf_err("ChipClkCSR access: wrote 0x%02x read 0x%02x\n",
--			  clkset, clkval);
--		return -EACCES;
--	}
--
--	SPINWAIT(((clkval = brcmf_sdiod_regrb(sdiodev,
--					      SBSDIO_FUNC1_CHIPCLKCSR, NULL)),
--			!SBSDIO_ALPAV(clkval)),
--			PMU_MAX_TRANSITION_DLY);
--	if (!SBSDIO_ALPAV(clkval)) {
--		brcmf_err("timeout on ALPAV wait, clkval 0x%02x\n",
--			  clkval);
--		return -EBUSY;
--	}
--
--	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_FORCE_ALP;
--	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
--	udelay(65);
--
--	/* Also, disable the extra SDIO pull-ups */
--	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
--
--	return 0;
--}
--
- static void
- brcmf_sdio_chip_buscoresetup(struct brcmf_sdio_dev *sdiodev,
- 			     struct brcmf_chip *ci)
-@@ -754,7 +665,7 @@ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
- 	if (!ci)
- 		return -ENOMEM;
- 
--	ret = brcmf_sdio_chip_buscoreprep(sdiodev);
-+	ret = brcmf_sdio_buscoreprep(sdiodev);
- 	if (ret != 0)
- 		goto err;
- 
-@@ -786,87 +697,6 @@ brcmf_sdio_chip_detach(struct brcmf_chip **ci_ptr)
- 	*ci_ptr = NULL;
- }
- 
--static char *brcmf_sdio_chip_name(uint chipid, char *buf, uint len)
--{
--	const char *fmt;
--
--	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
--	snprintf(buf, len, fmt, chipid);
--	return buf;
--}
--
--void
--brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
--				  struct brcmf_chip *ci, u32 drivestrength)
--{
--	const struct sdiod_drive_str *str_tab = NULL;
--	u32 str_mask;
--	u32 str_shift;
--	char chn[8];
--	u32 base = ci->c_inf[0].base;
--	u32 i;
--	u32 drivestrength_sel = 0;
--	u32 cc_data_temp;
--	u32 addr;
--
--	if (!(ci->c_inf[0].caps & CC_CAP_PMU))
--		return;
--
--	switch (SDIOD_DRVSTR_KEY(ci->chip, ci->pmurev)) {
--	case SDIOD_DRVSTR_KEY(BCM4330_CHIP_ID, 12):
--		str_tab = sdiod_drvstr_tab1_1v8;
--		str_mask = 0x00003800;
--		str_shift = 11;
--		break;
--	case SDIOD_DRVSTR_KEY(BCM4334_CHIP_ID, 17):
--		str_tab = sdiod_drvstr_tab6_1v8;
--		str_mask = 0x00001800;
--		str_shift = 11;
--		break;
--	case SDIOD_DRVSTR_KEY(BCM43143_CHIP_ID, 17):
--		/* note: 43143 does not support tristate */
--		i = ARRAY_SIZE(sdiod_drvstr_tab2_3v3) - 1;
--		if (drivestrength >= sdiod_drvstr_tab2_3v3[i].strength) {
--			str_tab = sdiod_drvstr_tab2_3v3;
--			str_mask = 0x00000007;
--			str_shift = 0;
--		} else
--			brcmf_err("Invalid SDIO Drive strength for chip %s, strength=%d\n",
--				  brcmf_sdio_chip_name(ci->chip, chn, 8),
--				  drivestrength);
--		break;
--	case SDIOD_DRVSTR_KEY(BCM43362_CHIP_ID, 13):
--		str_tab = sdiod_drive_strength_tab5_1v8;
--		str_mask = 0x00003800;
--		str_shift = 11;
--		break;
--	default:
--		brcmf_err("No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
--			  brcmf_sdio_chip_name(ci->chip, chn, 8),
--			  ci->chiprev, ci->pmurev);
--		break;
--	}
--
--	if (str_tab != NULL) {
--		for (i = 0; str_tab[i].strength != 0; i++) {
--			if (drivestrength >= str_tab[i].strength) {
--				drivestrength_sel = str_tab[i].sel;
--				break;
--			}
--		}
--		addr = CORE_CC_REG(base, chipcontrol_addr);
--		brcmf_sdiod_regwl(sdiodev, addr, 1, NULL);
--		cc_data_temp = brcmf_sdiod_regrl(sdiodev, addr, NULL);
--		cc_data_temp &= ~str_mask;
--		drivestrength_sel <<= str_shift;
--		cc_data_temp |= drivestrength_sel;
--		brcmf_sdiod_regwl(sdiodev, addr, cc_data_temp, NULL);
--
--		brcmf_dbg(INFO, "SDIO: %d mA (req=%d mA) drive strength selected, set to 0x%08x\n",
--			  str_tab[i].strength, drivestrength, cc_data_temp);
--	}
--}
--
- static void
- brcmf_sdio_chip_cm3_enterdl(struct brcmf_sdio_dev *sdiodev,
- 			    struct brcmf_chip *ci)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-index fb06143..2bc00c5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-@@ -219,9 +219,6 @@ struct sdpcmd_regs {
- int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
- 			   struct brcmf_chip **ci_ptr);
- void brcmf_sdio_chip_detach(struct brcmf_chip **ci_ptr);
--void brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
--				       struct brcmf_chip *ci,
--				       u32 drivestrength);
- u8 brcmf_sdio_chip_getinfidx(struct brcmf_chip *ci, u16 coreid);
- void brcmf_sdio_chip_enter_download(struct brcmf_sdio_dev *sdiodev,
- 				    struct brcmf_chip *ci);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 092e9c8..396c06c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -239,5 +239,6 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus);
- void brcmf_sdio_isr(struct brcmf_sdio *bus);
- 
- void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
-+int brcmf_sdio_buscoreprep(struct brcmf_sdio_dev *sdiodev);
- 
- #endif				/* _BRCM_SDH_H_ */
 -- 
-1.7.10.4
+1.7.9.5
 
