@@ -1,122 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:46083 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbaAQTEu (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:37212 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172AbaAQM4p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 14:04:50 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so1923803eaj.15
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 11:04:49 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: bitrate_mask add force_sgi support
-Date: Fri, 17 Jan 2014 20:04:14 +0100
-Message-Id: <1389985454-3997-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_200454_802109_3152EEA2)
+	Fri, 17 Jan 2014 07:56:45 -0500
+Received: by mail-pd0-f172.google.com with SMTP id z10so3968824pdj.31
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 04:56:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389952418.8062.57.camel@porter.coelho.fi>
+References: <a8aa052ea196de8256dcdc5b3ae81cfa64d3f9ff.1389935084.git.gamerh2o@gmail.com>
+	<1389939896.8062.53.camel@porter.coelho.fi>
+	<CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
+	<CAOiHx=nui0nVGiCLoukRovB3zY5jiKAt__Numo4y4bQv0dzOcQ@mail.gmail.com>
+	<1389949304.8062.55.camel@porter.coelho.fi>
+	<CAAb+SYYyQF54Cib3Wae18orzH31RJ-vYoTEOBidMEPwVYYRv=g@mail.gmail.com>
+	<CACna6rzTF8Wpj+Bn40iwEsZ9Ca+gE1ydYz1cgonb4u1rQPGQgw@mail.gmail.com>
+	<1389952418.8062.57.camel@porter.coelho.fi>
+Date: Fri, 17 Jan 2014 20:56:45 +0800
+Message-ID: <CAAb+SYacFzn_ybhtVbH6upNbvL8L3xf299TPeJnExcmiqLk5Sw@mail.gmail.com> (sfid-20140117_135652_326672_ADA7F0A6)
+Subject: Re: [PATCH 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
+From: ZHAO Gang <gamerh2o@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Jonas Gorski <jogo@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add force SGI support.
+On Fri, Jan 17, 2014 at 5:53 PM, Luca Coelho <luca@coelho.fi> wrote:
+> On Fri, 2014-01-17 at 10:37 +0100, Rafał Miłecki wrote:
+>> 2014/1/17 ZHAO Gang <gamerh2o@gmail.com>:
+>> > On Fri, Jan 17, 2014 at 5:01 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> >> On Fri, 2014-01-17 at 09:56 +0100, Jonas Gorski wrote:
+>> >>> On Fri, Jan 17, 2014 at 8:11 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> >>> > 2014/1/17 Luca Coelho <luca@coelho.fi>:
+>> >>> >> On Fri, 2014-01-17 at 13:27 +0800, ZHAO Gang wrote:
+>> >>> >>> In following patch, replace b43 specific helper function with kernel
+>> >>> >>> api to reduce code duplication.
+>> >>> >>>
+>> >>> >>> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
+>> >>> >>> ---
+>> >>> >>>  drivers/net/wireless/b43/xmit.c | 4 ++--
+>> >>> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>> >>> >>>
+>> >>> >>> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+>> >>> >>> index 4ae63f4..50e5ddb 100644
+>> >>> >>> --- a/drivers/net/wireless/b43/xmit.c
+>> >>> >>> +++ b/drivers/net/wireless/b43/xmit.c
+>> >>> >>> @@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+>> >>> >>>                * channel number in b43. */
+>> >>> >>>               if (chanstat & B43_RX_CHAN_5GHZ) {
+>> >>> >>>                       status.band = IEEE80211_BAND_5GHZ;
+>> >>> >>> -                     status.freq = b43_freq_to_channel_5ghz(chanid);
+>> >>> >>> +                     status.freq = b43_channel_to_freq_5ghz(chanid);
+>> >>> >>>               } else {
+>> >>> >>>                       status.band = IEEE80211_BAND_2GHZ;
+>> >>> >>> -                     status.freq = b43_freq_to_channel_2ghz(chanid);
+>> >>> >>> +                     status.freq = b43_channel_to_freq_2ghz(chanid);
+>> >>> >>>               }
+>> >>> >>>               break;
+>> >>> >>>       default:
+>> >>> >>
+>> >>> >> Why do you need this patch if you're going to remove these calls in the
+>> >>> >> next patch anyway?
+>> >>> >
+>> >>> > I was thinking about this for a moment too. You could just make a one
+>> >>> > patch and note in commit message that "translation" was reversed.
+>> >>>
+>> >>> That would mean mixing fixes and improvements, which is something you
+>> >>> are not supposed to do, so IMHO having these split into two is
+>> >>> correct. Think about stable maintainers wanting the fix but not the
+>> >>> other change because it might introduce unknown side effects.
+>> >>
+>> >> Makes sense.  In such case, the first patch should be clearly marked as
+>> >> a bug fix, so at least the commit message should be changed (ie.
+>> >> mentioning the next patch in the series is useless).
+>> >>
+>> >
+>> > I am OK to send this fix either in one patch or two, actually I have
+>> > sent a version 2 which is a one patch version :-)
+>> >
+>> > I'm not sure if this patch is needed for stable, yes, as you said, if
+>> > it's for stable, the commit message should be changed.
+>>
+>> Thanks for your help guys.
+>>
+>> I think it may be the best idea to send
+>> 1/2 as fix (probably 3.14) + stable CC
+>> 2/2 as improvement (for next)
+>> Does it make sense?
+>
+> Sounds good to me.  The actual fix is so simple and obvious that I don't
+> see any reason for not sending it as a fix + stable.
+>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
-depends on, nl80211: add Guard Interval support for set_bitrate_mask
+Hi, after reading the code, it seems that status.freq is not actually used
+in rx path, so this fix has no user sensible changes. So I think it is
+not needed
+to send this patch to stable.
 
- drivers/net/wireless/ath/ath10k/core.h |    1 +
- drivers/net/wireless/ath/ath10k/mac.c  |   35 +++++++++++++++++++++++++++++---
- 2 files changed, 33 insertions(+), 3 deletions(-)
+Anyway, I should mention that the version 2 patch should be ignored.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ade1781..f0e22c7 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -256,6 +256,7 @@ struct ath10k_vif {
- 
- 	u8 fixed_rate;
- 	u8 fixed_nss;
-+	u8 force_sgi;
- };
- 
- struct ath10k_vif_iter {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 70fe386..d1dd59b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3575,7 +3575,8 @@ static bool ath10k_get_fixed_rate_nss(const struct cfg80211_bitrate_mask *mask,
- 
- static int ath10k_set_fixed_rate_param(struct ath10k_vif *arvif,
- 				       u8 fixed_rate,
--				       u8 fixed_nss)
-+				       u8 fixed_nss,
-+				       u8 force_sgi)
- {
- 	struct ath10k *ar = arvif->ar;
- 	u32 vdev_param;
-@@ -3584,12 +3585,16 @@ static int ath10k_set_fixed_rate_param(struct ath10k_vif *arvif,
- 	mutex_lock(&ar->conf_mutex);
- 
- 	if (arvif->fixed_rate == fixed_rate &&
--	    arvif->fixed_nss == fixed_nss)
-+	    arvif->fixed_nss == fixed_nss &&
-+	    arvif->force_sgi == force_sgi)
- 		goto exit;
- 
- 	if (fixed_rate == WMI_FIXED_RATE_NONE)
- 		ath10k_dbg(ATH10K_DBG_MAC, "mac disable fixed bitrate mask\n");
- 
-+	if (force_sgi)
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac force sgi\n");
-+
- 	vdev_param = ar->wmi.vdev_param->fixed_rate;
- 	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
- 					vdev_param, fixed_rate);
-@@ -3615,6 +3620,19 @@ static int ath10k_set_fixed_rate_param(struct ath10k_vif *arvif,
- 
- 	arvif->fixed_nss = fixed_nss;
- 
-+	vdev_param = ar->wmi.vdev_param->sgi;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+					force_sgi);
-+
-+	if (ret) {
-+		ath10k_warn("Could not set sgi param %d: %d\n",
-+			    force_sgi, ret);
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	arvif->force_sgi = force_sgi;
-+
- exit:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
-@@ -3629,6 +3647,11 @@ static int ath10k_set_bitrate_mask(struct ieee80211_hw *hw,
- 	enum ieee80211_band band = ar->hw->conf.chandef.chan->band;
- 	u8 fixed_rate = WMI_FIXED_RATE_NONE;
- 	u8 fixed_nss = ar->num_rf_chains;
-+	u8 force_sgi;
-+
-+	force_sgi = mask->control[band].gi;
-+	if (force_sgi == NL80211_TXRATE_FORCE_LGI)
-+		return -EINVAL;
- 
- 	if (!ath10k_default_bitrate_mask(ar, band, mask)) {
- 		if (!ath10k_get_fixed_rate_nss(mask, band,
-@@ -3637,7 +3660,13 @@ static int ath10k_set_bitrate_mask(struct ieee80211_hw *hw,
- 			return -EINVAL;
- 	}
- 
--	return ath10k_set_fixed_rate_param(arvif, fixed_rate, fixed_nss);
-+	if (fixed_rate == WMI_FIXED_RATE_NONE && force_sgi) {
-+		ath10k_warn("Could not force SGI usage for default rate settings\n");
-+		return -EINVAL;
-+	}
-+
-+	return ath10k_set_fixed_rate_param(arvif, fixed_rate,
-+					   fixed_nss, force_sgi);
- }
- 
- static const struct ieee80211_ops ath10k_ops = {
--- 
-1.7.9.5
-
+> --
+> Luca.
+>
