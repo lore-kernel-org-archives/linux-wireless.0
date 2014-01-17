@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:56917 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755550AbaAFWDI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23112 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbaAQJX1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 17:03:08 -0500
-Date: Mon, 6 Jan 2014 23:03:06 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
-Message-ID: <20140106220306.GA24243@amd.pavel.ucw.cz> (sfid-20140106_230334_008380_22F8F6FC)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <201312311047.30147@pali>
- <20140106200050.GG10885@tuxdriver.com>
+	Fri, 17 Jan 2014 04:23:27 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Jonas Gorski <jogo@openwrt.org>
+CC: <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: enable firmware STA quick kickout
+References: <20140116123336.24551.2629.stgit@potku.adurom.net>
+	<CAOiHx=n77=CiFYfB3Y=jxOjVtmr06zvFhUe5R96Kq0HUgSLv5Q@mail.gmail.com>
+Date: Fri, 17 Jan 2014 11:23:22 +0200
+In-Reply-To: <CAOiHx=n77=CiFYfB3Y=jxOjVtmr06zvFhUe5R96Kq0HUgSLv5Q@mail.gmail.com>
+	(Jonas Gorski's message of "Fri, 17 Jan 2014 10:01:06 +0100")
+Message-ID: <871u07rmgl.fsf@kamboji.qca.qualcomm.com> (sfid-20140117_102519_647308_0A156AD9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140106200050.GG10885@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Jonas Gorski <jogo@openwrt.org> writes:
 
-> > > Hello, I'm sending wl1251 patches from linux-n900 tree [1] for
-> > > comments. More patches come from David's monitor & packet
-> > > injection work. Patches are tested with 3.12 rc5 kernel on
-> > > Nokia N900.
-> > > 
-> > > Second version contains new patch for fixing NULL pointer
-> > > dereference which sometimes cause kernel panic and fixes code
-> > > suggested by Pavel Machek.
->  
-> > So far, there are no new comments for patches 01, 03-13 and 16. 
-> > Are there any other problems with that patches or can be accepted 
-> > for upstream?
->  
-> They are probably fine to merge now.  Of course, I was still deleting
-> wl12xx patches when they were originally posted, so I'll need someone
-> to resend the patches to me...
+> On Thu, Jan 16, 2014 at 1:33 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Firmware has a feature to track if the associated STA is not acking the frames.
+>> When that happens, the firmware sends WMI_PEER_STA_KICKOUT_EVENTID event to the
+>> host. Enable that to faster detect when a STA has left BSS without sending a
+>> deauth frame.
+>>
+>> Also set huge keepalive timeouts to avoid using the keepalive functionality in
+>> the firmware.
+>>
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-I'll try to help with that (Pali has his development machine under
-repairs), but I'll have to hunt it in archives, too...
+[...]
+
+>> +       param = ar->wmi.pdev_param->sta_kickout_th;
+>> +       ret = ath10k_wmi_pdev_set_param(ar, param,
+>> +                                       ATH10K_KICKOUT_THRESHOLD);
+>> +       if (ret) {
+>> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+>> +               return ret;
+>> +       }
+>> +
+>> +       param = ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
+>> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+>> +                                       ATH10K_KEEPALIVE_MIN_IDLE);
+>> +       if (ret) {
+>> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+>> +               return ret;
+>> +       }
+>> +
+>> +       param = ar->wmi.vdev_param->ap_keepalive_max_idle_inactive_time_secs;
+>> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+>> +                                       ATH10K_KEEPALIVE_MAX_IDLE);
+>> +       if (ret) {
+>> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+>> +               return ret;
+>> +       }
+>> +
+>> +       param = ar->wmi.vdev_param->ap_keepalive_max_unresponsive_time_secs;
+>> +       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
+>> +                                       ATH10K_KEEPALIVE_MAX_UNRESPONSIVE);
+>> +       if (ret) {
+>> +               ath10k_warn("Failed to enable sta kickout: %d\n", ret);
+>> +               return ret;
+>> +       }
+>
+> Did you intend to have differing warnings here? Currently it will be
+> hard to tell which of these calls have failed based on the warning
+> (assuming ath10k_warn does not print the source code line it was
+> invoked from).
+
+You are right, all warning/error messages in ath10k should be unique so
+that the location can be easily found. I was actually supposed to fix
+this before I send it for review, but apparently I forgot. I'll send v2.
+
+Thanks!
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Kalle Valo
