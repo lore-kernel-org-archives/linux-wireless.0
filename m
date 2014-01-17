@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:34755 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408AbaAVJ6j (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:22279 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbaAQKS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:58:39 -0500
-Received: by mail-oa0-f43.google.com with SMTP id h16so166392oag.16
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 01:58:38 -0800 (PST)
+	Fri, 17 Jan 2014 05:18:58 -0500
+Date: Fri, 17 Jan 2014 13:18:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+Message-ID: <20140117101835.GQ7444@mwanda> (sfid-20140117_111938_978872_2E4CAD5D)
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
+ <1388429761.4410.1.camel@jlt4.sipsolutions.net>
+ <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
+ <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+ <20131230215701.GA4938@khazad-dum.debian.net>
+ <1388445188.18164.0.camel@jlt4.sipsolutions.net>
+ <20140106104802.GN30234@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
-	<CAAVeFuLP4MkfXGG1FMauvUw_J63zRXdhGwxqYy5W98L1wCQNbw@mail.gmail.com>
-	<CACRpkdYiy+sya6NqRfAmsrFOXvaa3qX=qjRuTDW1vZVSaG1+Gg@mail.gmail.com>
-	<201401211335.16885.arnd@arndb.de>
-	<CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
-Date: Wed, 22 Jan 2014 10:58:38 +0100
-Message-ID: <CACRpkdZbb=eO8YRtMn6hW0vn97PkHUo88e_o61DEC8=wPY3_PQ@mail.gmail.com> (sfid-20140122_105844_526303_F89AAB5F)
-Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Alexandre Courbot <gnurou@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140106104802.GN30234@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 21, 2014 at 3:53 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
+We're worried about reading beyond the end of the array and it's a heap
+allocation and the last char of the eth addr is the last byte of the
+page.  This causes an oops.
 
-> The good (or bad, rather) thing about DT is that we can do whatever we
-> please with the new bindings: decide which name or which index
-> (doesn't matter here) a GPIO should have. However we don't have this
-> control over ACPI, where nothing guarantees that the same index will
-> be used for the same GPIO function.
+It's almost impossible to hit that bug.
 
-It's not like ACPI will impose some tables on us and expect us to
-use them as-is no matter how crazy they are. Then indeed the whole
-idea of unifying ACPI and DT accessors would be moot and it would
-only work by mistake or as a good joke.
+1) You would have to have the eth addr at the end of the array.
+2) It would have to be a packed struct.
+3) The struct size would have to be a multiple of 4 because otherwise we
+   can't put it at the end of the page.
+4) It would need to be allocated on the heap.
 
-The situation with ACPI is just like with DT, it is assumed that the
-author of these tables also look at the Linux kernel drivers to figure
-out what argument goes where and we can influence them.
+You add all those up which is pretty rare so I wasn't able to find
+anything like that.  Then you have to get extremely unlucky.
 
-Yours,
-Linus Walleij
+The closest thing I could find were a couple places like like:
+
+static struct mac_addr null_mac_addr = { { 0, 0, 0, 0, 0, 0 } };
+
+It meets criteria 1 and 2 but not 3 and 4.
+
+regards,
+dan carpenter
+
