@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:59628 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816AbaAEHVk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63573 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752032AbaAQNkq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jan 2014 02:21:40 -0500
-Received: by mail-we0-f179.google.com with SMTP id q59so14651815wes.38
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jan 2014 23:21:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com>
-References: <1388870653-3507-1-git-send-email-chaitanya.mgit@gmail.com> <CANUX_P1VCsciMzFzF6PmYakdTnnbMQysAQHv+Dj3JC-XzHbUvw@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 5 Jan 2014 12:51:18 +0530
-Message-ID: <CABPxzYJ_iEdFVmyqMtpvzfVnyiMFR+ek8dfTjwRU0zoEBk5Dbw@mail.gmail.com> (sfid-20140105_082157_885277_A5AB7571)
-Subject: Re: [PATCH] mac80211: SMPS: Fix the overwrite of rx_chains in the
- interface loop.
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Fri, 17 Jan 2014 08:40:46 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH v2] ath10k: fix the MAC address of peer statistic
+References: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmexjQy-+Bv-uofBa2Ndcu56yYOAEeNzdBSE3yMCQdZKw@mail.gmail.com>
+Date: Fri, 17 Jan 2014 15:40:41 +0200
+In-Reply-To: <CA+BoTQmexjQy-+Bv-uofBa2Ndcu56yYOAEeNzdBSE3yMCQdZKw@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 17 Jan 2014 14:38:00 +0100")
+Message-ID: <87d2jqrajq.fsf@kamboji.qca.qualcomm.com> (sfid-20140117_144049_862413_3AB08366)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 5, 2014 at 12:12 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->
-> On Sat, Jan 4, 2014 at 11:24 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
-> > The interface loop identifies the no of static and dynamic
-> > smps chains, but overwrites their values across the VIF's
-> > (assuming there are more than one, in my case its AP and STA
-> > loopback), so the driver might not intimated about this update
-> > of SMPS mode, is the value is same.
-> >
-> > So inform driver for every VIF.
-> >
-> > For Ex: STA's SMPS state is changed, but in the loop AP appears
-> > at the last, SMPS state of AP is unchanged hence not intimated
-> > to the driver.
-> >
-> > Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> > ---
->
-> But the dynamic / static chains number is a property of the channel
-> context. If you have several vifs on the same channel context, the
-> maximum number of dynamic / static chains will be assigned to the
-> channel context. In short, I think that mac80211 already does the job
-> of taking all the parameters into account and putting the right value
-> into the channel context?
-> I don't really see what bug you are trying to solve - could you please
-> tell us exactly what is your configuration?
-> What SMPS do you have for each interface and what dynamic / static
-> chains settings does mac80211 end up with?
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Agree this looks good in channel context angle.
+> On 10 January 2014 10:19, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+>
+>>  struct wmi_peer_stats {
+>> +       __le32 peer_tx_rate;    /* TBA */
+>>         struct wmi_mac_addr peer_macaddr;
+>>         __le32 peer_rssi;
+>> -       __le32 peer_tx_rate;
+>>  } __packed;
+>
+> This looks wrong too. I've just checked it and it seems the
+> `wal_dbg_tx_stats` is out of date. It's missing a `__le32
+> stateless_tid_alloc_failure` that has been inserted at some point in
+> time in the firmware between `pdev_resets` and `phy_underrun`. You
+> should add this missing field instead of moving `peer_tx_rate`.
+>
+> Unfortunately AP firmware has even more fields inserted in
+> `wmi_pdev_stats`. Making this work with both firmwares is a mess.
 
-Lets say we have two VIF's one AP and one STA and the driver doesn't
-support channel context's so in that case the config will happen
-through hw_config but the problem is hw_config is out side the loop
-so the config will happen with the parameters of the last VIF, which
-is incorrect.
+This reminds me that Bartosz sent something related to this few months back:
+
+http://lists.infradead.org/pipermail/ath10k/2013-September/000317.html
+
+I promised to finish it, but it's still in my todo folder :/
+
+-- 
+Kalle Valo
