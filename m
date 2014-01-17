@@ -1,92 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:40513 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbaA1Hao (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:33784 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbaAQGz2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 02:30:44 -0500
-Message-ID: <52E75C4A.3030506@meshcoding.com> (sfid-20140128_083109_959297_1682169B)
-Date: Tue, 28 Jan 2014 08:29:14 +0100
-From: Antonio Quartulli <antonio@meshcoding.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: Re: IBSS can't beacon after rejoin / regression in TSF syncing code?
-References: <201401241826.45121.sw@simonwunderlich.de>	<21221.57261.792711.70974@gargle.gargle.HOWL>	<201401271427.51372.sw@simonwunderlich.de> <21223.2785.44186.69761@gargle.gargle.HOWL>
-In-Reply-To: <21223.2785.44186.69761@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="bbxj7ihKQrIVMFQ9M1FtEae1VD9r3miok"
+	Fri, 17 Jan 2014 01:55:28 -0500
+From: Chen-Yu Tsai <wens@csie.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, netdev@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 5/6] net: rfkill: gpio: add clock-frequency device tree property
+Date: Fri, 17 Jan 2014 14:47:30 +0800
+Message-Id: <1389941251-32692-6-git-send-email-wens@csie.org> (sfid-20140117_075535_499552_765C23A4)
+In-Reply-To: <1389941251-32692-1-git-send-email-wens@csie.org>
+References: <1389941251-32692-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---bbxj7ihKQrIVMFQ9M1FtEae1VD9r3miok
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Some devices, such as Broadcom Bluetooth devices, require a specific
+clock rate for the clock tied to the rfkill device. Add clock-frequency
+property so we can specify this from the device tree.
 
-On 28/01/14 02:41, Sujith Manoharan wrote:
-> Simon Wunderlich wrote:
->> Yeah, this patch works for my case. I'm not completely sure why we onl=
-y unlink=20
->> for this special case (no stations & bssid =3D zero), I don't see why =
-it would=20
->> hurt to always throw away that BSS and rescan on the next join?
->>
->> I'm CCing Teemu, who introduced this roughly 3.5 years ago ("mac80211:=
- remove=20
->> BSS from cfg80211 list when leaving IBSS",=20
->> 5ea096c0c85e80335889539899af9a4717976e0b) , maybe he can explain it mo=
-re.  I=20
->> couldn't understand that from the commit message and the corresponding=
- mail=20
->> thread.
->=20
-> I think we can drop the BSS when we leave an IBSS network. The only adv=
-antage
-> of not doing so is a slightly faster join command that is given after
-> leaving - if there are more than 2 nodes in the cell, that is. But it w=
-ould
-> be prudent to scan and check if the network exists before trying to joi=
-n it,
-> so I'll send the patch for review.
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt | 2 ++
+ net/rfkill/rfkill-gpio.c                                 | 4 ++++
+ 2 files changed, 6 insertions(+)
 
-Right now no scan takes place if you specify bssid and freq (+
-fixed_freq attr). Then no matter if the BSS is already the scan list:
-the join command will be fast.
+diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+index 8a07ea4..8b8db0a 100644
+--- a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
++++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+@@ -13,6 +13,7 @@ NAME_reset-gpios, or both, must be defined.
+ 
+ Optional properties:
+ - clocks		: phandle to clock to enable/disable
++- clock-frequency	: clock rate to set for the given clock
+ 
+ Example:
+ 
+@@ -23,4 +24,5 @@ Example:
+ 		bluetooth_shutdown-gpios = <0>, <&pio 7 18 0>;
+ 		bluetooth_reset-gpios = <&pio 7 24 0>;
+ 		clocks = <&clk_out_a>;
++		clock-frequency = <32678>;
+ 	};
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 48381a8..3092681 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -40,6 +40,7 @@ struct rfkill_gpio_data {
+ 	char			*reset_name;
+ 	char			*shutdown_name;
+ 	struct clk		*clk;
++	int			clk_frequency;
+ 
+ 	bool			clk_enabled;
+ };
+@@ -92,6 +93,7 @@ static int rfkill_gpio_dt_probe(struct device *dev,
+ 	rfkill->name = np->name;
+ 	of_property_read_string(np, "rfkill-name", &rfkill->name);
+ 	of_property_read_u32(np, "rfkill-type", &rfkill->type);
++	of_property_read_u32(np, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	return 0;
+ }
+@@ -138,6 +140,8 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	snprintf(rfkill->shutdown_name, len + 10, "%s_shutdown", rfkill->name);
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0)
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency);
+ 
+ 	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+ 	if (!IS_ERR(gpio)) {
+-- 
+1.8.5.2
 
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-
---bbxj7ihKQrIVMFQ9M1FtEae1VD9r3miok
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJS51xOAAoJEEKTMo6mOh1VAxEP/0py7kfTggVayCrefBEcgyPq
-JCW2/MVxm5gBmX1vVWG635K7W71di8fzwrqonkl8Y+T4UrOuXUQ3qD387Xz17FR+
-Ggb5jVduF/5/cE9jcTmN6J/TPDkGzzThDRYu0hF29OFiu8YR59hQDw6OL43jcWIB
-mVcblGcNrnekmTQNtJGQbRqeOxq2qAp1ymynBYXhygUGocl66o5XzT2ylqi8yMKE
-CGj0bkaLJwo9mqXA123h1kblr6m4C35hv5r9VdeAGxABu2h0pbPNy9aTpzsxtgoi
-7BuNwkJwMVBtzru+aIemAc6ByoSZpp2qCPdQcpO9K1lI0WDWZMIH5g4OgSV17oBt
-kDS8SPQhQgL4qh+j8rNPY4nNSASqSaAElhv43xcbGWD5n7BY0QYT7b/UFYNj7a7p
-KmbHBki9e3+EdO8kY7wNN2aDHA/VNQnzLt+h5/FxpXfR94xsbb5F1DCjrXV97HEe
-Zz86+3AW3HjLmpoHhB6NTESnF+ARlNiu8YsuKbpbu9oyjkgS3fy/szQDBWBIPZoW
-vwVtlajxEqNWMRbbvnnjMvrewQwOOnt4cRJUF1g0fNoOjm+1rcglDMK3gv5TeHe+
-rCRJ8DTRto/hBiSAMrjol3ThmK7uJkAOqpjge/irsJAC2iboMi1Ua8JX9t2+COZb
-vkTioZbB8CsHg0Jw1YmU
-=w8W2
------END PGP SIGNATURE-----
-
---bbxj7ihKQrIVMFQ9M1FtEae1VD9r3miok--
