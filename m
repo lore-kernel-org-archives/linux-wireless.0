@@ -1,109 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45789 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbaAWP5F (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21842 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbaAQNEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 10:57:05 -0500
-Message-ID: <1390492620.4142.33.camel@jlt4.sipsolutions.net> (sfid-20140123_165709_157828_3D5146D8)
-Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth
- flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Thu, 23 Jan 2014 16:57:00 +0100
-In-Reply-To: <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140122_134414_084742_E65606B6)
-References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140122_134414_084742_E65606B6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 17 Jan 2014 08:04:36 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Michal Kazior" <michal.kazior@tieto.com>
+Subject: Re: [PATCH] ath10k: implement and use new beacon method
+References: <1389287073-10939-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Fri, 17 Jan 2014 15:04:31 +0200
+In-Reply-To: <1389287073-10939-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Thu, 9 Jan 2014 18:04:33 +0100")
+Message-ID: <87ha92rc80.fsf@kamboji.qca.qualcomm.com> (sfid-20140117_140440_184142_1CF24139)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
-> Introduce regulatory flags field, NL80211_REG_WIDE_BW
-> country flag and new attribute NL80211_ATTR_REG_FLAGS.
-> If NL80211_REG_WIDE_BW is set, check rules and calculate
-> maximum bandwidth base on all contiguous regulatory rules.
-> If unset get maximum badwitdh from regulatory rule.
-> This patch is backward compatible with current CRDA/db.txt
-> implementation.
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-This seems reasonable, thanks. Maybe we should require the bandwidth to
-not be set at all or something? At least maybe in the regdb parser - it
-makes very little sense to have @20 and then ignore it completely?
+> From: Michal Kazior <michal.kazior@tieto.com>
+>
+> Until now ath10k used a copy-by-value beacon
+> submission.
+>
+> The new method passes a DMA address via WMI
+> command only. This command contains additional
+> metadata that fixes AP behaviour with regard
+> to powersave buffering.
+>
+> This also fixes strange bug when multicast traffic
+> would freeze TX indefinitely.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-Or maybe the userspace code could just not expose the flag, but rather
-set the new "wide_bw" flag when all the rules are marked as @N/A (and
-treat a combination of @number and @N/A as a bug)?
+[...]
 
-> + * @NL80211_ATTR_REG_FLAGS: Regulatory flags, see &enum nl80211_reg_flags
-
-should probably say it's a u32 attribute
-
->  /**
-> + * enum nl80211_reg_flags - regulatory flags
-> + * @NL80211_REG_FLAG_WIDE_BW: Calculate maximum available bandwidth
-> + *	base on contiguous regulatory rules instead of using
-> + *	maximum bandwidth from regulatory database.
-
-And that should probably not refer to the database but rather the
-nl80211 attribute that contains the number.
-
-> @@ -5203,6 +5208,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
->  	if (reg_supported_dfs_region(dfs_region))
->  		rd->dfs_region = dfs_region;
->  
-> +	rd->flags = flags;
-
-Why bother with the temporary flags variable?
-
->  	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
->  			    rem_reg_rules) {
->  		nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
-
-As per above, maybe check that no bandwidth is actually in the rules?
-
-> +static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
-> +					  const struct ieee80211_reg_rule *rule)
-> +{
-> +	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
-> +	const struct ieee80211_freq_range *freq_range_tmp;
-> +	const struct ieee80211_reg_rule *tmp;
-> +	u32 start_freq, end_freq, idx, no;
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -61,6 +61,11 @@ struct ath10k_skb_cb {
+>  		u8 frag_len;
+>  		u8 pad_len;
+>  	} __packed htt;
 > +
-> +	/* First check if strict regulatory database bandwidth calculation */
-> +	if (!(rd->flags & NL80211_REG_FLAG_WIDE_BW))
-> +		return freq_range->end_freq_khz - freq_range->start_freq_khz;
+> +	struct {
+> +		bool dtim_zero;
+> +		bool deliver_cab;
+> +	} bcn;
+>  } __packed;
 
-shouldn't that check the range's @bandwidth (as well)?
+I think we will run out of space in skb_cb soon and we will need to
+start using bitflags. But this is ok for now.
 
-or this is for sanity check only I guess.
+>  static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
+> @@ -222,6 +227,7 @@ struct ath10k_vif {
+>  	u32 beacon_interval;
+>  	u32 dtim_period;
+>  	struct sk_buff *beacon;
+> +	bool beacon_sent;
 
-> +	freq_diff = reg_get_max_bandwidth(rd, rule);
->  
-> -	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
-> -	    freq_range->max_bandwidth_khz > freq_diff)
-> +	if (freq_range->max_bandwidth_khz > freq_diff)
->  		return false;
+Please document how this is protected.
 
-Err, wait, this won't work as advertised, would it?
- 
-> @@ -645,11 +702,17 @@ reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
->  	return dfs_region1;
+> @@ -3377,25 +3390,40 @@ int ath10k_wmi_peer_assoc(struct ath10k *ar,
+>  	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->peer_assoc_cmdid);
 >  }
 >  
-> +static u32 reg_intersect_flags(const u32 flags1, const u32 flags2)
-> +{
-> +	return flags1 | flags2;
-> +}
+> -int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
+> -				  const struct wmi_bcn_tx_arg *arg)
+> +/* This function assumes the beacon is already DMA mapped */
+> +int ath10k_wmi_beacon_send_ref_nowait(struct ath10k *ar, u32 vdev_id,
+> +				      struct sk_buff *beacon)
 
-Wow, ok, this is getting tricky. But I think it should be the other way
-around? I mean, it seems WIDE_BW flag should be unset if it's unset in
-either of them?
+I think this would be cleaner:
 
-But we might also have to set max_bandwidth_khz to a proper calculated
-wide_bw value before intersecting...
+ath10k_wmi_beacon_send_ref_nowait(struct ath10k_vif *arvif,
+ 			      struct sk_buff *beacon)
 
-johannes
+Or maybe even without the beacon parameter? We get it from arvif anyway.
 
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -3391,6 +3391,20 @@ struct wmi_bcn_tx_arg {
+>  	const void *bcn;
+>  };
+>  
+> +enum wmi_bcn_tx_ref_flags {
+> +	WMI_BCN_TX_REF_FLAG_DTIM_ZERO = 0x1,
+> +	WMI_BCN_TX_REF_FLAG_DELIVER_CAB = 0x2,
+> +};
+> +
+> +struct wmi_bcn_tx_ref_cmd {
+> +	__le32 vdev_id;
+> +	__le32 data_len;
+> +	__le32 data_ptr; /* dma pointer */
+> +	__le32 msdu_id; /* id for host to track */
+> +	__le32 frame_control;
+> +	__le32 flags; /* WMI_BCN_TX_REF_FLAG_ */
+> +} __packed;
+
+Comments before the field, please. Like here:
+
+struct wmi_resource_config_10x {
+	/* number of virtual devices (VAPs) to support */
+	__le32 num_vdevs;
+
+	/* number of peer nodes to support */
+	__le32 num_peers;
+
+	/* number of keys per peer */
+	__le32 num_peer_keys;
+
+	/* total number of TX/RX data TIDs */
+	__le32 num_tids;
+
+-- 
+Kalle Valo
