@@ -1,119 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:42480 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbaALVL4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jan 2014 16:11:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/3 V2] b43: Fix lockdep splat
-Date: Sun, 12 Jan 2014 15:11:37 -0600
-Message-Id: <1389561099-17181-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140112_221202_497713_0D8A946A)
-In-Reply-To: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:5810 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752231AbaAQQVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jan 2014 11:21:01 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 8/9] ath10k: Use pci_enable_msi_range()
+Date: Fri, 17 Jan 2014 17:02:22 +0100
+Message-Id: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com> (sfid-20140117_172143_806457_827E180D)
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=67561, a locking dependency is reported
-when b43 is used with hostapd, and rfkill is used to kill the radio output.
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-The lockdep splat (in part) is as follows:
+This update also fixes a stylistic (naming and messaging only)
+confusion of MSI-X vs multiple MSIs which are not the same.
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.12.0 #1 Not tainted
--------------------------------------------------------
-rfkill/10040 is trying to acquire lock:
- (rtnl_mutex){+.+.+.}, at: [<ffffffff8146f282>] rtnl_lock+0x12/0x20
-
-but task is already holding lock:
- (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa04832ca>] rfkill_fop_write+0x6a/0x170 [rfkill]
-
---snip--
-
-Chain exists of:
-  rtnl_mutex --> misc_mtx --> rfkill_global_mutex
-
-The fix is to move the initialization of the hardware random number generator
-outside the code range covered by the rtnl_mutex.
-
-Reported-by: yury <urykhy@gmail.com>
-Tested-by: yury <urykhy@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath10k/pci.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
-V2 is identical to V1.
-
- drivers/net/wireless/b43/main.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ccd24f0a..86b2030 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2424,6 +2424,7 @@ error:
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 9e86a81..873f50c 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2073,14 +2073,14 @@ static void ath10k_pci_tasklet(unsigned long data)
+ 	}
+ }
  
- static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
- static void b43_one_core_detach(struct b43_bus_dev *dev);
-+static int b43_rng_init(struct b43_wl *wl);
- 
- static void b43_request_firmware(struct work_struct *work)
+-static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
++static int ath10k_pci_start_intr_multi_msi(struct ath10k *ar, int num)
  {
-@@ -2475,6 +2476,10 @@ start_ieee80211:
- 		goto err_one_core_detach;
- 	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
-+
-+	/* Register HW RNG driver */
-+	b43_rng_init(wl);
-+
- 	goto out;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 	int i;
  
- err_one_core_detach:
-@@ -4636,9 +4641,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
+-	ret = pci_enable_msi_block(ar_pci->pdev, num);
+-	if (ret)
++	ret = pci_enable_msi_range(ar_pci->pdev, num, num);
++	if (ret < 0)
+ 		return ret;
  
--	/* Unregister HW RNG driver */
--	b43_rng_exit(dev->wl);
--
- 	b43_set_status(dev, B43_STAT_UNINIT);
+ 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
+@@ -2111,11 +2111,11 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
+ 		}
+ 	}
  
- 	/* Stop the microcode PSM. */
-@@ -4795,9 +4797,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+-	ath10k_info("MSI-X interrupt handling (%d intrs)\n", num);
++	ath10k_info("Multi MSI interrupt handling (%d intrs)\n", num);
+ 	return 0;
+ }
  
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
+-static int ath10k_pci_start_intr_msi(struct ath10k *ar)
++static int ath10k_pci_start_intr_single_msi(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+@@ -2132,7 +2132,7 @@ static int ath10k_pci_start_intr_msi(struct ath10k *ar)
+ 		return ret;
+ 	}
  
--	/* Register HW RNG driver */
--	b43_rng_init(dev->wl);
--
- out:
- 	return err;
+-	ath10k_info("MSI interrupt handling\n");
++	ath10k_info("Single MSI interrupt handling\n");
+ 	return 0;
+ }
  
-@@ -5464,6 +5463,9 @@ static void b43_bcma_remove(struct bcma_device *core)
+@@ -2199,20 +2199,20 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
+ 		num = 1;
  
- 	b43_one_core_detach(wldev->dev);
+ 	if (num > 1) {
+-		ret = ath10k_pci_start_intr_msix(ar, num);
++		ret = ath10k_pci_start_intr_multi_msi(ar, num);
+ 		if (ret == 0)
+ 			goto exit;
  
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	b43_leds_unregister(wl);
+-		ath10k_warn("MSI-X didn't succeed (%d), trying MSI\n", ret);
++		ath10k_warn("Multi MSI failed (%d), trying single MSI\n", ret);
+ 		num = 1;
+ 	}
  
- 	ieee80211_free_hw(wl->hw);
-@@ -5541,6 +5543,9 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 	if (num == 1) {
+-		ret = ath10k_pci_start_intr_msi(ar);
++		ret = ath10k_pci_start_intr_single_msi(ar);
+ 		if (ret == 0)
+ 			goto exit;
  
- 	b43_one_core_detach(dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	if (list_empty(&wl->devlist)) {
- 		b43_leds_unregister(wl);
- 		/* Last core on the chip unregistered.
+-		ath10k_warn("MSI didn't succeed (%d), trying legacy INTR\n",
++		ath10k_warn("Single MSI failed (%d), trying legacy INTR\n",
+ 			    ret);
+ 		num = 0;
+ 	}
 -- 
-1.8.4
+1.7.7.6
 
