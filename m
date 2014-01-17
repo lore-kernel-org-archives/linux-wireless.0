@@ -1,111 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:62369 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751578AbaAMVUl (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:39882 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaAQPUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 16:20:41 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/8] bcma: add agent IOCTL bit values for Broadcom 802.11 and CR4 cores
-Date: Mon, 13 Jan 2014 22:20:24 +0100
-Message-ID: <1389648029-23560-4-git-send-email-arend@broadcom.com> (sfid-20140113_222051_265191_0CB273CB)
-In-Reply-To: <1389648029-23560-1-git-send-email-arend@broadcom.com>
-References: <1389648029-23560-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 17 Jan 2014 10:20:18 -0500
+Received: by mail-pb0-f53.google.com with SMTP id ma3so4209892pbc.12
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 07:20:17 -0800 (PST)
+From: ZHAO Gang <gamerh2o@gmail.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 2/2] b43: use kernel api to replace b43 specific helper function
+Date: Fri, 17 Jan 2014 23:19:14 +0800
+Message-Id: <55214eacffbb07577f07b58f3333f151af469720.1389970392.git.gamerh2o@gmail.com> (sfid-20140117_162024_437646_9D69BEAA)
+In-Reply-To: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
+References: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
+In-Reply-To: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
+References: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IOCTL register in the agent/wrapper contains additional bits
-that are core specific and use in the core reset sequence.
+Use ieee80211_channel_to_frequency() to replace b43_channel_to_freq_{2,5}ghz(),
+and remove unused b43_freq_to_channel_{2,5}ghz().
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   22 +++++++-------------
- include/linux/bcma/bcma_regs.h                     |    5 ++++-
- 2 files changed, 12 insertions(+), 15 deletions(-)
+v3: let this fix be two patches again.
+    first patch is fix, second patch is improvement.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 4342976..a002af9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -66,13 +66,6 @@
- #define CIB_REV_MASK		0xff000000
- #define CIB_REV_SHIFT		24
+ drivers/net/wireless/b43/main.h | 35 -----------------------------------
+ drivers/net/wireless/b43/xmit.c | 12 ++++++------
+ 2 files changed, 6 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index abac25e..f476fc3 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -58,41 +58,6 @@ enum b43_verbosity {
+ #endif
+ };
  
--/* ARM CR4 core specific control flag bits */
--#define ARMCR4_BCMA_IOCTL_CPUHALT	0x0020
 -
--/* D11 core specific control flag bits */
--#define D11_BCMA_IOCTL_PHYCLOCKEN	0x0004
--#define D11_BCMA_IOCTL_PHYRESET		0x0008
+-/* Lightweight function to convert a frequency (in Mhz) to a channel number. */
+-static inline u8 b43_freq_to_channel_5ghz(int freq)
+-{
+-	return ((freq - 5000) / 5);
+-}
+-static inline u8 b43_freq_to_channel_2ghz(int freq)
+-{
+-	u8 channel;
 -
- #define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
- /* SDIO Pad drive strength to select value mappings */
- struct sdiod_drive_str {
-@@ -873,8 +866,8 @@ brcmf_sdio_chip_cm3_enterdl(struct brcmf_sdio_dev *sdiodev,
+-	if (freq == 2484)
+-		channel = 14;
+-	else
+-		channel = (freq - 2407) / 5;
+-
+-	return channel;
+-}
+-
+-/* Lightweight function to convert a channel number to a frequency (in Mhz). */
+-static inline int b43_channel_to_freq_5ghz(u8 channel)
+-{
+-	return (5000 + (5 * channel));
+-}
+-static inline int b43_channel_to_freq_2ghz(u8 channel)
+-{
+-	int freq;
+-
+-	if (channel == 14)
+-		freq = 2484;
+-	else
+-		freq = 2407 + (5 * channel);
+-
+-	return freq;
+-}
+-
+ static inline int b43_is_cck_rate(int rate)
  {
- 	ci->coredisable(sdiodev, ci, BCMA_CORE_ARM_CM3, 0, 0);
- 	ci->resetcore(sdiodev, ci, BCMA_CORE_80211,
--		      D11_BCMA_IOCTL_PHYRESET | D11_BCMA_IOCTL_PHYCLOCKEN,
--		      D11_BCMA_IOCTL_PHYCLOCKEN, D11_BCMA_IOCTL_PHYCLOCKEN);
-+		      BCMA_IOCTL_80211_PHYCLOCKEN | BCMA_IOCTL_80211_PHYRESET,
-+		      BCMA_IOCTL_80211_PHYCLOCKEN, BCMA_IOCTL_80211_PHYCLOCKEN);
- 	ci->resetcore(sdiodev, ci, BCMA_CORE_INTERNAL_MEM, 0, 0, 0);
- }
- 
-@@ -913,13 +906,14 @@ brcmf_sdio_chip_cr4_enterdl(struct brcmf_sdio_dev *sdiodev,
- 		return;
- 
- 	wrapbase = ci->c_inf[idx].wrapbase;
-+	/* clear all IOCTL bits except HALT bit */
- 	regdata = brcmf_sdiod_regrl(sdiodev, wrapbase + BCMA_IOCTL, NULL);
--	regdata &= ARMCR4_BCMA_IOCTL_CPUHALT;
-+	regdata &= BCMA_IOCTL_ARMCR4_HALT;
- 	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, regdata,
--		      ARMCR4_BCMA_IOCTL_CPUHALT, ARMCR4_BCMA_IOCTL_CPUHALT);
-+		      BCMA_IOCTL_ARMCR4_HALT, BCMA_IOCTL_ARMCR4_HALT);
- 	ci->resetcore(sdiodev, ci, BCMA_CORE_80211,
--		      D11_BCMA_IOCTL_PHYRESET | D11_BCMA_IOCTL_PHYCLOCKEN,
--		      D11_BCMA_IOCTL_PHYCLOCKEN, D11_BCMA_IOCTL_PHYCLOCKEN);
-+		      BCMA_IOCTL_80211_PHYCLOCKEN | BCMA_IOCTL_80211_PHYRESET,
-+		      BCMA_IOCTL_80211_PHYCLOCKEN, BCMA_IOCTL_80211_PHYCLOCKEN);
- }
- 
- static bool
-@@ -939,7 +933,7 @@ brcmf_sdio_chip_cr4_exitdl(struct brcmf_sdio_dev *sdiodev, struct chip_info *ci)
- 			  sizeof(ci->rst_vec));
- 
- 	/* restore ARM */
--	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, ARMCR4_BCMA_IOCTL_CPUHALT,
-+	ci->resetcore(sdiodev, ci, BCMA_CORE_ARM_CR4, BCMA_IOCTL_ARMCR4_HALT,
- 		      0, 0);
- 
- 	return true;
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index 917dcd7..7f0edf2 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -22,10 +22,13 @@
- #define  BCMA_CLKCTLST_4328A0_HAVEHT	0x00010000 /* 4328a0 has reversed bits */
- #define  BCMA_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
- 
--/* Agent registers (common for every core) */
-+/* Agent registers (common unless indicated) */
- #define BCMA_IOCTL			0x0408 /* IO control */
- #define  BCMA_IOCTL_CLK			0x0001
- #define  BCMA_IOCTL_FGC			0x0002
-+#define  BCMA_IOCTL_80211_PHYCLOCKEN	0x0004 /* for 80211 core */
-+#define  BCMA_IOCTL_80211_PHYRESET	0x0008 /* for 80211 core */
-+#define  BCMA_IOCTL_ARMCR4_HALT		0x0020 /* for ARM CR4 core */
- #define  BCMA_IOCTL_CORE_BITS		0x3FFC
- #define  BCMA_IOCTL_PME_EN		0x4000
- #define  BCMA_IOCTL_BIST_EN		0x8000
+ 	return (rate == B43_CCK_RATE_1MB ||
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 50e5ddb..218a0f3 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -806,7 +806,8 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 		B43_WARN_ON(1);
+ 		/* FIXME: We don't really know which value the "chanid" contains.
+ 		 *        So the following assignment might be wrong. */
+-		status.freq = b43_channel_to_freq_5ghz(chanid);
++		status.freq =
++			ieee80211_channel_to_frequency(chanid, status.band);
+ 		break;
+ 	case B43_PHYTYPE_G:
+ 		status.band = IEEE80211_BAND_2GHZ;
+@@ -819,13 +820,12 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	case B43_PHYTYPE_HT:
+ 		/* chanid is the SHM channel cookie. Which is the plain
+ 		 * channel number in b43. */
+-		if (chanstat & B43_RX_CHAN_5GHZ) {
++		if (chanstat & B43_RX_CHAN_5GHZ)
+ 			status.band = IEEE80211_BAND_5GHZ;
+-			status.freq = b43_channel_to_freq_5ghz(chanid);
+-		} else {
++		else
+ 			status.band = IEEE80211_BAND_2GHZ;
+-			status.freq = b43_channel_to_freq_2ghz(chanid);
+-		}
++		status.freq =
++			ieee80211_channel_to_frequency(chanid, status.band);
+ 		break;
+ 	default:
+ 		B43_WARN_ON(1);
 -- 
-1.7.10.4
+1.8.4.2
 
