@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:37554 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297AbaAWJHi convert rfc822-to-8bit (ORCPT
+Received: from mail-qe0-f53.google.com ([209.85.128.53]:34465 "EHLO
+	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752499AbaARO7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:07:38 -0500
-From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: zhuyj <zyjzyj2000@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: 802.11a is supported in AP mode or not?
-Date: Thu, 23 Jan 2014 09:07:35 +0000
-Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com> (sfid-20140123_100800_240987_4E50EE6A)
-References: <52DF947E.40800@gmail.com>
- <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
- <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
- <52E0BA40.7090203@gmail.com>
- <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
- <52E0D7D5.6060504@gmail.com>
- <CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>,<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
-In-Reply-To: <CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 18 Jan 2014 09:59:45 -0500
+Date: Sat, 18 Jan 2014 09:59:40 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140118145940.GE3640@htj.dyndns.org> (sfid-20140118_160025_036300_4836FB0F)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+ <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+ <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By using latest hostapd, version, not works as well.
+On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
+> On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> >> > As the release is supposedly this weekend, do you prefer
+> >> > the patches to go to your tree or to individual trees after
+> >> > the release?
+> >>
+> >> I'd be happy to merge them, except for the fact that they probably
+> >> wouldn't have any time in -next before I ask Linus to pull them.  So
+> >> how about if we wait until after the release, ask the area maintainers
+> >> to take them, and if they don't take them, I'll put them in my tree
+> >> for v3.15?
+> >
+> > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+> > Whatever works for you ;)
+> >
+> > I am only concerned with a regression fix "ahci: Fix broken fallback to
+> > single MSI mode" which would be nice to have in 3.14. But it seems pretty
+> > much too late.
+> 
+> Tejun, if you want to ack that one, I can put it in either the first
+> 3.14 pull request or a subsequent one.  Either way, since it's a
+> regression fix, we should be able to get it in 3.14.
 
-Best Regards.
---------------------------------------
-Bopeng Liu
-WIND RIVER | China Development Center
-Phone: 8610-6483-5012
+Acked-by: Tejun Heo <tj@kernel.org>
 
+Please feel free to route it any way you see fit.
 
+Thanks!
 
-________________________________________
-From: Krishna Chaitanya [chaitanya.mgit@gmail.com]
-Sent: Thursday, January 23, 2014 5:04 PM
-To: Liu, Bopeng
-Cc: zhuyj; Emmanuel Grumbach; linux-wireless
-Subject: Re: 802.11a is supported in AP mode or not?
-
-On Thu, Jan 23, 2014 at 2:29 PM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
-> Is there any method to set the 5GHz channels be able?
->
-> Please show me the command...:)
-No it doesn't work that way, based on regulatory info and HW capability
-the framework will decide that.
-
-Lets give it a try with latest hostapd from git and see.
+-- 
+tejun
