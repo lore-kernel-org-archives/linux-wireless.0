@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56350 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbaAMTpQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 14:45:16 -0500
-Date: Mon, 13 Jan 2014 14:40:24 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20140113
-Message-ID: <20140113194024.GD14400@tuxdriver.com> (sfid-20140113_204521_430488_C2A3695F)
-References: <87fvos3xcz.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87fvos3xcz.fsf@kamboji.qca.qualcomm.com>
+Received: from mout.gmx.net ([212.227.17.20]:63003 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753910AbaARMyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jan 2014 07:54:40 -0500
+Received: from ultralex.lan ([93.218.86.193]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0MPYqL-1W0MYe388P-004lT4 for
+ <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 13:54:38 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/5] ath9k: use ath_is_mybeacon
+Date: Sat, 18 Jan 2014 13:54:16 +0100
+Message-Id: <1390049659-27021-3-git-send-email-linux@rempel-privat.de> (sfid-20140118_135453_156423_0D79C5CA)
+In-Reply-To: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
+References: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 02:00:28PM +0200, Kalle Valo wrote:
-> Hi John,
-> 
-> here's another ath10k pull request. Major changes are:
-> 
-> Janusz added Kconfig option for DFS. The DFS code was there already, but
-> after fixes to mac80211 we can now enable it.
-> 
-> Bartosz added a runtime firmware feature flag to disable P2P. Our 10.1
-> firmware branch doesn't support P2P and ath10k can now disable that. He
-> also added a limit for how many clients can connect to ath10k AP.
-> 
-> Michal fixed WEP shared authentication, in case someone still uses it.
-> And I added firmware debug log to help the firmware engineers.
-> 
-> Please let me know if there any problems.
-> 
-> The following changes since commit 39731b78b4afebb7501c05b68e2443a1b250b41c:
-> 
->   ath9k: simplify/fix tx packet TID handling (2013-12-19 14:41:57 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath.git for-linville
-> 
-> for you to fetch changes up to 51ab1a0a09a894442e8b091d57222c5425b6d700:
-> 
->   ath10k: add set_bitrate_mask callback (2014-01-10 11:54:49 +0200)
+This patch will also change behavior of rx_beacons statistic.
+Instead of collecting all received beacons, it will collect only
+ours. This, IMO make more sense, since for troubleshooting we will
+need to know count of our beacons, or both.
 
-Pulling now...
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5bf3243..a0ebdd0 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -969,21 +969,6 @@ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 		rxs->mactime += 0x100000000ULL;
+ }
+ 
+-static bool ath9k_is_mybeacon(struct ath_softc *sc, struct ieee80211_hdr *hdr)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	if (ieee80211_is_beacon(hdr->frame_control)) {
+-		RX_STAT_INC(rx_beacons);
+-		if (!is_zero_ether_addr(common->curbssid) &&
+-		    ether_addr_equal_64bits(hdr->addr3, common->curbssid))
+-			return true;
+-	}
+-
+-	return false;
+-}
+-
+ /*
+  * For Decrypt or Demic errors, we only mark packet status here and always push
+  * up the frame up to let mac80211 handle the actual error case, be it no
+@@ -1071,7 +1056,10 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		goto exit;
+ 	}
+ 
+-	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
++	if (ath_is_mybeacon(common, hdr)) {
++		RX_STAT_INC(rx_beacons);
++		rx_stats->is_mybeacon = true;
++	}
+ 
+ 	/*
+ 	 * This shouldn't happen, but have a safety check anyway.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.2
+
