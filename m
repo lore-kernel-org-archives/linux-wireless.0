@@ -1,28 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54137 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbaAOBLs (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44768 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbaARInx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 20:11:48 -0500
-Date: Tue, 14 Jan 2014 17:11:48 -0800 (PST)
-Message-Id: <20140114.171148.1748943434970025200.davem@davemloft.net> (sfid-20140115_021206_857673_F8C6302C)
-To: geert@linux-m68k.org
-Cc: andy@greyhouse.net, trivial@kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, geert+renesas@linux-m68k.org
-Subject: Re: [PATCH TRIVIAL] net: Spelling s/transmition/transmission/
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1389531976-6350-1-git-send-email-geert@linux-m68k.org>
-References: <1389531976-6350-1-git-send-email-geert@linux-m68k.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 18 Jan 2014 03:43:53 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: bitrate_mask add force_sgi support
+References: <1389985454-3997-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Sat, 18 Jan 2014 10:43:48 +0200
+In-Reply-To: <1389985454-3997-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Fri, 17 Jan 2014 20:04:14 +0100")
+Message-ID: <87r485ptmj.fsf@kamboji.qca.qualcomm.com> (sfid-20140118_094357_969953_4AED0B1C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Sun, 12 Jan 2014 14:06:16 +0100
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-> From: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
-> 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
+> Add force SGI support.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Applied.
+Thanks, the patch looks good.
+
+> depends on, nl80211: add Guard Interval support for set_bitrate_mask
+
+But I can only apply this only once the dependency patch goes to
+wireless-next, so I'll keep this in my pending queue until that happens.
+Most likely we need to wait for the merge window to close.
+
+-- 
+Kalle Valo
