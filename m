@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:50661 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754513AbaA1OmH (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:36391 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686AbaARJxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 09:42:07 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Sujith Manoharan <sujith@msujith.org>
-Subject: Re: [PATCH] mac80211: Fix IBSS join
-Date: Tue, 28 Jan 2014 15:42:03 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, stable@vger.kernel.org
-References: <1390874095-28008-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1390874095-28008-1-git-send-email-sujith@msujith.org>
+	Sat, 18 Jan 2014 04:53:20 -0500
+Received: by mail-bk0-f54.google.com with SMTP id u14so1944106bkz.41
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 01:53:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201401281542.03451.sw@simonwunderlich.de> (sfid-20140128_154212_064573_77F68DE5)
+In-Reply-To: <87d2jqrajq.fsf@kamboji.qca.qualcomm.com>
+References: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmexjQy-+Bv-uofBa2Ndcu56yYOAEeNzdBSE3yMCQdZKw@mail.gmail.com>
+	<87d2jqrajq.fsf@kamboji.qca.qualcomm.com>
+Date: Sat, 18 Jan 2014 17:53:18 +0800
+Message-ID: <CAEFj984ojBbfsMVi3VCQYcRqk2rMz+sq_MaH9JbDsuEmks0DTQ@mail.gmail.com> (sfid-20140118_105325_972877_FB9A9057)
+Subject: Re: [PATCH v2] ath10k: fix the MAC address of peer statistic
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> This reminds me that Bartosz sent something related to this few months back:
+>
+> http://lists.infradead.org/pipermail/ath10k/2013-September/000317.html
+>
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Currently, when a station leaves an IBSS network, the
-> corresponding BSS is not dropped from cfg80211 if there are
-> other active stations in the network. But, the small
-> window that is present when trying to determine a station's
-> status based on IEEE80211_IBSS_MERGE_INTERVAL introduces
-> a race.
-> 
-> Instead of trying to keep the BSS, always remove it when
-> leaving an IBSS network. There is not much benefit to retain
-> the BSS entry since it will be added with a subsequent join
-> operation.
-> 
-> This fixes an issue where a dangling BSS entry causes ath9k
-> to wait for a beacon indefinitely.
+Thanks, Michal and Kalle Valo for both your comments
 
-Thank you Sujith, works fine with and without setting a fixed BSSID.
+I just would like to know which version of firmware should we use?
 
-Feel free to add
-
-Tested-by: Simon Wunderlich <sw@simonwunderlich.de>
-
-Cheers,
-    Simon
+----
+Chun-Yeow
