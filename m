@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:45842 "EHLO
-	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430AbaANNRF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 08:17:05 -0500
-Received: from smtp28.msg.oleane.net (smtp28.mail.priv [172.17.20.150])
-	by smtp-out03.msg.oleane.net with ESMTP id s0EDH2v0018655
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 14:17:03 +0100
-Received: from RD8 ([195.6.104.67]) (authenticated)
-	by smtp28.msg.oleane.net (MSA) with ESMTP id s0ECuhu1006631
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 13:56:46 +0100
-From: "voncken" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC mac80211] Add field in struct ieee80211_tx_info 
-Date: Tue, 14 Jan 2014 13:56:42 +0100
-Message-ID: <07c501cf1128$15412a70$3fc37f50$@acksys.fr> (sfid-20140114_141710_195002_47B9DE35)
+Received: from mx1.redhat.com ([209.132.183.28]:61189 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753460AbaARHTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jan 2014 02:19:08 -0500
+Date: Sat, 18 Jan 2014 08:15:38 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com> (sfid-20140118_081921_508643_63B29983)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I want to add the management of IEEE80211_RADIOTAP_RATE and
-IEEE80211_RADIOTAP_MCS in radiotap parser.
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
+> 
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-To do that I need to add a flag in field flags of in struct
-ieee80211_tx_info (To bypass the mac80211 RC).
+Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+Whatever works for you ;)
 
-The problem is all bit are used in this field. 
+I am only concerned with a regression fix "ahci: Fix broken fallback to
+single MSI mode" which would be nice to have in 3.14. But it seems pretty
+much too late.
 
-How I can add the new flag ?
-	- I change the flags type to u64
-	- I add a second flag field in the struct ieee80211_tx_info (for
-exemple flags_ext)
+> Bjorn
 
-Thanks for your help
+Thanks!
 
-Cedric Voncken
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
