@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:58141 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922AbaA3Hkp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 02:40:45 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21226.184.85287.849137@gargle.gargle.HOWL> (sfid-20140130_084055_055524_A507F1FC)
-Date: Thu, 30 Jan 2014 13:05:20 +0530
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix IBSS join
-In-Reply-To: <201401291319.03802.sw@simonwunderlich.de>
-References: <1390874095-28008-1-git-send-email-sujith@msujith.org>
-	<1390997315.4143.4.camel@jlt4.sipsolutions.net>
-	<201401291319.03802.sw@simonwunderlich.de>
+Received: from mout.gmx.net ([212.227.15.15]:62083 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753911AbaARMyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jan 2014 07:54:43 -0500
+Received: from ultralex.lan ([93.218.86.193]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0LcWSI-1Velab0g46-00jtEv for
+ <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 13:54:41 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 3/5] ath9k_htc: use ath_is_mybeacon
+Date: Sat, 18 Jan 2014 13:54:17 +0100
+Message-Id: <1390049659-27021-4-git-send-email-linux@rempel-privat.de> (sfid-20140118_135455_445728_8D1915F2)
+In-Reply-To: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
+References: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich wrote:
-> In the CSA case the BSS is still used, we modify the BSS entry in 
-> ieee80211_ibss_finish_csa()  (which is not really clean, but done by all the 
-> current CSA code).
-> 
-> Since the BSS is changed and the node continues to beacon, I think that's ok 
-> to do it like Sujith proposed.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-I think Johannes is right. If a station receives a CSA and is unable to switch
-to the new channel, it leaves the IBSS network. In this case we don't need to
-keep the BSS entry around, since we proceed to scan again.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index b41e008..12e0f32 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1075,9 +1075,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 
+ 	last_rssi = priv->rx.last_rssi;
+ 
+-	if (ieee80211_is_beacon(hdr->frame_control) &&
+-	    !is_zero_ether_addr(common->curbssid) &&
+-	    ether_addr_equal_64bits(hdr->addr3, common->curbssid)) {
++	if (ath_is_mybeacon(common, hdr)) {
+ 		s8 rssi = rxbuf->rxstatus.rs_rssi;
+ 
+ 		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-- 
+1.8.5.2
 
-Sujith
