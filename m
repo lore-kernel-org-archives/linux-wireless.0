@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38281 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbaAONZ4 (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:7287 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065AbaARSUn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 08:25:56 -0500
-Message-ID: <1389792352.4338.10.camel@jlt4.sipsolutions.net> (sfid-20140115_142558_899122_6B92CC25)
-Subject: Re: [RFC 5/5] cfg80211: setup CAC time in db.txt for PL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Wed, 15 Jan 2014 14:25:52 +0100
-In-Reply-To: <1389720570-2430-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182950_657506_03BCBD9F)
-References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1389720570-2430-6-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140114_182950_657506_03BCBD9F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 18 Jan 2014 13:20:43 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: David Herrmann <dh.herrmann@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: RE: iwlwifi: P2P group-formation timeout
+Date: Sat, 18 Jan 2014 18:20:37 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03335A169@HASMSX106.ger.corp.intel.com> (sfid-20140118_192046_850965_BF2E9456)
+References: <CANq1E4Rhja6XZPq9sXfycK_wWNB3nsjpQFr2XnzOXLHUnm__mw@mail.gmail.com>
+	<CANq1E4STKqci55ZbGP9Siorf3ABptHHTAuOg_4-bbbEiw93w+A@mail.gmail.com>
+	<CB3B3D4774441E42AA3EA0E1BA8230A0333565A8@HASMSX106.ger.corp.intel.com>
+ <CANq1E4QmdmMsvXFonAmMYQ5X-r-GQDrPAsU9rYk49GgWMbF2bQ@mail.gmail.com>
+In-Reply-To: <CANq1E4QmdmMsvXFonAmMYQ5X-r-GQDrPAsU9rYk49GgWMbF2bQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-01-14 at 18:29 +0100, Janusz Dziedzic wrote:
-> This is DFS CAC time setup for PL.
-> We should do the same for all other
-> countries that support DFS in wireless-regd.
-> Here only as example, please don't merge.
+Hi David,
+
+Sorry for the late response. Hope the below can help :)
+
+Regards,
+
+Ilan.
+ 
+> I tried again and masked the 5ghz channels (via "p2p_set", not "set" I
+> guess?), however, still almost exactly the same log but on a 2.4ghz
+> channel. I attached the full log to the email, I cut down all the
+> "p2p-scan" log messages and inlined most parts of the log below.
 > 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  net/wireless/db.txt |    6 ++++--
+> Another thing that I noticed is that I don't get any "P2P-XY" status
+> messages to wpa_cli. I need to run "tail -f wpa.log | grep ^P2P-" in a
+> separate session to actually see messages like P2P-DEVICE-FOUND,
+> P2P-GO-NEG-SUCCESS, .. I only got "P2P-GROUP-" related messages
+> directly forwarded to my wpa_cli. I really think this is all somehow
+> related to the bunch of errors I get during p2p-dev-wlan0 setup, which
+> you said you cannot reproduce.
+>
 
-That file doesn't exist in the kernel tree anyway ...
+>From the logs it looks like the wpa_supplicant tries to use the P2P Device interface for the GO instantiation (which is impossible since this is not a netdev but a P2P Device interface). Can you please try to invoke the wpa_supplicant with a global control interface and issue the P2P commands over the global control interface? Something like:
 
-johannes
+wpa_supplicant -i wlan0 -c <conf> -p allow_p2p_device=1 -t -s -d -T -B -g /tmp/wpa_global -G <group>
+wpa_cli -g /tmp/wpa_global -G <group>
+
+See the following commit from Jouni: 78f79fe5fc251e3ababa2970956cc9a84f29f209
+
+    P2P: Do not add ctrl interface for P2P_DEVICE (p2p-dev-*)
+
+    Adding a new wpa_supplicant control interface for the dedicated
+    P2P_DEVICE would be quite confusing for programs that manage P2P
+    operations. Remove this control interface and require the global control
+    interface to be used since it will provide consistent interface for both
+    the new dedicated P2P_DEVICE (non-netdev) and old style P2P management
+    through a netdev.
+
+
+
+
+
 
