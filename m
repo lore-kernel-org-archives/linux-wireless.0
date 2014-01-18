@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:59165 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbaAQWCO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 17:02:14 -0500
-Received: from [192.168.1.221] ([93.218.75.192]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0MDQI1-1W7HlG06PN-00Gqxb for
- <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 23:02:12 +0100
-Message-ID: <52D9A85E.8070306@rempel-privat.de> (sfid-20140117_230236_763932_D71D8DEB)
-Date: Fri, 17 Jan 2014 23:02:06 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25661 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbaARJl7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jan 2014 04:41:59 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Julien Massot <jmassot@aldebaran-robotics.com>
+CC: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath6kl: Fix Tx credits management for ar6004 usb
+References: <1389034368-5370-1-git-send-email-jmassot@aldebaran-robotics.com>
+Date: Sat, 18 Jan 2014 11:41:53 +0200
+In-Reply-To: <1389034368-5370-1-git-send-email-jmassot@aldebaran-robotics.com>
+	(Julien Massot's message of "Mon, 6 Jan 2014 19:52:46 +0100")
+Message-ID: <87sislocda.fsf@kamboji.qca.qualcomm.com> (sfid-20140118_104245_711750_80EBA7F0)
 MIME-Version: 1.0
-To: Pavel Machek <pavel@ucw.cz>, Julia Lawall <Julia.Lawall@lip6.fr>
-CC: ath9k-devel@lists.ath9k.org, kernel-janitors@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 0/11] use ether_addr_equal_64bits
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr> <20140117212410.GA13930@amd.pavel.ucw.cz>
-In-Reply-To: <20140117212410.GA13930@amd.pavel.ucw.cz>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="wPeiUu57NahR2I82nneDslo4JQxIfmkgx"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---wPeiUu57NahR2I82nneDslo4JQxIfmkgx
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Julien Massot <jmassot@aldebaran-robotics.com> writes:
 
-Am 17.01.2014 22:24, schrieb Pavel Machek:
-> On Mon 2013-12-30 19:14:56, Julia Lawall wrote:
->> Ether_addr_equal_64bits is more efficient than ether_addr_equal, and c=
-an be
->> used when each argument is an array within a structure that contains a=
-t
->> least two bytes of data beyond the array.
->=20
-> I mean, yes, it is probably faster, and yes, most structures probably
-> contain two more bytes, but... is the uglyness worth the speedup? I'd
-> say this should not be done except in very time-critical places...
-> 									Pavel
+> By stressing the communication with different stream, iperf, ping,
+> and web browsing, the transmission is stuck after a while. (5-10 minutes)
+>
+> The driver doesn't update correctly the tx credit,
+> and the transmission becomes very slow.
+>
+> The ping latency raise to 20 secs, and finally stop with
+> "no buffer space available".
+>
+> The first patch fixes a babble error in Rx message:
+> "ath6kl: ath6kl_usb_recv_complete: recv pipe: 5, stat:-75, len:1536 urb:0xffff8802010dad80".
+>
+> The second patch decreases the Rx read threshold to make sure we read
+> the tx credit report as soon as possible.
+>
+> Julien Massot (2):
+>   ath6kl: increase usb rx buffer size to 4096
+>   ath6kl: set rx urb count threshold to 1
 
-This code run on every received beacon, almost on every wifi driver (If
-i understand what you mean.)
+Thanks, both patches applied.
 
---=20
-Regards,
-Oleksij
-
-
---wPeiUu57NahR2I82nneDslo4JQxIfmkgx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlLZqF4ACgkQHwImuRkmbWkVzQD/RakXROCReQFxlfH2WUvcgm/s
-h27RY898nl6Txplcd1QA/iBcXdKSu5CM6doc8bhMe1aOLsa1rkxYGv+fLl1IwOwr
-=oOX1
------END PGP SIGNATURE-----
-
---wPeiUu57NahR2I82nneDslo4JQxIfmkgx--
+-- 
+Kalle Valo
