@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:52009 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752291AbaAJPyS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 10:54:18 -0500
-Message-ID: <1389369254.4519.12.camel@porter.coelho.fi> (sfid-20140110_165421_911133_EE95F2A6)
-Subject: Re: [PATCH v4] wl12xx: fix tx power setting
-From: Luca Coelho <luca@coelho.fi>
-To: Alex Gal <a.gal@motsai.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Date: Fri, 10 Jan 2014 17:54:14 +0200
-In-Reply-To: <CAN44aq2=SLJz0e1JLEg+OmoQ8fxpmrbokvWyjW3MokLbbr1vKA@mail.gmail.com>
-References: <CAN44aq2=SLJz0e1JLEg+OmoQ8fxpmrbokvWyjW3MokLbbr1vKA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.20]:58213 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbaARMyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jan 2014 07:54:38 -0500
+Received: from ultralex.lan ([93.218.86.193]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0LjeWC-1VTEix0jFo-00bcJr for
+ <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 13:54:37 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 1/5] ath: add common function ath_is_mybeacon
+Date: Sat, 18 Jan 2014 13:54:15 +0100
+Message-Id: <1390049659-27021-2-git-send-email-linux@rempel-privat.de> (sfid-20140118_135450_355473_86AB406D)
+In-Reply-To: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
+References: <1390049659-27021-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-10 at 10:41 -0500, Alex Gal wrote:
-> My bad for the wrong format.
+this function is used by most ath driver, so it can be moved here.
 
-Please don't include this kind of comment in the commit log.  If you
-want to tell something about the version of the patch (which should not
-be in the log itself), add it after the '---' below the Signed-off-by
-line.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath.h | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index e0ba7cd..ab6a0c8 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -17,6 +17,7 @@
+ #ifndef ATH_H
+ #define ATH_H
+ 
++#include <linux/etherdevice.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_ether.h>
+ #include <linux/spinlock.h>
+@@ -162,10 +163,17 @@ struct ath_common {
+ 	bool bt_ant_diversity;
+ };
+ 
++static inline bool ath_is_mybeacon(struct ath_common *common,
++				   struct ieee80211_hdr *hdr)
++{
++	return ieee80211_is_beacon(hdr->frame_control) &&
++		!is_zero_ether_addr(common->curbssid) &&
++		ether_addr_equal_64bits(hdr->addr3, common->curbssid);
++}
++
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+ 				u32 len,
+ 				gfp_t gfp_mask);
+-
+ void ath_hw_setbssidmask(struct ath_common *common);
+ void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key);
+ int ath_key_config(struct ath_common *common,
+-- 
+1.8.5.2
 
