@@ -1,98 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:33786 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbaAQGz2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 01:55:28 -0500
-From: Chen-Yu Tsai <wens@csie.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, netdev@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 6/6] ARM: sun7i: cubietruck: enable bluetooth module
-Date: Fri, 17 Jan 2014 14:47:31 +0800
-Message-Id: <1389941251-32692-7-git-send-email-wens@csie.org> (sfid-20140117_075534_860214_DCA227F0)
-In-Reply-To: <1389941251-32692-1-git-send-email-wens@csie.org>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5279 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbaATSsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jan 2014 13:48:50 -0500
+Date: Mon, 20 Jan 2014 19:50:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Sergei Antonov <saproj@gmail.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: USB rt2x00 driver regression
+Message-ID: <20140120185044.GA1682@redhat.com> (sfid-20140120_194853_061928_413E2640)
+References: <CABikg9yZrXX=qfqeR+V77u+Ndegx50D1_POAYMeq63qJuEzv=w@mail.gmail.com>
+ <20140117100613.GD1425@redhat.com>
+ <A411C6B4-8474-47AC-97E1-0D92B24EB675@gmail.com>
+ <1390133995.6945.11.camel@X1Carbon.localdomain>
+ <03574886-F38F-461C-97FC-B10DCCCF30E8@gmail.com>
+ <52DC1761.9080608@openwrt.org>
+ <CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CubieTruck has an AMPAK AP6210 WiFi+Bluetooth module. The
-Bluetooth part is a BCM20710 device connected to UART2 in the
-A20 SoC.
+On Mon, Jan 20, 2014 at 12:20:05PM +0100, Sergei Antonov wrote:
+> On 19 January 2014 19:20, Gabor Juhos <juhosg@openwrt.org> wrote:
+> > The attached patch set adds the missing code to rt2x00. Please test whether it
+> > fixes the problem or not.
+> 
+> It does not work.
+> 
+> The minimal change that fixes the problem is removing 'return;' after
+> rt2800_mcu_request() allowing the standard freq. adjustment code to
+> execute.
 
-The IC also requires a 32.768 KHz low power clock input for
-proper auto-detection of the main clock, and power enable and
-wake signals via GPIO.
+Perhaps this MCU request is not supported by old firmware from
+linux-firmware repository.
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts | 37 ++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+Please download binary file accessible from this link
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-January/005610.html
+and replace rt2870.bin file in /lib/firmware directory.
 
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-index c8b3ea9..f172a8f 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-@@ -78,6 +78,20 @@
- 					allwinner,drive = <0>;
- 					allwinner,pull = <2>;
- 			};
-+
-+			bt_pwr_pin: bt_pwr_pin@0 {
-+				allwinner,pins = "PH18";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
-+
-+			bt_wake_pin: bt_wake_pin@0 {
-+				allwinner,pins = "PH24";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
- 		};
- 
- 		uart0: serial@01c28000 {
-@@ -86,6 +100,12 @@
- 			status = "okay";
- 		};
- 
-+		uart2: serial@01c28800 {
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&uart2_pins_a>;
-+			status = "okay";
-+		};
-+
- 		gmac: ethernet@01c50000 {
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&gmac_pins_rgmii>;
-@@ -157,4 +177,21 @@
- 			gpio = <&pio 7 3 0>;
- 		};
- 	};
-+
-+	rfkill-switches {
-+		compatible = "simple-bus";
-+		pinctrl-names = "default";
-+
-+		rfkill_bt {
-+			compatible = "rfkill-gpio";
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&bt_pwr_pin>, <&clk_out_a_pins>;
-+			rfkill-name = "bt";
-+			rfkill-type = <2>;
-+			bt_shutdown-gpios = <0>, <&pio 7 18 0>; /* PH18 */
-+			bt_reset-gpios = <&pio 7 24 0>; /* PH24 */
-+			clocks = <&clk_out_a>;
-+			clock-frequency = <32768>;
-+		};
-+	};
- };
--- 
-1.8.5.2
+Does it help ?
+
+Stanislaw
 
