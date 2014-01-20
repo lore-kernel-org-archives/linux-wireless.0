@@ -1,95 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36814 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbaAID0d (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:35843 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbaATJzd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 22:26:33 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	stable@vger.kernel.org
-Subject: [PATCH v2 2/3] ath9k: Use correct channel for RX packets
-Date: Thu,  9 Jan 2014 08:51:14 +0530
-Message-Id: <1389237675-32658-2-git-send-email-sujith@msujith.org> (sfid-20140109_042636_920342_3B1D66A7)
-In-Reply-To: <1389237675-32658-1-git-send-email-sujith@msujith.org>
-References: <1389237675-32658-1-git-send-email-sujith@msujith.org>
+	Mon, 20 Jan 2014 04:55:33 -0500
+Received: from smtp01.msg.oleane.net (smtp01.mail.priv [172.17.20.110])
+	by smtp-out06.msg.oleane.net with ESMTP id s0K9tWZp027838
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 10:55:32 +0100
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Dani Camps'" <danicamps81@yahoo.com>,
+	<linux-wireless@vger.kernel.org>
+References: <1389976009.26074.YahooMailNeo@web172803.mail.ir2.yahoo.com>
+In-Reply-To: <1389976009.26074.YahooMailNeo@web172803.mail.ir2.yahoo.com>
+Subject: RE: Read VLAN Tag in mac80211
+Date: Mon, 20 Jan 2014 10:35:18 +0100
+Message-ID: <095701cf15c2$ee6eef00$cb4ccd00$@acksys.fr> (sfid-20140120_105540_698814_1C9EA943)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	The VLAN tag is moved from frame to the field skb->vlan_tci by the
+input netdev. 
 
-Accessing the current channel definition in mac80211
-when processing RX packets is problematic because it
-could have been updated when a scan is issued. Since a
-channel change involves flushing the existing packets
-in the RX queue before a chip-reset is done, they would
-be processed using the wrong band/channel information.
+	In your case, if vlan_tci is always equal to 0, I think your driver
+do not support the VLAN, or you need to enable it.
+	You can have more information from netdev mailing list.
 
-To avoid this, use the current channel information
-maintained in the driver.
+Cedric Voncken 
 
-Cc: stable@vger.kernel.org
-Reported-by: Oleksij Rempel <linux@rempel-privat.de>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6d643ca..f7cc5b3 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -850,20 +850,15 @@ static int ath9k_process_rate(struct ath_common *common,
- 	enum ieee80211_band band;
- 	unsigned int i = 0;
- 	struct ath_softc __maybe_unused *sc = common->priv;
-+	struct ath_hw *ah = sc->sc_ah;
- 
--	band = hw->conf.chandef.chan->band;
-+	band = ah->curchan->chan->band;
- 	sband = hw->wiphy->bands[band];
- 
--	switch (hw->conf.chandef.width) {
--	case NL80211_CHAN_WIDTH_5:
-+	if (IS_CHAN_QUARTER_RATE(ah->curchan))
- 		rxs->flag |= RX_FLAG_5MHZ;
--		break;
--	case NL80211_CHAN_WIDTH_10:
-+	else if (IS_CHAN_HALF_RATE(ah->curchan))
- 		rxs->flag |= RX_FLAG_10MHZ;
--		break;
--	default:
--		break;
--	}
- 
- 	if (rx_stats->rs_rate & 0x80) {
- 		/* HT rate */
-@@ -1078,6 +1073,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 
- 	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
- 
-+	/*
-+	 * This shouldn't happen, but have a safety check anyway.
-+	 */
-+	if (WARN_ON(!ah->curchan)) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
- 		ret =-EINVAL;
- 		goto exit;
-@@ -1085,8 +1088,8 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 
- 	ath9k_process_rssi(common, hw, rx_stats, rx_status);
- 
--	rx_status->band = hw->conf.chandef.chan->band;
--	rx_status->freq = hw->conf.chandef.chan->center_freq;
-+	rx_status->band = ah->curchan->chan->band;
-+	rx_status->freq = ah->curchan->chan->center_freq;
- 	rx_status->antenna = rx_stats->rs_antenna;
- 	rx_status->flag |= RX_FLAG_MACTIME_END;
- 
--- 
-1.8.5.2
+> -----Message d'origine-----
+> Deа: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de Dani Camps
+> Envoyща: vendredi 17 janvier 2014 17:27
+> └а: linux-wireless@vger.kernel.org
+> Objetа: Read VLAN Tag in mac80211
+> 
+> 
+> 
+> Dear all,
+> 
+> I am having trouble reading a VLAN tag inside mac80211. I believe the tag
+is
+> in the packet because I can see it in wireshark. This is a simple test
+code that
+> I am using in tx.c:
+> 
+> #include <linux/if_vlan.h>
+> 
+> ...
+> а а а а unsigned short TCI;
+> а а а а unsigned short id;
+> ...
+> 
+> // Checking if VLAN tag is present
+> а а а а if(vlan_tx_tag_present(skb)){
+> а а а а а а а а TCI = vlan_tx_tag_get (skb);
+> а а а а а а а а id = TCI & VLAN_VID_MASK;
+> а а а а а а а а printk ("VLAN detection: аDetected frame with VLAN ID = %x
+\n", id);
+> а а а а }
+> а а а а else{
+> а а а а а а а а printk ("VLAN detection: аNo VLAN Tag detected but
+skb->vlan_tci is
+> %x \n", skb->vlan_tci);
+> а а а а }
+> 
+> The previous code always fails to enter the VLAN present case, and goes to
+> the else condition printing a skb->vlan_tci value of zero, whereas I can
+see in
+> wireshark a frame with a VLAN tag and VLAN ID=1.
+> 
+> Can anyone help me figure out what I am missing here?
+> 
+> Best Regards
+> 
+> Daniel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
