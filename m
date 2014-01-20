@@ -1,131 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42969 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbaAFO6o (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:39828 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627AbaATQUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 09:58:44 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: ZHAO Gang <gamerh2o@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: handle station TX latency allocation errors
-Date: Mon,  6 Jan 2014 15:58:40 +0100
-Message-Id: <1389020320-30862-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_155847_722591_B67F56CA)
+	Mon, 20 Jan 2014 11:20:31 -0500
+Received: by mail-ee0-f44.google.com with SMTP id c13so3525382eek.31
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 08:20:30 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: AP mode, set UAPSD params correctly
+Date: Mon, 20 Jan 2014 17:20:20 +0100
+Message-Id: <1390234821-4405-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140120_172035_921016_43A5E48F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Move UAPSD params settings after peer assoc
+command. This is required to setup UAPSD
+params correctly.
 
-When the station's TX latency data structures need to be
-allocated, handle failures properly and also free all the
-structures if there are any other problems.
-
-Move the allocation code up so that allocation failures
-don't trigger rate control algorithm calls.
-
-Reported-by: ZHAO Gang <gamerh2o@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/sta_info.c | 70 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 40 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   80 +++++++++++++++++++--------------
+ 1 file changed, 46 insertions(+), 34 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 8da3af2..703081d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -300,6 +300,35 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	if (!sta)
- 		return NULL;
- 
-+	rcu_read_lock();
-+	tx_latency = rcu_dereference(local->tx_latency);
-+	/* init stations Tx latency statistics && TID bins */
-+	if (tx_latency) {
-+		sta->tx_lat = kzalloc(IEEE80211_NUM_TIDS *
-+				      sizeof(struct ieee80211_tx_latency_stat),
-+				      GFP_ATOMIC);
-+		if (!sta->tx_lat) {
-+			rcu_read_unlock();
-+			goto free;
-+		}
-+
-+		if (tx_latency->n_ranges) {
-+			for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+				/* size of bins is size of the ranges +1 */
-+				sta->tx_lat[i].bin_count =
-+					tx_latency->n_ranges + 1;
-+				sta->tx_lat[i].bins =
-+					kcalloc(sta->tx_lat[i].bin_count,
-+						sizeof(u32), GFP_ATOMIC);
-+				if (!sta->tx_lat[i].bins) {
-+					rcu_read_unlock();
-+					goto free;
-+				}
-+			}
-+		}
-+	}
-+	rcu_read_unlock();
-+
- 	spin_lock_init(&sta->lock);
- 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
-@@ -324,10 +353,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
- 		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
- 
--	if (sta_prepare_rate_control(local, sta, gfp)) {
--		kfree(sta);
--		return NULL;
--	}
-+	if (sta_prepare_rate_control(local, sta, gfp))
-+		goto free;
- 
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
- 		/*
-@@ -371,34 +398,17 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	rcu_read_lock();
--
--	tx_latency = rcu_dereference(local->tx_latency);
--	/* init stations Tx latency statistics && TID bins */
--	if (tx_latency)
--		sta->tx_lat = kzalloc(IEEE80211_NUM_TIDS *
--				      sizeof(struct ieee80211_tx_latency_stat),
--				      GFP_ATOMIC);
--
--	/*
--	 * if Tx latency and bins are enabled and the previous allocation
--	 * succeeded
--	 */
--	if (tx_latency && tx_latency->n_ranges && sta->tx_lat)
--		for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
--			/* size of bins is size of the ranges +1 */
--			sta->tx_lat[i].bin_count =
--				tx_latency->n_ranges + 1;
--			sta->tx_lat[i].bins  = kcalloc(sta->tx_lat[i].bin_count,
--						       sizeof(u32),
--						       GFP_ATOMIC);
--		}
--
--	rcu_read_unlock();
--
- 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
--
- 	return sta;
-+
-+free:
-+	if (sta->tx_lat) {
-+		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
-+			kfree(sta->tx_lat[i].bins);
-+		kfree(sta->tx_lat);
-+	}
-+	kfree(sta);
-+	return NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 70fe386..fda146b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1092,27 +1092,20 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
+ 		   arg->peer_num_spatial_streams);
  }
  
- static int sta_info_insert_check(struct sta_info *sta)
+-static void ath10k_peer_assoc_h_qos_ap(struct ath10k *ar,
+-				       struct ath10k_vif *arvif,
+-				       struct ieee80211_sta *sta,
+-				       struct ieee80211_bss_conf *bss_conf,
+-				       struct wmi_peer_assoc_complete_arg *arg)
++static int ath10k_peer_assoc_qos_ap(struct ath10k *ar,
++				    struct ath10k_vif *arvif,
++				    struct ieee80211_sta *sta)
+ {
+ 	u32 uapsd = 0;
+ 	u32 max_sp = 0;
++	int ret = 0;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	if (sta->wme)
+-		arg->peer_flags |= WMI_PEER_QOS;
+-
+ 	if (sta->wme && sta->uapsd_queues) {
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac uapsd_queues 0x%x max_sp %d\n",
+ 			   sta->uapsd_queues, sta->max_sp);
+ 
+-		arg->peer_flags |= WMI_PEER_APSD;
+-		arg->peer_rate_caps |= WMI_RC_UAPSD_FLAG;
+-
+ 		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
+ 			uapsd |= WMI_AP_PS_UAPSD_AC3_DELIVERY_EN |
+ 				 WMI_AP_PS_UAPSD_AC3_TRIGGER_EN;
+@@ -1130,35 +1123,40 @@ static void ath10k_peer_assoc_h_qos_ap(struct ath10k *ar,
+ 		if (sta->max_sp < MAX_WMI_AP_PS_PEER_PARAM_MAX_SP)
+ 			max_sp = sta->max_sp;
+ 
+-		ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id,
+-					   sta->addr,
+-					   WMI_AP_PS_PEER_PARAM_UAPSD,
+-					   uapsd);
++		ret = ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id,
++						 sta->addr,
++						 WMI_AP_PS_PEER_PARAM_UAPSD,
++						 uapsd);
++		if (ret) {
++			ath10k_warn("failed to set ap ps peer param uapsd: %d\n",
++				    ret);
++			return ret;
++		}
+ 
+-		ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id,
+-					   sta->addr,
+-					   WMI_AP_PS_PEER_PARAM_MAX_SP,
+-					   max_sp);
++		ret = ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id,
++						 sta->addr,
++						 WMI_AP_PS_PEER_PARAM_MAX_SP,
++						 max_sp);
++		if (ret) {
++			ath10k_warn("failed to set ap ps peer param max sp: %d\n",
++				    ret);
++			return ret;
++		}
+ 
+ 		/* TODO setup this based on STA listen interval and
+ 		   beacon interval. Currently we don't know
+ 		   sta->listen_interval - mac80211 patch required.
+ 		   Currently use 10 seconds */
+-		ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id,
+-					   sta->addr,
+-					   WMI_AP_PS_PEER_PARAM_AGEOUT_TIME,
+-					   10);
++		ret = ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id, sta->addr,
++					WMI_AP_PS_PEER_PARAM_AGEOUT_TIME, 10);
++		if (ret) {
++			ath10k_warn("failed to set ap ps peer param ageout time: %d\n",
++				    ret);
++			return ret;
++		}
+ 	}
+-}
+ 
+-static void ath10k_peer_assoc_h_qos_sta(struct ath10k *ar,
+-					struct ath10k_vif *arvif,
+-					struct ieee80211_sta *sta,
+-					struct ieee80211_bss_conf *bss_conf,
+-					struct wmi_peer_assoc_complete_arg *arg)
+-{
+-	if (bss_conf->qos)
+-		arg->peer_flags |= WMI_PEER_QOS;
++	return 0;
+ }
+ 
+ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+@@ -1211,10 +1209,17 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+ {
+ 	switch (arvif->vdev_type) {
+ 	case WMI_VDEV_TYPE_AP:
+-		ath10k_peer_assoc_h_qos_ap(ar, arvif, sta, bss_conf, arg);
++		if (sta->wme)
++			arg->peer_flags |= WMI_PEER_QOS;
++
++		if (sta->wme && sta->uapsd_queues) {
++			arg->peer_flags |= WMI_PEER_APSD;
++			arg->peer_rate_caps |= WMI_RC_UAPSD_FLAG;
++		}
+ 		break;
+ 	case WMI_VDEV_TYPE_STA:
+-		ath10k_peer_assoc_h_qos_sta(ar, arvif, sta, bss_conf, arg);
++		if (bss_conf->qos)
++			arg->peer_flags |= WMI_PEER_QOS;
+ 		break;
+ 	default:
+ 		break;
+@@ -1412,6 +1417,13 @@ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+ 		return ret;
+ 	}
+ 
++	ret = ath10k_peer_assoc_qos_ap(ar, arvif, sta);
++	if (ret) {
++		ath10k_warn("could not set qos params for STA %pM, %d\n",
++			    sta->addr, ret);
++		return ret;
++	}
++
+ 	return ret;
+ }
+ 
 -- 
-1.8.5.1
+1.7.9.5
 
