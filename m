@@ -1,42 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:53664 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbaAQNIU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 08:08:20 -0500
-Received: by mail-ea0-f172.google.com with SMTP id g15so1166970eak.17
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 05:08:19 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: enable wmi ps peer param command for 10.x FW
-Date: Fri, 17 Jan 2014 14:08:08 +0100
-Message-Id: <1389964088-4458-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_140823_957964_F6788317)
+Received: from mout.gmx.net ([212.227.17.21]:50357 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751797AbaATSuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jan 2014 13:50:32 -0500
+Received: from ultralex.lan ([79.218.100.244]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0LqV4f-1VRbK33cjh-00e6Ki for
+ <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 19:50:31 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 3/5] ath9k: move ath9k_process_rate to common.c
+Date: Mon, 20 Jan 2014 19:50:09 +0100
+Message-Id: <1390243811-9132-2-git-send-email-linux@rempel-privat.de> (sfid-20140120_195034_984084_6125C24C)
+In-Reply-To: <1390243811-9132-1-git-send-email-linux@rempel-privat.de>
+References: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
+ <1390243811-9132-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable ap_ps_peer_param_cmdid for 10.x FW.
-This is used mainly for AP UAPSD.
+we can reuse this function in ath9k_htc
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/common.c | 42 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  4 +++
+ drivers/net/wireless/ath/ath9k/recv.c   | 59 +++++----------------------------
+ 3 files changed, 54 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 712a606..f49a842 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -213,7 +213,7 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
- 	.p2p_go_set_beacon_ie = WMI_10X_P2P_GO_SET_BEACON_IE,
- 	.p2p_go_set_probe_resp_ie = WMI_10X_P2P_GO_SET_PROBE_RESP_IE,
- 	.p2p_set_vendor_ie_data_cmdid = WMI_CMD_UNSUPPORTED,
--	.ap_ps_peer_param_cmdid = WMI_CMD_UNSUPPORTED,
-+	.ap_ps_peer_param_cmdid = WMI_10X_AP_PS_PEER_PARAM_CMDID,
- 	.ap_ps_peer_uapsd_coex_cmdid = WMI_CMD_UNSUPPORTED,
- 	.peer_rate_retry_sched_cmdid = WMI_10X_PEER_RATE_RETRY_SCHED_CMDID,
- 	.wlan_profile_trigger_cmdid = WMI_10X_WLAN_PROFILE_TRIGGER_CMDID,
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 7028c52..120fd46 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,6 +27,48 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
++int ath9k_cmn_process_rate(struct ath_common *common,
++			   struct ieee80211_hw *hw,
++			   struct ath_rx_status *rx_stats,
++			   struct ieee80211_rx_status *rxs)
++{
++	struct ieee80211_supported_band *sband;
++	enum ieee80211_band band;
++	unsigned int i = 0;
++	struct ath_hw *ah = common->ah;
++
++	band = ah->curchan->chan->band;
++	sband = hw->wiphy->bands[band];
++
++	if (IS_CHAN_QUARTER_RATE(ah->curchan))
++		rxs->flag |= RX_FLAG_5MHZ;
++	else if (IS_CHAN_HALF_RATE(ah->curchan))
++		rxs->flag |= RX_FLAG_10MHZ;
++
++	if (rx_stats->rs_rate & 0x80) {
++		/* HT rate */
++		rxs->flag |= RX_FLAG_HT;
++		rxs->flag |= rx_stats->flag;
++		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
++		return 0;
++	}
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
++			rxs->rate_idx = i;
++			return 0;
++		}
++		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
++			rxs->flag |= RX_FLAG_SHORTPRE;
++			rxs->rate_idx = i;
++			return 0;
++		}
++	}
++
++	return -EINVAL;
++}
++EXPORT_SYMBOL(ath9k_cmn_process_rate);
++
+ void ath9k_cmn_process_rssi(struct ath_common *common,
+ 			    struct ieee80211_hw *hw,
+ 			    struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index aaf4a9b5..729482f 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -42,6 +42,10 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++int ath9k_cmn_process_rate(struct ath_common *common,
++			   struct ieee80211_hw *hw,
++			   struct ath_rx_status *rx_stats,
++			   struct ieee80211_rx_status *rxs);
+ void ath9k_cmn_process_rssi(struct ath_common *common,
+ 			    struct ieee80211_hw *hw,
+ 			    struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5229e63..ab6a86c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -841,56 +841,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	return true;
+ }
+ 
+-static int ath9k_process_rate(struct ath_common *common,
+-			      struct ieee80211_hw *hw,
+-			      struct ath_rx_status *rx_stats,
+-			      struct ieee80211_rx_status *rxs)
+-{
+-	struct ieee80211_supported_band *sband;
+-	enum ieee80211_band band;
+-	unsigned int i = 0;
+-	struct ath_softc __maybe_unused *sc = common->priv;
+-	struct ath_hw *ah = sc->sc_ah;
+-
+-	band = ah->curchan->chan->band;
+-	sband = hw->wiphy->bands[band];
+-
+-	if (IS_CHAN_QUARTER_RATE(ah->curchan))
+-		rxs->flag |= RX_FLAG_5MHZ;
+-	else if (IS_CHAN_HALF_RATE(ah->curchan))
+-		rxs->flag |= RX_FLAG_10MHZ;
+-
+-	if (rx_stats->rs_rate & 0x80) {
+-		/* HT rate */
+-		rxs->flag |= RX_FLAG_HT;
+-		rxs->flag |= rx_stats->flag;
+-		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+-		return 0;
+-	}
+-
+-	for (i = 0; i < sband->n_bitrates; i++) {
+-		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
+-			rxs->flag |= RX_FLAG_SHORTPRE;
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-	}
+-
+-	/*
+-	 * No valid hardware bitrate found -- we should not get here
+-	 * because hardware has already validated this frame as OK.
+-	 */
+-	ath_dbg(common, ANY,
+-		"unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
+-		rx_stats->rs_rate);
+-	RX_STAT_INC(rx_rate_err);
+-	return -EINVAL;
+-}
+-
+ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 			      struct ieee80211_rx_status *rxs,
+ 			      u64 tsf)
+@@ -1007,7 +957,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		goto exit;
+ 	}
+ 
+-	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
++	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status)) {
++		/*
++		 * No valid hardware bitrate found -- we should not get here
++		 * because hardware has already validated this frame as OK.
++		 */
++		ath_dbg(common, ANY, "unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
++			rx_stats->rs_rate);
++		RX_STAT_INC(rx_rate_err);
+ 		ret =-EINVAL;
+ 		goto exit;
+ 	}
 -- 
-1.7.9.5
+1.8.5.3
 
