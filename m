@@ -1,208 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2384 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750793AbaAJDhT (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:52548 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbaATNwq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 22:37:19 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: add USB8897 support
-Date: Thu, 9 Jan 2014 19:36:55 -0800
-Message-ID: <1389325015-20918-1-git-send-email-bzhao@marvell.com> (sfid-20140110_043724_431689_91763600)
+	Mon, 20 Jan 2014 08:52:46 -0500
+Received: by mail-wi0-f179.google.com with SMTP id hr1so3177379wib.12
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 05:52:45 -0800 (PST)
+Date: Mon, 20 Jan 2014 14:51:48 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
+Message-ID: <20140120135147.GA369@magnum.frso.rivierawaves.com> (sfid-20140120_145310_744987_ABAC2FCD)
+References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
+ <874n67eabn.fsf@kamboji.qca.qualcomm.com>
+ <20140106180150.GB5358@magnum.frso.rivierawaves.com>
+ <1389108818.4645.11.camel@jlt4.sipsolutions.net>
+ <20140107173405.GA7267@magnum.frso.rivierawaves.com>
+ <1390216180.4335.20.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1390216180.4335.20.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+On Mon, Jan 20, 2014 at 12:09:40PM +0100, Johannes Berg wrote:
+> On Tue, 2014-01-07 at 18:34 +0100, Karl Beldan wrote:
+> > On Tue, Jan 07, 2014 at 04:33:38PM +0100, Johannes Berg wrote:
+> > > On Mon, 2014-01-06 at 19:01 +0100, Karl Beldan wrote:
+[...]
+> 
+> Well, heh. That'd mean learning all about the API? I think I have a
+> patch somewhere from somebody else that looked simpler, I think I'll
+> take that and see what happens.
+> 
 
-Adding new device IDs and assigning generic function/variable
-names instead of using device-id specific names.
+Arf, I wasn't aware of the trouble.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
----
- drivers/net/wireless/mwifiex/Kconfig |  4 +--
- drivers/net/wireless/mwifiex/usb.c   | 54 +++++++++++++++++++++++++++---------
- drivers/net/wireless/mwifiex/usb.h   | 12 +++++---
- 3 files changed, 51 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-index f7ff472..ecdf345 100644
---- a/drivers/net/wireless/mwifiex/Kconfig
-+++ b/drivers/net/wireless/mwifiex/Kconfig
-@@ -31,12 +31,12 @@ config MWIFIEX_PCIE
- 	  mwifiex_pcie.
  
- config MWIFIEX_USB
--	tristate "Marvell WiFi-Ex Driver for USB8797"
-+	tristate "Marvell WiFi-Ex Driver for USB8797/8897"
- 	depends on MWIFIEX && USB
- 	select FW_LOADER
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
--	  Avastar 88W8797 chipset with USB interface.
-+	  8797/8897 chipset with USB interface.
- 
- 	  If you choose to build it as a module, it will be called
- 	  mwifiex_usb.
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index a9240a2..e8ebbd4 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -22,15 +22,21 @@
- 
- #define USB_VERSION	"1.0"
- 
--static const char usbdriver_name[] = "usb8797";
-+static const char usbdriver_name[] = "usb8xxx";
- 
- static struct mwifiex_if_ops usb_ops;
- static struct semaphore add_remove_card_sem;
- static struct usb_card_rec *usb_card;
- 
- static struct usb_device_id mwifiex_usb_table[] = {
--	{USB_DEVICE(USB8797_VID, USB8797_PID_1)},
--	{USB_DEVICE_AND_INTERFACE_INFO(USB8797_VID, USB8797_PID_2,
-+	/* 8797 */
-+	{USB_DEVICE(USB8XXX_VID, USB8797_PID_1)},
-+	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8797_PID_2,
-+				       USB_CLASS_VENDOR_SPEC,
-+				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
-+	/* 8897 */
-+	{USB_DEVICE(USB8XXX_VID, USB8897_PID_1)},
-+	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8897_PID_2,
- 				       USB_CLASS_VENDOR_SPEC,
- 				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
- 	{ }	/* Terminating entry */
-@@ -343,10 +349,20 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		 id_vendor, id_product, bcd_device);
- 
- 	/* PID_1 is used for firmware downloading only */
--	if (id_product == USB8797_PID_1)
--		card->usb_boot_state = USB8797_FW_DNLD;
--	else
--		card->usb_boot_state = USB8797_FW_READY;
-+	switch (id_product) {
-+	case USB8797_PID_1:
-+	case USB8897_PID_1:
-+		card->usb_boot_state = USB8XXX_FW_DNLD;
-+		break;
-+	case USB8797_PID_2:
-+	case USB8897_PID_2:
-+		card->usb_boot_state = USB8XXX_FW_READY;
-+		break;
-+	default:
-+		pr_warning("unknown id_product %#x\n", id_product);
-+		card->usb_boot_state = USB8XXX_FW_DNLD;
-+		break;
-+	}
- 
- 	card->udev = udev;
- 	card->intf = intf;
-@@ -755,9 +771,20 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 
- 	card->adapter = adapter;
- 	adapter->dev = &card->udev->dev;
--	strcpy(adapter->fw_name, USB8797_DEFAULT_FW_NAME);
- 	usb_card = card;
- 
-+	switch (le16_to_cpu(card->udev->descriptor.idProduct)) {
-+	case USB8897_PID_1:
-+	case USB8897_PID_2:
-+		strcpy(adapter->fw_name, USB8897_DEFAULT_FW_NAME);
-+		break;
-+	case USB8797_PID_1:
-+	case USB8797_PID_2:
-+	default:
-+		strcpy(adapter->fw_name, USB8797_DEFAULT_FW_NAME);
-+		break;
-+	}
-+
- 	return 0;
- }
- 
-@@ -773,7 +800,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- {
- 	int ret = 0;
- 	u8 *firmware = fw->fw_buf, *recv_buff;
--	u32 retries = USB8797_FW_MAX_RETRY, dlen;
-+	u32 retries = USB8XXX_FW_MAX_RETRY, dlen;
- 	u32 fw_seqnum = 0, tlen = 0, dnld_cmd = 0;
- 	struct fw_data *fwdata;
- 	struct fw_sync_header sync_fw;
-@@ -875,7 +902,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 				continue;
- 			}
- 
--			retries = USB8797_FW_MAX_RETRY;
-+			retries = USB8XXX_FW_MAX_RETRY;
- 			break;
- 		}
- 		fw_seqnum++;
-@@ -899,13 +926,13 @@ static int mwifiex_usb_dnld_fw(struct mwifiex_adapter *adapter,
- 	int ret;
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
- 
--	if (card->usb_boot_state == USB8797_FW_DNLD) {
-+	if (card->usb_boot_state == USB8XXX_FW_DNLD) {
- 		ret = mwifiex_prog_fw_w_helper(adapter, fw);
- 		if (ret)
- 			return -1;
- 
- 		/* Boot state changes after successful firmware download */
--		if (card->usb_boot_state == USB8797_FW_DNLD)
-+		if (card->usb_boot_state == USB8XXX_FW_DNLD)
- 			return -1;
- 	}
- 
-@@ -1039,4 +1066,5 @@ MODULE_AUTHOR("Marvell International Ltd.");
- MODULE_DESCRIPTION("Marvell WiFi-Ex USB Driver version" USB_VERSION);
- MODULE_VERSION(USB_VERSION);
- MODULE_LICENSE("GPL v2");
--MODULE_FIRMWARE("mrvl/usb8797_uapsta.bin");
-+MODULE_FIRMWARE(USB8797_DEFAULT_FW_NAME);
-+MODULE_FIRMWARE(USB8897_DEFAULT_FW_NAME);
-diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
-index 98c4316..15b73d1 100644
---- a/drivers/net/wireless/mwifiex/usb.h
-+++ b/drivers/net/wireless/mwifiex/usb.h
-@@ -22,19 +22,23 @@
- 
- #include <linux/usb.h>
- 
--#define USB8797_VID		0x1286
-+#define USB8XXX_VID		0x1286
-+
- #define USB8797_PID_1		0x2043
- #define USB8797_PID_2		0x2044
-+#define USB8897_PID_1		0x2045
-+#define USB8897_PID_2		0x2046
- 
--#define USB8797_FW_DNLD		1
--#define USB8797_FW_READY	2
--#define USB8797_FW_MAX_RETRY	3
-+#define USB8XXX_FW_DNLD		1
-+#define USB8XXX_FW_READY	2
-+#define USB8XXX_FW_MAX_RETRY	3
- 
- #define MWIFIEX_TX_DATA_URB	6
- #define MWIFIEX_RX_DATA_URB	6
- #define MWIFIEX_USB_TIMEOUT	100
- 
- #define USB8797_DEFAULT_FW_NAME	"mrvl/usb8797_uapsta.bin"
-+#define USB8897_DEFAULT_FW_NAME	"mrvl/usb8897_uapsta.bin"
- 
- #define FW_DNLD_TX_BUF_SIZE	620
- #define FW_DNLD_RX_BUF_SIZE	2048
--- 
-1.8.2.3
-
+Karl
