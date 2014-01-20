@@ -1,82 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50128 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754204AbaAGVjV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59758 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937AbaATKdL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 16:39:21 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
-Date: Tue,  7 Jan 2014 19:05:42 +0100
-Message-Id: <a5774459cb8eebfc95156b8cd3b249d896e04400.1389103215.git.agordeev@redhat.com> (sfid-20140107_224148_984407_6985689A)
-In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
+	Mon, 20 Jan 2014 05:33:11 -0500
+Message-ID: <1390213987.4335.5.camel@jlt4.sipsolutions.net> (sfid-20140120_113315_586887_422359EC)
+Subject: Re: FW: Issue with authentication to Aerohive APs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steven Bateman <steven@fndtn.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Jan 2014 11:33:07 +0100
+In-Reply-To: <CEF450DF.167F3%steven@fndtn.com> (sfid-20140109_201358_587746_18A9EB82)
+References: <CEF439BF.167DB%steven@fndtn.com>
+	 <CEF44F30.167EB%steven@fndtn.com> <CEF450DF.167F3%steven@fndtn.com>
+	 (sfid-20140109_201358_587746_18A9EB82)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
- 1 files changed, 19 insertions(+), 17 deletions(-)
+On Thu, 2014-01-09 at 19:13 +0000, Steven Bateman wrote:
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index eeceab3..022dfe4 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	switch (use_msi) {
- 	case 3:
- 	case 1:
-+		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-+		break;
- 	case 0:
-+		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
- 		break;
- 	default:
--		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
--			use_msi);
-+		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
- 		use_msi = 1;
- 	}
--	wil->n_msi = use_msi;
--	if (wil->n_msi) {
--		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
--		rc = pci_enable_msi_block(pdev, wil->n_msi);
--		if (rc && (wil->n_msi == 3)) {
--			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
--			wil->n_msi = 1;
--			rc = pci_enable_msi_block(pdev, wil->n_msi);
--		}
--		if (rc) {
--			wil_err(wil, "pci_enable_msi failed, use INTx\n");
--			wil->n_msi = 0;
--		}
--	} else {
--		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-+
-+	switch (use_msi) {
-+	case 3:
-+		if (pci_enable_msi_range(pdev, 3, 3) > 0)
-+			break;
-+		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-+		use_msi = 1;
-+		/* fallthrough */
-+	case 1:
-+		if (pci_enable_msi_range(pdev, 1, 1) > 0)
-+			break;
-+		wil_err(wil, "pci_enable_msi_range failed, use INTx\n");
-+		use_msi = 0;
- 	}
- 
-+	wil->n_msi = use_msi;
-+
- 	rc = wil6210_init_irq(wil, pdev->irq);
- 	if (rc)
- 		goto stop_master;
--- 
-1.7.7.6
+> I'm writing on behalf of about 4 or 5 users that are having issues
+> connecting to a WLAN that I manage. The majority of the information can be
+> found at the following link, including relevant logs. I've enclosed the
+> packet capture from next to the station with failed authentications.
+
+How did you capture/filter the attached file? It shows no
+acknowledgement of the EAPOL packets, but no retries either, so you
+probably filtered out the acknowledgements. That leads me to believe
+that maybe there was something wrong with those EAPOL frames, maybe
+wpa_supplicant didn't get or didn't expect them?
+
+What makes you so sure it's a driver/firmware bug rather than a bug
+related to wpa_supplicant or interaction with it?
+
+johannes
 
