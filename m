@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57848 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545AbaAWJXC convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:43364 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868AbaATOZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:23:02 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Petko Manolov <petkan@nucleusys.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: iwlwifi crash with 3.13
-Date: Thu, 23 Jan 2014 09:22:46 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com> (sfid-20140123_102307_941935_455597CD)
-References: <20140123091659.GE9077@localhost>
-In-Reply-To: <20140123091659.GE9077@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 20 Jan 2014 09:25:41 -0500
+Received: by mail-ea0-f169.google.com with SMTP id l9so2740811eaj.14
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:40 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/7] mac80211: treat IBSS CSA finish failure seriously
+Date: Mon, 20 Jan 2014 15:21:05 +0100
+Message-Id: <1390227670-19030-3-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152546_292607_2D2CA4A5)
+In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> 	Hi guys,
-> 
-> Connecting to 5GHz router with my iwlwifi (on Yoga 2 Pro, 3.13 kernel) seems
-> to work fine, but 'dmesg' doesn't look pretty.  This is what
-> 'lspci' say about the actual controller: Intel Corporation Wireless 7260 (rev
-> 6b).
-> 
-> IIRC this was going on with 3.11.y and 3.12.y as well.  Please let me know if i
-> can help with anything else.
-> 
+Other interface modes are checked against failure.
+This should avoid false-positive channel switch
+events where IBSS CSA actually failed.
 
-Can you share the very first iwlwifi lines of your dmesg?
-I'd like to check the fw version.
-Also - can you please update to latest firmware from http://wireless.kernel.org/en/users/Drivers/iwlwifi.
-You can take iwlwifi-7260-ucode-22.1.7.0.tgz or iwlwifi-7260-ucode-22.15.8.0.tgz.
- 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 62bf6c4..76fe1f90 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3039,7 +3039,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 			return;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		ieee80211_ibss_finish_csa(sdata);
++		err = ieee80211_ibss_finish_csa(sdata);
++		if (err < 0)
++			return;
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
+-- 
+1.8.4.rc3
+
