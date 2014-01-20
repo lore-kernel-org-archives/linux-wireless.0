@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52202 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbaAPAVW (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:60829 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbaATOZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 19:21:22 -0500
-Date: Thu, 16 Jan 2014 01:21:21 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
-Message-ID: <20140116002121.GA3726@amd.pavel.ucw.cz> (sfid-20140116_012141_621003_F5B86BFE)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <201312311047.30147@pali>
- <20140106200050.GG10885@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20140106200050.GG10885@tuxdriver.com>
+	Mon, 20 Jan 2014 09:25:42 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so3543018eek.9
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:41 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/7] mac80211: move csa_active setting in STA CSA
+Date: Mon, 20 Jan 2014 15:21:06 +0100
+Message-Id: <1390227670-19030-4-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152551_905171_A2AFC6D2)
+In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2014-01-06 15:00:50, John W. Linville wrote:
-> On Tue, Dec 31, 2013 at 10:47:29AM +0100, Pali Rohár wrote:
-> > On Sunday 08 December 2013 10:24:58 Pali Rohár wrote:
-> > > Hello, I'm sending wl1251 patches from linux-n900 tree [1] for
-> > > comments. More patches come from David's monitor & packet
-> > > injection work. Patches are tested with 3.12 rc5 kernel on
-> > > Nokia N900.
-> > > 
-> > > Second version contains new patch for fixing NULL pointer
-> > > dereference which sometimes cause kernel panic and fixes code
-> > > suggested by Pavel Machek.
->  
-> > So far, there are no new comments for patches 01, 03-13 and 16. 
-> > Are there any other problems with that patches or can be accepted 
-> > for upstream?
->  
-> They are probably fine to merge now.  Of course, I was still deleting
-> wl12xx patches when they were originally posted, so I'll need someone
-> to resend the patches to me...
+The sdata->vif.csa_active could be left set after,
+e.g. channel context constraints check fail in STA
+mode leaving the interface in a strange state for
+a brief period of time until it is disconnected.
+This was harmless but ugly.
 
-Ping? Did they get merged? Did you receive the patches?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-								Pavel
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fc1d824..bfb81cb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1001,7 +1001,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+-	sdata->vif.csa_active = true;
+ 
+ 	mutex_lock(&local->chanctx_mtx);
+ 	if (local->use_chanctx) {
+@@ -1039,6 +1038,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	mutex_unlock(&local->chanctx_mtx);
+ 
+ 	sdata->csa_chandef = csa_ie.chandef;
++	sdata->vif.csa_active = true;
+ 
+ 	if (csa_ie.mode)
+ 		ieee80211_stop_queues_by_reason(&local->hw,
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.8.4.rc3
+
