@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64581 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbaAMMlv (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:43009 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbaATMC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 07:41:51 -0500
-Received: by mail-we0-f170.google.com with SMTP id u57so6378418wes.15
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 04:41:50 -0800 (PST)
-Date: Mon, 13 Jan 2014 13:41:10 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>
-Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Message-ID: <20140113124049.GA5796@magnum.frso.rivierawaves.com> (sfid-20140113_134155_115414_6D8A4154)
-References: <52B0B72A.5070704@gmail.com>
- <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
- <20140113111357.GA4611@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+	Mon, 20 Jan 2014 07:02:28 -0500
+Received: by mail-lb0-f172.google.com with SMTP id c11so4844380lbj.17
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 04:02:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <1390215337.4335.11.camel@jlt4.sipsolutions.net>
+References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1389947524-6102-5-git-send-email-janusz.dziedzic@tieto.com>
+	<1390215337.4335.11.camel@jlt4.sipsolutions.net>
+Date: Mon, 20 Jan 2014 13:02:27 +0100
+Message-ID: <CALhHN=q9ZwMEo2xzPtAqkk0oGri+oQ=G4w2KRAvATaB=hc31yw@mail.gmail.com> (sfid-20140120_130231_357434_7337EFF2)
+Subject: Re: [PATCH 4/5] cfg80211: introduce strict bandwidth regulatory flag
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 11:15:53AM +0000, Grumbach, Emmanuel wrote:
-> > >
-> > > FW still does not support power management on multiple MAC interfaces.
-> > > Currently the driver enforce this limitation by disabling PM if second
-> > > interface is added. Change this behavior to allow PM on a single
-> > > interface even if other interfaces exist but not bound to any specific PHY.
-> > > PM will be enabled if only one single interface is bound.
-> > >
-> > > Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-> > > Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > 
-> > Hi,
-> > 
-> > This broke monitor mode:
-> > (unsetting .power_update_binding does not hang)
-> > 
-> > modprobe iwlmvm
-> > iw dev wlan0 set type monitor
-> > iw dev wlan0 set freq 5180 40 5190  # hangs
-> > 
-> > Can you reproduce it easily or do you need me to post further dbg info ?
-> > 
-> 
-> We have an open bug on this internally - thanks for reporting.
+On 20 January 2014 11:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-01-17 at 09:32 +0100, Janusz Dziedzic wrote:
+>> Introduce NL80211_RRF_STRICT_BW regulatory rule flag.
+>> This mean we will check only banwidth defined in
+>> regulatory database and not check contiguous rules.
+>
+> If you meant for this to alleviate my concerns about crda/db.txt
+> compatibility, you didn't do it right. This has no value whatsoever
+> since it still breaks things.
+>
 
-OK, BTW I have errors like
-- "Microcode SW error detected." upon monitor up
-- "iwlwifi 0000:02:00.0: FW error in SYNC CMD TXPATH_FLUSH" sometimes
-after the subsequent ieee80211_restart_hw
-- "WARNING: ... iwlwifi/mvm/binding.c:201 iwl_mvm_binding_remove_vif"
-  when removing a monitor iface
+So, maybe better introduce opposite logic here. By default always
+calculate BW as STRICT_BW - be backwards compatible with current
+crda/db.txt implementation/calculation.
+And introduce WIDE(LOOSE)_BW flag for the rules we would like
+calculate maximum bandwidth using contiguous rules?
 
-You must have seen those too. I will avoid this tree with iwlwifi then.
-
- 
-Karl
+BR
+Janusz
