@@ -1,72 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43775 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:59832 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754756AbaAFTJr (ORCPT
+	with ESMTP id S1751807AbaATKuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 14:09:47 -0500
-Message-ID: <1389035380.5891.42.camel@jlt4.sipsolutions.net> (sfid-20140106_200950_388788_136CF989)
-Subject: Re: [PATCH v3 1/2] mac80211_hwsim: fix duplicate beacons on TSF
- adjust
+	Mon, 20 Jan 2014 05:50:20 -0500
+Message-ID: <1390215015.4335.6.camel@jlt4.sipsolutions.net> (sfid-20140120_115024_095547_2DCBE8F0)
+Subject: Re: [PATCH V2] cfg80211: Do not call CRDA when using internal
+ regulatory database
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <twpedersen@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Mon, 06 Jan 2014 20:09:40 +0100
-In-Reply-To: <1387477515-3583-1-git-send-email-twpedersen@gmail.com> (sfid-20131219_192631_841541_A85E52B4)
-References: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
-	 (sfid-20131219_192631_841541_A85E52B4)
+To: Chaitanya T K <chaitanya.mgit@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Mon, 20 Jan 2014 11:50:15 +0100
+In-Reply-To: <1390009167-4766-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140118_153524_887371_952B5952)
+References: <1390009167-4766-1-git-send-email-chaitanya.mgit@gmail.com>
+	 (sfid-20140118_153524_887371_952B5952)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-19 at 10:25 -0800, Thomas Pedersen wrote:
-> There was some bug when rescheduling the next beacon from
-> the beacon tasklet after adjusting TSF which would cause
-> the beacon timer to trigger twice. Beaconing at "old" TBT
-> (previously scheduled interface TBTT) with new timestamp
-> was incorrect anyway.
-> 
-> Instead, reschedule the beacon straight away when
-> adjusting TSF.
-> 
-> Signed-off-by: Thomas Pedersen <twpedersen@gmail.com>
-> 
-> ---
-> v2:
-> 
-> 	don't kill hrtimer tasklet if currently running to
-> 	avoid deadlock (Johannes)
-> 
->  drivers/net/wireless/mac80211_hwsim.c |   57 +++++++++++++++------------------
->  1 file changed, 26 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index 9c0cc8d..cf3b9d3 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -442,17 +442,36 @@ static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
->  	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
->  }
->  
-> +static void mac80211_hwsim_beacon_sched(struct ieee80211_hw *hw)
-> +{
-> +	struct mac80211_hwsim_data *data = hw->priv;
-> +	u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
-> +	u32 bcn_int = data->beacon_int;
-> +	u64 until_tbtt;
-> +
-> +	if (!bcn_int)
-> +		return;
-> +
-> +	until_tbtt = bcn_int - do_div(tsf, bcn_int);
-> +	if (!hrtimer_callback_running(&data->beacon_timer.timer) &&
-> +	    !test_bit(TASKLET_STATE_RUN, &data->beacon_timer.tasklet.state))
-> +		tasklet_hrtimer_cancel(&data->beacon_timer);
+On Sat, 2014-01-18 at 07:09 +0530, Chaitanya T K wrote:
+> When using internal regulatory data base kconfig option,
+> do not try to call crda. This completely defeats the 
+> purpose of enabling internal regulatory db.
 
-That test_bit() really seems suspicious - there are no other users in
-the tree except for the internal tasklet code... What are you trying to
-do?
+I still think that this is a significant userspace API change, so I'm
+not going to apply it. Find another solution.
 
 johannes
 
