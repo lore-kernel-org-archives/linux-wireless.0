@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:62177 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755836AbaA2HBX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750801AbaATKZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 02:01:23 -0500
-Received: by mail-ee0-f53.google.com with SMTP id t10so666553eei.12
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 23:01:22 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/5] mac80211: move csa_active setting in STA CSA
-Date: Wed, 29 Jan 2014 07:56:19 +0100
-Message-Id: <1390978581-13273-4-git-send-email-michal.kazior@tieto.com> (sfid-20140129_080148_846247_780EF42B)
-In-Reply-To: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
-References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 20 Jan 2014 05:25:30 -0500
+Message-ID: <1390213525.4335.2.camel@jlt4.sipsolutions.net> (sfid-20140120_112534_246364_7BB7F738)
+Subject: Re: [PATCH] mac80211: add check on hw->max_signal value on
+ ieee80211_register_hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andrea merello <andrea.merello@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Larry.Finger@lwfinger.net
+Date: Mon, 20 Jan 2014 11:25:25 +0100
+In-Reply-To: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com> (sfid-20140119_222350_487679_17C01C40)
+References: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com>
+	 (sfid-20140119_222350_487679_17C01C40)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sdata->vif.csa_active could be left set after,
-e.g. channel context constraints check fail in STA
-mode leaving the interface in a strange state for
-a brief period of time until it is disconnected.
-This was harmless but ugly.
+On Sun, 2014-01-19 at 22:21 +0100, andrea merello wrote:
+> When IEEE80211_HW_SIGNAL_UNSPEC is set, mac80211 will perform a
+> division by max_signal in ieee80211_bss_info_update. If max_signal
+> is not properly set by the driver (for example it is zero) this
+> leads to a divide error and crash.
+> Thanks to Larry Finger, who pointed me to this.
+> This patch adds in ieee80211_register_hw one more check to detect
+> this condition and eventually returns -EINVAL, as already done for
+> other checks already performed there.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cadf059..6c9ebca 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1012,7 +1012,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
--	sdata->vif.csa_active = true;
- 
- 	mutex_lock(&local->chanctx_mtx);
- 	if (local->use_chanctx) {
-@@ -1050,6 +1049,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	mutex_unlock(&local->chanctx_mtx);
- 
- 	sdata->csa_chandef = csa_ie.chandef;
-+	sdata->vif.csa_active = true;
- 
- 	if (csa_ie.mode)
- 		ieee80211_stop_queues_by_reason(&local->hw,
--- 
-1.8.5.3
+johannes
 
