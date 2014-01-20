@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:59328 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838AbaAHC6r (ORCPT
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:52726 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519AbaATOZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:58:47 -0500
-Message-ID: <52CCBEC1.1010309@huawei.com> (sfid-20140108_040101_368483_CCC9DB49)
-Date: Wed, 8 Jan 2014 10:58:09 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3.5 17/19] mwifiex: slight optimization of addr compare
-References: <52BC15E7.7050205@huawei.com> <477F20668A386D41ADCC57781B1F70430F534B5541@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F534B5541@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 20 Jan 2014 09:25:45 -0500
+Received: by mail-ea0-f171.google.com with SMTP id h10so3167879eak.30
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:44 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 7/7] Revert "cfg80211: disable CSA for all drivers"
+Date: Mon, 20 Jan 2014 15:21:10 +0100
+Message-Id: <1390227670-19030-8-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152549_942080_6E21E5C4)
+In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014/1/8 10:50, Bing Zhao wrote:
-> Hi Ding,
-> 
->> Use possibly more efficient ether_addr_equal
->> instead of memcmp.
-> 
->> @@ -782,8 +782,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
->>  	}
->>
->>  	/* If BSSID is diff, modify current BSS parameters */
->> -	if (memcmp(priv->curr_bss_params.bss_descriptor.mac_address,
->> -		   ibss_coal_resp->bssid, ETH_ALEN)) {
->> +	if (!ether_addr_equal(priv->curr_bss_params.bss_descriptor.mac_address, ibss_coal_resp->bssid))
-> 
-> Could you break the line?
-> If you run "checkpatch.pl" you will spot this warning.
-> 
->>  	if (!IS_11N_ENABLED(priv) ||
->> -	    memcmp(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest, ETH_ALEN)) {
->> +	    !ether_addr_equal_unaligned(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest)) {
-> 
-> Also over 80 characters here.
-> 
-> Thanks,
-> Bing
-> 
+This reverts commit dda444d52496aa8ddc501561bca580f1374a96a9.
 
-Ok, thanks
+Re-enable CSA as the locking issues have been solved.
 
-Regards
-Ding
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index d89dee2..aa3def7 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -443,12 +443,6 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/* support for 5/10 MHz is broken due to nl80211 API mess - disable */
+ 	wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 
+-	/*
+-	 * There are major locking problems in nl80211/mac80211 for CSA,
+-	 * disable for all drivers until this has been reworked.
+-	 */
+-	wiphy->flags &= ~WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+-
+ #ifdef CONFIG_PM
+ 	if (WARN_ON(wiphy->wowlan &&
+ 		    (wiphy->wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
+-- 
+1.8.4.rc3
 
