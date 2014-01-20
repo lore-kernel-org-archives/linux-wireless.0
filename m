@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34255 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbaAPLlh convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:37730 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbaATOZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 06:41:37 -0500
-Received: by mail-bk0-f46.google.com with SMTP id u15so1117119bkz.5
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 03:41:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEe0yM2F4C5DbWE+BjDVn92Sv_=k5EiUpokZjF1QugdSWw@mail.gmail.com>
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-	<1389787494-7361-10-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEe0yM2F4C5DbWE+BjDVn92Sv_=k5EiUpokZjF1QugdSWw@mail.gmail.com>
-Date: Thu, 16 Jan 2014 12:41:33 +0100
-Message-ID: <CA+BoTQnW+MRk-KQxkwHQ8WFhLERqTu98QWwKSw654FPAp0wBHg@mail.gmail.com> (sfid-20140116_124140_652455_029473B0)
-Subject: Re: [RFC 9/9] mac80211: implement multi-interface CSA
+	Mon, 20 Jan 2014 09:25:39 -0500
+Received: by mail-ee0-f44.google.com with SMTP id c13so3454395eek.31
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:38 -0800 (PST)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/7] mac80211: fix possible memory leak on AP CSA failure
+Date: Mon, 20 Jan 2014 15:21:04 +0100
+Message-Id: <1390227670-19030-2-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152543_342213_F9F85BDD)
+In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 January 2014 12:04, Eliad Peller <eliad@wizery.com> wrote:
-> On Wed, Jan 15, 2014 at 2:04 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> This implements a fairly simple multi-interface
->> CSA. It doesn't support multiple channel
->> contexts so it doesn't support multi-channel.
->>
->> Once a CSA is started other CSA requests are
->> denied until the first one is completed. A single
->> CSA may affect multiple interfaces. CSA can happen
->> only if it all target CSA chandefs are compatible
->> and it affects all interfaces are sharing a single
->> channel context exclusively.
->>
->> A new worker is introduced: csa_complete_work
->> which is used to account per-interface countdowns
->> and issue the actual channel switch after last
->> interface completes its CSA.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
-> [...]
->
->>
->> +static int ieee80211_ap_beacon_presp_backup(struct ieee80211_sub_if_data *sdata)
->> +{
->> +       struct beacon_data *beacon;
->> +       struct probe_resp *probe_resp;
->> +
->> +       beacon = sdata_dereference(sdata->u.ap.beacon, sdata);
->> +       if (beacon) {
->> +               sdata->u.ap.prev_beacon = kmemdup(beacon, sizeof(beacon) +
->> +                                                 beacon->head_len +
->> +                                                 beacon->tail_len, GFP_KERNEL);
->> +               if (!sdata->u.ap.prev_beacon)
->> +                       return -ENOMEM;
->> +       }
->> +
-> you must also update the pointers here...
+If CSA for AP interface failed and the interface
+was not stopped afterwards another CSA request
+would leak sdata->u.ap.next_beacon.
 
-You're right, thanks!
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 65dac7f..62bf6c4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2988,6 +2988,21 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+ 	return new_beacon;
+ }
+ 
++static int ieee80211_ap_finish_csa(struct ieee80211_sub_if_data *sdata)
++{
++	int err;
++
++	err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
++	kfree(sdata->u.ap.next_beacon);
++	sdata->u.ap.next_beacon = NULL;
++
++	if (err < 0)
++		return err;
++
++	ieee80211_bss_info_change_notify(sdata, err);
++	return 0;
++}
++
+ void ieee80211_csa_finish(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+@@ -3019,15 +3034,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.csa_active = false;
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+-		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
++		err = ieee80211_ap_finish_csa(sdata);
+ 		if (err < 0)
+ 			return;
+-
+-		changed |= err;
+-		kfree(sdata->u.ap.next_beacon);
+-		sdata->u.ap.next_beacon = NULL;
+-
+-		ieee80211_bss_info_change_notify(sdata, err);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ieee80211_ibss_finish_csa(sdata);
+-- 
+1.8.4.rc3
 
-Michał
