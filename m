@@ -1,30 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43289 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883AbaAFQjE (ORCPT
+Received: from AShevkov.infinet.ru ([91.191.225.92]:59447 "EHLO
+	ashevkov.infinet.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbaATGCl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 11:39:04 -0500
-Message-ID: <1389026338.5891.35.camel@jlt4.sipsolutions.net> (sfid-20140106_173927_117638_8331BE3A)
-Subject: Re: [PATCH 1/2 V3] nl80211/cfg80211: Add support for drivers with
- AP SME that require PMF SA Query assistance
-From: Johannes Berg <johannes@sipsolutions.net>
-To: clanctot@codeaurora.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:38:58 +0100
-In-Reply-To: <639efbd4cc1a2cf8a93953dc037ed52e.squirrel@www.codeaurora.org>
-References: <639efbd4cc1a2cf8a93953dc037ed52e.squirrel@www.codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 20 Jan 2014 01:02:41 -0500
+Date: Mon, 20 Jan 2014 12:02:04 +0600
+From: Alex Hacker <hacker@epn.ru>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix IQ calibration
+Message-ID: <20140120060204.GB5929@infinet.ru> (sfid-20140120_070302_642334_BB708753)
+References: <1389686117-9014-1-git-send-email-sujith@msujith.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389686117-9014-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-03 at 21:30 +0000, clanctot@codeaurora.org wrote:
-> Johannes,
-> 
-> Thanks for your comments regarding these changes.  See my responses below.
+Hello,
 
-Your responses are practically impossible to read in this interleaving
-with my notes. Care to resend with proper quote marks?
+On Tue, Jan 14, 2014 at 01:25:17PM +0530, Sujith Manoharan wrote:
+> +	if (i2_p_q2_a0_d1 > 0x1000)
+> +		i2_p_q2_a0_d1 = -((0x1fff - i2_p_q2_a0_d1) + 1);
 
-johannes
+While the 'i2_p_q2_a0_d1 = (iq_res[2] & 0xfff)' the condition
+'i2_p_q2_a0_d1 > 0x1000' is always false.
 
+Regards,
+Alex.
