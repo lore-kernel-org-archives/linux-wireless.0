@@ -1,64 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:7149 "EHLO
-	mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751218AbaAFJEs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 04:04:48 -0500
-Date: Mon, 6 Jan 2014 10:04:28 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Joe Perches <joe@perches.com>
-cc: Julia Lawall <julia.lawall@lip6.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-In-Reply-To: <1388998750.5808.43.camel@joe-AO722>
-Message-ID: <alpine.DEB.2.10.1401061001340.2079@hadrien> (sfid-20140106_100527_728269_CA46B66A)
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  <1388429761.4410.1.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
- <1388438724.4573.2.camel@jlt4.sipsolutions.net>  <20131230215701.GA4938@khazad-dum.debian.net>  <1388445188.18164.0.camel@jlt4.sipsolutions.net>  <1388445422.26796.38.camel@joe-AO722>  <alpine.DEB.2.10.1401060947550.2079@hadrien>
- <1388998750.5808.43.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mout.gmx.net ([212.227.15.19]:62033 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751797AbaATSu2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jan 2014 13:50:28 -0500
+Received: from ultralex.lan ([79.218.100.244]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0MKcdH-1W4UJa1XdP-001zp4 for
+ <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 19:50:27 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/5] ath9k: move ath9k_process_rssi to common.c
+Date: Mon, 20 Jan 2014 19:50:08 +0100
+Message-Id: <1390243811-9132-1-git-send-email-linux@rempel-privat.de> (sfid-20140120_195031_220045_2FA59E19)
+In-Reply-To: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
+References: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 6 Jan 2014, Joe Perches wrote:
+we can reuse this fucntion on ath9k_htc.
+Now we will need to use common version last_rssi, so switch
+it too.
 
-> On Mon, 2014-01-06 at 09:48 +0100, Julia Lawall wrote:
-> > Is there any way to get sizeof evaluated at build time?
->
-> I'm confused a bit by what you want to accomplish.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
+ drivers/net/wireless/ath/ath9k/common.c | 62 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  4 +++
+ drivers/net/wireless/ath/ath9k/init.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/recv.c   | 64 +--------------------------------
+ 6 files changed, 69 insertions(+), 66 deletions(-)
 
-To check that a field that is an argument od ether_addr_equal_64bits is
-a sufficient distance from the end of the structure.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b5ac32c..4ce3787 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -757,7 +757,6 @@ struct ath_softc {
+ #endif
+ 
+ 	struct ath9k_hw_cal_data caldata;
+-	int last_rssi;
+ 
+ #ifdef CONFIG_ATH9K_DEBUGFS
+ 	struct ath9k_debug debug;
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 768c733..7028c52 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,6 +27,68 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
++void ath9k_cmn_process_rssi(struct ath_common *common,
++			    struct ieee80211_hw *hw,
++			    struct ath_rx_status *rx_stats,
++			    struct ieee80211_rx_status *rxs)
++{
++	struct ath_hw *ah = common->ah;
++	int last_rssi;
++	int rssi = rx_stats->rs_rssi;
++	int i, j;
++
++	/*
++	 * RSSI is not available for subframes in an A-MPDU.
++	 */
++	if (rx_stats->rs_moreaggr) {
++		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
++		return;
++	}
++
++	/*
++	 * Check if the RSSI for the last subframe in an A-MPDU
++	 * or an unaggregated frame is valid.
++	 */
++	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
++		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
++		return;
++	}
++
++	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
++		s8 rssi;
++
++		if (!(ah->rxchainmask & BIT(i)))
++			continue;
++
++		rssi = rx_stats->rs_rssi_ctl[i];
++		if (rssi != ATH9K_RSSI_BAD) {
++		    rxs->chains |= BIT(j);
++		    rxs->chain_signal[j] = ah->noise + rssi;
++		}
++		j++;
++	}
++
++	/*
++	 * Update Beacon RSSI, this is used by ANI.
++	 */
++	if (rx_stats->is_mybeacon &&
++	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
++	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
++		ATH_RSSI_LPF(common->last_rssi, rx_stats->rs_rssi);
++		last_rssi = common->last_rssi;
++
++		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
++		if (rssi < 0)
++			rssi = 0;
++
++		ah->stats.avgbrssi = rssi;
++	}
++
++	rxs->signal = ah->noise + rx_stats->rs_rssi;
++}
++EXPORT_SYMBOL(ath9k_cmn_process_rssi);
++
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index eb85e1b..aaf4a9b5 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -42,6 +42,10 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++void ath9k_cmn_process_rssi(struct ath_common *common,
++			    struct ieee80211_hw *hw,
++			    struct ath_rx_status *rx_stats,
++			    struct ieee80211_rx_status *rxs);
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
+ struct ath9k_channel *ath9k_cmn_get_channel(struct ieee80211_hw *hw,
+ 					    struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c36de30..00e0f60 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -534,7 +534,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 
+ 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
+ 
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
++	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 73a3655..16b3ecb 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1609,7 +1609,7 @@ static void ath9k_set_assoc_state(struct ath_softc *sc,
+ 	common->curaid = bss_conf->aid;
+ 	ath9k_hw_write_associd(sc->sc_ah);
+ 
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
++	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a0ebdd0..5229e63 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -891,68 +891,6 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	return -EINVAL;
+ }
+ 
+-static void ath9k_process_rssi(struct ath_common *common,
+-			       struct ieee80211_hw *hw,
+-			       struct ath_rx_status *rx_stats,
+-			       struct ieee80211_rx_status *rxs)
+-{
+-	struct ath_softc *sc = hw->priv;
+-	struct ath_hw *ah = common->ah;
+-	int last_rssi;
+-	int rssi = rx_stats->rs_rssi;
+-	int i, j;
+-
+-	/*
+-	 * RSSI is not available for subframes in an A-MPDU.
+-	 */
+-	if (rx_stats->rs_moreaggr) {
+-		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
+-		return;
+-	}
+-
+-	/*
+-	 * Check if the RSSI for the last subframe in an A-MPDU
+-	 * or an unaggregated frame is valid.
+-	 */
+-	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
+-		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
+-		return;
+-	}
+-
+-	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
+-		s8 rssi;
+-
+-		if (!(ah->rxchainmask & BIT(i)))
+-			continue;
+-
+-		rssi = rx_stats->rs_rssi_ctl[i];
+-		if (rssi != ATH9K_RSSI_BAD) {
+-		    rxs->chains |= BIT(j);
+-		    rxs->chain_signal[j] = ah->noise + rssi;
+-		}
+-		j++;
+-	}
+-
+-	/*
+-	 * Update Beacon RSSI, this is used by ANI.
+-	 */
+-	if (rx_stats->is_mybeacon &&
+-	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
+-	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
+-		ATH_RSSI_LPF(sc->last_rssi, rx_stats->rs_rssi);
+-		last_rssi = sc->last_rssi;
+-
+-		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+-		if (rssi < 0)
+-			rssi = 0;
+-
+-		ah->stats.avgbrssi = rssi;
+-	}
+-
+-	rxs->signal = ah->noise + rx_stats->rs_rssi;
+-}
+-
+ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 			      struct ieee80211_rx_status *rxs,
+ 			      u64 tsf)
+@@ -1074,7 +1012,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		goto exit;
+ 	}
+ 
+-	ath9k_process_rssi(common, hw, rx_stats, rx_status);
++	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
+ 
+ 	rx_status->band = ah->curchan->chan->band;
+ 	rx_status->freq = ah->curchan->chan->center_freq;
+-- 
+1.8.5.3
 
-> Except for variable length arrays, isn't sizeof always
-> evaluated at build time?
-
-OK, the question was expressed badly.  Is there any way to use the value
-to trigger an action at build time?  The only way I kow to trigger an
-action is with #error, but #error is processed by cpp, which doesn't know
-about the size of types.
-
-julia
-
-> 6.5.3.4 The sizeof operator
-> Constraints
-> []
-> 2 The sizeof operator yields the size (in bytes) of its operand, which may be an
-> expression or the parenthesized name of a type. The size is determined from the type of
-> the operand. The result is an integer. If the type of the operand is a variable length array
-> type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an
-> integer constant.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
