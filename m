@@ -1,25 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41828 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592AbaARDLQ (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:51194 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbaATIHr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 22:11:16 -0500
-Date: Fri, 17 Jan 2014 19:11:15 -0800 (PST)
-Message-Id: <20140117.191115.1853104512168759877.davem@davemloft.net> (sfid-20140118_041123_445125_3762A6FE)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-01-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140117200028.GC15145@tuxdriver.com>
-References: <20140117200028.GC15145@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 20 Jan 2014 03:07:47 -0500
+Received: by mail-la0-f46.google.com with SMTP id b8so5259349lan.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 00:07:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAFED-jmDYTn2QhmcetnsYYOtdNTBpAeBHA=eEzmpp6f8xM6C9Q@mail.gmail.com>
+References: <CAFED-jmDYTn2QhmcetnsYYOtdNTBpAeBHA=eEzmpp6f8xM6C9Q@mail.gmail.com>
+Date: Mon, 20 Jan 2014 10:07:46 +0200
+Message-ID: <CANUX_P0XtpyGhUmm4poCWpYpgEZ2hvxnBod3O6cCL996xbcOgg@mail.gmail.com> (sfid-20140120_090803_331141_CA0EEBEB)
+Subject: Re: iwldvm: wireles-testing 3.13.0-rc7 system freeze
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: multipart/mixed; boundary=001a113440a612f74c04f0626385
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 17 Jan 2014 15:00:29 -0500
+--001a113440a612f74c04f0626385
+Content-Type: text/plain; charset=ISO-8859-1
 
-> Please pull this batch of updates for the 3.14 stream!
+On Fri, Jan 10, 2014 at 10:03 PM, Janusz Dziedzic
+<janusz.dziedzic@gmail.com> wrote:
+> Seems there is a system freeze with latest wireless-testing and iwldvm
+> driver after iface up.
+>
 
-Pulled, thanks John.
+patch attached
+
+--001a113440a612f74c04f0626385
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-iwlwifi-pcie-don-t-panic-on-host-commands-in-iwldvm.patch"
+Content-Disposition: attachment;
+	filename="0001-iwlwifi-pcie-don-t-panic-on-host-commands-in-iwldvm.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hqng9e0i0
+
+RnJvbSAyODFlNmJlZGRmM2Q0NjY2MWI2YzFkZDdhNGRlZGZkZTc4YmRmNmVkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
+aW50ZWwuY29tPgpEYXRlOiBNb24sIDIwIEphbiAyMDE0IDA5OjUwOjI5ICswMjAwClN1YmplY3Q6
+IFtQQVRDSF0gaXdsd2lmaTogcGNpZTogZG9uJ3QgcGFuaWMgb24gaG9zdCBjb21tYW5kcyBpbiBp
+d2xkdm0KCk15IGNvbW1pdDoKCk5vbmUgb2YgdGhlIGRldmljZXMgc3VwcG9ydGVkIGJ5IGl3bGR2
+bSBoYXZlIHN1cHBvcnQgZm9yCnNoYWRvdyByZWdpc3RlcnMuIFRoaXMgbWVhbnMgdGhhdCB3ZSB3
+YWtlIHRoZSBOSUMgd2hlbiB3ZQpzZW5kIGhvc3QgY29tbWFuZHMgd2hlbiB3ZSBpbmNyZW1lbnQg
+dGhlIHdyaXRlIHBvaW50ZXIgb24KdGhlIGhvc3QgY29tbWFuZHMgcmluZy4gVGhpcyBoYXBwZW5l
+ZCBldmVuIGJlZm9yZSBteSBiYWQKY29tbWl0IG1lbnRpb25uZWQgYmVsb3cuClNpbmNlIG15IGNv
+bW1pdCBiZWxvdywgd2Ugd2FrZSB1cCB0aGUgTklDIHJlZ2FyZGxlc3Mgb2YKc2hhZG93IHJlZ2lz
+dGVyIHN1cHBvcnQuIFRoaXMgbWVhbnMgdGhhdCBpbiBpd2xkdm0gKHdoZW4KdGhlIE5JQyBkb2Vz
+bid0IHN1cHBvcnQgc2hhZG93IHJlZ2lzdGVyKSwgd2Ugd2FrZSB1cCB0aGUKTklDIHR3aWNlOgoK
+cGNpZV9lbnF1ZXVlX2hjbWQ6Cgl3YWtlIHVwIHRoZSBOSUMKCWl3bF9wY2llX3R4cV9pbmNfd3Jf
+cHRyOgoJCXdha2UgdXAgdGhlIE5JQyAtIG5vIHNoYWRvdyByZWcgc3VwcG9ydAoKU2luY2Ugd2Fr
+aW5nIHVwIHRoZSBOSUMgbWVhbnMgdGhhdCB3ZSBuZWVkIHRvIGEgc3BpbmxvY2ssCnRoaXMgb2J2
+aW91c2x5IGxlYWRzIHRvIGEgcmVjdXJzaXZlIHNwaW5sb2NrIGFuZCBoZW5jZSBhCmZyZWV6ZS4K
+CkZpeGVzOiBiOTQzOTQ5MTA1NWEgKCJpd2x3aWZpOiBwY2llOiBrZWVwIHRoZSBOSUMgYXdha2Ug
+d2hlbiBjb21tYW5kcyBhcmUgaW4gZmxpZ2h0IikKUmVwb3J0ZWQtYnk6IEphbnVzeiBEemllZHpp
+YyA8amFudXN6LmR6aWVkemljQGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1
+bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJl
+bGVzcy9pd2x3aWZpL3BjaWUvdHguYyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRp
+b25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+aXdsd2lmaS9wY2llL3R4LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHgu
+YwppbmRleCAyNzA1MDllLi4wYjFhOTNlIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9pd2x3aWZpL3BjaWUvdHguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3Bj
+aWUvdHguYwpAQCAtMjk0LDEzICsyOTQsMTQgQEAgc3RhdGljIHZvaWQgaXdsX3BjaWVfdHhxX2lu
+dmFsX2J5dGVfY250X3RibChzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywKICAqLwogdm9pZCBpd2xf
+cGNpZV90eHFfaW5jX3dyX3B0cihzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgc3RydWN0IGl3bF90
+eHEgKnR4cSkKIHsKKwlzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgKnRyYW5zX3BjaWUgPSBJV0xfVFJB
+TlNfR0VUX1BDSUVfVFJBTlModHJhbnMpOwogCXUzMiByZWcgPSAwOwogCWludCB0eHFfaWQgPSB0
+eHEtPnEuaWQ7CiAKIAlpZiAodHhxLT5uZWVkX3VwZGF0ZSA9PSAwKQogCQlyZXR1cm47CiAKLQlp
+ZiAodHJhbnMtPmNmZy0+YmFzZV9wYXJhbXMtPnNoYWRvd19yZWdfZW5hYmxlKSB7CisJaWYgKHRy
+YW5zLT5jZmctPmJhc2VfcGFyYW1zLT5zaGFkb3dfcmVnX2VuYWJsZSB8fCB0eHFfaWQgPT0gdHJh
+bnNfcGNpZS0+Y21kX3F1ZXVlKSB7CiAJCS8qIHNoYWRvdyByZWdpc3RlciBlbmFibGVkICovCiAJ
+CWl3bF93cml0ZTMyKHRyYW5zLCBIQlVTX1RBUkdfV1JQVFIsCiAJCQkgICAgdHhxLT5xLndyaXRl
+X3B0ciB8ICh0eHFfaWQgPDwgOCkpOwotLSAKMS44LjMuMgoK
+--001a113440a612f74c04f0626385--
