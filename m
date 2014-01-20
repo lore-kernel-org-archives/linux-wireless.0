@@ -1,126 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:60961 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbaAQM7T convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60046 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaATMAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 07:59:19 -0500
-Received: by mail-pa0-f45.google.com with SMTP id lf10so1837102pab.4
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 04:59:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8b96c31da0f8a23b8e99ed790e462bd933925041.1389947627.git.gamerh2o@gmail.com>
-References: <CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
-	<8b96c31da0f8a23b8e99ed790e462bd933925041.1389947627.git.gamerh2o@gmail.com>
-Date: Fri, 17 Jan 2014 20:59:18 +0800
-Message-ID: <CAAb+SYZ4K1iLLiZG-RjyJeBjUu13QVGH2XgBGyWKE1_U6fQZWw@mail.gmail.com> (sfid-20140117_135921_678554_9EB07168)
-Subject: Re: [PATCH v2] b43: use kernel api to replace b43 specific helper function
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Luca Coelho <luca@coelho.fi>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 20 Jan 2014 07:00:08 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W5DWP-0007i3-ST
+	for linux-wireless@vger.kernel.org; Mon, 20 Jan 2014 13:00:06 +0100
+Message-ID: <1390219203.4335.22.camel@jlt4.sipsolutions.net> (sfid-20140120_130012_303574_E227372E)
+Subject: [PATCH] mac80211: Fix ROC duration == 0 handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Jan 2014 13:00:03 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 5:11 PM, ZHAO Gang <gamerh2o@gmail.com> wrote:
-> The b43_freq_to_channel_{2,5}ghz() should be changed to
-> b43_channel_to_freq{2,5}ghz() if we want to use b43 helper function,
-> but a better way is to use kernel api ieee80211_channel_to_frequency()
-> and remove these unnecessary helper function.
->
-> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
-> ---
-> v2: combine two patches to one.
->     suggested by Luca Coelho and Rafał Miłecki
->
+From: Ilan Peer <ilan.peer@intel.com>
 
-The version 2 patch should be ignored. After more discussion, it seems it's
-good to let the fix be two patches.
+In case the given ROC duration is 0, update it to a minimal value before
+setting the ieee80211_roc_work parameters, so it also would be valid
+for cases where scan is in progress or there are other ROCs queued.
 
->  drivers/net/wireless/b43/main.h | 35 -----------------------------------
->  drivers/net/wireless/b43/xmit.c | 12 ++++++------
->  2 files changed, 6 insertions(+), 41 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-> index abac25e..f476fc3 100644
-> --- a/drivers/net/wireless/b43/main.h
-> +++ b/drivers/net/wireless/b43/main.h
-> @@ -58,41 +58,6 @@ enum b43_verbosity {
->  #endif
->  };
->
-> -
-> -/* Lightweight function to convert a frequency (in Mhz) to a channel number. */
-> -static inline u8 b43_freq_to_channel_5ghz(int freq)
-> -{
-> -       return ((freq - 5000) / 5);
-> -}
-> -static inline u8 b43_freq_to_channel_2ghz(int freq)
-> -{
-> -       u8 channel;
-> -
-> -       if (freq == 2484)
-> -               channel = 14;
-> -       else
-> -               channel = (freq - 2407) / 5;
-> -
-> -       return channel;
-> -}
-> -
-> -/* Lightweight function to convert a channel number to a frequency (in Mhz). */
-> -static inline int b43_channel_to_freq_5ghz(u8 channel)
-> -{
-> -       return (5000 + (5 * channel));
-> -}
-> -static inline int b43_channel_to_freq_2ghz(u8 channel)
-> -{
-> -       int freq;
-> -
-> -       if (channel == 14)
-> -               freq = 2484;
-> -       else
-> -               freq = 2407 + (5 * channel);
-> -
-> -       return freq;
-> -}
-> -
->  static inline int b43_is_cck_rate(int rate)
->  {
->         return (rate == B43_CCK_RATE_1MB ||
-> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-> index 4ae63f4..218a0f3 100644
-> --- a/drivers/net/wireless/b43/xmit.c
-> +++ b/drivers/net/wireless/b43/xmit.c
-> @@ -806,7 +806,8 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->                 B43_WARN_ON(1);
->                 /* FIXME: We don't really know which value the "chanid" contains.
->                  *        So the following assignment might be wrong. */
-> -               status.freq = b43_channel_to_freq_5ghz(chanid);
-> +               status.freq =
-> +                       ieee80211_channel_to_frequency(chanid, status.band);
->                 break;
->         case B43_PHYTYPE_G:
->                 status.band = IEEE80211_BAND_2GHZ;
-> @@ -819,13 +820,12 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->         case B43_PHYTYPE_HT:
->                 /* chanid is the SHM channel cookie. Which is the plain
->                  * channel number in b43. */
-> -               if (chanstat & B43_RX_CHAN_5GHZ) {
-> +               if (chanstat & B43_RX_CHAN_5GHZ)
->                         status.band = IEEE80211_BAND_5GHZ;
-> -                       status.freq = b43_freq_to_channel_5ghz(chanid);
-> -               } else {
-> +               else
->                         status.band = IEEE80211_BAND_2GHZ;
-> -                       status.freq = b43_freq_to_channel_2ghz(chanid);
-> -               }
-> +               status.freq =
-> +                       ieee80211_channel_to_frequency(chanid, status.band);
->                 break;
->         default:
->                 B43_WARN_ON(1);
-> --
-> 1.8.4.2
->
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 032081c..e9ae299 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2628,6 +2628,18 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	if (!roc)
+ 		return -ENOMEM;
+ 
++	/*
++	 * If the duration is zero, then the driver
++	 * wouldn't actually do anything. Set it to
++	 * 10 for now.
++	 *
++	 * TODO: cancel the off-channel operation
++	 *       when we get the SKB's TX status and
++	 *       the wait time was zero before.
++	 */
++	if (!duration)
++		duration = 10;
++
+ 	roc->chan = channel;
+ 	roc->duration = duration;
+ 	roc->req_duration = duration;
+@@ -2651,18 +2663,6 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 
+ 	/* otherwise actually kick it off here (for error handling) */
+ 
+-	/*
+-	 * If the duration is zero, then the driver
+-	 * wouldn't actually do anything. Set it to
+-	 * 10 for now.
+-	 *
+-	 * TODO: cancel the off-channel operation
+-	 *       when we get the SKB's TX status and
+-	 *       the wait time was zero before.
+-	 */
+-	if (!duration)
+-		duration = 10;
+-
+ 	ret = drv_remain_on_channel(local, sdata, channel, duration, type);
+ 	if (ret) {
+ 		kfree(roc);
+-- 
+1.8.5.1
+
+
+
