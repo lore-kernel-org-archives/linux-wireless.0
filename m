@@ -1,133 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:64747 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaAUTQi (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:38481 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbaATAfT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 14:16:38 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e53so3543532eek.27
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 11:16:37 -0800 (PST)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	andrea merello <andrea.merello@gmail.com>
-Subject: [PATCH] rtl818x: change misleading names for few register bit definitions
-Date: Tue, 21 Jan 2014 20:16:43 +0100
-Message-Id: <1390331803-3672-1-git-send-email-andrea.merello@gmail.com> (sfid-20140121_201642_530242_9DB1C857)
+	Sun, 19 Jan 2014 19:35:19 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so6388897wgh.7
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jan 2014 16:35:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P1aKozsAR4xceeJXuwny1+LMEG+_y2RKgTQLSM=VctgDA@mail.gmail.com>
+References: <CAJwHY9U3_8soEfj0hQH3N6zdsDigiwcFx3djVn701C0=sAW-vQ@mail.gmail.com>
+	<52DAD949.2090906@gmail.com>
+	<CAJwHY9X3Rp2NRwXmjfH_-8odysKq9OozpVTr5dE33g4zk0Lg8g@mail.gmail.com>
+	<CANUX_P1aKozsAR4xceeJXuwny1+LMEG+_y2RKgTQLSM=VctgDA@mail.gmail.com>
+Date: Sun, 19 Jan 2014 19:35:18 -0500
+Message-ID: <CAJwHY9Vt4G52SVFom7iG5GaNRg94A_dBogtoMH-_U8ffxfgXbQ@mail.gmail.com> (sfid-20140120_013524_185603_BD9D0FA9)
+Subject: Re: iwlwifi & 7260 issues
+From: Adam Stylinski <kungfujesus06@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: andrea merello <andrea.merello@gmail.com>
+Excellent, I'll try to get this to you by end of day / evening tomorrow.
 
-In rtl8180/rtl8187 drivers, few register bit definitions have
-names of form FOOBAR_SHIFT, suggesting they should be used as
-shift offset, for example
-reg |= (1 << ENABLE_FOO_SHIFT).
-
-However they are actually defined as (1 << x) and thus they are
-used (correctly) like
-reg |= ENABLE_FOO_SHIFT;
-
-This patch kills the misleading _SHIFT suffix.
-
-Signed-off-by: andrea merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c |  8 ++++----
- drivers/net/wireless/rtl818x/rtl8187/dev.c | 14 +++++++-------
- drivers/net/wireless/rtl818x/rtl818x.h     | 10 +++++-----
- 3 files changed, 16 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 8ec17aa..9bc843e 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -602,13 +602,13 @@ static int rtl8180_start(struct ieee80211_hw *dev)
- 
- 	if (priv->r8185) {
- 		reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
--		reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
--		reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-+		reg &= ~RTL818X_CW_CONF_PERPACKET_CW;
-+		reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
- 		rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
- 
- 		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
--		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
--		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
- 		reg |=  RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
- 		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
- 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index fd78df8..c981bcf 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -785,7 +785,7 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	rtl818x_iowrite16(priv, (__le16 *)0xFF34, 0x0FFF);
- 
- 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
--	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-+	reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
- 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
- 
- 	/* Auto Rate Fallback Register (ARFR): 1M-54M setting */
-@@ -943,8 +943,8 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
- 
- 		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
--		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
--		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
- 		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
- 		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
- 
-@@ -986,13 +986,13 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
- 
- 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
--	reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
--	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-+	reg &= ~RTL818X_CW_CONF_PERPACKET_CW;
-+	reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
- 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
- 
- 	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
--	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
--	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-+	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
-+	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
- 	reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
- 	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
- 
-diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
-index ce23dfd..fa7f7f6 100644
---- a/drivers/net/wireless/rtl818x/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x/rtl818x.h
-@@ -144,9 +144,9 @@ struct rtl818x_csr {
- 	__le32	HSSI_PARA;
- 	u8	reserved_13[4];
- 	u8	TX_AGC_CTL;
--#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
--#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
--#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT			(1 << 2)
-+#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN	(1 << 0)
-+#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL	(1 << 1)
-+#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT		(1 << 2)
- 	u8	TX_GAIN_CCK;
- 	u8	TX_GAIN_OFDM;
- 	u8	TX_ANTENNA;
-@@ -158,8 +158,8 @@ struct rtl818x_csr {
- 	u8	SLOT;
- 	u8	reserved_16[5];
- 	u8	CW_CONF;
--#define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
--#define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
-+#define RTL818X_CW_CONF_PERPACKET_CW	(1 << 0)
-+#define RTL818X_CW_CONF_PERPACKET_RETRY	(1 << 1)
- 	u8	CW_VAL;
- 	u8	RATE_FALLBACK;
- #define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
--- 
-1.8.3.2
-
+On Sun, Jan 19, 2014 at 3:30 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Sat, Jan 18, 2014 at 10:23 PM, Adam Stylinski
+> <kungfujesus06@gmail.com> wrote:
+>> Tell me how and I might be able to.  It doesn't drop me into the
+>> kernel debugger if that's what you mean.  I'm using the stock kernel
+>> with my distro but if it requires more I'm willing to do it for the
+>> sake of having a working card.
+>
+> compile the kernel with CONFIG_IWLWIFI_DEVICE_TRACING and
+> CONFIG_IWLWIFI_DEBUG set.
+> Then, compile trace-cmd
+> (https://git.kernel.org/cgit/linux/kernel/git/rostedt/trace-cmd.git/)
+>
+> Finally as root:
+>   trace-cmd record -e iwlwifi -e iwlwifi_dbg
+>
+> Run the failing scenario - until you get the warning.
+>
+> you'll get  a trace.dat file. Compress it and send it to me.
+>
+> If you can't make it work - please enable CONFIG_IWLWIFI_DEBUG and
+> load the iwlwifi module with:
+> debug=0xC0800000 and send the dmesg output / syslog when the WARNING
+> occurs. This option is less preferred though.
+>
+>>
+>> On Sat, Jan 18, 2014 at 2:43 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>
+>>>
+>>> On 01/18/2014 08:47 PM, Adam Stylinski wrote:
+>>>> So does kernel 3.13 address all of these stability issues I've been
+>>>> having with the 7260 wireless NIC?  The communication between driver
+>>>> and firmware seems to frequently deadlock.  When I reinitialize the
+>>>> following stack trace spits out:
+>>>>
+>>>> [12152.263634] WARNING: CPU: 2 PID: 199 at
+>>>> drivers/net/wireless/iwlwifi/mvm/tx.c:684
+>>>> iwl_mvm_rx_tx_cmd+0x58c/0x5e0 [iwlmvm]()
+>>>> [12152.263636] Modules linked in: snd_hda_codec_hdmi joydev arc4
+>>>> snd_hda_codec_realtek x86_pkg_temp_thermal coretemp nls_cp437
+>>>> kvm_intel iTCO_wdt vfat fat iTCO_vendor_support kvm crct10dif_pclmul
+>>>> crct10dif_common crc32_pclmul crc32c_intel ghash_clmulni_intel
+>>>> aesni_intel aes_x86_64 lrw gf128mul iwlmvm glue_helper ablk_helper
+>>>> cryptd microcode mac80211 btusb evdev psmouse serio_raw bluetooth
+>>>> pcspkr iwlwifi rtsx_pci_ms memstick cfg80211 i915 thermal wmi
+>>>> intel_agp thinkpad_acpi battery snd_hda_intel nvram tpm_tis ac rfkill
+>>>> tpm tpm_bios intel_gtt drm_kms_helper snd_hda_codec snd_hwdep e1000e
+>>>> snd_pcm video drm snd_page_alloc mei_me snd_timer mei snd button
+>>>> i2c_i801 ptp soundcore i2c_algo_bit shpchp pps_core i2c_core processor
+>>>> lpc_ich nfs lockd sunrpc fscache ext4 crc16 mbcache jbd2 sd_mod
+>>>> rtsx_pci_sdmmc mmc_core
+>>>> [12152.263699]  ahci libahci libata scsi_mod ehci_pci ehci_hcd
+>>>> rtsx_pci xhci_hcd usbcore usb_common
+>>>> [12152.263709] CPU: 2 PID: 199 Comm: irq/61-iwlwifi Tainted: G
+>>>> W    3.12.7-2-ARCH #1
+>>>> [12152.263711] Hardware name: LENOVO 20ALCTO1WW/20ALCTO1WW, BIOS
+>>>> GIET66WW (2.16 ) 12/02/2013
+>>>> [12152.263713]  0000000000000009 ffff8800d55e9c38 ffffffff814ec113
+>>>> 0000000000000000
+>>>> [12152.263725]  ffff8800d55e9c70 ffffffff81061b8d ffff8800d433c618
+>>>> ffff8800d41317d0
+>>>> [12152.263728]  ffff8800d433c668 ffff8800d433c678 ffff8800d41317d8
+>>>> ffff8800d55e9c80
+>>>> [12152.263731] Call Trace:
+>>>> [12152.263738]  [<ffffffff814ec113>] dump_stack+0x54/0x8d
+>>>> [12152.263743]  [<ffffffff81061b8d>] warn_slowpath_common+0x7d/0xa0
+>>>> [12152.263746]  [<ffffffff81061c6a>] warn_slowpath_null+0x1a/0x20
+>>>> [12152.263752]  [<ffffffffa09f9b0c>] iwl_mvm_rx_tx_cmd+0x58c/0x5e0 [iwlmvm]
+>>>> [12152.263756]  [<ffffffffa09f49fd>] iwl_mvm_rx_dispatch+0x13d/0x160 [iwlmvm]
+>>>> [12152.263762]  [<ffffffffa07dba08>] iwl_pcie_irq_handler+0xff8/0x12e0 [iwlwifi]
+>>>> [12152.263767]  [<ffffffff810b69d0>] ? irq_finalize_oneshot.part.29+0xd0/0xd0
+>>>> [12152.263770]  [<ffffffff810b69f0>] irq_thread_fn+0x20/0x50
+>>>> [12152.263773]  [<ffffffff810b69d0>] ? irq_finalize_oneshot.part.29+0xd0/0xd0
+>>>> [12152.263776]  [<ffffffff810b6d2f>] irq_thread+0x11f/0x150
+>>>> [12152.263780]  [<ffffffff810b6b50>] ? wake_threads_waitq+0x50/0x50
+>>>> [12152.263783]  [<ffffffff810b6c10>] ? irq_thread_dtor+0xc0/0xc0
+>>>> [12152.263787]  [<ffffffff81083f60>] kthread+0xc0/0xd0
+>>>> [12152.263791]  [<ffffffff81083ea0>] ? kthread_create_on_node+0x120/0x120
+>>>> [12152.263794]  [<ffffffff814fab7c>] ret_from_fork+0x7c/0xb0
+>>>> [12152.263798]  [<ffffffff81083ea0>] ? kthread_create_on_node+0x120/0x120
+>>>> [12152.263800] ---[ end trace d95aa1d60ba2d57e ]---
+>>>>
+>>>
+>>> No - we don't address specifically anything like this.
+>>> This is the first time I see this WARNING with 7260.
+>>> Do you have the ability to record a tracing?
