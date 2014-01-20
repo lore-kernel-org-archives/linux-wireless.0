@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47185 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:60049 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbaAGPaN (ORCPT
+	with ESMTP id S1751538AbaATMAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 10:30:13 -0500
-Message-ID: <1389108609.4645.10.camel@jlt4.sipsolutions.net> (sfid-20140107_163028_275419_670CC6DD)
-Subject: Re: [PATCH 2/2] [RFC] mac80211: Add all enabled channels to the
- supported channels element
+	Mon, 20 Jan 2014 07:00:55 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W5DXC-0007j5-L3
+	for linux-wireless@vger.kernel.org; Mon, 20 Jan 2014 13:00:54 +0100
+Message-ID: <1390219252.4335.24.camel@jlt4.sipsolutions.net> (sfid-20140120_130058_635262_649D6D3E)
+Subject: [PATCH] mac80211: advertise BF STS according to AP support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 07 Jan 2014 16:30:09 +0100
-In-Reply-To: <1388503946-25862-3-git-send-email-ilan.peer@intel.com> (sfid-20131231_163100_337930_7D3482AD)
-References: <1388503946-25862-1-git-send-email-ilan.peer@intel.com>
-	 <1388503946-25862-3-git-send-email-ilan.peer@intel.com>
-	 (sfid-20131231_163100_337930_7D3482AD)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Jan 2014 13:00:52 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-31 at 17:32 +0200, Ilan Peer wrote:
+From: Eyal Shapira <eyal@wizery.com>
+
+Restrict our published beamformee STS capability according
+to the AP value.
+Some AP show bad behaviour in interoperability testing
+when our capabilities are better.
+
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dc770bd..2d7e1bee 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -508,6 +508,7 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
+ 	u8 *pos;
+ 	u32 cap;
+ 	struct ieee80211_sta_vht_cap vht_cap;
++	u32 mask, ap_bf_sts, our_bf_sts;
+ 
+ 	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
+ 
+@@ -535,6 +536,16 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
+ 			cpu_to_le32(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)))
+ 		cap &= ~IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE;
+ 
++	mask = IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
++
++	ap_bf_sts = le32_to_cpu(ap_vht_cap->vht_cap_info) & mask;
++	our_bf_sts = cap & mask;
++
++	if (ap_bf_sts < our_bf_sts) {
++		cap &= ~mask;
++		cap |= ap_bf_sts;
++	}
++
+ 	/* reserve and fill IE */
+ 	pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
+ 	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
+-- 
+1.8.5.1
 
 
-> +                       chan =
-> ieee80211_frequency_to_channel(center_freq);
-> +
-> +                       if (first_chan == 0) {
-> +                               /* first subband */
-> +                               first_chan = chan;
-> +                               count = 1;
-> +                       } else if (first_chan + count == chan) {
-> +                               /* continue the subband.
-> +                                * TODO: this is really only useful
-> for 2.4,
-> +                                * need to add spacing considerations for other
-> +                                * bands as well (the definition of a
-> subband
-> +                                * in the 802.11 spec. is a bit
-> vague).
-> +                                */
-> +                               count++;
-
-I agree this is very vague - anyone have a good idea who to ask?
-
-As it is now, I'm not sure it's correct at all, even in the version we
-have today, since different operating classes could have different
-requirements. Especially since we support 5/10 MHz now, I suspect even
-ieee80211_frequency_to_channel() really should be taught about operating
-classes in some form?
-
-> +	/* Get the number of enabled channels for spectrum management */
-> +	n_channels = ieee80211_get_num_enabled_channels(local->hw.wiphy);
-
-I would prefer you did this with an upper bound rather than the number
-of enabled channels - we don't need a good estimate, worst case we'll
-allocate a few bytes too many, but if we get it completely wrong e.g.
-because the channel flags are being changed, then we could overrun the
-SKB allocation, I think?
-
-It'd also be faster to iterate only the bands and add up n_channels
-rather than checking each channel's enabled bit.
-
-johannes
 
