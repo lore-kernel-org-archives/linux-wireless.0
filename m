@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:17548 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754114AbaA0VgR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59752 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074AbaATK3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 16:36:17 -0500
-Message-ID: <52E6D148.5020703@broadcom.com> (sfid-20140127_223634_149784_3659A64F)
-Date: Mon, 27 Jan 2014 22:36:08 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Alessandro Gnagni <enterprise.nx@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Trying to add support of 802.11ac broadcom chpiset to openwrt
-References: <52821B80.6000305@gmail.com>	<52826A82.3010505@broadcom.com> <CAJ-Vmo=LtKsGPbvjQ01VQSad-vKCkq5usRaGcD-WdZPcnG7SrQ@mail.gmail.com>
-In-Reply-To: <CAJ-Vmo=LtKsGPbvjQ01VQSad-vKCkq5usRaGcD-WdZPcnG7SrQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 20 Jan 2014 05:29:37 -0500
+Message-ID: <1390213774.4335.3.camel@jlt4.sipsolutions.net> (sfid-20140120_112940_829640_B7C349F3)
+Subject: Re: [PATCH] cfg80211: fix few minor issues in reg_process_hint()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 20 Jan 2014 11:29:34 +0100
+In-Reply-To: <1389705443-23410-1-git-send-email-ilan.peer@intel.com> (sfid-20140114_141537_791569_4F9CE0C3)
+References: <1389705443-23410-1-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140114_141537_791569_4F9CE0C3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/27/2014 08:10 PM, Adrian Chadd wrote:
-> On 12 November 2013 09:50, Arend van Spriel <arend@broadcom.com> wrote:
->> On 11/12/2013 01:13 PM, Alessandro Gnagni wrote:
->>>
->>> Hi,
->>> i am trying to implement on a smart city network a solution based on
->>> high end home routers like the asus RT-AC66U.
->>> we want to use openwrt for that but unfortunately the broadcom driver
->>> isn't yet supported.
->>> I have one rt-ac66u here for development, there is anything that i can
->>> do for help?
->>> i came here after a suggestion of one member on openwrt forum:
->>> https://forum.openwrt.org/viewtopic.php?pid=217341#p217341
->>>
->>> i also read this past email:
->>> http://www.spinics.net/lists/linux-wireless/msg110443.html
->>
->>
->> Not sure what 11ac chipset is used. The upstream brcm80211 drivers currently
->> only support one 11ac chipset, ie. the bcm4335. This is a single stream with
->> SDIO host interface supported by the fullmac driver brcmfmac.
->>
->> For chipsets like 4360 we need to add AC phy support to brcmsmac. So far we
->> do not have green light to do so.
->>
->> Regards,
->> Arend
+On Tue, 2014-01-14 at 15:17 +0200, Ilan Peer wrote:
+> Fix the following issues in reg_process_hint():
 > 
-> Hiya,
-> 
-> Is this still the status quo? I'd like to start porting updated
-> broadcom support to FreeBSD for Apple Macintosh users who would like
-> 11ac NIC support.
+> 1. Add verification that wiphy is valid before processing
+>    NL80211_REGDOMAIN_SET_BY_COUNTRY_IE.
+> 2. Free the request in case of invalid initiator.
+> 3. Remove WARN_ON check on reg_request->alpha2 as it is not a
+>    pointer.
 
-Hi Adrian,
+Applied.
 
-Interesting. A while ago someone wanted to port brcmsmac to a BSD flavor
-(not sure which one). Now brcmsmac as-is today uses BCMA bus driver
-which goes under GPL-v2, which may or may not be a problem. Apple Mac
-users probably have 4360 and that hurdle is also still there.
+It's not clear to me that we don't leak anywhere else, and that the
+wiphy_update_regulatory() call can't be a use-after-free?
 
-Gr. AvS
+johannes
+
