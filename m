@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52255 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbaAaON4 (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:33223 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349AbaATOZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 09:13:56 -0500
-Message-ID: <1391177634.4141.24.camel@jlt4.sipsolutions.net> (sfid-20140131_151400_103529_F40773F2)
-Subject: Re: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Date: Fri, 31 Jan 2014 15:13:54 +0100
-In-Reply-To: <1390818118-27261-5-git-send-email-ilan.peer@intel.com> (sfid-20140127_112047_079973_9230A036)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-	 <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140127_112047_079973_9230A036)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 20 Jan 2014 09:25:44 -0500
+Received: by mail-ea0-f173.google.com with SMTP id d10so350245eaj.18
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:25:41 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/7] mac80211: fix sdata->radar_required locking
+Date: Mon, 20 Jan 2014 15:21:07 +0100
+Message-Id: <1390227670-19030-5-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152555_016316_1A177AB8)
+In-Reply-To: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-27 at 12:21 +0200, Ilan Peer wrote:
+radar_required setting wasn't protected by
+local->mtx in some places. This should prevent
+from scanning/radar detection/roc colliding.
 
->  	switch (user_reg_hint_type) {
->  	case NL80211_USER_REG_HINT_USER:
->  	case NL80211_USER_REG_HINT_CELL_BASE:
-> -		break;
-> +		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
-> +			return -EINVAL;
-> +
-> +		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
-> +		return regulatory_hint_user(data, user_reg_hint_type);
-> +	case NL80211_USER_REG_HINT_INDOOR:
-> +		return regulatory_hint_indoor_user();
->  	default:
->  		return -EINVAL;
->  	}
->  
-> -	r = regulatory_hint_user(data, user_reg_hint_type);
-> -
-> -	return r;
-> +	return 0;
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c  | 4 ++--
+ net/mac80211/ibss.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Isn't that "return 0" dead code now?
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 76fe1f90..ddb1c4d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -970,9 +970,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	/* TODO: make hostapd tell us what it wants */
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+-	sdata->radar_required = params->radar_required;
+ 
+ 	mutex_lock(&local->mtx);
++	sdata->radar_required = params->radar_required;
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
+ 	mutex_unlock(&local->mtx);
+@@ -3017,8 +3017,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	int err, changed = 0;
+ 
+-	sdata->radar_required = sdata->csa_radar_required;
+ 	mutex_lock(&local->mtx);
++	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+ 	mutex_unlock(&local->mtx);
+ 	if (WARN_ON(err < 0))
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5ca5834..4854800 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -303,6 +303,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		mutex_unlock(&local->mtx);
+ 		return;
+ 	}
++	sdata->radar_required = radar_required;
+ 	mutex_unlock(&local->mtx);
+ 
+ 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
+@@ -318,7 +319,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(ifibss->presp, presp);
+ 	mgmt = (void *)presp->head;
+ 
+-	sdata->radar_required = radar_required;
+ 	sdata->vif.bss_conf.enable_beacon = true;
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
+ 	sdata->vif.bss_conf.basic_rates = basic_rates;
+-- 
+1.8.4.rc3
 
