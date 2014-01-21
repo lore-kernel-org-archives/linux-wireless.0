@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:37404 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754099AbaAULLI (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.186]:59861 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396AbaAUSuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 06:11:08 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [RFC 1/5] cfg80211: export minstrel best rate information through get_station()
-Date: Tue, 21 Jan 2014 12:09:47 +0100
-Message-Id: <1390302591-3352-2-git-send-email-antonio@meshcoding.com> (sfid-20140121_121112_007146_3431ABD1)
-In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+	Tue, 21 Jan 2014 13:50:44 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Alexandre Courbot <gnurou@gmail.com>
+Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
+Date: Tue, 21 Jan 2014 19:50:06 +0100
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"linux-sunxi" <linux-sunxi@googlegroups.com>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	"Chen-Yu Tsai" <wens@csie.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>
+References: <1389941251-32692-1-git-send-email-wens@csie.org> <201401211335.16885.arnd@arndb.de> <CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
+In-Reply-To: <CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201401211950.07011.arnd@arndb.de> (sfid-20140121_195109_633800_C1FF33C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Tuesday 21 January 2014, Alexandre Courbot wrote:
+> >> As discussed earlier in this thread I'm not sure the con_id is
+> >> suitable for labelling GPIOs. It'd be better to have a proper name
+> >> specified in DT/ACPI instead.
+> >
+> > +1
+> 
+> I wonder why you guys prefer to have the name defined in the GPIO
+> mapping. Having the driver decide the label makes it easier to look up
+> which GPIO does what in debugfs, whereas nothing prevents people to
+> name GPIOs whatever inadequate name they want in the device DT node.
+> What am I overlooking here?
 
-Users may need information about the best rate used by
-minstrel for a particular wireless device.
-Export such rate and its success probability through the
-get_station() API.
+I should have another look at the debugfs representation, but isn't
+there a global namespace that gets used for all gpios?  Neither the
+con_id nor the name that the driver picks would be globally unique
+and stable across kernel versions, so they don't make a good user
+interface.
 
-The exported information is Minstrel specific only,
-therefore drivers not using such RC algorithm should not
-report this data.
+I think what we want here is a system-wide unique identifier for
+each gpio line that may get represented in debugfs, and use a new
+DT mechanism to communicate that.
 
-This information is useful to the batman-adv module which
-will use it for its new metric computation.
-
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- include/net/cfg80211.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5e57bf..51d5d94 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -854,6 +854,7 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
-  * @STATION_INFO_NONPEER_PM: @nonpeer_pm filled
-  * @STATION_INFO_CHAIN_SIGNAL: @chain_signal filled
-  * @STATION_INFO_CHAIN_SIGNAL_AVG: @chain_signal_avg filled
-+ * @STATION_INFO_MINSTREL_BEST_RATE: @minstrel_best_rate filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -884,6 +885,7 @@ enum station_info_flags {
- 	STATION_INFO_TX_BYTES64		= 1<<25,
- 	STATION_INFO_CHAIN_SIGNAL	= 1<<26,
- 	STATION_INFO_CHAIN_SIGNAL_AVG	= 1<<27,
-+	STATION_INFO_MINSTREL_BEST_RATE	= 1<<28,
- };
- 
- /**
-@@ -963,6 +965,16 @@ struct sta_bss_parameters {
- #define IEEE80211_MAX_CHAINS	4
- 
- /**
-+ * struct cfg80211_minstral_rate_info - exported minstrel rate information
-+ * @bitrate: current chosen TX bitrate
-+ * @prob: probability of success of this birate
-+ */
-+struct cfg80211_minstrel_rate_info {
-+	u32 bitrate;
-+	u32 prob;
-+};
-+
-+/**
-  * struct station_info - station information
-  *
-  * Station information filled by driver for get_station() and dump_station.
-@@ -1005,6 +1017,9 @@ struct sta_bss_parameters {
-  * @local_pm: local mesh STA power save mode
-  * @peer_pm: peer mesh STA power save mode
-  * @nonpeer_pm: non-peer mesh STA power save mode
-+ * @minstrel_best_rate: information extracted from the Minstrel RC algorithm
-+ *  about the bitrate having the maximum throughput. This field can be filled
-+ *  only by drivers using Minstrel
-  */
- struct station_info {
- 	u32 filled;
-@@ -1043,6 +1058,8 @@ struct station_info {
- 	enum nl80211_mesh_power_mode peer_pm;
- 	enum nl80211_mesh_power_mode nonpeer_pm;
- 
-+	struct cfg80211_minstrel_rate_info minstrel_best_rate;
-+
- 	/*
- 	 * Note: Add a new enum station_info_flags value for each new field and
- 	 * use it to check which fields are initialized.
--- 
-1.8.5.3
-
+	Arnd
