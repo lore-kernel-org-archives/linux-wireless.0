@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:40643 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbaAMUWM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36736 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbaAUPOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:12 -0500
-Received: by mail-ea0-f174.google.com with SMTP id b10so3547200eae.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:11 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/18] iwlwifi: mvm: fix tx seq_ctrl debug print
-Date: Mon, 13 Jan 2014 22:21:46 +0200
-Message-Id: <1389644517-22807-7-git-send-email-egrumbach@gmail.com> (sfid-20140113_213436_652158_85156423)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+	Tue, 21 Jan 2014 10:14:46 -0500
+Message-ID: <1390317277.6199.33.camel@jlt4.sipsolutions.net> (sfid-20140121_161450_203765_A040C101)
+Subject: Re: [PATCH 6/7] mac80211: deny attempts at using chanctx during CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, Luca Coelho <luca@coelho.fi>
+Date: Tue, 21 Jan 2014 16:14:37 +0100
+In-Reply-To: <1390227670-19030-7-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152543_881447_A83022A4)
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-7-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140120_152543_881447_A83022A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliadx.peller@intel.com>
+On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
+> It was possible to connect STA when AP CSA was in
+> progress which clearly was a bug.
+> 
+> Deny attempts to increase chanctx refcount or
+> create chanctx.
+> 
+> This effectively denies starting a new interface
+> and radar detection while CSA is in progress.
+> 
+> Existing interfaces (including those with active
+> CSA) can be stopped though.
 
-Since seq_number is incremented right after using
-it, so printed seq_ctrl was actually the next
-one to be used.
+I think this is the wrong approach. This makes more special cases for
+non-chanctx code, whereas I think the code should gain more channel
+context awareness. Luca has a patch to make channel switch work with
+channel contexts (by creating one on the new channel and then later
+switching to it), and I think this mechanism should be subsumed into the
+channel context reservation code, rather than being CSA specific.
 
-Fix it by incrementing the seq_number only later,
-before saving it.
+However, if there's only one channel context (or no support for channel
+contexts) then CSA becomes a special case in Luca's patch, I guess,
+because we can't be reserving a new one?
 
-Additionally, use the IEEE80211_SEQ_TO_SN macro
-in order to print the actual sequence number.
+Luca, this is probably something you need to look into - this goes back
+to the exact timing thing we just talked about. If we don't support
+channel contexts, then we can create a fake one to switch to, but then
+this fake one can't accept any further interfaces being bound to it
+since it will not be able to coexist with the other one.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tx.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+As far as this particular behaviour is concerned, I would then say that
+then the old channel context should also be marked as incompatible for
+the time of the CSA, so that no other (station) vif can attempt to use
+it.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index a4d3bce..90378c2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -390,7 +390,6 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		seq_number &= IEEE80211_SCTL_SEQ;
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
--		seq_number += 0x10;
- 		is_data_qos = true;
- 		is_ampdu = info->flags & IEEE80211_TX_CTL_AMPDU;
- 	}
-@@ -407,13 +406,13 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	}
- 
- 	IWL_DEBUG_TX(mvm, "TX to [%d|%d] Q:%d - seq: 0x%x\n", mvmsta->sta_id,
--		     tid, txq_id, seq_number);
-+		     tid, txq_id, IEEE80211_SEQ_TO_SN(seq_number));
- 
- 	if (iwl_trans_tx(mvm->trans, skb, dev_cmd, txq_id))
- 		goto drop_unlock_sta;
- 
- 	if (is_data_qos && !ieee80211_has_morefrags(fc))
--		mvmsta->tid_data[tid].seq_number = seq_number;
-+		mvmsta->tid_data[tid].seq_number = seq_number + 0x10;
- 
- 	spin_unlock(&mvmsta->lock);
- 
--- 
-1.7.9.5
+That'll result in a better solution overall, I think.
+
+johannes
 
