@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:14616 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021AbaAULLI (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36951 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730AbaAUQSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 06:11:08 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@meshcoding.com>
-Subject: [RFC 0/5] Export Minstrel best API information via get_station()
-Date: Tue, 21 Jan 2014 12:09:46 +0100
-Message-Id: <1390302591-3352-1-git-send-email-antonio@meshcoding.com> (sfid-20140121_121110_964228_C6A6B498)
+	Tue, 21 Jan 2014 11:18:10 -0500
+Message-ID: <1390321084.6199.65.camel@jlt4.sipsolutions.net> (sfid-20140121_171814_503053_12B710E2)
+Subject: Re: [RFC 1/5] cfg80211: export minstrel best rate information
+ through get_station()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: Antonio Quartulli <antonio@meshcoding.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 21 Jan 2014 17:18:04 +0100
+In-Reply-To: <52DE9BAA.6020205@open-mesh.com>
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+		 <1390302591-3352-2-git-send-email-antonio@meshcoding.com>
+	 <1390320014.6199.61.camel@jlt4.sipsolutions.net>
+	 <52DE9BAA.6020205@open-mesh.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello list,
+On Tue, 2014-01-21 at 17:09 +0100, Antonio Quartulli wrote:
 
-we (as batman-adv developers) are currently working on a new version of the
-our routing protocol which is going to use some Minstrel internal information
-to compute the metric.
-In particular I am interested in the currently selected bitrate (which Minstrel
-selected because it "maximises the throughput") and it's probability of success.
+> > Actually this isn't expected throughput, but
+> > wouldn't something like expected throughput make even more sense?
+> 
+> How should I obtain that if not with the previous operation (bitrate*prob)?
 
-To achieve so I am proposing here a change to the get_station API.
-This change is supposed to export the needed information only if the current
-driver is using the Minstrel (or Minstrel HT) RC algorithm.
+Minstrel actually has some tables for that, no? This would still just
+only be the raw bitrate, not the actual throughput.
 
-Patch 1 introduced the change in get_station()
-Patch 2 add a new rate_control API used to query the RC algorithm and retrieve
-        the information. Then it fills the sinfo object.
-Patch 3 and 4 are implementing this rate_control API in minstrel and minstrel_ht
-Patch 5 exports the get_station API in order to allow other modules to use it.
+johannes
 
-
-I already had a discussion with Johannes about this patch being not generic
-enough and really focussed on Minstrel only.
-
-However this change will just
-introduce a new exported capability in the station_info object: if the driver
-does not support it (e.g. it does not use Minstrel) then we simply won't have
-this information (like we already do with other capabilities).
-
-
-Cheers,
-
-p.s. I may need to add some more kerneldoc
-
-
-Antonio Quartulli (5):
-  cfg80211: export minstrel best rate information through get_station()
-  mac80211: export minstrel best rate information in set_sta_info()
-  mac80211: minstrel - implement get_minstrel_best_rate() API
-  mac80211: minstrel_ht - implement get_minstrel_best_rate() API
-  cfg80211: implement cfg80211_get_station
-
- include/net/cfg80211.h             | 28 ++++++++++++++++++++++++++++
- include/net/mac80211.h             | 15 +++++++++++++++
- net/mac80211/cfg.c                 | 15 +++++++++++++++
- net/mac80211/rc80211_minstrel.c    | 12 ++++++++++++
- net/mac80211/rc80211_minstrel_ht.c | 30 ++++++++++++++++++++++++++++++
- net/wireless/nl80211.c             | 22 ++++++++++++++++++++++
- 6 files changed, 122 insertions(+)
-
--- 
-1.8.5.3
 
