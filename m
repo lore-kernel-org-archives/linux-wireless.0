@@ -1,245 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:54318 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751116AbaA2THX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:07:23 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
- ESMTPSA (Nemesis) id 0LlGoc-1VbBTI0wEw-00b0as for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:07:22 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 02/13] ath9k: move ath9k_process_rssi to common.c
-Date: Wed, 29 Jan 2014 20:06:53 +0100
-Message-Id: <1391022424-21087-1-git-send-email-linux@rempel-privat.de> (sfid-20140129_200727_078941_98A0B53D)
-In-Reply-To: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24355 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754031AbaAUK3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jan 2014 05:29:39 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "'Andreas Fenkart'" <afenkart@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 21 Jan 2014 02:29:32 -0800
+Subject: RE: mwifiex wowlan not working
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF59510D9F010FC@SC-VEXCH1.marvell.com> (sfid-20140121_112942_957004_DA2E5AD2)
+References: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com>
+ <CALtMJEBuMfTi=nqjC_T8GcJCkfM3M1Q1g6PMH2k+7=XOFkdabA@mail.gmail.com>
+In-Reply-To: <CALtMJEBuMfTi=nqjC_T8GcJCkfM3M1Q1g6PMH2k+7=XOFkdabA@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_5FF020A1CFFEEC49BD1E09530C4FF59510D9F010FCSCVEXCH1marve_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we can reuse this fucntion on ath9k_htc.
-Now we will need to use common version last_rssi, so switch
-it too.
+--_002_5FF020A1CFFEEC49BD1E09530C4FF59510D9F010FCSCVEXCH1marve_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
- drivers/net/wireless/ath/ath9k/common.c | 62 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |  4 +++
- drivers/net/wireless/ath/ath9k/init.c   |  2 +-
- drivers/net/wireless/ath/ath9k/main.c   |  2 +-
- drivers/net/wireless/ath/ath9k/recv.c   | 64 +--------------------------------
- 6 files changed, 69 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b5ac32c..4ce3787 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -757,7 +757,6 @@ struct ath_softc {
- #endif
- 
- 	struct ath9k_hw_cal_data caldata;
--	int last_rssi;
- 
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	struct ath9k_debug debug;
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 768c733..7028c52 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -27,6 +27,68 @@ MODULE_AUTHOR("Atheros Communications");
- MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
- MODULE_LICENSE("Dual BSD/GPL");
- 
-+void ath9k_cmn_process_rssi(struct ath_common *common,
-+			    struct ieee80211_hw *hw,
-+			    struct ath_rx_status *rx_stats,
-+			    struct ieee80211_rx_status *rxs)
-+{
-+	struct ath_hw *ah = common->ah;
-+	int last_rssi;
-+	int rssi = rx_stats->rs_rssi;
-+	int i, j;
-+
-+	/*
-+	 * RSSI is not available for subframes in an A-MPDU.
-+	 */
-+	if (rx_stats->rs_moreaggr) {
-+		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+		return;
-+	}
-+
-+	/*
-+	 * Check if the RSSI for the last subframe in an A-MPDU
-+	 * or an unaggregated frame is valid.
-+	 */
-+	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
-+		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+		return;
-+	}
-+
-+	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
-+		s8 rssi;
-+
-+		if (!(ah->rxchainmask & BIT(i)))
-+			continue;
-+
-+		rssi = rx_stats->rs_rssi_ctl[i];
-+		if (rssi != ATH9K_RSSI_BAD) {
-+		    rxs->chains |= BIT(j);
-+		    rxs->chain_signal[j] = ah->noise + rssi;
-+		}
-+		j++;
-+	}
-+
-+	/*
-+	 * Update Beacon RSSI, this is used by ANI.
-+	 */
-+	if (rx_stats->is_mybeacon &&
-+	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
-+	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
-+		ATH_RSSI_LPF(common->last_rssi, rx_stats->rs_rssi);
-+		last_rssi = common->last_rssi;
-+
-+		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-+			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-+		if (rssi < 0)
-+			rssi = 0;
-+
-+		ah->stats.avgbrssi = rssi;
-+	}
-+
-+	rxs->signal = ah->noise + rx_stats->rs_rssi;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_process_rssi);
-+
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index eb85e1b..aaf4a9b5 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -42,6 +42,10 @@
- #define ATH_EP_RND(x, mul) 						\
- 	(((x) + ((mul)/2)) / (mul))
- 
-+void ath9k_cmn_process_rssi(struct ath_common *common,
-+			    struct ieee80211_hw *hw,
-+			    struct ath_rx_status *rx_stats,
-+			    struct ieee80211_rx_status *rxs);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- struct ath9k_channel *ath9k_cmn_get_channel(struct ieee80211_hw *hw,
- 					    struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c36de30..00e0f60 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -534,7 +534,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 
- 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
- 
--	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5924f72..c3e15f8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1609,7 +1609,7 @@ static void ath9k_set_assoc_state(struct ath_softc *sc,
- 	common->curaid = bss_conf->aid;
- 	ath9k_hw_write_associd(sc->sc_ah);
- 
--	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a0ebdd0..5229e63 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -891,68 +891,6 @@ static int ath9k_process_rate(struct ath_common *common,
- 	return -EINVAL;
- }
- 
--static void ath9k_process_rssi(struct ath_common *common,
--			       struct ieee80211_hw *hw,
--			       struct ath_rx_status *rx_stats,
--			       struct ieee80211_rx_status *rxs)
--{
--	struct ath_softc *sc = hw->priv;
--	struct ath_hw *ah = common->ah;
--	int last_rssi;
--	int rssi = rx_stats->rs_rssi;
--	int i, j;
--
--	/*
--	 * RSSI is not available for subframes in an A-MPDU.
--	 */
--	if (rx_stats->rs_moreaggr) {
--		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
--		return;
--	}
--
--	/*
--	 * Check if the RSSI for the last subframe in an A-MPDU
--	 * or an unaggregated frame is valid.
--	 */
--	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
--		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
--		return;
--	}
--
--	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
--		s8 rssi;
--
--		if (!(ah->rxchainmask & BIT(i)))
--			continue;
--
--		rssi = rx_stats->rs_rssi_ctl[i];
--		if (rssi != ATH9K_RSSI_BAD) {
--		    rxs->chains |= BIT(j);
--		    rxs->chain_signal[j] = ah->noise + rssi;
--		}
--		j++;
--	}
--
--	/*
--	 * Update Beacon RSSI, this is used by ANI.
--	 */
--	if (rx_stats->is_mybeacon &&
--	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
--	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
--		ATH_RSSI_LPF(sc->last_rssi, rx_stats->rs_rssi);
--		last_rssi = sc->last_rssi;
--
--		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
--		if (rssi < 0)
--			rssi = 0;
--
--		ah->stats.avgbrssi = rssi;
--	}
--
--	rxs->signal = ah->noise + rx_stats->rs_rssi;
--}
--
- static void ath9k_process_tsf(struct ath_rx_status *rs,
- 			      struct ieee80211_rx_status *rxs,
- 			      u64 tsf)
-@@ -1074,7 +1012,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		goto exit;
- 	}
- 
--	ath9k_process_rssi(common, hw, rx_stats, rx_status);
-+	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
- 
- 	rx_status->band = ah->curchan->chan->band;
- 	rx_status->freq = ah->curchan->chan->center_freq;
--- 
-1.8.5.3
+Hi Andreas,
 
+>=20
+> One thing I noticed, these triggers don't work unless you also
+> enable a trigger with iw. Any ideas why I need to setup wowlan
+> via both tools iw and ethtool even if only want ethtool functions?
+>=20
+
+"ethwool wol" configuration should work independently. This command just co=
+nfigures sleep condition (adapter->hs_cfg.conditions) which is used later w=
+hen system suspends.
+
+Can you please enable dynamic debug and collect logs with attached change?
+1. CONFIG_DYNAMIC_DEBUG=3Dy in kernel .config and rebuild the kernel
+2. Load the driver.
+3. echo "module mwifiex +p" > /sys/kernel/debug/dynamic_debug/control
+4. echo "module mwifiex_usb +p" > /sys/kernel/debug/dynamic_debug/control
+5. save the logs in dmesg after the test.
+
+> e.g.
+>=20
+> <fresh booted system, wifi connected>
+> ethttool -s wlan0 wol u
+> echo mem > /sys/power/state
+>=20
+> -> no wakeup on ping request, I see ICMP packets with tcpdump
+>=20
+> iw phy0 wowlan enable patterns de:ad:be:ef
+> ethttool -s wlan0 wol u
+> echo mem > /sys/power/state
+>=20
+> -> wakeup on ping request works
+>=20
+
+I think, ethtool command is not taking an effect. Device waked up due to "i=
+w wowlan" configuration.
+
+Thanks,
+Amitkumar Karwar
+
+--_002_5FF020A1CFFEEC49BD1E09530C4FF59510D9F010FCSCVEXCH1marve_
+Content-Type: application/octet-stream; name="ethtool_dbg.diff"
+Content-Description: ethtool_dbg.diff
+Content-Disposition: attachment; filename="ethtool_dbg.diff"; size=773;
+	creation-date="Tue, 21 Jan 2014 04:10:17 GMT";
+	modification-date="Tue, 21 Jan 2014 04:10:17 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2V0aHRvb2wuYyBiL2V0aHRvb2wuYwppbmRleCBiZmIzOTkwLi43ODkyMzZk
+IDEwMDY0NAotLS0gYS9ldGh0b29sLmMKKysrIGIvZXRodG9vbC5jCkBAIC0yNSw2ICsyNSw4IEBA
+IHN0YXRpYyB2b2lkIG13aWZpZXhfZXRodG9vbF9nZXRfd29sKHN0cnVjdCBuZXRfZGV2aWNlICpk
+ZXYsCiAJc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiA9IG13aWZpZXhfbmV0ZGV2X2dldF9w
+cml2KGRldik7CiAJdTMyIGNvbmRpdGlvbnMgPSBsZTMyX3RvX2NwdShwcml2LT5hZGFwdGVyLT5o
+c19jZmcuY29uZGl0aW9ucyk7CiAKKwlwcl9pbmZvKCJFdGh0b29sIGdldCBoc19jZmcuY29uZGl0
+aW9ucz0weCV4XG4iLCBwcml2LT5hZGFwdGVyLT5oc19jZmcuY29uZGl0aW9ucyk7CisKIAl3b2wt
+PnN1cHBvcnRlZCA9IFdBS0VfVUNBU1R8V0FLRV9NQ0FTVHxXQUtFX0JDQVNUfFdBS0VfUEhZOwog
+CiAJaWYgKGNvbmRpdGlvbnMgPT0gSFNfQ0ZHX0NPTkRfREVGKQpAQCAtNjEsNiArNjMsOCBAQCBz
+dGF0aWMgaW50IG13aWZpZXhfZXRodG9vbF9zZXRfd29sKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYs
+CiAJCWNvbmRpdGlvbnMgfD0gSFNfQ0ZHX0NPTkRfREVGOwogCXByaXYtPmFkYXB0ZXItPmhzX2Nm
+Zy5jb25kaXRpb25zID0gY3B1X3RvX2xlMzIoY29uZGl0aW9ucyk7CiAKKwlwcl9pbmZvKCJFdGh0
+b29sIHNldCBoc19jZmcuY29uZGl0aW9ucz0weCV4XG4iLCBwcml2LT5hZGFwdGVyLT5oc19jZmcu
+Y29uZGl0aW9ucyk7CisKIAlyZXR1cm4gMDsKIH0KIAo=
+
+--_002_5FF020A1CFFEEC49BD1E09530C4FF59510D9F010FCSCVEXCH1marve_--
