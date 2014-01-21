@@ -1,56 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63709 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbaA2Occ (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:37404 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754099AbaAULLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 09:32:32 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Kim <dekim@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 13/14] brcmfmac: correct setting of WEP broadcast/unicast keys
-Date: Wed, 29 Jan 2014 15:32:23 +0100
-Message-ID: <1391005944-3220-14-git-send-email-arend@broadcom.com> (sfid-20140129_153237_656536_C5B9FE2B)
-In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 21 Jan 2014 06:11:08 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [RFC 1/5] cfg80211: export minstrel best rate information through get_station()
+Date: Tue, 21 Jan 2014 12:09:47 +0100
+Message-Id: <1390302591-3352-2-git-send-email-antonio@meshcoding.com> (sfid-20140121_121112_007146_3431ABD1)
+In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Kim <dekim@broadcom.com>
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-The brcmf_add_keyext() is for setting per-station key for cipher
-algorithms such as WPA1/WPA2 and should not be used to set
-WEP broadcast/unicast keys. This patch fixes connect failure
-problem with AP using 802.1x-WEP.
+Users may need information about the best rate used by
+minstrel for a particular wireless device.
+Export such rate and its success probability through the
+get_station() API.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Daniel Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The exported information is Minstrel specific only,
+therefore drivers not using such RC algorithm should not
+report this data.
+
+This information is useful to the batman-adv module which
+will use it for its new metric computation.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 843f1c7..fa42c0d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1981,7 +1981,9 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d5e57bf..51d5d94 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -854,6 +854,7 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+  * @STATION_INFO_NONPEER_PM: @nonpeer_pm filled
+  * @STATION_INFO_CHAIN_SIGNAL: @chain_signal filled
+  * @STATION_INFO_CHAIN_SIGNAL_AVG: @chain_signal_avg filled
++ * @STATION_INFO_MINSTREL_BEST_RATE: @minstrel_best_rate filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -884,6 +885,7 @@ enum station_info_flags {
+ 	STATION_INFO_TX_BYTES64		= 1<<25,
+ 	STATION_INFO_CHAIN_SIGNAL	= 1<<26,
+ 	STATION_INFO_CHAIN_SIGNAL_AVG	= 1<<27,
++	STATION_INFO_MINSTREL_BEST_RATE	= 1<<28,
+ };
  
--	if (mac_addr) {
-+	if (mac_addr &&
-+		(params->cipher != WLAN_CIPHER_SUITE_WEP40) &&
-+		(params->cipher != WLAN_CIPHER_SUITE_WEP104)) {
- 		brcmf_dbg(TRACE, "Exit");
- 		return brcmf_add_keyext(wiphy, ndev, key_idx, mac_addr, params);
- 	}
+ /**
+@@ -963,6 +965,16 @@ struct sta_bss_parameters {
+ #define IEEE80211_MAX_CHAINS	4
+ 
+ /**
++ * struct cfg80211_minstral_rate_info - exported minstrel rate information
++ * @bitrate: current chosen TX bitrate
++ * @prob: probability of success of this birate
++ */
++struct cfg80211_minstrel_rate_info {
++	u32 bitrate;
++	u32 prob;
++};
++
++/**
+  * struct station_info - station information
+  *
+  * Station information filled by driver for get_station() and dump_station.
+@@ -1005,6 +1017,9 @@ struct sta_bss_parameters {
+  * @local_pm: local mesh STA power save mode
+  * @peer_pm: peer mesh STA power save mode
+  * @nonpeer_pm: non-peer mesh STA power save mode
++ * @minstrel_best_rate: information extracted from the Minstrel RC algorithm
++ *  about the bitrate having the maximum throughput. This field can be filled
++ *  only by drivers using Minstrel
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -1043,6 +1058,8 @@ struct station_info {
+ 	enum nl80211_mesh_power_mode peer_pm;
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
+ 
++	struct cfg80211_minstrel_rate_info minstrel_best_rate;
++
+ 	/*
+ 	 * Note: Add a new enum station_info_flags value for each new field and
+ 	 * use it to check which fields are initialized.
 -- 
-1.7.10.4
+1.8.5.3
 
