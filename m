@@ -1,66 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47139 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbaA3Dae (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:30740 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754230AbaAULLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 22:30:34 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	stable@vger.kernel.org
-Subject: [PATCH] ath9k: Do not support PowerSave by default
-Date: Thu, 30 Jan 2014 08:55:01 +0530
-Message-Id: <1391052301-25369-1-git-send-email-sujith@msujith.org> (sfid-20140130_043038_985507_B4092C62)
+	Tue, 21 Jan 2014 06:11:10 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [RFC 5/5] cfg80211: implement cfg80211_get_station
+Date: Tue, 21 Jan 2014 12:09:51 +0100
+Message-Id: <1390302591-3352-6-git-send-email-antonio@meshcoding.com> (sfid-20140121_121121_187569_7B1DDAA3)
+In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-Even though we make sure PowerSave is not enabled by default
-by disabling the flag, WIPHY_FLAG_PS_ON_BY_DEFAULT on init,
-PS could be enabled by userspace based on various factors
-like battery usage etc. Since PS in ath9k is just broken
-and has been untested for years, remove support for it, but
-allow a user to explicitly enable it using a module parameter.
+Implement and export the new cfg80211_get_station() API.
+This utility can be used by other kernel modules to obtain
+detailed information about a given wireless station.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+It will be in particular useful to batman-adv which will
+implement a wireless rate based metric.
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h | 11 +++++++++++
+ net/wireless/nl80211.c | 22 ++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c36de30..1fc2e5a 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -57,6 +57,10 @@ static int ath9k_bt_ant_diversity;
- module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, 0444);
- MODULE_PARM_DESC(bt_ant_diversity, "Enable WLAN/BT RX antenna diversity");
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 51d5d94..8c4b6ee 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1067,6 +1067,17 @@ struct station_info {
+ };
  
-+static int ath9k_ps_enable;
-+module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
-+MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ /**
++ * cfg80211_get_station - retrieve information about a given station
++ * @dev: the device where the station is supposed to be connected to
++ * @mac_addr: the mac address of the station of interest
++ * @sinfo: pointer to the structure to fill with the information
++ *
++ * Returns 0 on success or a negative error code otherwise.
++ */
++int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
++			 struct station_info *sinfo);
 +
- bool is_ath9k_unloaded;
- /* We use the hw_value as an index into our private channel structure */
++/**
+  * enum monitor_flags - monitor flags
+  *
+  * Monitor interface configuration flags. Note that these must be the bits
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6e78c62..acba667 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3780,6 +3780,28 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 	return genlmsg_reply(msg, info);
+ }
  
-@@ -903,13 +907,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		IEEE80211_HW_SIGNAL_DBM |
--		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_PS_NULLFUNC_STACK |
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SUPPORTS_RC_TABLE |
- 		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
- 
-+	if (ath9k_ps_enable)
-+		hw->flags |= IEEE80211_HW_SUPPORTS_PS;
++int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
++			 struct station_info *sinfo)
++{
++	struct cfg80211_registered_device *rdev;
++	struct wireless_dev *wdev;
++	int err;
 +
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
- 		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
- 
++	wdev = dev->ieee80211_ptr;
++	if (!wdev)
++		return -EOPNOTSUPP;
++
++	rdev = wiphy_to_dev(wdev->wiphy);
++	if (!rdev->ops->get_station)
++		return -EOPNOTSUPP;
++
++	err = rdev_get_station(rdev, dev, mac_addr, sinfo);
++	if (err)
++		return err;
++
++	return 0;
++}
++
+ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 				  struct station_parameters *params,
+ 				  enum cfg80211_station_type statype)
 -- 
 1.8.5.3
 
