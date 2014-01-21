@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:19976 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932121AbaAaKzp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36670 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606AbaAUOzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 05:55:45 -0500
-Message-ID: <52EB8137.1000405@redpinesignals.com> (sfid-20140131_115547_927331_FC36082C)
-Date: Fri, 31 Jan 2014 16:25:51 +0530
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.13.1 3/9] rsi: Packet queueing/dequeueing to device
-References: <52EA75B5.5040002@redpinesignals.com>	 (sfid-20140130_170030_682221_D838173E) <1391103351.4323.23.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1391103351.4323.23.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Jan 2014 09:55:20 -0500
+Message-ID: <1390316116.6199.23.camel@jlt4.sipsolutions.net> (sfid-20140121_155523_429133_C13CAFA5)
+Subject: Re: [PATCH 1/7] mac80211: fix possible memory leak on AP CSA failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Jan 2014 15:55:16 +0100
+In-Reply-To: <1390227670-19030-2-git-send-email-michal.kazior@tieto.com> (sfid-20140120_152540_538746_94EBCBD5)
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140120_152540_538746_94EBCBD5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMM is being implemented in the hardware, the packets are 
-being scheduled similarly to help out the scheduling in the 
-hardware. Will consider the cases when multiple devices are 
-using the same driver and incorporate the changes.  
+On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
+> If CSA for AP interface failed and the interface
+> was not stopped afterwards another CSA request
+> would leak sdata->u.ap.next_beacon.
 
-Regards,
-Jahnavi
+>  void ieee80211_csa_finish(struct ieee80211_vif *vif)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> @@ -3019,15 +3034,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+>  	sdata->vif.csa_active = false;
+>  	switch (sdata->vif.type) {
+>  	case NL80211_IFTYPE_AP:
+> -		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
+> +		err = ieee80211_ap_finish_csa(sdata);
+>  		if (err < 0)
+>  			return;
+> -
+> -		changed |= err;
 
-On 01/30/2014 11:05 PM, Johannes Berg wrote:
-On Thu, 2014-01-30 at 21:24 +0530, Jahnavi wrote:
+This looks a bit like somebody had intended to batch the
+ieee80211_bss_info_change_notify() calls, which would probably be a good
+thing. You're breaking them apart even further - maybe we should
+actually batch them instead by moving ieee80211_bss_info_change_notify()
+after the switch()?
 
->> +#ifdef USE_SDIO_INTF
->> +static unsigned int pkt_count;
->> +#endif
->> +static unsigned int selected_qnum, pkt_cnt;
-> static variables are a really bad idea, especially ones like this. Have
-> you ever thought about more than one USB device being plugged in to the
-> same machine? :)
->
-> Also, I'm not sure trying to implement QoS in software is a great idea,
-> or does it only look like that's what you're doing?
->
-> johannes
->
->
->
-
+johannes
 
