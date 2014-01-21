@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:43009 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbaATMC2 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52414 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbaAUFeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 07:02:28 -0500
-Received: by mail-lb0-f172.google.com with SMTP id c11so4844380lbj.17
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 04:02:27 -0800 (PST)
+	Tue, 21 Jan 2014 00:34:14 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: AP mode, set UAPSD params correctly
+References: <1390234821-4405-1-git-send-email-janusz.dziedzic@tieto.com>
+	<8738kilhbx.fsf@kamboji.qca.qualcomm.com>
+	<CALhHN=pTEBd5P-weZSxSou3gQmb=wE4fAHTECU6oJ1PSMvfWoQ@mail.gmail.com>
+Date: Tue, 21 Jan 2014 07:34:08 +0200
+In-Reply-To: <CALhHN=pTEBd5P-weZSxSou3gQmb=wE4fAHTECU6oJ1PSMvfWoQ@mail.gmail.com>
+	(Janusz Dziedzic's message of "Mon, 20 Jan 2014 19:48:44 +0100")
+Message-ID: <87ppnlkien.fsf@kamboji.qca.qualcomm.com> (sfid-20140121_063417_693323_84631B36)
 MIME-Version: 1.0
-In-Reply-To: <1390215337.4335.11.camel@jlt4.sipsolutions.net>
-References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1389947524-6102-5-git-send-email-janusz.dziedzic@tieto.com>
-	<1390215337.4335.11.camel@jlt4.sipsolutions.net>
-Date: Mon, 20 Jan 2014 13:02:27 +0100
-Message-ID: <CALhHN=q9ZwMEo2xzPtAqkk0oGri+oQ=G4w2KRAvATaB=hc31yw@mail.gmail.com> (sfid-20140120_130231_357434_7337EFF2)
-Subject: Re: [PATCH 4/5] cfg80211: introduce strict bandwidth regulatory flag
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 January 2014 11:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-01-17 at 09:32 +0100, Janusz Dziedzic wrote:
->> Introduce NL80211_RRF_STRICT_BW regulatory rule flag.
->> This mean we will check only banwidth defined in
->> regulatory database and not check contiguous rules.
->
-> If you meant for this to alleviate my concerns about crda/db.txt
-> compatibility, you didn't do it right. This has no value whatsoever
-> since it still breaks things.
->
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-So, maybe better introduce opposite logic here. By default always
-calculate BW as STRICT_BW - be backwards compatible with current
-crda/db.txt implementation/calculation.
-And introduce WIDE(LOOSE)_BW flag for the rules we would like
-calculate maximum bandwidth using contiguous rules?
+> On 20 January 2014 17:59, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>>
+>>> Move UAPSD params settings after peer assoc
+>>> command. This is required to setup UAPSD
+>>> params correctly.
+>>>
+>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>> This is a pretty vague description. What is correct today can be totally
+>> wrong tomorrow :)
+>>
+>> So I would prefer that you describe a bit more about this change. At
+>> least describe the bug you are fixing (or mention the motivation behind
+>> the change).
+>
+> ath10k handles UAPSD completly in the firmware.
+> When works in AP mode we have to configure
+> UAPSD params for each station. Without this
+> patch we configure UAPSD params before we
+> send peer assoc command to the FW, which was
+> wrong. Next FW didn't know what should be trigger
+> frame, couse UAPSD didn't work correctly in AP mode.
+> To configure UAPSD params correctly we have to
+> send them after peer assoc command.
 
-BR
-Janusz
+This is much better. Can you send v2 with this description, please?
+
+-- 
+Kalle Valo
