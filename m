@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa06-10.prod.phx3.secureserver.net ([173.201.192.111]:40291
-	"EHLO p3plsmtpa06-10.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932636AbaAaWR2 (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:14616 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021AbaAULLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 17:17:28 -0500
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org,
-	"Mark A. Greer" <mgreer@animalcreek.com>
-Subject: [PATCH 3/3] NFC: trf7970a: Add DTS Documentation
-Date: Fri, 31 Jan 2014 15:17:11 -0700
-Message-Id: <1391206631-9862-4-git-send-email-mgreer@animalcreek.com> (sfid-20140131_231734_377661_B9216D11)
-In-Reply-To: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
+	Tue, 21 Jan 2014 06:11:08 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@meshcoding.com>
+Subject: [RFC 0/5] Export Minstrel best API information via get_station()
+Date: Tue, 21 Jan 2014 12:09:46 +0100
+Message-Id: <1390302591-3352-1-git-send-email-antonio@meshcoding.com> (sfid-20140121_121110_964228_C6A6B498)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Describe the properies used by the trf7970a
-RFID/NFC/15693 transceiver driver.
+Hello list,
 
-Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
----
- .../devicetree/bindings/net/nfc/trf7970a.txt       | 37 ++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+we (as batman-adv developers) are currently working on a new version of the
+our routing protocol which is going to use some Minstrel internal information
+to compute the metric.
+In particular I am interested in the currently selected bitrate (which Minstrel
+selected because it "maximises the throughput") and it's probability of success.
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-new file mode 100644
-index 0000000..4256893
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -0,0 +1,37 @@
-+* Texas Instruments TRF7970A RFID/NFC/15693 Transceiver
-+
-+Required properties:
-+- compatible: Should be "ti,trf7970a".
-+- spi-max-frequency: Maximum SPI frequency (<= 2000000).
-+- interrupt-parent: phandle of parent interrupt handler.
-+- interrupts: A single interrupt specifier.
-+- ti,enable-gpios: Two GPIO entries used for 'EN' and 'EN2' pins on the
-+  TRF7970A.
-+
-+Optional properties:
-+- ti,ss-gpio: GPIO used for Slave Select pin on TRF7970A.  Its presence
-+  indicates that "SPI with SS mode" is used by the TRF7970A.
-+
-+Optional SoC Specific Properties:
-+- pinctrl-names: Contains only one value - "default".
-+- pintctrl-0: Specifies the pin control groups used for this controller.
-+
-+Example (for ARM-based BeagleBone with TRF7970A on SPI1):
-+
-+&spi1 {
-+        status = "okay";
-+
-+        nfc@0 {
-+                compatible = "ti,trf7970a";
-+                reg = <0>;
-+                pinctrl-names = "default";
-+                pinctrl-0 = <&trf7970a_default>;
-+                spi-max-frequency = <2000000>;
-+                interrupt-parent = <&gpio2>;
-+                interrupts = <14 0>;
-+                ti,enable-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>,
-+                                <&gpio2 5 GPIO_ACTIVE_LOW>;
-+                ti,ss-gpio = <&gpio1 30 GPIO_ACTIVE_LOW>;
-+                status = "okay";
-+        };
-+};
+To achieve so I am proposing here a change to the get_station API.
+This change is supposed to export the needed information only if the current
+driver is using the Minstrel (or Minstrel HT) RC algorithm.
+
+Patch 1 introduced the change in get_station()
+Patch 2 add a new rate_control API used to query the RC algorithm and retrieve
+        the information. Then it fills the sinfo object.
+Patch 3 and 4 are implementing this rate_control API in minstrel and minstrel_ht
+Patch 5 exports the get_station API in order to allow other modules to use it.
+
+
+I already had a discussion with Johannes about this patch being not generic
+enough and really focussed on Minstrel only.
+
+However this change will just
+introduce a new exported capability in the station_info object: if the driver
+does not support it (e.g. it does not use Minstrel) then we simply won't have
+this information (like we already do with other capabilities).
+
+
+Cheers,
+
+p.s. I may need to add some more kerneldoc
+
+
+Antonio Quartulli (5):
+  cfg80211: export minstrel best rate information through get_station()
+  mac80211: export minstrel best rate information in set_sta_info()
+  mac80211: minstrel - implement get_minstrel_best_rate() API
+  mac80211: minstrel_ht - implement get_minstrel_best_rate() API
+  cfg80211: implement cfg80211_get_station
+
+ include/net/cfg80211.h             | 28 ++++++++++++++++++++++++++++
+ include/net/mac80211.h             | 15 +++++++++++++++
+ net/mac80211/cfg.c                 | 15 +++++++++++++++
+ net/mac80211/rc80211_minstrel.c    | 12 ++++++++++++
+ net/mac80211/rc80211_minstrel_ht.c | 30 ++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c             | 22 ++++++++++++++++++++++
+ 6 files changed, 122 insertions(+)
+
 -- 
-1.8.3.4
+1.8.5.3
 
