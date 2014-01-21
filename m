@@ -1,223 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24316 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbaA2Ocg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 09:32:36 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Kim <dekim@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/14] brcmfmac: enable firmware console logging functionality
-Date: Wed, 29 Jan 2014 15:32:13 +0100
-Message-ID: <1391005944-3220-4-git-send-email-arend@broadcom.com> (sfid-20140129_153246_634105_C79B17C8)
-In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:33553 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754712AbaAUN7x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jan 2014 08:59:53 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: [RFC 0/5] Export Minstrel best API information via get_station()
+From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+Date: Tue, 21 Jan 2014 14:52:53 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <28926A5E-E0FA-4677-BC0C-68E5E11C188F@net.t-labs.tu-berlin.de> (sfid-20140121_145956_492623_8EC07EDE)
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+To: Antonio Quartulli <antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Kim <dekim@broadcom.com>
+Hi Antonio,
 
-Address of rte console was not initialized and so console logging
-functionality didn't kick in. This patch fixes it and makes console
-polling interval a debugfs variable.
+I like you idea of making use of information from different layers to try to enhance wireless communication. 
+It seems reasonable for me to start exporting and further using/experimenting with that rate, where minstrel estimates the maximum throughput.
+But on closer inspection, it might also be of certain interest (maybe not batman in particular) to use the most robust rate, which both Minstrels version do also have an estimate.
+So what do you think about exporting the whole sorted rate table structure (struct ieee80211_sta_rates) instead of extracting the single max thr. rate ?
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Daniel Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  154 +++++++++++---------
- 1 file changed, 88 insertions(+), 66 deletions(-)
+Greetings Thomas
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 3e99189..98d0784 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -953,6 +953,86 @@ end:
- 
- }
- 
-+#ifdef DEBUG
-+static inline bool brcmf_sdio_valid_shared_address(u32 addr)
-+{
-+	return !(addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff));
-+}
-+
-+static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
-+				 struct sdpcm_shared *sh)
-+{
-+	u32 addr;
-+	int rv;
-+	u32 shaddr = 0;
-+	struct sdpcm_shared_le sh_le;
-+	__le32 addr_le;
-+
-+	shaddr = bus->ci->rambase + bus->ramsize - 4;
-+
-+	/*
-+	 * Read last word in socram to determine
-+	 * address of sdpcm_shared structure
-+	 */
-+	sdio_claim_host(bus->sdiodev->func[1]);
-+	brcmf_sdio_bus_sleep(bus, false, false);
-+	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr, (u8 *)&addr_le, 4);
-+	sdio_release_host(bus->sdiodev->func[1]);
-+	if (rv < 0)
-+		return rv;
-+
-+	addr = le32_to_cpu(addr_le);
-+
-+	brcmf_dbg(SDIO, "sdpcm_shared address 0x%08X\n", addr);
-+
-+	/*
-+	 * Check if addr is valid.
-+	 * NVRAM length at the end of memory should have been overwritten.
-+	 */
-+	if (!brcmf_sdio_valid_shared_address(addr)) {
-+			brcmf_err("invalid sdpcm_shared address 0x%08X\n",
-+				  addr);
-+			return -EINVAL;
-+	}
-+
-+	/* Read hndrte_shared structure */
-+	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&sh_le,
-+			       sizeof(struct sdpcm_shared_le));
-+	if (rv < 0)
-+		return rv;
-+
-+	/* Endianness */
-+	sh->flags = le32_to_cpu(sh_le.flags);
-+	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
-+	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
-+	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
-+	sh->assert_line = le32_to_cpu(sh_le.assert_line);
-+	sh->console_addr = le32_to_cpu(sh_le.console_addr);
-+	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
-+
-+	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) > SDPCM_SHARED_VERSION) {
-+		brcmf_err("sdpcm shared version unsupported: dhd %d dongle %d\n",
-+			  SDPCM_SHARED_VERSION,
-+			  sh->flags & SDPCM_SHARED_VERSION_MASK);
-+		return -EPROTO;
-+	}
-+
-+	return 0;
-+}
-+
-+static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
-+{
-+	struct sdpcm_shared sh;
-+
-+	if (brcmf_sdio_readshared(bus, &sh) == 0)
-+		bus->console_addr = sh.console_addr;
-+}
-+#else
-+static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
-+{
-+}
-+#endif /* DEBUG */
-+
- static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- {
- 	u32 intstatus = 0;
-@@ -996,6 +1076,12 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 		else
- 			brcmf_dbg(SDIO, "Dongle ready, protocol version %d\n",
- 				  bus->sdpcm_ver);
-+
-+		/*
-+		 * Retrieve console state address now that firmware should have
-+		 * updated it.
-+		 */
-+		brcmf_sdio_get_console_addr(bus);
- 	}
- 
- 	/*
-@@ -2810,72 +2896,6 @@ brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- }
- 
- #ifdef DEBUG
--static inline bool brcmf_sdio_valid_shared_address(u32 addr)
--{
--	return !(addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff));
--}
--
--static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
--				 struct sdpcm_shared *sh)
--{
--	u32 addr;
--	int rv;
--	u32 shaddr = 0;
--	struct sdpcm_shared_le sh_le;
--	__le32 addr_le;
--
--	shaddr = bus->ci->rambase + bus->ramsize - 4;
--
--	/*
--	 * Read last word in socram to determine
--	 * address of sdpcm_shared structure
--	 */
--	sdio_claim_host(bus->sdiodev->func[1]);
--	brcmf_sdio_bus_sleep(bus, false, false);
--	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr, (u8 *)&addr_le, 4);
--	sdio_release_host(bus->sdiodev->func[1]);
--	if (rv < 0)
--		return rv;
--
--	addr = le32_to_cpu(addr_le);
--
--	brcmf_dbg(SDIO, "sdpcm_shared address 0x%08X\n", addr);
--
--	/*
--	 * Check if addr is valid.
--	 * NVRAM length at the end of memory should have been overwritten.
--	 */
--	if (!brcmf_sdio_valid_shared_address(addr)) {
--			brcmf_err("invalid sdpcm_shared address 0x%08X\n",
--				  addr);
--			return -EINVAL;
--	}
--
--	/* Read hndrte_shared structure */
--	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&sh_le,
--			       sizeof(struct sdpcm_shared_le));
--	if (rv < 0)
--		return rv;
--
--	/* Endianness */
--	sh->flags = le32_to_cpu(sh_le.flags);
--	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
--	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
--	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
--	sh->assert_line = le32_to_cpu(sh_le.assert_line);
--	sh->console_addr = le32_to_cpu(sh_le.console_addr);
--	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
--
--	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) > SDPCM_SHARED_VERSION) {
--		brcmf_err("sdpcm shared version unsupported: dhd %d dongle %d\n",
--			  SDPCM_SHARED_VERSION,
--			  sh->flags & SDPCM_SHARED_VERSION_MASK);
--		return -EPROTO;
--	}
--
--	return 0;
--}
--
- static int brcmf_sdio_dump_console(struct brcmf_sdio *bus,
- 				   struct sdpcm_shared *sh, char __user *data,
- 				   size_t count)
-@@ -3105,6 +3125,8 @@ static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
- 	debugfs_create_file("forensics", S_IRUGO, dentry, bus,
- 			    &brcmf_sdio_forensic_ops);
- 	brcmf_debugfs_create_sdio_count(drvr, &bus->sdcnt);
-+	debugfs_create_u32("console_interval", 0644, dentry,
-+			   &bus->console_interval);
- }
- #else
- static int brcmf_sdio_checkdied(struct brcmf_sdio *bus)
--- 
-1.7.10.4
+
+On 21.01.2014, at 12:09, Antonio Quartulli <antonio@meshcoding.com> wrote:
+
+> Hello list,
+> 
+> we (as batman-adv developers) are currently working on a new version of the
+> our routing protocol which is going to use some Minstrel internal information
+> to compute the metric.
+> In particular I am interested in the currently selected bitrate (which Minstrel
+> selected because it "maximises the throughput") and it's probability of success.
+> 
+> To achieve so I am proposing here a change to the get_station API.
+> This change is supposed to export the needed information only if the current
+> driver is using the Minstrel (or Minstrel HT) RC algorithm.
+> 
+> Patch 1 introduced the change in get_station()
+> Patch 2 add a new rate_control API used to query the RC algorithm and retrieve
+>        the information. Then it fills the sinfo object.
+> Patch 3 and 4 are implementing this rate_control API in minstrel and minstrel_ht
+> Patch 5 exports the get_station API in order to allow other modules to use it.
+> 
+> 
+> I already had a discussion with Johannes about this patch being not generic
+> enough and really focussed on Minstrel only.
+> 
+> However this change will just
+> introduce a new exported capability in the station_info object: if the driver
+> does not support it (e.g. it does not use Minstrel) then we simply won't have
+> this information (like we already do with other capabilities).
+> 
+> 
+> Cheers,
+> 
+> p.s. I may need to add some more kerneldoc
+> 
+> 
+> Antonio Quartulli (5):
+>  cfg80211: export minstrel best rate information through get_station()
+>  mac80211: export minstrel best rate information in set_sta_info()
+>  mac80211: minstrel - implement get_minstrel_best_rate() API
+>  mac80211: minstrel_ht - implement get_minstrel_best_rate() API
+>  cfg80211: implement cfg80211_get_station
+> 
+> include/net/cfg80211.h             | 28 ++++++++++++++++++++++++++++
+> include/net/mac80211.h             | 15 +++++++++++++++
+> net/mac80211/cfg.c                 | 15 +++++++++++++++
+> net/mac80211/rc80211_minstrel.c    | 12 ++++++++++++
+> net/mac80211/rc80211_minstrel_ht.c | 30 ++++++++++++++++++++++++++++++
+> net/wireless/nl80211.c             | 22 ++++++++++++++++++++++
+> 6 files changed, 122 insertions(+)
+> 
+> -- 
+> 1.8.5.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
