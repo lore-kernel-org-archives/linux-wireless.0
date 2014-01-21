@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm30-vm5.bullet.mail.ne1.yahoo.com ([98.138.91.252]:46438 "EHLO
-	nm30-vm5.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751005AbaAGKfm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 05:35:42 -0500
-Message-ID: <1389090941.99903.YahooMailNeo@web122306.mail.ne1.yahoo.com> (sfid-20140107_113546_594357_2AA226C4)
-Date: Tue, 7 Jan 2014 02:35:41 -0800 (PST)
-From: Anand Moon <moon.linux@yahoo.com>
-Reply-To: Anand Moon <moon.linux@yahoo.com>
-Subject: 5gz 802.11n and 5ghz 802.11ac packet caputure.
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:43428 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbaAUTDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jan 2014 14:03:05 -0500
+Received: by mail-wi0-f182.google.com with SMTP id ex4so4753150wid.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 11:03:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com>
+References: <1390166509-3992-1-git-send-email-andrea.merello@gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 22 Jan 2014 00:32:42 +0530
+Message-ID: <CABPxzYKykToRsDanUpUdcE7xvsiPZ2E-fMG7B=Xn9JkuXGAHGQ@mail.gmail.com> (sfid-20140121_200309_428191_A0CF8720)
+Subject: Re: [PATCH] mac80211: add check on hw->max_signal value on ieee80211_register_hw
+To: andrea merello <andrea.merello@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- 
-Hi All,
+On Mon, Jan 20, 2014 at 2:51 AM, andrea merello
+<andrea.merello@gmail.com> wrote:
+>
+> +       if (hw->flags &
+> IEEE80211_HW_SIGNAL_UNSPEC && hw->max_signal <= 0)
+> +               return -EINVAL;
+> +
 
-Could some one share the basic packet capture for 5gz 802.11n and 5ghz 802.11ac.
-I just want to understand the difference in packet structure and packet details.
-
-This is just for study purpose. 
-
--Anand Moon
-
------BEGIN PGP MESSAGE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-jA0EAwMCYq3dHqTzwcVgyRxC1j+oLxS8Yw92EIeKln+x3eAWzd7mM/pUluRo
-=0RYk
------END PGP MESSAGE-----
-
+Should we add a check for > 100 as well, similar to cfg?
