@@ -1,40 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbaA2ISH (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:43893 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261AbaAUQIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 03:18:07 -0500
-Message-ID: <1390983472.4143.0.camel@jlt4.sipsolutions.net> (sfid-20140129_091810_913579_46656EB6)
-Subject: Re: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Janusz Dziedzic <janusz.dziedzi@tieto.com>
-Date: Wed, 29 Jan 2014 09:17:52 +0100
-In-Reply-To: <CAB=NE6VfmOMVT3zxE1iEOtT53SycgrrpiKuoi2NPuDXvccz96Q@mail.gmail.com> (sfid-20140128_204258_986741_2295FC10)
-References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <20140125003418.GF28512@garbanzo.do-not-panic.com>
-	 <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com>
-	 <CAB=NE6VfmOMVT3zxE1iEOtT53SycgrrpiKuoi2NPuDXvccz96Q@mail.gmail.com>
-	 (sfid-20140128_204258_986741_2295FC10)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 21 Jan 2014 11:08:25 -0500
+Message-ID: <52DE9B30.3000505@open-mesh.com> (sfid-20140121_170828_599926_E2574B93)
+Date: Tue, 21 Jan 2014 17:07:12 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <antonio@meshcoding.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 5/5] cfg80211: implement cfg80211_get_station
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>	 <1390302591-3352-6-git-send-email-antonio@meshcoding.com> <1390320181.6199.64.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1390320181.6199.64.camel@jlt4.sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="PuCOVILNDI42uRqftKEsDWLX1VjCKSMXb"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-01-28 at 11:42 -0800, Luis R. Rodriguez wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--PuCOVILNDI42uRqftKEsDWLX1VjCKSMXb
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> > You mean we should introduce:
-> > iw wlanX reg get?
-> 
-> Sure, and iw dev reg get can also display what it does now but then
-> also iterate over all wiphys and also display all wiphy's own regd if
-> they have any.
+On 21/01/14 17:03, Johannes Berg wrote:
+> On Tue, 2014-01-21 at 12:09 +0100, Antonio Quartulli wrote:
+>=20
+>> +++ b/net/wireless/nl80211.c
+>> @@ -3780,6 +3780,28 @@ static int nl80211_get_station(struct sk_buff *=
+skb, struct genl_info *info)
+>>  	return genlmsg_reply(msg, info);
+>>  }
+>> =20
+>> +int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
+>> +			 struct station_info *sinfo)
+>=20
+> Not sure nl80211.c is the best place for this?
 
-I'm not really sure I see much point in all this - what userspace
-eventually cares about isn't the reg data but the channel list that can
-be obtained with (the equivalent of) iw list.
+mh true, I saw other cfg80211_* function in there..but they are all
+NL80211 related. :)
 
-johannes
+I think util.c is a better place.
 
+>=20
+>> +{
+>> +	struct cfg80211_registered_device *rdev;
+>> +	struct wireless_dev *wdev;
+>> +	int err;
+>> +
+>> +	wdev =3D dev->ieee80211_ptr;
+>> +	if (!wdev)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	rdev =3D wiphy_to_dev(wdev->wiphy);
+>> +	if (!rdev->ops->get_station)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	err =3D rdev_get_station(rdev, dev, mac_addr, sinfo);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	return 0;
+>=20
+> Those "err" variable checks and whatever are just pointless -- this is
+> really just
+> return rdev_get_station(...)
+
+agreed!
+
+>=20
+>> +}
+>=20
+> Consider exporting it if you actually want to use your new function. :)=
+
+
+agreed=C2=B2!!
+
+
+Thanks!
+
+
+--=20
+Antonio Quartulli
+
+
+--PuCOVILNDI42uRqftKEsDWLX1VjCKSMXb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJS3ps0AAoJEEKTMo6mOh1VqOkP/iZi+HRYhkyTMS/nZCENOjuS
+80RlTkSZMlwQc1vTDkEnUoJj53c3v77sSlmlnCg+nzTTcu21rJxo0qopDs10DTod
+6mB0OgVDtKGiEN2lr4zpTLJ00xLT6zcILkaFyhsSL4bOlNXORST2sv33w3xX40yk
+nXYWUc7fpsGjMgkcGaqQb6B6K+DwOh3UUHEml+5WT2vWTzXjpzTlr0mj2n4cwh1I
+Aa4n+x88Yyvbbld9bqZPYXab0yBqJhzLTx1170qnTkMxOCCdQaBqgJCIVjyDIoTM
++RPAk2NtYs+Um3UYRmewcsxuj31phDITUG1iH7KkgbE0eMObQ/MEPOF2BgLDPdhG
+o0u/qpbBb5Yaa+OjVWdyrIkGJlEwVzt/MIBhyYDtCsABH9Z5j3FeFaT1MTWzf81e
+jqqSy35LQvJc099CeaD0BdFGnE81qg0RL1XaMQHFqeVgX161B4uKZllnoPqe0hgJ
+pFuZnxP4SSoA1awWopThFuqasaKy8501fYudGjChFqLEBKxP9jg53ZDK6+s7oN1a
+UGkaH2TVsDRbIK492InrcPIPQyeXyOsRwToMNDr1wjCVXog6rGOKNCKUNPStxxpx
+1UMwhckYIqqXDoeC3vc99osRHbCnpnKg/0HPOu3OLSWcU/ZIfaKqBjE3bH0TiAkf
+IEouylKuvq68rcIKJgxg
+=T9Ac
+-----END PGP SIGNATURE-----
+
+--PuCOVILNDI42uRqftKEsDWLX1VjCKSMXb--
