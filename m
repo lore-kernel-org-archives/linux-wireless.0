@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:49390 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751472AbaAIQHQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 11:07:16 -0500
-Received: from [195.4.92.142] (helo=mjail2.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.80.1 #4)
-	id 1W1I3a-0008SL-KZ
-	for linux-wireless@vger.kernel.org; Thu, 09 Jan 2014 17:02:06 +0100
-Received: from localhost ([::1]:50265 helo=mjail2.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #4)
-	id 1W1I3a-00081k-BR
-	for linux-wireless@vger.kernel.org; Thu, 09 Jan 2014 17:02:06 +0100
-Received: from mx17.freenet.de ([195.4.92.27]:55213)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #4)
-	id 1W1I1T-00014T-6l
-	for linux-wireless@vger.kernel.org; Thu, 09 Jan 2014 16:59:55 +0100
-Received: from p4fde3285.dip0.t-ipconnect.de ([79.222.50.133]:58284 helo=mail.maya.org)
-	by mx17.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 587) (Exim 4.80.1 #4)
-	id 1W1I1S-0006lD-T8
-	for linux-wireless@vger.kernel.org; Thu, 09 Jan 2014 16:59:55 +0100
-Message-ID: <52CEC808.3080301@01019freenet.de> (sfid-20140109_170720_638673_67387BDC)
-Date: Thu, 09 Jan 2014 17:02:16 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Naughtboy <skylvlinux@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: have any others tools to test the wifi moduels throughput ???
-References: <CAKH5=LuBkCSf5nLYTzivDJj_sdZ4GZRxDy0_sr7-TxkKm0Rq5A@mail.gmail.com>
-In-Reply-To: <CAKH5=LuBkCSf5nLYTzivDJj_sdZ4GZRxDy0_sr7-TxkKm0Rq5A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:58063 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190AbaAVMoN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jan 2014 07:44:13 -0500
+Received: by mail-ea0-f179.google.com with SMTP id q10so3396059ead.38
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 04:44:12 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Janusz Dziedzic <janusz.dziedzi@tieto.com>
+Subject: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
+Date: Wed, 22 Jan 2014 13:43:42 +0100
+Message-Id: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140122_134417_214253_C9CD1ED9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Naughtboy wrote:
-> hi big guys!
-> i have some problem is test the wifi moduels  throughput
-> just the tools i kown is iperf ,and it performance just ok
+Add helper function that will return regdomain.
+Follow the driver's regulatory domain, if present,
+unless a country IE has been processed or a user
+wants to help complaince further.
 
-netperf
+Signed-off-by: Janusz Dziedzic <janusz.dziedzi@tieto.com>
+---
+ net/wireless/reg.c |   31 ++++++++++++++++++++-----------
+ 1 file changed, 20 insertions(+), 11 deletions(-)
 
-http://www.netperf.org/netperf/
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b897fc..d58a09c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -522,6 +522,25 @@ bool reg_is_valid_request(const char *alpha2)
+ 	return alpha2_equal(lr->alpha2, alpha2);
+ }
+ 
++static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
++{
++	const struct ieee80211_regdomain *regd;
++	struct regulatory_request *lr = get_last_request();
++
++	/*
++	 * Follow the driver's regulatory domain, if present, unless a country
++	 * IE has been processed or a user wants to help complaince further
++	 */
++	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
++	    wiphy->regd)
++		regd = get_wiphy_regdom(wiphy);
++	else
++		regd = get_cfg80211_regdom();
++
++	return regd;
++}
++
+ /* Sanity check on a regulatory rule */
+ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ {
+@@ -821,18 +840,8 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+ 					       u32 center_freq)
+ {
+ 	const struct ieee80211_regdomain *regd;
+-	struct regulatory_request *lr = get_last_request();
+ 
+-	/*
+-	 * Follow the driver's regulatory domain, if present, unless a country
+-	 * IE has been processed or a user wants to help complaince further
+-	 */
+-	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
+-	    wiphy->regd)
+-		regd = get_wiphy_regdom(wiphy);
+-	else
+-		regd = get_cfg80211_regdom();
++	regd = reg_get_regdomain(wiphy);
+ 
+ 	return freq_reg_info_regd(wiphy, center_freq, regd);
+ }
+-- 
+1.7.9.5
 
-
-Regards,
-Andreas
