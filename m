@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbaATKdL (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:57840 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752408AbaAVVVO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 05:33:11 -0500
-Message-ID: <1390213987.4335.5.camel@jlt4.sipsolutions.net> (sfid-20140120_113315_586887_422359EC)
-Subject: Re: FW: Issue with authentication to Aerohive APs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Bateman <steven@fndtn.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 20 Jan 2014 11:33:07 +0100
-In-Reply-To: <CEF450DF.167F3%steven@fndtn.com> (sfid-20140109_201358_587746_18A9EB82)
-References: <CEF439BF.167DB%steven@fndtn.com>
-	 <CEF44F30.167EB%steven@fndtn.com> <CEF450DF.167F3%steven@fndtn.com>
-	 (sfid-20140109_201358_587746_18A9EB82)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Jan 2014 16:21:14 -0500
+Received: by mail-wg0-f54.google.com with SMTP id x13so863344wgg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 13:21:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52DF947E.40800@gmail.com>
+References: <52DF947E.40800@gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 23 Jan 2014 02:50:52 +0530
+Message-ID: <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com> (sfid-20140122_222117_333506_BB7514C4)
+Subject: Re: 802.11a is supported in AP mode or not?
+To: zhuyj <zyjzyj2000@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Liu, Bopeng" <Bopeng.Liu@windriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-09 at 19:13 +0000, Steven Bateman wrote:
+On Wed, Jan 22, 2014 at 3:20 PM, zhuyj <zyjzyj2000@gmail.com> wrote:
+> Hi, maintainers
+>
+> I made tests on ubuntu 13.10. I followed these steps.
+> From the following logs, we can see 802.11a is not supported in channel
+> list.
+> I want to know whether 802.11a supports this or not? Or 802.11a is not used
+> in this?
+> Chip is 6205. lspci -vvv is as below.
 
-> I'm writing on behalf of about 4 or 5 users that are having issues
-> connecting to a WLAN that I manage. The majority of the information can be
-> found at the following link, including relevant logs. I've enclosed the
-> packet capture from next to the station with failed authentications.
+Its a AGN card, so it supports 5GHz.
 
-How did you capture/filter the attached file? It shows no
-acknowledgement of the EAPOL packets, but no retries either, so you
-probably filtered out the acknowledgements. That leads me to believe
-that maybe there was something wrong with those EAPOL frames, maybe
-wpa_supplicant didn't get or didn't expect them?
+Also From the other Thread:
 
-What makes you so sure it's a driver/firmware bug rather than a bug
-related to wpa_supplicant or interaction with it?
+On Wed, Jan 22, 2014 at 4:27 PM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+>
+> AP Mode:
+>
+> hw_mode can't be supported, have you ever met such problem?
+>
+>
+>  hostapd -B /etc/hostapd.conf
+> Configuration file: /etc/hostapd.conf
+> channel [9] (104) is disabled for use in AP mode, flags: 0x1
+> wlan0: IEEE 802.11 Configured channel (104) not found from the channel list of current mode (2) IEEE 802.11a
+> wlan0: IEEE 802.11 Hardware does not support configured channel
+> Could not select hw_mode and channel. (-4)
+> wlan0: Unable to setup interface.
+>
+Channel 104 is a DFS channel which is not allowed in country US.
+Please use a non-DFS channel like 36/40/149 and then try (or)
+change the country_code which has 104 allowed :-).
 
-johannes
+You can also use "iw reg get" to get list of bands allowed, all the bands
+marked with passive-scan are not allowed in AP mode unless we implement
+full DFS functionality (CAC) and make the channel usable.
 
+Also use a separate thread, dont post in other threads.
