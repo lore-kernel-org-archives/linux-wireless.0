@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:63779 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268AbaAXWqy (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39856 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbaAVIVv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 17:46:54 -0500
-Received: by mail-pb0-f53.google.com with SMTP id md12so3731787pbc.26
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:46:54 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 03/11] rel-html: update Linux project file
-Date: Fri, 24 Jan 2014 14:46:25 -0800
-Message-Id: <1390603593-27728-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20140124_234657_575276_C6AE302F)
-In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 22 Jan 2014 03:21:51 -0500
+Message-ID: <1390378907.4334.2.camel@jlt4.sipsolutions.net> (sfid-20140122_092200_769927_71F38F5B)
+Subject: Re: [PATCH] mac80211: mesh: fix mesh_id check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Date: Wed, 22 Jan 2014 09:21:47 +0100
+In-Reply-To: <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com> (sfid-20140122_074536_150907_F7F99D56)
+References: <1390334699.6199.67.camel@jlt4.sipsolutions.net>
+	 <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com>
+	 (sfid-20140122_074536_150907_F7F99D56)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reflects the latest changes for kernel release
-project maintenance. The 3.14-rc1 is not out yet but
-should be out soon.
+On Wed, 2014-01-22 at 14:45 +0800, Chun-Yeow Yeoh wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- rel-html.cfg | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > @@ -866,7 +866,7 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+> >         if (sdata->vif.csa_active)
+> >                 return true;
+> >
+> > -       if (!ifmsh->mesh_id)
+> > +       if (!ifmsh->mesh_id_len)
+> 
+> I don't see this in mac80211-next. Anyway, I think that this is not
+> needed since the checking (sdata->wdev.mesh_id_len) is done at
+> ieee80211_mesh_rx_queued_mgmt prior to
+> ieee80211_mesh_process_chnswitch.
 
-diff --git a/rel-html.cfg b/rel-html.cfg
-index d6b010e..a4baa15 100644
---- a/rel-html.cfg
-+++ b/rel-html.cfg
-@@ -1,9 +1,10 @@
- [project]
- rel_html_proj           = linux
- supported =
-+		3.14
- 		3.13
- 		3.12
--		3.12
-+		3.10
- 		3.4
- 		3.2
- 		2.6.34
--- 
-1.8.5.2
+Indeed, this part seems to only be in 3.13 - probably got cleaned up in
+somebody else's patches. I think though mac80211 should probably check
+ifmsh->mesh_id_len and not sdata->wdev.mesh_id_len? Also, cfg80211 seems
+to be missing this check in nl80211_channel_switch(), no?
+
+johannes
 
