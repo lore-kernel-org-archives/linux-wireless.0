@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57363 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752887AbaAWCLT (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43863 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753140AbaAVLkc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 21:11:19 -0500
-Date: Wed, 22 Jan 2014 18:12:08 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Realtek 8821 wireless PCI driver?
-Message-ID: <20140123021208.GA13639@kroah.com> (sfid-20140123_031123_038757_27CD9AC7)
-References: <20140120193249.GA25707@kroah.com>
- <52E066A1.9010009@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52E066A1.9010009@lwfinger.net>
+	Wed, 22 Jan 2014 06:40:32 -0500
+Message-ID: <1390390829.4189.10.camel@porter.coelho.fi> (sfid-20140122_124035_878892_31F61B09)
+Subject: Re: [PATCH 3/7] mac80211: move csa_active setting in STA CSA
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Wed, 22 Jan 2014 13:40:29 +0200
+In-Reply-To: <1390227670-19030-4-git-send-email-michal.kazior@tieto.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-4-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 06:47:29PM -0600, Larry Finger wrote:
-> On 01/20/2014 01:32 PM, Greg KH wrote:
-> > Hi all,
-> >
-> > I have a box here with a Realtek 8821 wireless PCI device.  We don't
-> > seem to have a driver upstream for it yet, but there's a huge tarball
-> > from Realtek on their site.
-> >
-> > Has anyone started picking the needed pieces out of the tarball to get
-> > this merged "properly", or does this need to be done yet?
-> >
-> > Hm, I wonder if I should just dump the tarball into staging for now, to
-> > get my box working, any objections to me doing that?
+On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
+> The sdata->vif.csa_active could be left set after,
+> e.g. channel context constraints check fail in STA
+> mode leaving the interface in a strange state for
+> a brief period of time until it is disconnected.
+> This was harmless but ugly.
 > 
-> I have had contact with the Realtek developers regarding a Linux driver for the 
-> RTL8821AE device with PCI ID 10ec:8821. On Dec 10, 2013, they indicated that 
-> there were still 802.11ac problems, and they were not yet ready to release it to 
-> me. I will write them again and check if the driver is now ready, and they just 
-> forgot to send it to me. Once they are ready, they will also be sending me 
-> sample devices.
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/mac80211/mlme.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> What is the URL for the driver that you found? I did a quick search on their 
-> site and did not find it.
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index fc1d824..bfb81cb 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1001,7 +1001,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  	}
+>  
+>  	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+> -	sdata->vif.csa_active = true;
+>  
+>  	mutex_lock(&local->chanctx_mtx);
+>  	if (local->use_chanctx) {
+> @@ -1039,6 +1038,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  	mutex_unlock(&local->chanctx_mtx);
+>  
+>  	sdata->csa_chandef = csa_ie.chandef;
+> +	sdata->vif.csa_active = true;
+>  
+>  	if (csa_ie.mode)
+>  		ieee80211_stop_queues_by_reason(&local->hw,
 
-It came with a device I got at a conference, along with 1,000 other
-people, so it's being used in the "wild" now, running Linux.  I'll send
-you the patch off-list as it's not small.
+Looks better indeed.
 
-> To answer your question, I certainly would have no objections to your dumping 
-> the driver into staging. I can fix it up there as easily as in my own private 
-> stores. You will, of course, get a lot more intermediate patches, but I think 
-> you have already anticipated that. The PCI group usually send me mac80211-based 
-> drivers, thus the residence in staging may be short, but that is desirable.
+--
+Luca.
 
-Ok, I spent an hour or so trying to see if I could just use the existing
-rtlwifi module with this driver, but it seems that they are using a 2
-year-old version of it, so I'll have to bundle it directly into the
-driver for now, along with an "odd" bluetooth sharing module.  I'll work
-on making the needed changes to the driver to get it to work with
-rtlwifi first, and then clean up the rest over the next few months.  I
-have the hardware here to test with, so that should make it easier than
-the normal staging driver work I do.
-
-But for now, staging seems like a good idea, especially as one "distro"
-is already shipping it in this form (SteamOS).
-
-thanks,
-
-greg k-h
