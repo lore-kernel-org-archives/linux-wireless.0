@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:49330 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346AbaAQHeC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 02:34:02 -0500
-Message-ID: <52D8DC0E.40207@neratec.com> (sfid-20140117_083407_539620_98608653)
-Date: Fri, 17 Jan 2014 08:30:22 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>	<1384665016-12022-5-git-send-email-sujith@msujith.org>	<52CE934D.1020400@neratec.com>	<21198.40916.260973.48444@gargle.gargle.HOWL>	<52CEA5A3.2040308@neratec.com>	<21198.43395.235654.597422@gargle.gargle.HOWL>	<52CEAB24.5090700@neratec.com>	<52D3F962.1010302@neratec.com>	<21204.319.492595.58625@gargle.gargle.HOWL>	<52D402C3.3070606@neratec.com>	<21204.1991.201080.986559@gargle.gargle.HOWL>	<21204.2384.710460.402183@gargle.gargle.HOWL>	<21204.3832.404821.109119@gargle.gargle.HOWL>	<52D63EBB.7020607@neratec.com>	<21206.17284.157496.206327@gargle.gargle.HOWL>	<52D6472B.2060207@neratec.com>	<21207.48441.292580.481850@gargle.gargle.HOWL>	<21207.49245.151249.759167@gargle.gargle.HOWL>	<52D7C62F.2030307@neratec.com> <21208.20686.79159.966434@gargle.gargle.HOWL>
-In-Reply-To: <21208.20686.79159.966434@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:40036 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbaAVJQ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jan 2014 04:16:56 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W5tvb-0001Ue-9m
+	for linux-wireless@vger.kernel.org; Wed, 22 Jan 2014 10:16:55 +0100
+Message-ID: <1390382213.4334.20.camel@jlt4.sipsolutions.net> (sfid-20140122_101706_204583_550A83DC)
+Subject: [PATCH] mac80211: mesh: remove mesh_id check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 22 Jan 2014 10:16:53 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/16/2014 10:36 PM, Sujith Manoharan wrote:
-> Wojciech Dubowik wrote:
->> I guess I won't be able to reproduce bad scan results with wireless
->> testing since I have
->> changed scan reporting to pure rssi in my openwrt compat.
->> In normal case you get a sum of rssi and noise floor and it will be
->> correct i.e. when
->> NF is shifted by 14db so will be rssi.
->> So it's just my use case.
->>
->> Anyway I have just solved the issue by applying calibrated noise floor
->> values from eeprom
->> instead of nominal in nf_get functions and nf histogram. Now the rssi
->> seems stable in my test
->> environment. I have just started testing but it looks promising.
-> I don't see how that would fix the issue. The race still remains since
-> there is a window between NF cal init and completion. The results
-> of the calibration depends on the environment and using default values
-> from the eeprom will not fix this, I think.
->
-> Sujith
-I agree it's more of a workaround because there can be situations
-where measured value is far from calibrated. In my setup it
-helps but I haven't yet tested what happens in the noisy environment.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Do you know a better way to fix this? I am not so deep into calibration
-tasks but I have a working setup so I could spend more time on that.
+The mesh_id is an array so can't ever be NULL, it looks
+like mesh_id_len check was intended instead. However,
+since the previous patch, cfg80211 does the check, so
+just remove it here.
 
-Wojtek
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e948b38..cf961a5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3196,9 +3196,6 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		ifmsh = &sdata->u.mesh;
+ 
+-		if (!ifmsh->mesh_id)
+-			return -EINVAL;
+-
+ 		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
+ 			return -EINVAL;
+ 
+-- 
+1.8.5.1
+
+
 
