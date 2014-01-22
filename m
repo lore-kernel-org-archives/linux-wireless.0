@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:42489 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbaAOMJ1 (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:34755 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408AbaAVJ6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 07:09:27 -0500
-Received: by mail-ee0-f50.google.com with SMTP id d17so808615eek.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:09:26 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 2/9] mac80211: treat IBSS CSA finish failure seriously
-Date: Wed, 15 Jan 2014 13:04:47 +0100
-Message-Id: <1389787494-7361-3-git-send-email-michal.kazior@tieto.com> (sfid-20140115_130931_467842_501B2EDA)
-In-Reply-To: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 22 Jan 2014 04:58:39 -0500
+Received: by mail-oa0-f43.google.com with SMTP id h16so166392oag.16
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 01:58:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
+References: <1389941251-32692-1-git-send-email-wens@csie.org>
+	<CAAVeFuLP4MkfXGG1FMauvUw_J63zRXdhGwxqYy5W98L1wCQNbw@mail.gmail.com>
+	<CACRpkdYiy+sya6NqRfAmsrFOXvaa3qX=qjRuTDW1vZVSaG1+Gg@mail.gmail.com>
+	<201401211335.16885.arnd@arndb.de>
+	<CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com>
+Date: Wed, 22 Jan 2014 10:58:38 +0100
+Message-ID: <CACRpkdZbb=eO8YRtMn6hW0vn97PkHUo88e_o61DEC8=wPY3_PQ@mail.gmail.com> (sfid-20140122_105844_526303_F89AAB5F)
+Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Alexandre Courbot <gnurou@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Other interface modes are checked against failure.
-This should avoid false-positive channel switch
-events where IBSS CSA actually failed.
+On Tue, Jan 21, 2014 at 3:53 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> The good (or bad, rather) thing about DT is that we can do whatever we
+> please with the new bindings: decide which name or which index
+> (doesn't matter here) a GPIO should have. However we don't have this
+> control over ACPI, where nothing guarantees that the same index will
+> be used for the same GPIO function.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8c78572..2ab5f49 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3040,7 +3040,9 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 			goto unlock;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		ieee80211_ibss_finish_csa(sdata);
-+		err = ieee80211_ibss_finish_csa(sdata);
-+		if (err < 0)
-+			goto unlock;
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
--- 
-1.8.4.rc3
+It's not like ACPI will impose some tables on us and expect us to
+use them as-is no matter how crazy they are. Then indeed the whole
+idea of unifying ACPI and DT accessors would be moot and it would
+only work by mistake or as a good joke.
 
+The situation with ACPI is just like with DT, it is assumed that the
+author of these tables also look at the Linux kernel drivers to figure
+out what argument goes where and we can influence them.
+
+Yours,
+Linus Walleij
