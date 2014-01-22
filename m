@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:45489 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816AbaAQRoZ (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:53090 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754916AbaAVLiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 12:44:25 -0500
-Date: Fri, 17 Jan 2014 09:44:16 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org
-Subject: Re: [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140117174415.GG7993@atomide.com> (sfid-20140117_184429_663549_88326E95)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
- <20140106225709.GA23070@earth.universe>
- <20140117014514.GA604@earth.universe>
- <20140117150127.GA15145@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140117150127.GA15145@tuxdriver.com>
+	Wed, 22 Jan 2014 06:38:07 -0500
+Message-ID: <1390390684.4189.9.camel@porter.coelho.fi> (sfid-20140122_123812_365301_DD4EA617)
+Subject: Re: [PATCH 2/7] mac80211: treat IBSS CSA finish failure seriously
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 22 Jan 2014 13:38:04 +0200
+In-Reply-To: <1390316421.6199.25.camel@jlt4.sipsolutions.net>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140120_152540_652074_76AA6981) <1390316421.6199.25.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [140117 07:17]:
-> On Fri, Jan 17, 2014 at 02:45:15AM +0100, Sebastian Reichel wrote:
-> > On Mon, Jan 06, 2014 at 11:57:09PM +0100, Sebastian Reichel wrote:
-> > > Hi John,
-> > > 
-> > > > The following patchset adds device tree support to
-> > > > the spi variant of the wl1251 driver.
-> > > >
-> > > > Luciano Coelho (1):
-> > > >   wl1251: split wl251 platform data to a separate structure
-> > > > 
-> > > > Sebastian Reichel (4):
-> > > >   wl1251: move power GPIO handling into the driver
-> > > >   wl1251: spi: add vio regulator support
-> > > >   wl1251: spi: add device tree support
-> > > >   Documentation: dt: wireless: Add wl1251
-> > > 
-> > > What's the status of this patchset? Tony prepared an immutable
-> > > branch for patches 1+2 [0]. I think the other patches are also ok
-> > > (at least there were no more complains from the DT binding
-> > > maintainers). It would be nice to have wl1251 DT support in 3.14.
-> > > 
-> > > [0] http://www.spinics.net/lists/linux-omap/msg101165.html
-> > > 
-> > > -- Sebastian
+On Tue, 2014-01-21 at 16:00 +0100, Johannes Berg wrote:
+> On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
+> > Other interface modes are checked against failure.
+> > This should avoid false-positive channel switch
+> > events where IBSS CSA actually failed.
 > > 
-> > ping? I can't see it on wireless-next.
+> > Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> > ---
+> >  net/mac80211/cfg.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> > index 62bf6c4..76fe1f90 100644
+> > --- a/net/mac80211/cfg.c
+> > +++ b/net/mac80211/cfg.c
+> > @@ -3039,7 +3039,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+> >  			return;
+> >  		break;
+> >  	case NL80211_IFTYPE_ADHOC:
+> > -		ieee80211_ibss_finish_csa(sdata);
+> > +		err = ieee80211_ibss_finish_csa(sdata);
+> > +		if (err < 0)
+> > +			return;
 > 
-> I can't pull it because the branch is based on a later source than
-> that of wireless-next.
+> Looks fine, though I suppose this should then perhaps also return a
+> changed bitmap to be used later. Ditto for mesh, I guess.
 
-Hmm I thought v3.13-rc1 was the base we agreed on the immutable branch.
-Care to explain what the issue is merging it in?
+Yes, I agree.  I actually had started to work on some patches to align
+all this, but I'll leave it to Michal. ;)
 
-AFAIK merging it fast forwards your branch to v3.13-rc1 and then
-you just need to do the pull request against v3.13-rc1.
+--
+Luca.
 
-Regards,
-
-Tony
