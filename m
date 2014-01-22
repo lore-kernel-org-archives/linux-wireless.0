@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751021AbaAVJPJ (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:41629 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbaAVGxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:15:09 -0500
-Message-ID: <1390382106.4334.18.camel@jlt4.sipsolutions.net> (sfid-20140122_101514_820877_FCC3226B)
-Subject: Re: [PATCH 3/3] cfg80211: implement multi-interface CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 22 Jan 2014 10:15:06 +0100
-In-Reply-To: <CA+BoTQnL5WKMb1TN7ZtDziRQ8=A8F0qq0r6jDOWCZJDCsV5cQA@mail.gmail.com> (sfid-20140122_100954_022427_5EC58ED4)
-References: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com>
-	 <1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
-	 <1390319550.6199.59.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=sWMSN5NveRf0aw98mMYWks2eXKWzZvk4NZgGLOctuQQ@mail.gmail.com>
-	 <1390380813.4334.5.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnL5WKMb1TN7ZtDziRQ8=A8F0qq0r6jDOWCZJDCsV5cQA@mail.gmail.com>
-	 (sfid-20140122_100954_022427_5EC58ED4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Jan 2014 01:53:23 -0500
+Received: by mail-pd0-f178.google.com with SMTP id y13so9293215pdi.9
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 22:53:22 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix the increment of mesh precedence value
+Date: Wed, 22 Jan 2014 14:53:04 +0800
+Message-Id: <1390373584-24716-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140122_075329_742648_520B21D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 10:09 +0100, Michal Kazior wrote:
-> On 22 January 2014 09:53, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Wed, 2014-01-22 at 07:36 +0100, Michal Kazior wrote:
-> >
-> >> >> +     if (!attrs[NL80211_ATTR_IFINDEX])
-> >> >> +             return -EINVAL;
+The mesh precedence value in ieee80211_channel_switch
+should be incremented or set to 1 only if this is the
+initiator of mesh channel switch. For non-initiator,
+the precedence value has updated using the Mesh
+Channel Switch Parameters element. Fix this.
 
-> >> 1: the old one, which has ifindex in the root
-> >> 2: the new one, which has wiphy in the root, and an array of (1)
-> >> within CH_SWITCH_IFACES (and each entry has ifindex at its root)
-> >
-> > Yeah I think I confused the two. This is handling case 1 only, right?
-> 
-> No. It handles both cases.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/cfg.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-In general. I phrased it badly - by "this" I was referring only to the
-two lines above.
-
-> > But you have to check the ifindex manually since for case 2 you can only
-> > require the pre_doit() to give you the wiphy.
-> 
-> In case 2 ifindex is not available in the attribute root. Can you
-> require pre_doit() to check ifindex if it's possible for ifindex to be
-> missing (case 2)?
-
-No, the way you're doing it is exactly right, I just got confused.
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 032081c..e948b38 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3207,13 +3207,13 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
+-		if (!ifmsh->pre_value)
+-			ifmsh->pre_value = 1;
+-		else
+-			ifmsh->pre_value++;
+-
+-		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE) {
+ 			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
++			if (!ifmsh->pre_value)
++				ifmsh->pre_value = 1;
++			else
++				ifmsh->pre_value++;
++		}
+ 
+ 		/* see comments in the NL80211_IFTYPE_AP block */
+ 		if (params->count > 1) {
+-- 
+1.7.9.5
 
