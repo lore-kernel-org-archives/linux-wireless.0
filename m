@@ -1,121 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:38045 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbaAKTzA (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:58004 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbaAVGvJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 14:55:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <gruszka@redhat.com>, netdev@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/3 RESUBMIT] b43: Fix lockdep splat
-Date: Sat, 11 Jan 2014 13:54:52 -0600
-Message-Id: <1389470092-13098-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_205512_126999_527FE7EF)
+	Wed, 22 Jan 2014 01:51:09 -0500
+Received: by mail-ee0-f42.google.com with SMTP id e49so4616988eek.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2014 22:51:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
+Date: Wed, 22 Jan 2014 07:51:08 +0100
+Message-ID: <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com> (sfid-20140122_075114_139752_88E4FB38)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <gruszka@redhat.com>
+On 21 January 2014 16:06, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2014-01-20 at 15:21 +0100, Michal Kazior wrote:
+>> The patch improves channel switch related locking
+>> (STA, IBSS, AP, mesh).
+>>
+>> Now read access to sdata->vif.csa_active is
+>> protected by wdev.mtx and local->mtx so holding
+>> either is enough for read access but both are
+>> required for write access. Keep in mind sdata lock
+>> must be taken before local->mtx. Taking them in
+>> reverse order creates a deadlock situation.
+>>
+>> The only exception is ieee80211_beacon_get_tim()
+>> but it's safe to leave it as is and it doesn't
+>> influence mac80211 state in any way.
+>>
+>> The patch adds a few lockdep assertions along for
+>> easier code/locking maintenance.
+> ---
+>> This also prepares for multi-interface CSA.
+>
+> There's only one or two lines for that preparation as far as I can tell,
+> but I think you should separate it (or maybe make that part of another
+> patch)... or did I miss something?
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=67561, a locking dependency is reported
-when b43 is used with hostapd, and rfkill is used to kill the radio output.
+True. I'll remove the sentence.
 
-The lockdep splat (in part) is as follows:
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.12.0 #1 Not tainted
--------------------------------------------------------
-rfkill/10040 is trying to acquire lock:
- (rtnl_mutex){+.+.+.}, at: [<ffffffff8146f282>] rtnl_lock+0x12/0x20
+> I mean this:
+>
+>> +       sdata->csa_chandef = params.chandef;
+>
+> doesn't seem to belong here.
 
-but task is already holding lock:
- (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa04832ca>] rfkill_fop_write+0x6a/0x170 [rfkill]
+I mistakenly left that while rebasing. I'll fix that. I think that's
+the only thing that shouldn't be in this patch?
 
---snip--
 
-Chain exists of:
-  rtnl_mutex --> misc_mtx --> rfkill_global_mutex
+> It would also be good to explain why you're doing this?
 
-The fix is to move the initialization of the hardware random number generator
-outside the code range covered by the rtnl_mutex.
+You mean the whole locking patch? Basically to be able safely assess
+CSA state. Taking a bunch of wdev->mtx seems like a bad idea. Due to
+how the locks are ordered and organized I've came up with using
+local->mtx as an extra CSA-related variable protection. Using
+local->mtx makes it possible to iterate over interfaces and check
+for/update CSA state in an atomic way.
 
-Reported-by: yury <urykhy@gmail.com>
-Tested-by: yury <urykhy@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
-This patch was resubmitted because there was a typo in Stanislaw's address.
+Is this a satisfactory explanation?
 
-Larry
----
-drivers/net/wireless/b43/main.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ccd24f0a..86b2030 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2424,6 +2424,7 @@ error:
- 
- static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
- static void b43_one_core_detach(struct b43_bus_dev *dev);
-+static int b43_rng_init(struct b43_wl *wl);
- 
- static void b43_request_firmware(struct work_struct *work)
- {
-@@ -2475,6 +2476,10 @@ start_ieee80211:
- 		goto err_one_core_detach;
- 	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
-+
-+	/* Register HW RNG driver */
-+	b43_rng_init(wl);
-+
- 	goto out;
- 
- err_one_core_detach:
-@@ -4636,9 +4641,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
- 
--	/* Unregister HW RNG driver */
--	b43_rng_exit(dev->wl);
--
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
- 	/* Stop the microcode PSM. */
-@@ -4795,9 +4797,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
- 
--	/* Register HW RNG driver */
--	b43_rng_init(dev->wl);
--
- out:
- 	return err;
- 
-@@ -5464,6 +5463,9 @@ static void b43_bcma_remove(struct bcma_device *core)
- 
- 	b43_one_core_detach(wldev->dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	b43_leds_unregister(wl);
- 
- 	ieee80211_free_hw(wl->hw);
-@@ -5541,6 +5543,9 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 
- 	b43_one_core_detach(dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	if (list_empty(&wl->devlist)) {
- 		b43_leds_unregister(wl);
- 		/* Last core on the chip unregistered.
--- 
-1.8.4
-
+Michał
