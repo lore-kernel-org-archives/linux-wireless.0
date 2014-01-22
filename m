@@ -1,109 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:37212 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172AbaAQM4p convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40330 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755111AbaAVKfD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 07:56:45 -0500
-Received: by mail-pd0-f172.google.com with SMTP id z10so3968824pdj.31
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 04:56:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389952418.8062.57.camel@porter.coelho.fi>
-References: <a8aa052ea196de8256dcdc5b3ae81cfa64d3f9ff.1389935084.git.gamerh2o@gmail.com>
-	<1389939896.8062.53.camel@porter.coelho.fi>
-	<CACna6rzkKGxBxReQJ0Y=TscY8GJ+r=S+6Cs+g+B0=7k1FFxW2w@mail.gmail.com>
-	<CAOiHx=nui0nVGiCLoukRovB3zY5jiKAt__Numo4y4bQv0dzOcQ@mail.gmail.com>
-	<1389949304.8062.55.camel@porter.coelho.fi>
-	<CAAb+SYYyQF54Cib3Wae18orzH31RJ-vYoTEOBidMEPwVYYRv=g@mail.gmail.com>
-	<CACna6rzTF8Wpj+Bn40iwEsZ9Ca+gE1ydYz1cgonb4u1rQPGQgw@mail.gmail.com>
-	<1389952418.8062.57.camel@porter.coelho.fi>
-Date: Fri, 17 Jan 2014 20:56:45 +0800
-Message-ID: <CAAb+SYacFzn_ybhtVbH6upNbvL8L3xf299TPeJnExcmiqLk5Sw@mail.gmail.com> (sfid-20140117_135652_326672_ADA7F0A6)
-Subject: Re: [PATCH 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Jonas Gorski <jogo@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jan 2014 05:35:03 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/7] mac80211: minstrel_ht: sample_table can be __read_mostly
+Date: Wed, 22 Jan 2014 11:34:57 +0100
+Message-Id: <1390386898-14316-7-git-send-email-johannes@sipsolutions.net> (sfid-20140122_113515_184509_D1F6D6C7)
+In-Reply-To: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
+References: <1390386898-14316-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 5:53 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2014-01-17 at 10:37 +0100, Rafał Miłecki wrote:
->> 2014/1/17 ZHAO Gang <gamerh2o@gmail.com>:
->> > On Fri, Jan 17, 2014 at 5:01 PM, Luca Coelho <luca@coelho.fi> wrote:
->> >> On Fri, 2014-01-17 at 09:56 +0100, Jonas Gorski wrote:
->> >>> On Fri, Jan 17, 2014 at 8:11 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> >>> > 2014/1/17 Luca Coelho <luca@coelho.fi>:
->> >>> >> On Fri, 2014-01-17 at 13:27 +0800, ZHAO Gang wrote:
->> >>> >>> In following patch, replace b43 specific helper function with kernel
->> >>> >>> api to reduce code duplication.
->> >>> >>>
->> >>> >>> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
->> >>> >>> ---
->> >>> >>>  drivers/net/wireless/b43/xmit.c | 4 ++--
->> >>> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
->> >>> >>>
->> >>> >>> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
->> >>> >>> index 4ae63f4..50e5ddb 100644
->> >>> >>> --- a/drivers/net/wireless/b43/xmit.c
->> >>> >>> +++ b/drivers/net/wireless/b43/xmit.c
->> >>> >>> @@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->> >>> >>>                * channel number in b43. */
->> >>> >>>               if (chanstat & B43_RX_CHAN_5GHZ) {
->> >>> >>>                       status.band = IEEE80211_BAND_5GHZ;
->> >>> >>> -                     status.freq = b43_freq_to_channel_5ghz(chanid);
->> >>> >>> +                     status.freq = b43_channel_to_freq_5ghz(chanid);
->> >>> >>>               } else {
->> >>> >>>                       status.band = IEEE80211_BAND_2GHZ;
->> >>> >>> -                     status.freq = b43_freq_to_channel_2ghz(chanid);
->> >>> >>> +                     status.freq = b43_channel_to_freq_2ghz(chanid);
->> >>> >>>               }
->> >>> >>>               break;
->> >>> >>>       default:
->> >>> >>
->> >>> >> Why do you need this patch if you're going to remove these calls in the
->> >>> >> next patch anyway?
->> >>> >
->> >>> > I was thinking about this for a moment too. You could just make a one
->> >>> > patch and note in commit message that "translation" was reversed.
->> >>>
->> >>> That would mean mixing fixes and improvements, which is something you
->> >>> are not supposed to do, so IMHO having these split into two is
->> >>> correct. Think about stable maintainers wanting the fix but not the
->> >>> other change because it might introduce unknown side effects.
->> >>
->> >> Makes sense.  In such case, the first patch should be clearly marked as
->> >> a bug fix, so at least the commit message should be changed (ie.
->> >> mentioning the next patch in the series is useless).
->> >>
->> >
->> > I am OK to send this fix either in one patch or two, actually I have
->> > sent a version 2 which is a one patch version :-)
->> >
->> > I'm not sure if this patch is needed for stable, yes, as you said, if
->> > it's for stable, the commit message should be changed.
->>
->> Thanks for your help guys.
->>
->> I think it may be the best idea to send
->> 1/2 as fix (probably 3.14) + stable CC
->> 2/2 as improvement (for next)
->> Does it make sense?
->
-> Sounds good to me.  The actual fix is so simple and obvious that I don't
-> see any reason for not sending it as a fix + stable.
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi, after reading the code, it seems that status.freq is not actually used
-in rx path, so this fix has no user sensible changes. So I think it is
-not needed
-to send this patch to stable.
+The sample table is initialized only once at module start, so
+is really __read_mostly. Additionally, the code to init it can
+be marked __init since it will never be needed again, it is
+likely automatically inlined into the __init function already
+by the compiler, so this doesn't really make a difference.
 
-Anyway, I should mention that the version 2 patch should be ignored.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> --
-> Luca.
->
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a6d6cc5..bccaf85 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -124,7 +124,7 @@ const struct mcs_group minstrel_mcs_groups[] = {
+ 
+ #define MINSTREL_CCK_GROUP	(ARRAY_SIZE(minstrel_mcs_groups) - 1)
+ 
+-static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES];
++static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
+ 
+ static void
+ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
+@@ -1048,8 +1048,7 @@ static const struct rate_control_ops mac80211_minstrel_ht = {
+ };
+ 
+ 
+-static void
+-init_sample_table(void)
++static void __init init_sample_table(void)
+ {
+ 	int col, i, new_idx;
+ 	u8 rnd[MCS_GROUP_RATES];
+-- 
+1.8.5.1
+
