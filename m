@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:41104 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142AbaAIQ2O (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbaAVJDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 11:28:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Jan Prinsloo <janroot@gmail.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl8192cu: Add new device ID
-Date: Thu,  9 Jan 2014 10:27:27 -0600
-Message-Id: <1389284847-19668-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140109_172822_949919_9A4B8DD3)
+	Wed, 22 Jan 2014 04:03:01 -0500
+Message-ID: <1390381374.4334.13.camel@jlt4.sipsolutions.net> (sfid-20140122_100306_443465_92218E87)
+Subject: Re: [PATCH] mac80211: fix the increment of mesh precedence value
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Wed, 22 Jan 2014 10:02:54 +0100
+In-Reply-To: <1390373584-24716-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140122_075328_936337_B2DBF8A4)
+References: <1390373584-24716-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20140122_075328_936337_B2DBF8A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Jan Prinsloo <janroot@gmail.com>
-Tested-by: Jan Prinsloo <janroot@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
- 1 file changed, 1 insertion(+)
+On Wed, 2014-01-22 at 14:53 +0800, Chun-Yeow Yeoh wrote:
+> The mesh precedence value in ieee80211_channel_switch
+> should be incremented or set to 1 only if this is the
+> initiator of mesh channel switch. For non-initiator,
+> the precedence value has updated using the Mesh
+> Channel Switch Parameters element. Fix this.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 8501954..c613110 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -317,6 +317,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
- 	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
- 	{RTL_USB_DEVICE(0x0df6, 0x005c, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
-+	{RTL_USB_DEVICE(0x0df6, 0x0077, rtl92cu_hal_cfg)}, /*Sitecom-WLA2100V2*/
- 	{RTL_USB_DEVICE(0x0eb0, 0x9071, rtl92cu_hal_cfg)}, /*NO Brand - Etop*/
- 	{RTL_USB_DEVICE(0x4856, 0x0091, rtl92cu_hal_cfg)}, /*NetweeN - Feixun*/
- 	/* HP - Lite-On ,8188CUS Slim Combo */
--- 
-1.8.4
+Applied.
+
+johannes
 
