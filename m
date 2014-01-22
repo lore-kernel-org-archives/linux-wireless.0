@@ -1,126 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:34645 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076AbaAaKws (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:56301 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414AbaAVLxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 05:52:48 -0500
-Message-ID: <52EB8083.2050507@redpinesignals.com> (sfid-20140131_115252_482006_4B69A490)
-Date: Fri, 31 Jan 2014 16:22:51 +0530
-From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
-MIME-Version: 1.0
+	Wed, 22 Jan 2014 06:53:53 -0500
+Received: by mail-we0-f180.google.com with SMTP id q59so227674wes.39
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 03:53:50 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.13.1 1/9] rsi: Add RS9113 driver
-References: <52EA7584.4040508@redpinesignals.com>	 (sfid-20140130_165938_444207_B3C8ACC3) <1391098706.4323.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1391098706.4323.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt frames, as per spec
+Date: Wed, 22 Jan 2014 12:52:44 +0100
+Message-Id: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com> (sfid-20140122_125356_479432_4BD767FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes, 
-Thank you for the review comments, will make the changes
-as you have suggested. A-MPDU indication frames are sent 
-to the firmware to start/stop tx/rx ampdu aggregation.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Regards,
-Jahnavi
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/agg-tx.c | 2 +-
+ net/mac80211/ht.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-On 01/30/2014 09:48 PM, Johannes Berg wrote:
-> On Thu, 2014-01-30 at 21:23 +0530, Jahnavi wrote:
->> From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
->>
->> This driver supports the RS9113 chipset from Redpine Signals Inc. This
->> chipset supports the 802.11a/b/g/n standards, but this driver currently
->> supports only b/g/n. Both SDIO and USB interfaces are supported. Can be
->> upgraded to 91x quite easily. More information can be found at:
->> http://www.redpinesignals.com/Technologies_&_Chipsets/Chipsets/RS9113.php
-> You should probably propose it for staging... let me take a few minutes
-> and make a quick review pass.
->
->> +/**
->> + * @file rsi_device_ops.h
->> + * @author
->> + * @version 1.0
->> + *
->> + * @section LICENSE
-> Those lines are all useless
->
->> + * Copyright (c) 2013 Redpine Signals Inc.
-> It's 2014 now, surely you want to claim copyright this year?
->
->> + * @section DESCRIPTION
-> That's unnecessary.
->
->> + * This file contians the data structures and variables/ macros commonly
-> contains
->
->> +#define RSI_HEADER_SIZE                 18
-> That should probably be some struct, and the define doing sizeof()?
->
->> +static inline unsigned int rsi_get_queueno(unsigned char *addr,
->> +					   unsigned short offset)
->> +{
->> +	return (le16_to_cpu(*(unsigned short *)&addr[offset]) & 0x7000) >> 12;
->> +static inline unsigned int rsi_get_length(unsigned char *addr,
->> +					  unsigned short offset)
->> +static inline unsigned char rsi_get_extended_desc(unsigned char *addr,
->> +						  unsigned short offset)
->> +static inline unsigned char rsi_get_rssi(unsigned char *addr)
->> +static inline unsigned char rsi_get_channel(unsigned char *addr)
-> These seem like they should then just be replaced by
->
-> 	some_struct_ptr->rssi
->
-> and similar?
->
->> +int rsi_send_ampdu_indication_frame(struct rsi_common *common,
->> +				    unsigned short tid,
->> +				    unsigned short ssn, unsigned char buf_size,
->> +				    unsigned char event);
-> what are "A-MPDU indication frame[s]"?
->
->> +#ifdef USE_USB_INTF
-> Shouldn't that be just CONFIG_RSI_SOMETHING?
->
->> +typedef void (*SD_INTERRUPT)(void *pcontext);
-> no typedefs please
->
->> +#define SDIO_BLOCK_SIZE                         256
-> Seems like there should be a define for that already?
->
->
->> +++ b/drivers/net/wireless/rsi/include/rsi_mac80211.h	2014-01-30 16:01:00.194777922 +0530
->> +static const struct ieee80211_channel rsi_2ghz_channels[] = {
->> +static const struct ieee80211_channel rsi_5ghz_channels[] = {
->> +static struct ieee80211_rate rsi_rates[] = {
->> +static const unsigned short rsi_mcsrates[] = {
-> None of this belongs into a header file.
->
->> + * This file contians the os dependent( Linux) specific function prototypes
->> + * and macros
-> That kind of thing is generally frowned upon.
->
->> +void rsi_print(int zone, unsigned char *vdata, int len);
-> Unless it's more than just a simple printk wrapper?
->
->> +struct module_ps_config {
->> +	unsigned int not_in_use:1;
->> +	unsigned int clock_gate:1;
->> +	unsigned int logical_prgm:1;
->> +	unsigned int logical_poweroff:1;
->> +	unsigned int power_off:1;
->> +	unsigned int resvd:27;
->> +};
-> Uh, no, you can't use bitfields in hardware/firmware communication
-> structs. They also need to be __packed, in most cases.
->
->> +struct rsi_mac_frame {
-> All those unions seem a bit ... overblown? Probably better to define
-> separate structs for different usages and cast appropriately.
->
-> johannes
->
->
->
-
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 13b7683..ce9633a 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -107,7 +107,7 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.u.addba_req.start_seq_num =
+ 					cpu_to_le16(start_seq_num << 4);
+ 
+-	ieee80211_tx_skb_tid(sdata, skb, tid);
++	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index fab7b91..dc3c280 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -375,7 +375,7 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.u.delba.params = cpu_to_le16(params);
+ 	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
+ 
+-	ieee80211_tx_skb_tid(sdata, skb, tid);
++	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+-- 
+1.8.5.1.19.gdaad3aa
 
