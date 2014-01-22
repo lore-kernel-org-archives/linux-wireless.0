@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:61105 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbaAQIcQ (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:55015 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbaAVUrh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 03:32:16 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so745420ead.27
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 00:32:15 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 1/5] cfg80211: don't check regulatory bandwidth
-Date: Fri, 17 Jan 2014 09:32:00 +0100
-Message-Id: <1389947524-6102-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_093222_952069_DA9710BA)
-In-Reply-To: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 22 Jan 2014 15:47:37 -0500
+Received: by mail-ee0-f51.google.com with SMTP id b57so23897eek.10
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 12:47:36 -0800 (PST)
+In-Reply-To: <1390418495.4334.49.camel@jlt4.sipsolutions.net>
+References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com> <1390394079.4334.30.camel@jlt4.sipsolutions.net> <20140122130924.GA18365@magnum.frso.rivierawaves.com> <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com> <20140122152845.GB18365@magnum.frso.rivierawaves.com> <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com> <20140122164122.GC18365@magnum.frso.rivierawaves.com> <1390416713.4334.46.camel@jlt4.sipsolutions.net> <20140122191610.GD18365@magnum.frso.rivierawaves.com> (sfid-20140122_201711_730750_BBD5790C) <1390418495.4334.49.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt frames, as per spec
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Date: Wed, 22 Jan 2014 21:47:27 +0100
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Message-ID: <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com> (sfid-20140122_214741_839099_BD1DC81E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't check regulatory bandwith base on
-single regulatory rule. There will be introduced
-new code that will calculate maximum bandwidth
-base on all contiguous rules.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/wireless/reg.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7d20d84..89bfac1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -526,7 +526,6 @@ bool reg_is_valid_request(const char *alpha2)
- static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- {
- 	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
--	u32 freq_diff;
- 
- 	if (freq_range->start_freq_khz <= 0 || freq_range->end_freq_khz <= 0)
- 		return false;
-@@ -534,10 +533,7 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- 	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
- 		return false;
- 
--	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
--
--	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
--	    freq_range->max_bandwidth_khz > freq_diff)
-+	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
- 		return false;
- 
- 	return true;
--- 
-1.7.9.5
 
+
+Johannes Berg <johannes@sipsolutions.net> schrieb:
+>On Wed, 2014-01-22 at 20:16 +0100, Karl Beldan wrote:
+>
+>> > Given the fact that we only send the frame from
+>> > ieee80211_stop_tx_ba_cb() I don't see any problem. Even if we were
+>to
+>> > send the frame directly after calling the ampdu_action, it seems it
+>> > would be fine, since the callback (now) requires sending the
+>remaining
+>> > frames unaggregated. (Given that, I'm not even sure why we required
+>the
+>> > packets to be sent unaggregated, Emmanuel, do you remember?)
+>> > 
+>> I'd expect most device to not block ack such frames, and they'd be
+>> right to do so, sending them unaggregated seems the right thing to
+>do.
+>
+>Oh, I roughly remember now - we didn't want to separate the cases of us
+>sending a delBA and us receiving a delBA. If we receive a delBA, we
+>should stop sending aggregated frames immediately (actually for iwlwifi
+>the firmware will do that) or as quickly as possible, hence the
+>requirement
+>
+>If we decide to tear down the session ourselves then we could continue
+>sending until later, but it's not worth it.
+>
+>> So, I guess you are taking what I sent ?
+>
+>Haven't really made up my mind yet ... I think it's more correct, so I
+>should, but I also don't really want to break the ralink drivers over
+>what seems to me to be a fairly small issue.
+
+I think I'm fine with this now. Let's just see if someone experiences any issues ...
+
+ Furthermore I think i even remember that you can force ralink HW to stop a BA session. But all in all lets better comply with the spec ...
+
+Helmut
