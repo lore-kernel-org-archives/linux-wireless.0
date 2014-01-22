@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:44803 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaA3Iw6 (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:33992 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336AbaAVVxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 03:52:58 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 22 Jan 2014 16:53:33 -0500
+Received: by mail-wi0-f179.google.com with SMTP id hr1so1173059wib.6
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 13:53:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1390426022.4334.50.camel@jlt4.sipsolutions.net>
+References: <1390373865-6088-1-git-send-email-chaitanya.mgit@gmail.com> <1390426022.4334.50.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 23 Jan 2014 03:23:11 +0530
+Message-ID: <CABPxzY+Z_1PMmsUMOpSwjzv7ZLg791Ltd7VivbqAuemoYWM16A@mail.gmail.com> (sfid-20140122_225336_698923_7053C3B6)
+Subject: Re: [PATCH] minstrel_ht: Use RTS_CTS when STA is in DYNAMIC SMPS mode
+ for frames sent using Nss>1.
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, <stable@vger.kernel.org>
-Subject: [PATCH v2] mac80211: Fix IBSS disconnect
-Date: Thu, 30 Jan 2014 14:17:28 +0530
-Message-Id: <1391071648-12863-1-git-send-email-sujith@msujith.org> (sfid-20140130_095301_911576_DEEAECF4)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, Jan 23, 2014 at 2:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-01-22 at 12:27 +0530, Chaitanya T K wrote:
+>
+>> +             if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
+>> +                     minstrel_mcs_groups[i].streams > 1) {
+>> +                     mi->tx_flags |= IEEE80211_TX_RC_USE_RTS_CTS;
+>> +             } else if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
+>> +                     minstrel_mcs_groups[i].streams > 1) {
+>
+> Your indentation is off inside the if statements. I'll have to wait for
+> nbd to review the patch itself, I guess.
 
-Currently, when a station leaves an IBSS network, the
-corresponding BSS is not dropped from cfg80211 if there are
-other active stations in the network. But, the small
-window that is present when trying to determine a station's
-status based on IEEE80211_IBSS_MERGE_INTERVAL introduces
-a race.
+Ok, I will fix that. Checkpatch didn't catch that so missed it.
 
-Instead of trying to keep the BSS, always remove it when
-leaving an IBSS network. There is not much benefit to retain
-the BSS entry since it will be added with a subsequent join
-operation.
+> PS: Your clock/timezone is wrong by approximately 10 hours.
 
-This fixes an issue where a dangling BSS entry causes ath9k
-to wait for a beacon indefinitely.
-
-Cc: <stable@vger.kernel.org>
-Reported-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
-v2 - Remove BSS entry in the CSA-failure case too.
-
- net/mac80211/ibss.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 771080e..2796a19 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -695,12 +695,9 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
- 	struct cfg80211_bss *cbss;
- 	struct beacon_data *presp;
- 	struct sta_info *sta;
--	int active_ibss;
- 	u16 capability;
- 
--	active_ibss = ieee80211_sta_active_ibss(sdata);
--
--	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-+	if (!is_zero_ether_addr(ifibss->bssid)) {
- 		capability = WLAN_CAPABILITY_IBSS;
- 
- 		if (ifibss->privacy)
--- 
-1.8.5.3
-
+Oh..I have sent this from my virtual-box where time is not properly set :-).
