@@ -1,178 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:50357 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751797AbaATSuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 13:50:32 -0500
-Received: from ultralex.lan ([79.218.100.244]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0LqV4f-1VRbK33cjh-00e6Ki for
- <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 19:50:31 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 3/5] ath9k: move ath9k_process_rate to common.c
-Date: Mon, 20 Jan 2014 19:50:09 +0100
-Message-Id: <1390243811-9132-2-git-send-email-linux@rempel-privat.de> (sfid-20140120_195034_984084_6125C24C)
-In-Reply-To: <1390243811-9132-1-git-send-email-linux@rempel-privat.de>
-References: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
- <1390243811-9132-1-git-send-email-linux@rempel-privat.de>
+Received: from s3.sipsolutions.net ([144.76.43.152]:40033 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbaAVJQ2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jan 2014 04:16:28 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W5tv9-0001Su-FS
+	for linux-wireless@vger.kernel.org; Wed, 22 Jan 2014 10:16:27 +0100
+Message-ID: <1390382185.4334.19.camel@jlt4.sipsolutions.net> (sfid-20140122_101632_398677_25D89820)
+Subject: [PATCH] nl80211: check channel switch validity better
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 22 Jan 2014 10:16:25 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we can reuse this function in ath9k_htc
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Before allowing userspace to initiate a channel switch, check
+that it's actually connected in some sense. Also use a more
+appropriate error code for the not connected case.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/common.c | 42 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |  4 +++
- drivers/net/wireless/ath/ath9k/recv.c   | 59 +++++----------------------------
- 3 files changed, 54 insertions(+), 51 deletions(-)
+ net/wireless/nl80211.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 7028c52..120fd46 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -27,6 +27,48 @@ MODULE_AUTHOR("Atheros Communications");
- MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
- MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6e78c62..0c2ef08 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5799,10 +5799,15 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
  
-+int ath9k_cmn_process_rate(struct ath_common *common,
-+			   struct ieee80211_hw *hw,
-+			   struct ath_rx_status *rx_stats,
-+			   struct ieee80211_rx_status *rxs)
-+{
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
-+	unsigned int i = 0;
-+	struct ath_hw *ah = common->ah;
-+
-+	band = ah->curchan->chan->band;
-+	sband = hw->wiphy->bands[band];
-+
-+	if (IS_CHAN_QUARTER_RATE(ah->curchan))
-+		rxs->flag |= RX_FLAG_5MHZ;
-+	else if (IS_CHAN_HALF_RATE(ah->curchan))
-+		rxs->flag |= RX_FLAG_10MHZ;
-+
-+	if (rx_stats->rs_rate & 0x80) {
-+		/* HT rate */
-+		rxs->flag |= RX_FLAG_HT;
-+		rxs->flag |= rx_stats->flag;
-+		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
-+		return 0;
-+	}
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
-+			rxs->flag |= RX_FLAG_SHORTPRE;
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+	}
-+
-+	return -EINVAL;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_process_rate);
-+
- void ath9k_cmn_process_rssi(struct ath_common *common,
- 			    struct ieee80211_hw *hw,
- 			    struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index aaf4a9b5..729482f 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -42,6 +42,10 @@
- #define ATH_EP_RND(x, mul) 						\
- 	(((x) + ((mul)/2)) / (mul))
- 
-+int ath9k_cmn_process_rate(struct ath_common *common,
-+			   struct ieee80211_hw *hw,
-+			   struct ath_rx_status *rx_stats,
-+			   struct ieee80211_rx_status *rxs);
- void ath9k_cmn_process_rssi(struct ath_common *common,
- 			    struct ieee80211_hw *hw,
- 			    struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 5229e63..ab6a86c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -841,56 +841,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	return true;
- }
- 
--static int ath9k_process_rate(struct ath_common *common,
--			      struct ieee80211_hw *hw,
--			      struct ath_rx_status *rx_stats,
--			      struct ieee80211_rx_status *rxs)
--{
--	struct ieee80211_supported_band *sband;
--	enum ieee80211_band band;
--	unsigned int i = 0;
--	struct ath_softc __maybe_unused *sc = common->priv;
--	struct ath_hw *ah = sc->sc_ah;
--
--	band = ah->curchan->chan->band;
--	sband = hw->wiphy->bands[band];
--
--	if (IS_CHAN_QUARTER_RATE(ah->curchan))
--		rxs->flag |= RX_FLAG_5MHZ;
--	else if (IS_CHAN_HALF_RATE(ah->curchan))
--		rxs->flag |= RX_FLAG_10MHZ;
--
--	if (rx_stats->rs_rate & 0x80) {
--		/* HT rate */
--		rxs->flag |= RX_FLAG_HT;
--		rxs->flag |= rx_stats->flag;
--		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
--		return 0;
--	}
--
--	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
--			rxs->rate_idx = i;
--			return 0;
--		}
--		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
--			rxs->flag |= RX_FLAG_SHORTPRE;
--			rxs->rate_idx = i;
--			return 0;
--		}
--	}
--
--	/*
--	 * No valid hardware bitrate found -- we should not get here
--	 * because hardware has already validated this frame as OK.
--	 */
--	ath_dbg(common, ANY,
--		"unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
--		rx_stats->rs_rate);
--	RX_STAT_INC(rx_rate_err);
--	return -EINVAL;
--}
--
- static void ath9k_process_tsf(struct ath_rx_status *rs,
- 			      struct ieee80211_rx_status *rxs,
- 			      u64 tsf)
-@@ -1007,7 +957,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		goto exit;
- 	}
- 
--	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
-+	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status)) {
-+		/*
-+		 * No valid hardware bitrate found -- we should not get here
-+		 * because hardware has already validated this frame as OK.
-+		 */
-+		ath_dbg(common, ANY, "unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
-+			rx_stats->rs_rate);
-+		RX_STAT_INC(rx_rate_err);
- 		ret =-EINVAL;
- 		goto exit;
- 	}
+ 		/* useless if AP is not running */
+ 		if (!wdev->beacon_interval)
+-			return -EINVAL;
++			return -ENOTCONN;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
++		if (!wdev->ssid_len)
++			return -ENOTCONN;
++		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		if (!wdev->mesh_id_len)
++			return -ENOTCONN;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
 -- 
-1.8.5.3
+1.8.5.1
+
+
 
