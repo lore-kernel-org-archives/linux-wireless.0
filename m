@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32983 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbaAWOwE (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:59254 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754704AbaAVPN4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 09:52:04 -0500
-Message-ID: <52E12C90.3080509@candelatech.com> (sfid-20140123_155208_274479_87AB0E19)
-Date: Thu, 23 Jan 2014 06:52:00 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Wed, 22 Jan 2014 10:13:56 -0500
+Message-ID: <1390403634.4189.39.camel@porter.coelho.fi> (sfid-20140122_161359_883315_8E79AD84)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Luca Coelho <luca@coelho.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
-References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>	  <1390431296-20568-2-git-send-email-greearb@candelatech.com>	  (sfid-20140122_235550_068991_E5B7233B) <1390432245.20070.0.camel@jlt4.sipsolutions.net>	 <52E05CB1.80308@candelatech.com> <1390465191.4142.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1390465191.4142.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 22 Jan 2014 17:13:54 +0200
+In-Reply-To: <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 (sfid-20140122_111301_086907_C6814DB8) <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2014 12:19 AM, Johannes Berg wrote:
-> On Wed, 2014-01-22 at 16:05 -0800, Ben Greear wrote:
->
->>>> + * @IEEE80211_KEY_FLAG_SW_RX_CRYPT: This flag indicates hardware will not
->>>> + *	do any decrypt for received packets, though it may have uploaded
->>>> + *	the hardware key to be used for encrypting transmitted frames.
->>>
->>> This isn't needed, all you need to do is return 0 from the set_key
->>> callback in the driver, without programming the key into the device. And
->>> then ignore tkip key updates for such a key.
->>
->> I want and need to program the key into the device so that it can do the
->> encryption for transmit.  But, I need software to do full decryption on
->> receive.
->
-> Ok so the "without programming the key into the device" part was iwlwifi
-> specific (on TX the key is given explicitly with that device.) However,
-> the same still applies - just replace that by "without enabling it for
-> RX" or so.
->
->> That is the only way I could get ath10k to do any sort of software crypt,
->> and in fact, that is the most efficient way to get the features I need
->> so I might try getting ath9k to support the same mode some day...
->>
->> I'll be posting ath10k patches to use this soon, but the dark magic
->> is down in the firmware in this case.
->
-> Ok, whatever, what I'm saying is that mac80211 doesn't care about
-> whether you enabled the key for RX or not if you return 0 from
-> set_key(). All it cares about it that if you return 0 the key must be
-> available for TX. You therefore don't need to make any mac80211 changes.
+On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
+> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
+> 
+> > I don't think we should try to merge the channel switches.  We should
+> > just perform them separately, especially because the exact time of the
+> > switch will most likely not be the same (since the TBTTs are not in
+> > sync).
+> 
+> Do you mean that we shouldn't even have all that new API to switch
+> multiple interfaces simultaneously?
 
-The ieee80211_tkip_decrypt_data method is explicitly checking if the key is uploaded to hardware.
-I need it to think that it is not uploaded to hardware as far as that check
-is concerned, otherwise packets will not decrypt properly.
+Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
+need something like that, but maybe it would still be better not to do
+this in the nl80211 API, but sync/merge in cfg80211/mac80211?
 
-There are other places that check that key-uploaded-to-hardware flag,
-so I don't think I can just upload the key and then not set that flag?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+Luca.
 
