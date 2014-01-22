@@ -1,118 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:40552 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbaAWJuw (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:53269 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756024AbaAVPgP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:50:52 -0500
-Message-ID: <1390470648.4189.88.camel@porter.coelho.fi> (sfid-20140123_105057_777863_06EF11D7)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
+	Wed, 22 Jan 2014 10:36:15 -0500
+Received: by mail-ie0-f173.google.com with SMTP id e14so11736335iej.18
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 07:36:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140122152845.GB18365@magnum.frso.rivierawaves.com>
+References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
+	<1390394079.4334.30.camel@jlt4.sipsolutions.net>
+	<20140122130924.GA18365@magnum.frso.rivierawaves.com>
+	<CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
+	<20140122152845.GB18365@magnum.frso.rivierawaves.com>
+Date: Wed, 22 Jan 2014 16:36:14 +0100
+Message-ID: <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com> (sfid-20140122_163618_839337_E1F5D207)
+Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
+ frames, as per spec
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Karl Beldan <karl.beldan@gmail.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Thu, 23 Jan 2014 11:50:48 +0200
-In-Reply-To: <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
-	 <1390394166.4189.28.camel@porter.coelho.fi>
-	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
-	 <1390403634.4189.39.camel@porter.coelho.fi>
-	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
-	 <1390458664.4189.48.camel@porter.coelho.fi>
-	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
-	 <1390462306.4189.56.camel@porter.coelho.fi>
-	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
-> On 23 January 2014 08:31, Luca Coelho <luca@coelho.fi> wrote:
-> > (adding Andrei, since he should be aware of these discussions as well ;)
-> >
-> > On Thu, 2014-01-23 at 07:41 +0100, Michal Kazior wrote:
-> >> On 23 January 2014 07:31, Luca Coelho <luca@coelho.fi> wrote:
-> >> > On Thu, 2014-01-23 at 07:22 +0100, Michal Kazior wrote:
-> >> >> On 22 January 2014 16:13, Luca Coelho <luca@coelho.fi> wrote:
-> >> >> > On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
-> >> >> >> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
-> >> >> >>
-> >> >> >> > I don't think we should try to merge the channel switches.  We should
-> >> >> >> > just perform them separately, especially because the exact time of the
-> >> >> >> > switch will most likely not be the same (since the TBTTs are not in
-> >> >> >> > sync).
-> >> >> >>
-> >> >> >> Do you mean that we shouldn't even have all that new API to switch
-> >> >> >> multiple interfaces simultaneously?
-> >> >> >
-> >> >> > Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
-> >> >> > need something like that, but maybe it would still be better not to do
-> >> >> > this in the nl80211 API, but sync/merge in cfg80211/mac80211?
-> >> >>
-> >> >> I was thinking about it. This should work, mostly, as long as you're
-> >> >> able to submit CSA requests fast enough and you don't use count 0 or
-> >> >> 1, in which case it becomes racy.
-> >> >
-> >> > CSA with count 0 or 1 are really tricky in many respects.  But still I
-> >> > don't see why it would get racy.  The interfaces will switch
-> >> > independently, making their own chanctx reservations and so on...
-> >>
-> >> You can't really switch multiple interfaces independently with a
-> >> single-channel hardware. You'll either end up with some interfaces
-> >> disconnected or dragged to a different channel forcefully.
-> >
-> > Right... I think there's no way around dragging them all forcefully.
-> >
-> > What about this: when mac80211 sees that one interface is about to
-> > switch channel and there are other interfaces in a single-channel
-> > device, it automatically starts channel switch on the other interfaces
-> > as well (really, there's no way around it).  Obviously it needs to
-> > inform userspace in this case and then it's up to the userspace to
-> > decide what to do (drop the connection, or accept the change).
-> 
-> This is actually the tricky part. How do you automatically switch an
-> AP interface? You should be able to at least generate CSA IE - true -
-> but what about beacon after CSA? You need to update HT IE and VHT IE
-> at least.
+On Wed, Jan 22, 2014 at 4:28 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
+> On Wed, Jan 22, 2014 at 02:33:14PM +0100, Helmut Schaa wrote:
+>> On Wed, Jan 22, 2014 at 2:09 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
+>> > On Wed, Jan 22, 2014 at 01:34:39PM +0100, Johannes Berg wrote:
+>> >> Hmm. I guess you're right about the spec, but I vaguely remember races
+>> >> in this with the delBA going out too soon or so?
+>> >>
+>> >
+>> > Indeed, this was intended by cf6bb79 ("Use appropriate TID for sending
+>> > BAR, ADDBA and DELBA frames") and I overlooked it .. will look into it,
+>> > thanks.
+>> > I Cced Helmut who authored the said commit.
+>>
+>> You're right. There were some issues with that, but that was 2 years ago :)
+>>
+>> Sending ADDBA over AV_VO should be safe.
+>> If a DELBA is sent as AC_VO it might get received before the last AMPDU
+>> of the BlockAck session. So, the pending AMPDUs will get dropped at the
+>> receiver.
+>>
+>> In theory this could also be avoided by properly flushing all pending AMPDUs
+>> of the TID in question from the hw queues or by waiting for the tx status
+>> of all pending AMPDUs.
+>>
+>
+> I just looked at the code with your change in mind and couldn't find any
+> issue caused by sending {add,del}ba on AC_VO.
+> As of today, a delba is sent only after a driver has called 'purposely'
+> ieee80211_stop_tx_ba_cb_irqsafe so I see no issue with the delba either,
+> do you see one today ?
 
-Good point, so instead of doing it automatically, we send a notification
-that says "switch or die".  Then userspace needs to request the switch
-or drop.
+If the driver does the right thing by flushing the right frames in the
+hw tx queues
+I think this should be ok. At least rt2x00 is not doing that, but
+maybe that's just
+an issue in rt2x00 :(
 
-
-> Perhaps we could split CSA into two parts somehow and make it more
-> userspace coordinated. The first part of CSA - announcing it, is
-> trivial and can actually be done entirely within mac80211 if I'm not
-> mistaken. What needs userspace input is what happens after the
-> announcement. This would mean that there is a possible time gap
-> between announcement being completed and the actual channel switch &
-> operation resuming.
-
-Yeah, this is similar to what I was thinking about while replying to the
-other thread.
-
-
-> This approach would also help with case of handling CSA to a DFS
-> "usable" channel that needs a CAC first.
-
-The CAC might take too long.  If we have an AP1 and a STA and the STA
-gets the CSA from its AP2 with a short count, AP1 may not have the time
-to CAC.  In this case, AP1 have two choices: trust that AP2 is doing the
-right thing and moving to a usable DFS channel or shut itself down.
-
-Still, we leave the final decision to the userspace.  The only thing
-mac80211 can know for sure is that all the interfaces in that channel
-must "switch or die".
-
---
-Luca.
-
+Helmut
