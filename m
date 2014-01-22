@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:41834 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbaAXHoU (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39938 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528AbaAVIwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 02:44:20 -0500
-Message-ID: <1390549457.19968.8.camel@porter.coelho.fi> (sfid-20140124_084423_143752_C94110B1)
+	Wed, 22 Jan 2014 03:52:13 -0500
+Message-ID: <1390380726.4334.4.camel@jlt4.sipsolutions.net> (sfid-20140122_095216_176361_260E4D90)
 Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Luca Coelho <luca@coelho.fi>
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Fri, 24 Jan 2014 09:44:17 +0200
-In-Reply-To: <CA+BoTQmGrx0Ko-E9N6ntzurGgZHK+nTyY78U43xXw8yctGbf4A@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 22 Jan 2014 09:52:06 +0100
+In-Reply-To: <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com> (sfid-20140122_075114_139752_88E4FB38)
 References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
 	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
 	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
 	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
-	 <1390394166.4189.28.camel@porter.coelho.fi>
-	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
-	 <1390403634.4189.39.camel@porter.coelho.fi>
-	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
-	 <1390458664.4189.48.camel@porter.coelho.fi>
-	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
-	 <1390462306.4189.56.camel@porter.coelho.fi>
-	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
-	 <1390478961.4142.12.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmGrx0Ko-E9N6ntzurGgZHK+nTyY78U43xXw8yctGbf4A@mail.gmail.com>
+	 (sfid-20140122_075114_139752_88E4FB38)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-23 at 13:41 +0100, Michal Kazior wrote:
-> On 23 January 2014 13:09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
-> >
-> >> This is actually the tricky part. How do you automatically switch an
-> >> AP interface? You should be able to at least generate CSA IE - true -
-> >> but what about beacon after CSA? You need to update HT IE and VHT IE
-> >> at least.
-> >>
-> >> Perhaps we could split CSA into two parts somehow and make it more
-> >> userspace coordinated. The first part of CSA - announcing it, is
-> >> trivial and can actually be done entirely within mac80211 if I'm not
-> >> mistaken. What needs userspace input is what happens after the
-> >> announcement. This would mean that there is a possible time gap
-> >> between announcement being completed and the actual channel switch &
-> >> operation resuming.
-> >
-> > I believe that even announcing it isn't necessarily possible without
-> > userspace involvement, particularly for things like 11ac's channel
-> > switch wrapper IE and/or operating class changes.
-> 
-> Aww, too bad then.
-> 
-> But splitting would still be useful (at least in some sense) if you
-> consider CSA to "usable" DFS channels.
+On Wed, 2014-01-22 at 07:51 +0100, Michal Kazior wrote:
 
-I don't like the split idea that much.  If we send the CS announcement
-automatically but the userspace never reacts to our indication, we will
-be stuck in the middle of the channel switch...
+> > I mean this:
+> >
+> >> +       sdata->csa_chandef = params.chandef;
+> >
+> > doesn't seem to belong here.
+> 
+> I mistakenly left that while rebasing. I'll fix that. I think that's
+> the only thing that shouldn't be in this patch?
 
---
-Luca.
+It's the only thing I found, but ... :)
+
+> > It would also be good to explain why you're doing this?
+> 
+> You mean the whole locking patch? Basically to be able safely assess
+> CSA state. Taking a bunch of wdev->mtx seems like a bad idea. Due to
+> how the locks are ordered and organized I've came up with using
+> local->mtx as an extra CSA-related variable protection. Using
+> local->mtx makes it possible to iterate over interfaces and check
+> for/update CSA state in an atomic way.
+> 
+> Is this a satisfactory explanation?
+
+Almost - where exactly do you need that? I'm just trying to weigh this
+patch vs. the other that I didn't like to see if this is needed
+regardless of the particular approach of how we switch channels later.
+
+johannes
 
