@@ -1,120 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21842 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbaAQNEg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51441 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbaAVWzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 08:04:36 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Michal Kazior" <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath10k: implement and use new beacon method
-References: <1389287073-10939-1-git-send-email-marek.puzyniak@tieto.com>
-Date: Fri, 17 Jan 2014 15:04:31 +0200
-In-Reply-To: <1389287073-10939-1-git-send-email-marek.puzyniak@tieto.com>
-	(Marek Puzyniak's message of "Thu, 9 Jan 2014 18:04:33 +0100")
-Message-ID: <87ha92rc80.fsf@kamboji.qca.qualcomm.com> (sfid-20140117_140440_184142_1CF24139)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 22 Jan 2014 17:55:47 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
+Date: Wed, 22 Jan 2014 14:54:56 -0800
+Message-Id: <1390431296-20568-2-git-send-email-greearb@candelatech.com> (sfid-20140122_235550_068991_E5B7233B)
+In-Reply-To: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
+References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> From: Michal Kazior <michal.kazior@tieto.com>
->
-> Until now ath10k used a copy-by-value beacon
-> submission.
->
-> The new method passes a DMA address via WMI
-> command only. This command contains additional
-> metadata that fixes AP behaviour with regard
-> to powersave buffering.
->
-> This also fixes strange bug when multicast traffic
-> would freeze TX indefinitely.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Some NICs can be made to offload the tx encryption and
+run the rx encryption in software.  This can be used to
+allow connecting several stations to the same AP, since most
+hardware appears to hash only on the remote peer's MAC.
 
-[...]
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ include/net/mac80211.h | 4 ++++
+ net/mac80211/tkip.c    | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -61,6 +61,11 @@ struct ath10k_skb_cb {
->  		u8 frag_len;
->  		u8 pad_len;
->  	} __packed htt;
-> +
-> +	struct {
-> +		bool dtim_zero;
-> +		bool deliver_cab;
-> +	} bcn;
->  } __packed;
-
-I think we will run out of space in skb_cb soon and we will need to
-start using bitflags. But this is ok for now.
-
->  static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
-> @@ -222,6 +227,7 @@ struct ath10k_vif {
->  	u32 beacon_interval;
->  	u32 dtim_period;
->  	struct sk_buff *beacon;
-> +	bool beacon_sent;
-
-Please document how this is protected.
-
-> @@ -3377,25 +3390,40 @@ int ath10k_wmi_peer_assoc(struct ath10k *ar,
->  	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->peer_assoc_cmdid);
->  }
->  
-> -int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
-> -				  const struct wmi_bcn_tx_arg *arg)
-> +/* This function assumes the beacon is already DMA mapped */
-> +int ath10k_wmi_beacon_send_ref_nowait(struct ath10k *ar, u32 vdev_id,
-> +				      struct sk_buff *beacon)
-
-I think this would be cleaner:
-
-ath10k_wmi_beacon_send_ref_nowait(struct ath10k_vif *arvif,
- 			      struct sk_buff *beacon)
-
-Or maybe even without the beacon parameter? We get it from arvif anyway.
-
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -3391,6 +3391,20 @@ struct wmi_bcn_tx_arg {
->  	const void *bcn;
->  };
->  
-> +enum wmi_bcn_tx_ref_flags {
-> +	WMI_BCN_TX_REF_FLAG_DTIM_ZERO = 0x1,
-> +	WMI_BCN_TX_REF_FLAG_DELIVER_CAB = 0x2,
-> +};
-> +
-> +struct wmi_bcn_tx_ref_cmd {
-> +	__le32 vdev_id;
-> +	__le32 data_len;
-> +	__le32 data_ptr; /* dma pointer */
-> +	__le32 msdu_id; /* id for host to track */
-> +	__le32 frame_control;
-> +	__le32 flags; /* WMI_BCN_TX_REF_FLAG_ */
-> +} __packed;
-
-Comments before the field, please. Like here:
-
-struct wmi_resource_config_10x {
-	/* number of virtual devices (VAPs) to support */
-	__le32 num_vdevs;
-
-	/* number of peer nodes to support */
-	__le32 num_peers;
-
-	/* number of keys per peer */
-	__le32 num_peer_keys;
-
-	/* total number of TX/RX data TIDs */
-	__le32 num_tids;
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f4ab2fb..dc552c7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1203,6 +1203,9 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  *	fall back to software crypto. Note that this flag deals only with
+  *	RX, if your crypto engine can't deal with TX you can also set the
+  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
++ * @IEEE80211_KEY_FLAG_SW_RX_CRYPT: This flag indicates hardware will not
++ *	do any decrypt for received packets, though it may have uploaded
++ *	the hardware key to be used for encrypting transmitted frames.
+  */
+ enum ieee80211_key_flags {
+ 	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+@@ -1211,6 +1214,7 @@ enum ieee80211_key_flags {
+ 	IEEE80211_KEY_FLAG_SW_MGMT_TX	= 1<<4,
+ 	IEEE80211_KEY_FLAG_PUT_IV_SPACE = 1<<5,
+ 	IEEE80211_KEY_FLAG_RX_MGMT	= 1<<6,
++	IEEE80211_KEY_FLAG_SW_RX_CRYPT	= 1<<7,
+ };
+ 
+ /**
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 0ae2077..83ac9d9 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -283,7 +283,8 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
+ 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
+ 	}
+ 	if (key->local->ops->update_tkip_key &&
+-	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
++	    (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
++	     !(key->conf.flags & IEEE80211_KEY_FLAG_SW_RX_CRYPT)) &&
+ 	    key->u.tkip.rx[queue].state != TKIP_STATE_PHASE1_HW_UPLOADED) {
+ 		struct ieee80211_sub_if_data *sdata = key->sdata;
+ 
 -- 
-Kalle Valo
+1.7.11.7
+
