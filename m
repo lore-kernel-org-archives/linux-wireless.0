@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:42866 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312AbaA3AmF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbaAVJ62 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 19:42:05 -0500
-Received: by mail-la0-f41.google.com with SMTP id mc6so2113466lab.28
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 16:42:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1391001002.4143.14.camel@jlt4.sipsolutions.net>
-References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
- <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
- <1390492620.4142.33.camel@jlt4.sipsolutions.net> <20140125003255.GE28512@garbanzo.do-not-panic.com>
- <1391001002.4143.14.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 29 Jan 2014 16:41:42 -0800
-Message-ID: <CAB=NE6XysGH36Jep4xxqQZPmFM=AR6akcb-REWPW93H4y68=tQ@mail.gmail.com> (sfid-20140130_014209_727999_A54C1133)
-Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth flag
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jan 2014 04:58:28 -0500
+Message-ID: <1390384700.4334.24.camel@jlt4.sipsolutions.net> (sfid-20140122_105832_692136_E853D141)
+Subject: Re: [PATCH 2/2] mac80211: implement multi-interface CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Date: Wed, 22 Jan 2014 10:58:20 +0100
+In-Reply-To: <CA+BoTQmE3TdT=oQbAjzUi5vGo0FA0opz1S9Z6-9UEQ_miSEpXQ@mail.gmail.com> (sfid-20140122_104043_252086_A2709C95)
+References: <1390228033-19162-1-git-send-email-michal.kazior@tieto.com>
+	 <1390228033-19162-3-git-send-email-michal.kazior@tieto.com>
+	 <1390318236.6199.45.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ==WJPJV=t8=_CZAD5qyW3igAtaOcUz9hNCcvUPYH+jdA@mail.gmail.com>
+	 <1390381261.4334.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmE3TdT=oQbAjzUi5vGo0FA0opz1S9Z6-9UEQ_miSEpXQ@mail.gmail.com>
+	 (sfid-20140122_104043_252086_A2709C95)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 29, 2014 at 5:10 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2014-01-24 at 16:32 -0800, Luis R. Rodriguez wrote:
->
->> > This seems reasonable, thanks. Maybe we should require the bandwidth to
->> > not be set at all or something? At least maybe in the regdb parser - it
->> > makes very little sense to have @20 and then ignore it completely?
->> >
->> > Or maybe the userspace code could just not expose the flag, but rather
->> > set the new "wide_bw" flag when all the rules are marked as @N/A (and
->> > treat a combination of @number and @N/A as a bug)?
->>
->> The optimizer code I added to CRDA does all this for us, so technically,
->> unless I'm missing something, this could be dealt with magically in
->> userspace. Its also unclear why we'd define this as a regulatory
->> parameter -- this just seems to make sense.
->>
->> I'd look at extending CRDA binary to use the optimizer on the regulatory
->> domain prior to sending it to the kernel. All of a sudden you get full
->> support for this for free on any kernel.
->
-> I'm not sure I get it. Whatever 'optimisation' you're doing surely can't
-> be changing the semantics of the rules, which are currently defined to
-> be separate and channels can't cross different rules. This may not be
-> all that interesting for most country entries today, but there are a few
-> that have overlapping rules and regardless, it's some form of API/ABI.
+On Wed, 2014-01-22 at 10:40 +0100, Michal Kazior wrote:
 
-Sure.
+> > Can't we just prohibit that though? That seems pretty much useless,
+> > although if the interfaces actually have different beacon intervals (if
+> > such a thing is permitted?) then it would be necessary to do more
+> > difficult calculations ...
+> 
+> Not really sure what extra calculation would be necessary here beyond
+> just waiting until last interfaces finishes sending CSA beacons?
 
-> In any case, no optimiser can actually do what Janusz needs, since he
-> needs the ability to split up existing frequency ranges due to different
-> flags in parts of those, while keeping the ability to use channels that
-> use multiple ranges.
+If we wanted to enforce that they all switch at (roughly) the same time,
+and they have different beacon intervals, we'd have to do some
+calculations.
 
-Ah I see.
+> > Isn't it under RTNL anyway though?
+> 
+> No, it isn't. This is eventually called from a worker. I don't think
+> you can use RTNL in a per-interface worker, can you?
 
-> The only thing I could think of an optimiser doing is combine ranges,
-> but then it would lose flags which can't be right.
+Ah ok. No, you can't.
 
-One thing is in-kernel rules, another is wireless-regdb. If you are
-extending rules in wireless-regdb you may at times run into a
-situation where two rules are contiguous and you know you can combine
-them and want to, combination for example makes sense if your source
-for the db has a set of contiguous frequency rules with the same
-power, max eirp, and flags. That's what the optimizer available as a
-library does in reglib, part of CRDA.
+> > That's true, so maybe you just need to explain this chandef thing
+> > better? I don't really see the utility (admittedly without actually
+> > checking carefully in the code where you need it)
+> 
+> Since you can CSA multiple interfaces you can have different chandefs
+> for those interfaces. This means you need to know the chandef for the
+> final channel switch.
+> 
+> You could probably cache this to local->csa_chandef when processing
+> the channel switch request itself, but that means you explicitly limit
+> yourself to single CSA against a given hw/driver.
+> 
+> At one point I was contemplating having a dedicated structure for
+> channel switches, and have a list of channel switch structures in
+> ieee80211_local, but perhaps that's just an overkill.
 
-> And in fact combining rules would be breaking the current db.txt format.  I won't let you get
-> away with that on the kernel/userspace API (hence this patch), but if
-> you can get away with breaking it in CRDA I'm only going to roll my eyes
-> a bit :-)
+But if we bind all interfaces against a 'pending' chanctx, then that's
+all implicit in that chanctx calculating/binding, no?
 
-CRDA binary doesn't make use of the optimizer yet but it can.
+johannes
 
-  Luis
