@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48392 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:42779 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753332AbaAQU0q (ORCPT
+	with ESMTP id S1752310AbaAVXKt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 15:26:46 -0500
-Message-ID: <1389990392.10404.10.camel@jlt4.sipsolutions.net> (sfid-20140117_212710_226730_94590424)
-Subject: Re: [PATCH RFC 0/6] net: rfkill: gpio: Add device tree support
+	Wed, 22 Jan 2014 18:10:49 -0500
+Message-ID: <1390432245.20070.0.camel@jlt4.sipsolutions.net> (sfid-20140123_001052_661337_21771340)
+Subject: Re: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 17 Jan 2014 21:26:32 +0100
-In-Reply-To: <1389941251-32692-1-git-send-email-wens@csie.org>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 23 Jan 2014 00:10:45 +0100
+In-Reply-To: <1390431296-20568-2-git-send-email-greearb@candelatech.com> (sfid-20140122_235550_068991_E5B7233B)
+References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
+	 <1390431296-20568-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20140122_235550_068991_E5B7233B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-17 at 14:47 +0800, Chen-Yu Tsai wrote:
+On Wed, 2014-01-22 at 14:54 -0800, greearb@candelatech.com wrote:
 
-> This patch series adds device tree support to rfkill-gpio, and
-> fixes some issues I ran into. This is so we can define and control
-> RF devices through the device tree, such as the Broadcom BCM20710
-> UART-based Bluetooth device found on the CubieTruck,
+> + * @IEEE80211_KEY_FLAG_SW_RX_CRYPT: This flag indicates hardware will not
+> + *	do any decrypt for received packets, though it may have uploaded
+> + *	the hardware key to be used for encrypting transmitted frames.
 
-> Comments, please?
-
-Does anyone else want to maintain rfkill-gpio? :)
-
-I'm not up to par on all the DT, ACPI and even GPIO stuff it does, and
-the rfkill bits in it are really small ...
-
-I'll happily apply the patches if everyone else is happy with them, but
-please don't expect me to actually be able to say anything about them.
+This isn't needed, all you need to do is return 0 from the set_key
+callback in the driver, without programming the key into the device. And
+then ignore tkip key updates for such a key.
 
 johannes
 
