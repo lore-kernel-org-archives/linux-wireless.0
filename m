@@ -1,81 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49335 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbaAMPrS (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:52475 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549AbaAVKYA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 10:47:18 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 22 Jan 2014 05:24:00 -0500
+Received: by mail-ea0-f174.google.com with SMTP id b10so4458124eae.33
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 02:23:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21204.2384.710460.402183@gargle.gargle.HOWL> (sfid-20140113_164721_570648_34636D9D)
-Date: Mon, 13 Jan 2014 21:12:08 +0530
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-In-Reply-To: <21204.1991.201080.986559@gargle.gargle.HOWL>
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
-	<1384665016-12022-5-git-send-email-sujith@msujith.org>
-	<52CE934D.1020400@neratec.com>
-	<21198.40916.260973.48444@gargle.gargle.HOWL>
-	<52CEA5A3.2040308@neratec.com>
-	<21198.43395.235654.597422@gargle.gargle.HOWL>
-	<52CEAB24.5090700@neratec.com>
-	<52D3F962.1010302@neratec.com>
-	<21204.319.492595.58625@gargle.gargle.HOWL>
-	<52D402C3.3070606@neratec.com>
-	<21204.1991.201080.986559@gargle.gargle.HOWL>
+In-Reply-To: <1390384700.4334.24.camel@jlt4.sipsolutions.net>
+References: <1390228033-19162-1-git-send-email-michal.kazior@tieto.com>
+	<1390228033-19162-3-git-send-email-michal.kazior@tieto.com>
+	<1390318236.6199.45.camel@jlt4.sipsolutions.net>
+	<CA+BoTQ==WJPJV=t8=_CZAD5qyW3igAtaOcUz9hNCcvUPYH+jdA@mail.gmail.com>
+	<1390381261.4334.12.camel@jlt4.sipsolutions.net>
+	<CA+BoTQmE3TdT=oQbAjzUi5vGo0FA0opz1S9Z6-9UEQ_miSEpXQ@mail.gmail.com>
+	<1390384700.4334.24.camel@jlt4.sipsolutions.net>
+Date: Wed, 22 Jan 2014 11:23:58 +0100
+Message-ID: <CA+BoTQ=7h5beyTa-8fF-7D+3uK8f9K+8-uJP0vG-GWOJiKJERw@mail.gmail.com> (sfid-20140122_112404_236257_372CC6E4)
+Subject: Re: [PATCH 2/2] mac80211: implement multi-interface CSA
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luca Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> Wojciech Dubowik wrote:
-> > Exactly. I have a setup with 4 Ap's on 5180MHz but I have set 5180 and 
-> > 5200 as scanning frequencies.
-> > I am running attenuator profile to switch between them.  Here is my 
-> > supplicant config.
-> > 
-> > ctrl_interface=/var/run/wpa_supplicant
-> > eapol_version=1
-> > fast_reauth=1
-> > ap_scan=1
-> > network={
-> >      bgscan="simple:1:-65:10:1:2"
-> >      scan_freq=5180 5200
-> >      scan_ssid=1
-> >      ssid="ATS11-1"
-> >      key_mgmt=WPA-PSK
-> >      proto=RSN
-> >      pairwise=CCMP
-> >      group=CCMP
-> >      psk="12345678"
-> > }
-> 
-> I am not able to see the issue.
-> Log: http://pastebin.com/raw.php?i=0bTQcAx6
-> 
-> After association, I ran a scan for the frequencies 5180 and 5200
-> and on returning to the home channel, the rssi was the same as before.
-> 
-> I used this patch:
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 5bf3243..c85be42 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1088,6 +1088,9 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
->  
->  	ath9k_process_rssi(common, hw, rx_stats, rx_status);
->  
-> +	printk("NOISE/RSSI/SIGNAL for %pM: %d/%d/%d\n",
-> +	       hdr->addr3, ah->noise, rx_stats->rs_rssi, rx_status->signal);
-> +
->  	rx_status->band = ah->curchan->chan->band;
->  	rx_status->freq = ah->curchan->chan->center_freq;
->  	rx_status->antenna = rx_stats->rs_antenna;
+On 22 January 2014 10:58, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-01-22 at 10:40 +0100, Michal Kazior wrote:
+>> > That's true, so maybe you just need to explain this chandef thing
+>> > better? I don't really see the utility (admittedly without actually
+>> > checking carefully in the code where you need it)
+>>
+>> Since you can CSA multiple interfaces you can have different chandefs
+>> for those interfaces. This means you need to know the chandef for the
+>> final channel switch.
+>>
+>> You could probably cache this to local->csa_chandef when processing
+>> the channel switch request itself, but that means you explicitly limit
+>> yourself to single CSA against a given hw/driver.
+>>
+>> At one point I was contemplating having a dedicated structure for
+>> channel switches, and have a list of channel switch structures in
+>> ieee80211_local, but perhaps that's just an overkill.
+>
+> But if we bind all interfaces against a 'pending' chanctx, then that's
+> all implicit in that chanctx calculating/binding, no?
 
-I think something is wrong. From the log I posted:
+Correct.
 
-Jan 14 02:31:51 linux-test kernel: ath: phy8: next DTIM -557162496
-Jan 14 02:31:51 linux-test kernel: ath: phy8: next beacon -557162496
+Hmm. How do you bind a pending chanctx? Does this mean an interface
+can have two channel contexts - the current one, and the pending one?
 
-Sujith
+I suppose you'd still need to iterate over interfaces (through
+local->interfaces or the [non-existent yet] chanctx->interfaces)
+anyway for validate/sanity check if the final switch is really okay,
+and/or possibly disconnect/stop some interfaces that didn't get a
+chance to request a channel switch (I'm thinking of your STA-CSA-GO
+case).
+
+
+Michał
