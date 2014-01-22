@@ -1,116 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36854 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbaAUPwi (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:43954 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbaAVSpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:52:38 -0500
-Message-ID: <1390319550.6199.59.camel@jlt4.sipsolutions.net> (sfid-20140121_165241_948676_E6152E9E)
-Subject: Re: [PATCH 3/3] cfg80211: implement multi-interface CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Jan 2014 16:52:30 +0100
-In-Reply-To: <1390226968-18928-4-git-send-email-michal.kazior@tieto.com> (sfid-20140120_151409_031432_70783BAC)
-References: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com>
-	 <1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140120_151409_031432_70783BAC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Jan 2014 13:45:19 -0500
+Message-ID: <52E01172.2080907@open-mesh.com> (sfid-20140122_194530_880330_A3CB37B5)
+Date: Wed, 22 Jan 2014 19:44:02 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Antonio Quartulli <antonio@meshcoding.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 1/5] cfg80211: export minstrel best rate information through
+ get_station()
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com> <1390302591-3352-2-git-send-email-antonio@meshcoding.com> <1390320014.6199.61.camel@jlt4.sipsolutions.net> <52DE9BAA.6020205@open-mesh.com> <1390321084.6199.65.camel@jlt4.sipsolutions.net> <52DEA10F.6090700@meshcoding.com> <52DFD8A5.5090800@meshcoding.com> <1390401820.4334.32.camel@jlt4.sipsolutions.net> <7C173B24-D062-49BE-836E-E0889633E955@net.t-labs.tu-berlin.de>
+In-Reply-To: <7C173B24-D062-49BE-836E-E0889633E955@net.t-labs.tu-berlin.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="pRxx1fQO3vl4aB84EbPRfxJljxcQX9ETN"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-20 at 15:09 +0100, Michal Kazior wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pRxx1fQO3vl4aB84EbPRfxJljxcQX9ETN
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> @@ -2583,6 +2588,7 @@ enum wiphy_flags {
->  	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
->  	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
->  	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
-> +	WIPHY_FLAG_HAS_MULTI_IF_CHSWITCH	= BIT(24),
->  };
+On 22/01/14 19:32, Thomas H=FChn wrote:
+> Hi all,
+>=20
+> I do also agree that the expected throughput [=3Dmax_throughput(mac_thr=
+oughput_rate) * success_probability(max_throughput_rate)] is the value of=
+ interest.
+> For my current power control development I just use those minstrel stat=
+istics per client, that are provided via debugfs and parse those values t=
+hat I am interested.
+> Maybe it is an alternative option for your development of batman is suc=
+h a way to use those debugfs statistics, where you have all information, =
+expected throughput included. And once your experimentation shows which s=
+ubset of those stats is sufficient for a better routing performance, you =
+go for a proper api. Or are you already confident about the expected thro=
+ughput value is the one and only ?
+>=20
 
-You could probably use an nl80211 feature flag directly, see e.g.
-NL80211_FEATURE_HT_IBSS (enum nl80211_feature_flags) and save the code
-to set the extra flag attribute.
- 
-> + * @NL80211_ATTR_CH_SWITCH_IFACES: Nested attribute with channel switch
-> + *	settings in each entry (ifindex, frequency, beacon IEs). Also used as a
-> + *	device capability flag in nl80211_send_wiphy().
-
-Which would obviously change this.
- 
-> +int ieee80211_channel_switch(struct wiphy *wiphy,
-> +			     struct cfg80211_csa_settings *params,
-> +			     int num_params)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +	int err;
-> +
-> +	/* multi-vif CSA is not implemented */
-> +	if (num_params > 1)
-> +		return -EOPNOTSUPP;
-
-The capability flag should be checked in cfg80211, so this shouldn't be
-needed?
-
-> +int ieee80211_channel_switch(struct wiphy *wiphy,
-> +			     struct cfg80211_csa_settings *params,
-> +			     int num_params);
-
-This function can be static now as the other places call the __ version
-now. Careful with locking though - you just moved it as well, won't the
-callers have to be updated?
- 
-> @@ -1270,6 +1271,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
->  		if ((dev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP) &&
->  		    nla_put_flag(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP))
->  			goto nla_put_failure;
-> +		if ((dev->wiphy.flags & WIPHY_FLAG_HAS_MULTI_IF_CHSWITCH) &&
-> +		     nla_put_flag(msg, NL80211_ATTR_CH_SWITCH_IFACES))
-> +			goto nla_put_failure;
->  		state->split_start++;
->  		if (state->split)
->  			break;
-
-This goes away, which also saves you the trouble of moving it to a
-correct place (due to size constraints, we can't increase the amount of
-data available to really old iw/wpa_s versions)
-
-> +	/* static variables avoid waste of stack size - this
->  	 * function is called under RTNL lock, so this should not be a problem.
->  	 */
->  	static struct nlattr *csa_attrs[NL80211_ATTR_MAX+1];
-
-Technically we could even just reuse family->attrs since we're also
-under genl_lock :)
-
-> -	u8 radar_detect_width = 0;
-> +	struct net_device *dev = NULL;
-> +	struct wireless_dev *wdev;
->  	int err;
->  	bool need_new_beacon = false;
->  
-> -	if (!rdev->ops->channel_switch ||
-> -	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
-> -		return -EOPNOTSUPP;
-> +	ASSERT_RTNL();
-> +
-> +	if (!attrs[NL80211_ATTR_IFINDEX])
-> +		return -EINVAL;
-
-Hmm, shouldn't you use the ifindex from the csa_attrs? Or are you
-requiring one to be in the outer data to identify the wiphy? But that
-seems odd too, you can just get the wiphy in whatever way by asking the
-pre_doit for that?
+The only stable point is that the our metric will be "throughput
+based"...the way how this "throughput" is computed could also change in
+the future..
 
 
-> +		nla_for_each_nested(attrs,
-> +				    info->attrs[NL80211_ATTR_CH_SWITCH_IFACES],
-> +				    tmp) {
-> +			nla_parse(csa_attrs, NL80211_ATTR_MAX, nla_data(attrs),
-> +				  nla_len(attrs), nl80211_policy);
+Actually for experiment purposes I have already implemented my hacky
+cfg80211 API and I am using it (therefore I have no real need to use
+these debugfs stats).
 
-I think nla_parse() can fail, you should check that, otherwise there's
-no full validity checking of the attributes contained in it I believe.
- 
-johannes
+Now I would like to bring this API to the next level and merge it.
 
+The experiments performed shown that bitrate*probability is a reasonable
+value to use. But even if in the future we may decide to change how this
+"expected throughput" is computed I think there is no problem as soon as
+the semantic of the API is remains consistent (=3Dreturn expected through=
+put).
+
+
+Cheers,
+
+
+> Greetings Thomas
+>=20
+> On 22.01.2014, at 15:43, Johannes Berg <johannes@sipsolutions.net> wrot=
+e:
+>=20
+>> On Wed, 2014-01-22 at 15:41 +0100, Antonio Quartulli wrote:
+>>
+>>> do you think that an API exporting the "expected throughput" would be=
+ a
+>>> acceptable? At that point any RC algorithm can implement it the way i=
+t
+>>> prefers.
+>>
+>> I think that's a better choice, yes.
+>>
+>> johannes
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wirele=
+ss" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+
+--=20
+Antonio Quartulli
+
+
+--pRxx1fQO3vl4aB84EbPRfxJljxcQX9ETN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJS4BF3AAoJEEKTMo6mOh1VvB4P/i3phzAQZDZXCWM/VoU0xFm8
+CMiTvzeBdXyZ+LL1TCkdorokqT+d7StAd/k5JKL2YeW4qlo2pUchbCb2QFpYKkgn
+DsHT5LcCdfrO4hMiukYjFmY7B3o+eKSzP1L6uvH3Y9Izh7UNJO7OaUFwhEOmfOSd
+zkN6LCdHXoXuvEFYwfuEC6+o9rNjDuV4EZ/0lxmhGMQTXM3UCoZong/b35L4TGPd
+Q+uVfwE470KjC8uJ0zO+0u+Vo96/CoSMWh9JdFU4x8m8oOBSiuOSGduawKauDUN/
+gy7IkspEVSVySEOwGc9OrAWtyFLwsR30qKWyhB4B5MhbES4fl2lfeiULtkQ3iJkQ
+7GYC3UOHaUofqup1fPCnK0/8vJoVbNM4Fbz1UvSW363uyTZAjJdCtCwqXIdI+/Bz
+1F/RU0HAo1f1oPqFUvAwnegQ59zEesJwC0hbR6o9gjS5dq0lqRoVUGRWD4nBG+kN
+sO7oajgjuDU2M66V8RnYYb8tL+aJQ9p3sr/DxO22cqx5dZKNbs4ZYg88Aidipk0T
+Ke8ZeIF/VmOeie3WAnAqyHtY7PQoQSu9l7bNuF86BUYFmvxgAr4LzgEXQlJUC9bW
+zY6FamRXDKeNIyhbp8rMmeIt4V/u72qWGjA6GENfsEV/p4zniFhfoCNpnS2fIPLJ
+VsFUVZPkf2HmpiESNsCr
+=CDIN
+-----END PGP SIGNATURE-----
+
+--pRxx1fQO3vl4aB84EbPRfxJljxcQX9ETN--
