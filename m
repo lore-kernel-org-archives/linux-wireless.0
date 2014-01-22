@@ -1,72 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48618 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753007AbaAGXPX (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:44491 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbaAVTRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 18:15:23 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 07/12] mac80211_hwsim: assign index from separate counter
-Date: Wed,  8 Jan 2014 00:15:12 +0100
-Message-Id: <1389136517-21216-8-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001537_985584_F59D24C3)
-In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
-References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 22 Jan 2014 14:17:11 -0500
+Received: by mail-wi0-f177.google.com with SMTP id m19so1011934wiv.16
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 11:17:10 -0800 (PST)
+Date: Wed, 22 Jan 2014 20:16:10 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
+ frames, as per spec
+Message-ID: <20140122191610.GD18365@magnum.frso.rivierawaves.com> (sfid-20140122_201717_753898_31ABF9BA)
+References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
+ <1390394079.4334.30.camel@jlt4.sipsolutions.net>
+ <20140122130924.GA18365@magnum.frso.rivierawaves.com>
+ <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
+ <20140122152845.GB18365@magnum.frso.rivierawaves.com>
+ <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
+ <20140122164122.GC18365@magnum.frso.rivierawaves.com>
+ <1390416713.4334.46.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1390416713.4334.46.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jan 22, 2014 at 07:51:53PM +0100, Johannes Berg wrote:
+> On Wed, 2014-01-22 at 17:41 +0100, Karl Beldan wrote:
+> 
+> > > >> If a DELBA is sent as AC_VO it might get received before the last AMPDU
+> > > >> of the BlockAck session. So, the pending AMPDUs will get dropped at the
+> > > >> receiver.
+> > > >>
+> > > >> In theory this could also be avoided by properly flushing all pending AMPDUs
+> > > >> of the TID in question from the hw queues or by waiting for the tx status
+> > > >> of all pending AMPDUs.
+> 
+> Let's get the issue straight first.
+> 
+> The (current) documentation for the TX_STOP ampdu actions says:
+> 
+>  * @IEEE80211_AMPDU_TX_STOP_CONT: stop TX aggregation but continue
+> transmitting
+>  *      queued packets, now unaggregated. After all packets are
+> transmitted the
+>  *      driver has to call ieee80211_stop_tx_ba_cb_irqsafe().
+>  * @IEEE80211_AMPDU_TX_STOP_FLUSH: stop TX aggregation and flush all
+> packets,
+>  *      called when the station is removed. There's no need or reason to
+> call
+>  *      ieee80211_stop_tx_ba_cb_irqsafe() in this case as mac80211
+> assumes the
+>  *      session is gone and removes the station.
+>  * @IEEE80211_AMPDU_TX_STOP_FLUSH_CONT: called when TX aggregation is
+> stopped
+>  *      but the driver hasn't called ieee80211_stop_tx_ba_cb_irqsafe()
+> yet and
+>  *      now the connection is dropped and the station will be removed.
+> Drivers
+>  *      should clean up and drop remaining packets when this is called.
+> 
+> I say "current" because we only completed this fairly recently (couple
+> months ago?) to make it complete with the three different possibilities.
+> 
+> Therefore, I don't think there's a need to ever *flush* the queues,
+> although the term "flush" is getting confusing and we should probably
+> call this IEEE80211_AMPDU_TX_STOP_DROP instead of _FLUSH, as that's what
+> it really means, drop all the remaining frames (if any.)
+> 
+> Given the fact that we only send the frame from
+> ieee80211_stop_tx_ba_cb() I don't see any problem. Even if we were to
+> send the frame directly after calling the ampdu_action, it seems it
+> would be fine, since the callback (now) requires sending the remaining
+> frames unaggregated. (Given that, I'm not even sure why we required the
+> packets to be sent unaggregated, Emmanuel, do you remember?)
+> 
+I'd expect most device to not block ack such frames, and they'd be
+right to do so, sending them unaggregated seems the right thing to do.
 
-To later allow dynamic registration, assign the index for the
-struct device and MAC address from a new free-running counter.
+> > Callers of ieee80211_stop_tx_ba_cb_irqsafe are:
+> > ath9k
+> > ath9k_htc
+> > carl9170
+> > wcn36xx
+> > brcm80211
+> > iwlegacy
+> > iwlwifi
+> > mwl8k
+> > rt2x00
+> > rtlwifi
+> > 
+> > Johannes, what is your impression ?
+> 
+> I'm pretty sure iwlwifi should be safe. ath9k/htc/carl9170/wcn36xx are
+> probably fine, I can't really say anything about the other ones. I'd
+> guess brcm80211 should be OK since it builds aggregates in software and
+> should be able to easily stop transmitting aggregates. But see above - I
+> don't see how even if the driver didn't stop sending aggregates it could
+> be wrong. Unless the driver called ieee80211_stop_tx_ba_cb() immediately
+> but didn't actually stop sending. That's pretty much a bug anyway
+> though.
+> 
+So, I guess you are taking what I sent ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 5670ecb..08d8d61 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -217,6 +217,7 @@ static const struct ieee80211_rate hwsim_rates[] = {
  
- static spinlock_t hwsim_radio_lock;
- static struct list_head hwsim_radios;
-+static int hwsim_radio_idx;
- 
- struct mac80211_hwsim_data {
- 	struct list_head list;
-@@ -2123,7 +2124,7 @@ static const struct ieee80211_iface_combination hwsim_if_comb[] = {
- 	}
- };
- 
--static int __init mac80211_hwsim_create_radio(int idx)
-+static int __init mac80211_hwsim_create_radio(void)
- {
- 	int err;
- 	u8 addr[ETH_ALEN];
-@@ -2131,6 +2132,11 @@ static int __init mac80211_hwsim_create_radio(int idx)
- 	struct ieee80211_hw *hw;
- 	enum ieee80211_band band;
- 	const struct ieee80211_ops *ops = &mac80211_hwsim_ops;
-+	int idx;
-+
-+	spin_lock_bh(&hwsim_radio_lock);
-+	idx = hwsim_radio_idx++;
-+	spin_unlock_bh(&hwsim_radio_lock);
- 
- 	if (channels > 1)
- 		ops = &mac80211_hwsim_mchan_ops;
-@@ -2372,7 +2378,7 @@ static int __init init_mac80211_hwsim(void)
- 	}
- 
- 	for (i = 0; i < radios; i++) {
--		err = mac80211_hwsim_create_radio(i);
-+		err = mac80211_hwsim_create_radio();
- 		if (err)
- 			goto out_free_radios;
- 	}
--- 
-1.8.5.1
-
+Karl
