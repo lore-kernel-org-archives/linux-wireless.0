@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:50651 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbaAWJ1i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:27:38 -0500
-Received: by mail-la0-f51.google.com with SMTP id c6so1222439lan.38
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:27:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>
-References: <52DF947E.40800@gmail.com>
-	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
-	<52E0BA40.7090203@gmail.com>
-	<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
-	<52E0D7D5.6060504@gmail.com>
-	<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>
-Date: Thu, 23 Jan 2014 11:27:37 +0200
-Message-ID: <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com> (sfid-20140123_102744_250977_863AD498)
-Subject: Re: 802.11a is supported in AP mode or not?
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	zhuyj <zyjzyj2000@gmail.com>,
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:34110 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751379AbaAVSc6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jan 2014 13:32:58 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: [RFC 1/5] cfg80211: export minstrel best rate information through get_station()
+From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1390401820.4334.32.camel@jlt4.sipsolutions.net>
+Date: Wed, 22 Jan 2014 19:32:55 +0100
+Cc: Antonio Quartulli <antonio@meshcoding.com>,
+	Antonio Quartulli <antonio@open-mesh.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <7C173B24-D062-49BE-836E-E0889633E955@net.t-labs.tu-berlin.de> (sfid-20140122_193301_423085_8A5EBD6B)
+References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com> <1390302591-3352-2-git-send-email-antonio@meshcoding.com> <1390320014.6199.61.camel@jlt4.sipsolutions.net> <52DE9BAA.6020205@open-mesh.com> <1390321084.6199.65.camel@jlt4.sipsolutions.net> <52DEA10F.6090700@meshcoding.com> <52DFD8A5.5090800@meshcoding.com> <1390401820.4334.32.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 11:21 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
->
->
-> So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
-Yes
+Hi all,
 
->
-> Though #iwconfig wlan0 shows there is modes a ?
+I do also agree that the expected throughput [=max_throughput(mac_throughput_rate) * success_probability(max_throughput_rate)] is the value of interest.
+For my current power control development I just use those minstrel statistics per client, that are provided via debugfs and parse those values that I am interested.
+Maybe it is an alternative option for your development of batman is such a way to use those debugfs statistics, where you have all information, expected throughput included. And once your experimentation shows which subset of those stats is sufficient for a better routing performance, you go for a proper api. Or are you already confident about the expected throughput value is the one and only ?
 
-In client mode - not in AP mode
->
-> iwconfig wlan0
-> wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
->           Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
->           Bit Rate=1 Mb/s   Tx-Power=15 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->           Link Quality=60/70  Signal level=-50 dBm
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:14   Missed beacon:0
->
->
+Greetings Thomas
+
+On 22.01.2014, at 15:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> On Wed, 2014-01-22 at 15:41 +0100, Antonio Quartulli wrote:
+> 
+>> do you think that an API exporting the "expected throughput" would be a
+>> acceptable? At that point any RC algorithm can implement it the way it
+>> prefers.
+> 
+> I think that's a better choice, yes.
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
