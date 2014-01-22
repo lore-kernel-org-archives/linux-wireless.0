@@ -1,86 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:43247 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674AbaAXWVL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41146 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755238AbaAVPKg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 17:21:11 -0500
-Received: by mail-pd0-f169.google.com with SMTP id v10so3622776pde.0
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:21:11 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] crda: document contribution process using the DCO
-Date: Fri, 24 Jan 2014 14:21:04 -0800
-Message-Id: <1390602064-26043-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140124_232116_206283_3B512F7B)
+	Wed, 22 Jan 2014 10:10:36 -0500
+Message-ID: <1390403432.4334.33.camel@jlt4.sipsolutions.net> (sfid-20140122_161039_409593_ABCA2C07)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 22 Jan 2014 16:10:32 +0100
+In-Reply-To: <1390394166.4189.28.camel@porter.coelho.fi>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 (sfid-20140122_111301_086907_C6814DB8) <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This documents the contribution process for CRDA, which makes
-use of the Developer Certificate of Origin:
+On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
 
-http://developercertificate.org/
+> I don't think we should try to merge the channel switches.  We should
+> just perform them separately, especially because the exact time of the
+> switch will most likely not be the same (since the TBTTs are not in
+> sync).
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- CONTRIBUTING | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
- create mode 100644 CONTRIBUTING
+Do you mean that we shouldn't even have all that new API to switch
+multiple interfaces simultaneously?
 
-diff --git a/CONTRIBUTING b/CONTRIBUTING
-new file mode 100644
-index 0000000..f288959
---- /dev/null
-+++ b/CONTRIBUTING
-@@ -0,0 +1,49 @@
-+
-+This project embraces the Developer Certificate of Origin (DCO) for
-+contributions. This means you must agree to the following prior to submitting
-+patches, if you agree with this developer certificate you acknowledge this by
-+adding a Signed-off-by tag to your patch commit log. Every submitted patch
-+must have this.
-+
-+The source for the DCO:
-+
-+http://developercertificate.org/
-+
-+-----------------------------------------------------------------------
-+
-+Developer Certificate of Origin
-+Version 1.1
-+
-+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-+660 York Street, Suite 102,
-+San Francisco, CA 94110 USA
-+
-+Everyone is permitted to copy and distribute verbatim copies of this
-+license document, but changing it is not allowed.
-+
-+
-+Developer's Certificate of Origin 1.1
-+
-+By making a contribution to this project, I certify that:
-+
-+(a) The contribution was created in whole or in part by me and I
-+    have the right to submit it under the open source license
-+    indicated in the file; or
-+
-+(b) The contribution is based upon previous work that, to the best
-+    of my knowledge, is covered under an appropriate open source
-+    license and I have the right under that license to submit that
-+    work with modifications, whether created in whole or in part
-+    by me, under the same open source license (unless I am
-+    permitted to submit under a different license), as indicated
-+    in the file; or
-+
-+(c) The contribution was provided directly to me by some other
-+    person who certified (a), (b) or (c) and I have not modified
-+    it.
-+
-+(d) I understand and agree that this project and the contribution
-+    are public and that a record of the contribution (including all
-+    personal information I submit with it, including my sign-off) is
-+    maintained indefinitely and may be redistributed consistent with
-+    this project or the open source license(s) involved.
--- 
-1.8.5.2
+johannes
 
