@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:58864 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104AbaACVap (ORCPT
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:39268 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720AbaAVVJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jan 2014 16:30:45 -0500
-Received: by mail-pb0-f43.google.com with SMTP id rq2so16119871pbb.30
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 13:30:44 -0800 (PST)
-Message-ID: <52C72C01.4030209@lwfinger.net> (sfid-20140103_223050_950913_58C8A30A)
-Date: Fri, 03 Jan 2014 15:30:41 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chris Taylor <chris.taylor@cantab.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8723ae PCI Driver update
-References: <CAC94StQ0EQYDxUQR6jNLEpJjB+tpR9ue2rzesz8uT6cmRTkQ8A@mail.gmail.com>	<52C5A8DB.2090506@lwfinger.net>	<CAC94StR7qDESmMiOkrDnFjmOqbmMQNJqMd=zMnMCMZR9tPmi7Q@mail.gmail.com>	<52C5D96E.7060306@lwfinger.net> <CAC94StTgBSG927imnZi36b2jXZ4Wt_hQbQ3ceO0co6e_H49n2Q@mail.gmail.com>
-In-Reply-To: <CAC94StTgBSG927imnZi36b2jXZ4Wt_hQbQ3ceO0co6e_H49n2Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 22 Jan 2014 16:09:14 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rp16so915693pbb.20
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 13:09:13 -0800 (PST)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH] minstrel_ht:  Use RTS_CTS when STA is in DYNAMIC SMPS mode for frames sent using Nss>1.
+Date: Wed, 22 Jan 2014 12:27:45 +0530
+Message-Id: <1390373865-6088-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20140122_220922_496698_558FFC80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/03/2014 03:14 PM, Chris Taylor wrote:
-> OK, I wasn't aware that it was only a Ubuntu issue. Sorry if it's
-> sounded like I've criticised your work on the current driver - I
-> assumed it was an issue affecting all. I've tried the 3.12.6 kernel
-> but didn't notice any significant difference.
->
-> Would you recommend filing a bug report with Ubuntu? If so, do you
-> have any inkling where the Ubuntu devs should start looking for the
-> problem?
+When the STA is in Dynamic SMPS mode, tell
+minstrel_ht to use RTS_CTS for frames which
+are transmitted using more than 1 spatial
+streams.
 
-It may not only be an issue with Ubuntu; however, I am not aware of problems 
-posted elsewhere. I am also aware that Ubuntu user space has a lot more trouble 
-than I see with NetworkManager on openSUSE. I doubt that the Ubuntu devs would 
-do much with a bug report.
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Have you tried the backports package? It has material that will be in 3.14. If 
-that still has the same problem, then I would need to see whatever diagnostics 
-that your system outputs. As I am not an Ubuntu user, I have no idea where it 
-might be. The stuff from dmesg is a help, but not usually definitive. What 
-make/model of AP are you using? Is the firmware up to date? What encryption mode 
-do you use, and is it 802.11n or g?
-
-Larry
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index c1b5b73..a1095d3 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -925,10 +925,17 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
+ 			continue;
+ 
+-		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
+-		if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
+-		    minstrel_mcs_groups[i].streams > 1)
++		/* Handle STA's SMPS State
++		 * a. Use RTS_CTS, if Nss>1 and if STA is in Dynamic SMPS Mode
++		 * b. Mark Nss>1 as unsupported, if STA is in static SMPS mode
++		 */
++		if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
++			minstrel_mcs_groups[i].streams > 1) {
++			mi->tx_flags |= IEEE80211_TX_RC_USE_RTS_CTS;
++		} else if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
++			minstrel_mcs_groups[i].streams > 1) {
+ 			continue;
++		}
+ 
+ 		mi->groups[i].supported =
+ 			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
