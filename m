@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:48936 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751780AbaAWJtQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41894 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752408AbaAVTVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:49:16 -0500
-Received: by mail-la0-f53.google.com with SMTP id e16so1234888lan.40
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:49:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C3A05@ALA-MBB.corp.ad.wrs.com>
-References: <52DF947E.40800@gmail.com>
-	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
-	<52E0BA40.7090203@gmail.com>
-	<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
-	<52E0D7D5.6060504@gmail.com>
-	<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>
-	<CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
-	<CABPxzYLJwyXA+XZ+nHzoCZrSo99joTfhP7iQUbWMfcw403H_WA@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C3A05@ALA-MBB.corp.ad.wrs.com>
-Date: Thu, 23 Jan 2014 11:49:14 +0200
-Message-ID: <CANUX_P2LODJOk3R+oZ-1LHPJiAS22niV4hW904QAqT-3KYxiTw@mail.gmail.com> (sfid-20140123_104921_105974_6FBE7F4C)
-Subject: Re: 802.11a is supported in AP mode or not?
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	zhuyj <zyjzyj2000@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 22 Jan 2014 14:21:40 -0500
+Message-ID: <1390418495.4334.49.camel@jlt4.sipsolutions.net> (sfid-20140122_202143_034691_5184CAC6)
+Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
+ frames, as per spec
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Wed, 22 Jan 2014 20:21:35 +0100
+In-Reply-To: <20140122191610.GD18365@magnum.frso.rivierawaves.com> (sfid-20140122_201711_730750_BBD5790C)
+References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
+	 <1390394079.4334.30.camel@jlt4.sipsolutions.net>
+	 <20140122130924.GA18365@magnum.frso.rivierawaves.com>
+	 <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
+	 <20140122152845.GB18365@magnum.frso.rivierawaves.com>
+	 <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
+	 <20140122164122.GC18365@magnum.frso.rivierawaves.com>
+	 <1390416713.4334.46.camel@jlt4.sipsolutions.net>
+	 <20140122191610.GD18365@magnum.frso.rivierawaves.com>
+	 (sfid-20140122_201711_730750_BBD5790C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 11:34 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
-> But very pity, when running on the AP mode:wlan0     IEEE 802.11abgn  is the same....
->
-> ~# iwconfig wlan0
-> wlan0     IEEE 802.11abgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=15 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Power Management:off
->
+On Wed, 2014-01-22 at 20:16 +0100, Karl Beldan wrote:
 
-cool - just send a patch to fix iwconfig, but this tool is ancient and
-I doubt anybody even cares.
+> > Given the fact that we only send the frame from
+> > ieee80211_stop_tx_ba_cb() I don't see any problem. Even if we were to
+> > send the frame directly after calling the ampdu_action, it seems it
+> > would be fine, since the callback (now) requires sending the remaining
+> > frames unaggregated. (Given that, I'm not even sure why we required the
+> > packets to be sent unaggregated, Emmanuel, do you remember?)
+> > 
+> I'd expect most device to not block ack such frames, and they'd be
+> right to do so, sending them unaggregated seems the right thing to do.
+
+Oh, I roughly remember now - we didn't want to separate the cases of us
+sending a delBA and us receiving a delBA. If we receive a delBA, we
+should stop sending aggregated frames immediately (actually for iwlwifi
+the firmware will do that) or as quickly as possible, hence the
+requirement
+
+If we decide to tear down the session ourselves then we could continue
+sending until later, but it's not worth it.
+
+> So, I guess you are taking what I sent ?
+
+Haven't really made up my mind yet ... I think it's more correct, so I
+should, but I also don't really want to break the ralink drivers over
+what seems to me to be a fairly small issue.
+
+johannes
+
