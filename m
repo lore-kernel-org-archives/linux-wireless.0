@@ -1,112 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:44491 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaAVTRL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528AbaAVKJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 14:17:11 -0500
-Received: by mail-wi0-f177.google.com with SMTP id m19so1011934wiv.16
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 11:17:10 -0800 (PST)
-Date: Wed, 22 Jan 2014 20:16:10 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Wed, 22 Jan 2014 05:09:28 -0500
+Message-ID: <1390385361.4334.25.camel@jlt4.sipsolutions.net> (sfid-20140122_110936_448188_04807A7C)
+Subject: Re: [PATCH] mac80211: mesh: fix mesh_id check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
- frames, as per spec
-Message-ID: <20140122191610.GD18365@magnum.frso.rivierawaves.com> (sfid-20140122_201717_753898_31ABF9BA)
-References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
- <1390394079.4334.30.camel@jlt4.sipsolutions.net>
- <20140122130924.GA18365@magnum.frso.rivierawaves.com>
- <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
- <20140122152845.GB18365@magnum.frso.rivierawaves.com>
- <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
- <20140122164122.GC18365@magnum.frso.rivierawaves.com>
- <1390416713.4334.46.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1390416713.4334.46.camel@jlt4.sipsolutions.net>
+	Javier Cardona <javier@cozybit.com>
+Date: Wed, 22 Jan 2014 11:09:21 +0100
+In-Reply-To: <CAEFj984Y=VRVxT7NRdmN3iLPWEQt7qJGm-fix9zrxExrpAFORg@mail.gmail.com> (sfid-20140122_105925_273477_750EAC5C)
+References: <1390334699.6199.67.camel@jlt4.sipsolutions.net>
+	 <CAHS2MGOVvv92L7c85Z0J70mt8kM9nG-P=2G-diL4UsC6MVTJgg@mail.gmail.com>
+	 <1390378907.4334.2.camel@jlt4.sipsolutions.net>
+	 <CAEFj984Y=VRVxT7NRdmN3iLPWEQt7qJGm-fix9zrxExrpAFORg@mail.gmail.com>
+	 (sfid-20140122_105925_273477_750EAC5C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 07:51:53PM +0100, Johannes Berg wrote:
-> On Wed, 2014-01-22 at 17:41 +0100, Karl Beldan wrote:
-> 
-> > > >> If a DELBA is sent as AC_VO it might get received before the last AMPDU
-> > > >> of the BlockAck session. So, the pending AMPDUs will get dropped at the
-> > > >> receiver.
-> > > >>
-> > > >> In theory this could also be avoided by properly flushing all pending AMPDUs
-> > > >> of the TID in question from the hw queues or by waiting for the tx status
-> > > >> of all pending AMPDUs.
-> 
-> Let's get the issue straight first.
-> 
-> The (current) documentation for the TX_STOP ampdu actions says:
-> 
->  * @IEEE80211_AMPDU_TX_STOP_CONT: stop TX aggregation but continue
-> transmitting
->  *      queued packets, now unaggregated. After all packets are
-> transmitted the
->  *      driver has to call ieee80211_stop_tx_ba_cb_irqsafe().
->  * @IEEE80211_AMPDU_TX_STOP_FLUSH: stop TX aggregation and flush all
-> packets,
->  *      called when the station is removed. There's no need or reason to
-> call
->  *      ieee80211_stop_tx_ba_cb_irqsafe() in this case as mac80211
-> assumes the
->  *      session is gone and removes the station.
->  * @IEEE80211_AMPDU_TX_STOP_FLUSH_CONT: called when TX aggregation is
-> stopped
->  *      but the driver hasn't called ieee80211_stop_tx_ba_cb_irqsafe()
-> yet and
->  *      now the connection is dropped and the station will be removed.
-> Drivers
->  *      should clean up and drop remaining packets when this is called.
-> 
-> I say "current" because we only completed this fairly recently (couple
-> months ago?) to make it complete with the three different possibilities.
-> 
-> Therefore, I don't think there's a need to ever *flush* the queues,
-> although the term "flush" is getting confusing and we should probably
-> call this IEEE80211_AMPDU_TX_STOP_DROP instead of _FLUSH, as that's what
-> it really means, drop all the remaining frames (if any.)
-> 
-> Given the fact that we only send the frame from
-> ieee80211_stop_tx_ba_cb() I don't see any problem. Even if we were to
-> send the frame directly after calling the ampdu_action, it seems it
-> would be fine, since the callback (now) requires sending the remaining
-> frames unaggregated. (Given that, I'm not even sure why we required the
-> packets to be sent unaggregated, Emmanuel, do you remember?)
-> 
-I'd expect most device to not block ack such frames, and they'd be
-right to do so, sending them unaggregated seems the right thing to do.
+On Wed, 2014-01-22 at 17:59 +0800, Yeoh Chun-Yeow wrote:
 
-> > Callers of ieee80211_stop_tx_ba_cb_irqsafe are:
-> > ath9k
-> > ath9k_htc
-> > carl9170
-> > wcn36xx
-> > brcm80211
-> > iwlegacy
-> > iwlwifi
-> > mwl8k
-> > rt2x00
-> > rtlwifi
-> > 
-> > Johannes, what is your impression ?
-> 
-> I'm pretty sure iwlwifi should be safe. ath9k/htc/carl9170/wcn36xx are
-> probably fine, I can't really say anything about the other ones. I'd
-> guess brcm80211 should be OK since it builds aggregates in software and
-> should be able to easily stop transmitting aggregates. But see above - I
-> don't see how even if the driver didn't stop sending aggregates it could
-> be wrong. Unless the driver called ieee80211_stop_tx_ba_cb() immediately
-> but didn't actually stop sending. That's pretty much a bug anyway
-> though.
-> 
-So, I guess you are taking what I sent ?
+> > Also, cfg80211 seems to be missing this check in nl80211_channel_switch(), no?
+> This checking is required for FullMAC implementation, right?
 
- 
-Karl
+Which is unlikely to support it, but generally it seems better to do it
+closer to userspace. I've posted a patch for it.
+
+johannes
+
