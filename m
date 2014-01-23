@@ -1,164 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55335 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbaAIMv2 (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:63511 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbaAWKdo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 07:51:28 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: handle MMPDUs at EOSP correctly
-Date: Thu,  9 Jan 2014 13:51:22 +0100
-Message-Id: <1389271882-15806-5-git-send-email-johannes@sipsolutions.net> (sfid-20140109_135134_403566_BE4C5D03)
-In-Reply-To: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
-References: <1389271882-15806-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 23 Jan 2014 05:33:44 -0500
+Received: by mail-bk0-f43.google.com with SMTP id mx11so278136bkb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 02:33:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1390470648.4189.88.camel@porter.coelho.fi>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	<CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	<1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	<1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	<1390394166.4189.28.camel@porter.coelho.fi>
+	<1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	<1390403634.4189.39.camel@porter.coelho.fi>
+	<CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	<1390458664.4189.48.camel@porter.coelho.fi>
+	<CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+	<1390462306.4189.56.camel@porter.coelho.fi>
+	<CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
+	<1390470648.4189.88.camel@porter.coelho.fi>
+Date: Thu, 23 Jan 2014 11:33:42 +0100
+Message-ID: <CA+BoTQm768pE7w1x9p5dN+qTxYjzf8R5u4WASd4zEaQ=v717BQ@mail.gmail.com> (sfid-20140123_113354_638244_6A6EDD40)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 23 January 2014 10:50, Luca Coelho <luca@coelho.fi> wrote:
+> On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
+>> On 23 January 2014 08:31, Luca Coelho <luca@coelho.fi> wrote:
+>> > (adding Andrei, since he should be aware of these discussions as well ;)
+>> >
+>> > On Thu, 2014-01-23 at 07:41 +0100, Michal Kazior wrote:
+>> >> On 23 January 2014 07:31, Luca Coelho <luca@coelho.fi> wrote:
+>> >> > On Thu, 2014-01-23 at 07:22 +0100, Michal Kazior wrote:
+>> >> >> On 22 January 2014 16:13, Luca Coelho <luca@coelho.fi> wrote:
+>> >> >> > On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
+>> >> >> >> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
+>> >> >> >>
+>> >> >> >> > I don't think we should try to merge the channel switches.  We should
+>> >> >> >> > just perform them separately, especially because the exact time of the
+>> >> >> >> > switch will most likely not be the same (since the TBTTs are not in
+>> >> >> >> > sync).
+>> >> >> >>
+>> >> >> >> Do you mean that we shouldn't even have all that new API to switch
+>> >> >> >> multiple interfaces simultaneously?
+>> >> >> >
+>> >> >> > Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
+>> >> >> > need something like that, but maybe it would still be better not to do
+>> >> >> > this in the nl80211 API, but sync/merge in cfg80211/mac80211?
+>> >> >>
+>> >> >> I was thinking about it. This should work, mostly, as long as you're
+>> >> >> able to submit CSA requests fast enough and you don't use count 0 or
+>> >> >> 1, in which case it becomes racy.
+>> >> >
+>> >> > CSA with count 0 or 1 are really tricky in many respects.  But still I
+>> >> > don't see why it would get racy.  The interfaces will switch
+>> >> > independently, making their own chanctx reservations and so on...
+>> >>
+>> >> You can't really switch multiple interfaces independently with a
+>> >> single-channel hardware. You'll either end up with some interfaces
+>> >> disconnected or dragged to a different channel forcefully.
+>> >
+>> > Right... I think there's no way around dragging them all forcefully.
+>> >
+>> > What about this: when mac80211 sees that one interface is about to
+>> > switch channel and there are other interfaces in a single-channel
+>> > device, it automatically starts channel switch on the other interfaces
+>> > as well (really, there's no way around it).  Obviously it needs to
+>> > inform userspace in this case and then it's up to the userspace to
+>> > decide what to do (drop the connection, or accept the change).
+>>
+>> This is actually the tricky part. How do you automatically switch an
+>> AP interface? You should be able to at least generate CSA IE - true -
+>> but what about beacon after CSA? You need to update HT IE and VHT IE
+>> at least.
+>
+> Good point, so instead of doing it automatically, we send a notification
+> that says "switch or die".  Then userspace needs to request the switch
+> or drop.
 
-If a uAPSD service period ends with an MMPDU, we currently just
-send that MMPDU, but it obviously won't get the EOSP bit set as
-it doesn't have a QoS header. This contradicts the standard, so
-add a QoS-nulldata frame after the MMPDU to properly terminate
-the service period with a frame that has EOSP set.
+An extreme approach would to actually update AP IEs in mac80211. This
+way it would be possible to pull any interface into CSA implicitly if
+you're out of channels. This way single-channel multi-BSS AP could
+probably switch atomically without races and your multi-channel
+GO-possibly-follows-STA would still work.
 
-Also fix a bug wrt. the TID for the MMPDU, it shouldn't be set
-to 0 unconditionally but use the actual TID that was assigned.
+Or less intrusively - instead of "drop" just silence beaconing, notify
+userspace and wait for a channel switch (which would be immediate at
+this point, it would just take chandef, beacon_after and presp_after
+from it). It could "drop" if target channel requires CAC.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h  |  5 ++++
- net/mac80211/sta_info.c | 61 ++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 53 insertions(+), 13 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 25b1887..f4ab2fb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2119,6 +2119,11 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-  * appropriately (only the last frame may have %IEEE80211_TX_STATUS_EOSP)
-  * and also take care of the EOSP and MORE_DATA bits in the frame.
-  * The driver may also use ieee80211_sta_eosp() in this case.
-+ *
-+ * Note that if the driver ever buffers frames other than QoS-data
-+ * frames, it must take care to never send a non-QoS-data frame as
-+ * the last frame in a service period, adding a QoS-nulldata frame
-+ * after a non-QoS-data frame if needed.
-  */
- 
- /**
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 93e2157..a41f2cb 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1153,7 +1153,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 
- static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
- 					 struct sta_info *sta, int tid,
--					 enum ieee80211_frame_release_type reason)
-+					 enum ieee80211_frame_release_type reason,
-+					 bool call_driver)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_qos_hdr *nullfunc;
-@@ -1211,7 +1212,9 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
- 		       IEEE80211_TX_STATUS_EOSP |
- 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
--	drv_allow_buffered_frames(local, sta, BIT(tid), 1, reason, false);
-+	if (call_driver)
-+		drv_allow_buffered_frames(local, sta, BIT(tid), 1,
-+					  reason, false);
- 
- 	skb->dev = sdata->dev;
- 
-@@ -1334,12 +1337,13 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		/* This will evaluate to 1, 3, 5 or 7. */
- 		tid = 7 - ((ffs(~ignored_acs) - 1) << 1);
- 
--		ieee80211_send_null_response(sdata, sta, tid, reason);
-+		ieee80211_send_null_response(sdata, sta, tid, reason, true);
- 	} else if (!driver_release_tids) {
- 		struct sk_buff_head pending;
- 		struct sk_buff *skb;
- 		int num = 0;
- 		u16 tids = 0;
-+		bool need_null = false;
- 
- 		skb_queue_head_init(&pending);
- 
-@@ -1373,22 +1377,48 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 			    ieee80211_is_qos_nullfunc(hdr->frame_control))
- 				qoshdr = ieee80211_get_qos_ctl(hdr);
- 
--			/* end service period after last frame */
--			if (skb_queue_empty(&frames)) {
--				if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
--				    qoshdr)
--					*qoshdr |= IEEE80211_QOS_CTL_EOSP;
-+			tids |= BIT(skb->priority);
- 
-+			__skb_queue_tail(&pending, skb);
-+
-+			/* end service period after last frame or add one */
-+			if (!skb_queue_empty(&frames))
-+				continue;
-+
-+			if (reason != IEEE80211_FRAME_RELEASE_UAPSD) {
-+				/* for PS-Poll, there's only one frame */
- 				info->flags |= IEEE80211_TX_STATUS_EOSP |
- 					       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+				break;
- 			}
- 
--			if (qoshdr)
--				tids |= BIT(*qoshdr & IEEE80211_QOS_CTL_TID_MASK);
--			else
--				tids |= BIT(0);
-+			/* For uAPSD, things are a bit more complicated. If the
-+			 * last frame has a QoS header (i.e. is a QoS-data or
-+			 * QoS-nulldata frame) then just set the EOSP bit there
-+			 * and be done.
-+			 * If the frame doesn't have a QoS header (which means
-+			 * it should be a bufferable MMPDU) then we can't set
-+			 * the EOSP bit in the QoS header; add a QoS-nulldata
-+			 * frame to the list to send it after the MMPDU.
-+			 *
-+			 * Note that this code is only in the mac80211-release
-+			 * code path, we assume that the driver will not buffer
-+			 * anything but QoS-data frames, or if it does, will
-+			 * create the QoS-nulldata frame by itself if needed.
-+			 *
-+			 * Cf. 802.11-2012 10.2.1.10 (c).
-+			 */
-+			if (qoshdr) {
-+				*qoshdr |= IEEE80211_QOS_CTL_EOSP;
- 
--			__skb_queue_tail(&pending, skb);
-+				info->flags |= IEEE80211_TX_STATUS_EOSP |
-+					       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+			} else {
-+				/* FIXME: do we need to set more-data? */
-+				need_null = true;
-+				num++;
-+			}
-+			break;
- 		}
- 
- 		drv_allow_buffered_frames(local, sta, tids, num,
-@@ -1396,6 +1426,11 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 		ieee80211_add_pending_skbs(local, &pending);
- 
-+		if (need_null)
-+			ieee80211_send_null_response(
-+				sdata, sta, find_highest_prio_tid(tids),
-+				reason, false);
-+
- 		sta_info_recalc_tim(sta);
- 	} else {
- 		/*
--- 
-1.8.5.1
+>> Perhaps we could split CSA into two parts somehow and make it more
+>> userspace coordinated. The first part of CSA - announcing it, is
+>> trivial and can actually be done entirely within mac80211 if I'm not
+>> mistaken. What needs userspace input is what happens after the
+>> announcement. This would mean that there is a possible time gap
+>> between announcement being completed and the actual channel switch &
+>> operation resuming.
+>
+> Yeah, this is similar to what I was thinking about while replying to the
+> other thread.
+>
+>
+>> This approach would also help with case of handling CSA to a DFS
+>> "usable" channel that needs a CAC first.
+>
+> The CAC might take too long.  If we have an AP1 and a STA and the STA
+> gets the CSA from its AP2 with a short count, AP1 may not have the time
+> to CAC.  In this case, AP1 have two choices: trust that AP2 is doing the
+> right thing and moving to a usable DFS channel or shut itself down.
 
+That's the point. AP1 doesn't have time to perform CAC in this case,
+but it should still be possible for AP1 to _just_ beacon CSA as it's
+only a hint. AP1 could then be stopped to perform CAC, and once it's
+completed restart the AP1.
+
+
+Michał
