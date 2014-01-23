@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65489 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750800AbaAJDsS (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:50651 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbaAWJ1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 22:48:18 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: <linux-wireless@vger.kernel.org>,
-	<linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
-Date: Thu, 9 Jan 2014 19:48:11 -0800
-Message-ID: <1389325691-21371-1-git-send-email-bzhao@marvell.com> (sfid-20140110_044824_226941_10E64F43)
+	Thu, 23 Jan 2014 04:27:38 -0500
+Received: by mail-la0-f51.google.com with SMTP id c6so1222439lan.38
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:27:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>
+References: <52DF947E.40800@gmail.com>
+	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
+	<52E0BA40.7090203@gmail.com>
+	<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+	<52E0D7D5.6060504@gmail.com>
+	<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
+	<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>
+Date: Thu, 23 Jan 2014 11:27:37 +0200
+Message-ID: <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com> (sfid-20140123_102744_250977_863AD498)
+Subject: Re: 802.11a is supported in AP mode or not?
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	zhuyj <zyjzyj2000@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 52d77db9f133afe4d2b26aeccfd603745f45fda1:
+On Thu, Jan 23, 2014 at 11:21 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+>
+>
+> So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
+Yes
 
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware (2013-12-30 15:22:40 +0100)
+>
+> Though #iwconfig wlan0 shows there is modes a ?
 
-are available in the git repository at:
-
-
-  git://git.marvell.com/mwifiex-firmware.git master
-
-for you to fetch changes up to 2d4aa2037a7015c4d78cde40006f80b8012537a6:
-
-  linux-firmware: add Marvell USB8897-B0 firmware combo image (2014-01-09 19:17:35 -0800)
-
-----------------------------------------------------------------
-Bing Zhao (3):
-      linux-firmware: update Marvell USB8797-B0 firmware image
-      linux-firmware: update Marvell SD8897-B0 firmware combo image
-      linux-firmware: add Marvell USB8897-B0 firmware combo image
-
- WHENCE                  |   7 +++++--
- mrvl/sd8897_uapsta.bin  | Bin 639012 -> 668028 bytes
- mrvl/usb8797_uapsta.bin | Bin 508372 -> 541048 bytes
- mrvl/usb8897_uapsta.bin | Bin 0 -> 705364 bytes
- 4 files changed, 5 insertions(+), 2 deletions(-)
- create mode 100644 mrvl/usb8897_uapsta.bin
-
-diff --git a/WHENCE b/WHENCE
-index 4f87d8a..23faafa 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -730,10 +730,13 @@ File: mrvl/sd8797_uapsta.bin
- Version: 14.66.11.p151
- 
- File: mrvl/sd8897_uapsta.bin
--Version: 15.69.2.p11
-+Version: 15.68.201.p113
- 
- File: mrvl/usb8797_uapsta.bin
--Version: 14.69.11.p179
-+Version: 14.68.29.p26
-+
-+File: mrvl/usb8897_uapsta.bin
-+Version: 15.68.201.p113
- 
- File: mrvl/pcie8897_uapsta.bin
- Version: 15.69.2.p11
-diff --git a/mrvl/sd8897_uapsta.bin b/mrvl/sd8897_uapsta.bin
-index 70732a6..e68a049 100644
-Binary files a/mrvl/sd8897_uapsta.bin and b/mrvl/sd8897_uapsta.bin differ
-diff --git a/mrvl/usb8797_uapsta.bin b/mrvl/usb8797_uapsta.bin
-index bd7c07c..1963798 100644
-Binary files a/mrvl/usb8797_uapsta.bin and b/mrvl/usb8797_uapsta.bin differ
-diff --git a/mrvl/usb8897_uapsta.bin b/mrvl/usb8897_uapsta.bin
-new file mode 100644
-index 0000000..59aef78
-Binary files /dev/null and b/mrvl/usb8897_uapsta.bin differ
+In client mode - not in AP mode
+>
+> iwconfig wlan0
+> wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
+>           Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
+>           Bit Rate=1 Mb/s   Tx-Power=15 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality=60/70  Signal level=-50 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:14   Missed beacon:0
+>
+>
