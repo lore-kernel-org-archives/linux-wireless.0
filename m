@@ -1,120 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:42007 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaAMIkI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 03:40:08 -0500
-Received: by mail-la0-f53.google.com with SMTP id e16so2156510lan.12
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 00:40:06 -0800 (PST)
+Received: from mga02.intel.com ([134.134.136.20]:55525 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753248AbaAWHu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 02:50:59 -0500
+From: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+To: Luca Coelho <luca@coelho.fi>,
+	Michal Kazior <michal.kazior@tieto.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 5/7] mac80211: improve CSA locking
+Date: Thu, 23 Jan 2014 07:50:52 +0000
+Message-ID: <B2CD83211F5FDD478D7EFFF030D107ED02F3B840@HASMSX104.ger.corp.intel.com> (sfid-20140123_085103_905104_826C0C81)
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+ <1390462306.4189.56.camel@porter.coelho.fi>
+In-Reply-To: <1390462306.4189.56.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAEFj985kz+5DWx=hvDu=w=BEud0fJGbYMpUT939xVPbvFbXFPw@mail.gmail.com>
-References: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com>
-	<CAEFj987Rxv9azS4EmW47a5guhVT-JijXsxSOgcGfvgwLkB9tEg@mail.gmail.com>
-	<CADnKcViXui6jCsBxgbYh5A2R4ra+p3YxBP-Om1cT5GaYjjAFPw@mail.gmail.com>
-	<CAEFj985kz+5DWx=hvDu=w=BEud0fJGbYMpUT939xVPbvFbXFPw@mail.gmail.com>
-Date: Mon, 13 Jan 2014 09:40:06 +0100
-Message-ID: <CADnKcViYW_iXJYokjiDnC+MjR4xw-gn0ZPOcf-CVgROsXxtm5A@mail.gmail.com> (sfid-20140113_094014_208216_15326DD5)
-Subject: Re: [PATCH] ath10k: disable STA KICKOUT in FW
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 January 2014 10:09, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Marek
-Hi,
->
-> Do you mind to share which firmware that you are using?
+SSBhZ3JlZSB3aXRoIEx1Y2EgdGhhdCB3ZSBuZWVkIHRvIGxlYXZlIGFuIG9wdGlvbiB0byBzd2l0
+Y2ggbXVsdGlwbGUgaW50ZXJmYWNlIHNlcGFyYXRlbHkuDQpTdXBwb3NlIHRoZSBmb2xsb3dpbmcg
+c2NlbmFyaW86IEJTU18xIGFuZCBHT18xIG9uIGNoYW5uZWwgWCwgYW5kIEJTU18yIGFuZCBHT18y
+IG9uIGNoYW5uZWwgWS4NCk5vdyBCU1NfMSByZWNlaXZlcyBjaGFubmVsIHN3aXRjaCAoY291bnQg
+NSAtPiBjaGFubmVsIFopIGFuZCB0aGUgdXNlciBzcGFjZSBkZWNpZGVzIHRvIG1vdmUgR09fMSAo
+b25seSkuDQpTbGlnaHRseSBsYXRlciwgd2hlbiB0aGUgcHJldmlvdXMgY2hhbm5lbCBzd2l0Y2gg
+aXMgc3RpbGwgaW4gcHJvZ3Jlc3MgQlNTXzIgYWxzbyByZWNlaXZlcyBhIGNoYW5uZWwgc3dpdGNo
+LCBzbyB3cGFfcw0Kd291bGQgdHJ5IHRvIHRyaWdnZXIgR09fMidzIENTQSwgd2hpY2ggaXMgaW1w
+b3NzaWJsZSBiZWNhdXNlIHRoZXJlJ3MgYWxyZWFkeSBhICJtZXJnZWQgQ1NBIiBpbiBwcm9ncmVz
+cy4NCg0KU28gdGhlIGJlc3Qgd2F5IGhlcmUgaXMgdG8gc2VuZCBhIHNlcGFyYXRlIENTQSBjb21t
+YW5kIGZvciBlYWNoIGludGVyZmFjZSBhbmQgbGV0IHRoZQ0Ka2VybmVsIGRlY2lkZSBob3cgdG8g
+cGVyZm9ybSB0aGUgc3dpdGNoLg0KDQpUaGUgbWVyZ2VkIEFQSSBpcyBvayB3aXRoIG1lLCBidXQg
+aXQgc2hvdWxkIGxlYXZlIHRoZSBvcHRpb24gdG8gc3dpdGNoIHNlcGFyYXRlbHkgKHdpdGggbGl0
+dGxlIGRlbGF5cykuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMdWNhIENv
+ZWxobyBbbWFpbHRvOmx1Y2FAY29lbGhvLmZpXSANClNlbnQ6IFRodXJzZGF5LCBKYW51YXJ5IDIz
+LCAyMDE0IDA5OjMyDQpUbzogTWljaGFsIEthemlvcg0KQ2M6IEpvaGFubmVzIEJlcmc7IGxpbnV4
+LXdpcmVsZXNzOyBPdGNoZXJldGlhbnNraSwgQW5kcmVpDQpTdWJqZWN0OiBSZTogW1BBVENIIDUv
+N10gbWFjODAyMTE6IGltcHJvdmUgQ1NBIGxvY2tpbmcNCg0KKGFkZGluZyBBbmRyZWksIHNpbmNl
+IGhlIHNob3VsZCBiZSBhd2FyZSBvZiB0aGVzZSBkaXNjdXNzaW9ucyBhcyB3ZWxsIDspDQoNCk9u
+IFRodSwgMjAxNC0wMS0yMyBhdCAwNzo0MSArMDEwMCwgTWljaGFsIEthemlvciB3cm90ZToNCj4g
+T24gMjMgSmFudWFyeSAyMDE0IDA3OjMxLCBMdWNhIENvZWxobyA8bHVjYUBjb2VsaG8uZmk+IHdy
+b3RlOg0KPiA+IE9uIFRodSwgMjAxNC0wMS0yMyBhdCAwNzoyMiArMDEwMCwgTWljaGFsIEthemlv
+ciB3cm90ZToNCj4gPj4gT24gMjIgSmFudWFyeSAyMDE0IDE2OjEzLCBMdWNhIENvZWxobyA8bHVj
+YUBjb2VsaG8uZmk+IHdyb3RlOg0KPiA+PiA+IE9uIFdlZCwgMjAxNC0wMS0yMiBhdCAxNjoxMCAr
+MDEwMCwgSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4gPj4gPj4gT24gV2VkLCAyMDE0LTAxLTIyIGF0
+IDE0OjM2ICswMjAwLCBMdWNhIENvZWxobyB3cm90ZToNCj4gPj4gPj4NCj4gPj4gPj4gPiBJIGRv
+bid0IHRoaW5rIHdlIHNob3VsZCB0cnkgdG8gbWVyZ2UgdGhlIGNoYW5uZWwgc3dpdGNoZXMuICBX
+ZSANCj4gPj4gPj4gPiBzaG91bGQganVzdCBwZXJmb3JtIHRoZW0gc2VwYXJhdGVseSwgZXNwZWNp
+YWxseSBiZWNhdXNlIHRoZSANCj4gPj4gPj4gPiBleGFjdCB0aW1lIG9mIHRoZSBzd2l0Y2ggd2ls
+bCBtb3N0IGxpa2VseSBub3QgYmUgdGhlIHNhbWUgDQo+ID4+ID4+ID4gKHNpbmNlIHRoZSBUQlRU
+cyBhcmUgbm90IGluIHN5bmMpLg0KPiA+PiA+Pg0KPiA+PiA+PiBEbyB5b3UgbWVhbiB0aGF0IHdl
+IHNob3VsZG4ndCBldmVuIGhhdmUgYWxsIHRoYXQgbmV3IEFQSSB0byANCj4gPj4gPj4gc3dpdGNo
+IG11bHRpcGxlIGludGVyZmFjZXMgc2ltdWx0YW5lb3VzbHk/DQo+ID4+ID4NCj4gPj4gPiBSaWdo
+dCwgSSdtIG5vdCByZWFsbHkgc3VyZSBpdCdzIG5lY2Vzc2FyeS4gIFBFcmhhcHMgd2l0aCANCj4g
+Pj4gPiBub24tY2hhbmN0eCB3ZSBuZWVkIHNvbWV0aGluZyBsaWtlIHRoYXQsIGJ1dCBtYXliZSBp
+dCB3b3VsZCBzdGlsbCANCj4gPj4gPiBiZSBiZXR0ZXIgbm90IHRvIGRvIHRoaXMgaW4gdGhlIG5s
+ODAyMTEgQVBJLCBidXQgc3luYy9tZXJnZSBpbiBjZmc4MDIxMS9tYWM4MDIxMT8NCj4gPj4NCj4g
+Pj4gSSB3YXMgdGhpbmtpbmcgYWJvdXQgaXQuIFRoaXMgc2hvdWxkIHdvcmssIG1vc3RseSwgYXMg
+bG9uZyBhcyANCj4gPj4geW91J3JlIGFibGUgdG8gc3VibWl0IENTQSByZXF1ZXN0cyBmYXN0IGVu
+b3VnaCBhbmQgeW91IGRvbid0IHVzZSANCj4gPj4gY291bnQgMCBvciAxLCBpbiB3aGljaCBjYXNl
+IGl0IGJlY29tZXMgcmFjeS4NCj4gPg0KPiA+IENTQSB3aXRoIGNvdW50IDAgb3IgMSBhcmUgcmVh
+bGx5IHRyaWNreSBpbiBtYW55IHJlc3BlY3RzLiAgQnV0IHN0aWxsIA0KPiA+IEkgZG9uJ3Qgc2Vl
+IHdoeSBpdCB3b3VsZCBnZXQgcmFjeS4gIFRoZSBpbnRlcmZhY2VzIHdpbGwgc3dpdGNoIA0KPiA+
+IGluZGVwZW5kZW50bHksIG1ha2luZyB0aGVpciBvd24gY2hhbmN0eCByZXNlcnZhdGlvbnMgYW5k
+IHNvIG9uLi4uDQo+IA0KPiBZb3UgY2FuJ3QgcmVhbGx5IHN3aXRjaCBtdWx0aXBsZSBpbnRlcmZh
+Y2VzIGluZGVwZW5kZW50bHkgd2l0aCBhIA0KPiBzaW5nbGUtY2hhbm5lbCBoYXJkd2FyZS4gWW91
+J2xsIGVpdGhlciBlbmQgdXAgd2l0aCBzb21lIGludGVyZmFjZXMgDQo+IGRpc2Nvbm5lY3RlZCBv
+ciBkcmFnZ2VkIHRvIGEgZGlmZmVyZW50IGNoYW5uZWwgZm9yY2VmdWxseS4NCg0KUmlnaHQuLi4g
+SSB0aGluayB0aGVyZSdzIG5vIHdheSBhcm91bmQgZHJhZ2dpbmcgdGhlbSBhbGwgZm9yY2VmdWxs
+eS4NCg0KV2hhdCBhYm91dCB0aGlzOiB3aGVuIG1hYzgwMjExIHNlZXMgdGhhdCBvbmUgaW50ZXJm
+YWNlIGlzIGFib3V0IHRvIHN3aXRjaCBjaGFubmVsIGFuZCB0aGVyZSBhcmUgb3RoZXIgaW50ZXJm
+YWNlcyBpbiBhIHNpbmdsZS1jaGFubmVsIGRldmljZSwgaXQgYXV0b21hdGljYWxseSBzdGFydHMg
+Y2hhbm5lbCBzd2l0Y2ggb24gdGhlIG90aGVyIGludGVyZmFjZXMgYXMgd2VsbCAocmVhbGx5LCB0
+aGVyZSdzIG5vIHdheSBhcm91bmQgaXQpLiAgT2J2aW91c2x5IGl0IG5lZWRzIHRvIGluZm9ybSB1
+c2Vyc3BhY2UgaW4gdGhpcyBjYXNlIGFuZCB0aGVuIGl0J3MgdXAgdG8gdGhlIHVzZXJzcGFjZSB0
+byBkZWNpZGUgd2hhdCB0byBkbyAoZHJvcCB0aGUgY29ubmVjdGlvbiwgb3IgYWNjZXB0IHRoZSBj
+aGFuZ2UpLg0KDQpJbiBtdWx0aS1jaGFubmVsIGludGVyZmFjZXMsIHdlIGRvbid0IHN3aXRjaCBh
+dXRvbWF0aWNhbGx5LCBidXQgbGV0IHRoZSB1c2Vyc3BhY2UgZGVjaWRlIHdoYXQgdG8gZG8gd2l0
+aCB0aGUgb3RoZXIgaW50ZXJmYWNlcy4gIElmIGl0IGRvZXNuJ3QgZG8gYW55dGhpbmcsIHdlIGVu
+ZCB1cCB3aXRoIGVhY2ggaW50ZXJmYWNlIG9uIGEgZGlmZmVyZW50IGNoYW5uZWwuDQoNCkFjdHVh
+bGx5IHRoaXMgY291bGQgYmUgZ2VuZXJhbGl6ZWQgdG9vLiAgV2UgZG9uJ3Qgc3dpdGNoIGF1dG9t
+YXRpY2FsbHkgb25seSB3aGVuIHdlIGhhdmUgc2luZ2xlLWNoYW5uZWwgaW50ZXJmYWNlcywgYnV0
+IHdoZW4gd2UgZG9uJ3QgaGF2ZSBhIGZyZWUgY29udGV4dCBmb3IgdGhlIG5ldyBjaGFubmVsLg0K
+DQotLQ0KTHVjYS4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkEgbWVtYmVyIG9mIHRoZSBJbnRlbCBDb3Jwb3Jh
+dGlvbiBncm91cCBvZiBjb21wYW5pZXMKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMg
+bWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2YgdGhl
+IGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkgb3Ro
+ZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZApy
+ZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29waWVz
+Lgo=
 
-I am using FW from:
-https://github.com/kvalo/ath10k-firmware/blob/master/ap/firmware-2.bin_10.1.467-1
-
-> I have tried your patch and this is set accordingly in an the AP (set
-> param 13). But once the associated STA is leaving,
-> WMI_PEER_STA_KICKOUT_EVENTID is still received.
->
-> [  145.060000] ath10k: wmi pdev set param 13 value 0
-> .......
-> [  148.560000] ath10k: wmi vdev id 0x0 set param 8 value 1
-> [  148.560000] ath10k: wmi peer create vdev_id 0 peer_addr 04:f0:21:0c:a5:44
-> [  148.560000] ath10k: wmi peer assoc vdev 0 addr 04:f0:21:0c:a5:44
-> [  149.040000] ath10k: wmi event debug mesg len 44
-> [  209.090000] ath10k: WMI_PEER_STA_KICKOUT_EVENTID
-> [  210.090000] ath10k: WMI_PEER_STA_KICKOUT_EVENTID
->
-> FYI, I am using firmware version 999.999.0.636
->
-> ethtool -i wlan0
-> driver: ath10k_pci
-> firmware-version: 999.999.0.636
->
-> Thanks
->
-> Regards,
-> Chun-Yeow
-Marek
->
->
-> On Wed, Jan 8, 2014 at 6:40 PM, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
->> On 2 January 2014 13:41, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->>>
->>> On Dec 30, 2013 4:08 PM, "Marek Puzyniak" <marek.puzyniak@tieto.com> wrote:
->>>>
->>>> Currently ath10k is not using STA KICKOUT firmware functionality.
->>>> In order to avoid unwanted FW events this functionality should be
->>>> disabled when not used.
->>>
->>> What are unwanted FW events?
->>
->> WMI_PEER_STA_KICKOUT_EVENT which indicates lack of activity from
->> associated STA for specified period of time.
->>
->>>
->>> ----
->>> Chun-Yeow
->> Marek
->>>
->>>> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath10k/mac.c | 9 +++++++++
->>>>  1 file changed, 9 insertions(+)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
->>>> b/drivers/net/wireless/ath/ath10k/mac.c
->>>> index 5b45f3a..93416ab 100644
->>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>>> @@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct
->>>> ieee80211_hw *hw,
->>>>         }
->>>>
->>>>         if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
->>>> +               u32 param_id;
->>>> +
->>>>                 ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
->>>>                 if (ret) {
->>>>                         ath10k_warn("Failed to create peer for AP: %d\n",
->>>> ret);
->>>>                         goto err_vdev_delete;
->>>>                 }
->>>> +
->>>> +               param_id = ar->wmi.pdev_param->sta_kickout_th;
->>>> +
->>>> +               /* Disable STA KICKOUT functionality in FW */
->>>> +               ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
->>>> +               if (ret)
->>>> +                       ath10k_warn("Failed to disable STA KICKOUT\n");
->>>>         }
->>>>
->>>>         if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
->>>> --
->>>> 1.8.1.2
->>>>
->>>>
->>>> _______________________________________________
->>>> ath10k mailing list
->>>> ath10k@lists.infradead.org
->>>> http://lists.infradead.org/mailman/listinfo/ath10k
