@@ -1,130 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:41748 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbaAWI7o convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:58667 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbaAWJLT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:59:44 -0500
-From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	zhuyj <zyjzyj2000@gmail.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: 802.11a is supported in AP mode or not?
-Date: Thu, 23 Jan 2014 08:59:41 +0000
-Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com> (sfid-20140123_095957_527771_9A222716)
-References: <52DF947E.40800@gmail.com>
- <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
- <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
- <52E0BA40.7090203@gmail.com>
- <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
- <52E0D7D5.6060504@gmail.com>,<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
-In-Reply-To: <CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 23 Jan 2014 04:11:19 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so807615iec.22
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:11:19 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAKKnJbe=eBMzB3Bp7qkYvwSTr0x=g-bZkz9dQ6HUihZE5rc5iw@mail.gmail.com>
+References: <CAKKnJbe=eBMzB3Bp7qkYvwSTr0x=g-bZkz9dQ6HUihZE5rc5iw@mail.gmail.com>
+Date: Thu, 23 Jan 2014 10:11:18 +0100
+Message-ID: <CAFED-jmUF9u=sLfVuCSy3rjmB4DM9x6BCLhJaq2CrY9MV6Wycg@mail.gmail.com> (sfid-20140123_101125_925693_E688EE9B)
+Subject: Re: wlcore-spi crash
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Charles <hobbesc7@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there any method to set the 5GHz channels be able?
+2014/1/22 Charles <hobbesc7@gmail.com>:
+> I am building the TI wireless drivers from backports-3.12-1 for a 3.2 kernel.
+>
+> When I modprobe wlcore-spi I get a kernel crash.  Has anyone
+> encountered this?  I found a similar problem here:
+> http://marc.info/?l=linux-wireless&m=135212370625698&w=2
+>
+> I tried adding the patch mentioned there to backports-3.12-1, but I
+> get this build error: "error: 'struct wl1271' has no member named
+> 'set_power'"
+>
+> Here's the crash:
+>
+> [   98.325693] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000000
+> [   98.334171] pgd = c0004000
+> [   98.337031] [00000000] *pgd=00000000
+> [   98.340791] Internal error: Oops: 80000007 [#1]
+> [   98.345524] Modules linked in: wlcore_spi(O) wl12xx(O) wlcore(O)
+> mac80211(O) cfg80211(O) compat(O) autofs4
+> [   98.355661] CPU: 0    Tainted: G           O  (3.2.0)
+> [   98.364120] PC is at 0x0
+> [   98.366846] LR is at wl12xx_set_power_on+0x30/0x150 [wlcore]
 
-Please show me the command...:)
+I think this should help:
+http://www.spinics.net/lists/linux-wireless/msg98589.html
 
-Best Regards.
---------------------------------------
-Bopeng Liu
-WIND RIVER | China Development Center
-Phone: 8610-6483-5012
-
-
-
-________________________________________
-From: Krishna Chaitanya [chaitanya.mgit@gmail.com]
-Sent: Thursday, January 23, 2014 4:57 PM
-To: zhuyj
-Cc: Emmanuel Grumbach; Liu, Bopeng; linux-wireless
-Subject: Re: 802.11a is supported in AP mode or not?
-
-On Thu, Jan 23, 2014 at 2:20 PM, zhuyj <zyjzyj2000@gmail.com> wrote:
-> On 01/23/2014 04:23 PM, Emmanuel Grumbach wrote:
->>
->> On Thu, Jan 23, 2014 at 8:44 AM, zhuyj <zyjzyj2000@gmail.com> wrote:
->>>
->>> On 01/23/2014 02:15 PM, Krishna Chaitanya wrote:
->>>>
->>>> hostapd -dd -B /etc/hostapd.conf
->>>
->>> root@wind-desktop:~# hostapd -dd -B /etc/hostapd.conf
->>>
->>> random: Trying to read entropy from /dev/random
->>> Configuration file: /etc/hostapd.conf
->>> ctrl_interface_group=0
->>> nl80211: interface wlan0 in phy phy0
->>> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
->>> nl80211: Using driver-based off-channel TX
->>> nl80211: Register frame command failed (type=208): ret=-114 (Operation
->>> already in progress)
->>> nl80211: Register frame match - hexdump(len=2): 04 0a
->>> nl80211: Failed to register Action frame processing - ignore for now
->>> nl80211: Add own interface ifindex 3
->>> nl80211: Set mode ifindex 3 iftype 3 (AP)
->>> nl80211: Create interface iftype 6 (MONITOR)
->>> nl80211: New interface mon.wlan0 created: ifindex=4
->>> nl80211: Add own interface ifindex 4
->>> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
->>> nl80211: Regulatory information - country=00
->>> nl80211: 2402-2472 @ 40 MHz
->>> nl80211: 2457-2482 @ 40 MHz
->>> nl80211: 2474-2494 @ 20 MHz
->>> nl80211: 5170-5250 @ 40 MHz
->>> nl80211: 5735-5835 @ 40 MHz
->>> nl80211: Added 802.11b mode based on 802.11g information
->>> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=15 dBm
->>> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=15 dBm
->>> wlan0: IEEE 802.11 Configured channel (1) not found from the channel list
->>> of
->>> current mode (2) IEEE 802.11a
->>>
->>> wlan0: IEEE 802.11 Hardware does not support configured channel
->>> Could not select hw_mode and channel. (-4)
->>> wlan0: Unable to setup interface.
->>> Flushing old station entries
->>> Deauthenticate all stations
->>> rmdir[ctrl_interface]: No such file or directory
->>> nl80211: Remove interface ifindex=4
->>> netlink: Operstate: linkmode=0, operstate=6
->>> nl80211: Set mode ifindex 3 iftype 2 (STATION)
->>> root@wind-desktop:~#
->>>
->>>
->>> root@wind-desktop:~# hostapd -v
->>
->> I think you have the answer to your question, don't you?
->>
-> Yeah, maybe the hardware can support 802.11a, but the driver does not
-> support 802.11a?
-
-All the 5GHz channels are either disabled (or) passive-scan, so AP operation
-will not work. (from iw phy)
-
-Why don't you try with hostapd from git (1.0 is old)? It has changes to
-handle regulatory and channel list update properly.
+BR
+Janusz
