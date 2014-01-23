@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39098 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:45596 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbaALIkt (ORCPT
+	with ESMTP id S932082AbaAWOzc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jan 2014 03:40:49 -0500
-Message-ID: <1389516039.5242.1.camel@jlt4.sipsolutions.net> (sfid-20140112_094123_647890_26809280)
-Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
+	Thu, 23 Jan 2014 09:55:32 -0500
+Message-ID: <1390488928.4142.17.camel@jlt4.sipsolutions.net> (sfid-20140123_155535_140562_ABE1014F)
+Subject: Re: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>
-Date: Sun, 12 Jan 2014 09:40:39 +0100
-In-Reply-To: <1389500647.3720.51.camel@deadeye.wl.decadent.org.uk> (sfid-20140112_052455_040829_49454E3C)
-References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net>
-	 <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
-	 <52D21226.4070306@lwfinger.net>
-	 <1389500647.3720.51.camel@deadeye.wl.decadent.org.uk>
-	 (sfid-20140112_052455_040829_49454E3C)
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 23 Jan 2014 15:55:28 +0100
+In-Reply-To: <52E12C90.3080509@candelatech.com>
+References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
+		  <1390431296-20568-2-git-send-email-greearb@candelatech.com>
+		  (sfid-20140122_235550_068991_E5B7233B) <1390432245.20070.0.camel@jlt4.sipsolutions.net>
+		 <52E05CB1.80308@candelatech.com>
+	 <1390465191.4142.2.camel@jlt4.sipsolutions.net>
+	 <52E12C90.3080509@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-01-12 at 04:24 +0000, Ben Hutchings wrote:
+On Thu, 2014-01-23 at 06:52 -0800, Ben Greear wrote:
 
-> You could switch back to synchronous firmware loading soon, as it's not
-> going to support a usermode helper any more.
-> 
-> But until then, the proper fix for this is going to be to cancel the
-> waiter earlier in teardown.
+> The ieee80211_tkip_decrypt_data method is explicitly checking if the key is uploaded to hardware.
 
-I don't think we found a way when we looked at this, and instead made
-the module unload wait for the request_firmware callback to come back
-(see all users of the request_firmware_complete struct member in
-iwlwifi/iwl-drv.c)
+It is, but only for calling drv_update_tkip_key(), which you can make
+the driver ignore.
+
+> I need it to think that it is not uploaded to hardware as far as that check
+> is concerned, otherwise packets will not decrypt properly.
+
+I don't believe this is true. The stack was always designed so that if
+you didn't decrypt the packet, you just don't set the flags indicating
+it was decrypted and it'll be decrypted in software.
 
 johannes
 
