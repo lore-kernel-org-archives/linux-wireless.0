@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:58626 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984AbaAOQLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 11:11:49 -0500
-Received: from ultralex.lan ([93.218.75.192]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0Lq9se-1VPiTL2tW4-00dkCw for
- <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 17:11:47 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 5/5] carl9170: use ath_is_mybeacon
-Date: Wed, 15 Jan 2014 17:11:39 +0100
-Message-Id: <1389802299-7048-1-git-send-email-linux@rempel-privat.de> (sfid-20140115_171151_637033_564D906B)
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:41797 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbaAWENv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jan 2014 23:13:51 -0500
+Received: by mail-oa0-f42.google.com with SMTP id i7so1558902oag.15
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 20:13:49 -0800 (PST)
+Message-ID: <52E096F7.8040903@lwfinger.net> (sfid-20140123_051426_637339_AAAB9745)
+Date: Wed, 22 Jan 2014 22:13:43 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Realtek 8821 wireless PCI driver?
+References: <20140120193249.GA25707@kroah.com> <52E066A1.9010009@lwfinger.net> <20140123021208.GA13639@kroah.com>
+In-Reply-To: <20140123021208.GA13639@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/carl9170/rx.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+On 01/22/2014 08:12 PM, Greg KH wrote:
+> On Wed, Jan 22, 2014 at 06:47:29PM -0600, Larry Finger wrote:
+>> On 01/20/2014 01:32 PM, Greg KH wrote:
+>>> Hi all,
+>>>
+>>> I have a box here with a Realtek 8821 wireless PCI device.  We don't
+>>> seem to have a driver upstream for it yet, but there's a huge tarball
+>>> from Realtek on their site.
+>>>
+>>> Has anyone started picking the needed pieces out of the tarball to get
+>>> this merged "properly", or does this need to be done yet?
+>>>
+>>> Hm, I wonder if I should just dump the tarball into staging for now, to
+>>> get my box working, any objections to me doing that?
+>>
+>> I have had contact with the Realtek developers regarding a Linux driver for the
+>> RTL8821AE device with PCI ID 10ec:8821. On Dec 10, 2013, they indicated that
+>> there were still 802.11ac problems, and they were not yet ready to release it to
+>> me. I will write them again and check if the driver is now ready, and they just
+>> forgot to send it to me. Once they are ready, they will also be sending me
+>> sample devices.
+>>
+>> What is the URL for the driver that you found? I did a quick search on their
+>> site and did not find it.
+>
+> It came with a device I got at a conference, along with 1,000 other
+> people, so it's being used in the "wild" now, running Linux.  I'll send
+> you the patch off-list as it's not small.
+>
+>> To answer your question, I certainly would have no objections to your dumping
+>> the driver into staging. I can fix it up there as easily as in my own private
+>> stores. You will, of course, get a lot more intermediate patches, but I think
+>> you have already anticipated that. The PCI group usually send me mac80211-based
+>> drivers, thus the residence in staging may be short, but that is desirable.
+>
+> Ok, I spent an hour or so trying to see if I could just use the existing
+> rtlwifi module with this driver, but it seems that they are using a 2
+> year-old version of it, so I'll have to bundle it directly into the
+> driver for now, along with an "odd" bluetooth sharing module.  I'll work
+> on making the needed changes to the driver to get it to work with
+> rtlwifi first, and then clean up the rest over the next few months.  I
+> have the hardware here to test with, so that should make it easier than
+> the normal staging driver work I do.
+>
+> But for now, staging seems like a good idea, especially as one "distro"
+> is already shipping it in this form (SteamOS).
 
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 1b1b207..536bc46a 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -519,6 +519,7 @@ static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
- {
- 	struct ieee80211_hdr *hdr = data;
- 	struct ieee80211_tim_ie *tim_ie;
-+	struct ath_common *common = &ar->common;
- 	u8 *tim;
- 	u8 tim_len;
- 	bool cam;
-@@ -526,17 +527,13 @@ static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
- 	if (likely(!(ar->hw->conf.flags & IEEE80211_CONF_PS)))
- 		return;
- 
--	/* check if this really is a beacon */
--	if (!ieee80211_is_beacon(hdr->frame_control))
--		return;
--
- 	/* min. beacon length + FCS_LEN */
- 	if (len <= 40 + FCS_LEN)
- 		return;
- 
-+	/* check if this really is a beacon */
- 	/* and only beacons from the associated BSSID, please */
--	if (!ether_addr_equal_64bits(hdr->addr3, ar->common.curbssid) ||
--	    !ar->common.curaid)
-+	if (!ath_is_mybeacon(common, hdr) || !common->curaid)
- 		return;
- 
- 	ar->ps.last_beacon = jiffies;
--- 
-1.8.5.2
+Too bad I couldn't get one of those devices.
+
+The "odd" bluetooth sharing module is part of a new driver that I am about to 
+push into drivers/net/wireless to be part of 3.15. This one drives the RTL8723BE 
+device, which is somewhat different from the existing RTL8723AE. Both of the 
+8723 device are both wifi and BT, and it also seems that the 8821AE is also a 
+dual device.
+
+I will merge the 8821 code with my current working version of rtlwifi and 
+becoexist, and send you patches for testing. I agree that staging is a good 
+place for now.
+
+Thanks for the heads-up on this matter.
+
+Larry
+
 
