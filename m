@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:59525 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbaAGMPF (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37054 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461AbaAWG2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 07:15:05 -0500
-Date: Tue, 7 Jan 2014 13:15:02 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
-Message-ID: <20140107121502.GB10358@amd.pavel.ucw.cz> (sfid-20140107_131541_825161_D3406B84)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <201312311047.30147@pali>
- <20140106200050.GG10885@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140106200050.GG10885@tuxdriver.com>
+	Thu, 23 Jan 2014 01:28:47 -0500
+Message-ID: <1390458525.4189.46.camel@porter.coelho.fi> (sfid-20140123_072850_872537_6CBF76B7)
+Subject: Re: [PATCH 3/3] cfg80211: implement multi-interface CSA
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Thu, 23 Jan 2014 08:28:45 +0200
+In-Reply-To: <1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
+References: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com>
+	 <1390226968-18928-4-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi,
 
-> > > Second version contains new patch for fixing NULL pointer
-> > > dereference which sometimes cause kernel panic and fixes code
-> > > suggested by Pavel Machek.
->  
-> > So far, there are no new comments for patches 01, 03-13 and 16. 
-> > Are there any other problems with that patches or can be accepted 
-> > for upstream?
->  
-> They are probably fine to merge now.  Of course, I was still deleting
-> wl12xx patches when they were originally posted, so I'll need someone
-> to resend the patches to me...
+Sorry for coming to this a bit late, but hopefully not too late. ;)
 
-Patches should be in your inbox now, with subjects "[PATCH v3 13/13]
-wl1251:". I hand selected patches 01, 03-13 and 16. I was doing
-forwarding by hand, sorry for extra (fwd) in 06/13.
+On Mon, 2014-01-20 at 15:09 +0100, Michal Kazior wrote:
+> This extends NL80211_CMD_CHANNEL_SWITCH by adding
+> a new attribute NL80211_ATTR_CH_SWITCH_IFACES. The
+> attribute holds an array of CSA attributes. Each
+> entry holds attributes that were used until now:
+> ifindex, chandef, blocktx, beacon/proberesp.
 
-Best regards,
-									Pavel
+Why is this necessary? I think it's easier to treat the CSA's
+separately.  When wpa_supplicant decides to switch channel in one
+interface, it asks cfg80211 to do so.  Then, if that interface change is
+"approved" (ie. there's no internal reason why it would fail), cfg80211
+sends a notification to userspace that the interface will switch.  Then
+wpa_s decides whether any other interfaces need switching as well (ie.
+if it's in the same channel context).
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+
+> The new attribute is used as a flag in
+> send_wiphy() and a driver may advertise the
+> capability with WIPHY_FLAG_HAS_MULTI_IF_CHSWITCH.
+> 
+> Userspace may now submit CSA in the old way or
+> with the new attribute set. If the new attribute
+> is set attributes outside the nested attribute are
+> ignored.
+> 
+> This makes it possible for userspace to request a
+> multi-interface channel switch while allowing
+> sanity checks wrt target interface/channel
+> combination.
+
+Okay, the sanity checks are an interesting issue.  But if the
+combination is not good, the whole command will fail and none of the
+interfaces will switch.  If wpa_s does this interface-by-interface,
+separately, the triggering interface (ie. the one that decided to switch
+in the first place) may succeed while the subsequent requests may fail
+(eg. if the interface combination is not allowed in the new channel).
+If the second one fails, wpa_s may make another decision, for instance
+trying to switch the second interface to a *different* channel instead,
+or not switch at all.
+
+I think this approach makes things more flexible and simpler.
+
+--
+Luca.
+
