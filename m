@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59141 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753125AbaAZWNj convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:35843 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754842AbaAWKnm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 17:13:39 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v2 0/6] Enable additional channels for use
-Date: Sun, 26 Jan 2014 22:13:35 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03336BCD2@HASMSX106.ger.corp.intel.com> (sfid-20140126_231342_223431_3C1FDB14)
-References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
- <20140125002416.GD28512@garbanzo.do-not-panic.com>
-In-Reply-To: <20140125002416.GD28512@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 23 Jan 2014 05:43:42 -0500
+Received: by mail-ea0-f182.google.com with SMTP id r15so331917ead.27
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 02:43:41 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/2] ath10k: add CSA support
+Date: Thu, 23 Jan 2014 11:38:24 +0100
+Message-Id: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com> (sfid-20140123_114408_818039_C85211F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> 
-> Looks good but needs a bit of work. In particular the biggest concern I have is
-> the last_request thing, and the feature flag on the wiphy. Other than that,
-> tons of cleanup and one last
-> requirement: please document this on the wireless wiki on the regulatory
-> page, once accepted.
-> 
-> http://wireless.kernel.org/en/developers/Regulatory/processing_rules
-> 
+This is a refactored and rewritten AP CSA patch
+split into 2. As a bonus this fixes STA CSA as
+well.
 
-Sure :)
+
+Michal Kazior (2):
+  ath10k: implement channel switching
+  ath10k: implement AP CSA
+
+ drivers/net/wireless/ath/ath10k/core.h |  12 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  | 182 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c  |  11 ++
+ 3 files changed, 175 insertions(+), 30 deletions(-)
+
+-- 
+1.8.5.3
+
