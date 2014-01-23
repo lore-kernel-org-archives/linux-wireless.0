@@ -1,105 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbaAXJSk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25430 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbaAWKqY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 04:18:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: check nla_parse() return values
-Date: Fri, 24 Jan 2014 10:18:33 +0100
-Message-Id: <1390555113-9231-1-git-send-email-johannes@sipsolutions.net> (sfid-20140124_101846_035486_1FA517D8)
+	Thu, 23 Jan 2014 05:46:24 -0500
+From: "Mani, Raja" <rmani@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] nl80211: Count only ssid attr to know number of match
+ sets
+Date: Thu, 23 Jan 2014 10:46:17 +0000
+Message-ID: <BD8355E3EE4C424D96D29100D45098AB42C4027A@aphydexd01a.ap.qualcomm.com> (sfid-20140123_114627_754175_A321A021)
+References: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com>
+	 <1390465052.4142.0.camel@jlt4.sipsolutions.net>
+	 <BD8355E3EE4C424D96D29100D45098AB42C40238@aphydexd01a.ap.qualcomm.com>
+ <1390471178.4142.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1390471178.4142.8.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-If there's a policy, then nla_parse() return values must be
-checked, otherwise the policy is useless and there's nothing
-that ensures the attributes are actually what we expect them
-to be.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 37 +++++++++++++++++++++++--------------
- 1 file changed, 23 insertions(+), 14 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fdd4cae..ffbab17 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2066,10 +2066,12 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		nla_for_each_nested(nl_txq_params,
- 				    info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS],
- 				    rem_txq_params) {
--			nla_parse(tb, NL80211_TXQ_ATTR_MAX,
--				  nla_data(nl_txq_params),
--				  nla_len(nl_txq_params),
--				  txq_params_policy);
-+			result = nla_parse(tb, NL80211_TXQ_ATTR_MAX,
-+					   nla_data(nl_txq_params),
-+					   nla_len(nl_txq_params),
-+					   txq_params_policy);
-+			if (result)
-+				goto bad_res;
- 			result = parse_txq_params(tb, &txq_params);
- 			if (result)
- 				goto bad_res;
-@@ -5226,9 +5228,11 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- 
- 	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
- 			    rem_reg_rules) {
--		nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
--			  nla_data(nl_reg_rule), nla_len(nl_reg_rule),
--			  reg_rule_policy);
-+		r = nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
-+			      nla_data(nl_reg_rule), nla_len(nl_reg_rule),
-+			      reg_rule_policy);
-+		if (r)
-+			goto bad_reg;
- 		r = parse_reg_rule(tb, &rd->reg_rules[rule_idx]);
- 		if (r)
- 			goto bad_reg;
-@@ -5650,9 +5654,11 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 				    tmp) {
- 			struct nlattr *ssid, *rssi;
- 
--			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
--				  nla_data(attr), nla_len(attr),
--				  nl80211_match_policy);
-+			err = nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
-+					nla_data(attr), nla_len(attr),
-+					nl80211_match_policy);
-+			if (err)
-+				goto out_free;
- 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
- 			if (ssid) {
- 				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
-@@ -7527,16 +7533,19 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 	 * directly to the enum ieee80211_band values used in cfg80211.
- 	 */
- 	BUILD_BUG_ON(NL80211_MAX_SUPP_HT_RATES > IEEE80211_HT_MCS_MASK_LEN * 8);
--	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
--	{
-+	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem) {
- 		enum ieee80211_band band = nla_type(tx_rates);
-+		int err;
-+
- 		if (band < 0 || band >= IEEE80211_NUM_BANDS)
- 			return -EINVAL;
- 		sband = rdev->wiphy.bands[band];
- 		if (sband == NULL)
- 			return -EINVAL;
--		nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
--			  nla_len(tx_rates), nl80211_txattr_policy);
-+		err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
-+				nla_len(tx_rates), nl80211_txattr_policy);
-+		if (err)
-+			return err;
- 		if (tb[NL80211_TXRATE_LEGACY]) {
- 			mask.control[band].legacy = rateset_to_mask(
- 				sband,
--- 
-1.8.5.2
-
+Pj4gPkVyciwgeW91IGZhaWxlZCB0byBleHBsYWluICp3aHkqIHRoaXMgaXMgYSBwcm9ibGVtLiBJ
+J20gbm90IGV2ZW4gY29udmluY2VkIHlvdSdyZSByaWdodCBhbnl3YXkuDQoNCj4+IFRvIGtub3cg
+bWF0Y2ggc2V0IGNvdW50LCBubDgwMjExIHNob3VsZCBjb3VudCBvbmx5IE5MODAyMTFfU0NIRURf
+Kl9BVFRSX1NTSUQuDQo+PiBTb21lIGNhc2VzLCB3cGFfc3VwcGxpY2FudCB3b3VsZCBwYXNzIE5M
+ODAyMTFfU0NIRURfKl9BVFRSX1JTU0kgYWxzbyANCj4+IGFsb25lIHdpdGggTkw4MDIxMV9TQ0hF
+RF8qX0FUVFJfU1NJRC4gIEZvciBleGFtcGxlLCBhc3N1bWUgIG9uZSANCj4+IE5MODAyMTFfU0NI
+RURfKl9BVFRSX1NTSUQgYW5kIG9uZSBOTDgwMjExX1NDSEVEXypfQVRUUl9SU1NJIHBhc3NlZCAN
+Cj4+IGZyb20gd3BhX3N1cHBsaWNhbnQuIEluIHRoaXMgY2FzZSwgbmw4MDIxMSBjb3VudCANCj4+
+IE5MODAyMTFfU0NIRURfKl9BVFRSX1JTU0kgYWxzbyBvbmUgb2YgdGhlIHByb2ZpbGUgLCBGaW5h
+bGx5IG1hdGNoIHNldCANCj4+IGNvdW50IHdpbGwgYmUgY29tZQ0KPj4gMiBpbiB0aGlzIGNhc2Uu
+IChJZGVhbGx5LCBtYXRjaCBzZXQgY291bnQgc2hvdWxkIGJlIDEpLiAgVGhlIHNhbWUgDQo+PiBj
+b3VudCB2YWx1ZSBpcyBwYXNzZWQgdG8gZHJpdmVyLCBhbmQgZHJpdmVyIGFsc28gd291bGQgYXNz
+dW1lIHRoZXJlIGFyZSB0d28gU1NJRCBhdmFpbGFibGUgaW4gbWF0Y2ggc2V0IGFycmF5IChyZXF1
+ZXN0LT5tYXRjaF9zZXRzKS4NCj4+IEJ1dCBvbmx5IG9uZSBTU0lEIGlzIHZhbGlkIGluIHJlcXVl
+c3QtPm1hdGNoX3NldHMgYXJyYXkgaW4gdGhpcyBjYXNlLg0KPg0KPllvdSBzdGlsbCBoYXZlbid0
+IGV4cGxhaW5lZCAqd2h5KiB5b3UgdGhpbmsgdGhhdCBhIG1hdGNoIHNldCBzaG91bGQgb25seSBi
+ZSBjb25zaWRlcmVkIHRvIGJlIG9uZSB3aGVuIGl0IGluY2x1ZGVzIGFuIFNTSUQuIFRoYXQgZG9l
+c24ndCBzZWVtIHRvIGJlIHRoZSBkZWZpbml0aW9uIG9mIHRoZSBBUEkuDQo+DQo+Sm9oYW5uZXMN
+Cg0KRHJpdmVyIGl0ZXJhdGVzIG1hdGNoIHNldCBhcnJheSAocmVxdWVzdC0+bWF0Y2hfc2V0cykg
+YmFzZWQgb24gbWF0Y2ggc2V0IGNvdW50IChyZXF1ZXN0LT5uX21hdGNoX3NldHMpLg0KSW4gYWJv
+dmUgZXhhbXBsZSwgb25seSByZXF1ZXN0LT5uX21hdGNoX3NldHNbMF0gd2lsbCBoYXZlIHZhbGlk
+IFNTSUQgYW5kICByZXF1ZXN0LT5uX21hdGNoX3NldHNbMV0pIHdpbGwgaGF2ZSBaRVJPIGluIGl0
+cyBlbGVtZW50IGFsd2F5cy4NCkJ5IGhhdmluZyBjb3VudCBiZWluZyAyIGFuZCBoYXZpbmcgaW52
+YWxpZCBTU0lEIGluIHJlcXVlc3QtPm5fbWF0Y2hfc2V0c1sxXSBpcyB0aGUgcHJvYmxlbS4gIA0K
+DQpNZW1vcnkgZm9yIHJlcXVlc3QtPm1hdGNoX3NldHMgaXMgYWxsb2NhdGVkIGJhc2VkIG9uIG1h
+dGNoIHNldCBjb3VudCBpbiBubDgwMjExLiAgQnkgcmVkdWNpbmcgdGhlIGNvdW50ICwgIG5sODAy
+MTEgZG9uJ3QgaGF2ZSANClRvIGFsbG9jYXRlIG1lbW9yeSBmb3IgcmVxdWVzdC0+bl9tYXRjaF9z
+ZXRzWzFdIGFuZCBhbHNvIGRyaXZlciBjYW4gZXhhY3RseSBrbm93IHZhbGlkIFNTSUQgY291bnQg
+YXZhaWxhYmxlIGluIG1hdGNoIHNldCBhcnJheSB3aXRoIG15IGNoYW5nZS4NCg==
