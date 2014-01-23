@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:55522 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064AbaAQXL5 (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:55962 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753305AbaAWGlJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 18:11:57 -0500
-Received: by mail-ob0-f178.google.com with SMTP id uz6so5028134obc.23
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 15:11:56 -0800 (PST)
+	Thu, 23 Jan 2014 01:41:09 -0500
+Received: by mail-bk0-f44.google.com with SMTP id mz12so204722bkb.17
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 22:41:08 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAGb2v67UKiyfJbKZ_Frk3OwZupMPoA2Ck3Hj2zsRFXBQPztavg@mail.gmail.com>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
-	<1389941251-32692-5-git-send-email-wens@csie.org>
-	<201401171747.46332.arnd@arndb.de>
-	<CAGb2v67UKiyfJbKZ_Frk3OwZupMPoA2Ck3Hj2zsRFXBQPztavg@mail.gmail.com>
-Date: Sat, 18 Jan 2014 00:11:56 +0100
-Message-ID: <CACRpkdZOD4zeA8T5kbJ4c5NsnuzHCg1mw8rRMYNT9c4R-Qnc6A@mail.gmail.com> (sfid-20140118_001211_714827_31068AD5)
-Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Chen-Yu Tsai <wens@csie.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree <devicetree@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1390458664.4189.48.camel@porter.coelho.fi>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	<CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	<1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	<1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	<1390394166.4189.28.camel@porter.coelho.fi>
+	<1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	<1390403634.4189.39.camel@porter.coelho.fi>
+	<CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	<1390458664.4189.48.camel@porter.coelho.fi>
+Date: Thu, 23 Jan 2014 07:41:08 +0100
+Message-ID: <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com> (sfid-20140123_074114_128616_86274C66)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 6:43 PM, Chen-Yu Tsai <wens@csie.org> wrote:
-> On Sat, Jan 18, 2014 at 12:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-
->>> +- NAME_shutdown-gpios  : GPIO phandle to shutdown control
->>> +                         (phandle must be the second)
->>> +- NAME_reset-gpios     : GPIO phandle to reset control
->>> +
->>> +NAME must match the rfkill-name property. NAME_shutdown-gpios or
->>> +NAME_reset-gpios, or both, must be defined.
->>> +
+On 23 January 2014 07:31, Luca Coelho <luca@coelho.fi> wrote:
+> On Thu, 2014-01-23 at 07:22 +0100, Michal Kazior wrote:
+>> On 22 January 2014 16:13, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
+>> >> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
+>> >>
+>> >> > I don't think we should try to merge the channel switches.  We should
+>> >> > just perform them separately, especially because the exact time of the
+>> >> > switch will most likely not be the same (since the TBTTs are not in
+>> >> > sync).
+>> >>
+>> >> Do you mean that we shouldn't even have all that new API to switch
+>> >> multiple interfaces simultaneously?
+>> >
+>> > Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
+>> > need something like that, but maybe it would still be better not to do
+>> > this in the nl80211 API, but sync/merge in cfg80211/mac80211?
 >>
->> I don't understand this part. Why do you include the name in the
->> gpios property, rather than just hardcoding the property strings
->> to "shutdown-gpios" and "reset-gpios"?
+>> I was thinking about it. This should work, mostly, as long as you're
+>> able to submit CSA requests fast enough and you don't use count 0 or
+>> 1, in which case it becomes racy.
 >
-> This quirk is a result of how gpiod_get_index implements device tree
-> lookup.
+> CSA with count 0 or 1 are really tricky in many respects.  But still I
+> don't see why it would get racy.  The interfaces will switch
+> independently, making their own chanctx reservations and so on...
 
-Why can't it just have a single property "gpios", where the first
-element is the reset GPIO and the second is the shutdown GPIO?
+You can't really switch multiple interfaces independently with a
+single-channel hardware. You'll either end up with some interfaces
+disconnected or dragged to a different channel forcefully.
 
-rfkill-gpio does this:
 
-gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
-gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
-
-The passed con ID name parameter is only there for the device
-tree case it seems. (ACPI ignores it.) So what about you just
-don't pass it at all and patch it to do like this instead:
-
-gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
-gpio = devm_gpiod_get_index(&pdev->dev, NULL, 1);
-
-Heikki, are you OK with this change?
-
-I think this is actually necessary if the ACPI and DT unification
-pipe dream shall limp forward, we cannot have arguments passed
-that have a semantic effect on DT but not on ACPI... Drivers
-that are supposed to use both ACPI and DT will always
-have to pass NULL as con ID.
-
-> If con_id is given, it is prepended to "gpios" as the property string.
-> con_id is also used as the label passed to gpiod_request, which is
-> then shown in /sys/kernel/debug/gpio.
-
-If your problem  is really what turns up in debugfs, then we need
-to figure out a way to label gpios outside of the *gpiod_get* calls.
-
-The string passed in *gpiod_get* is a "connection ID" not a proper
-name for the GPIO.
-
-Yours,
-Linus Walleij
+Michał
