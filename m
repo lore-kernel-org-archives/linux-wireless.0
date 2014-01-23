@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13555 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaAXIUk (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:32983 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753250AbaAWOwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 03:20:40 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: implement channel switching
-References: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com>
-	<1390473506-15677-2-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 24 Jan 2014 10:20:34 +0200
-In-Reply-To: <1390473506-15677-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 23 Jan 2014 11:38:25 +0100")
-Message-ID: <87ob314wq5.fsf@kamboji.qca.qualcomm.com> (sfid-20140124_092043_839802_F584BD88)
+	Thu, 23 Jan 2014 09:52:04 -0500
+Message-ID: <52E12C90.3080509@candelatech.com> (sfid-20140123_155208_274479_87AB0E19)
+Date: Thu, 23 Jan 2014 06:52:00 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Support tx-hw-crypt with rx-sw-crypt.
+References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>	  <1390431296-20568-2-git-send-email-greearb@candelatech.com>	  (sfid-20140122_235550_068991_E5B7233B) <1390432245.20070.0.camel@jlt4.sipsolutions.net>	 <52E05CB1.80308@candelatech.com> <1390465191.4142.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1390465191.4142.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> Until now channel change wasn't propagating to FW
-> directly because operational channel is abstracted
-> by VDEVs and it wasn't really necessary since
-> ath10k implements hwscan and hwroc.
+On 01/23/2014 12:19 AM, Johannes Berg wrote:
+> On Wed, 2014-01-22 at 16:05 -0800, Ben Greear wrote:
 >
-> This effectively fixes STA CSA and allows for
-> future AP-like CSA as well.
+>>>> + * @IEEE80211_KEY_FLAG_SW_RX_CRYPT: This flag indicates hardware will not
+>>>> + *	do any decrypt for received packets, though it may have uploaded
+>>>> + *	the hardware key to be used for encrypting transmitted frames.
+>>>
+>>> This isn't needed, all you need to do is return 0 from the set_key
+>>> callback in the driver, without programming the key into the device. And
+>>> then ignore tkip key updates for such a key.
+>>
+>> I want and need to program the key into the device so that it can do the
+>> encryption for transmit.  But, I need software to do full decryption on
+>> receive.
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Ok so the "without programming the key into the device" part was iwlwifi
+> specific (on TX the key is given explicitly with that device.) However,
+> the same still applies - just replace that by "without enabling it for
+> RX" or so.
+>
+>> That is the only way I could get ath10k to do any sort of software crypt,
+>> and in fact, that is the most efficient way to get the features I need
+>> so I might try getting ath9k to support the same mode some day...
+>>
+>> I'll be posting ath10k patches to use this soon, but the dark magic
+>> is down in the firmware in this case.
+>
+> Ok, whatever, what I'm saying is that mac80211 doesn't care about
+> whether you enabled the key for RX or not if you return 0 from
+> set_key(). All it cares about it that if you return 0 the key must be
+> available for TX. You therefore don't need to make any mac80211 changes.
 
-[...]
+The ieee80211_tkip_decrypt_data method is explicitly checking if the key is uploaded to hardware.
+I need it to think that it is not uploaded to hardware as far as that check
+is concerned, otherwise packets will not decrypt properly.
 
-> @@ -2559,15 +2676,18 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
->  				 * this is never erased as we it for crypto key
->  				 * clearing; this is FW requirement
->  				 */
-> -				memcpy(arvif->u.sta.bssid, info->bssid,
-> -				       ETH_ALEN);
-> +				memcpy(arvif->bssid, info->bssid, ETH_ALEN);
->  
->  				ath10k_dbg(ATH10K_DBG_MAC,
->  					   "mac vdev %d start %pM\n",
->  					   arvif->vdev_id, info->bssid);
->  
-> -				/* FIXME: check return value */
->  				ret = ath10k_vdev_start(arvif);
-> +				if (ret)
-> +					ath10k_warn("failed to start vdev: %d\n",
-> +						    ret);
-> +				else
-> +					arvif->is_started = true;
->  			}
+There are other places that check that key-uploaded-to-hardware flag,
+so I don't think I can just upload the key and then not set that flag?
 
-I really don't like that if-else construct and I think it's just better
-to bail out if an error happens, so I changed this to:
-
-				ret = ath10k_vdev_start(arvif);
-				if (ret) {
-					ath10k_warn("failed to start vdev: %d\n",
-						    ret);
-					return;
-				}
-
-				arvif->is_started = true;
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
