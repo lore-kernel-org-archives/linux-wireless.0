@@ -1,42 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64165 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752166AbaATCKK (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42852 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162AbaAWHbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 21:10:10 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>
-Date: Sun, 19 Jan 2014 18:10:03 -0800
-Subject: RE: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
-Message-ID: <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com> (sfid-20140120_031041_198980_EB1D9D9E)
-References: <1389325691-21371-1-git-send-email-bzhao@marvell.com>
- <1390174797.3651.7.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1390174797.3651.7.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 23 Jan 2014 02:31:49 -0500
+Message-ID: <1390462306.4189.56.camel@porter.coelho.fi> (sfid-20140123_083153_633123_753D8CA3)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Thu, 23 Jan 2014 09:31:46 +0200
+In-Reply-To: <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQmVuLA0KDQo+ID4gQEAgLTczMCwxMCArNzMwLDEzIEBAIEZpbGU6IG1ydmwvc2Q4Nzk3X3Vh
-cHN0YS5iaW4NCj4gPiAgVmVyc2lvbjogMTQuNjYuMTEucDE1MQ0KPiA+DQo+ID4gIEZpbGU6IG1y
-dmwvc2Q4ODk3X3VhcHN0YS5iaW4NCj4gPiAtVmVyc2lvbjogMTUuNjkuMi5wMTENCj4gPiArVmVy
-c2lvbjogMTUuNjguMjAxLnAxMTMNCj4gPg0KPiA+ICBGaWxlOiBtcnZsL3VzYjg3OTdfdWFwc3Rh
-LmJpbg0KPiA+IC1WZXJzaW9uOiAxNC42OS4xMS5wMTc5DQo+ID4gK1ZlcnNpb246IDE0LjY4LjI5
-LnAyNg0KPiBbLi4uXQ0KPiANCj4gV2h5IGFyZSB0aGVzZSB1cGRhdGVzIHJvbGxpbmcgdGhlIHZl
-cnNpb24gbnVtYmVyIGJhY2t3YXJkPyAgRGlkIHRoZQ0KPiBsYXRlciB2ZXJzaW9ucyBjYXVzZSBy
-ZWdyZXNzaW9ucz8NCg0KVGhlc2UgaW1hZ2VzIGFyZSBuZXdlciBmaXJtd2FyZSB2ZXJzaW9ucyBh
-Y3R1YWxseS4NCg0KVGhlIDJuZCAoNjkgb3IgNjgpIGFuZCAzcmQgKDExIG9yIDI5KSBudW1iZXJz
-IGluIHRoZSB2ZXJzaW9uIHN0cmluZyBkbyBub3QgbmVjZXNzYXJpbHkgbWVhbiB0aGUgdmVyc2lv
-biBpbmNyZWFzaW5nIG9yIGRlY3JlYXNpbmcuIE9ubHkgd2hlbiBmaXJzdCAzIG51bWJlcnMgYXJl
-IGZpeGVkLCBhIHNtYWxsZXIgNHRoIG51bWJlciB3aWxsIG1lYW4gdGhhdCB0aGUgdmVyc2lvbiBp
-cyByb2xsaW5nIGJhY2t3YXJkLiBGb3IgZXhhbXBsZXMsDQoNCkZpbGU6IG1ydmwvc2Q4Nzk3X3Vh
-cHN0YS5iaW4NCi1WZXJzaW9uOiAxNC42Ni4xMS5wMTAwDQorVmVyc2lvbjogMTQuNjYuMTEucDE1
-MQ0KDQpUaGUgdmVyc2lvbiBpcyBtb3ZpbmcgZm9yd2FyZC4NCg0KQnV0IGlmIHdlIGRvLA0KDQot
-VmVyc2lvbjogMTQuNjYuMTEucDEwMA0KK1ZlcnNpb246IDE0LjY2LjExLnA5OQ0KDQp0aGlzIHdp
-bGwgYmUgcm9sbGluZyBiYWNrd2FyZC4NCg0KDQpFYWNoIGZpcm13YXJlIGltYWdlIGNvbnRhaW5z
-IGEgdGltZXN0YW1wIHN1Y2ggYXMgIjIwMTMvMTIvMDYsIDIxOjI4OjMxIi4NCklmIHlvdSB0aGlu
-ayB0aGF0IGlzIGluZm9ybWF0aXZlIEkgY2FuIGFkZCB0aGUgdGltZXN0YW1wcyBpbiBjb21taXQg
-bG9ncyBhbmQgcmVzZW5kIHRoZSBwdWxsIHJlcXVlc3QuDQoNClRoYW5rcywNCkJpbmcNCg0K
+(adding Andrei, since he should be aware of these discussions as well ;)
+
+On Thu, 2014-01-23 at 07:41 +0100, Michal Kazior wrote:
+> On 23 January 2014 07:31, Luca Coelho <luca@coelho.fi> wrote:
+> > On Thu, 2014-01-23 at 07:22 +0100, Michal Kazior wrote:
+> >> On 22 January 2014 16:13, Luca Coelho <luca@coelho.fi> wrote:
+> >> > On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
+> >> >> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
+> >> >>
+> >> >> > I don't think we should try to merge the channel switches.  We should
+> >> >> > just perform them separately, especially because the exact time of the
+> >> >> > switch will most likely not be the same (since the TBTTs are not in
+> >> >> > sync).
+> >> >>
+> >> >> Do you mean that we shouldn't even have all that new API to switch
+> >> >> multiple interfaces simultaneously?
+> >> >
+> >> > Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
+> >> > need something like that, but maybe it would still be better not to do
+> >> > this in the nl80211 API, but sync/merge in cfg80211/mac80211?
+> >>
+> >> I was thinking about it. This should work, mostly, as long as you're
+> >> able to submit CSA requests fast enough and you don't use count 0 or
+> >> 1, in which case it becomes racy.
+> >
+> > CSA with count 0 or 1 are really tricky in many respects.  But still I
+> > don't see why it would get racy.  The interfaces will switch
+> > independently, making their own chanctx reservations and so on...
+> 
+> You can't really switch multiple interfaces independently with a
+> single-channel hardware. You'll either end up with some interfaces
+> disconnected or dragged to a different channel forcefully.
+
+Right... I think there's no way around dragging them all forcefully.
+
+What about this: when mac80211 sees that one interface is about to
+switch channel and there are other interfaces in a single-channel
+device, it automatically starts channel switch on the other interfaces
+as well (really, there's no way around it).  Obviously it needs to
+inform userspace in this case and then it's up to the userspace to
+decide what to do (drop the connection, or accept the change).
+
+In multi-channel interfaces, we don't switch automatically, but let the
+userspace decide what to do with the other interfaces.  If it doesn't do
+anything, we end up with each interface on a different channel.
+
+Actually this could be generalized too.  We don't switch automatically
+only when we have single-channel interfaces, but when we don't have a
+free context for the new channel.
+
+--
+Luca.
+
