@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:33992 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbaAVVxd (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:64303 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbaAWMKZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 16:53:33 -0500
-Received: by mail-wi0-f179.google.com with SMTP id hr1so1173059wib.6
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 13:53:32 -0800 (PST)
+	Thu, 23 Jan 2014 07:10:25 -0500
+Received: by mail-bk0-f51.google.com with SMTP id w10so316078bkz.38
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 04:10:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1390426022.4334.50.camel@jlt4.sipsolutions.net>
-References: <1390373865-6088-1-git-send-email-chaitanya.mgit@gmail.com> <1390426022.4334.50.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 23 Jan 2014 03:23:11 +0530
-Message-ID: <CABPxzY+Z_1PMmsUMOpSwjzv7ZLg791Ltd7VivbqAuemoYWM16A@mail.gmail.com> (sfid-20140122_225336_698923_7053C3B6)
-Subject: Re: [PATCH] minstrel_ht: Use RTS_CTS when STA is in DYNAMIC SMPS mode
- for frames sent using Nss>1.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <87ha8u6h9v.fsf@kamboji.qca.qualcomm.com>
+References: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com>
+	<87ha8u6h9v.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 23 Jan 2014 13:10:22 +0100
+Message-ID: <CA+BoTQkyQBnWomTbCVqySXvXfUR1Un=4dHJuCZE3ATc9m_bJow@mail.gmail.com> (sfid-20140123_131027_941774_EE72C3DF)
+Subject: Re: [PATCH 0/2] ath10k: add CSA support
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 2:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2014-01-22 at 12:27 +0530, Chaitanya T K wrote:
+On 23 January 2014 12:59, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
->> +             if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
->> +                     minstrel_mcs_groups[i].streams > 1) {
->> +                     mi->tx_flags |= IEEE80211_TX_RC_USE_RTS_CTS;
->> +             } else if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
->> +                     minstrel_mcs_groups[i].streams > 1) {
+>> This is a refactored and rewritten AP CSA patch
+>> split into 2. As a bonus this fixes STA CSA as
+>> well.
+>>
+>>
+>> Michal Kazior (2):
+>>   ath10k: implement channel switching
+>>   ath10k: implement AP CSA
 >
-> Your indentation is off inside the if statements. I'll have to wait for
-> nbd to review the patch itself, I guess.
+> Oddly enough only the cover letter was delivered to ath10k list, no idea
+> what happened to the patches. But I can get the patches from
+> linux-wireless lists.
+>
+> But do these patches depend to any mac80211 or cfg80211 patches. Or is
+> it safe to take these to my ath-next branch?
 
-Ok, I will fix that. Checkpatch didn't catch that so missed it.
+It's safe take them. They don't have any strange dependencies.
 
-> PS: Your clock/timezone is wrong by approximately 10 hours.
 
-Oh..I have sent this from my virtual-box where time is not properly set :-).
+Michał
