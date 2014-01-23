@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7348 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247AbaAFKz6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43549 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbaAWE1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 05:55:58 -0500
-Message-ID: <52CA8BBC.7070601@broadcom.com> (sfid-20140106_115601_464675_D5440DAA)
-Date: Mon, 6 Jan 2014 11:55:56 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 22 Jan 2014 23:27:17 -0500
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH] nl80211: Count only ssid attr to know number of match sets
+Date: Thu, 23 Jan 2014 09:57:09 +0530
+Message-ID: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20140123_052721_677350_857D5D7A)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: py80211 update on github
-References: <51D49027.9010803@broadcom.com> <52CA77B5.5060100@broadcom.com>	 (sfid-20140106_103040_059390_26262C87) <1389004577.5891.6.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1389004577.5891.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2014 11:36 AM, Johannes Berg wrote:
-> On Mon, 2014-01-06 at 10:30 +0100, Arend van Spriel wrote:
-> 
->> In the christmas holiday I tinkered a bit more on py80211. It comes with
->> a utility to extract definitions and netlink policies from the nl80211
->> source files. What is currently on github is in prototype state. It can
->> retrieve all wiphy information including band, frequency and rate
->> information. It relies on policy information and it turned out that not
->> all attributes are properly initialized in nl80211_policy. One that I
->> added manually is NL80211_ATTR_SUPPORTED_IFTYPES, which should actually
->> be typed as NLA_NESTED. There are other attributes that are not covered yet.
-> 
-> This makes sense because the kernel policy only covers things that are
-> sent *to* the kernel. In some very rare cases, the stuff sent *to* the
-> kernel and *by* the kernel may even differ, so you may have to add some
-> special cases.
+NL80211_ATTR_SCHED_SCAN_MATCH can have NL80211_SCHED_SCAN_MATCH_ATTR_SSID
+as well as NL80211_SCHED_SCAN_MATCH_ATTR_RSSI in it. Each nested attributes
+which are part of NL80211_ATTR_SCHED_SCAN_MATCH are counted to find out
+number of match sets in nl80211_start_sched_scan().
 
-Yeah, I realized that indeed the policies in the kernel only cover
-validation *to* the kernel. In iw the policies are used rarely and most
-type information is covered in the code. py80211 relies on policies to
-obtain the type information and I was hoping to extract it from the
-kernel/iw code. I may end up maintaining it in py80211.
+This is the problem if NL80211_SCHED_SCAN_MATCH_ATTR_RSSI also part of
+NL80211_ATTR_SCHED_SCAN_MATCH. Fix this incorrect calculation by considering
+only NL80211_SCHED_SCAN_MATCH_ATTR_SSID to know match set count.
 
-Gr. AvS
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ net/wireless/nl80211.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d0afd82..2d3a86f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5504,11 +5504,17 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (n_ssids > wiphy->max_sched_scan_ssids)
+ 		return -EINVAL;
+ 
+-	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH])
++	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH]) {
+ 		nla_for_each_nested(attr,
+ 				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+-				    tmp)
+-			n_match_sets++;
++				    tmp) {
++			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
++				  nla_data(attr), nla_len(attr),
++				  nl80211_match_policy);
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID])
++				n_match_sets++;
++		}
++	}
+ 
+ 	if (n_match_sets > wiphy->max_match_sets)
+ 		return -EINVAL;
+-- 
+1.7.10.4
 
