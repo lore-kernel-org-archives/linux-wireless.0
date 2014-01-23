@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40037 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408AbaAVJRN (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57363 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887AbaAWCLT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:17:13 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.82)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1W5tvs-0001VA-IF
-	for linux-wireless@vger.kernel.org; Wed, 22 Jan 2014 10:17:12 +0100
-Message-ID: <1390382230.4334.21.camel@jlt4.sipsolutions.net> (sfid-20140122_101723_090174_FF052C46)
-Subject: [PATCH] mac80211: use local mesh_id_len instead of wdev's
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 22 Jan 2014 10:17:10 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Jan 2014 21:11:19 -0500
+Date: Wed, 22 Jan 2014 18:12:08 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Realtek 8821 wireless PCI driver?
+Message-ID: <20140123021208.GA13639@kroah.com> (sfid-20140123_031123_038757_27CD9AC7)
+References: <20140120193249.GA25707@kroah.com>
+ <52E066A1.9010009@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52E066A1.9010009@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jan 22, 2014 at 06:47:29PM -0600, Larry Finger wrote:
+> On 01/20/2014 01:32 PM, Greg KH wrote:
+> > Hi all,
+> >
+> > I have a box here with a Realtek 8821 wireless PCI device.  We don't
+> > seem to have a driver upstream for it yet, but there's a huge tarball
+> > from Realtek on their site.
+> >
+> > Has anyone started picking the needed pieces out of the tarball to get
+> > this merged "properly", or does this need to be done yet?
+> >
+> > Hm, I wonder if I should just dump the tarball into staging for now, to
+> > get my box working, any objections to me doing that?
+> 
+> I have had contact with the Realtek developers regarding a Linux driver for the 
+> RTL8821AE device with PCI ID 10ec:8821. On Dec 10, 2013, they indicated that 
+> there were still 802.11ac problems, and they were not yet ready to release it to 
+> me. I will write them again and check if the driver is now ready, and they just 
+> forgot to send it to me. Once they are ready, they will also be sending me 
+> sample devices.
+> 
+> What is the URL for the driver that you found? I did a quick search on their 
+> site and did not find it.
 
-Since we copy the mesh_id_len into our own data structures,
-use it consistently and don't sometimes use cfg80211's copy.
+It came with a device I got at a conference, along with 1,000 other
+people, so it's being used in the "wild" now, running Linux.  I'll send
+you the patch off-list as it's not small.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mesh.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> To answer your question, I certainly would have no objections to your dumping 
+> the driver into staging. I can fix it up there as easily as in my own private 
+> stores. You will, of course, get a lot more intermediate patches, but I think 
+> you have already anticipated that. The PCI group usually send me mac80211-based 
+> drivers, thus the residence in staging may be short, but that is desirable.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index b02ac33..836ec01 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1216,7 +1216,7 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 	sdata_lock(sdata);
- 
- 	/* mesh already went down */
--	if (!sdata->wdev.mesh_id_len)
-+	if (!sdata->u.mesh.mesh_id_len)
- 		goto out;
- 
- 	rx_status = IEEE80211_SKB_RXCB(skb);
-@@ -1269,7 +1269,7 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
- 	sdata_lock(sdata);
- 
- 	/* mesh already went down */
--	if (!sdata->wdev.mesh_id_len)
-+	if (!sdata->u.mesh.mesh_id_len)
- 		goto out;
- 
- 	if (ifmsh->preq_queue_len &&
--- 
-1.8.5.1
+Ok, I spent an hour or so trying to see if I could just use the existing
+rtlwifi module with this driver, but it seems that they are using a 2
+year-old version of it, so I'll have to bundle it directly into the
+driver for now, along with an "odd" bluetooth sharing module.  I'll work
+on making the needed changes to the driver to get it to work with
+rtlwifi first, and then clean up the rest over the next few months.  I
+have the hardware here to test with, so that should make it easier than
+the normal staging driver work I do.
 
+But for now, staging seems like a good idea, especially as one "distro"
+is already shipping it in this form (SteamOS).
 
+thanks,
 
+greg k-h
