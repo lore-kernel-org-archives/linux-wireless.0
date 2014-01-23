@@ -1,44 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:52884 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaAGSfU (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58012 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbaAWEnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 13:35:20 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x13so833290ief.20
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2014 10:35:19 -0800 (PST)
+	Wed, 22 Jan 2014 23:43:16 -0500
+Date: Wed, 22 Jan 2014 20:44:05 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Realtek 8821 wireless PCI driver?
+Message-ID: <20140123044405.GA9879@kroah.com> (sfid-20140123_054339_704460_21F8A488)
+References: <20140120193249.GA25707@kroah.com>
+ <52E066A1.9010009@lwfinger.net>
+ <20140123021208.GA13639@kroah.com>
+ <52E096F7.8040903@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20140107181333.GB7267@magnum.frso.rivierawaves.com>
-References: <529CF2D6.1080008@gmail.com> <1386017965-13641-12-git-send-email-egrumbach@gmail.com>
- <20140106150716.GA5358@magnum.frso.rivierawaves.com> <CAF8O4-y4K_0G=3e2fcNzfJuGSz6WwrUU3EyL1H3B7Z6-koGFyw@mail.gmail.com>
- <20140107102746.GA20561@magnum.frso.rivierawaves.com> <CAF8O4-xaNWO+tFS=0+ffR5aKf0Z+OWDBSPpnjYWUgP86Oiey2g@mail.gmail.com>
- <20140107181333.GB7267@magnum.frso.rivierawaves.com>
-From: Eyal Shapira <eyal@wizery.com>
-Date: Tue, 7 Jan 2014 20:34:59 +0200
-Message-ID: <CAF8O4-zE-EAMh4-HHFTM6FHEB76icTfpNWHZUR+VE5HWkvb5KA@mail.gmail.com> (sfid-20140107_193523_947052_4CD25DB0)
-Subject: Re: [PATCH 12/13] iwlwifi: mvm: rs: overhaul search cycle state machine
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52E096F7.8040903@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 8:13 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
-> On Tue, Jan 07, 2014 at 06:30:07PM +0200, Eyal Shapira wrote:
->> Thanks. Seems like we decided the AP doesn't support any MIMO rates.
->> This wasn't handled well and caused the search cycle for an optimal Tx
->> configuration to get stuck.
->> Can you try the attached patch ?
->>
-> Working, thanks.
->
+On Wed, Jan 22, 2014 at 10:13:43PM -0600, Larry Finger wrote:
+> On 01/22/2014 08:12 PM, Greg KH wrote:
+> > On Wed, Jan 22, 2014 at 06:47:29PM -0600, Larry Finger wrote:
+> >> On 01/20/2014 01:32 PM, Greg KH wrote:
+> >>> Hi all,
+> >>>
+> >>> I have a box here with a Realtek 8821 wireless PCI device.  We don't
+> >>> seem to have a driver upstream for it yet, but there's a huge tarball
+> >>> from Realtek on their site.
+> >>>
+> >>> Has anyone started picking the needed pieces out of the tarball to get
+> >>> this merged "properly", or does this need to be done yet?
+> >>>
+> >>> Hm, I wonder if I should just dump the tarball into staging for now, to
+> >>> get my box working, any objections to me doing that?
+> >>
+> >> I have had contact with the Realtek developers regarding a Linux driver for the
+> >> RTL8821AE device with PCI ID 10ec:8821. On Dec 10, 2013, they indicated that
+> >> there were still 802.11ac problems, and they were not yet ready to release it to
+> >> me. I will write them again and check if the driver is now ready, and they just
+> >> forgot to send it to me. Once they are ready, they will also be sending me
+> >> sample devices.
+> >>
+> >> What is the URL for the driver that you found? I did a quick search on their
+> >> site and did not find it.
+> >
+> > It came with a device I got at a conference, along with 1,000 other
+> > people, so it's being used in the "wild" now, running Linux.  I'll send
+> > you the patch off-list as it's not small.
+> >
+> >> To answer your question, I certainly would have no objections to your dumping
+> >> the driver into staging. I can fix it up there as easily as in my own private
+> >> stores. You will, of course, get a lot more intermediate patches, but I think
+> >> you have already anticipated that. The PCI group usually send me mac80211-based
+> >> drivers, thus the residence in staging may be short, but that is desirable.
+> >
+> > Ok, I spent an hour or so trying to see if I could just use the existing
+> > rtlwifi module with this driver, but it seems that they are using a 2
+> > year-old version of it, so I'll have to bundle it directly into the
+> > driver for now, along with an "odd" bluetooth sharing module.  I'll work
+> > on making the needed changes to the driver to get it to work with
+> > rtlwifi first, and then clean up the rest over the next few months.  I
+> > have the hardware here to test with, so that should make it easier than
+> > the normal staging driver work I do.
+> >
+> > But for now, staging seems like a good idea, especially as one "distro"
+> > is already shipping it in this form (SteamOS).
+> 
+> Too bad I couldn't get one of those devices.
 
-great. thanks for testing and again for reporting to begin with.
+They all seem to be sold-out at the moment, if I hear of a way to get
+any more, I'll be sure to let you know.
 
->> Also, any chance you can send a traffic capture of some beacons and the assoc ?
->> I'd like to understand why we come to the conclusion no MIMO is supported.
->>
-> AP limitation, but here is a capture anyway.
+> The "odd" bluetooth sharing module is part of a new driver that I am about to 
+> push into drivers/net/wireless to be part of 3.15. This one drives the RTL8723BE 
+> device, which is somewhat different from the existing RTL8723AE. Both of the 
+> 8723 device are both wifi and BT, and it also seems that the 8821AE is also a 
+> dual device.
+> 
+> I will merge the 8821 code with my current working version of rtlwifi and 
+> becoexist, and send you patches for testing. I agree that staging is a good 
+> place for now.
 
-ok. so everything here makes sense.
+Wonderful, I didn't want to deal with becoexist at all, I'll gladly let
+you do that :)
+
+thanks,
+
+greg k-h
