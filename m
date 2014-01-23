@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50137 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754415AbaAGVjx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35501 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202AbaAWTPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 16:39:53 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	ath10k@lists.infradead.org, linux-nvme@lists.infradead.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 0/7] Phase out pci_enable_msi_block()
-Date: Tue,  7 Jan 2014 19:05:35 +0100
-Message-Id: <cover.1389103215.git.agordeev@redhat.com> (sfid-20140107_224047_038998_5EF4F471)
+	Thu, 23 Jan 2014 14:15:16 -0500
+Date: Thu, 23 Jan 2014 14:01:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: pull request: iwlwifi-next 2014-1-20
+Message-ID: <20140123190123.GD4309@tuxdriver.com> (sfid-20140123_201531_920027_11CCDE69)
+References: <52DCFE87.9080103@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52DCFE87.9080103@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result of recent deprecation of MSI-X/MSI enablement
-interfaces pci_enable_msi_block(), pci_enable_msi() and
-pci_enable_msix() all drivers need to be updated to use
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Mon, Jan 20, 2014 at 12:46:31PM +0200, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> Well... I know... Not something to be proud of...
+> 
+> A critical bug has been reported on all NICs supported by iwldvm.
+> iwlwifi would simply panic upon interface up This patch fixes this. The
+> offending code is by me and is present in wireless-next.git and hence in
+> net-next.git.
+> I hope that this pull reuqest can reach 3.14-rc1 otherwise, all the
+> system with NICs supported by iwldvm will simply lock up.
+> 
+> Thanks!
+> 
+> 
+> The following changes since commit cf38e4f756d6396657c76f72ef42b6f47c523f97:
+> 
+>   iwlwifi: mvm: don't use highest rate in VHT MCS Set (2014-01-13
+> 22:17:22 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+> for-john
+> 
+> for you to fetch changes up to 23e76d1a516eef416fb5c038791e943fc0916b67:
+> 
+>   iwlwifi: pcie: don't panic on host commands in iwldvm (2014-01-20
+> 12:32:06 +0200)
+> 
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       iwlwifi: pcie: don't panic on host commands in iwldvm
+> 
+>  drivers/net/wireless/iwlwifi/pcie/tx.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is the first in a series of updates, to phase out
-pci_enable_msi_block() function.
-
-This series is against pci/msi branch in Bjorn Helgaas's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-
-Thanks!
-
-Alexander Gordeev (7):
-  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
-    failed
-  ipr: Use new interfaces for MSI/MSI-X enablement
-  ahci: Use new interfaces for MSI/MSI-X enablement
-  nvme: Use new interfaces for MSI/MSI-X enablement
-  vfio: Use new interfaces for MSI/MSI-X enablement
-  ath10k: Use new interfaces for MSI enablement
-  wil6210: Use new interfaces for MSI enablement
-
- drivers/ata/ahci.c                          |   15 +++-----
- drivers/block/nvme-core.c                   |   33 ++++-------------
- drivers/net/wireless/ath/ath10k/pci.c       |   22 ++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
- drivers/scsi/ipr.c                          |   51 +++++++++-----------------
- drivers/vfio/pci/vfio_pci_intrs.c           |    8 ++--
- 6 files changed, 66 insertions(+), 99 deletions(-)
+Pulling now...
 
 -- 
-1.7.7.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
