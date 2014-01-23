@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:51474 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbaALDzU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26817 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587AbaAWM52 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 22:55:20 -0500
-Message-ID: <52D21226.4070306@lwfinger.net> (sfid-20140112_045551_987547_E28940F2)
-Date: Sat, 11 Jan 2014 21:55:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 23 Jan 2014 07:57:28 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix the printing of 10.x FW version when FW crashed
+References: <1390296081-22788-1-git-send-email-yeohchunyeow@gmail.com>
+Date: Thu, 23 Jan 2014 14:57:23 +0200
+In-Reply-To: <1390296081-22788-1-git-send-email-yeohchunyeow@gmail.com>
+	(Chun-Yeow Yeoh's message of "Tue, 21 Jan 2014 17:21:21 +0800")
+Message-ID: <87fvoe500c.fsf@kamboji.qca.qualcomm.com> (sfid-20140123_135731_173073_900A5B8D)
 MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/3] b43: Fix oops if firmware is not available
-References: <1389469714-13040-1-git-send-email-Larry.Finger@lwfinger.net>	 <1389469714-13040-3-git-send-email-Larry.Finger@lwfinger.net> <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1389497251.3720.40.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2014 09:27 PM, Ben Hutchings wrote:
-> On Sat, 2014-01-11 at 13:48 -0600, Larry Finger wrote:
->> On openSUSE systems, the script that installs the firmware for b43 also
->> unloads and reloads the driver. When the firmware was not previously
->> available, the driver has stalled at a wait_for_completion(). When the
->> unload routine releases that hold, the driver encounters structures
->> that have already been deleted and generates a fatal condition. When
->> the user does a manual restart, the file system cleanup frequently
->> results in the firmware files being deleted and the user is never able
->> to install the firmware. The fix is to change the wait_for_completion()
->> with a wait_for_completion_timeout() with a 60 second wait period.
->>
->> There is a potential race condition; however, the chances that less
->> than a minute has elapsed between the initial driver load and a
->> subsequent unload is very unlikely.
+Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
+
+> 10.x FW has no structure member sw_version_1. Thus,
+> both fw_version_release and fw_version_build are not
+> available. The provided fw_version_major is also wrong.
+> Fix this by using the fw_version from struct wiphy.
 >
-> A minute-long race is 'unlikely' to be hit?  Seriously?!
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Ben,
+Thanks, applied.
 
-If you force a reboot before the minute expires, nothing weird happens. The only 
-race condition happens when the user has to log in, open a terminal, run a 
-script that downloads 13.5 MiB of files from the Internet, and then executes the 
-firmware extraction program. On my 10 Mbps external line and a 2 GHz CPU, that 
-takes 32 s, plus any time to enter the password for a sudo operation. That was 
-the basis for my conclusion that a race is unlikely.
-
-What is the minimum time that should be allowed for a request_firmware_nowait() 
-to respond? I know we had to go to asynchronous fw loading because the 
-synchronous  version would timeout at 30 s.
-
-Larry
-
-
+-- 
+Kalle Valo
