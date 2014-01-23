@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:37478 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbaA0JhZ (ORCPT
+Received: from mail1.windriver.com ([147.11.146.13]:42536 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502AbaAWJV0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 04:37:25 -0500
-Received: by mail-ie0-f177.google.com with SMTP id at1so5279906iec.8
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2014 01:37:24 -0800 (PST)
+	Thu, 23 Jan 2014 04:21:26 -0500
+From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: zhuyj <zyjzyj2000@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: 802.11a is supported in AP mode or not?
+Date: Thu, 23 Jan 2014 09:21:23 +0000
+Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com> (sfid-20140123_102130_758591_7EB2EC38)
+References: <52DF947E.40800@gmail.com>
+ <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+ <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
+ <52E0BA40.7090203@gmail.com>
+ <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+ <52E0D7D5.6060504@gmail.com>
+ <CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>,<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>,<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>,<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
+In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1390810765.4251.0.camel@jlt4.sipsolutions.net>
-References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-	<CAB3XZEc94pTAMXWPYeWhu7o_YLEnD1_9O035-+YXYiR0Uij28w@mail.gmail.com>
-	<1390810765.4251.0.camel@jlt4.sipsolutions.net>
-Date: Mon, 27 Jan 2014 11:37:24 +0200
-Message-ID: <CAB3XZEczgVTALA3_4hSBikJs=TXOhHHTHSLzmuU3MGot-hG+1g@mail.gmail.com> (sfid-20140127_103734_721830_7189AFA6)
-Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute confusion
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 10:19 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2014-01-26 at 10:56 +0200, Eliad Peller wrote:
->
->> this means that min-rssi-only sched scan request will be seen as
->> req->n_match_sets = 1 with empty SSID?
->
-> Yes.
->
->> i don't think that's desirable (at least the current documentation
->> assumes n_match_sets=0 for this case).
->
-> I don't think that's true? I looked at the drivers that use this and
-> they all skip empty SSIDs, except the one that I fixed.
->
-ok. so at least fix the documentation? :)
 
-Eliad.
+
+So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
+
+Though #iwconfig wlan0 shows there is modes a ?
+
+iwconfig wlan0
+wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
+          Bit Rate=1 Mb/s   Tx-Power=15 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=60/70  Signal level=-50 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:14   Missed beacon:0
+
+
+Best Regards.
+--------------------------------------
+Bopeng Liu
+WIND RIVER | China Development Center
+Phone: 8610-6483-5012
+
+
+
+________________________________________
+From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Liu, Bopeng [Bopeng.Liu@windriver.com]
+Sent: Thursday, January 23, 2014 5:07 PM
+To: Krishna Chaitanya
+Cc: zhuyj; Emmanuel Grumbach; linux-wireless
+Subject: RE: 802.11a is supported in AP mode or not?
+
+By using latest hostapd, version, not works as well.
+
+Best Regards.
+--------------------------------------
+Bopeng Liu
+WIND RIVER | China Development Center
+Phone: 8610-6483-5012
+
+
+
+________________________________________
+From: Krishna Chaitanya [chaitanya.mgit@gmail.com]
+Sent: Thursday, January 23, 2014 5:04 PM
+To: Liu, Bopeng
+Cc: zhuyj; Emmanuel Grumbach; linux-wireless
+Subject: Re: 802.11a is supported in AP mode or not?
+
+On Thu, Jan 23, 2014 at 2:29 PM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+> Is there any method to set the 5GHz channels be able?
+>
+> Please show me the command...:)
+No it doesn't work that way, based on regulatory info and HW capability
+the framework will decide that.
+
+Lets give it a try with latest hostapd from git and see.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
