@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52000 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755738AbaAHMpC (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:58272 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751791AbaAWUTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 07:45:02 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
-References: <cover.1389103215.git.agordeev@redhat.com>
-	<dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
-	<87txdehog9.fsf@kamboji.qca.qualcomm.com>
-	<20140108090449.GC20157@dhcp-26-207.brq.redhat.com>
-Date: Wed, 8 Jan 2014 14:44:55 +0200
-In-Reply-To: <20140108090449.GC20157@dhcp-26-207.brq.redhat.com> (Alexander
-	Gordeev's message of "Wed, 8 Jan 2014 10:04:50 +0100")
-Message-ID: <87ob3mfxrs.fsf@kamboji.qca.qualcomm.com> (sfid-20140108_134520_445957_DA904157)
+	Thu, 23 Jan 2014 15:19:33 -0500
+Date: Thu, 23 Jan 2014 22:19:22 +0200
+From: Petko Manolov <petkan@nucleusys.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi crash with 3.13
+Message-ID: <20140123201922.GB4064@localhost> (sfid-20140123_211937_018324_4D65E949)
+References: <20140123091659.GE9077@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
+ <20140123123125.GA3424@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
+ <52E16978.3040602@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52E16978.3040602@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexander Gordeev <agordeev@redhat.com> writes:
+On 14-01-23 21:11:52, Emmanuel Grumbach wrote:
+> Ok -  I put the pieces together:
+> 
+> > iwlwifi 0000:01:00.0: loaded firmware version 22.15.8.0 op_mode iwlmvm
+> > iwlwifi 0000:01:00.0: Detected Intel(R) Wireless N 7260, REV=0x144
+> 
+> This means that your NIC is 2.4GHz only. Dual band NICs print something
+> else.
 
-> On Wed, Jan 08, 2014 at 10:23:18AM +0200, Kalle Valo wrote:
->
->> Do you want me to take this patch to my ath.git tree or how were you
->> planning to handle it?
->
-> I see no option other than pushing it thru pci.git tree at this stage.
+This isn't correct.  My NIC happily connects to my crappy Linksys WRT610Nv1 at 5GHz.  After a while the router's (5GHz) radio dies, but before 
+that i am able to easily do more than 100Mbps.
 
-Thanks, I'll then just drop it from my queue.
+iwconfig output:
 
--- 
-Kalle Valo
+wlan0     IEEE 802.11abgn  ESSID:"xxxxxxx"
+          Mode:Managed  Frequency:5.745 GHz  Access Point: xx:xx:xx:xx:xx:xx
+          Bit Rate=135 Mb/s   Tx-Power=16 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+          Link Quality=64/70  Signal level=-46 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:9  Invalid misc:3   Missed beacon:0
+ 
+> Now here come the catch. You seem to have an "old" NIC in a way that the
+> NVM (EEPROM like) is old. In that NVM, there was a bug that advertised
+> the A band channels but disabled the A band in SKU cap.
+
+iwlwifi-7260-7 ucode works fine for both bands.  iwlwifi-7260-8.ucode seems unable to connect at 5GHz.
+
+> Can you please try the patch attached?
+
+Do you still think it is a good idea to apply and test the patch?
+
+
+		Petko
