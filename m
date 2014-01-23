@@ -1,122 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f47.google.com ([209.85.128.47]:65137 "EHLO
-	mail-qe0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751573AbaAMM6s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 07:58:48 -0500
-Received: by mail-qe0-f47.google.com with SMTP id 5so6787882qeb.6
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 04:58:47 -0800 (PST)
+Received: from mga03.intel.com ([143.182.124.21]:37066 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752101AbaAWMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 07:30:12 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] mac80211: avoid deadlock revealed by lockdep
+Date: Thu, 23 Jan 2014 14:28:16 +0200
+Message-Id: <1390480096-15150-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140123_133037_251315_3E356FD5)
 MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF59510D9F010D4@SC-VEXCH1.marvell.com>
-References: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF59510D9F010D4@SC-VEXCH1.marvell.com>
-Date: Mon, 13 Jan 2014 13:58:47 +0100
-Message-ID: <CALtMJECByCXZ3ToiToNiZUwTAkj0dzd6PtTMPCBjgTRJsKUkJA@mail.gmail.com> (sfid-20140113_135852_162380_2E6A5B0C)
-Subject: Re: mwifiex wowlan not working
-From: Andreas Fenkart <afenkart@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Sven Neumann <neumann@teufel.de>
-Content-Type: multipart/mixed; boundary=047d7b6d80aaf2847e04efd9a2a0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---047d7b6d80aaf2847e04efd9a2a0
-Content-Type: text/plain; charset=UTF-8
+sdata->u.ap.request_smps_work can’t be flushed synchronously
+under wdev_lock(wdev) since ieee80211_request_smps_ap_work
+itself locks the same lock.
+While at it, reset the driver_smps_mode when the ap is
+stopped to its default: OFF.
 
-Hi Amitkumar,
+This solves:
 
-2014/1/10 Amitkumar Karwar <akarwar@marvell.com>:
->> these fail:
->>
->> iw phy0 wowlan enable magic-packet
->> etherwake -i wlan0 5C:F8:A1:15:1B:0B
->> wakeonlan 5C:F8:A1:15:1B:0B
->>
->
-> It works for magic-packet, only if the packet contains device's(Marvell) MAC address and received through wireless interface.
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.12.0-ipeer+ #2 Tainted: G           O
+-------------------------------------------------------
+rmmod/2867 is trying to acquire lock:
+  ((&sdata->u.ap.request_smps_work)){+.+...}, at: [<c105b8d0>] flush_work+0x0/0x90
 
-The module is from Murata, will magic packet wakeup work with those?
-http://hwaddress.com/?q=5C%3AF8%3AA1%3A15%3A1B%3A0B
+but task is already holding lock:
+  (&wdev->mtx){+.+.+.}, at: [<f9b32626>] cfg80211_stop_ap+0x26/0x230 [cfg80211]
 
-> Are you generating magic packet on different device connected wirelessly?
-> Is 5C:F8:A1:15:1B:0B MAC of Marvell device?
->
->> wake-on RX packets with TCP destination port 22
->> iw phy0 wowlan enable patterns 44+16
->> <hit random keys in ssh session, established before sleep>
->
-> This could be a setup issue. Connection might have lost.
-> Can you please confirm using TCPDUMP,sniffer etc. if TCP packets are actually transmitted by remote device?
+which lock already depends on the new lock.
 
-I attached two pcap files. I'm using a router with openwrt flashed to it.
+the existing dependency chain (in reverse order) is:
 
-[magic packet]
-I issue the command on the router, and check on the target that the
-packet arrives:
+-> #1 (&wdev->mtx){+.+.+.}:
+        [<c10aefa9>] lock_acquire+0x79/0xe0
+        [<c1607a1a>] mutex_lock_nested+0x4a/0x360
+        [<fb06288b>] ieee80211_request_smps_ap_work+0x2b/0x50 [mac80211]
+        [<c105cdd8>] process_one_work+0x198/0x450
+        [<c105d469>] worker_thread+0xf9/0x320
+        [<c10669ff>] kthread+0x9f/0xb0
+        [<c1613397>] ret_from_kernel_thread+0x1b/0x28
 
-router# etherwake -i wlan1 5C:F8:A1:15:1B:0B
-target# tcpdump  -i wlan0  -w magic-packet.pcap
+-> #0 ((&sdata->u.ap.request_smps_work)){+.+...}:
+        [<c10ae9df>] __lock_acquire+0x183f/0x1910
+        [<c10aefa9>] lock_acquire+0x79/0xe0
+        [<c105b917>] flush_work+0x47/0x90
+        [<c105d867>] __cancel_work_timer+0x67/0xe0
+        [<c105d90f>] cancel_work_sync+0xf/0x20
+        [<fb0765cc>] ieee80211_stop_ap+0x8c/0x340 [mac80211]
+        [<f9b3268c>] cfg80211_stop_ap+0x8c/0x230 [cfg80211]
+        [<f9b0d8f9>] cfg80211_leave+0x79/0x100 [cfg80211]
+        [<f9b0da72>] cfg80211_netdev_notifier_call+0xf2/0x4f0 [cfg80211]
+        [<c160f2c9>] notifier_call_chain+0x59/0x130
+        [<c106c6de>] __raw_notifier_call_chain+0x1e/0x30
+        [<c106c70f>] raw_notifier_call_chain+0x1f/0x30
+        [<c14f8213>] call_netdevice_notifiers_info+0x33/0x70
+        [<c14f8263>] call_netdevice_notifiers+0x13/0x20
+        [<c14f82a4>] __dev_close_many+0x34/0xb0
+        [<c14f83fe>] dev_close_many+0x6e/0xc0
+        [<c14f9c77>] rollback_registered_many+0xa7/0x1f0
+        [<c14f9dd4>] unregister_netdevice_many+0x14/0x60
+        [<fb06f4d9>] ieee80211_remove_interfaces+0xe9/0x170 [mac80211]
+        [<fb055116>] ieee80211_unregister_hw+0x56/0x110 [mac80211]
+        [<fa3e9396>] iwl_op_mode_mvm_stop+0x26/0xe0 [iwlmvm]
+        [<f9b9d8ca>] _iwl_op_mode_stop+0x3a/0x70 [iwlwifi]
+        [<f9b9d96f>] iwl_opmode_deregister+0x6f/0x90 [iwlwifi]
+        [<fa405179>] __exit_compat+0xd/0x19 [iwlmvm]
+        [<c10b8bf9>] SyS_delete_module+0x179/0x2b0
+        [<c1613421>] sysenter_do_call+0x12/0x32
 
-After seeing that magic packet arrive, I send the target
-to sleep and send the magic-packet again
+Fixes: 687da132234f ("mac80211: implement SMPS for AP")
+Cc: <stable@vger.kernel.org> [3.13]
+Reported-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/cfg.c   |  3 +--
+ net/mac80211/ht.c    |  4 +++-
+ net/mac80211/iface.c | 15 +++++++++++----
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-[ssh-packet-while sleep]
-I open up an ssh session from host via router to the the target.
-I sniff on the router for outgoing packets to target
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 2279258..53917b7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1090,8 +1090,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	kfree(sdata->u.ap.next_beacon);
+ 	sdata->u.ap.next_beacon = NULL;
+ 
+-	cancel_work_sync(&sdata->u.ap.request_smps_work);
+-
+ 	/* turn off carrier for this interface and dependent VLANs */
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 		netif_carrier_off(vlan->dev);
+@@ -1103,6 +1101,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	kfree_rcu(old_beacon, rcu_head);
+ 	if (old_probe_resp)
+ 		kfree_rcu(old_probe_resp, rcu_head);
++	sdata->u.ap.driver_smps_mode = IEEE80211_SMPS_OFF;
+ 
+ 	__sta_info_flush(sdata, true);
+ 	ieee80211_free_keys(sdata, true);
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index fab7b91..70dd013 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -466,7 +466,9 @@ void ieee80211_request_smps_ap_work(struct work_struct *work)
+ 			     u.ap.request_smps_work);
+ 
+ 	sdata_lock(sdata);
+-	__ieee80211_request_smps_ap(sdata, sdata->u.ap.driver_smps_mode);
++	if (sdata_dereference(sdata->u.ap.beacon, sdata))
++		__ieee80211_request_smps_ap(sdata,
++					    sdata->u.ap.driver_smps_mode);
+ 	sdata_unlock(sdata);
+ }
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6af9bbf..4fa8a5f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -770,12 +770,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_roc_purge(local, sdata);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
+ 		ieee80211_mgd_stop(sdata);
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		break;
++	case NL80211_IFTYPE_ADHOC:
+ 		ieee80211_ibss_stop(sdata);
+-
++		break;
++	case NL80211_IFTYPE_AP:
++		cancel_work_sync(&sdata->u.ap.request_smps_work);
++		break;
++	default:
++		break;
++	}
+ 
+ 	/*
+ 	 * Remove all stations associated with this interface.
+-- 
+1.8.3.2
 
-host# ssh root@target
-target# iw phy0 wowlan enable patterns 44+16
-target# echo mem > /sys/power/state
-router# tcpdump -i wlan1 dst 192.168.11.219 -w ssh-pkt-while-sleeping.pcap
-
-
->
-> Regards,
-> Amitkumar Karwar
-
-/Andreas
-
---047d7b6d80aaf2847e04efd9a2a0
-Content-Type: application/vnd.tcpdump.pcap;
-	name="ssh-pkt-while-sleeping.pcap"
-Content-Disposition: attachment; filename="ssh-pkt-while-sleeping.pcap"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hqdq1d3i0
-
-obLD1AACAAQAAAAAAAAAAAAA//8AAAABUtPewQAI1osAAAByAAAAclz4oRUbCzyp9CGKlAgARRAA
-ZI8+QABABhIkwKgL9sCoC9u/1AAWsR74qAtx3I6AGACEkDUAAAEBCAoIbQYmAANTCx9F7q2OFiVI
-4cf9LXyMo8R/N8NELBA8HfOvhWRUoYyCnqDteN+hNqE6LHzMfYD9BVLT3sEADBV1AAAAcgAAAHJc
-+KEVGws8qfQhipQIAEUQAGSPP0AAQAYSI8CoC/bAqAvbv9QAFrEe+NgLcdyOgBgAhFatAAABAQgK
-CG0GWwADUwvKaDIajffPw7qniGlsw3W9Rga2oPjdj/7KgTNc3xKpe9kYMuyfAFKVmL1JgKVYwYdS
-097BAA3swQAAAKIAAACiXPihFRsLPKn0IYqUCABFEACUj0BAAEAGEfLAqAv2wKgL27/UABaxHvio
-C3HcjoAYAIS9NwAAAQEICghtBnoAA1MLH0XurY4WJUjhx/0tfIyjxH83w0QsEDwd86+FZFShjIKe
-oO1436E2oTosfMx9gP0FymgyGo33z8O6p4hpbMN1vUYGtqD43Y/+yoEzXN8SqXvZGDLsnwBSlZi9
-SYClWMGHUtPewgAI69YAAACiAAAAolz4oRUbCzyp9CGKlAgARRAAlI9BQABABhHxwKgL9sCoC9u/
-1AAWsR74qAtx3I6AGACEvI8AAAEBCAoIbQciAANTCx9F7q2OFiVI4cf9LXyMo8R/N8NELBA8HfOv
-hWRUoYyCnqDteN+hNqE6LHzMfYD9BcpoMhqN98/DuqeIaWzDdb1GBrag+N2P/sqBM1zfEql72Rgy
-7J8AUpWYvUmApVjBh1LT3sMADj0nAAAAogAAAKJc+KEVGws8qfQhipQIAEUQAJSPQkAAQAYR8MCo
-C/bAqAvbv9QAFrEe+KgLcdyOgBgAhLs+AAABAQgKCG0IcwADUwsfRe6tjhYlSOHH/S18jKPEfzfD
-RCwQPB3zr4VkVKGMgp6g7XjfoTahOix8zH2A/QXKaDIajffPw7qniGlsw3W9Rga2oPjdj/7KgTNc
-3xKpe9kYMuyfAFKVmL1JgKVYwYdS097GAAmIRAAAAKIAAACiXPihFRsLPKn0IYqUCABFEACUj0NA
-AEAGEe/AqAv2wKgL27/UABaxHvioC3HcjoAYAIS4nQAAAQEICghtCxQAA1MLH0XurY4WJUjhx/0t
-fIyjxH83w0QsEDwd86+FZFShjIKeoO1436E2oTosfMx9gP0FymgyGo33z8O6p4hpbMN1vUYGtqD4
-3Y/+yoEzXN8SqXvZGDLsnwBSlZi9SYClWMGHUtPezAAAQaYAAACiAAAAolz4oRUbCzyp9CGKlAgA
-RRAAlI9EQABABhHuwKgL9sCoC9u/1AAWsR74qAtx3I6AGACEs1kAAAEBCAoIbRBYAANTCx9F7q2O
-FiVI4cf9LXyMo8R/N8NELBA8HfOvhWRUoYyCnqDteN+hNqE6LHzMfYD9BcpoMhqN98/DuqeIaWzD
-db1GBrag+N2P/sqBM1zfEql72Rgy7J8AUpWYvUmApVjBhw==
---047d7b6d80aaf2847e04efd9a2a0
-Content-Type: application/vnd.tcpdump.pcap; name="magic-packet.pcap"
-Content-Disposition: attachment; filename="magic-packet.pcap"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hqdqfyvq1
-
-1MOyoQIABAAAAAAAAAAAAP//AAABAAAAa6ySURFdBAB0AAAAdAAAAFz4oRUbC2RwArXYZAhC////
-////XPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsL
-XPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLbaySUTM4CAB0AAAAdAAA
-AFz4oRUbC2RwArXYZAhC////////XPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsL
-XPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPih
-FRsLb6ySUZuzAgB0AAAAdAAAAFz4oRUbC2RwArXYZAhC////////XPihFRsLXPihFRsLXPihFRsL
-XPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPihFRsLXPih
-FRsLXPihFRsLXPihFRsLXPihFRsL
---047d7b6d80aaf2847e04efd9a2a0--
