@@ -1,117 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63709 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538AbaA2Ocd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001AbaAWP5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 09:32:33 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/14] brcmfmac: rename sdio_chip.[ch]
-Date: Wed, 29 Jan 2014 15:32:15 +0100
-Message-ID: <1391005944-3220-6-git-send-email-arend@broadcom.com> (sfid-20140129_160006_692688_5DFA1EB3)
-In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 23 Jan 2014 10:57:05 -0500
+Message-ID: <1390492620.4142.33.camel@jlt4.sipsolutions.net> (sfid-20140123_165709_157828_3D5146D8)
+Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth
+ flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Thu, 23 Jan 2014 16:57:00 +0100
+In-Reply-To: <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140122_134414_084742_E65606B6)
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140122_134414_084742_E65606B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just renaming the file. This file will contain chip related functions
-that are independent of the host interface type.
+On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
+> Introduce regulatory flags field, NL80211_REG_WIDE_BW
+> country flag and new attribute NL80211_ATTR_REG_FLAGS.
+> If NL80211_REG_WIDE_BW is set, check rules and calculate
+> maximum bandwidth base on all contiguous regulatory rules.
+> If unset get maximum badwitdh from regulatory rule.
+> This patch is backward compatible with current CRDA/db.txt
+> implementation.
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/Makefile                |    4 ++--
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c                |    1 -
- drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.c => chip.c} |    4 ++--
- drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.h => chip.h} |    0
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c              |    2 +-
- 5 files changed, 5 insertions(+), 6 deletions(-)
- rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.c => chip.c} (99%)
- rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.h => chip.h} (100%)
+This seems reasonable, thanks. Maybe we should require the bandwidth to
+not be set at all or something? At least maybe in the regdb parser - it
+makes very little sense to have @20 and then ignore it completely?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index 57cddee..1d2ceac 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -24,6 +24,7 @@ ccflags-y += -D__CHECK_ENDIAN__
- obj-$(CONFIG_BRCMFMAC) += brcmfmac.o
- brcmfmac-objs += \
- 		wl_cfg80211.o \
-+		chip.o \
- 		fwil.o \
- 		fweh.o \
- 		fwsignal.o \
-@@ -36,8 +37,7 @@ brcmfmac-objs += \
- 		btcoex.o
- brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
- 		dhd_sdio.o \
--		bcmsdh.o \
--		sdio_chip.o
-+		bcmsdh.o
- brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
- 		usb.o
- brcmfmac-$(CONFIG_BRCMDBG) += \
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9eb6f78..5711fd6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -43,7 +43,6 @@
- #include "dhd_bus.h"
- #include "dhd_dbg.h"
- #include "sdio_host.h"
--#include "sdio_chip.h"
+Or maybe the userspace code could just not expose the flag, but rather
+set the new "wide_bw" flag when all the rules are marked as @N/A (and
+treat a combination of @number and @N/A as a bug)?
+
+> + * @NL80211_ATTR_REG_FLAGS: Regulatory flags, see &enum nl80211_reg_flags
+
+should probably say it's a u32 attribute
+
+>  /**
+> + * enum nl80211_reg_flags - regulatory flags
+> + * @NL80211_REG_FLAG_WIDE_BW: Calculate maximum available bandwidth
+> + *	base on contiguous regulatory rules instead of using
+> + *	maximum bandwidth from regulatory database.
+
+And that should probably not refer to the database but rather the
+nl80211 attribute that contains the number.
+
+> @@ -5203,6 +5208,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+>  	if (reg_supported_dfs_region(dfs_region))
+>  		rd->dfs_region = dfs_region;
+>  
+> +	rd->flags = flags;
+
+Why bother with the temporary flags variable?
+
+>  	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
+>  			    rem_reg_rules) {
+>  		nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
+
+As per above, maybe check that no bandwidth is actually in the rules?
+
+> +static unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+> +					  const struct ieee80211_reg_rule *rule)
+> +{
+> +	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
+> +	const struct ieee80211_freq_range *freq_range_tmp;
+> +	const struct ieee80211_reg_rule *tmp;
+> +	u32 start_freq, end_freq, idx, no;
+> +
+> +	/* First check if strict regulatory database bandwidth calculation */
+> +	if (!(rd->flags & NL80211_REG_FLAG_WIDE_BW))
+> +		return freq_range->end_freq_khz - freq_range->start_freq_khz;
+
+shouldn't that check the range's @bandwidth (as well)?
+
+or this is for sanity check only I guess.
+
+> +	freq_diff = reg_get_max_bandwidth(rd, rule);
+>  
+> -	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
+> -	    freq_range->max_bandwidth_khz > freq_diff)
+> +	if (freq_range->max_bandwidth_khz > freq_diff)
+>  		return false;
+
+Err, wait, this won't work as advertised, would it?
  
- #define SDIOH_API_ACCESS_RETRY_LIMIT	2
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-similarity index 99%
-rename from drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-rename to drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index 1ce8cb7..37fd44a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -30,7 +30,7 @@
- #include <soc.h>
- #include "dhd_dbg.h"
- #include "sdio_host.h"
--#include "sdio_chip.h"
-+#include "chip.h"
- 
- /* chip core base & ramsize */
- /* bcm4329 */
-@@ -127,7 +127,7 @@ brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
- 				    NULL);
- 	regdata &= (SSB_TMSLOW_RESET | SSB_TMSLOW_REJECT |
- 		    SSB_IMSTATE_REJECT | SSB_TMSLOW_CLOCK);
--	return (SSB_TMSLOW_CLOCK == regdata);
-+	return SSB_TMSLOW_CLOCK == regdata;
- }
- 
- static bool
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-similarity index 100%
-rename from drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
-rename to drivers/net/wireless/brcm80211/brcmfmac/chip.h
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 090ce18..d78fffb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -40,7 +40,7 @@
- #include <brcm_hw_ids.h>
- #include <soc.h>
- #include "sdio_host.h"
--#include "sdio_chip.h"
-+#include "chip.h"
- #include "nvram.h"
- 
- #define DCMD_RESP_TIMEOUT  2000	/* In milli second */
--- 
-1.7.10.4
+> @@ -645,11 +702,17 @@ reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
+>  	return dfs_region1;
+>  }
+>  
+> +static u32 reg_intersect_flags(const u32 flags1, const u32 flags2)
+> +{
+> +	return flags1 | flags2;
+> +}
+
+Wow, ok, this is getting tricky. But I think it should be the other way
+around? I mean, it seems WIDE_BW flag should be unset if it's unset in
+either of them?
+
+But we might also have to set max_bandwidth_khz to a proper calculated
+wide_bw value before intersecting...
+
+johannes
 
