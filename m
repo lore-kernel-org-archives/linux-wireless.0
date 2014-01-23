@@ -1,103 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12225 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753095AbaA0KU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 05:20:27 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor channels
-Date: Mon, 27 Jan 2014 12:21:58 +0200
-Message-Id: <1390818118-27261-7-git-send-email-ilan.peer@intel.com> (sfid-20140127_112045_011046_98DEA116)
-In-Reply-To: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:42689 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbaAWIuh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 03:50:37 -0500
+Received: by mail-pa0-f44.google.com with SMTP id kq14so1583728pab.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 00:50:36 -0800 (PST)
+Message-ID: <52E0D7D5.6060504@gmail.com> (sfid-20140123_095040_697818_32BE10C8)
+Date: Thu, 23 Jan 2014 16:50:29 +0800
+From: zhuyj <zyjzyj2000@gmail.com>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	"Liu, Bopeng" <Bopeng.Liu@windriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	zhuyj <zyjzyj2000@gmail.com>
+Subject: Re: 802.11a is supported in AP mode or not?
+References: <52DF947E.40800@gmail.com>	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>	<52E0BA40.7090203@gmail.com> <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+In-Reply-To: <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow active scanning and frame injection on channels marked with
-IEEE80211_CHAN_NO_IR iff the channel is also marked with
-IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
-operates in an indoor environment.
+On 01/23/2014 04:23 PM, Emmanuel Grumbach wrote:
+> On Thu, Jan 23, 2014 at 8:44 AM, zhuyj <zyjzyj2000@gmail.com> wrote:
+>> On 01/23/2014 02:15 PM, Krishna Chaitanya wrote:
+>>> hostapd -dd -B /etc/hostapd.conf
+>> root@wind-desktop:~# hostapd -dd -B /etc/hostapd.conf
+>>
+>> random: Trying to read entropy from /dev/random
+>> Configuration file: /etc/hostapd.conf
+>> ctrl_interface_group=0
+>> nl80211: interface wlan0 in phy phy0
+>> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+>> nl80211: Using driver-based off-channel TX
+>> nl80211: Register frame command failed (type=208): ret=-114 (Operation
+>> already in progress)
+>> nl80211: Register frame match - hexdump(len=2): 04 0a
+>> nl80211: Failed to register Action frame processing - ignore for now
+>> nl80211: Add own interface ifindex 3
+>> nl80211: Set mode ifindex 3 iftype 3 (AP)
+>> nl80211: Create interface iftype 6 (MONITOR)
+>> nl80211: New interface mon.wlan0 created: ifindex=4
+>> nl80211: Add own interface ifindex 4
+>> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+>> nl80211: Regulatory information - country=00
+>> nl80211: 2402-2472 @ 40 MHz
+>> nl80211: 2457-2482 @ 40 MHz
+>> nl80211: 2474-2494 @ 20 MHz
+>> nl80211: 5170-5250 @ 40 MHz
+>> nl80211: 5735-5835 @ 40 MHz
+>> nl80211: Added 802.11b mode based on 802.11g information
+>> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=15 dBm
+>> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=15 dBm
+>> wlan0: IEEE 802.11 Configured channel (1) not found from the channel list of
+>> current mode (2) IEEE 802.11a
+>>
+>> wlan0: IEEE 802.11 Hardware does not support configured channel
+>> Could not select hw_mode and channel. (-4)
+>> wlan0: Unable to setup interface.
+>> Flushing old station entries
+>> Deauthenticate all stations
+>> rmdir[ctrl_interface]: No such file or directory
+>> nl80211: Remove interface ifindex=4
+>> netlink: Operstate: linkmode=0, operstate=6
+>> nl80211: Set mode ifindex 3 iftype 2 (STATION)
+>> root@wind-desktop:~#
+>>
+>>
+>> root@wind-desktop:~# hostapd -v
+> I think you have the answer to your question, don't you?
+>
+Yeah, maybe the hardware can support 802.11a, but the driver does not 
+support 802.11a?
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/mac80211/scan.c |   15 +++++++++------
- net/mac80211/tx.c   |    3 ++-
- 2 files changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 88c8161..e78aa29 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -527,8 +527,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 		/* We need to ensure power level is at max for scanning. */
- 		ieee80211_hw_config(local, 0);
- 
--		if ((req->channels[0]->flags &
--		     IEEE80211_CHAN_NO_IR) ||
-+		if (!regulatory_ir_allowed(local->hw.wiphy,
-+					   req->channels[0]) ||
- 		    !local->scan_req->n_ssids) {
- 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		} else {
-@@ -568,13 +568,14 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- }
- 
- static unsigned long
--ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
-+ieee80211_scan_get_channel_time(struct wiphy *wiphy,
-+				struct ieee80211_channel *chan)
- {
- 	/*
- 	 * TODO: channel switching also consumes quite some time,
- 	 * add that delay as well to get a better estimation
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR)
-+	if (!regulatory_ir_allowed(wiphy, chan))
- 		return IEEE80211_PASSIVE_CHANNEL_TIME;
- 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
- }
-@@ -588,6 +589,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_channel *next_chan;
- 	enum mac80211_scan_state next_scan_state;
-+	struct wiphy *wiphy = local->hw.wiphy;
- 
- 	/*
- 	 * check if at least one STA interface is associated,
-@@ -623,7 +625,8 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	 */
- 
- 	bad_latency = time_after(jiffies +
--				 ieee80211_scan_get_channel_time(next_chan),
-+				 ieee80211_scan_get_channel_time(wiphy,
-+								 next_chan),
- 				 local->leave_oper_channel_time + HZ / 8);
- 
- 	if (associated && !tx_empty) {
-@@ -698,7 +701,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	 *
- 	 * In any case, it is not necessary for a passive scan.
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR ||
-+	if (!regulatory_ir_allowed(local->hw.wiphy, chan) ||
- 	    !local->scan_req->n_ssids) {
- 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		local->next_scan_state = SCAN_DECISION;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 27c990b..171d0c5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1732,7 +1732,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * radar detection by itself. We can do that later by adding a
- 	 * monitor flag interfaces used for AP support.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
-+	if (!regulatory_ir_allowed(local->hw.wiphy, chan) ||
-+	    chan->flags & IEEE80211_CHAN_RADAR)
- 		goto fail_rcu;
- 
- 	ieee80211_xmit(sdata, skb, chan->band);
--- 
-1.7.10.4
 
