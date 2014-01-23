@@ -1,95 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:38973 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755553AbaAVOmy (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45088 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797AbaAWMJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 09:42:54 -0500
-Message-ID: <52DFD8A5.5090800@meshcoding.com> (sfid-20140122_154312_222402_84FA8618)
-Date: Wed, 22 Jan 2014 15:41:41 +0100
-From: Antonio Quartulli <antonio@meshcoding.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Antonio Quartulli <antonio@open-mesh.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/5] cfg80211: export minstrel best rate information through
- get_station()
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>		 <1390302591-3352-2-git-send-email-antonio@meshcoding.com>	 <1390320014.6199.61.camel@jlt4.sipsolutions.net>	 <52DE9BAA.6020205@open-mesh.com> <1390321084.6199.65.camel@jlt4.sipsolutions.net> <52DEA10F.6090700@meshcoding.com>
-In-Reply-To: <52DEA10F.6090700@meshcoding.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="iDI5KvlRAfpM23pMCPkLNmd9gebKNj1CK"
+	Thu, 23 Jan 2014 07:09:27 -0500
+Message-ID: <1390478961.4142.12.camel@jlt4.sipsolutions.net> (sfid-20140123_130930_498582_8DF207AD)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Thu, 23 Jan 2014 13:09:21 +0100
+In-Reply-To: <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com> (sfid-20140123_085715_974773_1D88AF38)
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+	 <1390462306.4189.56.camel@porter.coelho.fi>
+	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
+	 (sfid-20140123_085715_974773_1D88AF38)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---iDI5KvlRAfpM23pMCPkLNmd9gebKNj1CK
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
 
-On 21/01/14 17:32, Antonio Quartulli wrote:
-> On 21/01/14 17:18, Johannes Berg wrote:
->> On Tue, 2014-01-21 at 17:09 +0100, Antonio Quartulli wrote:
->>
->>>> Actually this isn't expected throughput, but
->>>> wouldn't something like expected throughput make even more sense?
->>>
->>> How should I obtain that if not with the previous operation (bitrate*=
-prob)?
->>
->> Minstrel actually has some tables for that, no? This would still just
->> only be the raw bitrate, not the actual throughput.
->=20
-> I will check within Minstrel, but in this way we are limiting batman-ad=
-v
-> to use only what Minstrel thinks to be the "expected throughput"....And=
+> This is actually the tricky part. How do you automatically switch an
+> AP interface? You should be able to at least generate CSA IE - true -
+> but what about beacon after CSA? You need to update HT IE and VHT IE
+> at least.
+> 
+> Perhaps we could split CSA into two parts somehow and make it more
+> userspace coordinated. The first part of CSA - announcing it, is
+> trivial and can actually be done entirely within mac80211 if I'm not
+> mistaken. What needs userspace input is what happens after the
+> announcement. This would mean that there is a possible time gap
+> between announcement being completed and the actual channel switch &
+> operation resuming.
 
-> if this turns to be something not adequate we will have to change
-> API.
->=20
->=20
+I believe that even announcing it isn't necessarily possible without
+userspace involvement, particularly for things like 11ac's channel
+switch wrapper IE and/or operating class changes.
 
-Johannes,
+johannes
 
-do you think that an API exporting the "expected throughput" would be a
-acceptable? At that point any RC algorithm can implement it the way it
-prefers.
-
-Moreover, if users realise that the API is not returning a proper value
-we can still fix the implementation in the future (as soon as it still
-returns something called "expected throughput").
-
-Can this be the way to go? At this point we forget about the concept of
-rate and we move to throughput, which is what we are really interested in=
-=2E
-
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-
---iDI5KvlRAfpM23pMCPkLNmd9gebKNj1CK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJS39ioAAoJEEKTMo6mOh1V4fcP/AgnkfA2qc3fZf9VkAAyyVJw
-cKaTfgesw+efhzCAQMEnidOicjz9TkGhu5zMABk2OM2AJTcDX/zpoBFVnOEtsJMR
-xG8QVPXScxzIBXqJQ52dGz09mjvxf2m9M73Lxtro5SmftiHOiIpSfv7XSeZMdvMU
-fUpybjzdhvHEc8xFpSYoIbgOsGA6cpcKgi6uu6jyYKSypOXvJWDiTItucVmv8xe4
-2ah6/mQCkl8R0v3KkRo93as+1tzAuDPdRJDDVXWCWgGV8a9vwrjEtAt4wXtu/3aQ
-30qvQBDEuFBH4v2W3nZvMK+/pmq3JmXGDqKqkhj4ZEyAdITFU/IqChIBuO6bDh2m
-h4wNLF7oNak/H+Yt5y1ice7WrsdXCe38vYwEh5P0LhopCXmNQXK4zMxNB1VB1Jb1
-DtwvnlnNx1EfC7FF1vSHMKs3YQpIv9oiUqvxNheouRpJwt/B8Lrswl+vwx6KsgIt
-VjWqinQdFzBoDjjQnktb1OHd3fWZgc2aO3+tWKgTlqlCLrVDEFi6JLE3ttuxe6bt
-00TZvCnpP/xWSTv/5ef0hoQW+KqxgEjN2oa4tQ8DtSgk9edPOyRnf7tE9NPphUjI
-0uFL78kQoyb/OExrleSUzl/wAcwdYbbc3QO7GEdSipK6aHycQ8ZJzp1IbOYWn9xo
-Tn/UH/Xv7AdiGKAkkouN
-=FWPJ
------END PGP SIGNATURE-----
-
---iDI5KvlRAfpM23pMCPkLNmd9gebKNj1CK--
