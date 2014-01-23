@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:50519 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbaALVLu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jan 2014 16:11:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from purkki.adurom.net ([80.68.90.206]:45255 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752516AbaAWPKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 10:10:17 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/3 V2] iFixes for b43 and b43legacy
-Date: Sun, 12 Jan 2014 15:11:36 -0600
-Message-Id: <1389561099-17181-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140112_221159_557990_F2F5519D)
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCH] mac80211_hwsim: add channel switch support
+References: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 23 Jan 2014 17:10:14 +0200
+In-Reply-To: <1390387899-28972-1-git-send-email-johannes@sipsolutions.net>
+	(Johannes Berg's message of "Wed, 22 Jan 2014 11:51:39 +0100")
+Message-ID: <87k3dqn38p.fsf@purkki.adurom.net> (sfid-20140123_161022_207051_1D2947FD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These 3 fixes should be applied as soon as possible. I understand that 3.13
-will be released soon. As all 3 are marked for stable, inclusion in 3.14
-will be satisfactory.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-V2 - Patch 1 is unchanged, but 2 and 3 are fixed to remove any race conditions.
+> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+>
+> Advertise to mac80211 that we can do channel switch both
+> for STA and AP/GO.
+> After each beacon transmission check if CSA is done and
+> call ieee80211_csa_finish if needed.
+>
+> Change-Id: I1cb34c04f533275522236381ae14b624bec35418
 
-Larry
-
-
-Larry Finger (3):
-  b43: Fix lockdep splat
-  b43: Fix unload oops if firmware is not available
-  b43legacy: Fix unload oops if firmware is not available
-
- drivers/net/wireless/b43/b43.h        |  4 ++--
- drivers/net/wireless/b43/main.c       | 27 ++++++++++++++++-----------
- drivers/net/wireless/b43legacy/main.c |  1 +
- 3 files changed, 19 insertions(+), 13 deletions(-)
+Change id visible.
 
 -- 
-1.8.4
-
+Kalle Valo
