@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42294 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:45144 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754212AbaAFLEj (ORCPT
+	with ESMTP id S1750797AbaAWMU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:04:39 -0500
+	Thu, 23 Jan 2014 07:20:29 -0500
+Message-ID: <1390479620.4142.14.camel@jlt4.sipsolutions.net> (sfid-20140123_132032_566643_614AEAF6)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add tracing for ieee80211_sta_set_buffered
-Date: Mon,  6 Jan 2014 12:04:30 +0100
-Message-Id: <1389006270-21768-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_120442_243958_09E1FBFA)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Thu, 23 Jan 2014 13:20:20 +0100
+In-Reply-To: <CA+BoTQm768pE7w1x9p5dN+qTxYjzf8R5u4WASd4zEaQ=v717BQ@mail.gmail.com> (sfid-20140123_113344_104982_CBFDA68E)
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+	 <1390462306.4189.56.camel@porter.coelho.fi>
+	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
+	 <1390470648.4189.88.camel@porter.coelho.fi>
+	 <CA+BoTQm768pE7w1x9p5dN+qTxYjzf8R5u4WASd4zEaQ=v717BQ@mail.gmail.com>
+	 (sfid-20140123_113344_104982_CBFDA68E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-01-23 at 11:33 +0100, Michal Kazior wrote:
 
-This is useful for debugging issues with drivers using this
-function (erroneously), so add tracing for the API call.
+> An extreme approach would to actually update AP IEs in mac80211. This
+> way it would be possible to pull any interface into CSA implicitly if
+> you're out of channels. This way single-channel multi-BSS AP could
+> probably switch atomically without races and your multi-channel
+> GO-possibly-follows-STA would still work.
 
-Change-Id: Ice9d7eabb8fecbac188f0a741920d3488de700ec
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |  2 ++
- net/mac80211/trace.h    | 27 +++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+I don't really like updating IEs in mac80211 much. Asking userspace
+shouldn't be *that* much slower.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 4576ba0..8da3af2 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1485,6 +1485,8 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
- 	if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
- 		return;
- 
-+	trace_api_sta_set_buffered(sta->local, pubsta, tid, buffered);
-+
- 	if (buffered)
- 		set_bit(tid, &sta->driver_buffered_tids);
- 	else
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index da93666..a0b0aea 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1835,6 +1835,33 @@ TRACE_EVENT(api_eosp,
- 	)
- );
- 
-+TRACE_EVENT(api_sta_set_buffered,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sta *sta,
-+		 u8 tid, bool buffered),
-+
-+	TP_ARGS(local, sta, tid, buffered),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		STA_ENTRY
-+		__field(u8, tid)
-+		__field(bool, buffered)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->tid = tid;
-+		__entry->buffered = buffered;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT STA_PR_FMT " tid:%d buffered:%d",
-+		LOCAL_PR_ARG, STA_PR_ARG, __entry->tid, __entry->buffered
-+	)
-+);
-+
- /*
-  * Tracing for internal functions
-  * (which may also be called in response to driver calls)
--- 
-1.8.5.1
+> > The CAC might take too long.  If we have an AP1 and a STA and the STA
+> > gets the CSA from its AP2 with a short count, AP1 may not have the time
+> > to CAC.  In this case, AP1 have two choices: trust that AP2 is doing the
+> > right thing and moving to a usable DFS channel or shut itself down.
+> 
+> That's the point. AP1 doesn't have time to perform CAC in this case,
+> but it should still be possible for AP1 to _just_ beacon CSA as it's
+> only a hint. AP1 could then be stopped to perform CAC, and once it's
+> completed restart the AP1.
+
+I don't get this side discussion about CAC. There's no time to do CAC in
+the middle of a CSA *anyway* since you can't be beaconing on the old
+channel while doing CAC on the new channel, and if you stop beaconing
+entirely for the time of the CAC then all clients will likely go away...
+I'm not sure I understand how you can ever do a CSA to a radar channel
+that would still need CAC?
+
+johannes
 
