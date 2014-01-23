@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:50160 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752076AbaAOQiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 11:38:06 -0500
-Received: from ultralex.lan ([93.218.75.192]) by mail.gmx.com (mrgmx103) with
- ESMTPSA (Nemesis) id 0Lskr7-1VNq6o0n4j-012ECP for
- <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 17:38:05 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 1/5] ath: add common function ath_is_mybeacon
-Date: Wed, 15 Jan 2014 17:37:42 +0100
-Message-Id: <1389803862-9078-1-git-send-email-linux@rempel-privat.de> (sfid-20140115_173811_455473_6D7F8241)
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:40643 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888AbaAWOfq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 09:35:46 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so1189759iec.36
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 06:35:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAFED-jmUF9u=sLfVuCSy3rjmB4DM9x6BCLhJaq2CrY9MV6Wycg@mail.gmail.com>
+References: <CAKKnJbe=eBMzB3Bp7qkYvwSTr0x=g-bZkz9dQ6HUihZE5rc5iw@mail.gmail.com>
+	<CAFED-jmUF9u=sLfVuCSy3rjmB4DM9x6BCLhJaq2CrY9MV6Wycg@mail.gmail.com>
+Date: Thu, 23 Jan 2014 09:35:45 -0500
+Message-ID: <CAKKnJbeVqvUUnW7E7yw3cvF_1DKw5_+xpYJ+jB3U-=VL=vQyVg@mail.gmail.com> (sfid-20140123_153550_025263_3010BB61)
+Subject: Re: wlcore-spi crash
+From: Charles <hobbesc7@gmail.com>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this function is used by most ath driver, so it can be moved here.
+>> When I modprobe wlcore-spi I get a kernel crash.  Has anyone
+>> encountered this?  I found a similar problem here:
+>> http://marc.info/?l=linux-wireless&m=135212370625698&w=2
+>>
+>> I tried adding the patch mentioned there to backports-3.12-1, but I
+>> get this build error: "error: 'struct wl1271' has no member named
+>> 'set_power'"
+>>
+>> Here's the crash:
+>>
+>> [   98.325693] Unable to handle kernel NULL pointer dereference at
+>> virtual address 00000000
+>> [   98.334171] pgd = c0004000
+>> [   98.337031] [00000000] *pgd=00000000
+>> [   98.340791] Internal error: Oops: 80000007 [#1]
+>> [   98.345524] Modules linked in: wlcore_spi(O) wl12xx(O) wlcore(O)
+>> mac80211(O) cfg80211(O) compat(O) autofs4
+>> [   98.355661] CPU: 0    Tainted: G           O  (3.2.0)
+>> [   98.364120] PC is at 0x0
+>> [   98.366846] LR is at wl12xx_set_power_on+0x30/0x150 [wlcore]
+>
+> I think this should help:
+> http://www.spinics.net/lists/linux-wireless/msg98589.html
+>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath.h  | 2 ++
- drivers/net/wireless/ath/main.c | 8 ++++++++
- 2 files changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index e0ba7cd..b59cfbe 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -17,6 +17,7 @@
- #ifndef ATH_H
- #define ATH_H
- 
-+#include <linux/etherdevice.h>
- #include <linux/skbuff.h>
- #include <linux/if_ether.h>
- #include <linux/spinlock.h>
-@@ -165,6 +166,7 @@ struct ath_common {
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- 				u32 len,
- 				gfp_t gfp_mask);
-+bool ath_is_mybeacon(struct ath_common *common, struct ieee80211_hdr *hdr);
- 
- void ath_hw_setbssidmask(struct ath_common *common);
- void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key);
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 8e99540..8b0ac14 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -59,6 +59,14 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- }
- EXPORT_SYMBOL(ath_rxbuf_alloc);
- 
-+bool ath_is_mybeacon(struct ath_common *common, struct ieee80211_hdr *hdr)
-+{
-+	return ieee80211_is_beacon(hdr->frame_control) &&
-+		!is_zero_ether_addr(common->curbssid) &&
-+		ether_addr_equal_64bits(hdr->addr3, common->curbssid);
-+}
-+EXPORT_SYMBOL(ath_is_mybeacon);
-+
- void ath_printk(const char *level, const struct ath_common* common,
- 		const char *fmt, ...)
- {
--- 
-1.8.5.2
-
+As I mentioned above, I get a compile error with that patch: the
+wl1271 struct doesn't have "set_power".
