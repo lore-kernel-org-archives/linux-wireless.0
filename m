@@ -1,156 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11655 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932573AbaAaNfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 08:35:17 -0500
-Date: Fri, 31 Jan 2014 14:37:07 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: ath9k-devel@venema.h4ckr.net
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] ath9k_htc: avoid scheduling while atomic on sta_rc_update
-Message-ID: <20140131133707.GA7648@redhat.com> (sfid-20140131_143539_155809_A8CF642B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([144.76.43.152]:45793 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbaAWP7F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 10:59:05 -0500
+Message-ID: <1390492742.4142.35.camel@jlt4.sipsolutions.net> (sfid-20140123_165910_256894_B0A4458F)
+Subject: Re: Issue with authentication to Aerohive APs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steven Bateman <steven@fndtn.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 23 Jan 2014 16:59:02 +0100
+In-Reply-To: <CF02A704.17362%steven@fndtn.com>
+References: <CF02A704.17362%steven@fndtn.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 ->sta_rc_update() callback must be atomic. Since we have to
-take mutex and do other operations that can sleep when sending fimrware
-commands to device, the only option to satisfy atomicity requirement of
-->sta_rc_update(), that I can see, is introduce work_struct and defer
-uploading new rates to that work.
+On Mon, 2014-01-20 at 16:27 +0000, Steven Bateman wrote:
+> You're right, I did accidentally filter out acks. I have an updated
+> filtered capture attached.
+> 
+> It could be either, but I'm going off of wpa_supplicant instructing to
+> transmit the 2nd EAPOL frame, but it never showing up in the air. The
+> consultations I've received so far indicated that it would more likely be
+> a driver/firmware issue, but I don't have enough experience with Linux
+> supplicants to be sure about that.
 
-I don't have h/w to test this patch. Since sta_rc_update() calls are
-very unlikely, those who would like to test that patch should remove
-my previous patch "ath9k_htc: make ->sta_rc_update atomic for most
-calls" and possibly even modify mac80211 to call sta_rc_update(),
-without actual reason, just to test changed ath9k_htc code.
+Ohh. Ok. Yeah then it's most likely a driver bug. Hmm. I vaguely
+remember bugs like this but I thought they were all fixed.
 
-Thanks
-Stanislaw
----
- drivers/net/wireless/ath/ath9k/htc.h          |  2 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 60 +++++++++++++++++----------
- 2 files changed, 40 insertions(+), 22 deletions(-)
+Is there any chance you could try to put the particular AP into 2.4 GHz?
+Although I guess you have similar APs on 2.4 GHz channels that work?
+Could you (or the user actually running into the problem) collect
+tracing maybe?
+http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 58da346..99a2031 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -262,6 +262,8 @@ enum tid_aggr_state {
- struct ath9k_htc_sta {
- 	u8 index;
- 	enum tid_aggr_state tid_state[ATH9K_HTC_MAX_TID];
-+	struct work_struct rc_update_work;
-+	struct ath9k_htc_priv *htc_priv;
- };
- 
- #define ATH9K_HTC_RXBUF 256
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index a57af9b..c9254a6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1270,18 +1270,50 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 	mutex_unlock(&priv->mutex);
- }
- 
-+static void ath9k_htc_sta_rc_update_work(struct work_struct *work)
-+{
-+	struct ath9k_htc_sta *ista =
-+	    container_of(work, struct ath9k_htc_sta, rc_update_work);
-+	struct ieee80211_sta *sta =
-+	    container_of((void *)ista, struct ieee80211_sta, drv_priv);
-+	struct ath9k_htc_priv *priv = ista->htc_priv;
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_target_rate trate;
-+
-+	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
-+
-+	memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
-+	ath9k_htc_setup_rate(priv, sta, &trate);
-+	if (!ath9k_htc_send_rate_cmd(priv, &trate))
-+		ath_dbg(common, CONFIG,
-+			"Supported rates for sta: %pM updated, rate caps: 0x%X\n",
-+			sta->addr, be32_to_cpu(trate.capflags));
-+	else
-+		ath_dbg(common, CONFIG,
-+			"Unable to update supported rates for sta: %pM\n",
-+			sta->addr);
-+
-+	ath9k_htc_ps_restore(priv);
-+	mutex_unlock(&priv->mutex);
-+}
-+
- static int ath9k_htc_sta_add(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath9k_htc_sta *ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 	int ret;
- 
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
- 	ret = ath9k_htc_add_station(priv, vif, sta);
--	if (!ret)
-+	if (!ret) {
-+		INIT_WORK(&ista->rc_update_work, ath9k_htc_sta_rc_update_work);
-+		ista->htc_priv = priv;
- 		ath9k_htc_init_rate(priv, sta);
-+	}
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
-@@ -1293,12 +1325,13 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 				struct ieee80211_sta *sta)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
--	struct ath9k_htc_sta *ista;
-+	struct ath9k_htc_sta *ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 	int ret;
- 
-+	cancel_work_sync(&ista->rc_update_work);
-+
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
--	ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 	htc_sta_drain(priv->htc, ista->index);
- 	ret = ath9k_htc_remove_station(priv, vif, sta);
- 	ath9k_htc_ps_restore(priv);
-@@ -1311,29 +1344,12 @@ static void ath9k_htc_sta_rc_update(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_sta *sta, u32 changed)
- {
--	struct ath9k_htc_priv *priv = hw->priv;
--	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct ath9k_htc_target_rate trate;
-+	struct ath9k_htc_sta *ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 
- 	if (!(changed & IEEE80211_RC_SUPP_RATES_CHANGED))
- 		return;
- 
--	mutex_lock(&priv->mutex);
--	ath9k_htc_ps_wakeup(priv);
--
--	memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
--	ath9k_htc_setup_rate(priv, sta, &trate);
--	if (!ath9k_htc_send_rate_cmd(priv, &trate))
--		ath_dbg(common, CONFIG,
--			"Supported rates for sta: %pM updated, rate caps: 0x%X\n",
--			sta->addr, be32_to_cpu(trate.capflags));
--	else
--		ath_dbg(common, CONFIG,
--			"Unable to update supported rates for sta: %pM\n",
--			sta->addr);
--
--	ath9k_htc_ps_restore(priv);
--	mutex_unlock(&priv->mutex);
-+	schedule_work(&ista->rc_update_work);
- }
- 
- static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
--- 
-1.7.11.7
+johannes
 
