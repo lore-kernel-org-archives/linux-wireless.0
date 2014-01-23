@@ -1,105 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy19-pub.mail.unifiedlayer.com ([70.40.200.33]:51138 "HELO
-	oproxy19-pub.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750895AbaA0GcK (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52639 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718AbaAWGfN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 01:32:10 -0500
-Message-ID: <1390804323.2436.172.camel@Wailaba2> (sfid-20140127_073213_814442_253C243A)
-Subject: Re: [ISSUE] rtl8192ce appears to interfere with ALSA playback
-From: Olivier Langlois <olivier@trillion01.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, daniel@zonque.org
-Date: Mon, 27 Jan 2014 01:32:03 -0500
-In-Reply-To: <52D6BEEF.5050705@lwfinger.net>
-References: <1389767820.2436.45.camel@Wailaba2>
-	 <52D6BEEF.5050705@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 23 Jan 2014 01:35:13 -0500
+Received: by mail-bk0-f46.google.com with SMTP id r7so198917bkg.5
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 22:35:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1390394166.4189.28.camel@porter.coelho.fi>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	<CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	<1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	<CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	<1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	<1390394166.4189.28.camel@porter.coelho.fi>
+Date: Thu, 23 Jan 2014 07:35:11 +0100
+Message-ID: <CA+BoTQ=vACFk2_9xgUVdZKjrcfhNBswULG-5v7HC=Bsa3kLpVQ@mail.gmail.com> (sfid-20140123_073517_595503_843F1305)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On 22 January 2014 13:36, Luca Coelho <luca@coelho.fi> wrote:
+> On Wed, 2014-01-22 at 11:19 +0100, Johannes Berg wrote:
+>> On Wed, 2014-01-22 at 11:13 +0100, Michal Kazior wrote:
 
-I have not hear back from you since that I provided the information that
-you asked me. Did you find something?
+[...]
 
-I did some investigation on my side and I think that I have narrow down
-quite a bit the cause of my problem unless I receive some assistance, I
-am not sure that I can advance very much further by myself.
+>> > What about cfg80211 intf combinations? If GO sends a channel switch it
+>> > will fail on num_available_channels unless you implicitly consider the
+>> > userspace event you mentioned or export CSA state down to cfg80211.
+>>
+>> Yeah, that's a good point, need to consider that.
+>
+> Very good point.  I hadn't thought about it.  When mac80211 decides to
+> change channel to an existing context, it needs to know whether the
+> combination will be valid or not.
+>
+>
+>> > At one point I was wondering if channel contexts should be actually
+>> > exposed in cfg80211. It would probably make it easier to coordinate
+>> > some CSA scenarios like this in a sane way, don't you think? But then
+>> > again that's quite big of a change.
+>>
+>> Yeah that'd be a bit of a change, but maybe it's worth it? Not sure.
+>
+> That's probably going to be necessary.  How would mac80211 be able to
+> know if the future combination would be possible or not? I thought about
+> asking cfg80211 if the combination would be okay when reserving a
+> context, but that wouldn't work if we have >= 2 reservations.  cfg80211
+> needs to know about the reservations as well. :(
 
-Is this usual for a Wifi device to spend about 340 ms in a irq
-handler???
+You could probably get away without exposing channel contexts to
+cfg80211 as long as you at least provide some level of channel
+switching state back to cfg80211.
 
-First, something that I have noticed in net/wireless/rtlwifi/core.c,
-function rtl_op_config(), there is a call to mdelay(50). I'm pretty much
-certain that this delay could be safely replaced with msleep(50). It
-should be ok since the function can already sleep by calling
-mutex_lock(). Do you agree?
+You could have a 'channel switch state' which says a channel X will
+become channel Y for A,B,C.. interfaces "soon". mac80211 (or any
+cfg80211-based driver for that matter) could tell cfg80211 "the switch
+is complete" (and possibly a status code to indicate failure). This
+way cfg80211 would be the one to stop/disconnect interfaces that were
+on channel X but weren't included in a given channel switch to channel
+Y. I think this should work with >= 2 reservations including error
+handling (i.e. failing in the middle).
 
-Here is the sequence of events that I have traced that seem to cause my
-audio playback underrun.
+What bothers me here is locking. You can't just use wdev->mtx -- you
+need a more global lock for protecting this sort of thing. Since the
+reservation would be accessible from userspace (even implicitly via
+some existing nl80211 commands) and from cfg80211-based (i.e.
+mac80211) it might be tricky? But I suppose having channel contexts in
+cfg80211 would involve this predicament as well.
 
-1. wpa_supplicant send a start_scan request to the nl80211 driver
-2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
-3.   rtl_ips_nic_on is called which disable local irqs
-4.     rtl92c_phy_set_rf_power_state() is called
-5.       rtl_ps_enable_nic() is called and enable interrupts on the
-device
-6.   as soon as local irqs are reenabled before exiting rtl_ips_nic_on,
-a RX interrupt is handled and _rtl_pci_interrupt appears to be taking
-about 340 ms to process the interrupt.
-
-I have measured that time by placing 2 printks between 
-
-spin_unlock_irqrestore(&rtlpriv->locks.ips_lock, flags);
-
-in rtl_ips_nic_on().
-
-[   69.376012] rtlwifi:rtl_ips_nic_on():<0-1> before
-spin_unlock_irqrestore
-[   69.711920] rtl_pci:_rtl_pci_interrupt():<10000-1> Rx ok interrupt!
-[   69.711948] rtlwifi:rtl_ips_nic_on():<0-0> after
-spin_unlock_irqrestore
-
-Also from an exchange that I had with Takashi [1], if my audio buffer
-size is 371 msec, the playback is smooth. If it is set to 341 msec, I
-have underruns.
-
-notice the proximity of values between the time it takes for rtl8192ce
-to service its irq and the audio buffer size causing troubles. I think
-that it would be very surprising if it is just a coincidence....
-
-[1]
-http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071569.html
-
-On Wed, 2014-01-15 at 11:01 -0600, Larry Finger wrote:
-> On 01/15/2014 12:37 AM, Olivier Langlois wrote:
-> > How to reproduce:
-> >
-> > 1. Enable Wifi while not connecting to any AP.
-> > 2. lano1106@hpmini ~/Music $ aplay -c1 sine.wav
-> > underrun!!! (at least 1856093977.967 ms long)
-> 
-> Olivier,
-> 
-> I am certain that rtl8192ce does not disable interrupts for 2 sec, but I need 
-> some more info from you.
-> 
-> What is your CPU situation? I suspect x86_64, but please confirm. How many CPUs? 
-> What is the maximum CPU speed?
-> 
-> What distro?
-> 
-> How do you control the wifi? Is it NetworkManager? This is important because the 
-> device driver does not initiate any scans on its own - scans are initiated and 
-> controlled by upstream.
-> 
-> Please provide a URL for the test file sine.wav. If it is part of your distro, 
-> then put it in a public repository, or E-mail it to me privately.
-> 
-> Larry
-> 
-> 
-> 
+Also currently cfg80211 is oblivious to HT40+/HT40- and It doesn't
+consider HT40+ @ chan6 and HT40- @ chan6 as different channels, right?
 
 
+Micha³
