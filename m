@@ -1,75 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35376 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbaAND42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 22:56:28 -0500
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com [209.85.220.41])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 7657F8812D
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 11:56:27 +0800 (CST)
-Received: by mail-pa0-f41.google.com with SMTP id fb1so6933586pad.14
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 19:56:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo64ttbB7-WYgg2B9seFu5tdSjZqrUSKBKx00GfXzoUDOw@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
- <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
- <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
- <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
- <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
- <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
- <CALkVjQavGvumxnghCc5R8E=7rzDSy1_q+LVZ=vR6--OJxhp7CA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C1CB@HASMSX103.ger.corp.intel.com> <CAErSpo64ttbB7-WYgg2B9seFu5tdSjZqrUSKBKx00GfXzoUDOw@mail.gmail.com>
-From: Sascha Weaver <wzyboy@wzyboy.org>
-Date: Tue, 14 Jan 2014 11:56:11 +0800
-Message-ID: <CALkVjQZJxPL=pq5jmOWjVsq8OX=GfuiqG93ANRjOg8yceuUCOQ@mail.gmail.com> (sfid-20140114_045632_317130_20040A38)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-we0-f175.google.com ([74.125.82.175]:48985 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754825AbaAWTHo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 14:07:44 -0500
+Received: by mail-we0-f175.google.com with SMTP id p61so1689520wes.34
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 11:07:43 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] mac80211: send {ADD,DEL}BA on AC_VO like other mgmt frames, as per spec
+Date: Thu, 23 Jan 2014 20:06:34 +0100
+Message-Id: <1390503994-13496-1-git-send-email-karl.beldan@gmail.com> (sfid-20140123_200748_820570_2CD395DE)
+In-Reply-To: <1390486106.4142.15.camel@jlt4.sipsolutions.net>
+References: <1390486106.4142.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014/1/14 Bjorn Helgaas <bhelgaas@google.com>:
-> It doesn't seem strange to me; maybe we're interpreting wzyboy's data
-> differently.  The way I read it, if /etc/modprobe.d/iwlwifi.conf
-> contains "options iwlmvm power_scheme=1", everything works fine (cases
-> 0, 4, 8).  If iwlwifi.conf does not exist or contains only a
-> commented-out line, he sees problems (cases 2, 6).
->
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Yes, Bjorn got my point :-)
+ATM, {ADD,DEL}BA and BAR frames are sent on the AC matching the TID of
+the BA parameters. Johannes recalled [1] that it fixed some races with
+the DELBA and indeed this behavior was introduced in [2].
+While [2] is right for the BARs, the part queueing the {ADD,DEL}BAs on
+their BA params TID AC violates the spec and is more a workaround for
+some drivers. Helmut expressed [2] some concerns wrt such drivers, in
+particular DELBAs in rt2x00.
+ATM, DELBAs are sent after a driver has called (hence "purposely")
+ieee80211_start_tx_ba_cb_irqsafe and Johannes and Emmanuel gave [2] some
+details wrt intentions behind the split of the IEEE80211_AMPDU_TX_STOP_*
+given to the drv ampdu_action supposed to call this function, which
+could prove handy to people trying to do the right thing in faulty
+drivers (if their fw/hw don't get in their way).
 
-With "options iwlmvm power_scheme=1" -> network is good
-Without "options iwlmvm power_scheme=1" -> network is bad
+[1] Message-Id: http://mid.gmane.org/1390391564-18481-1-git-send-email-karl.beldan@gmail.com
+[2] Commit: cf6bb79ad8287cd9fe87 ("mac80211: Use appropriate TID for sending BAR, ADDBA and DELBA frames")
 
-Currently I am using Linux 3.12.7 with Emmanuel's patch, and without
-any setpci tricks.
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/agg-tx.c | 2 +-
+ net/mac80211/ht.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Emmanuel says a new firmware is available in 3.13 so I will follow up
-when 3.13 is released in my distro's repo.
-
-
-
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 13b7683..ce9633a 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -107,7 +107,7 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.u.addba_req.start_seq_num =
+ 					cpu_to_le16(start_seq_num << 4);
+ 
+-	ieee80211_tx_skb_tid(sdata, skb, tid);
++	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index fab7b91..dc3c280 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -375,7 +375,7 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.u.delba.params = cpu_to_le16(params);
+ 	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
+ 
+-	ieee80211_tx_skb_tid(sdata, skb, tid);
++	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
 -- 
-Sascha Weaver
+1.8.5.1.19.gdaad3aa
+
