@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48342 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721AbaATO3e (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:51564 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184AbaAWPuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 09:29:34 -0500
-Date: Mon, 20 Jan 2014 17:29:00 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] NFC: potential overflows in microread_target_discovered()
-Message-ID: <20140120142900.GA4954@elgon.mountain> (sfid-20140120_152939_377233_B294D587)
+	Thu, 23 Jan 2014 10:50:32 -0500
+Received: by mail-oa0-f44.google.com with SMTP id g12so2323324oah.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 07:50:31 -0800 (PST)
+Message-ID: <52E13A46.6050005@lwfinger.net> (sfid-20140123_165036_602386_04985AB4)
+Date: Thu, 23 Jan 2014 09:50:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?ISO-8859-1?Q?Obed_Gonz=E1lez?= <obedlink@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Wireless not working for rtl8192ce (RTL8188CE)/asus pce-n15
+References: <1422360.xT36SRXFTZ@kubuntu>
+In-Reply-To: <1422360.xT36SRXFTZ@kubuntu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch says that skb->data is untrusted so we need to check to make sure
-that the memcpy() doesn't overflow.
+On 01/23/2014 07:51 AM, Obed González wrote:
+> [1]Wireless not working for rtl8192ce (RTL8188CE)/asus pce-n15
+>
+> [2] with kernel version equal or less than 3.12, the network manager asks for
+> wireless password countless times.
+>
+> kernel with version 3.13 and later, the network administrator establishes
+> connection with the router, gets an IP address, but no internet access, no
+> access to the router, does not "ping" to any address. the network manager
+> shows a bandwidth 1Mbits / s instead of the typical 54Mbits / s
+>
+> the connection using my wireless card only works with kernel version Ubuntu
+> 12.04 LTS.
 
-Fixes: cfad1ba87150 ('NFC: Initial support for Inside Secure microread')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Compile tested only.
+There are a lot of changes in this driver in the wireless-testing tree that will 
+not be in the mainline tree until 3.14. Please generate a kernel from that repo.
 
-diff --git a/drivers/nfc/microread/microread.c b/drivers/nfc/microread/microread.c
-index f868333271aa..963a4a5dc88e 100644
---- a/drivers/nfc/microread/microread.c
-+++ b/drivers/nfc/microread/microread.c
-@@ -501,9 +501,13 @@ static void microread_target_discovered(struct nfc_hci_dev *hdev, u8 gate,
- 		targets->sens_res =
- 			 be16_to_cpu(*(u16 *)&skb->data[MICROREAD_EMCF_A_ATQA]);
- 		targets->sel_res = skb->data[MICROREAD_EMCF_A_SAK];
--		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A_UID],
--		       skb->data[MICROREAD_EMCF_A_LEN]);
- 		targets->nfcid1_len = skb->data[MICROREAD_EMCF_A_LEN];
-+		if (targets->nfcid1_len > sizeof(targets->nfcid1)) {
-+			r = -EINVAL;
-+			goto exit_free;
-+		}
-+		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A_UID],
-+		       targets->nfcid1_len);
- 		break;
- 	case MICROREAD_GATE_ID_MREAD_ISO_A_3:
- 		targets->supported_protocols =
-@@ -511,9 +515,13 @@ static void microread_target_discovered(struct nfc_hci_dev *hdev, u8 gate,
- 		targets->sens_res =
- 			 be16_to_cpu(*(u16 *)&skb->data[MICROREAD_EMCF_A3_ATQA]);
- 		targets->sel_res = skb->data[MICROREAD_EMCF_A3_SAK];
--		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A3_UID],
--		       skb->data[MICROREAD_EMCF_A3_LEN]);
- 		targets->nfcid1_len = skb->data[MICROREAD_EMCF_A3_LEN];
-+		if (targets->nfcid1_len > sizeof(targets->nfcid1)) {
-+			r = -EINVAL;
-+			goto exit_free;
-+		}
-+		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A3_UID],
-+		       targets->nfcid1_len);
- 		break;
- 	case MICROREAD_GATE_ID_MREAD_ISO_B:
- 		targets->supported_protocols = NFC_PROTO_ISO14443_B_MASK;
+Larry
+
+
