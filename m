@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755938AbaAWIUq (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:42383 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaAWGPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:20:46 -0500
-Message-ID: <1390465244.4142.3.camel@jlt4.sipsolutions.net> (sfid-20140123_092050_125358_D08C1954)
-Subject: Re: [PATCH 1/2] mac80211:  Extra debug info for station cleanup
- case.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 23 Jan 2014 09:20:44 +0100
-In-Reply-To: <52E05B2E.7030200@candelatech.com>
-References: <1390431296-20568-1-git-send-email-greearb@candelatech.com>
-	  (sfid-20140122_235532_670534_4FD6E588) <1390432284.20070.1.camel@jlt4.sipsolutions.net>
-	 <52E05B2E.7030200@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 23 Jan 2014 01:15:44 -0500
+Received: by mail-wi0-f170.google.com with SMTP id ex4so262449wid.5
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 22:15:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+References: <52DF947E.40800@gmail.com> <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 23 Jan 2014 11:45:22 +0530
+Message-ID: <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com> (sfid-20140123_071547_325135_7DC8A6F1)
+Subject: Re: 802.11a is supported in AP mode or not?
+To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
+Cc: zhuyj <zyjzyj2000@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-22 at 15:58 -0800, Ben Greear wrote:
-
-> > You should put the string into the warning
-> > 
-> > WARN_ONCE(ret, "sta-info-destroy: ...", ...)
-> 
-> I wanted it to kernel splat once and print out a message, and after that, only print
-> messages.
-> 
-> I think your suggestion will only splat _and_ print once?
-
-Hm, that's true, but it shouldn't be happening anyway? So why would you
-care about subsequent instances - even the first is a bug?
-
-johannes
-
+On Thu, Jan 23, 2014 at 7:30 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+> Thanks for your mail, but very pity, after checking, it doesn't as well. May you test it on your board?
+>
+>
+> # iw reg get
+> country US:
+>         (2402 - 2472 @ 40), (30, 0)
+>         (5170 - 5250 @ 80), (17, 0)
+>         (5250 - 5330 @ 80), (23, 0)
+>         (5735 - 5835 @ 80), (30, 0)
+>         (57240 - 63720 @ 2160), (40, 0)
+>
+> country_code=US
+> hw_mode=a
+> channel=149
+>
+> #hostapd -B /etc/hostapd.conf
+> Configuration file: /etc/hostapd.conf
+> channel [19] (149) is disabled for use in AP mode, flags: 0x7
+> wlan0: IEEE 802.11 Configured channel (149) not found from the channel list of current mode (2) IEEE 802.11a
+> wlan0: IEEE 802.11 Hardware does not support configured channel
+> Could not select hw_mode and channel. (-4)
+> wlan0: Unable to setup interface.
+> rmdir[ctrl_interface]: No such file or directory
+>
+Can you use "hostapd -dd -B /etc/hostapd.conf"and send the output?
+Also "hostapd -v" and "iw phy" as well.
