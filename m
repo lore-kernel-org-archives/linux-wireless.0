@@ -1,294 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy6-pub.mail.unifiedlayer.com ([67.222.54.6]:32991 "HELO
-	oproxy6-pub.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752101AbaAWIUF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:20:05 -0500
-Message-ID: <1390464800.2436.111.camel@Wailaba2> (sfid-20140123_092010_525251_12ECADDD)
-Subject: Re: [ISSUE] rtl8192ce appears to interfere with ALSA playback
-From: Olivier Langlois <olivier@trillion01.com>
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org, daniel@zonque.org,
-	alsa-devel@alsa-project.org
-Date: Thu, 23 Jan 2014 03:13:20 -0500
-In-Reply-To: <20140116055547.GU19393@us.netrek.org>
-References: <1389767820.2436.45.camel@Wailaba2>
-	 <52D6BEEF.5050705@lwfinger.net> <52D76D56.6060906@trillion01.com>
-	 <20140116055547.GU19393@us.netrek.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:33383 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750969AbaAWGJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jan 2014 01:09:02 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: RE: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt
+ frames, as per spec
+Date: Thu, 23 Jan 2014 06:08:57 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D56A24@HASMSX103.ger.corp.intel.com> (sfid-20140123_070907_754104_E6568173)
+References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com>
+ <1390394079.4334.30.camel@jlt4.sipsolutions.net>
+ <20140122130924.GA18365@magnum.frso.rivierawaves.com>
+ <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com>
+ <20140122152845.GB18365@magnum.frso.rivierawaves.com>
+ <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com>
+ <20140122164122.GC18365@magnum.frso.rivierawaves.com>
+ <1390416713.4334.46.camel@jlt4.sipsolutions.net>
+ <20140122191610.GD18365@magnum.frso.rivierawaves.com>
+ (sfid-20140122_201711_730750_BBD5790C)
+ <1390418495.4334.49.camel@jlt4.sipsolutions.net>
+ <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com>
+In-Reply-To: <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James,
-
-I think that I have found and fix the cause of the timing miscalculation
-[1]
-
-I have recompiled rtlwifi modules to have access to the debug option
-which I have set to 4. I have also compiled ALSA modules with the
-XRUN_DEBUG option that I have activated with
-
-echo 1 > /proc/asound/card0/pcm0p/xrun_debug
-
-I have reproduced the problems while collecting dmesg output and using
-'watch -n1 cat /proc/interrupts'
-
-I have made a couple of observations.
-
-1. there is a small burst of interrupts for rtl8192ce at a regular
-interval which seems to happen during rtl_op_sw_scan and the underruns
-appear to coincide with that.
-2. I was expecting to see XRUN entries in dmesg but I didn't. The
-closest that I have is
-[ 1700.756017] PCM: Lost interrupts? [Q] (stream=0, delta=16108,
-new_hw_ptr=383756, old_hw_ptr=367648)
-3. I didn't realise that the default ALSA device was a plugin using
-dmix. I have no underruns by using directly the ALSA HW device (hw:0,0)
-4. I have seen this in dmesg logs:
-hda-intel: IRQ timing workaround is activated for card #0. Suggest a
-bigger bdl_pos_adj.
-
-here is the aplay output with the dmesg logs around this time:
-
-$ aplay -v ~/Music/sine.wav 
-Playing WAVE '/home/lano1106/Music/sine.wav' : Signed 16 bit Little
-Endian, Rate 44100 Hz, Stereo
-Plug PCM: Rate conversion PCM (48000, sformat=S32_LE)
-Converter: linear-interpolation
-Protocol version: 10002
-Its setup is:
-  stream       : PLAYBACK
-  access       : RW_INTERLEAVED
-  format       : S16_LE
-  subformat    : STD
-  channels     : 2
-  rate         : 44100
-  exact rate   : 44100 (44100/1)
-  msbits       : 16
-  buffer_size  : 15052
-  period_size  : 940
-  period_time  : 21333
-  tstamp_mode  : NONE
-  period_step  : 1
-  avail_min    : 940
-  period_event : 0
-  start_threshold  : 15052
-  stop_threshold   : 15052
-  silence_threshold: 0
-  silence_size : 0
-  boundary     : 986447872
-Slave: Soft volume PCM
-Control: PCM Playback Volume
-min_dB: -51
-max_dB: 0
-resolution: 256
-Its setup is:
-  stream       : PLAYBACK
-  access       : MMAP_INTERLEAVED
-  format       : S32_LE
-  subformat    : STD
-  channels     : 2
-  rate         : 48000
-  exact rate   : 48000 (48000/1)
-  msbits       : 32
-  buffer_size  : 16384
-  period_size  : 1024
-  period_time  : 21333
-  tstamp_mode  : NONE
-  period_step  : 1
-  avail_min    : 1024
-  period_event : 0
-  start_threshold  : 16384
-  stop_threshold   : 16384
-  silence_threshold: 0
-  silence_size : 0
-  boundary     : 1073741824
-Slave: Direct Stream Mixing PCM
-Its setup is:
-  stream       : PLAYBACK
-  access       : MMAP_INTERLEAVED
-  format       : S32_LE
-  subformat    : STD
-  channels     : 2
-  rate         : 48000
-  exact rate   : 48000 (48000/1)
-  msbits       : 32
-  buffer_size  : 16384
-  period_size  : 1024
-  period_time  : 21333
-  tstamp_mode  : NONE
-  period_step  : 1
-  avail_min    : 1024
-  period_event : 0
-  start_threshold  : 16384
-  stop_threshold   : 16384
-  silence_threshold: 0
-  silence_size : 0
-  boundary     : 1073741824
-Hardware PCM card 0 'HDA Intel' device 0 subdevice 0
-Its setup is:
-  stream       : PLAYBACK
-  access       : MMAP_INTERLEAVED
-  format       : S32_LE
-  subformat    : STD
-  channels     : 2
-  rate         : 48000
-  exact rate   : 48000 (48000/1)
-  msbits       : 32
-  buffer_size  : 16384
-  period_size  : 1024
-  period_time  : 21333
-  tstamp_mode  : ENABLE
-  period_step  : 1
-  avail_min    : 1024
-  period_event : 0
-  start_threshold  : 1
-  stop_threshold   : 1073741824
-  silence_threshold: 0
-  silence_size : 1073741824
-  boundary     : 1073741824
-  appl_ptr     : 0
-  hw_ptr       : 0
-underrun!!! (at least 7098.589 ms long)
-Status:
-  state       : XRUN
-  trigger_time: 1692.774265154
-  tstamp      : 1700.760145135
-  delay       : -301
-  avail       : 15353
-  avail_max   : 15341
-
-[ 1692.761247] hda-intel 0000:00:1b.0: azx_pcm_prepare: bufsize=0x20000, format=0x31
-[ 1692.761268] hda_codec_setup_stream: NID=0x13, stream=0x8, channel=0, format=0x31
-[ 1692.761275] hda_codec_setup_stream: NID=0x14, stream=0x8, channel=0, format=0x31
-[ 1694.303968] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
-[ 1694.304021] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304086] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304200] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304314] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304427] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304541] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304655] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304693] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304693] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304693] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304693] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1694.304693] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:98053f15:10
-[ 1694.304693] rtl8192ce:rtl92ce_sw_led_on():<0-1> LedAddr:4E ledpin=1
-[ 1694.304693] rtl8192c_common:rtl92c_download_fw():<0-1> Firmware Version(49), Signature(0x88c1),Size(32)
-[ 1694.318113] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
-[ 1694.318113] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1> The SECR-value cc
-[ 1694.318113] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-1> Schedule TxPowerTracking direct call!!
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> rtl92c_dm_txpower_tracking_callback_thermalmeter
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Readback Thermal Meter = 0xd pre thermal meter 0xf eeprom_thermalmeter 0xf
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Initial pathA ele_d reg0xc80 = 0x40000000, ofdm_index=0xc
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Initial reg0xa24 = 0x90e1317, cck_index=0xc, ch14 0
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Readback Thermal Meter = 0xd pre thermal meter 0xf eeprom_thermalmeter 0xf delta 0x2 delta_lck 0x1 delta_iqk 0x1
-[ 1694.318113] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> <===
-[ 1694.318113] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-1> pMgntInfo->txpower_tracking = 1
-[ 1694.318113] rtl8192ce:rtl92ce_led_control():<0-1> ledaction 3
-[ 1694.318113] rtl8192ce:rtl92ce_sw_led_on():<0-1> LedAddr:4E ledpin=1
-[ 1694.640920] PCM: Lost interrupts? [Q] (stream=0, delta=14444, new_hw_ptr=90248, old_hw_ptr=75804)
-[ 1694.641440] rtl8192c_common:rtl92c_dm_dynamic_bb_powersaving():<0-0> Not connected to any
-[ 1694.641454] rtl8192c_common:rtl92c_dm_dynamic_bb_powersaving():<0-0> AP Ext Port PWDB = 0x0
-[ 1694.641472] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-0> Trigger 92S Thermal Meter!!
-[ 1694.641517] rtlwifi:rtl_op_sw_scan_start():<0-0>
-[ 1694.641530] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 6
-[ 1694.641545] rtl8192c_common:rtl92c_dm_write_dig():<0-0> cur_igvalue = 0x20, pre_igvalue = 0x0, back_val = 10
-[ 1694.654779] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1694.654786] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1694.724173] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1694.724179] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1694.794176] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1694.794181] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1694.864217] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1694.864226] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1694.934184] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1694.934193] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.004187] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.004196] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.074187] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.074196] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.144185] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.144194] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.214184] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.214196] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.284182] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.284192] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.354186] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.354195] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.424207] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schedule workitem
-[ 1695.424217] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
-[ 1695.424275] rtlwifi:rtl_op_sw_scan_complete():<0-0>
-[ 1695.424282] rtl8192c_common:rtl92c_dm_write_dig():<0-0> cur_igvalue = 0x22, pre_igvalue = 0x22, back_val = 10
-[ 1695.524091] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
-[ 1695.524141] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 2
-[ 1695.524147] rtl8192ce:rtl92ce_sw_led_on():<0-0> LedAddr:4E ledpin=1
-[ 1700.419054] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
-[ 1700.419106] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419172] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419286] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419399] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419513] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419627] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419745] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419866] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.419984] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.420015] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.420015] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:18051d59:11
-[ 1700.420015] rtl8192ce:_rtl92ce_init_mac():<0-1> reg0xec:98053f15:10
-[ 1700.420015] rtl8192ce:rtl92ce_sw_led_on():<0-1> LedAddr:4E ledpin=1
-[ 1700.420015] rtl8192c_common:rtl92c_download_fw():<0-1> Firmware Version(49), Signature(0x88c1),Size(32)
-[ 1700.420015] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
-[ 1700.420015] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1> The SECR-value cc
-[ 1700.420015] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-1> Schedule TxPowerTracking direct call!!
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> rtl92c_dm_txpower_tracking_callback_thermalmeter
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Readback Thermal Meter = 0xd pre thermal meter 0xf eeprom_thermalmeter 0xf
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Initial pathA ele_d reg0xc80 = 0x40000000, ofdm_index=0xc
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Initial reg0xa24 = 0x90e1317, cck_index=0xc, ch14 0
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> Readback Thermal Meter = 0xd pre thermal meter 0xf eeprom_thermalmeter 0xf delta 0x2 delta_lck 0x1 delta_iqk 0x1
-[ 1700.420015] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1> <===
-[ 1700.420015] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-1> pMgntInfo->txpower_tracking = 1
-[ 1700.420015] rtl8192ce:rtl92ce_led_control():<0-1> ledaction 3
-[ 1700.420015] rtl8192ce:rtl92ce_sw_led_on():<0-1> LedAddr:4E ledpin=1
-[ 1700.756017] PCM: Lost interrupts? [Q] (stream=0, delta=16108, new_hw_ptr=383756, old_hw_ptr=367648)
-[ 1700.756513] rtlwifi:rtl_op_sw_scan_start():<0-0>
-
-
-[1]
-http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071521.html
-
-On Thu, 2014-01-16 at 16:55 +1100, James Cameron wrote:
-> On Thu, Jan 16, 2014 at 12:25:42AM -0500, Olivier Langlois wrote:
-> > On 01/15/2014 12:01 PM, Larry Finger wrote:
-> > >On 01/15/2014 12:37 AM, Olivier Langlois wrote:
-> > >>How to reproduce:
-> > >>
-> > >>1. Enable Wifi while not connecting to any AP.
-> > >>2. lano1106@hpmini ~/Music $ aplay -c1 sine.wav
-> > >>underrun!!! (at least 1856093977.967 ms long)
-> 
-> Indeed, that timing is fishy.
-> 
-> I've looked at the alsa-devel thread [1] and your problem description
-> there.
-> 
-> At OLPC during development we found similar symptoms showing up in
-> ALSA playback that were contributed to other drivers, but the
-> underlying causes were in the ALSA driver for our codec chip, and the
-> other drivers were changing the appearance of the fault only because
-> of timing changes.
-> 
-> But there's no need to conclude that interrupts were disabled or
-> delayed.  There can be many other causes.
-> 
-> The timing miscalculation by ALSA might be important.  I can't figure
-> out how a wireless driver can easily cause that.
-> 
-> 1.
-> http://mailman.alsa-project.org/pipermail/alsa-devel/2014-January/071142.html
-> 
-
-
-
+PiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PiBzY2hyaWViOg0KPiA+
+T24gV2VkLCAyMDE0LTAxLTIyIGF0IDIwOjE2ICswMTAwLCBLYXJsIEJlbGRhbiB3cm90ZToNCj4g
+Pg0KPiA+PiA+IEdpdmVuIHRoZSBmYWN0IHRoYXQgd2Ugb25seSBzZW5kIHRoZSBmcmFtZSBmcm9t
+DQo+ID4+ID4gaWVlZTgwMjExX3N0b3BfdHhfYmFfY2IoKSBJIGRvbid0IHNlZSBhbnkgcHJvYmxl
+bS4gRXZlbiBpZiB3ZSB3ZXJlDQo+ID50bw0KPiA+PiA+IHNlbmQgdGhlIGZyYW1lIGRpcmVjdGx5
+IGFmdGVyIGNhbGxpbmcgdGhlIGFtcGR1X2FjdGlvbiwgaXQgc2VlbXMgaXQNCj4gPj4gPiB3b3Vs
+ZCBiZSBmaW5lLCBzaW5jZSB0aGUgY2FsbGJhY2sgKG5vdykgcmVxdWlyZXMgc2VuZGluZyB0aGUN
+Cj4gPnJlbWFpbmluZw0KPiA+PiA+IGZyYW1lcyB1bmFnZ3JlZ2F0ZWQuIChHaXZlbiB0aGF0LCBJ
+J20gbm90IGV2ZW4gc3VyZSB3aHkgd2UgcmVxdWlyZWQNCj4gPnRoZQ0KPiA+PiA+IHBhY2tldHMg
+dG8gYmUgc2VudCB1bmFnZ3JlZ2F0ZWQsIEVtbWFudWVsLCBkbyB5b3UgcmVtZW1iZXI/KQ0KPiA+
+PiA+DQo+ID4+IEknZCBleHBlY3QgbW9zdCBkZXZpY2UgdG8gbm90IGJsb2NrIGFjayBzdWNoIGZy
+YW1lcywgYW5kIHRoZXknZCBiZQ0KPiA+PiByaWdodCB0byBkbyBzbywgc2VuZGluZyB0aGVtIHVu
+YWdncmVnYXRlZCBzZWVtcyB0aGUgcmlnaHQgdGhpbmcgdG8NCj4gPmRvLg0KPiA+DQo+ID5PaCwg
+SSByb3VnaGx5IHJlbWVtYmVyIG5vdyAtIHdlIGRpZG4ndCB3YW50IHRvIHNlcGFyYXRlIHRoZSBj
+YXNlcyBvZiB1cw0KPiA+c2VuZGluZyBhIGRlbEJBIGFuZCB1cyByZWNlaXZpbmcgYSBkZWxCQS4g
+SWYgd2UgcmVjZWl2ZSBhIGRlbEJBLCB3ZQ0KPiA+c2hvdWxkIHN0b3Agc2VuZGluZyBhZ2dyZWdh
+dGVkIGZyYW1lcyBpbW1lZGlhdGVseSAoYWN0dWFsbHkgZm9yIGl3bHdpZmkNCj4gPnRoZSBmaXJt
+d2FyZSB3aWxsIGRvIHRoYXQpIG9yIGFzIHF1aWNrbHkgYXMgcG9zc2libGUsIGhlbmNlIHRoZQ0K
+PiA+cmVxdWlyZW1lbnQNCj4gPg0KPiA+SWYgd2UgZGVjaWRlIHRvIHRlYXIgZG93biB0aGUgc2Vz
+c2lvbiBvdXJzZWx2ZXMgdGhlbiB3ZSBjb3VsZCBjb250aW51ZQ0KPiA+c2VuZGluZyB1bnRpbCBs
+YXRlciwgYnV0IGl0J3Mgbm90IHdvcnRoIGl0Lg0KPiA+DQoNCkV4YWN0bHkgLSB3ZSB3YW50ZWQg
+dG8gdW5pZnkgdGhlIGluaXRpYXRvciAodGhlIFRYaW5nIHNpZGUgZGVjaWRlcyB0byBzdG9wIHRo
+ZSBCQSBhZ3JlZW1lbnQpIGFuZCB0aGUgcmVjaXBpZW50ICh0aGUgUlhpbmcgc2lkZSBkZWNpZGVz
+IHRvIHN0b3AgdGhlIEJBIGFncmVlbWVudCkgY2FzZXMuIFNvIGl0IGdvZXMgbGlrZSB0aGlzOg0K
+SWYgeW91IGdldCBhcmUgVFhpbmcgYW5kIHlvdSBnZXQgYSAocmVjaXBpZW50KSBERUxCQSwgdGhl
+biB5b3UgbmVlZCB0byBzdG9wIHNlbmRpbmcgQU1QRFVzIHN0cmFpZ2h0IGF3YXkuIFRoaXMgaXMg
+d2h5IEludGVsIGNhcmRzIGhhdmUgdGhlIGZpcm13YXJlIGRvIHRoaXMuIEJ1dCBzaW5jZSBpd2x3
+aWZpIHVzZXMgZGlmZmVyZW50IHF1ZXVlcyBmb3Igbm9uLWFnZ3JlZ2F0ZWQgdHJhZmZpYyBhbmQg
+QU1QRFVzLCB3ZSBtdXN0IHdhaXQgdW50aWwgYWxsIHRoZSBwYWNrZXRzIGluIHRoZSBBTVBEVSBx
+dWV1ZSB3aWxsIGRyYWluLCBhbmQgb25seSB0aGVuLCBhbGxvdyBtYWM4MDIxMSB0byBzZW5kIHBh
+Y2tldHMgdG8gdGhlIG5vbi1hZ2dyZWdhdGVkIHRyYWZmaWMgcXVldWUuIE5vdyAtIGV2ZW4gdmVu
+ZG9ycyB0aGF0IGRvbid0IHByZXZlbnQgdGhlIEFNUERVcyBpbiBmaXJtd2FyZSBzaG91bGQgc3Rp
+bGwgZG8gdGhlIHNhbWUgKHByb3ZpZGVkIHRoYXQgdGhleSB1c2UgZGlmZmVyZW50IHF1ZXVlcyBm
+b3IgQU1QRFUgYW5kIG5vbi1BTVBEVSB0cmFmZmljKS4gVGhpcyBpcyBub3QgdG8gcHJldmVudCBz
+ZW5kaW5nIEFNUERVcyBhZnRlciBERUxCQSwgYnV0IG1vcmUgdG8gcHJldmVudCBvdXQtb2Ytb3Jk
+ZXIgVFguDQpJbiB0aGUgY2FzZSBvZiBvcmlnaW5hdG9yIERFTEJBLCBpdCBpcyBzbGlnaHRseSBk
+aWZmZXJlbnQuIFdlIGNhbiBjaG9vc2Ugd2hlbiB0byBzZW5kIHRoZSBERUxCQSBhZnRlciBhbGwu
+IE9mIGNvdXJzZSB3ZSBzdGlsbCBoYXZlIHRoZSBvdXQtb2Ytb3JkZXIgdGhpbmcgdG8gdGFrZSBj
+YXJlIGFib3V0LCBidXQgYXQgbGVhc3QsIHdlIGNhbiBhdm9pZCB0aGUgIkFNUERVcyBhZnRlciBE
+RUxCQSIgZXZlbiB3aXRob3V0IGZpcm13YXJlIHN1cHBvcnQuDQpUaGUgb25seSB0aGluZyB5b3Ug
+aGF2ZSB0byBkbyBpcyB0byBtYWtlIHN1cmUgdGhhdCBpZWVlODAyMTFfc3RvcF90eF9iYV9jYiBp
+cyBjYWxsZWQgb25seSAqYWZ0ZXIqIHRoZSBkcml2ZXIgaXMgc3VyZSB0aGF0IGFsbCB0aGUgcGFj
+a2V0cyBpbiB0aGUgQU1QRFUgcXVldWUgYXJlIHNlbnQuIE1hYzgwMjExIHdvbid0IHNlbmQgdGhl
+IERFTEJBIGJlZm9yZSB0aGUgbG93IGxldmVsIGRyaXZlciBjYWxscyBpZWVlODAyMTFfc3RvcF90
+eF9iYV9jYi4gU28sIGlmIHRoZSBkcml2ZXIgaXMgYWJsZSB0byB0ZWxsIG1hYzgwMjExIHdoZW4g
+aXQgaXMgZmluaXNoZWQgd2l0aCB0aGUgQU1QRFUgcGFja2V0cywgeW91IGNhbiBzYWZlbHkgc2Vu
+ZCBpdCBpbiBWTyBhbmQgbm90IGZlYXIgYW55ICJBTVBEVSBhZnRlciBERUxCQSIgcHJvYmxlbS4N
+CkFub3RoZXIgKHNpZGUpIHBvaW50LiBFdmVuIGlmIHlvdSBjYW4gc3RvcCBzZW5kaW5nIEFNUERV
+cyBzdHJhaWdodCBhd2F5IChpd2x3aWZpIGNhbiBkbyB0aGF0IHdpdGggYSBjb21tYW5kIHRvIHRo
+ZSBmaXJtd2FyZSB0aGF0IHdpbGwgYmUgbXVjaCBmYXN0ZXIgdGhhbiB3YWl0aW5nIGZvciBxdWV1
+ZXMgdG8gZHJhaW4pLCB5b3Ugc3RpbGwgaGF2ZSB0aGUgVHggb3V0LW9mLW9yZGVyIHByb2JsZW0u
+DQpTbyB0aGF0IHRlY2huaWNhbGx5LCB3ZSBjb3VsZCBoYXZlIGEgbW9yZSBmaW5lIGdyYWluIHJl
+c29sdXRpb24gaW4gbWFjODAyMTEgdGhhdCBhbGxvd3MgdGhlIGxvdyBsZXZlbCBkcml2ZXIgdG8g
+aGF2ZSBtYWM4MDIxMSBzZW5kIHRoZSBERUxCQSBlYXJsaWVyLCBidXQgc3RpbGwgcHJldmVudHMg
+bWFjODAyMTEgZnJvbSBzZW5kaW5nIHBhY2tldHMgdG8gdGhlIGxvdyBsZXZlbCBkcml2ZXIgdW50
+aWwgdGhlIGFsbCB0aGUgcXVldWVzIGFyZSBkcmFpbmVkLg0KQnV0IHRoaXMgaXMgZGVmaW5pdGVs
+eSBub3Qgd29ydGggdGhlIGNvbXBsZXhpdHkgc2luY2UgZGVsYXlpbmcgdGhlIERFTEJBIGJ5IGEg
+Yml0IGRvZXNuJ3QgY29zdCBhbnl0aGluZy4NCg0KSG9wZSB0aGF0IGhlbHBzIDopDQoNCj4gPj4g
+U28sIEkgZ3Vlc3MgeW91IGFyZSB0YWtpbmcgd2hhdCBJIHNlbnQgPw0KPiA+DQo+ID5IYXZlbid0
+IHJlYWxseSBtYWRlIHVwIG15IG1pbmQgeWV0IC4uLiBJIHRoaW5rIGl0J3MgbW9yZSBjb3JyZWN0
+LCBzbyBJDQo+ID5zaG91bGQsIGJ1dCBJIGFsc28gZG9uJ3QgcmVhbGx5IHdhbnQgdG8gYnJlYWsg
+dGhlIHJhbGluayBkcml2ZXJzIG92ZXINCj4gPndoYXQgc2VlbXMgdG8gbWUgdG8gYmUgYSBmYWly
+bHkgc21hbGwgaXNzdWUuDQo+IA0KPiBJIHRoaW5rIEknbSBmaW5lIHdpdGggdGhpcyBub3cuIExl
+dCdzIGp1c3Qgc2VlIGlmIHNvbWVvbmUgZXhwZXJpZW5jZXMgYW55DQo+IGlzc3VlcyAuLi4NCj4g
+DQo+ICBGdXJ0aGVybW9yZSBJIHRoaW5rIGkgZXZlbiByZW1lbWJlciB0aGF0IHlvdSBjYW4gZm9y
+Y2UgcmFsaW5rIEhXIHRvIHN0b3AgYQ0KPiBCQSBzZXNzaW9uLiBCdXQgYWxsIGluIGFsbCBsZXRz
+IGJldHRlciBjb21wbHkgd2l0aCB0aGUgc3BlYyAuLi4NCg0KV2VsbCAtIHlvdSBuZWVkIHRvIHNl
+ZSB3aGF0ICJzdG9wIGEgQkEgc2Vzc2lvbiIgbWVhbi4gSWYgeW91IGFyZSBhYmxlIHRvIHRlbGwg
+dGhlIEhXIG5vIEFNUERVcyBhbnltb3JlICpub3cqLCB0aGVuIG9rIC0gYnV0IHlvdSBzdGlsbCBo
+YXZlIHRoZSBvdXQtb2Ytb3JkZXIgVFggcHJvYmxlbS4gVW5sZXNzIHlvdSB1c2UgdGhlIHNhbWUg
+VFggcXVldWUgZm9yIEFNUFVzIGFuZCBub24tQU1QRFVzIGFuZCBkb24ndCBmZWFyIHJlb3JkZXJp
+bmcgaXNzdWVzDQoNCj4gDQo+IEhlbG11dA0K
