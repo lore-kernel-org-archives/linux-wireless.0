@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:57277 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166AbaATCWd (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:41142 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408AbaAWJaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 21:22:33 -0500
-Date: Mon, 20 Jan 2014 13:22:23 +1100
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
-Message-ID: <20140120022223.GI17658@us.netrek.org> (sfid-20140120_032259_681724_15558974)
-References: <1389325691-21371-1-git-send-email-bzhao@marvell.com>
- <1390174797.3651.7.camel@deadeye.wl.decadent.org.uk>
- <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com>
+	Thu, 23 Jan 2014 04:30:19 -0500
+Received: by mail-we0-f173.google.com with SMTP id t60so902258wes.32
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:30:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com>
+In-Reply-To: <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
+References: <52DF947E.40800@gmail.com> <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+ <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
+ <52E0BA40.7090203@gmail.com> <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+ <52E0D7D5.6060504@gmail.com> <CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
+ <CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
+ <DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com> <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 23 Jan 2014 14:59:58 +0530
+Message-ID: <CABPxzYLJwyXA+XZ+nHzoCZrSo99joTfhP7iQUbWMfcw403H_WA@mail.gmail.com> (sfid-20140123_103025_928914_79EC42A6)
+Subject: Re: 802.11a is supported in AP mode or not?
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Liu, Bopeng" <Bopeng.Liu@windriver.com>,
+	zhuyj <zyjzyj2000@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 19, 2014 at 06:10:03PM -0800, Bing Zhao wrote:
-> The 2nd (69 or 68) and 3rd (11 or 29) numbers in the version string
-> do not necessarily mean the version increasing or decreasing. Only
-> when first 3 numbers are fixed, a smaller 4th number will mean that
-> the version is rolling backward.
+On Thu, Jan 23, 2014 at 2:57 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Thu, Jan 23, 2014 at 11:21 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+>>
+>>
+>> So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
+> Yes
+>
+>>
+>> Though #iwconfig wlan0 shows there is modes a ?
+>
+> In client mode - not in AP mode
+>>
+Well in Us channel 149/36 is a valid channel for AP operation. So ideally
+it should work? Is there any specific feature blocking such in iwlwifi?
 
-Ah, light dawns.  I've been dealing with these version numbers for
-years now, for 8388, 8686 and 8787, and I didn't know that.  Is this
-documented anywhere else?  Have the 2nd and 3rd numbers any meaning or
-are they random?
+can you try building iwlwifi with CONFIG_IWLWIFI_DEBUG from make menuconfig?
+It prints out the reg rules it read from eeprom? Also please post the
+full dmesg.
 
--- 
-James Cameron
-http://quozl.linux.org.au/
+>> iwconfig wlan0
+>> wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
+>>           Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
+>>           Bit Rate=1 Mb/s   Tx-Power=15 dBm
+>>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>           Encryption key:off
+>>           Power Management:off
+>>           Link Quality=60/70  Signal level=-50 dBm
+>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>           Tx excessive retries:0  Invalid misc:14   Missed beacon:0
+>>
