@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f47.google.com ([209.85.128.47]:35353 "EHLO
-	mail-qe0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaAJUVY (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:58282 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751167AbaAWUVu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 15:21:24 -0500
-Received: by mail-qe0-f47.google.com with SMTP id 5so4838084qeb.6
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2014 12:21:23 -0800 (PST)
-From: Alex Gal <a.gal@motsai.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Alex Gal <a.gal@motsai.com>
-Subject: [PATCH v5] wl12xx: fix tx power setting
-Date: Fri, 10 Jan 2014 15:21:13 -0500
-Message-Id: <1389385273-1322-1-git-send-email-a.gal@motsai.com> (sfid-20140110_212129_433831_3BAD5CCF)
+	Thu, 23 Jan 2014 15:21:50 -0500
+Date: Thu, 23 Jan 2014 22:21:43 +0200
+From: Petko Manolov <petkan@nucleusys.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi crash with 3.13
+Message-ID: <20140123202142.GC4064@localhost> (sfid-20140123_212154_206616_4F75B031)
+References: <20140123091659.GE9077@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
+ <20140123123125.GA3424@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
+ <20140123200045.GA4064@localhost>
+ <52E17698.9070607@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52E17698.9070607@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver ignores BSS_CHANGED_TXPOWER changes.
-Fix this by calling ACX_TX_POWER when appropriate.
+On 14-01-23 22:07:52, Emmanuel Grumbach wrote:
+> 
+> Unfortunately, I can't see the loading of iwlwifi.
 
-Signed-off-by: Alex Gal <a.gal@motsai.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+It overflowed.  That's what happen when debug != 0 ... :)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e9da47c..89d2310 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4457,6 +4457,16 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- 
-+	if ((changed & BSS_CHANGED_TXPOWER) &&
-+	    bss_conf->txpower != wlvif->power_level) {
-+
-+		ret = wl1271_acx_tx_power(wl, wlvif, bss_conf->txpower);
-+		if (ret < 0)
-+			goto out;
-+
-+		wlvif->power_level = bss_conf->txpower;
-+	}
-+
- 	if (is_ap)
- 		wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
- 	else
--- 
-1.8.5.2
+> Doesn't matter any more - I found the issue.
 
+Ah, good.  Cheers.
+
+
+		Petko
