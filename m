@@ -1,128 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:35779 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbaAGRE5 (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:35621 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbaAXHlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 12:04:57 -0500
-Received: by mail-oa0-f54.google.com with SMTP id o6so471700oag.41
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2014 09:04:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140107162655.GB9092@w1.fi>
-References: <20140106075126.GA31046@w1.fi>
-	<1389110387.4645.26.camel@jlt4.sipsolutions.net>
-	<20140107162655.GB9092@w1.fi>
-Date: Tue, 7 Jan 2014 09:04:56 -0800
-Message-ID: <CAMcMvshGwDB1G1urY18jYHr8mdXTapktfRsSgX0nhJjuPFW5Jg@mail.gmail.com> (sfid-20140107_180525_171002_44C8C9E6)
-Subject: Re: [RFC 2/3] cfg80211: MinChannelTime and MaxChannelTime for scan requests
-From: Paul Stewart <pstew@chromium.org>
-To: Jouni Malinen <j@w1.fi>
+	Fri, 24 Jan 2014 02:41:49 -0500
+Message-ID: <1390549306.19968.6.camel@porter.coelho.fi> (sfid-20140124_084153_316380_EF056C82)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Fri, 24 Jan 2014 09:41:46 +0200
+In-Reply-To: <CA+BoTQkd6XLYpJPAb-HLosbmT3duVCdpEStpxNCcHCGTx9djzw@mail.gmail.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+	 <1390462306.4189.56.camel@porter.coelho.fi>
+	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
+	 <1390470648.4189.88.camel@porter.coelho.fi>
+	 <CA+BoTQm768pE7w1x9p5dN+qTxYjzf8R5u4WASd4zEaQ=v717BQ@mail.gmail.com>
+	 <1390479620.4142.14.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQkd6XLYpJPAb-HLosbmT3duVCdpEStpxNCcHCGTx9djzw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 8:26 AM, Jouni Malinen <j@w1.fi> wrote:
->
-> On Tue, Jan 07, 2014 at 04:59:47PM +0100, Johannes Berg wrote:
-> > On Mon, 2014-01-06 at 09:51 +0200, Jouni Malinen wrote:
-> > > This adds new nl80211 attributes to allow MinChannelTime and
-> > > MaxChannelTime to be specified for scan requests. The parameters can be
-> > > used to control the amount of time spent on each channel during a scan
-> > > as specified in the IEEE Std 802.11-2012 MLME-SCAN.request() primitive.
+On Thu, 2014-01-23 at 13:38 +0100, Michal Kazior wrote:
+> On 23 January 2014 13:20, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2014-01-23 at 11:33 +0100, Michal Kazior wrote:
 > >
-> > What are the specific use cases for this? Our driver is likely to muck
-> > around with these in the future, possibly depending on traffic levels
-> > etc., so I wonder what this addresses and whether it can be unified in
-> > some way?
->
-> I don't have any specific use case in mind. These are parameters
-> included in the standard and there are various new use cases coming up
-> for IEEE 802.11 scanning and those could potentially be able to use this
-> type of parameters. Similarly, I'd actually like to see quite a bit
-> additional flexibility in scanning operations like partial scan reports
-> (event notification of updated BSSes per channel etc.) and aborting
-> scans, etc., that has also come up in the past.
-
-I've seen situations where it'd be useful to distinguish in user-space
-between scan types.  Here are a few scenarios:
-
- - Scanning for geo-location while associated (low-priority scan, tolerant
-   to delayed/incomplete results, definitely not intended to interrupt or
-   delay any inbound data traffic)
- - Background scan.  If there is traffic during the scan, we should abort
-   (NL80211_SCAN_FLAG_LOW_PRIORITY should help with this).  If there is
-   a history of traffic (e.g, an active data transfer) we might want to flag
-   further that this scan should have shorter-than-usual dwell times as above.
- - User-initiated scanning while idle in extremely congested networks
-   (may need to actually wait a full beacon interval on each channel since
-   the APs contend with each other to respond to probe requests -- user
-   initiated, so it behooves us to get a complete list).
-
-For my part, I don't care to define the exact parameters (dwell time, etc)
-as much as I'd prefer that these concerns be conveyed in a way that the
-driver can make effective decisions as to what type of scan should be
-performed.  Of course this leads to a set of complex decisions in userspace
-as to how to interpret the scan results -- wpa_supplicant has logic for
-removing a BSS if it was not present for some number of scans -- that
-heuristic won't hold true if the scan was not necessarily complete.
-
-> > Would you expect these to always be specified, to the point where our
-> > driver no longer has any flexibility in adjusting things internally?
->
-> Maybe for some use cases, but unlikely for the find an AP to connect to
-> case.
->
-> > > + * @min_chan_time: MinChannelTime in TUs; time to spend waiting for
-> > > + * PHY-CCA.indication (channel busy) in Active scan; 0 to indicate that driver
-> > > + * default value to be used
-> > > + * @max_chan_time: MaxChannelTime in TUs; time to spend waiting for Beacon or
-> > > + * Probe Response frames; 0 to indicate that driver default value to be used
+> >> An extreme approach would to actually update AP IEs in mac80211. This
+> >> way it would be possible to pull any interface into CSA implicitly if
+> >> you're out of channels. This way single-channel multi-BSS AP could
+> >> probably switch atomically without races and your multi-channel
+> >> GO-possibly-follows-STA would still work.
 > >
-> > missing some indentation
->
-> Different coding styles.. I can handle this whenever there is an example
-> close-by, but this structure did not have one :).
->
-> > > + * @NL80211_ATTR_MIN_CHANNEL_TIME: MinChannelTime - Minimum time (in TU) to
-> > > + * spend on each channel when scanning (used for active scans). If not
-> > > + * included, the driver will use its default value. u32 attribute.
+> > I don't really like updating IEs in mac80211 much. Asking userspace
+> > shouldn't be *that* much slower.
+> 
+> I'm not really fond the idea either. Though it's not about being
+> slower but about the 'dragging other interfaces along' being possibly
+> automatic when you're out of channels.
+
+Yeah, I agree that updating the IEs in mac80211 is not a good idea.
+That's why I would prefer to have the notifications to the user space
+("your interface must switch channel") and wait for the userspace to
+request a channel switch (with all the necessary information).
+
+
+> >> > The CAC might take too long.  If we have an AP1 and a STA and the STA
+> >> > gets the CSA from its AP2 with a short count, AP1 may not have the time
+> >> > to CAC.  In this case, AP1 have two choices: trust that AP2 is doing the
+> >> > right thing and moving to a usable DFS channel or shut itself down.
+> >>
+> >> That's the point. AP1 doesn't have time to perform CAC in this case,
+> >> but it should still be possible for AP1 to _just_ beacon CSA as it's
+> >> only a hint. AP1 could then be stopped to perform CAC, and once it's
+> >> completed restart the AP1.
 > >
-> > What about passive scans?
->
-> As defined in IEEE Std 802.11-2012.. In other words, MinChannelTime is
-> not used with passive scans. As you can see from the mac80211
-> implementation in the following patch, that does not use this
-> MinChannelTime even for active scans. This could be used for the
-> optimization where CCA detection could be used to stop an Active scan
-> more quickly. I'm not sure whether we'd ever use this, but well, it was
-> easy to include for completeness sake.
->
-> > If you specify a very long min_chan_time, that's unlikely to please
-> > drivers. Especially if multi-channel mode is implemented, maybe in
-> > conjunction with operating as a GO or a client that wants to hear DTIM
-> > beacons, this might become very complicated.
->
-> Agreed. I was thinking of adding some limits on how large a value could
-> be set, but could not come up with any specific, justifiable value. (And
-> the standard was not very helpful either with the "N/A" as the valid
-> range ;-).
->
-> > I'd be really interested in seeing if we can address the use cases here
-> > in a different way that keeps more flexibility in the
-> > driver/firmware/... implementation of scan.
->
-> That would require knowing the specific use cases first.. :)  In
-> general, I'd expect to see need for doing scans that take less time even
-> if that results in smaller likelihood of seeing BSSes on the first
-> attempt. I could come up with much more difficult designs for the
-> driver/firmware to handle, but I'm not sure whether something more
-> flexible would be available unless someone can first articulate specific
-> use cases.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > I don't get this side discussion about CAC. There's no time to do CAC in
+> > the middle of a CSA *anyway* since you can't be beaconing on the old
+> > channel while doing CAC on the new channel, and if you stop beaconing
+> > entirely for the time of the CAC then all clients will likely go away...
+> 
+> You're right, but..
+> 
+> 
+> > I'm not sure I understand how you can ever do a CSA to a radar channel
+> > that would still need CAC?
+> 
+> You're supposed to fulfil a uniform channel usage spread which
+> includes "usable" DFS channels.
+> 
+> With CSA you're at least able to tell stations to stop Tx and should
+> wait for you (the AP) on a different channel.
+
+I think that we should stop transmission in all interfaces that are on a
+certain channel when that channel receives a CSA with "quiet" mode.  I'm
+not sure this would help your CAC case, but I think it's a wise thing to
+do to prevent the other interfaces from transmitting.
+
+--
+Luca.
+
