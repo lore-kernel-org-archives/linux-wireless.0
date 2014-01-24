@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:62773 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbaAXXgK (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:63779 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268AbaAXWqy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 18:36:10 -0500
-Received: by mail-lb0-f178.google.com with SMTP id u14so2974082lbd.23
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 15:36:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1385395140.4443.28.camel@jlt4.sipsolutions.net>
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com>
- <1384377738.28806.15.camel@jlt4.sipsolutions.net> <20131114141105.GB19070@garbanzo.do-not-panic.com>
- <1384440286.13941.27.camel@jlt4.sipsolutions.net> <20131114151809.GB29954@garbanzo.do-not-panic.com>
- <1385395140.4443.28.camel@jlt4.sipsolutions.net>
+	Fri, 24 Jan 2014 17:46:54 -0500
+Received: by mail-pb0-f53.google.com with SMTP id md12so3731787pbc.26
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:46:54 -0800 (PST)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 24 Jan 2014 15:35:48 -0800
-Message-ID: <CAB=NE6XOk+KYW7OyKpYvnDsxTtj7YcT1p=w49mC4tJuA5bAWcg@mail.gmail.com> (sfid-20140125_003615_077488_4E59569F)
-Subject: Re: [RFC 3/5] cfg80211: add regulatory quiescing support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Jouni Malinen <j@w1.fi>, sunitb <sunitb@qca.qualcomm.com>,
-	rsunki <rsunki@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 03/11] rel-html: update Linux project file
+Date: Fri, 24 Jan 2014 14:46:25 -0800
+Message-Id: <1390603593-27728-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20140124_234657_575276_C6AE302F)
+In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 7:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> At least we should then also have that patch that QCA has somewhere
-> about reporting to userspace that AP was stopped :P
+This reflects the latest changes for kernel release
+project maintenance. The 3.14-rc1 is not out yet but
+should be out soon.
 
-I don't have time to resubmit these, so someone else can pick them up,
-I'm happy to review though.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ rel-html.cfg | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-  Luis
+diff --git a/rel-html.cfg b/rel-html.cfg
+index d6b010e..a4baa15 100644
+--- a/rel-html.cfg
++++ b/rel-html.cfg
+@@ -1,9 +1,10 @@
+ [project]
+ rel_html_proj           = linux
+ supported =
++		3.14
+ 		3.13
+ 		3.12
+-		3.12
++		3.10
+ 		3.4
+ 		3.2
+ 		2.6.34
+-- 
+1.8.5.2
+
