@@ -1,82 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:60000 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaAQOQr (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49924 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210AbaAXNPA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 09:16:47 -0500
-Received: by mail-qa0-f43.google.com with SMTP id o15so3312446qap.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 06:16:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com>
-References: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com>
-Date: Fri, 17 Jan 2014 15:16:47 +0100
-Message-ID: <CALtMJEBuMfTi=nqjC_T8GcJCkfM3M1Q1g6PMH2k+7=XOFkdabA@mail.gmail.com> (sfid-20140117_151651_013232_340B8582)
-Subject: Re: mwifiex wowlan not working
-From: Andreas Fenkart <afenkart@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 24 Jan 2014 08:15:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: send event when AP interface is stopped by kernel
+Date: Fri, 24 Jan 2014 14:14:56 +0100
+Message-Id: <1390569296-23030-1-git-send-email-johannes@sipsolutions.net> (sfid-20140124_141505_968865_65374E31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-2014/1/10 Andreas Fenkart <afenkart@gmail.com>:
-> these fail:
->
-> iw phy0 wowlan enable magic-packet
-> etherwake -i wlan0 5C:F8:A1:15:1B:0B
-> wakeonlan 5C:F8:A1:15:1B:0B
+There are a few cases, e.g. suspend, where an AP interface is
+stopped by the kernel rather than by userspace request, most
+commonly when suspending. To let userspace know about this,
+send the NL80211_CMD_STOP_AP command as an event every time
+an AP interface is stopped. This also happens when userspace
+did in fact request the AP stop, but that's not a problem.
 
-see followup patch, looks like a bug
+For full-MAC drivers this may need to be extended to also
+cover cases where the device stopped the AP operation for
+some reason, this a bit more complicated because then all
+cfg80211 state also needs to be reset; such API is not part
+of this patch.
 
-> wake-on RX packets with TCP destination port 22
-> iw phy0 wowlan enable patterns 44+16
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/ap.c      |  1 +
+ net/wireless/nl80211.c | 29 +++++++++++++++++++++++++++++
+ net/wireless/nl80211.h |  2 ++
+ 3 files changed, 32 insertions(+)
 
-me bad here, should be: (mind the extr 0x00 after the offset)
-iw phy0 wowlan enable patterns 44+00:16
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 11ee4ed..4760d655 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -30,6 +30,7 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		wdev->channel = NULL;
+ 		wdev->ssid_len = 0;
+ 		rdev_set_qos_map(rdev, dev, NULL);
++		nl80211_send_ap_stopped(wdev);
+ 	}
+ 
+ 	return err;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 36fb595..6753203 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11757,6 +11757,35 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
+ }
+ EXPORT_SYMBOL(cfg80211_crit_proto_stopped);
+ 
++void nl80211_send_ap_stopped(struct wireless_dev *wdev)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_STOP_AP);
++	if (!hdr)
++		goto out;
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->netdev->ifindex) ||
++	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
++		goto out;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(wiphy), msg, 0,
++				NL80211_MCGRP_MLME, GFP_KERNEL);
++	return;
++ out:
++	nlmsg_free(msg);
++}
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index b1b2313..cb0216e 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -74,6 +74,8 @@ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
+ 		     enum nl80211_radar_event event,
+ 		     struct net_device *netdev, gfp_t gfp);
+ 
++void nl80211_send_ap_stopped(struct wireless_dev *wdev);
++
+ void cfg80211_rdev_free_coalesce(struct cfg80211_registered_device *rdev);
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
+-- 
+1.8.5.2
 
-> <hit random keys in ssh session, established before sleep>
-works great! login through ssh, put it to sleep and wake it
-up by hitting a random key. all from the same ssh shell. loving it
-
-Also started to play around with ethtool:
-
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/105122
-
-One thing I noticed, these triggers don't work unless you also
-enable a trigger with iw. Any ideas why I need to setup wowlan
-via both tools iw and ethtool even if only want ethtool functions?
-
-e.g.
-
-<fresh booted system, wifi connected>
-ethttool -s wlan0 wol u
-echo mem > /sys/power/state
-
--> no wakeup on ping request, I see ICMP packets with tcpdump
-
-iw phy0 wowlan enable patterns de:ad:be:ef
-ethttool -s wlan0 wol u
-echo mem > /sys/power/state
-
--> wakeup on ping request works
-
-iw phy0 wowlan disable
-
--> no more wakeup on ping request
-
-iw phy0 wowlan enable patterns de:ad:be:ef
-
--> works again
-
-iw phy0 wowlan disable
-ethttool -s wlan0 wol u
-
--> doesn't work
-
-iw phy0 wowlan enable patterns de:ad:be:ef
-
--> works again
-
-Any ideas on that?
