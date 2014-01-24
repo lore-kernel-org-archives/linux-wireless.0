@@ -1,29 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34215 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbaANQEX (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:34367 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbaAXB4c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 11:04:23 -0500
-Message-ID: <1389715458.32635.3.camel@jlt4.sipsolutions.net> (sfid-20140114_170426_833501_F338BE16)
-Subject: Re: [RFC 1/4] nl80211: make chandef parser take nlattr arg
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Jan 2014 17:04:18 +0100
-In-Reply-To: <1389194818-7864-2-git-send-email-michal.kazior@tieto.com> (sfid-20140108_163115_371270_4B089B95)
-References: <1389194818-7864-1-git-send-email-michal.kazior@tieto.com>
-	 <1389194818-7864-2-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140108_163115_371270_4B089B95)
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 23 Jan 2014 20:56:32 -0500
+Date: Thu, 23 Jan 2014 17:56:29 -0800 (PST)
+Message-Id: <20140123.175629.1402294897531681309.davem@davemloft.net> (sfid-20140124_025642_789337_36538E3A)
+To: cwang@twopensource.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: Re: [README] bug fixes only...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAHA+R7MtKK-YS8O808a_d-Qm7od+beEvsRjMpWpWZozV1sS1QA@mail.gmail.com>
+References: <20140123.162408.681541949851852312.davem@davemloft.net>
+	<CAHA+R7MtKK-YS8O808a_d-Qm7od+beEvsRjMpWpWZozV1sS1QA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-08 at 16:26 +0100, Michal Kazior wrote:
-> The chandef parsing function doesn't need to
-> access genl_info. It just needs the attrs field.
+From: Cong Wang <cwang@twopensource.com>
+Date: Thu, 23 Jan 2014 17:16:58 -0800
 
-This seems reasonable regardless of everything else, I'll apply it.
+> Are the patches submitted before your email still allowed to update?
 
-johannes
-
+If the feature/cleanup/optimization patch wasn't ready by now, it will
+have to wait until net-next opens back up again.
