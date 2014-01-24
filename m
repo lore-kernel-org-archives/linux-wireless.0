@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:59269 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbaAGMNa (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:46295 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbaAXWsn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 07:13:30 -0500
-Date: Tue, 7 Jan 2014 13:13:28 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 13/13] wl1251: fix NULL pointer dereference
-Message-ID: <20140107121328.GM10836@amd.pavel.ucw.cz> (sfid-20140107_131418_665122_49291FB1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Fri, 24 Jan 2014 17:48:43 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <simon@open-mesh.com>
+Subject: [PATCH] mac80211: send ibss probe responses with noack flag
+Date: Fri, 24 Jan 2014 23:48:29 +0100
+Message-Id: <1390603709-8041-1-git-send-email-sw@simonwunderlich.de> (sfid-20140124_234846_895744_E7A8105C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl1251: fix NULL pointer dereference
+From: Simon Wunderlich <simon@open-mesh.com>
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Reported-by: Felipe Contreras <felipe.contreras@gmail.com>
-Signed-off-by: Pavel Machek <pavel@ucw.cz>
+Responding to probe requests for scanning clients will often create
+excessive rtries, as it happens quite often that the scanning client
+already left the channel. Therefore do it like hostapd and send probe
+responses for broadcast SSID only once by using the noack flag.
+
+Signed-off-by: Simon Wunderlich <simon@open-mesh.com>
 ---
- drivers/net/wireless/ti/wl1251/event.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/ibss.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index 192cebd..db01053 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -124,7 +124,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 			return ret;
- 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ed7eec3..e22eb95 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1465,6 +1465,11 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(((struct ieee80211_mgmt *) skb->data)->da, mgmt->sa, ETH_ALEN);
+ 	ibss_dbg(sdata, "Sending ProbeResp to %pM\n", mgmt->sa);
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++
++	/* avoid excessive retries for probe request to wildcard SSIDs */
++	if (pos[1] == 0)
++		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_NO_ACK;
++
+ 	ieee80211_tx_skb(sdata, skb);
+ }
  
--	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
-+	if (wl->vif && vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
- 
- 		/* indicate to the stack, that beacons have been lost */
+-- 
+1.7.10.4
+
