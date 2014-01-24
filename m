@@ -1,82 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:54395 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbaAYKYX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaAXH2j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jan 2014 05:24:23 -0500
-Received: by mail-ea0-f169.google.com with SMTP id l9so1236536eaj.14
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 02:24:22 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Janusz Dziedzic <janusz.dziedzi@tieto.com>
-Subject: [PATCH v3 1/2] cfg80211: add helper reg_get_regdomain() function
-Date: Sat, 25 Jan 2014 11:24:11 +0100
-Message-Id: <1390645452-2495-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140125_112445_216392_511C2737)
+	Fri, 24 Jan 2014 02:28:39 -0500
+Message-ID: <1390548516.4257.1.camel@jlt4.sipsolutions.net> (sfid-20140124_082842_459950_A377103F)
+Subject: Re: Issue with authentication to Aerohive APs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 24 Jan 2014 08:28:36 +0100
+In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C3D2D@ALA-MBB.corp.ad.wrs.com>
+References: <CF02A704.17362%steven@fndtn.com>
+	,<1390492742.4142.35.camel@jlt4.sipsolutions.net>
+	 <DE84205DFC6FCF4A904A2F75D822FABA558C3D2D@ALA-MBB.corp.ad.wrs.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add helper function that will return regdomain.
-Follow the driver's regulatory domain, if present,
-unless a country IE has been processed or a user
-wants to help complaince further.
+On Fri, 2014-01-24 at 02:28 +0000, Liu, Bopeng wrote:
+> I met a problem when I set to 5Mhz
+> 
+> Mode A can't work...
+> 
+> Do you have some ideas on this issue? 
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzi@tieto.com>
----
- net/wireless/reg.c |   31 ++++++++++++++++++++-----------
- 1 file changed, 20 insertions(+), 11 deletions(-)
+STOP! Don't hijack other threads, keep your own. Otherwise I'll just
+have to add you to a blacklist and never see email from you again.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9b897fc..d58a09c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -522,6 +522,25 @@ bool reg_is_valid_request(const char *alpha2)
- 	return alpha2_equal(lr->alpha2, alpha2);
- }
- 
-+static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
-+{
-+	const struct ieee80211_regdomain *regd;
-+	struct regulatory_request *lr = get_last_request();
-+
-+	/*
-+	 * Follow the driver's regulatory domain, if present, unless a country
-+	 * IE has been processed or a user wants to help complaince further
-+	 */
-+	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
-+	    wiphy->regd)
-+		regd = get_wiphy_regdom(wiphy);
-+	else
-+		regd = get_cfg80211_regdom();
-+
-+	return regd;
-+}
-+
- /* Sanity check on a regulatory rule */
- static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- {
-@@ -821,18 +840,8 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
- 					       u32 center_freq)
- {
- 	const struct ieee80211_regdomain *regd;
--	struct regulatory_request *lr = get_last_request();
- 
--	/*
--	 * Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed or a user wants to help complaince further
--	 */
--	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--	    lr->initiator != NL80211_REGDOM_SET_BY_USER &&
--	    wiphy->regd)
--		regd = get_wiphy_regdom(wiphy);
--	else
--		regd = get_cfg80211_regdom();
-+	regd = reg_get_regdomain(wiphy);
- 
- 	return freq_reg_info_regd(wiphy, center_freq, regd);
- }
--- 
-1.7.9.5
+johannes
 
