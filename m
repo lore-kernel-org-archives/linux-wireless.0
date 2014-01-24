@@ -1,28 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:34367 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbaAXB4c (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26682 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaAXIYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 20:56:32 -0500
-Date: Thu, 23 Jan 2014 17:56:29 -0800 (PST)
-Message-Id: <20140123.175629.1402294897531681309.davem@davemloft.net> (sfid-20140124_025642_789337_36538E3A)
-To: cwang@twopensource.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [README] bug fixes only...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAHA+R7MtKK-YS8O808a_d-Qm7od+beEvsRjMpWpWZozV1sS1QA@mail.gmail.com>
-References: <20140123.162408.681541949851852312.davem@davemloft.net>
-	<CAHA+R7MtKK-YS8O808a_d-Qm7od+beEvsRjMpWpWZozV1sS1QA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 24 Jan 2014 03:24:17 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath10k: add CSA support
+References: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 24 Jan 2014 10:24:11 +0200
+In-Reply-To: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 23 Jan 2014 11:38:24 +0100")
+Message-ID: <87k3dp4wk4.fsf@kamboji.qca.qualcomm.com> (sfid-20140124_092421_064143_2DE08CCF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Cong Wang <cwang@twopensource.com>
-Date: Thu, 23 Jan 2014 17:16:58 -0800
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Are the patches submitted before your email still allowed to update?
+> This is a refactored and rewritten AP CSA patch
+> split into 2. As a bonus this fixes STA CSA as
+> well.
+>
+>
+> Michal Kazior (2):
+>   ath10k: implement channel switching
+>   ath10k: implement AP CSA
 
-If the feature/cleanup/optimization patch wasn't ready by now, it will
-have to wait until net-next opens back up again.
+Thanks, both patches applied.
+
+-- 
+Kalle Valo
