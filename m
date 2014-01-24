@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:41142 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408AbaAWJaT (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:35815 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbaAXK0q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:30:19 -0500
-Received: by mail-we0-f173.google.com with SMTP id t60so902258wes.32
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 01:30:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
-References: <52DF947E.40800@gmail.com> <CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
- <CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
- <52E0BA40.7090203@gmail.com> <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
- <52E0D7D5.6060504@gmail.com> <CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
- <CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
- <DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com> <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 23 Jan 2014 14:59:58 +0530
-Message-ID: <CABPxzYLJwyXA+XZ+nHzoCZrSo99joTfhP7iQUbWMfcw403H_WA@mail.gmail.com> (sfid-20140123_103025_928914_79EC42A6)
-Subject: Re: 802.11a is supported in AP mode or not?
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Liu, Bopeng" <Bopeng.Liu@windriver.com>,
-	zhuyj <zyjzyj2000@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Jan 2014 05:26:46 -0500
+Message-ID: <1390559202.19968.76.camel@porter.coelho.fi> (sfid-20140124_112648_881157_1847457D)
+Subject: Re: [PATCH-v2] nl80211: Fix bug in match set count calculation
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Raja Mani <rmani@qti.qualcomm.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 24 Jan 2014 12:26:42 +0200
+In-Reply-To: <1390555312.4257.35.camel@jlt4.sipsolutions.net>
+References: <1390476858-4833-1-git-send-email-rmani@qti.qualcomm.com>
+	 <1390555312.4257.35.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 2:57 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Thu, Jan 23, 2014 at 11:21 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
->>
->>
->> So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
-> Yes
->
->>
->> Though #iwconfig wlan0 shows there is modes a ?
->
-> In client mode - not in AP mode
->>
-Well in Us channel 149/36 is a valid channel for AP operation. So ideally
-it should work? Is there any specific feature blocking such in iwlwifi?
+On Fri, 2014-01-24 at 10:21 +0100, Johannes Berg wrote:
+> On Thu, 2014-01-23 at 17:04 +0530, Raja Mani wrote:
+> > Match set count is calculated in nl80211_start_sched_scan() by counting
+> > each attr available in NL80211_ATTR_SCHED_SCAN_MATCH. Some cases, RSSI
+> > threshold limit NL80211_SCHED_SCAN_MATCH_ATTR_RSSI attr also can come
+> > from user space along with NL80211_SCHED_SCAN_MATCH_ATTR_SSID attr.
+> > In such cases, exiting code counts NL80211_SCHED_SCAN_MATCH_ATTR_RSSI
+> > attr also as one of SSID and leads extra memory allocation for match set
+> > array (request->match_sets).
+> > 
+> > Counting only NL80211_SCHED_SCAN_MATCH_ATTR_RSSI attr will help nl80211 to
+> > allocate exact memory needed for match set array and also driver can know
+> > the exact valid SSID available in match set array.
+> 
+> Much better now. I still think you should explain *why* this is a
+> problem. It's not obvious at first glance that the sched scan match
+> thing is actually completely stupid, allowing the RSSI attribute in the
+> nested thing but then only using a single one of it ... Luca, any ideas
+> about that part? Was something else intended?
 
-can you try building iwlwifi with CONFIG_IWLWIFI_DEBUG from make menuconfig?
-It prints out the reg rules it read from eeprom? Also please post the
-full dmesg.
+As discussed on IRC, the problem was the implementation of the RSSI
+attribute.  It should have been included in every matchset (ie. one for
+each matchset that contains a BSSI attribute) to have the desired
+effect.
 
->> iwconfig wlan0
->> wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
->>           Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
->>           Bit Rate=1 Mb/s   Tx-Power=15 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Encryption key:off
->>           Power Management:off
->>           Link Quality=60/70  Signal level=-50 dBm
->>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>           Tx excessive retries:0  Invalid misc:14   Missed beacon:0
->>
+Looked at your other patch and it looks like a good wait to solve the
+problem, while keeping backwards compatibility.
+
+--
+Luca.
+
