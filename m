@@ -1,112 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:65352 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbaAWIgO convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:54225 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647AbaAXWrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:36:14 -0500
-From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	zhuyj <zyjzyj2000@gmail.com>
-CC: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: 802.11a is supported in AP mode or not?
-Date: Thu, 23 Jan 2014 08:36:11 +0000
-Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C37BC@ALA-MBB.corp.ad.wrs.com> (sfid-20140123_093626_635400_B1AB3130)
-References: <52DF947E.40800@gmail.com>
-	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
-	<52E0BA40.7090203@gmail.com>,<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
-In-Reply-To: <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 24 Jan 2014 17:47:24 -0500
+Received: by mail-pd0-f178.google.com with SMTP id y13so3634459pdi.9
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:47:24 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 10/11] rel-html: update CRDA project file
+Date: Fri, 24 Jan 2014 14:46:32 -0800
+Message-Id: <1390603593-27728-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20140125_000006_069830_7ECF63CA)
+In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not yet,please tell me..... Please,thanks very much. 
+CRDA is now licensed under the copyleft-next project.
 
-Best Regards.
---------------------------------------
-Bopeng Liu
-WIND RIVER | China Development Center
-Phone: 8610-6483-5012
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ projects/crda.cfg | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/projects/crda.cfg b/projects/crda.cfg
+index c52bb6b..33c2c66 100644
+--- a/projects/crda.cfg
++++ b/projects/crda.cfg
+@@ -1,9 +1,10 @@
+ [project]
+ rel_html_proj           = crda
+ supported =
+-	1.1
++	3.13
++	3.14
+ rel_html_url_releases	= http://kernel.org/pub/software/network/crda/
+-rel_license 		= ISC
++rel_license 		= copyleft-next
+ ignore_changelogs	= True
+ 
+ [html]
+-- 
+1.8.5.2
 
-
-________________________________________
-From: Emmanuel Grumbach [egrumbach@gmail.com]
-Sent: Thursday, January 23, 2014 4:23 PM
-To: zhuyj
-Cc: Krishna Chaitanya; Liu, Bopeng; linux-wireless
-Subject: Re: 802.11a is supported in AP mode or not?
-
-On Thu, Jan 23, 2014 at 8:44 AM, zhuyj <zyjzyj2000@gmail.com> wrote:
-> On 01/23/2014 02:15 PM, Krishna Chaitanya wrote:
->>
->> hostapd -dd -B /etc/hostapd.conf
->
-> root@wind-desktop:~# hostapd -dd -B /etc/hostapd.conf
->
-> random: Trying to read entropy from /dev/random
-> Configuration file: /etc/hostapd.conf
-> ctrl_interface_group=0
-> nl80211: interface wlan0 in phy phy0
-> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
-> nl80211: Using driver-based off-channel TX
-> nl80211: Register frame command failed (type=208): ret=-114 (Operation
-> already in progress)
-> nl80211: Register frame match - hexdump(len=2): 04 0a
-> nl80211: Failed to register Action frame processing - ignore for now
-> nl80211: Add own interface ifindex 3
-> nl80211: Set mode ifindex 3 iftype 3 (AP)
-> nl80211: Create interface iftype 6 (MONITOR)
-> nl80211: New interface mon.wlan0 created: ifindex=4
-> nl80211: Add own interface ifindex 4
-> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-> nl80211: Regulatory information - country=00
-> nl80211: 2402-2472 @ 40 MHz
-> nl80211: 2457-2482 @ 40 MHz
-> nl80211: 2474-2494 @ 20 MHz
-> nl80211: 5170-5250 @ 40 MHz
-> nl80211: 5735-5835 @ 40 MHz
-> nl80211: Added 802.11b mode based on 802.11g information
-> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=15 dBm
-> wlan0: IEEE 802.11 Configured channel (1) not found from the channel list of
-> current mode (2) IEEE 802.11a
->
-> wlan0: IEEE 802.11 Hardware does not support configured channel
-> Could not select hw_mode and channel. (-4)
-> wlan0: Unable to setup interface.
-> Flushing old station entries
-> Deauthenticate all stations
-> rmdir[ctrl_interface]: No such file or directory
-> nl80211: Remove interface ifindex=4
-> netlink: Operstate: linkmode=0, operstate=6
-> nl80211: Set mode ifindex 3 iftype 2 (STATION)
-> root@wind-desktop:~#
->
->
-> root@wind-desktop:~# hostapd -v
-
-I think you have the answer to your question, don't you?
