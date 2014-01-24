@@ -1,96 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54608 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752099AbaAOQL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 11:11:26 -0500
-Received: from ultralex.lan ([93.218.75.192]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0MAgvb-1WEAA33A0R-00BsQ4 for
- <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 17:11:25 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 4/5] ath5k: use ath_is_mybeacon
-Date: Wed, 15 Jan 2014 17:11:15 +0100
-Message-Id: <1389802275-7000-1-git-send-email-linux@rempel-privat.de> (sfid-20140115_171128_992779_62B30208)
+Received: from mail1.windriver.com ([147.11.146.13]:49135 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbaAXG0H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jan 2014 01:26:07 -0500
+From: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	zhuyj <zyjzyj2000@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: 802.11a is supported in AP mode or not?
+Date: Fri, 24 Jan 2014 06:26:01 +0000
+Message-ID: <DE84205DFC6FCF4A904A2F75D822FABA558C3FF5@ALA-MBB.corp.ad.wrs.com> (sfid-20140124_072629_710124_49579AA3)
+References: <52DF947E.40800@gmail.com>
+	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
+	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
+	<52E0BA40.7090203@gmail.com>
+	<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>
+	<52E0D7D5.6060504@gmail.com>
+	<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>
+	<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>
+	<DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>,<CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
+In-Reply-To: <CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath5k/base.c | 33 ++++++++-------------------------
- 1 file changed, 8 insertions(+), 25 deletions(-)
+I just check the chip 6205's spec. it said it supports the SoftAP with Mode A, 
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index d85c312..ef35da8 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1238,14 +1238,11 @@ static void
- ath5k_check_ibss_tsf(struct ath5k_hw *ah, struct sk_buff *skb,
- 		     struct ieee80211_rx_status *rxs)
- {
--	struct ath_common *common = ath5k_hw_common(ah);
- 	u64 tsf, bc_tstamp;
- 	u32 hw_tu;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
- 
--	if (ieee80211_is_beacon(mgmt->frame_control) &&
--	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
--	    ether_addr_equal_64bits(mgmt->bssid, common->curbssid)) {
-+	if (le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS) {
- 		/*
- 		 * Received an IBSS beacon with the same BSSID. Hardware *must*
- 		 * have updated the local TSF. We have to work around various
-@@ -1301,23 +1298,6 @@ ath5k_check_ibss_tsf(struct ath5k_hw *ah, struct sk_buff *skb,
- 	}
- }
- 
--static void
--ath5k_update_beacon_rssi(struct ath5k_hw *ah, struct sk_buff *skb, int rssi)
--{
--	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
--	struct ath_common *common = ath5k_hw_common(ah);
--
--	/* only beacons from our BSSID */
--	if (!ieee80211_is_beacon(mgmt->frame_control) ||
--	    !ether_addr_equal_64bits(mgmt->bssid, common->curbssid))
--		return;
--
--	ewma_add(&ah->ah_beacon_rssi_avg, rssi);
--
--	/* in IBSS mode we should keep RSSI statistics per neighbour */
--	/* le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS */
--}
--
- /*
-  * Compute padding position. skb must contain an IEEE 802.11 frame
-  */
-@@ -1390,6 +1370,7 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 		    struct ath5k_rx_status *rs)
- {
- 	struct ieee80211_rx_status *rxs;
-+	struct ath_common *common = ath5k_hw_common(ah);
- 
- 	ath5k_remove_padding(skb);
- 
-@@ -1442,11 +1423,13 @@ ath5k_receive_frame(struct ath5k_hw *ah, struct sk_buff *skb,
- 
- 	trace_ath5k_rx(ah, skb);
- 
--	ath5k_update_beacon_rssi(ah, skb, rs->rs_rssi);
-+	if (ath_is_mybeacon(common, (struct ieee80211_hdr *)skb->data)) {
-+		ewma_add(&ah->ah_beacon_rssi_avg, rs->rs_rssi);
- 
--	/* check beacons in IBSS mode */
--	if (ah->opmode == NL80211_IFTYPE_ADHOC)
--		ath5k_check_ibss_tsf(ah, skb, rxs);
-+		/* check beacons in IBSS mode */
-+		if (ah->opmode == NL80211_IFTYPE_ADHOC)
-+			ath5k_check_ibss_tsf(ah, skb, rxs);
-+	}
- 
- 	ieee80211_rx(ah->hw, skb);
- }
--- 
-1.8.5.2
+but why the AP in mode A can't be used?
 
+Best Regards.
+--------------------------------------
+Bopeng Liu
+WIND RIVER | China Development Center
+Phone: 8610-6483-5012
+
+
+
+________________________________________
+From: Emmanuel Grumbach [egrumbach@gmail.com]
+Sent: Thursday, January 23, 2014 5:27 PM
+To: Liu, Bopeng
+Cc: Krishna Chaitanya; zhuyj; linux-wireless
+Subject: Re: 802.11a is supported in AP mode or not?
+
+On Thu, Jan 23, 2014 at 11:21 AM, Liu, Bopeng <Bopeng.Liu@windriver.com> wrote:
+>
+>
+> So,it that mean: there is no way to fix this problem by modify the kernel and driver codes?
+Yes
+
+>
+> Though #iwconfig wlan0 shows there is modes a ?
+
+In client mode - not in AP mode
+>
+> iwconfig wlan0
+> wlan0     IEEE 802.11abgn  ESSID:"IDPDK-169c"
+>           Mode:Managed  Frequency:2.462 GHz  Access Point: A0:88:B4:1E:16:9C
+>           Bit Rate=1 Mb/s   Tx-Power=15 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality=60/70  Signal level=-50 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:14   Missed beacon:0
+>
+>
