@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:59678 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966AbaATOOG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 09:14:06 -0500
-Received: by mail-ea0-f176.google.com with SMTP id h14so3062586eaj.21
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:14:05 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/3] cfg80211: implement multi-interface CSA
-Date: Mon, 20 Jan 2014 15:09:25 +0100
-Message-Id: <1390226968-18928-1-git-send-email-michal.kazior@tieto.com> (sfid-20140120_151413_796424_F6F22412)
+Received: from ring0.de ([91.143.88.219]:34720 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674AbaAXVxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jan 2014 16:53:38 -0500
+Date: Fri, 24 Jan 2014 22:53:22 +0100
+From: Sebastian Reichel <sre@ring0.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Tony Lindgren <tony@atomide.com>, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org
+Subject: Re: [PATCHv2 0/5] wl1251 device tree support
+Message-ID: <20140124215321.GA25727@earth.universe> (sfid-20140124_225343_432410_CCF260D5)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
+ <20140106225709.GA23070@earth.universe>
+ <20140117014514.GA604@earth.universe>
+ <20140117150127.GA15145@tuxdriver.com>
+ <20140117174415.GG7993@atomide.com>
+ <20140117192204.GB15145@tuxdriver.com>
+ <20140118174705.GE7235@atomide.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="FCuugMFkClbJLl1L"
+In-Reply-To: <20140118174705.GE7235@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-This is the cfg80211 part for CSA multi-interface
-support.
+--FCuugMFkClbJLl1L
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It's still missing proper tracing. I'm out of
-ideas how to deal with it. I've tried some pustom
-trace_seq_ stuff but trace-cmd report doens't
-seem to happy with that (it complains about parse
-errors). Is this expected or am I missing
-something? Any hints are welcome.
+On Sat, Jan 18, 2014 at 09:47:06AM -0800, Tony Lindgren wrote:
+> [...]
+>=20
+> The reason was for keeping things building and git bisect working.
+>=20
+> I do have wl1251-pdata-signed as the base for branch
+> omap-for-v3.14/omap3-board-removal. However the board removal was
+> considered too early for v3.14, so that's been postponed. This is
+> because people are still updating their systems to device tree
+> based booting. So I can redo my omap-for-v3.14/omap3-board-removal
+> against v3.14.
+>=20
+> So if you want to, feel free to pick all the wl12xx patches to your
+> wireless tree. AFAIK my omap-for-v3.14/omap3-board-removal is the
+> only other user for those patches, and that I can redo that on
+> v3.14.
+>=20
+> So for the arch/arm/*omap* touching patches, feel free to add:
+>=20
+> Acked-by: Tony Lindgren <tony@atomide.com>
 
+Another ping. If this does not go into 3.14 via wireless tree
+it will become complicated for 3.15 again.
 
-Changes since RFC:
+-- Sebastian
 
- * drop rename patch (it is kind of squashed into
-   the multi-intf combination patch)
+--FCuugMFkClbJLl1L
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
- * refactor multi-intf combination patch and split
-   helper functions
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
- * nl80211 command uses now a simple nested array
-   instead of recursive nesting
+iQIcBAEBCAAGBQJS4uDRAAoJENju1/PIO/qaAOkP/AnKO//56D5poxvhpsDbnG1/
+kQz24cexjIPlWeeWHlFQaiU7gTl5ftqhhtR0xBES6CbPfQKD3zFMqN3I6llN66eA
+SaNVP6/l/AN6PTvMKxrf2EYzRw/tD/axGKyl2DfTylcZlXjVaW0kErbtLAts/ghl
+fHbAT4R3B2OoHOlzlFDrm/0rw7/uVSoiXFcIZwmwxTItQXJrOMwL/OmpoOdbmoqE
+Q+uXEl6qroM2lH+JjAhIoj04z66R9bWawBr18Xb36jNhRFHwhEz3WZx+feqoM9JI
+bdNyl35iUDba/hgDxoTLsa9NXPeWQd7j6ONbcCYypOF748ix9AW8Du8hefdEY5ab
+Pa0eVfa7191+SulBFAwhddNeXzlHy+KiBi9CTqSDGOO7/K3Wh3ISBHl8ZdlUvt+o
+k4w8lcF//K8D9IG1k1dk1+0OFrCfcOOPLYXznTbt1zPkLr2sxci7K4Rt48jBahyF
+q9A93IQEJ/GUlp//HSybLUGG5Pkz3SU7qHvRc+MdsWBSvqIvWndAzDgRmA4kSS2d
+pJju2qTMavqNcxxOjksR6hQ3U7j2HJ1V867UeM60TmvnDiHODPlJb9z5zr3MvGEK
+vObVFoWEK+sRrZV2CjeeN8rmL3fsW9d5ODKfc/vnTlZAWTrwsyzC291sK7YoJh/b
+9FhEweMck6Ia3so0s7th
+=4YoO
+-----END PGP SIGNATURE-----
 
- * advertise multi-intf csa support to userspace
-
-
-Michal Kazior (3):
-  nl80211: make chandef parser take nlattr arg
-  cfg80211: implement multi-vif interface combination validation
-  cfg80211: implement multi-interface CSA
-
- include/net/cfg80211.h       |  10 +-
- include/uapi/linux/nl80211.h |   6 +
- net/mac80211/cfg.c           |  23 +++-
- net/mac80211/ibss.c          |   4 +-
- net/mac80211/ieee80211_i.h   |   7 +-
- net/mac80211/mesh.c          |   4 +-
- net/wireless/core.h          |  36 +++++-
- net/wireless/nl80211.c       | 276 ++++++++++++++++++++++++++++++-------------
- net/wireless/rdev-ops.h      |   8 +-
- net/wireless/trace.h         |  37 ++----
- net/wireless/util.c          | 198 +++++++++++++++++++------------
- 11 files changed, 405 insertions(+), 204 deletions(-)
-
--- 
-1.8.4.rc3
-
+--FCuugMFkClbJLl1L--
