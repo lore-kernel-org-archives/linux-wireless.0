@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8274 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750743AbaATU0y (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:42582 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaAXN3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 15:26:54 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 20 Jan 2014 12:26:47 -0800
-Subject: RE: linux-firmware: pull-request Marvell mwifiex-firmware 2014-01-09
-Message-ID: <477F20668A386D41ADCC57781B1F70430F53691FC8@SC-VEXCH1.marvell.com> (sfid-20140120_212659_002617_EC32B27E)
-References: <1389325691-21371-1-git-send-email-bzhao@marvell.com>
-	 <1390174797.3651.7.camel@deadeye.wl.decadent.org.uk>
-	 <477F20668A386D41ADCC57781B1F70430F53691E15@SC-VEXCH1.marvell.com>
- <1390186665.3651.27.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1390186665.3651.27.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Fri, 24 Jan 2014 08:29:38 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c41so970852eek.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 05:29:35 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] cfg80211: set preset_chandef after channel switch
+Date: Fri, 24 Jan 2014 14:29:21 +0100
+Message-Id: <1390570161-25041-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140124_142941_176841_D4219BA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQmVuLA0KDQo+ID4gPiA+ICBGaWxlOiBtcnZsL3VzYjg3OTdfdWFwc3RhLmJpbg0KPiA+ID4g
-PiAtVmVyc2lvbjogMTQuNjkuMTEucDE3OQ0KPiA+ID4gPiArVmVyc2lvbjogMTQuNjguMjkucDI2
-DQo+ID4gPiBbLi4uXQ0KPiA+ID4NCj4gPiA+IFdoeSBhcmUgdGhlc2UgdXBkYXRlcyByb2xsaW5n
-IHRoZSB2ZXJzaW9uIG51bWJlciBiYWNrd2FyZD8gIERpZCB0aGUNCj4gPiA+IGxhdGVyIHZlcnNp
-b25zIGNhdXNlIHJlZ3Jlc3Npb25zPw0KPiA+DQo+ID4gVGhlc2UgaW1hZ2VzIGFyZSBuZXdlciBm
-aXJtd2FyZSB2ZXJzaW9ucyBhY3R1YWxseS4NCj4gPg0KPiA+IFRoZSAybmQgKDY5IG9yIDY4KSBh
-bmQgM3JkICgxMSBvciAyOSkgbnVtYmVycyBpbiB0aGUgdmVyc2lvbiBzdHJpbmcgZG8NCj4gPiBu
-b3QgbmVjZXNzYXJpbHkgbWVhbiB0aGUgdmVyc2lvbiBpbmNyZWFzaW5nIG9yIGRlY3JlYXNpbmcu
-IE9ubHkgd2hlbg0KPiA+IGZpcnN0IDMgbnVtYmVycyBhcmUgZml4ZWQsIGEgc21hbGxlciA0dGgg
-bnVtYmVyIHdpbGwgbWVhbiB0aGF0IHRoZQ0KPiA+IHZlcnNpb24gaXMgcm9sbGluZyBiYWNrd2Fy
-ZC4gRm9yIGV4YW1wbGVzLA0KPiANCj4gU28gd2hhdCBkbyB5b3UgdGhleSBtZWFuIGFuZCB3aHkg
-YXJlIHRoZXkgaW4gdGhlIHZlcnNpb24gbnVtYmVyPw0KDQpUaGUgZmlyc3QgMyBudW1iZXJzIGFs
-dG9nZXRoZXIgaWRlbnRpZmllcyB0aGUgZmlybXdhcmUgYnJhbmNoL2ZlYXR1cmVzLiBUaGUgNHRo
-IG51bWJlciBpcyB0aGUgZmlybXdhcmUgcmV2aXNpb24uDQoNClRoYW5rcywNCkJpbmcNCg0K
+Set preset_chandef in channel switch notification.
+In other case we will have old preset_chandef.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/nl80211.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d0afd82..dc8621d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11144,6 +11144,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 		return;
+ 
+ 	wdev->channel = chandef->chan;
++	wdev->preset_chandef = *chandef;
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL);
+ }
+ EXPORT_SYMBOL(cfg80211_ch_switch_notify);
+-- 
+1.7.9.5
+
