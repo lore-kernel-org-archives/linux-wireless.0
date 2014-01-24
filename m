@@ -1,85 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:56876 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbaACQoA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50211 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212AbaAXPAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jan 2014 11:44:00 -0500
-Received: by mail-pa0-f51.google.com with SMTP id fa1so15889406pad.24
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 08:43:59 -0800 (PST)
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: add handler for memeory allocation failure
-Date: Sat,  4 Jan 2014 00:42:52 +0800
-Message-Id: <46c874024953fa47667455051f304041827748e0.1388766243.git.gamerh2o@gmail.com> (sfid-20140103_174404_594893_07C11E2F)
+	Fri, 24 Jan 2014 10:00:05 -0500
+Message-ID: <1390575602.4257.44.camel@jlt4.sipsolutions.net> (sfid-20140124_160010_391769_EE834D51)
+Subject: Re: [RFC] iw: add support for retry limit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: WiFi Mailing List <linux-wireless@vger.kernel.org>
+Date: Fri, 24 Jan 2014 16:00:02 +0100
+In-Reply-To: <1389273736-9486-1-git-send-email-royujjal@gmail.com> (sfid-20140109_142238_521185_44E25359)
+References: <1389273736-9486-1-git-send-email-royujjal@gmail.com>
+	 (sfid-20140109_142238_521185_44E25359)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
----
- net/mac80211/sta_info.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+On Thu, 2014-01-09 at 18:52 +0530, Ujjal Roy wrote:
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 4576ba0..c600caf 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -325,8 +325,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
- 
- 	if (sta_prepare_rate_control(local, sta, gfp)) {
--		kfree(sta);
--		return NULL;
-+		goto free_sta;
- 	}
- 
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-@@ -375,10 +374,15 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 
- 	tx_latency = rcu_dereference(local->tx_latency);
- 	/* init stations Tx latency statistics && TID bins */
--	if (tx_latency)
-+	if (tx_latency) {
- 		sta->tx_lat = kzalloc(IEEE80211_NUM_TIDS *
- 				      sizeof(struct ieee80211_tx_latency_stat),
- 				      GFP_ATOMIC);
-+		if (!sta->tx_lat) {
-+			rcu_read_unlock();
-+			goto free_rate_ctrl;
-+		}
-+	}
- 
- 	/*
- 	 * if Tx latency and bins are enabled and the previous allocation
-@@ -392,12 +396,28 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 			sta->tx_lat[i].bins  = kcalloc(sta->tx_lat[i].bin_count,
- 						       sizeof(u32),
- 						       GFP_ATOMIC);
-+			if (!sta->tx_lat[i].bins) {
-+				rcu_read_unlock();
-+				goto free_bins;
-+			}
- 		}
- 
- 	rcu_read_unlock();
- 
- 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
-+	goto out;
- 
-+free_bins:
-+	while (i > 0)
-+		kfree(sta->tx_lat[--i].bins);
-+	kfree(sta->tx_lat);
-+free_rate_ctrl:
-+	if (sta->rate_ctrl)
-+		rate_control_free_sta(sta);
-+free_sta:
-+	kfree(sta);
-+	sta = NULL;
-+out:
- 	return sta;
- }
- 
--- 
-1.8.4.2
+Sorry for the late reply.
+
+> @@ -232,6 +232,45 @@ COMMAND(set, rts, "<rts threshold|off>",
+>  	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+>  	"Set rts threshold.");
+>  
+> +static int handle_retry(struct nl80211_state *state,
+> +		      struct nl_cb *cb, struct nl_msg *msg,
+> +		      int argc, char **argv,
+> +		      enum id_input id)
+
+indentation is a bit off
+
+> +COMMAND(set, retry, "<short limit> [<long limit>]",
+> +	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
+> +	"Set retry limit.");
+
+This seems odd to me, why would you want to allow setting the short
+limit while not changing the long one, but not the other way around?
+
+johannes
 
