@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:44201 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbaAQFaT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50301 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628AbaAXPXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 00:30:19 -0500
-Received: by mail-pb0-f50.google.com with SMTP id rq2so3636099pbb.23
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 21:30:18 -0800 (PST)
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: <b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
-Date: Fri, 17 Jan 2014 13:27:33 +0800
-Message-Id: <a8aa052ea196de8256dcdc5b3ae81cfa64d3f9ff.1389935084.git.gamerh2o@gmail.com> (sfid-20140117_063032_014839_3779AD7F)
+	Fri, 24 Jan 2014 10:23:25 -0500
+Message-ID: <1390577001.4257.61.camel@jlt4.sipsolutions.net> (sfid-20140124_162328_529265_B705E593)
+Subject: Re: [RFC 2/3] cfg80211: MinChannelTime and MaxChannelTime for scan
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Laudin Alessandro Molina T <laudin.molina@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Date: Fri, 24 Jan 2014 16:23:21 +0100
+In-Reply-To: <CACX7s6MHvzeBf1m4K3t=ZBS5g_WJGdse9S-sOLiH+X22mgwUKA@mail.gmail.com> (sfid-20140109_172331_159132_99EAF1FA)
+References: <20140106075126.GA31046@w1.fi>
+	 <1389110387.4645.26.camel@jlt4.sipsolutions.net>
+	 <20140107162655.GB9092@w1.fi>
+	 <CACX7s6MHvzeBf1m4K3t=ZBS5g_WJGdse9S-sOLiH+X22mgwUKA@mail.gmail.com>
+	 (sfid-20140109_172331_159132_99EAF1FA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In following patch, replace b43 specific helper function with kernel
-api to reduce code duplication.
+On Thu, 2014-01-09 at 17:23 +0100, Laudin Alessandro Molina T wrote:
 
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
----
- drivers/net/wireless/b43/xmit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> As M. Stewart said in a previous mail, there are some scenarios where
+> the scanning algorithms depends on the application priorities, to add
+> another examples:
+> 
+> - A mobile station is moving (for example someone is walking on the
+> street with some available community networks) so, to take advantage
+> of an eventual connection the scanning needs to be very fast, then it
+> might need a list of candidate APs ASAP, no matter if the list in
+> incomplete. In this scenario the values for Min/MaxChannelTime should
+> be short enough to accomplish time restrictions.
+> 
+> - On the other side, the same station could arrive to one specific
+> place (for example an office or home) so the user might prefer the
+> full AP list, so it could choose to connect to the best one.
 
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 4ae63f4..50e5ddb 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		 * channel number in b43. */
- 		if (chanstat & B43_RX_CHAN_5GHZ) {
- 			status.band = IEEE80211_BAND_5GHZ;
--			status.freq = b43_freq_to_channel_5ghz(chanid);
-+			status.freq = b43_channel_to_freq_5ghz(chanid);
- 		} else {
- 			status.band = IEEE80211_BAND_2GHZ;
--			status.freq = b43_freq_to_channel_2ghz(chanid);
-+			status.freq = b43_channel_to_freq_2ghz(chanid);
- 		}
- 		break;
- 	default:
--- 
-1.8.4.2
+I'm not convinced that the completeness of the scan list would be the
+main concern here. Additionally, it will be difficult for anyone to tell
+whether the device is moving or not. I think for this particular use
+case, trying to adjust dwell times is probably not a good idea. Having
+some form of continuous background scan, so a roaming candidate is
+always available, would probably be a better solution to the first
+scenario.
+
+As far as the second scenario goes, the user is probably not connected
+anyway, and in that case most devices/drivers wouldn't really be
+concerned with traffic (which usually drives optimisations.)
+
+> > Agreed. I was thinking of adding some limits on how large a value could
+> > be set, but could not come up with any specific, justifiable value. (And
+> > the standard was not very helpful either with the "N/A" as the valid
+> > range ;-).
+> 
+> We have seen Probe Responses arriving after 300ms, although in a city
+> center spontaneous deployment ~90% of the Probe Responses arrive
+> before 50ms. Anyway, I would only suggest to check for positive
+> values.
+
+300ms is far too long for that AP to be useful at all, most likely :)
+
+> Another questions:
+> 
+> - What about IEEE80211_PROBE_DELAY (Probe Delay)? Why won't allow to
+> adjust this value? I'm not sure about the definition/use of this
+> delay. Could any of you help me with an explanation of this?
+
+We don't have proper CCA in software scans, so this is needed. It's
+fairly implicit in the standard, but you can find it (somewhere)
+
+johannes
 
