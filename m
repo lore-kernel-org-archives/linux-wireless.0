@@ -1,163 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36776 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754748AbaAUPak (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58861 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbaAXKZ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 10:30:40 -0500
-Message-ID: <1390318236.6199.45.camel@jlt4.sipsolutions.net> (sfid-20140121_163043_960624_470B5A2C)
-Subject: Re: [PATCH 2/2] mac80211: implement multi-interface CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, Luca Coelho <luca@coelho.fi>
-Date: Tue, 21 Jan 2014 16:30:36 +0100
-In-Reply-To: <1390228033-19162-3-git-send-email-michal.kazior@tieto.com> (sfid-20140120_153204_422278_760034F0)
-References: <1390228033-19162-1-git-send-email-michal.kazior@tieto.com>
-	 <1390228033-19162-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140120_153204_422278_760034F0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 24 Jan 2014 05:25:58 -0500
+Message-ID: <52E23FB2.7010705@broadcom.com> (sfid-20140124_112602_342061_B3188E88)
+Date: Fri, 24 Jan 2014 11:25:54 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Hans de Goede <hdegoede@redhat.com>, <linux-sunxi@googlegroups.com>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>,
+	<benn@cubietech.com>
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com>
+In-Reply-To: <52E19A27.7000402@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-20 at 15:27 +0100, Michal Kazior wrote:
+On 01/23/2014 11:39 PM, Hans de Goede wrote:
+> Hi,
+> 
+> I've been working on updating sunxi-devel to include more
+> recent versions if your gmac patches, as well as adding support
+> for the wifi + bluetooth found on the cubietruck.
+> 
+> Here is my current work on this:
+> 
+> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+> 
+> It is close to working, but unfortunately it does not work,
+> here is what I get in dmesg when I modprove the module:
+> 
+> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+> [  100.322508] usbcore: registered new interface driver brcmfmac
+> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+> already: status (1)
+> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+> already: status (1)
+> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+> already: status (1)
 
-> This implements a fairly simple multi-interface
-> CSA. It doesn't support multiple channel
-> contexts so it doesn't support multi-channel.
+Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can have
+a look.
 
-For not implementing chanctx support, I think it changes an awful lot in
-the implementation there...
-
-> A new worker is introduced: csa_complete_work
-> which is used to account per-interface countdowns
-> and issue the actual channel switch after last
-> interface completes its CSA.
-
-Not sure I understand this part, don't they all have the same countdown,
-and should finish at the same time?
- 
->  	/* abort any running channel switch */
->  	mutex_lock(&local->mtx);
-> -	sdata->vif.csa_active = false;
-> -	kfree(sdata->u.ap.next_beacon);
-> -	sdata->u.ap.next_beacon = NULL;
-> +	ieee80211_csa_clear(sdata);
-> +	ieee80211_csa_free(sdata);
->  	mutex_unlock(&local->mtx);
-
-Maybe that kind of refactoring would be better in a separate patch?
- 
-> +static int ieee80211_ap_beacon_presp_backup(struct ieee80211_sub_if_data *sdata)
-
-I'm beginning to think it's time to create a new file
-net/mac80211/ap.c :-)
-
-What's the backup/restore used for anyway?
-
-> -int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-> -				 u32 *changed)
-> +const struct cfg80211_chan_def *
-> +ieee80211_get_csa_chandef(struct ieee80211_local *local)
->  {
-> -	struct ieee80211_local *local = sdata->local;
-> -	struct ieee80211_chanctx_conf *conf;
-> -	struct ieee80211_chanctx *ctx;
-> -	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
-> -	int ret;
-> -	u32 chanctx_changed = 0;
-> +	struct ieee80211_sub_if_data *sdata;
-> +	const struct cfg80211_chan_def *chandef = NULL;
->  
->  	lockdep_assert_held(&local->mtx);
-> +	lockdep_assert_held(&local->chanctx_mtx);
->  
-> -	/* should never be called if not performing a channel switch. */
-> -	if (WARN_ON(!sdata->vif.csa_active))
-> -		return -EINVAL;
-> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-
-_rcu doesn't seem right.
-
-But then again this whole function, iterating interfaces rather than
-channel contexts etc. is terrible IMHO. This seems to pretty much turn
-chanctx support upside down, making the channel context structures not
-be the first-class citizens I think we want them to be.
-
-I'd say Luca's approach has more future, as it makes channel context
-support native. With this, I don't even see how you *could* later add
-real channel context support. A function like this, that essentially
-assumes exactly a single chanctx that might be doing CSA and similar
-seems to make that rather difficult.
-
-> +struct ieee80211_chanctx *
-> +ieee80211_get_csa_chanctx(struct ieee80211_local *local)
-> +{
-> +	struct ieee80211_chanctx *chanctx = NULL, *ctx;
-> +	int num_chanctx = 0;
-> +
-> +	lockdep_assert_held(&local->chanctx_mtx);
-> +
-> +	list_for_each_entry(ctx, &local->chanctx_list, list) {
-> +		chanctx = ctx;
-> +		num_chanctx++;
->  	}
->  
-> -	sdata->vif.bss_conf.chandef = *chandef;
-> -	ctx->conf.def = *chandef;
-> +	/* multi-channel is not supported, multi-vif is */
-> +	if (num_chanctx > 1)
-> +		return NULL;
-
-This is essentially the same thing, but written as a chanctx function?
-
-> +	if (!chandef) {
-> +		rcu_read_unlock();
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (!cfg80211_chandef_usable(local->hw.wiphy, chandef,
-> +				     IEEE80211_CHAN_DISABLED)) {
-> +		rcu_read_unlock();
-> +		return -EINVAL;
-> +	}
-> +
-> +	ieee80211_use_csa_chandef(local);
-> +	rcu_read_unlock();
-
-A function that changes something but is under rcu_read_lock()? can't
-this call into the driver, which is likely not allowed?
-
-
-> +++ b/net/mac80211/tx.c
-> @@ -2427,13 +2427,16 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
->  	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
->  		return;
->  
-> -	/* Warn if the driver did not check for/react to csa
-> -	 * completeness.  A beacon with CSA counter set to 0 should
-> -	 * never occur, because a counter of 1 means switch just
-> -	 * before the next beacon.
-> -	 */
-> -	if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
-> +	if (beacon_data[counter_offset_beacon] == 1) {
-> +		/* Warn if the driver did not check for/react to csa
-> +		 * completeness. A beacon with CSA counter set to 0 should
-> +		 * never occur, because a counter of 1 means switch just before
-> +		 * the next beacon. Multi-interface CSA may need to wait for
-> +		 * other interfaces to complete their counter so don't warn
-> +		 * unless driver actually didn't notify us. */
-
-Err, that doesn't seem right either ... multi-interface CSA should all
-be switching at the same time, so you *still* shouldn't be running into
-this and transmitting beacons with CSA count==1. If you do, your driver
-is likely not behaving as it should.
-
-
-In any case, unless I'm missing some bigger picture this seems like a
-really hacky way to add things, basically ignoring all the channel
-context work. Since I care more about channel contexts, maybe we should
-merge support for channel context CSA before we try to do the multi
-thing.
-
-johannes
-
+Regards,
+Arend
