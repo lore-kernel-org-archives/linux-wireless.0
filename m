@@ -1,96 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alt-proxy13.mail.unifiedlayer.com ([67.222.34.81]:39332 "HELO
-	alt-proxy13.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751888AbaAXFcr (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:63724 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057AbaAXPcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 00:32:47 -0500
-Message-ID: <1390541559.2436.125.camel@Wailaba2> (sfid-20140124_063253_165700_564A243A)
-Subject: Re: [alsa-devel] [ISSUE] rtl8192ce appears to interfere with	ALSA
- playback
-From: Olivier Langlois <olivier@trillion01.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: LANGLOIS Olivier PIS -EXT
-	<olivier.pis.langlois@transport.alstom.com>,
-	"alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	James Cameron <quozl@laptop.org>,
-	"daniel@zonque.org" <daniel@zonque.org>
-Date: Fri, 24 Jan 2014 00:32:39 -0500
-In-Reply-To: <s5h1tzyu0em.wl%tiwai@suse.de>
-References: <1389767820.2436.45.camel@Wailaba2>
-	 <52D6BEEF.5050705@lwfinger.net> <52D76D56.6060906@trillion01.com>
-	 <20140116055547.GU19393@us.netrek.org> <1390464800.2436.111.camel@Wailaba2>
-	 <s5htxcvt718.wl%tiwai@suse.de>
-	 <89F8E4011FD7234ABFE48744E300CBC206BCE732@041-DB3MPN1-092.041d.mgd.msft.net>
-	 <s5h1tzyu0em.wl%tiwai@suse.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 24 Jan 2014 10:32:19 -0500
+Received: by mail-oa0-f49.google.com with SMTP id i7so3906952oag.36
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 07:32:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1390576776.4257.57.camel@jlt4.sipsolutions.net>
+References: <20140106075126.GA31046@w1.fi>
+	<1389110387.4645.26.camel@jlt4.sipsolutions.net>
+	<20140107162655.GB9092@w1.fi>
+	<CAMcMvshGwDB1G1urY18jYHr8mdXTapktfRsSgX0nhJjuPFW5Jg@mail.gmail.com>
+	<1390576776.4257.57.camel@jlt4.sipsolutions.net>
+Date: Fri, 24 Jan 2014 07:32:18 -0800
+Message-ID: <CAMcMvshUuaPYeH2TesPAaYg7JN12+SYDFWg+=fmUM=ZOtB+Waw@mail.gmail.com> (sfid-20140124_163223_143812_B26E6178)
+Subject: Re: [RFC 2/3] cfg80211: MinChannelTime and MaxChannelTime for scan requests
+From: Paul Stewart <pstew@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Takashi,
-
-On Thu, 2014-01-23 at 17:29 +0100, Takashi Iwai wrote:
-
-> Which machine and codec?  For example, Lenovo IdeaPad with ALC269 is
-> known to be broken with 48kHz, so we have a fixed rate limitation in
-> the driver.
-> 
-
-it is a hpmini. I have this from dmesg:
-
-[    9.638142] hda_codec: 92HD81B1X5: Apply fix-func for HP
-[    9.639859] hda-codec: Enable HP auto-muting on NID 0xb
-[    9.639888] hda-codec: Enable auto-mic switch on NID 0x11/0xa/0x0
-[    9.642312] hda_codec: 92HD81B1X5: Apply fix-func for HP
-
-
-> Other than the hardware restriction, you may play more with
-> position_fix or bdl_pos_adj option of snd-hda-intel driver.
-> 
-thank you for the advice. I'll take a look on these params to see what
-they do. However, because my sound card works very well all the time
-except that I have underruns that happens only when wpa_supplicant is
-doing this:
-
-wlan0: Control interface command 'STATUS'
-wlan0: State: DISCONNECTED -> SCANNING
-...
-wlan0: No suitable network found
-wlan0: Setting scan request: 5 sec 0 usec
-wlan0: Checking for other virtual interfaces sharing same radio (phy0)
-in event_scan_results
-wlan0: Starting AP scan for wildcard SSID
-WPS: Building WPS IE for Probe Request
-WPS:  * Version (hardcoded 0x10)
-WPS:  * Request Type
-WPS:  * Config Methods (148)
-WPS:  * UUID-E
-WPS:  * Primary Device Type
-WPS:  * RF Bands (1)
-WPS:  * Association State
-WPS:  * Configuration Error (0)
-WPS:  * Device Password ID (0)
-WPS:  * Device Name
-P2P: * P2P IE header
-P2P: * Capability dev=21 group=00
-P2P: * Listen Channel: Regulatory Class 81 Channel 1
-nl80211: Scan SSID - hexdump_ascii(len=0): [NULL]
-nl80211: Scan extra IEs - hexdump(len=101): xxx
-Scan requested (ret=0) - scan timeout 30 seconds
-nl80211: Event message available
-nl80211: Scan trigger
-nl80211: Event message available
-nl80211: New scan results available
-wlan0: Event SCAN_RESULTS (3) received
-nl80211: Received scan results (19 BSSes)
-wlan0: BSS: Start scan result update 2
-
-when wlan0 goes to connected or I just turn off the wifi, underruns go
-away, I'll check first what rtl8192ce's nl80211 interface implementation
-does when asked to perform a scan.
-
-thank you again for your suggestions,
-Olivier
+On Fri, Jan 24, 2014 at 7:19 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2014-01-07 at 09:04 -0800, Paul Stewart wrote:
+>
+> > I've seen situations where it'd be useful to distinguish in user-space
+> > between scan types.  Here are a few scenarios:
+> >
+> >  - Scanning for geo-location while associated (low-priority scan, tolerant
+> >    to delayed/incomplete results, definitely not intended to interrupt or
+> >    delay any inbound data traffic)
+> >  - Background scan.  If there is traffic during the scan, we should abort
+> >    (NL80211_SCAN_FLAG_LOW_PRIORITY should help with this).  If there is
+> >    a history of traffic (e.g, an active data transfer) we might want to flag
+> >    further that this scan should have shorter-than-usual dwell times as above.
+>
+> This makes sense, I'm not sure the first is all that much different from
+> the second, though the precise meaning of "low priority" isn't all that
+> well defined.
+>
+> >  - User-initiated scanning while idle in extremely congested networks
+> >    (may need to actually wait a full beacon interval on each channel since
+> >    the APs contend with each other to respond to probe requests -- user
+> >    initiated, so it behooves us to get a complete list).
+>
+> That's an interesting situation, but I'm not sure how you'd ever detect
+> which channels are extremely congested?
 
 
+Off the top of my head, I suppose one could devise a heuristic based
+on the ratio of beacons to probe-responses received on channel.  Also,
+some drivers support the "channel busy time" or some such measure in
+the survey results.
+>
+>
+> johannes
+>
