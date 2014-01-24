@@ -1,65 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:38810 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662AbaANR3s (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50233 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068AbaAXPJg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 12:29:48 -0500
-Received: by mail-ee0-f53.google.com with SMTP id t10so375507eei.12
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 09:29:47 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 3/5] cfg80211: parse DFS CAC time for internal regdb option
-Date: Tue, 14 Jan 2014 18:29:28 +0100
-Message-Id: <1389720570-2430-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140114_182956_408074_54B48E9C)
-In-Reply-To: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1389720570-2430-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 24 Jan 2014 10:09:36 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1W6iNz-0007F1-7e
+	for linux-wireless@vger.kernel.org; Fri, 24 Jan 2014 16:09:35 +0100
+Message-ID: <1390576173.4257.47.camel@jlt4.sipsolutions.net> (sfid-20140124_161002_201848_5A92E5F9)
+Subject: [ANN] iw 3.14 released
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 24 Jan 2014 16:09:33 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for parsing DFS CAC time when internal
-regulatory database is used.
+Since the content of 3.14's nl80211.h is fixed, I've released iw 3.14 as
+well.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/wireless/genregdb.awk |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+It'll be available from the usual places in a few minutes.
 
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 9a8217d..d48f881 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -66,6 +66,7 @@ function parse_reg_rule()
- 	units = $8
- 	sub(/\)/, "", units)
- 	sub(/,/, "", units)
-+	dfs_cac = $9
- 	if (units == "mW") {
- 		if (power == 100) {
- 			power = 20
-@@ -78,7 +79,12 @@ function parse_reg_rule()
- 		} else {
- 			print "Unknown power value in database!"
- 		}
-+	} else {
-+		dfs_cac = $8
- 	}
-+	sub(/,/, "", dfs_cac)
-+	sub(/\(/, "", dfs_cac)
-+	sub(/\)/, "", dfs_cac)
- 	flagstr = ""
- 	for (i=8; i<=NF; i++)
- 		flagstr = flagstr $i
-@@ -109,7 +115,7 @@ function parse_reg_rule()
- 
- 	}
- 	flags = flags "0"
--	printf "\t\tREG_RULE(%d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, flags
-+	printf "\t\tREG_RULE_DFS(%d, %d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, dfs_cac, flags
- 	rules++
- }
- 
--- 
-1.7.9.5
+johannes
 
