@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:33858 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbaANVu5 (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:51935 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216AbaAXVds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jan 2014 16:50:57 -0500
-Received: by mail-ob0-f177.google.com with SMTP id va2so251362obc.8
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2014 13:50:56 -0800 (PST)
-Message-ID: <52D5B13C.3040006@lwfinger.net> (sfid-20140114_225101_098345_08A4C09D)
-Date: Tue, 14 Jan 2014 15:50:52 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 24 Jan 2014 16:33:48 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so3474278iec.22
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 13:33:47 -0800 (PST)
 MIME-Version: 1.0
-To: andrea.merello@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL8187SE staging Linux driver
-References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>	<522F584E.6000806@lwfinger.net>	<CAN8YU5PCFj-gtQwuuR3fM52YAVTi_5NYPbDVj-KMSzMpXjvFWQ@mail.gmail.com> <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
-In-Reply-To: <CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1390572447.4257.43.camel@jlt4.sipsolutions.net>
+References: <1390570161-25041-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1390572447.4257.43.camel@jlt4.sipsolutions.net>
+Date: Fri, 24 Jan 2014 22:33:47 +0100
+Message-ID: <CAFED-j=bfkffdtb8PLdbkCwWhXamWY2uiL6iFuAZhz95VLFHJg@mail.gmail.com> (sfid-20140124_223412_869932_AF17F934)
+Subject: Re: [PATCH] cfg80211: set preset_chandef after channel switch
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/14/2014 11:40 AM, Andrea Merello wrote:
-> Hello Bernhard,
+2014/1/24 Johannes Berg <johannes@sipsolutions.net>:
+> On Fri, 2014-01-24 at 14:29 +0100, Janusz Dziedzic wrote:
+>> Set preset_chandef in channel switch notification.
+>> In other case we will have old preset_chandef.
 >
-> Are you still curious to test something ? :)
-> I attach a patch that should apply to wireless-testing..
+> Why would we care? We only keep the preset_chandef thing around because
+> hostapd (currently) doesn't pass the frequency to START_AP/the first
+> SET_BEACON, but after that this doesn't matter. And when you shut down
+> hostapd, and restart it, then it'll set the preset_chandef again through
+> explicitly setting the channel.
 >
-> I still have several items pending on my TODO list, including things
-> to tidy/fix, and things that are currently missing, however  I'm
-> getting encouraging results on my setup..
+> So in which case would we care? Who would ever STOP_AP and then START_AP
+> without a new frequency?
 >
-> If this works for you, and if other people in CC here agree, I may
-> starting split this mega-patch in something more suitable for kernel
-> maintainers to merge (currently it even changes few misleading names
-> in the common register struct, affecting also rtl8187 driver)..
->
-> Let me know if it works :)
 
-Andrea,
+We have test code in cfg80211 that using preset_chandef when compare
+chandefs when csa.
+And after that I see we never change preset_chandef after csa.
 
-Building your version gets the following warning:
+>From other side, I could imagine case where we have two VAPs in hostapd.
+- first we start first VAPs (eg. channel 36 HT40+)
+- next we call CSA (channel 44 HT40+)
+- now we start second VAPs - we will get err here because of
+preset_chandef (36 HT40+)
 
-   CC [M]  drivers/net/wireless/rtl818x/rtl8187/rfkill.o
-drivers/net/wireless/rtl818x/rtl8187/dev.c: In function ‘rtl8187_set_anaparam’:
-drivers/net/wireless/rtl818x/rtl8187/dev.c:596:3: warning: passing argument 2 of 
-‘rtl818x_iowrite8’ from incompatible pointer type [enabled by default]
-In file included from drivers/net/wireless/rtl818x/rtl8187/dev.c:32:0:
-drivers/net/wireless/rtl818x/rtl8187/rtl8187.h:237:20: note: expected ‘u8 *’ but 
-argument is of type ‘__le16 *’
-
-The easy fix is to change that to an ...iowrite16() call. So far, my testing to 
-see if writing that extra byte messes up the RTL8187B has not shown any 
-problems; however, I have not yet tested on a big-endian machine.
-
-Have you given any thought to renaming the driver? It seems to me that rtl8180 
-was probably not right when it drove both RTL8180 and RTL8185, and it is even 
-less appropriate today.
-
-The driver connects to the following APs:
-
-802.11n running WPA2
-802.11g running WPA1
-802.11g running WEP
-
-Looks good.
-
-Larry
+BR
+Janusz
 
 
-
-
+-- 
+Janusz Dziedzic
