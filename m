@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64793 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbaAMQXr (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13555 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaAXIUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 11:23:47 -0500
-Received: by mail-we0-f170.google.com with SMTP id u57so6613499wes.29
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 08:23:46 -0800 (PST)
-Message-ID: <1389630210.2590.3.camel@canaries32-MCP7A> (sfid-20140113_172355_153573_474564E7)
-Subject: [PATCH 4/6] staging: vt6656: sparse fixes: iwctl_siwgenie use
- memcpy.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 13 Jan 2014 16:23:30 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 24 Jan 2014 03:20:40 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: implement channel switching
+References: <1390473506-15677-1-git-send-email-michal.kazior@tieto.com>
+	<1390473506-15677-2-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 24 Jan 2014 10:20:34 +0200
+In-Reply-To: <1390473506-15677-2-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 23 Jan 2014 11:38:25 +0100")
+Message-ID: <87ob314wq5.fsf@kamboji.qca.qualcomm.com> (sfid-20140124_092043_839802_F584BD88)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-extra is in kernel space replace copy_from_user with
-memcpy with no need to error check.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-We already know that extra is valid by error checking
-on wrq->length.
+> Until now channel change wasn't propagating to FW
+> directly because operational channel is abstracted
+> by VDEVs and it wasn't really necessary since
+> ath10k implements hwscan and hwroc.
+>
+> This effectively fixes STA CSA and allows for
+> future AP-like CSA as well.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-sparse warning
-iwctl.c:1567:53: warning: incorrect type in argument 2 (different address spaces)
-iwctl.c:1567:53:    expected void const [noderef] <asn:1>*from
-iwctl.c:1567:53:    got char *extra
+[...]
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/iwctl.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> @@ -2559,15 +2676,18 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+>  				 * this is never erased as we it for crypto key
+>  				 * clearing; this is FW requirement
+>  				 */
+> -				memcpy(arvif->u.sta.bssid, info->bssid,
+> -				       ETH_ALEN);
+> +				memcpy(arvif->bssid, info->bssid, ETH_ALEN);
+>  
+>  				ath10k_dbg(ATH10K_DBG_MAC,
+>  					   "mac vdev %d start %pM\n",
+>  					   arvif->vdev_id, info->bssid);
+>  
+> -				/* FIXME: check return value */
+>  				ret = ath10k_vdev_start(arvif);
+> +				if (ret)
+> +					ath10k_warn("failed to start vdev: %d\n",
+> +						    ret);
+> +				else
+> +					arvif->is_started = true;
+>  			}
 
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index 058df65..bf56877 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -1564,10 +1564,8 @@ int iwctl_siwgenie(struct net_device *dev, struct iw_request_info *info,
- 			goto out;
- 		}
- 		memset(pMgmt->abyWPAIE, 0, MAX_WPA_IE_LEN);
--		if (copy_from_user(pMgmt->abyWPAIE, extra, wrq->length)) {
--			ret = -EFAULT;
--			goto out;
--		}
-+
-+		memcpy(pMgmt->abyWPAIE, extra, wrq->length);
- 		pMgmt->wWPAIELen = wrq->length;
- 	} else {
- 		memset(pMgmt->abyWPAIE, 0, MAX_WPA_IE_LEN);
+I really don't like that if-else construct and I think it's just better
+to bail out if an error happens, so I changed this to:
+
+				ret = ath10k_vdev_start(arvif);
+				if (ret) {
+					ath10k_warn("failed to start vdev: %d\n",
+						    ret);
+					return;
+				}
+
+				arvif->is_started = true;
+
 -- 
-1.8.5.2
-
-
+Kalle Valo
