@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21700 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751807AbaATIKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 03:10:17 -0500
-Date: Mon, 20 Jan 2014 10:10:07 +0200
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Chen-Yu Tsai <wens@csie.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree <devicetree@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:41834 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbaAXHoU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jan 2014 02:44:20 -0500
+Message-ID: <1390549457.19968.8.camel@porter.coelho.fi> (sfid-20140124_084423_143752_C94110B1)
+Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
-Message-ID: <20140120081007.GA19123@xps8300> (sfid-20140120_091040_887781_74DAAE54)
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
- <1389941251-32692-5-git-send-email-wens@csie.org>
- <201401171747.46332.arnd@arndb.de>
- <CAGb2v67UKiyfJbKZ_Frk3OwZupMPoA2Ck3Hj2zsRFXBQPztavg@mail.gmail.com>
- <CACRpkdZOD4zeA8T5kbJ4c5NsnuzHCg1mw8rRMYNT9c4R-Qnc6A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACRpkdZOD4zeA8T5kbJ4c5NsnuzHCg1mw8rRMYNT9c4R-Qnc6A@mail.gmail.com>
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Fri, 24 Jan 2014 09:44:17 +0200
+In-Reply-To: <CA+BoTQmGrx0Ko-E9N6ntzurGgZHK+nTyY78U43xXw8yctGbf4A@mail.gmail.com>
+References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
+	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
+	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
+	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
+	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
+	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
+	 <1390394166.4189.28.camel@porter.coelho.fi>
+	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
+	 <1390403634.4189.39.camel@porter.coelho.fi>
+	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	 <1390458664.4189.48.camel@porter.coelho.fi>
+	 <CA+BoTQnyd5HQxU9n=7G8bhJTukMJqZwNmD1FgWowHm2LJ=NUsA@mail.gmail.com>
+	 <1390462306.4189.56.camel@porter.coelho.fi>
+	 <CA+BoTQn-wjQYfUVxJU+xOUoANKE=8ajmq=ytmzAqVuiqMXJj=w@mail.gmail.com>
+	 <1390478961.4142.12.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQmGrx0Ko-E9N6ntzurGgZHK+nTyY78U43xXw8yctGbf4A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Sat, Jan 18, 2014 at 12:11:56AM +0100, Linus Walleij wrote:
-> On Fri, Jan 17, 2014 at 6:43 PM, Chen-Yu Tsai <wens@csie.org> wrote:
-> > On Sat, Jan 18, 2014 at 12:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> 
-> >>> +- NAME_shutdown-gpios  : GPIO phandle to shutdown control
-> >>> +                         (phandle must be the second)
-> >>> +- NAME_reset-gpios     : GPIO phandle to reset control
-> >>> +
-> >>> +NAME must match the rfkill-name property. NAME_shutdown-gpios or
-> >>> +NAME_reset-gpios, or both, must be defined.
-> >>> +
-> >>
-> >> I don't understand this part. Why do you include the name in the
-> >> gpios property, rather than just hardcoding the property strings
-> >> to "shutdown-gpios" and "reset-gpios"?
+On Thu, 2014-01-23 at 13:41 +0100, Michal Kazior wrote:
+> On 23 January 2014 13:09, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2014-01-23 at 08:57 +0100, Michal Kazior wrote:
 > >
-> > This quirk is a result of how gpiod_get_index implements device tree
-> > lookup.
+> >> This is actually the tricky part. How do you automatically switch an
+> >> AP interface? You should be able to at least generate CSA IE - true -
+> >> but what about beacon after CSA? You need to update HT IE and VHT IE
+> >> at least.
+> >>
+> >> Perhaps we could split CSA into two parts somehow and make it more
+> >> userspace coordinated. The first part of CSA - announcing it, is
+> >> trivial and can actually be done entirely within mac80211 if I'm not
+> >> mistaken. What needs userspace input is what happens after the
+> >> announcement. This would mean that there is a possible time gap
+> >> between announcement being completed and the actual channel switch &
+> >> operation resuming.
+> >
+> > I believe that even announcing it isn't necessarily possible without
+> > userspace involvement, particularly for things like 11ac's channel
+> > switch wrapper IE and/or operating class changes.
 > 
-> Why can't it just have a single property "gpios", where the first
-> element is the reset GPIO and the second is the shutdown GPIO?
+> Aww, too bad then.
 > 
-> rfkill-gpio does this:
-> 
-> gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
-> gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
-> 
-> The passed con ID name parameter is only there for the device
-> tree case it seems. (ACPI ignores it.) So what about you just
-> don't pass it at all and patch it to do like this instead:
-> 
-> gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
-> gpio = devm_gpiod_get_index(&pdev->dev, NULL, 1);
-> 
-> Heikki, are you OK with this change?
+> But splitting would still be useful (at least in some sense) if you
+> consider CSA to "usable" DFS channels.
 
-Yes, definitely. That is much cleaner.
+I don't like the split idea that much.  If we send the CS announcement
+automatically but the userspace never reacts to our indication, we will
+be stuck in the middle of the channel switch...
 
-Thanks,
+--
+Luca.
 
--- 
-heikki
