@@ -1,87 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:49652 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752708AbaA2TIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 14:08:34 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
- ESMTPSA (Nemesis) id 0MMHaL-1WBbhc0AGL-007zJ7 for
- <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:33 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 11/13] ath9k_htc: use ath9k_cmn_rx_skb_postprocess
-Date: Wed, 29 Jan 2014 20:07:02 +0100
-Message-Id: <1391022424-21087-10-git-send-email-linux@rempel-privat.de> (sfid-20140129_200837_496725_ED5657B2)
-In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
- <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:35438 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbaAXWht (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jan 2014 17:37:49 -0500
+Received: by mail-pd0-f181.google.com with SMTP id y10so3603519pdj.40
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:37:49 -0800 (PST)
+Received: from mcgrof@gmail.com (c-24-7-61-223.hsd1.ca.comcast.net. [24.7.61.223])
+        by mx.google.com with ESMTPSA id xs1sm17138517pac.7.2014.01.24.14.37.45
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Fri, 24 Jan 2014 14:37:47 -0800 (PST)
+Date: Fri, 24 Jan 2014 14:37:44 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] crda-3.13 released
+Message-ID: <20140124223742.GA26233@garbanzo.do-not-panic.com> (sfid-20140124_233753_001278_9BDED5C9)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 28 +++------------------------
- 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 7321b64..c4368c4 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -973,9 +973,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct ath_hw *ah = common->ah;
- 	struct ath_htc_rx_status *rxstatus;
- 	struct ath_rx_status *rx_stats;
--	int hdrlen, padsize;
- 	bool decrypt_error;
--	__le16 fc;
- 
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
- 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
-@@ -999,16 +997,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
- 	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
- 
--	hdr = (struct ieee80211_hdr *)skb->data;
--	fc = hdr->frame_control;
--	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--
--	padsize = hdrlen & 3;
--	if (padsize && skb->len >= hdrlen+padsize+FCS_LEN) {
--		memmove(skb->data + padsize, skb->data, hdrlen);
--		skb_pull(skb, padsize);
--	}
--
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	rx_stats = kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
-@@ -1022,23 +1010,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
- 	 */
-+	hdr = (struct ieee80211_hdr *)skb->data;
- 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats,
- 			&decrypt_error, priv->rxfilter))
- 		goto rx_next;
- 
--	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
--		u8 keyix;
--		keyix = rxbuf->rxstatus.rs_keyix;
--		if (keyix != ATH9K_RXKEYIX_INVALID) {
--			rx_status->flag |= RX_FLAG_DECRYPTED;
--		} else if (ieee80211_has_protected(fc) &&
--			   skb->len >= hdrlen + 4) {
--			keyix = skb->data[hdrlen + 3] >> 6;
--			if (test_bit(keyix, common->keymap))
--				rx_status->flag |= RX_FLAG_DECRYPTED;
--		}
--	}
--
-+	ath9k_cmn_rx_skb_postprocess(common, skb, rx_stats,
-+				     rx_status, decrypt_error);
- 
- 	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status))
- 		goto rx_next;
--- 
-1.8.5.3
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+I hadn't made a release in a while, its time. Quite a bit of changes
+have happened but nothing relevant for the user other than the code
+was cleaned up heavily.
+
+Distributions folks would care that CRDA is now licensed under
+copyleft-next, and that we now use separate code for using the
+db into a library. This allows developers to easily write code
+to work with the db, parse it, and do kung-fu with it. A great
+example is the new database optimizer parser, which could be
+used for example by vendors who have legacy regulatory databases
+and need something to scrape their not-so-efficient-dbs into
+efficient dbs.
+
+New shiny temporary release page:
+
+http://drvbp1.linux-foundation.org/~mcgrof/rel-html/crda/
+
+Ben Hutchings (1):
+      reglib: Validate all structure and array lengths
+
+Christian Lamparter (1):
+      reglib: fix memset usage
+
+Luis R. Rodriguez (50):
+      crda: fix compile warning on pcc for reglib for string.h
+      crda: make reg_rules_intersect() style match Linux
+      crda: port over Linux is_valid_reg_rule() change bd05f28e
+      crda: remove verbose errors out of regdom_intersect()
+      crda: constify usage of struct ieee80211_regdomain
+      crda: remove unused BUG_ON() from intersect.c
+      crda: move regdom_intersect() to reglib
+      crda: fix regression when using reglib_for_each_country()
+      crda: move intersection if first attempt failed
+      crda: do not double count on reglib_for_each_country()
+      crda: annotate intersection worst case scenerio
+      crda: fix intersect.c memory management
+      crda: explicitly munmap() on reglib_get_rd_alpha2()
+      crda: explicitly close file descriptor and munmap() on failures
+      crda: separate crda_verify_db_signature() implementations
+      crda: use gcry_sexp_release() on crda_verify_db_signature()
+      crda: explicitly use close() and munmap() on reglib_get_rd_alpha2()
+      crda: use gcry_mpi_release() when using gcry_mpi_scan()
+      crda: rename world and prev_world on intersect.c
+      crda: remove verbosity out of intersect.c
+      crda: rename regdom_intersect() to reglib_intersect_rds()
+      crda: rename crda_get_file_ptr() to reglib_get_file_ptr()
+      crda: rename crda_verify_db_signature() to reglib_verify_db_signature()
+      crda: rename print_regdom() to reglib_print_regdom()
+      crda: add regdb_dfs_regions
+      crda: make print-regdom use internal flags
+      crda: move reg print helpers to reglib
+      crda: rename is_world_regdom() to reglib_is_world_regdom()
+      crda: rename isalpha_upper() to reglib_isalpha_upper()
+      crda: rename is_alpha2() to reglib_is_alpha2()
+      crda: rename is_valid_regdom() to reglib_is_valid_regdom()
+      crda: rename max() to reglib_max()
+      crda: rename min() to reglib_min()
+      crda: fix spacing on reglib_for_each_country()
+      crda: clarify intersect.c only computes an intersection
+      crda: separate intersecting a full db into a helper
+      crda: move reglib_intersect_regdb() to reglib
+      crda: move regdbprint to its own helper
+      crda: add reglib regdb context helpers: reglib_(malloc|free)_regdb_ctx()
+      crda: pass struct reglib_regdb_ctx to country2rd()
+      crda: make reglib_for_each_country() use the reglib context
+      reglib: add reglib_is_valid_rd() and verify data upon build
+      crda: consolidate passive-scan and no-ibss flags
+      crda: remove antenna gain
+      crda: relicense under copyleft-next-0.3.0
+      crda: fix -pedantic gcc compilation
+      crda: add regulatory domain stream parser
+      crda: add regulatory domain optimizer
+      crda: make ssl keys include stdint.h
+      crda: make reglib a shared library
+
+Zefir Kurtisi (2):
+      crda: synch up nl80211.h
+      crda: display DFS regulatory domain in regdbdump
+
+
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJS4us1AAoJEKwtdpJg+MHGNJoP/jSxLwjgsoijVci5LoK2+zku
+zoQ/XrB01Mx6G05cWNgAzHLxN9iqmmpfW//h/esIHAmbpxxHu9JGyU1RhInqpNkU
+emq8UKZ/WdzUtgQp7QI3dmbpOT+2m351racPp63lyCozBattUuFxGqrwrz9JW8ii
+4fd7ISBkUadmNQ3+1biY8mGSiljviI180udvPlIH+hEKLndZpcu9J8MwuETn7vxZ
+rNxcFXByNXkd0fHgK65bwFOjYvQNksNbiifHhjCin8oSaB8uldosgDTggroIQ0tn
+WDgXcwLksGELoaeBl/ZmLXAx1V7PhTfJEbA2pXiT8eIaOwo7boj6Ea1o32skpo1h
+fDO3LsQvwv5APqLdF/IPtWqMtluD9bfApjmKyb12vhqHhLZJuoAVnko7Ukf5c5r1
+kfVxPeIrfZROPDf20kBa8HG+64/kPp6kAf7KbggwlZz1FTDTxseoXuVaS2w9L1YT
+Bn377U93NGwFgaMRq/7nyvfQoIE17ZhC7+c0ib1AKKVbRs3oBzVEap+qtaKcj8RT
+V/R6P/T3+ckUD6j8P3XlxTSlUSuRdGldeGhzr1Pr+hWM8cNA3SntV8n+wwrpORRM
+FWYur6QXGp9ZwiXrvtNkOjZhLTy6lmot4WFHUEW1mzm6IOlaojR2dq4F7wDz+MxI
+ojDTXM3ndDsn+mlsYwd9
+=Lckd
+-----END PGP SIGNATURE-----
+
+--nFreZHaLTZJo0R7j--
