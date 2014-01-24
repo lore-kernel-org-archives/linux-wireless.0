@@ -1,139 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:40781 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754636AbaAUOxe (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46531 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbaAXTpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 09:53:34 -0500
+	Fri, 24 Jan 2014 14:45:49 -0500
+Date: Fri, 24 Jan 2014 14:39:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-next 2014-01-24
+Message-ID: <20140124193933.GL4309@tuxdriver.com> (sfid-20140124_204615_949499_8173D345)
 MIME-Version: 1.0
-In-Reply-To: <201401211335.16885.arnd@arndb.de>
-References: <1389941251-32692-1-git-send-email-wens@csie.org>
- <CAAVeFuLP4MkfXGG1FMauvUw_J63zRXdhGwxqYy5W98L1wCQNbw@mail.gmail.com>
- <CACRpkdYiy+sya6NqRfAmsrFOXvaa3qX=qjRuTDW1vZVSaG1+Gg@mail.gmail.com> <201401211335.16885.arnd@arndb.de>
-From: Alexandre Courbot <gnurou@gmail.com>
-Date: Tue, 21 Jan 2014 23:53:13 +0900
-Message-ID: <CAAVeFuKFfAvSPYLmvWV5jjT-peZFJ8sJ2bbh4F=JAYoWLhjZpA@mail.gmail.com> (sfid-20140121_155355_577831_4DF8902E)
-Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 21, 2014 at 9:35 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 21 January 2014, Linus Walleij wrote:
->> On Tue, Jan 21, 2014 at 4:11 AM, Alexandre Courbot <gnurou@gmail.com> wrote:
->> > On Sat, Jan 18, 2014 at 8:11 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
->> >
->> > I agree that's how it should be be done with the current API if your
->> > driver can obtain GPIOs from both ACPI and DT. This is a potential
->> > issue, as drivers are not supposed to make assumptions about who is
->> > going to be their GPIO provider. Let's say you started a driver with
->> > only DT in mind, and used gpio_get(dev, con_id) to get your GPIOs. DT
->> > bindings are thus of the form "con_id-gpio = <phandle>", and set in
->> > stone. Then later, someone wants to use your driver with ACPI. How do
->> > you handle that gracefully?
->>
->> Short answer is you can't. You have to pour backward-compatibility
->> code into the driver first checking for that property and then falling
->> back to the new binding if it doesn't exist.
->
-> With the ACPI named properties extension, it should be possible to have
-> something akin to a "gpio-names" list that can be attached to an indexed
-> array of gpio descriptors. I assume that Intel is going to need this
-> for named irqs, clocks, regulators, dmas as well, so I think it will
-> eventually get there. It's not something that can be done today though,
-> or that is standardized in APCI-5.0.
 
-Good to know. I'm not sure this would help with the named GPIO
-resolution issue however. I assume that contrary to DT we will have no
-control over the naming of ACPI-defined GPIOs, and thus there is
-little chance that a GPIO serving a function will end up having the
-same name as the one we chose for the DT binding...
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->
-> My guess is that named GPIOs are going to make more sense on x86 embedded
-> than on arm64 server.
->
->> > I'm starting to wonder, now that ACPI is a first-class GPIO provider,
->> > whether we should not start to encourage the deprecation of the
->> > "con_id-gpio = <phandle>" binding form in DT and only use a single
->> > indexed GPIO property per device.
->>
->> You have a valid point.
->
-> Independent of ACPI, I prefer indexed "gpios" properties over "con_id-gpio"
-> properties anyway, because it's more consistent with some of the other
-> subsystems. I don't have an opinion though on whether we should also
-> allow a "gpios"/"gpio-names" pair, or whether we should keep the indexed
-> "gpios" list for the anonymous case.
->
->> > The con_id parameter would then only
->> > be used as a label, which would also have the nice side-effect that
->> > all GPIOs used for a given function will be reported under the same
->> > name no matter what the GPIO provider is.
->>
->> As discussed earlier in this thread I'm not sure the con_id is
->> suitable for labelling GPIOs. It'd be better to have a proper name
->> specified in DT/ACPI instead.
->
-> +1
+Dave,
 
-I wonder why you guys prefer to have the name defined in the GPIO
-mapping. Having the driver decide the label makes it easier to look up
-which GPIO does what in debugfs, whereas nothing prevents people to
-name GPIOs whatever inadequate name they want in the device DT node.
-What am I overlooking here?
+Please pull these fixes for the 3.14 stream!
 
->
->> > From an aesthetic point of view, I definitely prefer using con_id to
->> > identify GPIOs instead of indexes, but I don't see how we can make it
->> > play nice with ACPI. Thoughts?
->>
->> Let's ask the DT maintainers...
->>
->> I'm a bit sceptic to the whole ACPI-DT-API-should-be-unified
->> just-one-function-call business, as this was just a very simple example
->> of what can happen to something as simple as
->> devm_gpiod_get[_index]().
->
-> I think a unified kernel API makes more sense for some subsystems than
-> others, and it depends a bit on the rate of adoption of APCI for drivers
-> that already have a DT binding (or vice versa, if that happens).
->
-> GPIO might actually be in the first category since it's commonly used
-> for off-chip components that will get shared across ARM and x86 (as
-> well as everything else), while a common kernel API would be less
-> important for things that are internal to an SoC where Intel is the
-> only company needing ACPI support.
+For the iwlwifi fix, Emmanuel says:
 
-I am afraid I don't have a good enough view of the ACPI landscape to
-understand how often drivers might be reused on both ACPI and DT. But
-I suppose nothing speaks against that, technically speaking. Maybe
-Mika would have comments to make here?
+"A critical bug has been reported on all NICs supported by iwldvm.
+iwlwifi would simply panic upon interface up This patch fixes this. The
+offending code is by me and is present in wireless-next.git and hence in
+net-next.git."
 
-The good (or bad, rather) thing about DT is that we can do whatever we
-please with the new bindings: decide which name or which index
-(doesn't matter here) a GPIO should have. However we don't have this
-control over ACPI, where nothing guarantees that the same index will
-be used for the same GPIO function. And there goes our unified GPIO
-mapping. Workarounds would imply additional layers of mapping, or
-using different probe functions depending on whether we rely on DT or
-ACPI (I don't want to imagine there will be systems that use *both*).
-Considering that we already have drivers using that trick (e.g. to
-choose between SPI or I2C), the latter might be acceptable.
+Along with that...
 
-Alex.
+Andreas Fenkart corrects a WoWLAN problem with mwifiex.
+
+Roman Dubtsov adds a device ID to rt2800usb.
+
+Sujith Manoharan re-enables a mistakenly commented-out line of code in
+ath9k, and also fixes and interrupt mitigation issue for that driver.
+
+ZHAO Gang fixes an incorrect assignment (reverse/wrong API call) in b43.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+The following changes since commit f55aa836fb7a90b62cb2c533b899e331cdffcf0c:
+
+  rtnetlink: remove IFLA_BOND_SLAVE definition (2014-01-24 00:36:48 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
+for-davem
+
+for you to fetch changes up to 5746cc2a6923b4e4726d9be8aa155461829be360:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless-next into for-davem (2014-01-24 13:25:15 -0500)
+
+----------------------------------------------------------------
+
+Andreas Fenkart (1):
+      mwifiex: fix wakeup on magic packet
+
+Emmanuel Grumbach (1):
+      iwlwifi: pcie: don't panic on host commands in iwldvm
+
+John W. Linville (2):
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
+ext
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
+ext into for-davem
+
+Roman Dubtsov (1):
+      rt2x00: rt2800usb: mark D-Link DWA-137 as supported
+
+Sujith Manoharan (2):
+      ath9k: Fix code mistake
+      ath9k: Fix RX interrupt mitigation
+
+ZHAO Gang (1):
+      b43: fix the wrong assignment of status.freq in b43_rx()
+
+ drivers/net/wireless/ath/ath9k/hw.c     | 12 ++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h     |  2 ++
+ drivers/net/wireless/ath/ath9k/main.c   |  2 +-
+ drivers/net/wireless/b43/xmit.c         |  4 ++--
+ drivers/net/wireless/iwlwifi/pcie/tx.c  |  4 +++-
+ drivers/net/wireless/mwifiex/cfg80211.c |  2 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c |  1 +
+ 7 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath=
+/ath9k/hw.c
+index ce41658a6003..fbf43c05713f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -358,6 +358,14 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+=20
+ 	ah->config.rx_intr_mitigation =3D true;
+=20
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		ah->config.rimt_last =3D 500;
++		ah->config.rimt_first =3D 2000;
++	} else {
++		ah->config.rimt_last =3D 250;
++		ah->config.rimt_first =3D 700;
++	}
++
+ 	/*
+ 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
+ 	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
+@@ -1876,8 +1884,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_ch=
+annel *chan,
+ 		REG_WRITE(ah, AR_OBS, 8);
+=20
+ 	if (ah->config.rx_intr_mitigation) {
+-		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, 500);
+-		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 2000);
++		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, ah->config.rimt_last);
++		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, ah->config.rimt_first);
+ 	}
+=20
+ 	if (ah->config.tx_intr_mitigation) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath=
+/ath9k/hw.h
+index e766399bdcda..0acd4b5a4892 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -310,6 +310,8 @@ struct ath9k_ops_config {
+ 	u8 max_txtrig_level;
+ 	u16 ani_poll_interval; /* ANI poll interval in ms */
+ 	u16 hw_hang_checks;
++	u16 rimt_first;
++	u16 rimt_last;
+=20
+ 	/* Platform specific config */
+ 	u32 aspm_l1_fix;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/a=
+th/ath9k/main.c
+index 73a36551a5ed..5924f72dd493 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -524,7 +524,7 @@ void ath9k_tasklet(unsigned long data)
+ 			 * successfully after a GTT interrupt, the GTT counter
+ 			 * gets reset to zero here.
+ 			 */
+-			/* sc->gtt_cnt =3D 0; */
++			sc->gtt_cnt =3D 0;
+=20
+ 			ath_tx_edma_tasklet(sc);
+ 		} else {
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmi=
+t.c
+index 4ae63f4ddfb2..50e5ddb12fb3 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *sk=
+b, const void *_rxhdr)
+ 		 * channel number in b43. */
+ 		if (chanstat & B43_RX_CHAN_5GHZ) {
+ 			status.band =3D IEEE80211_BAND_5GHZ;
+-			status.freq =3D b43_freq_to_channel_5ghz(chanid);
++			status.freq =3D b43_channel_to_freq_5ghz(chanid);
+ 		} else {
+ 			status.band =3D IEEE80211_BAND_2GHZ;
+-			status.freq =3D b43_freq_to_channel_2ghz(chanid);
++			status.freq =3D b43_channel_to_freq_2ghz(chanid);
+ 		}
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/=
+iwlwifi/pcie/tx.c
+index 3b14fa8abfc7..3d549008b3e2 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -289,13 +289,15 @@ static void iwl_pcie_txq_inval_byte_cnt_tbl(struct iw=
+l_trans *trans,
+  */
+ void iwl_pcie_txq_inc_wr_ptr(struct iwl_trans *trans, struct iwl_txq *txq)
+ {
++	struct iwl_trans_pcie *trans_pcie =3D IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 reg =3D 0;
+ 	int txq_id =3D txq->q.id;
+=20
+ 	if (txq->need_update =3D=3D 0)
+ 		return;
+=20
+-	if (trans->cfg->base_params->shadow_reg_enable) {
++	if (trans->cfg->base_params->shadow_reg_enable ||
++	    txq_id =3D=3D trans_pcie->cmd_queue) {
+ 		/* shadow register enabled */
+ 		iwl_write32(trans, HBUS_TARG_WRPTR,
+ 			    txq->q.write_ptr | (txq_id << 8));
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless=
+/mwifiex/cfg80211.c
+index f37b403e83d0..8bfc07cd330e 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2449,7 +2449,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wip=
+hy,
+ 		       ETH_ALEN);
+ 		mef_entry->filter[filt_num].byte_seq[MWIFIEX_MEF_MAX_BYTESEQ] =3D
+ 								ETH_ALEN;
+-		mef_entry->filter[filt_num].offset =3D 14;
++		mef_entry->filter[filt_num].offset =3D 28;
+ 		mef_entry->filter[filt_num].filt_type =3D TYPE_EQ;
+ 		if (filt_num)
+ 			mef_entry->filter[filt_num].filt_action =3D TYPE_OR;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless=
+/rt2x00/rt2800usb.c
+index 5c5c4906c6b6..caddc1b427a9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -989,6 +989,7 @@ static struct usb_device_id rt2800usb_device_table[] =
+=3D {
+ 	{ USB_DEVICE(0x07d1, 0x3c15) },
+ 	{ USB_DEVICE(0x07d1, 0x3c16) },
+ 	{ USB_DEVICE(0x07d1, 0x3c17) },
++	{ USB_DEVICE(0x2001, 0x3317) },
+ 	{ USB_DEVICE(0x2001, 0x3c1b) },
+ 	/* Draytek */
+ 	{ USB_DEVICE(0x07fa, 0x7712) },
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJS4sF1AAoJEJctW/TcYTgGSGMP/RKEjGIxZtG4Qaj4TyccHF9o
+K+mHv1UbEwdkWXPvNd1a10NmnNFYv41Bwq8fHkakM299TpYl0ms8yB1m3rjy1JLJ
+I5+VrZTTJnynPMNApyT6djr6KPiRmcIK8IkQF7bGWQVL82MuZ7BJCbDgVoIFb0Jt
+Y0ACkmScPJ4JNYN+GMTOnNyFtnAfckHTwVrAmg8xflTN0/recBUYhB376DvNISgC
+tEsrL5UynMC+RK6rQGsBPJu9f/LVKNkV91CHryYl+WtKZZnqwWAyXO4Tlpa7F1i4
+R0SlQS0AL9ki9atmnzMN/Kigo5dmzpCmITdibc/x9j3nhvNKRF1Ilyg0T/MWlU+z
+DVBYiiZRXNubueqTUfcW2NlV1175VAWzuh+lEud9fzuyMI9QESwCAWJW6SQUjBQq
+tSviZ5sZB70Zdqq52hfNSFsYqp9hzQHXV8nxOF4XvVav7iokUyqxNawMRLyrif/w
+iYhk0htoKygpphsLaSvl4bueQ0Gy40OwV7hHWTyeTxoe89Tdkb4eYGI0cI3VghY/
+WUYATX19y0e+0ZyYJCw8+1/yGK8IMm21uanHVYqYrqlQsMtTa6PkkNc+C3gR1kx8
+VjSYDsUriXz5FCYgpGT4wzB93z+Nucs9SvDAWPpeNQ8/l7gyBbqYTWOfeFmDTwDT
+QCqg+ewSYz9WKwGEH7Hu
+=qKuS
+-----END PGP SIGNATURE-----
+
+--7AUc2qLy4jB3hD7Z--
