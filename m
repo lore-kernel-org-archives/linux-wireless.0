@@ -1,41 +1,285 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36290 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178AbaAXJSD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49763 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbaAXMUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 04:18:03 -0500
-Date: Fri, 24 Jan 2014 01:18:00 -0800 (PST)
-Message-Id: <20140124.011800.1437880947731667846.davem@davemloft.net> (sfid-20140124_101819_055842_1D172161)
-To: jiri@resnulli.us
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [README] bug fixes only...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140124083927.GA3153@minipsycho.orion>
-References: <20140123.162408.681541949851852312.davem@davemloft.net>
-	<20140124083927.GA3153@minipsycho.orion>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 24 Jan 2014 07:20:05 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Raja Mani <rmani@qti.qualcomm.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute confusion
+Date: Fri, 24 Jan 2014 13:20:01 +0100
+Message-Id: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net> (sfid-20140124_132011_269961_241C2D86)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Pirko <jiri@resnulli.us>
-Date: Fri, 24 Jan 2014 09:39:27 +0100
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Fri, Jan 24, 2014 at 01:24:08AM CET, davem@davemloft.net wrote:
->>
->>I want to see zero feature and/or cleanup patches submitted at this
->>time.
->>
->>net-next is now frozen and I'm going to let it sit for a day before
->>I try to merge it to Linus.
->>
->>Thanks for your understanding.
-> 
-> Hi Dave.
-> 
-> Please do not forget about the patch named "rtnetlink: remove
-> IFLA_BOND_SLAVE definition" which is currently in patchwork.
-> It would not be good if the definition got from net-next into linus's tree.
+The scheduled scan matchsets were intended to be a list of filters,
+with the found BSS having to pass at least one of them to be passed
+to the host. When the RSSI attribute was added, however, this was
+broken and currently wpa_supplicant adds that attribute in its own
+matchset; however, it doesn't intend that to mean that anything
+that passes the RSSI filter should be passed to the host, instead
+it wants it to mean that everything needs to also have higher RSSI.
 
-I applied it before you wrote this. :-)
+This is semantically problematic because we have a list of filters
+like [ SSID1, SSID2, SSID3, RSSI ] with no real indication which
+one should be OR'ed and which one AND'ed.
+
+To fix this, move the RSSI filter attribute into each matchset. As
+we need to stay backward compatible, treat a matchset with only the
+RSSI attribute as a "default RSSI filter" for all other matchsets,
+but only if there are other matchsets (an RSSI-only matchset by
+itself is still desirable.)
+
+To make driver implementation easier, keep a global min_rssi_thold
+for the entire request as well. The only affected driver is ath6kl.
+
+I found this when I looked into the code after Raja Mani submitted
+a patch fixing the n_match_sets calculation to disregard the RSSI,
+but that patch didn't address the semantic issue.
+
+Reported-by: Raja Mani <rmani@qti.qualcomm.com>
+Acked-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 19 +++++---
+ drivers/net/wireless/iwlwifi/mvm/scan.c    |  3 ++
+ include/net/cfg80211.h                     |  7 ++-
+ include/uapi/linux/nl80211.h               | 10 ++++-
+ net/wireless/nl80211.c                     | 70 ++++++++++++++++++++++++++----
+ 5 files changed, 91 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index fd4c89d..eba32f5 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3256,6 +3256,15 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	u16 interval;
+ 	int ret, rssi_thold;
++	int n_match_sets = request->n_match_sets;
++
++	/*
++	 * If there's a matchset w/o an SSID, then assume it's just for
++	 * the RSSI (nothing else is currently supported) and ignore it.
++	 * The device only supports a global RSSI filter that we set below.
++	 */
++	if (n_match_sets == 1 && !request->match_sets[0].ssid.ssid_len)
++		n_match_sets = 0;
+ 
+ 	if (ar->state != ATH6KL_STATE_ON)
+ 		return -EIO;
+@@ -3268,11 +3277,11 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
+ 				      request->n_ssids,
+ 				      request->match_sets,
+-				      request->n_match_sets);
++				      n_match_sets);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	if (!request->n_match_sets) {
++	if (!n_match_sets) {
+ 		ret = ath6kl_wmi_bssfilter_cmd(ar->wmi, vif->fw_vif_idx,
+ 					       ALL_BSS_FILTER, 0);
+ 		if (ret < 0)
+@@ -3286,12 +3295,12 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 
+ 	if (test_bit(ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
+ 		     ar->fw_capabilities)) {
+-		if (request->rssi_thold <= NL80211_SCAN_RSSI_THOLD_OFF)
++		if (request->min_rssi_thold <= NL80211_SCAN_RSSI_THOLD_OFF)
+ 			rssi_thold = 0;
+-		else if (request->rssi_thold < -127)
++		else if (request->min_rssi_thold < -127)
+ 			rssi_thold = -127;
+ 		else
+-			rssi_thold = request->rssi_thold;
++			rssi_thold = request->min_rssi_thold;
+ 
+ 		ret = ath6kl_wmi_set_rssi_filter_cmd(ar->wmi, vif->fw_vif_idx,
+ 						     rssi_thold);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 4ce9bb5..d876fa7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -590,6 +590,9 @@ static void iwl_scan_offload_build_ssid(struct cfg80211_sched_scan_request *req,
+ 	 * config match list.
+ 	 */
+ 	for (i = 0; i < req->n_match_sets && i < PROBE_OPTION_MAX; i++) {
++		/* skip empty SSID matchsets */
++		if (!req->match_sets[i].ssid.ssid_len)
++			continue;
+ 		scan->direct_scan[i].id = WLAN_EID_SSID;
+ 		scan->direct_scan[i].len = req->match_sets[i].ssid.ssid_len;
+ 		memcpy(scan->direct_scan[i].ssid, req->match_sets[i].ssid.ssid,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d5e57bf..459700e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1395,9 +1395,11 @@ struct cfg80211_scan_request {
+  * struct cfg80211_match_set - sets of attributes to match
+  *
+  * @ssid: SSID to be matched
++ * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
+  */
+ struct cfg80211_match_set {
+ 	struct cfg80211_ssid ssid;
++	s32 rssi_thold;
+ };
+ 
+ /**
+@@ -1420,7 +1422,8 @@ struct cfg80211_match_set {
+  * @dev: the interface
+  * @scan_start: start time of the scheduled scan
+  * @channels: channels to scan
+- * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
++ * @min_rssi_thold: for drivers only supporting a single threshold, this
++ *	contains the minimum over all matchsets
+  */
+ struct cfg80211_sched_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -1433,7 +1436,7 @@ struct cfg80211_sched_scan_request {
+ 	u32 flags;
+ 	struct cfg80211_match_set *match_sets;
+ 	int n_match_sets;
+-	s32 rssi_thold;
++	s32 min_rssi_thold;
+ 
+ 	/* internal */
+ 	struct wiphy *wiphy;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 53e56cf..474ce32 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2467,9 +2467,15 @@ enum nl80211_reg_rule_attr {
+  * enum nl80211_sched_scan_match_attr - scheduled scan match attributes
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID: attribute number 0 is reserved
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_SSID: SSID to be used for matching,
+- * only report BSS with matching SSID.
++ *	only report BSS with matching SSID.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_RSSI: RSSI threshold (in dBm) for reporting a
+- *	BSS in scan results. Filtering is turned off if not specified.
++ *	BSS in scan results. Filtering is turned off if not specified. Note that
++ *	if this attribute is in a match set of its own, then it is treated as
++ *	the default value for all matchsets with an SSID, rather than being a
++ *	matchset of its own without an RSSI filter. This is due to problems with
++ *	how this API was implemented in the past. Also, due to the same problem,
++ *	the only way to create a matchset with only an RSSI filter (with this
++ *	attribute) is if there's only a single matchset with the RSSI attribute.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
+  *	attribute number currently defined
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ffbab17..36fb595 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5495,6 +5495,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	enum ieee80211_band band;
+ 	size_t ie_len;
+ 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
++	s32 default_match_rssi = NL80211_SCAN_RSSI_THOLD_OFF;
+ 
+ 	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN) ||
+ 	    !rdev->ops->sched_scan_start)
+@@ -5529,11 +5530,40 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (n_ssids > wiphy->max_sched_scan_ssids)
+ 		return -EINVAL;
+ 
+-	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH])
++	/*
++	 * First, count the number of 'real' matchsets. Due to an issue with
++	 * the old implementation, matchsets containing only the RSSI attribute
++	 * (NL80211_SCHED_SCAN_MATCH_ATTR_RSSI) are considered as the 'default'
++	 * RSSI for all matchsets, rather than their own matchset for reporting
++	 * all APs with a strong RSSI. This is needed to be compatible with
++	 * older userspace that treated a matchset with only the RSSI as the
++	 * global RSSI for all other matchsets - if there are other matchsets.
++	 */
++	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH]) {
+ 		nla_for_each_nested(attr,
+ 				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+-				    tmp)
+-			n_match_sets++;
++				    tmp) {
++			struct nlattr *rssi;
++
++			err = nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
++					nla_data(attr), nla_len(attr),
++					nl80211_match_policy);
++			if (err)
++				return err;
++			/* add other standalone attributes here */
++			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
++				n_match_sets++;
++				continue;
++			}
++			rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
++			if (rssi)
++				default_match_rssi = nla_get_s32(rssi);
++		}
++	}
++
++	/* However, if there's no other matchset, add the RSSI one */
++	if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
++		n_match_sets = 1;
+ 
+ 	if (n_match_sets > wiphy->max_match_sets)
+ 		return -EINVAL;
+@@ -5661,6 +5691,15 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 				goto out_free;
+ 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
+ 			if (ssid) {
++				if (WARN_ON(i >= n_match_sets)) {
++					/* this indicates a programming error,
++					 * the loop above should have verified
++					 * things properly
++					 */
++					err = -EINVAL;
++					goto out_free;
++				}
++
+ 				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
+ 					err = -EINVAL;
+ 					goto out_free;
+@@ -5669,15 +5708,28 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 				       nla_data(ssid), nla_len(ssid));
+ 				request->match_sets[i].ssid.ssid_len =
+ 					nla_len(ssid);
++				/* special attribute - old implemenation w/a */
++				request->match_sets[i].rssi_thold =
++					default_match_rssi;
++				rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
++				if (rssi)
++					request->match_sets[i].rssi_thold =
++						nla_get_s32(rssi);
+ 			}
+-			rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
+-			if (rssi)
+-				request->rssi_thold = nla_get_u32(rssi);
+-			else
+-				request->rssi_thold =
+-						   NL80211_SCAN_RSSI_THOLD_OFF;
+ 			i++;
+ 		}
++
++		/* there was no other matchset, so the RSSI one is alone */
++		if (i == 0)
++			request->match_sets[0].rssi_thold = default_match_rssi;
++
++		request->min_rssi_thold = INT_MAX;
++		for (i = 0; i < n_match_sets; i++)
++			request->min_rssi_thold =
++				min(request->match_sets[i].rssi_thold,
++				    request->min_rssi_thold);
++	} else {
++		request->min_rssi_thold = NL80211_SCAN_RSSI_THOLD_OFF;
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_IE]) {
+-- 
+1.8.5.2
+
