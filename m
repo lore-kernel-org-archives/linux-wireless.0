@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52291 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756094AbaAFTaV (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:59985 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbaAYXXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 14:30:21 -0500
-Date: Mon, 6 Jan 2014 14:20:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: pull request: iwlwifi 2013 12 31
-Message-ID: <20140106192048.GD10885@tuxdriver.com> (sfid-20140106_203026_094761_3EB3DD31)
-References: <52C2F7EA.3050600@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52C2F7EA.3050600@gmail.com>
+	Sat, 25 Jan 2014 18:23:47 -0500
+Received: by mail-pb0-f41.google.com with SMTP id up15so4559794pbc.14
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 15:23:46 -0800 (PST)
+From: Connor Behan <connor.behan@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Connor Behan <connor.behan@gmail.com>
+Subject: [PATCH] Remove executable permissions from firmware files
+Date: Sat, 25 Jan 2014 15:19:06 -0800
+Message-Id: <1390691946-6612-1-git-send-email-connor.behan@gmail.com> (sfid-20140126_002415_611225_542C1390)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 31, 2013 at 06:59:22PM +0200, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> This is a pull request intended for 3.13.
-> It only includes new device IDs so it's not vital. If you have a pull
-> request to net.git anyway, I'd happy to have this in. If not, I'll CC
-> stable later.
-> 
-> Thanks!
-> 
-> The following changes since commit 3c5da7eefce5835acfc73ebd0a4f961cdae4ae67:
-> 
->   iwlwifi: mvm: use a cast to calculate the last seqno from the next one
-> (2013-11-25 23:00:21 +0200)
-> 
-> are available in the git repository at:
-> 
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
-> for=john
-> 
-> for you to fetch changes up to efc5520c4224479967b7381775a63fb48283b082:
-> 
->   iwlwifi: add new devices for 7265 series (2013-12-31 17:32:20 +0200)
+We should change these permissions unless there is a reason to keep them
+executable.
 
-Pulling now...
+Signed-off-by: Connor Behan <connor.behan@gmail.com>
+---
+ ar3k/AthrBT_0x41020000.dfu     | Bin
+ ar3k/ramps_0x41020000_40.dfu   | Bin
+ ar5523.bin                     | Bin
+ carl9170fw/carlfw/src/printf.c |   0
+ rtlwifi/rtl8723fw.bin          | Bin
+ rtlwifi/rtl8723fw_B.bin        | Bin
+ 6 files changed, 0 insertions(+), 0 deletions(-)
+ mode change 100755 => 100644 ar3k/AthrBT_0x41020000.dfu
+ mode change 100755 => 100644 ar3k/ramps_0x41020000_40.dfu
+ mode change 100755 => 100644 ar5523.bin
+ mode change 100755 => 100644 carl9170fw/carlfw/src/printf.c
+ mode change 100755 => 100644 rtlwifi/rtl8723fw.bin
+ mode change 100755 => 100644 rtlwifi/rtl8723fw_B.bin
 
+diff --git a/ar3k/AthrBT_0x41020000.dfu b/ar3k/AthrBT_0x41020000.dfu
+old mode 100755
+new mode 100644
+diff --git a/ar3k/ramps_0x41020000_40.dfu b/ar3k/ramps_0x41020000_40.dfu
+old mode 100755
+new mode 100644
+diff --git a/ar5523.bin b/ar5523.bin
+old mode 100755
+new mode 100644
+diff --git a/carl9170fw/carlfw/src/printf.c b/carl9170fw/carlfw/src/printf.c
+old mode 100755
+new mode 100644
+diff --git a/rtlwifi/rtl8723fw.bin b/rtlwifi/rtl8723fw.bin
+old mode 100755
+new mode 100644
+diff --git a/rtlwifi/rtl8723fw_B.bin b/rtlwifi/rtl8723fw_B.bin
+old mode 100755
+new mode 100644
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.2
+
