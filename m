@@ -1,132 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57987 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbaAGMG0 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:44527 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbaAYK3w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 07:06:26 -0500
-Date: Tue, 7 Jan 2014 13:06:24 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 03/13] wl1251: implement hardware ARP filtering
-Message-ID: <20140107120624.GC10836@amd.pavel.ucw.cz> (sfid-20140107_130629_159502_0E787A02)
+	Sat, 25 Jan 2014 05:29:52 -0500
+Received: by mail-ie0-f174.google.com with SMTP id tp5so3843269ieb.5
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 02:29:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB=NE6Wag0Zr_vUX3q6fitbDHEVKgdwSi7qnyVqy6oOR=HcF9A@mail.gmail.com>
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
+	<1390492620.4142.33.camel@jlt4.sipsolutions.net>
+	<20140125003255.GE28512@garbanzo.do-not-panic.com>
+	<CAB=NE6Wag0Zr_vUX3q6fitbDHEVKgdwSi7qnyVqy6oOR=HcF9A@mail.gmail.com>
+Date: Sat, 25 Jan 2014 11:29:51 +0100
+Message-ID: <CAFED-jmWNZULA+uSD9LjSscHCTdNXZ9yXAGWFLT4hhidcWR38g@mail.gmail.com> (sfid-20140125_112955_700148_1DFA223B)
+Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth flag
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+2014/1/25 Luis R. Rodriguez <mcgrof@do-not-panic.com>:
+> On Fri, Jan 24, 2014 at 4:32 PM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+>> On Thu, Jan 23, 2014 at 04:57:00PM +0100, Johannes Berg wrote:
+>>> On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
+>>> > Introduce regulatory flags field, NL80211_REG_WIDE_BW
+>>> > country flag and new attribute NL80211_ATTR_REG_FLAGS.
+>>> > If NL80211_REG_WIDE_BW is set, check rules and calculate
+>>> > maximum bandwidth base on all contiguous regulatory rules.
+>>> > If unset get maximum badwitdh from regulatory rule.
+>>> > This patch is backward compatible with current CRDA/db.txt
+>>> > implementation.
+>>>
+>>> This seems reasonable, thanks. Maybe we should require the bandwidth to
+>>> not be set at all or something? At least maybe in the regdb parser - it
+>>> makes very little sense to have @20 and then ignore it completely?
+>>>
+>>> Or maybe the userspace code could just not expose the flag, but rather
+>>> set the new "wide_bw" flag when all the rules are marked as @N/A (and
+>>> treat a combination of @number and @N/A as a bug)?
+>>
+>> The optimizer code I added to CRDA does all this for us, so technically,
+>> unless I'm missing something, this could be dealt with magically in
+>> userspace. Its also unclear why we'd define this as a regulatory
+>> parameter -- this just seems to make sense.
+>>
+>> I'd look at extending CRDA binary to use the optimizer on the regulatory
+>> domain prior to sending it to the kernel. All of a sudden you get full
+>> support for this for free on any kernel.
+>
+> And as for the users of the internal regdb -- have them use the
+> optimizer to optimize their db prior to compiling the kernel ;)
+>
 
-Update hardware ARP filter configuration on BSS_CHANGED_ARP_FILTER
-notification from mac80211.
-Ported from wl1271 driver.
+Sounds good. This mean we have to remove from kernel:
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Signed-off-by: Pavel Machek <pavel@ucw.cz>
----
- drivers/net/wireless/ti/wl1251/acx.c  |   26 ++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl1251/acx.h  |   15 +++++++++++++++
- drivers/net/wireless/ti/wl1251/main.c |   12 ++++++++++++
- 3 files changed, 53 insertions(+)
+freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+if (freq_range->max_bandwidth_khz > freq_diff)
+    return false;
 
-diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
-index cce50e2..5f4a552 100644
---- a/drivers/net/wireless/ti/wl1251/acx.c
-+++ b/drivers/net/wireless/ti/wl1251/acx.c
-@@ -1062,6 +1062,32 @@ out:
- 	return ret;
- }
- 
-+int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
-+{
-+	struct wl1251_acx_arp_filter *acx;
-+	int ret;
-+
-+	wl1251_debug(DEBUG_ACX, "acx arp ip filter, enable: %d", enable);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx)
-+		return -ENOMEM;
-+
-+	acx->version = ACX_IPV4_VERSION;
-+	acx->enable = enable;
-+
-+	if (enable)
-+		memcpy(acx->address, &address, ACX_IPV4_ADDR_SIZE);
-+
-+	ret = wl1251_cmd_configure(wl, ACX_ARP_IP_FILTER,
-+				   acx, sizeof(*acx));
-+	if (ret < 0)
-+		wl1251_warning("failed to set arp ip filter: %d", ret);
-+
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
- 		      u8 aifs, u16 txop)
- {
-diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti/wl1251/acx.h
-index 99ea80e..4444cd0 100644
---- a/drivers/net/wireless/ti/wl1251/acx.h
-+++ b/drivers/net/wireless/ti/wl1251/acx.h
-@@ -1233,6 +1233,20 @@ struct wl1251_acx_bet_enable {
- 	u8 padding[2];
- } __packed;
- 
-+#define ACX_IPV4_VERSION 4
-+#define ACX_IPV6_VERSION 6
-+#define ACX_IPV4_ADDR_SIZE 4
-+struct wl1251_acx_arp_filter {
-+	struct acx_header header;
-+	u8 version;	/* The IP version: 4 - IPv4, 6 - IPv6.*/
-+	u8 enable;	/* 1 - ARP filtering is enabled, 0 - disabled */
-+	u8 padding[2];
-+	u8 address[16];	/* The IP address used to filter ARP packets.
-+			   ARP packets that do not match this address are
-+			   dropped. When the IP Version is 4, the last 12
-+			   bytes of the the address are ignored. */
-+} __attribute__((packed));
-+
- struct wl1251_acx_ac_cfg {
- 	struct acx_header header;
- 
-@@ -1475,6 +1489,7 @@ int wl1251_acx_mem_cfg(struct wl1251 *wl);
- int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim);
- int wl1251_acx_bet_enable(struct wl1251 *wl, enum wl1251_acx_bet_mode mode,
- 			  u8 max_consecutive);
-+int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address);
- int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
- 		      u8 aifs, u16 txop);
- int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 46a2494..0e27f1f 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -980,6 +980,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct wl1251 *wl = hw->priv;
- 	struct sk_buff *beacon, *skb;
-+	bool enable;
- 	int ret;
- 
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 bss info changed");
-@@ -1078,6 +1079,17 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (changed & BSS_CHANGED_ARP_FILTER) {
-+		__be32 addr = bss_conf->arp_addr_list[0];
-+		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
-+
-+		enable = bss_conf->arp_addr_cnt == 1 && bss_conf->assoc;
-+		wl1251_acx_arp_ip_filter(wl, enable, addr);
-+
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON) {
- 		beacon = ieee80211_beacon_get(hw, vif);
- 		if (!beacon)
+For internal regdb/also my case this should be enough, while I can set
+correct BW manually
+
+Anyway
+I send new version with changes Johannes suggest.
+
+-- 
+Janusz Dziedzic
