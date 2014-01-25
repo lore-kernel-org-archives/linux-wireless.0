@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:37918 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbaAVJHR convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33699 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbaAYAgz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:07:17 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so3565584ead.27
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 01:07:16 -0800 (PST)
+	Fri, 24 Jan 2014 19:36:55 -0500
+Received: by mail-lb0-f174.google.com with SMTP id l4so3038352lbv.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 16:36:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1390380726.4334.4.camel@jlt4.sipsolutions.net>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	<1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	<1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	<CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	<1390380726.4334.4.camel@jlt4.sipsolutions.net>
-Date: Wed, 22 Jan 2014 10:07:14 +0100
-Message-ID: <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com> (sfid-20140122_100723_445624_D48D5B67)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Michal Kazior <michal.kazior@tieto.com>
+In-Reply-To: <20140125003255.GE28512@garbanzo.do-not-panic.com>
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
+ <1390492620.4142.33.camel@jlt4.sipsolutions.net> <20140125003255.GE28512@garbanzo.do-not-panic.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 24 Jan 2014 16:36:33 -0800
+Message-ID: <CAB=NE6Wag0Zr_vUX3q6fitbDHEVKgdwSi7qnyVqy6oOR=HcF9A@mail.gmail.com> (sfid-20140125_013658_683692_661DAC07)
+Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth flag
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 January 2014 09:52, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-01-22 at 07:51 +0100, Michal Kazior wrote:
->
->> > I mean this:
->> >
->> >> +       sdata->csa_chandef = params.chandef;
->> >
->> > doesn't seem to belong here.
+On Fri, Jan 24, 2014 at 4:32 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Thu, Jan 23, 2014 at 04:57:00PM +0100, Johannes Berg wrote:
+>> On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
+>> > Introduce regulatory flags field, NL80211_REG_WIDE_BW
+>> > country flag and new attribute NL80211_ATTR_REG_FLAGS.
+>> > If NL80211_REG_WIDE_BW is set, check rules and calculate
+>> > maximum bandwidth base on all contiguous regulatory rules.
+>> > If unset get maximum badwitdh from regulatory rule.
+>> > This patch is backward compatible with current CRDA/db.txt
+>> > implementation.
 >>
->> I mistakenly left that while rebasing. I'll fix that. I think that's
->> the only thing that shouldn't be in this patch?
->
-> It's the only thing I found, but ... :)
->
->> > It would also be good to explain why you're doing this?
+>> This seems reasonable, thanks. Maybe we should require the bandwidth to
+>> not be set at all or something? At least maybe in the regdb parser - it
+>> makes very little sense to have @20 and then ignore it completely?
 >>
->> You mean the whole locking patch? Basically to be able safely assess
->> CSA state. Taking a bunch of wdev->mtx seems like a bad idea. Due to
->> how the locks are ordered and organized I've came up with using
->> local->mtx as an extra CSA-related variable protection. Using
->> local->mtx makes it possible to iterate over interfaces and check
->> for/update CSA state in an atomic way.
->>
->> Is this a satisfactory explanation?
+>> Or maybe the userspace code could just not expose the flag, but rather
+>> set the new "wide_bw" flag when all the rules are marked as @N/A (and
+>> treat a combination of @number and @N/A as a bug)?
 >
-> Almost - where exactly do you need that? I'm just trying to weigh this
-> patch vs. the other that I didn't like to see if this is needed
-> regardless of the particular approach of how we switch channels later.
+> The optimizer code I added to CRDA does all this for us, so technically,
+> unless I'm missing something, this could be dealt with magically in
+> userspace. Its also unclear why we'd define this as a regulatory
+> parameter -- this just seems to make sense.
+>
+> I'd look at extending CRDA binary to use the optimizer on the regulatory
+> domain prior to sending it to the kernel. All of a sudden you get full
+> support for this for free on any kernel.
 
-Hmm.. ieee80211_check_concurrent_iface() checks for vif.csa_active so
-I assumed it should be protected by a lock too. But now I'm
-questioning if it should check csa_active at all? It's just an
-interface type change. You can't change iftype of a running (i.e.
-connected/associated/beaconing) interface, right? If interface isn't
-actually running it doesn't use a channel context, so it is fine to
-change iftype regardless of CSA state. What should actually be
-forbidden is to bind to a channel context that is a part of a CSA
-(which I do in the other patch).
+And as for the users of the internal regdb -- have them use the
+optimizer to optimize their db prior to compiling the kernel ;)
 
-local->mtx is also used in the later patch to lock out conflicting
-(current impl. just assumes concurrent = conflicting) CSA requests.
-But I wonder (assuming we forege csa_active check in
-ieee80211_check_concurrent_iface) - if we move CSA to be more chanctx
-centric it might actually make more sense to depend on chanctx_mtx
-instead of local->mtx, no?
-
-
-Michał
+  Luis
