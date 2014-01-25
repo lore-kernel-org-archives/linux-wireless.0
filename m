@@ -1,188 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49356 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaATJBu (ORCPT
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:51271 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750903AbaAYAJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 04:01:50 -0500
-Subject: [PATCH v2] ath10k: enable firmware STA quick kickout
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 20 Jan 2014 11:01:46 +0200
-Message-ID: <20140120090146.5500.12995.stgit@potku.adurom.net> (sfid-20140120_100154_316556_D1ED1A14)
+	Fri, 24 Jan 2014 19:09:35 -0500
+Date: Fri, 24 Jan 2014 16:09:29 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Sebastian Reichel <sre@ring0.de>, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org
+Subject: Re: [PATCHv2 0/5] wl1251 device tree support
+Message-ID: <20140125000929.GD25488@atomide.com> (sfid-20140125_010939_952419_62319C36)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
+ <20140106225709.GA23070@earth.universe>
+ <20140117014514.GA604@earth.universe>
+ <20140117150127.GA15145@tuxdriver.com>
+ <20140117174415.GG7993@atomide.com>
+ <20140117192204.GB15145@tuxdriver.com>
+ <20140118174705.GE7235@atomide.com>
+ <20140124215321.GA25727@earth.universe>
+ <20140124235656.GM4309@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140124235656.GM4309@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware has a feature to track if the associated STA is not acking the frames.
-When that happens, the firmware sends WMI_PEER_STA_KICKOUT_EVENTID event to the
-host. Enable that to faster detect when a STA has left BSS without sending a
-deauth frame.
+* John W. Linville <linville@tuxdriver.com> [140124 16:03]:
+> On Fri, Jan 24, 2014 at 10:53:22PM +0100, Sebastian Reichel wrote:
+> > On Sat, Jan 18, 2014 at 09:47:06AM -0800, Tony Lindgren wrote:
+> > > [...]
+> > > 
+> > > The reason was for keeping things building and git bisect working.
+> > > 
+> > > I do have wl1251-pdata-signed as the base for branch
+> > > omap-for-v3.14/omap3-board-removal. However the board removal was
+> > > considered too early for v3.14, so that's been postponed. This is
+> > > because people are still updating their systems to device tree
+> > > based booting. So I can redo my omap-for-v3.14/omap3-board-removal
+> > > against v3.14.
+> > > 
+> > > So if you want to, feel free to pick all the wl12xx patches to your
+> > > wireless tree. AFAIK my omap-for-v3.14/omap3-board-removal is the
+> > > only other user for those patches, and that I can redo that on
+> > > v3.14.
+> > > 
+> > > So for the arch/arm/*omap* touching patches, feel free to add:
+> > > 
+> > > Acked-by: Tony Lindgren <tony@atomide.com>
+> > 
+> > Another ping. If this does not go into 3.14 via wireless tree
+> > it will become complicated for 3.15 again.
+> 
+> It's too late for new networking features in 3.14.  Why wouldn't Tony
+> send it via his tree?
 
-Also set huge keepalive timeouts to avoid using the keepalive functionality in
-the firmware.
+It's mostly drivers/net/wireless related to patch the wl12xx driver
+further.
+ 
+> At any rate, I don't have the patches.  If you still want them through
+> the wireless tree (for 3.15) then you'll need to resend them.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h |   12 +++++++
- drivers/net/wireless/ath/ath10k/mac.c  |   58 ++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/wmi.c  |   22 ++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  |    4 ++
- 4 files changed, 88 insertions(+), 8 deletions(-)
+Sebastian, please resend the whole series to John and feel free
+to add my acks. It's best that John picks them all up, otherwise
+we'll have the same issue for v3.15. It seems that we should have
+just taken the merge conflict rather than going back and forth
+with this.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ade1781..e6308f4 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -46,6 +46,18 @@
- 
- #define ATH10K_MAX_NUM_MGMT_PENDING 128
- 
-+/* number of failed packets */
-+#define ATH10K_KICKOUT_THRESHOLD 50
-+
-+/*
-+ * Use insanely high numbers to make sure that the firmware implementation
-+ * won't start, we have the same functionality already in hostapd. Unit
-+ * is seconds.
-+ */
-+#define ATH10K_KEEPALIVE_MIN_IDLE 3747
-+#define ATH10K_KEEPALIVE_MAX_IDLE 3895
-+#define ATH10K_KEEPALIVE_MAX_UNRESPONSIVE 3900
-+
- struct ath10k;
- 
- struct ath10k_skb_cb {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7aa6c4d..9f90816 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -339,6 +339,50 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	return 0;
- }
- 
-+static int ath10k_mac_set_kickout(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	u32 param;
-+	int ret;
-+
-+	param = ar->wmi.pdev_param->sta_kickout_th;
-+	ret = ath10k_wmi_pdev_set_param(ar, param,
-+					ATH10K_KICKOUT_THRESHOLD);
-+	if (ret) {
-+		ath10k_warn("Failed to set kickout threshold: %d\n", ret);
-+		return ret;
-+	}
-+
-+	param = ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
-+					ATH10K_KEEPALIVE_MIN_IDLE);
-+	if (ret) {
-+		ath10k_warn("Failed to set keepalive minimum idle time : %d\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	param = ar->wmi.vdev_param->ap_keepalive_max_idle_inactive_time_secs;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
-+					ATH10K_KEEPALIVE_MAX_IDLE);
-+	if (ret) {
-+		ath10k_warn("Failed to set keepalive maximum idle time: %d\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	param = ar->wmi.vdev_param->ap_keepalive_max_unresponsive_time_secs;
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
-+					ATH10K_KEEPALIVE_MAX_UNRESPONSIVE);
-+	if (ret) {
-+		ath10k_warn("Failed to set keepalive maximum unresponsive time: %d\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int  ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
- {
- 	struct ath10k *ar = arvif->ar;
-@@ -2214,7 +2258,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	enum wmi_sta_powersave_param param;
- 	int ret = 0;
--	u32 value, param_id;
-+	u32 value;
- 	int bit;
- 	u32 vdev_param;
- 
-@@ -2307,12 +2351,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 			goto err_vdev_delete;
- 		}
- 
--		param_id = ar->wmi.pdev_param->sta_kickout_th;
--
--		/* Disable STA KICKOUT functionality in FW */
--		ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
--		if (ret)
--			ath10k_warn("Failed to disable STA KICKOUT\n");
-+		ret = ath10k_mac_set_kickout(arvif);
-+		if (ret) {
-+			ath10k_warn("Failed to set kickout parameters: %d\n",
-+				    ret);
-+			goto err_peer_delete;
-+		}
- 	}
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 712a606..0bc8543 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1116,7 +1116,27 @@ static void ath10k_wmi_event_vdev_stopped(struct ath10k *ar,
- static void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar,
- 					      struct sk_buff *skb)
- {
--	ath10k_dbg(ATH10K_DBG_WMI, "WMI_PEER_STA_KICKOUT_EVENTID\n");
-+	struct wmi_peer_sta_kickout_event *ev;
-+	struct ieee80211_sta *sta;
-+
-+	ev = (struct wmi_peer_sta_kickout_event *)skb->data;
-+
-+	ath10k_dbg(ATH10K_DBG_WMI, "wmi event peer sta kickout %pM\n",
-+		   ev->peer_macaddr.addr);
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(ar->hw, ev->peer_macaddr.addr, NULL);
-+	if (!sta) {
-+		ath10k_warn("Spurious quick kickout for STA %pM\n",
-+			    ev->peer_macaddr.addr);
-+		goto exit;
-+	}
-+
-+	ieee80211_report_low_ack(sta, 10);
-+
-+exit:
-+	rcu_read_unlock();
- }
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 4b5e7d3..9dc90c5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4039,6 +4039,10 @@ struct wmi_chan_info_event {
- 	__le32 cycle_count;
- } __packed;
- 
-+struct wmi_peer_sta_kickout_event {
-+	struct wmi_mac_addr peer_macaddr;
-+} __packed;
-+
- #define WMI_CHAN_INFO_FLAG_COMPLETE BIT(0)
- 
- /* FIXME: empirically extrapolated */
+Cheers,
 
+Tony
