@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:57611 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751955AbaAEWud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jan 2014 17:50:33 -0500
-Date: Mon, 6 Jan 2014 00:28:03 +0200 (EET)
-From: Meelis Roos <mroos@linux.ee>
-To: Fabrice Bellet <fabrice@bellet.info>
-cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Cisco aironet 350 problem: Bad MAC enable reason=88, rid=ff10,
- offset=49392
-Message-ID: <alpine.SOC.1.00.1401060017390.28155@math.ut.ee> (sfid-20140105_235040_260758_4FE9FEED)
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:64435 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093AbaAYAdE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jan 2014 19:33:04 -0500
+Received: by mail-pa0-f51.google.com with SMTP id ld10so3859985pab.38
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 16:33:02 -0800 (PST)
+Date: Fri, 24 Jan 2014 16:32:57 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth flag
+Message-ID: <20140125003255.GE28512@garbanzo.do-not-panic.com> (sfid-20140125_013330_165745_A928E895)
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
+ <1390492620.4142.33.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390492620.4142.33.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tried to make my X30 use wireless today and found that its 5.2.19 
-firmware did not support WPA (scan results were fine). Put the card in 
-another laptop with 
-Windows, installed Cisco driver, that automatically upgraded the 
-firmware to 5.60.21. Now the driver seems to think WPA is working. Scan 
-results are also still there. But trying to enable the MAC on 
-association gets an error like below (cmd 1 s MAC enable, 2 is MAC 
-disable).
+On Thu, Jan 23, 2014 at 04:57:00PM +0100, Johannes Berg wrote:
+> On Wed, 2014-01-22 at 13:43 +0100, Janusz Dziedzic wrote:
+> > Introduce regulatory flags field, NL80211_REG_WIDE_BW
+> > country flag and new attribute NL80211_ATTR_REG_FLAGS.
+> > If NL80211_REG_WIDE_BW is set, check rules and calculate
+> > maximum bandwidth base on all contiguous regulatory rules.
+> > If unset get maximum badwitdh from regulatory rule.
+> > This patch is backward compatible with current CRDA/db.txt
+> > implementation.
+> 
+> This seems reasonable, thanks. Maybe we should require the bandwidth to
+> not be set at all or something? At least maybe in the regdb parser - it
+> makes very little sense to have @20 and then ignore it completely?
+> 
+> Or maybe the userspace code could just not expose the flag, but rather
+> set the new "wide_bw" flag when all the rules are marked as @N/A (and
+> treat a combination of @number and @N/A as a bug)?
 
-Googling around shows that people have had this problem already with 
-5.41 firmware and I saw no solution to it. Are there any docs on 
-firmware interfaces, or was it just reverse engineered - does anybody 
-remmeber?
+The optimizer code I added to CRDA does all this for us, so technically,
+unless I'm missing something, this could be dealt with magically in
+userspace. Its also unclear why we'd define this as a regulatory
+parameter -- this just seems to make sense.
 
+I'd look at extending CRDA binary to use the optimizer on the regulatory
+domain prior to sending it to the kernel. All of a sudden you get full
+support for this for free on any kernel.
 
-[    4.610572] airo(): Probing for PCI adapters
-[    4.610881] airo(): Found an MPI350 card
-[    5.579016] airo(eth1): Firmware version 5.60.21
-[    5.579121] airo(eth1): WPA supported.
-[    5.579191] airo(eth1): MAC enabled 00:02:8a:25:27:a8
-[    5.581818] airo(): Finished probing for PCI adapters
-[  110.237510] airo(eth1): link lost (local choice)
-[  114.256285] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  114.256302] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  114.256357] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  114.257493] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  114.257502] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  114.257727] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  114.258856] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  114.258866] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  114.259957] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  114.261153] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  114.261164] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  114.261226] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  114.262232] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  114.262241] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  120.270865] airo(eth1): cmd:103 status:7f03 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  128.270296] airo(eth1): cmd:103 status:7f03 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  132.806204] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  132.817940] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  132.817959] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  132.861628] airo(eth1): cmd:3 status:7f03 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  132.862728] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-[  132.863799] airo(eth1): cmd:1 status:7f01 rsp0:88 rsp1:ff10 rsp2:c0f0
-[  132.863809] airo(eth1): Bad MAC enable reason=88, rid=ff10, offset=49392
-[  132.867607] airo(eth1): cmd:2 status:7f02 rsp0:0 rsp1:ff10 rsp2:c0f0
-
--- 
-Meelis Roos (mroos@linux.ee)
+  Luis
