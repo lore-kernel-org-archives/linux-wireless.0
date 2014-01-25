@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63674 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353AbaATOcD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48700 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093AbaAYAPg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 09:32:03 -0500
-Received: by mail-ee0-f46.google.com with SMTP id c13so3388883eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 06:32:02 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/2] mac80211: implement multi-interface CSA
-Date: Mon, 20 Jan 2014 15:27:11 +0100
-Message-Id: <1390228033-19162-1-git-send-email-michal.kazior@tieto.com> (sfid-20140120_153207_807164_10347777)
+	Fri, 24 Jan 2014 19:15:36 -0500
+Date: Fri, 24 Jan 2014 19:01:13 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: CRDA: Build Fail: Database signature verification failed
+Message-ID: <20140125000113.GO4309@tuxdriver.com> (sfid-20140125_011559_728956_A56E8FDA)
+References: <CABPxzYJSBagxbz4nd8=Qt_HbG4ecqe=-cbzi0N4JDPCwDE42Mg@mail.gmail.com>
+ <CABPxzYLu+yjkfsi13BXG8sKoySu_CwtN+uSgwwYdiXdEq8sGMw@mail.gmail.com>
+ <CAB=NE6U7zy8MeO4qLuWsEC_t69JKkS2=98crGrp4073=5WHU9Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6U7zy8MeO4qLuWsEC_t69JKkS2=98crGrp4073=5WHU9Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Jan 24, 2014 at 03:02:11PM -0800, Luis R. Rodriguez wrote:
+> On Mon, Dec 16, 2013 at 11:14 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+> > On Tue, Dec 17, 2013 at 12:20 PM, Krishna Chaitanya
+> > <chaitanya.mgit@gmail.com> wrote:
+> >> Hi,
+> >>
+> >> With the latest git source, i am seeing a build failure with the below error.
+> >>
+> >>   LD   crda
+> >>   CC   intersect.o
+> >>   LD   intersect
+> >>   CC   regdbdump.o
+> >>   LD   regdbdump
+> >>   CC   db2rd.o
+> >>   LD   db2rd
+> >>   CC   optimize.o
+> >>   LD   optimize
+> >>   CHK  /usr/lib/crda/regulatory.bin
+> >> Database signature verification failed.
+> >> Invalid or empty regulatory file, note: a binary regulatory file should be used.
+> >> make: *** [verify] Error 234
+> >>
+> >> Is there something wrong with the certificate?
+> >>
+> > Additional info:
+> >
+> > # regdbdump /usr/lib/crda/regulatory.bin
+> > Database signature verification failed.
+> > #  ls -l /usr/lib/crda/regulatory.bin
+> > -rw-r--r-- 1 root root 3344 Dec 16 17:34 /usr/lib/crda/regulatory.bin
+> >
+> > regualtory.bin copied from wireless-regdb latest git.
+> 
+> John, what ever happened with this, I forget.
 
-This is the final change for multi-interface CSA.
-It depends on my patchset for multi-interface CSA
-in cfg80211 and mac80211 CSA fixes.
-
-linux and hostap trees can be found at:
-
- https://github.com/kazikcz/linux/tree/multi-interface-csa-review-2014-01-20-1
- https://github.com/kazikcz/hostap/tree/multi-interface-csa-review-2014-01-20-1
-
-
-Changes since RFC:
-
- * rebase against mac80211-next and adjust
-
- * update backup beacon pointers (thanks Eliad!)
-
- * advertise multi-interface CSA via wiphy flag
-
- * actually check chanctx->refcount when
-   validating channel switch
-
-
-Michal Kazior (2):
-  ath9k: prepare for multi-interface CSA support
-  mac80211: implement multi-interface CSA
-
- drivers/net/wireless/ath/ath9k/ath9k.h  |   4 +-
- drivers/net/wireless/ath/ath9k/beacon.c |  29 ++-
- drivers/net/wireless/ath/ath9k/main.c   |  12 +-
- drivers/net/wireless/ath/ath9k/xmit.c   |   2 +-
- net/mac80211/cfg.c                      | 376 +++++++++++++++++++++++++++-----
- net/mac80211/chan.c                     | 117 +++++++---
- net/mac80211/ibss.c                     |   2 +-
- net/mac80211/ieee80211_i.h              |  23 +-
- net/mac80211/iface.c                    |   5 +-
- net/mac80211/main.c                     |   6 +
- net/mac80211/mesh.c                     |   2 +-
- net/mac80211/mlme.c                     |   9 +-
- net/mac80211/tx.c                       |  15 +-
- 13 files changed, 477 insertions(+), 125 deletions(-)
+I thought these issues were resolved...?
 
 -- 
-1.8.4.rc3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
