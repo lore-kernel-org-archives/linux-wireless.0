@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47190 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:53502 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaAGPdq (ORCPT
+	with ESMTP id S1751178AbaAYIkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 10:33:46 -0500
-Message-ID: <1389108818.4645.11.camel@jlt4.sipsolutions.net> (sfid-20140107_163349_632230_FDD80E50)
-Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
+	Sat, 25 Jan 2014 03:40:14 -0500
+Message-ID: <1390639211.4131.1.camel@jlt4.sipsolutions.net> (sfid-20140125_094019_694053_6AAAED68)
+Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute
+ confusion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Tue, 07 Jan 2014 16:33:38 +0100
-In-Reply-To: <20140106180150.GB5358@magnum.frso.rivierawaves.com> (sfid-20140106_190246_733254_0F1DE3AB)
-References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
-	 <874n67eabn.fsf@kamboji.qca.qualcomm.com>
-	 <20140106180150.GB5358@magnum.frso.rivierawaves.com>
-	 (sfid-20140106_190246_733254_0F1DE3AB)
+To: "Mani, Raja" <rmani@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 25 Jan 2014 09:40:11 +0100
+In-Reply-To: <BD8355E3EE4C424D96D29100D45098AB42C43A80@aphydexd01a.ap.qualcomm.com>
+References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
+	 <BD8355E3EE4C424D96D29100D45098AB42C43A80@aphydexd01a.ap.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 19:01 +0100, Karl Beldan wrote:
+On Sat, 2014-01-25 at 05:46 +0000, Mani, Raja wrote:
+> >@@ -5669,15 +5708,28 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+> >                                       nla_data(ssid), nla_len(ssid));
+> >                                request->match_sets[i].ssid.ssid_len =
+> >                                        nla_len(ssid);
+> >+                               /* special attribute - old implemenation w/a */
+> >+                               request->match_sets[i].rssi_thold =
+> >+                                       default_match_rssi;
+> 
+> How about this case where RSSI is disabled for SSID1 and and SSID 4
+> and only SSID2 and SSID3 needs RSSI filter.
+> 
+>    SSID1, SSID2, RSSI, SSID3, RSSI, SSID4
+> 
+> Wouldn't this change set RSSI of SSID3 to SSID1 and SSID4 ?
+> Did i miss to understand anything ?
 
-> +	if (vif->csa_active) {
-> +		vp->csa_bcn_cnt++;
+It's not a case that was previously supported. Previously, all you could
+do was
 
-I don't see any readers of this variable?
+{ SSID1 | SSID2 | SSID3 } + RSSI
 
-> +		if (vp->csa_finished) {
-> +			wiphy_debug(hw->wiphy,"%s extra CSA-beacon\n", __func__);
-> +		} else if (ieee80211_csa_is_complete(vif)) {
-> +			wiphy_debug(hw->wiphy,
-> +				    "%s CSA complete after %d beacons\n",
-> +				    __func__, vp->csa_bcn_cnt);
+Now, you can do
 
-except for the debug, but is that really useful?
+{ (SSID1, RSSI1) | (SSID2, RSSI2) | (SSID3, RSSI3) }
 
-> +			ieee80211_csa_finish(vif);
-> +			vp->csa_finished = true;
-
-and if we remove the other debug we can also remove the csa_finished
-variable, that seems reasonable to me since mac80211 would already warn
-anyway, no?
+IOW, it wouldn't change anything - note how the RSSI value before used
+to set request->rssi_thold, and not request->matchsets[i].rssi_thold.
 
 johannes
 
