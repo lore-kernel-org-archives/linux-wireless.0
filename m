@@ -1,35 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:54954 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbaAOU3h (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37467 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484AbaAZMuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 15:29:37 -0500
-Received: by mail-oa0-f42.google.com with SMTP id n16so1866544oag.29
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 12:29:37 -0800 (PST)
-Message-ID: <52D6EFAD.40703@lwfinger.net> (sfid-20140115_212944_266357_31FDE4A8)
-Date: Wed, 15 Jan 2014 14:29:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 26 Jan 2014 07:50:32 -0500
+Message-ID: <52E50495.1040505@broadcom.com> (sfid-20140126_135036_028232_4ABD2B86)
+Date: Sun, 26 Jan 2014 13:50:29 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: andrea.merello@gmail.com
-CC: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	John Linville <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL8187SE staging Linux driver
-References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>	<522F584E.6000806@lwfinger.net>	<CAN8YU5PCFj-gtQwuuR3fM52YAVTi_5NYPbDVj-KMSzMpXjvFWQ@mail.gmail.com>	<CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com>	<52D6B31F.8080007@lwfinger.net>	<CAN8YU5NLzULTB1H0WMEfyL6jKn8naAM95fm3n0RT02KUXWe68Q@mail.gmail.com>	<52D6C871.7020302@lwfinger.net>	<CAN8YU5NqZxz0pjyk2dwLXRPaXeSCwp4bT37w6GtkbUQYuK53Rw@mail.gmail.com> <CAN8YU5NVS0Xi7Lx854AUpNm3agxW91p01tZMFgDwHZvhc=6B3w@mail.gmail.com>
-In-Reply-To: <CAN8YU5NVS0Xi7Lx854AUpNm3agxW91p01tZMFgDwHZvhc=6B3w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Hans de Goede <hdegoede@redhat.com>, <linux-sunxi@googlegroups.com>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>,
+	<benn@cubietech.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4EBAA.2010204@broadcom.com> <52E4FB03.7010503@redhat.com>
+In-Reply-To: <52E4FB03.7010503@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2014 12:43 PM, Andrea Merello wrote:
-> should be
-> +                (hw->max_signal < 0),
->
-> I'm sorry, I did something wrong in my git commit
+On 01/26/2014 01:09 PM, Hans de Goede wrote:
+> Hi,
+> 
+> On 01/26/2014 12:04 PM, Arend van Spriel wrote:
+>> On 01/24/2014 05:34 PM, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
+>>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
+>>>>> Hi,
+>>>>>
+>>>>> I've been working on updating sunxi-devel to include more
+>>>>> recent versions if your gmac patches, as well as adding support
+>>>>> for the wifi + bluetooth found on the cubietruck.
+>>>>>
+>>>>> Here is my current work on this:
+>>>>>
+>>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+>>>>>
+>>>>> It is close to working, but unfortunately it does not work,
+>>>>> here is what I get in dmesg when I modprove the module:
+>>>>>
+>>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+>>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+>>>>> wl0:
+>>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
+>>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>
+>>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can
+>>>> have
+>>>> a look.
+>>>
+>>> I've captured a log with these flags until the first "Scanning already"
+>>> message, you can find it here:
+>>
+>> Hi Hans,
+>>
+>> The log looks confusing.
+>>
+>> [  543.512827] brcmfmac: brcmf_fweh_event_worker event ESCAN_RESULT (69)
+>> ifidx 0 bsscfg 0 addr 02:00:00:00:00:00
+>> [  543.512840] brcmfmac: brcmf_fweh_event_worker   version 2 flags 0
+>> status 0 reason 0
+>> [  543.512849] brcmutil: event payload, len=12
+>> [  543.512860] 00000000: 0c 00 00 00 6d 00 00 00 34 12 00 00
+>>    ....m...4...
+>> [  543.512872] brcmfmac: brcmf_inform_bss scanned AP count (0)
+>> [  543.512880] brcmfmac: brcmf_notify_escan_complete Enter
+>> [  543.512891] brcmfmac: brcmf_notify_escan_complete ESCAN Completed
+>> scan: Done
+>> [  543.512911] brcmfmac: brcmf_fil_iovar_data_set name=mpc, len=4
+>> [  543.512919] brcmutil: data
+>> [  543.512928] 00000000: 01 00 00 00
+>>    ....
+>> [  543.512941] brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+>> [  543.512951] brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+>> [  543.513018] brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+>>
+>> The trace messages above indicate completion of regular scan and after
+>> that the code does:
+>>
+>>     if (!test_and_clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
+>>         brcmf_dbg(SCAN, "Scan complete, probably P2P scan\n");
+>>
+>> [  543.514758] brcmfmac: brcmf_cfg80211_sched_scan_start Enter
+>> n_match_sets:0 n_ssids:0
+>> [  543.514777] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>> already: status (1)
+>>
+>> So the bit SCAN_STATUS_BUSY should be cleared, but you get this message.
+>> That makes no sense to me or test_and_clear_bit() does something else
+>> than I expect.
+> 
+> Once I've successfully associated these messages go away, so it is
+> possible that this is a bug which has been around for a while, but people
+> normally never see because the code path is not entered.
+> 
+> Or could it be that this bug gets triggered by the regular scan turning
+> up with 0 access points, maybe that causes it to enter a path where it
+> does not clear the bit in question ?
 
-I would have expected <= 0. It is the zero value that causes the divide fault.
+I think that is partly true or some trace messages were missing, but I
+think the trigger is the 0 APs. Thanks for letting me know.
 
-Larry
-
-
+Regards,
+Arend
