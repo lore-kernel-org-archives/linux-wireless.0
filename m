@@ -1,43 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:64052 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbaAMUW0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:22:26 -0500
-Received: by mail-ee0-f49.google.com with SMTP id d17so941150eek.36
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 12:22:25 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/18] iwlwifi: mvm: add REPLY_SF_CFG_CMD to cmd strings
-Date: Mon, 13 Jan 2014 22:21:56 +0200
-Message-Id: <1389644517-22807-17-git-send-email-egrumbach@gmail.com> (sfid-20140113_213436_794189_AB68C6B4)
-In-Reply-To: <52D44A46.4000805@gmail.com>
-References: <52D44A46.4000805@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56221 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751245AbaAZNVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jan 2014 08:21:35 -0500
+Message-ID: <52E50B79.9080909@redhat.com> (sfid-20140126_142150_798957_D94D03BD)
+Date: Sun, 26 Jan 2014 14:19:53 +0100
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>, linux-sunxi@googlegroups.com
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com> <52E4E21F.2040307@redhat.com> <52E50683.8060003@broadcom.com>
+In-Reply-To: <52E50683.8060003@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Hi,
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c |    1 +
- 1 file changed, 1 insertion(+)
+On 01/26/2014 01:58 PM, Arend van Spriel wrote:
+> On 01/26/2014 11:23 AM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 01/26/2014 09:53 AM, Arend van Spriel wrote:
+>>> On 01/24/2014 05:34 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
+>>>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> I've been working on updating sunxi-devel to include more
+>>>>>> recent versions if your gmac patches, as well as adding support
+>>>>>> for the wifi + bluetooth found on the cubietruck.
+>>>>>>
+>>>>>> Here is my current work on this:
+>>>>>>
+>>>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+>>>>>>
+>>>>>> It is close to working, but unfortunately it does not work,
+>>>>>> here is what I get in dmesg when I modprove the module:
+>>>>>>
+>>>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+>>>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+>>>>>> wl0:
+>>>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>>>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
+>>>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>>> already: status (1)
+>>>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>>> already: status (1)
+>>>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>>> already: status (1)
+>>>>>
+>>>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can
+>>>>> have
+>>>>> a look.
+>>>>
+>>>> I've captured a log with these flags until the first "Scanning already"
+>>>> message, you can find it here:
+>>>
+>>> Bedankt, Hans
+>>>
+>>> Looking at the log it looks more or less ok. wpa_supplicant (assume you
+>>> use that) first does three regular scans which end with no APs found.
+>>> Not sure why that happens unless you are in a shielded room :-) After
+>>> those scans wpa_supplicant tries to tell the device to do a so-called
+>>> scheduled scan. Basically, it is a scan offload. However, the driver
+>>> still thinks there is a regular scan ongoing. This needs to be
+>>> investigated more.
+>>
+>> Thanks for looking into this. I've nothing scheduled this entire Sunday
+>> except working on hobby projects. If there is anything I can do to help,
+>> you can find me in #linux-sunxi on freenode irc. My nick is hansg.
+>>
+>> I would really like to get this working, so feel free to poke me to run
+>> any tests / debug log gathering exercises you think will be helpful.
+>
+> I did a quick diff between your brcmfmac folder and mine. I am curious
+> what your results are after the merge window. There has been a lot of
+> rework in SDIO part of brcmfmac driver.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 2437a06..a3d43de 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -309,6 +309,7 @@ static const char *iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(BT_PROFILE_NOTIFICATION),
- 	CMD(BT_CONFIG),
- 	CMD(MCAST_FILTER_CMD),
-+	CMD(REPLY_SF_CFG_CMD),
- 	CMD(REPLY_BEACON_FILTERING_CMD),
- 	CMD(REPLY_THERMAL_MNG_BACKOFF),
- 	CMD(MAC_PM_POWER_TABLE),
--- 
-1.7.9.5
+Ok, I plan to rebase my tree on 3.14-rc1 when it is released. I'll run
+some more tests then and let you know how things go.
 
+Regards,
+
+Hans
