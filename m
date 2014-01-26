@@ -1,37 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52120 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbaAaNjK (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:65221 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbaAZM6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 08:39:10 -0500
-Message-ID: <1391175537.4141.9.camel@jlt4.sipsolutions.net> (sfid-20140131_143931_460886_FA00FA43)
-Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to
- power efficient workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zoran Markovic <zoran.markovic@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Fri, 31 Jan 2014 14:38:57 +0100
-In-Reply-To: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org> (sfid-20140131_000951_185024_42790CBB)
-References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
-	 (sfid-20140131_000951_185024_42790CBB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 26 Jan 2014 07:58:46 -0500
+Message-ID: <52E50683.8060003@broadcom.com> (sfid-20140126_135850_267469_0996DD5A)
+Date: Sun, 26 Jan 2014 13:58:43 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Hans de Goede <hdegoede@redhat.com>, <linux-sunxi@googlegroups.com>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>,
+	<benn@cubietech.com>
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com> <52E4E21F.2040307@redhat.com>
+In-Reply-To: <52E4E21F.2040307@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-30 at 15:08 -0800, Zoran Markovic wrote:
-> From: Shaibal Dutta <shaibal.dutta@broadcom.com>
+On 01/26/2014 11:23 AM, Hans de Goede wrote:
+> Hi,
 > 
-> For better use of CPU idle time, allow the scheduler to select the CPU
-> on which the timeout work of regulatory settings would be executed.
-> This extends CPU idle residency time and saves power.
+> On 01/26/2014 09:53 AM, Arend van Spriel wrote:
+>> On 01/24/2014 05:34 PM, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
+>>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
+>>>>> Hi,
+>>>>>
+>>>>> I've been working on updating sunxi-devel to include more
+>>>>> recent versions if your gmac patches, as well as adding support
+>>>>> for the wifi + bluetooth found on the cubietruck.
+>>>>>
+>>>>> Here is my current work on this:
+>>>>>
+>>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+>>>>>
+>>>>> It is close to working, but unfortunately it does not work,
+>>>>> here is what I get in dmesg when I modprove the module:
+>>>>>
+>>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+>>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+>>>>> wl0:
+>>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
+>>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>>> already: status (1)
+>>>>
+>>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can
+>>>> have
+>>>> a look.
+>>>
+>>> I've captured a log with these flags until the first "Scanning already"
+>>> message, you can find it here:
+>>
+>> Bedankt, Hans
+>>
+>> Looking at the log it looks more or less ok. wpa_supplicant (assume you
+>> use that) first does three regular scans which end with no APs found.
+>> Not sure why that happens unless you are in a shielded room :-) After
+>> those scans wpa_supplicant tries to tell the device to do a so-called
+>> scheduled scan. Basically, it is a scan offload. However, the driver
+>> still thinks there is a regular scan ongoing. This needs to be
+>> investigated more.
 > 
-> This functionality is enabled when CONFIG_WQ_POWER_EFFICIENT is selected.
+> Thanks for looking into this. I've nothing scheduled this entire Sunday
+> except working on hobby projects. If there is anything I can do to help,
+> you can find me in #linux-sunxi on freenode irc. My nick is hansg.
+> 
+> I would really like to get this working, so feel free to poke me to run
+> any tests / debug log gathering exercises you think will be helpful.
 
-Applied.
+I did a quick diff between your brcmfmac folder and mine. I am curious
+what your results are after the merge window. There has been a lot of
+rework in SDIO part of brcmfmac driver.
 
-johannes
-
+Regards,
+Arend
