@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26474 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbaATJIR (ORCPT
+Received: from andre.telenet-ops.be ([195.130.132.53]:54895 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752435AbaAZK61 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 04:08:17 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: enable firmware STA quick kickout
-References: <20140120090146.5500.12995.stgit@potku.adurom.net>
-Date: Mon, 20 Jan 2014 11:08:12 +0200
-In-Reply-To: <20140120090146.5500.12995.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Mon, 20 Jan 2014 11:01:46 +0200")
-Message-ID: <87sisjkolf.fsf@kamboji.qca.qualcomm.com> (sfid-20140120_100825_461699_CAC68DF6)
+	Sun, 26 Jan 2014 05:58:27 -0500
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ath9k: Fix uninitialized variable in ath9k_has_tx_pending()
+Date: Sun, 26 Jan 2014 11:53:21 +0100
+Message-Id: <1390733601-11244-1-git-send-email-geert@linux-m68k.org> (sfid-20140126_115830_160614_CE0EF599)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+drivers/net/wireless/ath/ath9k/main.c: In function ‘ath9k_has_tx_pending’:
+drivers/net/wireless/ath/ath9k/main.c:1869: warning: ‘npend’ may be used uninitialized in this function
 
-> Firmware has a feature to track if the associated STA is not acking the frames.
-> When that happens, the firmware sends WMI_PEER_STA_KICKOUT_EVENTID event to the
-> host. Enable that to faster detect when a STA has left BSS without sending a
-> deauth frame.
->
-> Also set huge keepalive timeouts to avoid using the keepalive functionality in
-> the firmware.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Introduced by commit 10e2318103f5941aa70c318afe34bc41f1b98529 ("ath9k:
+optimize ath9k_flush").
 
-In this v2 I fixed the warning messages.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+This doesn't look like a false positive to me
 
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5924f72dd493..f08d5051c13f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1866,7 +1866,7 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 
+ static bool ath9k_has_tx_pending(struct ath_softc *sc)
+ {
+-	int i, npend;
++	int i, npend = 0;
+ 
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+ 		if (!ATH_TXQ_SETUP(sc, i))
 -- 
-Kalle Valo
+1.7.9.5
+
