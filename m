@@ -1,81 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbaAGXQ6 (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:59141 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753125AbaAZWNj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 18:16:58 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 11/12] mac80211_hwsim: register netlink even with multi-channel
-Date: Wed,  8 Jan 2014 00:15:16 +0100
-Message-Id: <1389136517-21216-12-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001701_785830_A0912FCB)
-In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
-References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 26 Jan 2014 17:13:39 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: RE: [PATCH v2 0/6] Enable additional channels for use
+Date: Sun, 26 Jan 2014 22:13:35 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03336BCD2@HASMSX106.ger.corp.intel.com> (sfid-20140126_231342_223431_3C1FDB14)
+References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
+ <20140125002416.GD28512@garbanzo.do-not-panic.com>
+In-Reply-To: <20140125002416.GD28512@garbanzo.do-not-panic.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Reject wmediumd registrations when any devices have multi-channel
-capability, but register the generic netlink family unconditionally
-to make it possible to add new commands that shouldn't depend on
-the number of (default) channels.
+> 
+> Looks good but needs a bit of work. In particular the biggest concern I have is
+> the last_request thing, and the feature flag on the wiphy. Other than that,
+> tons of cleanup and one last
+> requirement: please document this on the wireless wiki on the regulatory
+> page, once accepted.
+> 
+> http://wireless.kernel.org/en/developers/Regulatory/processing_rules
+> 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 68375f7..e623a9e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2240,6 +2240,22 @@ out:
- static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 				      struct genl_info *info)
- {
-+	struct mac80211_hwsim_data *data;
-+	int chans = 1;
-+
-+	spin_lock_bh(&hwsim_radio_lock);
-+	list_for_each_entry(data, &hwsim_radios, list)
-+		chans = max(chans, data->channels);
-+	spin_unlock_bh(&hwsim_radio_lock);
-+
-+	/* In the future we should revise the userspace API and allow it
-+	 * to set a flag that it does support multi-channel, then we can
-+	 * let this pass conditionally on the flag.
-+	 * For current userspace, prohibit it since it won't work right.
-+	 */
-+	if (chans > 1)
-+		return -EOPNOTSUPP;
-+
- 	if (wmediumd_portid)
- 		return -EBUSY;
- 
-@@ -2297,10 +2313,6 @@ static int hwsim_init_netlink(void)
- {
- 	int rc;
- 
--	/* userspace test API hasn't been adjusted for multi-channel */
--	if (channels > 1)
--		return 0;
--
- 	printk(KERN_INFO "mac80211_hwsim: initializing netlink\n");
- 
- 	rc = genl_register_family_with_ops(&hwsim_genl_family, hwsim_ops);
-@@ -2320,10 +2332,6 @@ failure:
- 
- static void hwsim_exit_netlink(void)
- {
--	/* userspace test API hasn't been adjusted for multi-channel */
--	if (channels > 1)
--		return;
--
- 	/* unregister the notifier */
- 	netlink_unregister_notifier(&hwsim_netlink_notifier);
- 	/* unregister the family */
--- 
-1.8.5.1
-
+Sure :)
