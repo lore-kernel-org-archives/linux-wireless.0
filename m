@@ -1,39 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47207 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbaAGPf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 10:35:28 -0500
-Message-ID: <1389108924.4645.14.camel@jlt4.sipsolutions.net> (sfid-20140107_163532_219008_9EE11A76)
-Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev
- notifier
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org
-Date: Tue, 07 Jan 2014 16:35:24 +0100
-In-Reply-To: <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215341_748002_0553EE53)
-References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131219_215341_748002_0553EE53)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.15]:54229 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752156AbaAZNlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jan 2014 08:41:10 -0500
+Received: from [192.168.1.100] ([93.196.93.204]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0Lkfii-1VXGKM2VL2-00aZU4 for
+ <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2014 14:41:09 +0100
+Message-ID: <52E51061.9090006@rempel-privat.de> (sfid-20140126_144114_143906_7EEE4428)
+Date: Sun, 26 Jan 2014 14:40:49 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 0/5] eliminate some ath9k_htc code
+References: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1390243693-9061-1-git-send-email-linux@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
-> This adds a trigger to review any pending regulatory
-> requests whenever an 802.11 device interface is brought
-> down or up. We use this as an opportunistic trigger
-> for checking the regulatory work queues as otherwise
-> they they're only checked upon an initial regulatory
-> request or when beacon hints are found.
-> 
-> This opportunistic mechanism can be used to trigger
-> kicking the queues regulatory queues at any time from
-> userspace without having to change the regulatory state.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I don't like this. Can't we just have a self-contained timeout on the
-userspace request instead?
+Please do not apply this patch set, it will need some changes.
 
-johannes
+Am 20.01.2014 19:48, schrieb Oleksij Rempel:
+> Ath9k_htc has too match outdated copy/paste from ath9k.
+>=20
+> This patch set trying to remove some of it and make some function commo=
+n
+> to both drivers.
+>=20
+> Oleksij Rempel (5):
+>   ath: add last_rssi to ath_common
+>   ath9k: move ath9k_process_rssi to common.c
+>   ath9k: move ath9k_process_rate to common.c
+>   ath9k: move ath9k_rx_accept to common.c
+>   ath9k_htc: rework ath9k_rx_prepare and make use of common funcs
+>=20
+>  drivers/net/wireless/ath/ath.h                |   2 +
+>  drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
+>  drivers/net/wireless/ath/ath9k/common.c       | 192 ++++++++++++++++++=
++++++
+>  drivers/net/wireless/ath/ath9k/common.h       |  14 ++
+>  drivers/net/wireless/ath/ath9k/htc.h          |   1 -
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 149 ++++++------------=
 
+>  drivers/net/wireless/ath/ath9k/init.c         |   2 +-
+>  drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
+>  drivers/net/wireless/ath/ath9k/main.c         |   2 +-
+>  drivers/net/wireless/ath/ath9k/recv.c         | 211 ++----------------=
+--------
+>  12 files changed, 270 insertions(+), 315 deletions(-)
+>=20
+
+
+--=20
+Regards,
+Oleksij
+
+
+--0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iF4EAREIAAYFAlLlEHEACgkQHwImuRkmbWm5rgD9Gn3PH/kgzlYM9ZPQijkyMwtt
+lyyHeVst4yKN6XI1uqEA+wVGP3GIJ587Uv055VO+xCVxKRHyphFtSmTzAG3PAtRT
+=1ZJu
+-----END PGP SIGNATURE-----
+
+--0C3eQ7tVBGnkNU6l4kqarSdml7tuxWR0O--
