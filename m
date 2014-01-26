@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbaA2J7G (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:33858 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbaAZANN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 04:59:06 -0500
-Message-ID: <1390989537.4143.1.camel@jlt4.sipsolutions.net> (sfid-20140129_105911_365804_C968202D)
-Subject: Re: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 29 Jan 2014 10:58:57 +0100
-In-Reply-To: <CAB=NE6VWCSKhfC8+vYaJEbQ9kEthKV1iDtc+A3Cei1p8SJL5zw@mail.gmail.com> (sfid-20140129_104635_696158_18AB5F9B)
-References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <20140125003418.GF28512@garbanzo.do-not-panic.com>
-	 <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com>
-	 <CAB=NE6VfmOMVT3zxE1iEOtT53SycgrrpiKuoi2NPuDXvccz96Q@mail.gmail.com>
-	 <1390983472.4143.0.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6VDcP1Jq0rm+XVVS6PuGYD5Dmb-EXeY5hOJ9FCfZFvh8Q@mail.gmail.com>
-	 <CAB=NE6VWCSKhfC8+vYaJEbQ9kEthKV1iDtc+A3Cei1p8SJL5zw@mail.gmail.com>
-	 (sfid-20140129_104635_696158_18AB5F9B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 25 Jan 2014 19:13:13 -0500
+Received: by mail-ob0-f178.google.com with SMTP id wn1so5070844obc.23
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 16:13:13 -0800 (PST)
+Message-ID: <52E45317.9060508@lwfinger.net> (sfid-20140126_011337_926013_907CEF39)
+Date: Sat, 25 Jan 2014 18:13:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Connor Behan <connor.behan@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Remove executable permissions from firmware files
+References: <1390691946-6612-1-git-send-email-connor.behan@gmail.com>
+In-Reply-To: <1390691946-6612-1-git-send-email-connor.behan@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-29 at 01:46 -0800, Luis R. Rodriguez wrote:
->   janusz.dziedzi@tieto.com bounces BTW
+On 01/25/2014 05:19 PM, Connor Behan wrote:
+> We should change these permissions unless there is a reason to keep them
+> executable.
+>
+> Signed-off-by: Connor Behan <connor.behan@gmail.com>
+> ---
 
-that's just because there's a missing 'c' in there :)
+I have no problem with making this change. I had not done so for the rtlwifi 
+files as it just looks like churning the firmware.
 
-johannes
+A bigger problem is that this is not the correct place to submit patches for 
+linux-firmware. I do Cc linux-wireless, but the patches should also be sent to 
+David Woodhouse <dwmw2@infradead.org>, and Ben Hutchings <ben@decadent.org.uk> 
+with a Cc to netdev@vger.kernel.org.
+
+Larry
 
