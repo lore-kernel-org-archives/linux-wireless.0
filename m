@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5806 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752187AbaAOPvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 10:51:03 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, wireless-regdb@lists.infradead.org,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 5/6] cfg80211: Enable GO operation on indoor channels
-Date: Wed, 15 Jan 2014 17:52:41 +0200
-Message-Id: <1389801162-14488-6-git-send-email-ilan.peer@intel.com> (sfid-20140115_165107_794540_E18C8882)
-In-Reply-To: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
-References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:60367 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117AbaAZOfn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jan 2014 09:35:43 -0500
+MIME-Version: 1.0
+In-Reply-To: <d4d1340a176aee1e58ffe80e83ddc3394f2829e3.1389975095.git.gamerh2o@gmail.com>
+References: <d4d1340a176aee1e58ffe80e83ddc3394f2829e3.1389975095.git.gamerh2o@gmail.com>
+Date: Sun, 26 Jan 2014 15:35:42 +0100
+Message-ID: <CACna6rw3GuZ-hmGJvQRQvb33GtSFrA50OpQjyjwYcUHQsHK-fQ@mail.gmail.com> (sfid-20140126_153548_838055_7D455ACE)
+Subject: Re: [PATCH v4 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: ZHAO Gang <gamerh2o@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stable <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/wireless/chan.c |    5 +++++
- 1 file changed, 5 insertions(+)
+2014/1/17 ZHAO Gang <gamerh2o@gmail.com>:
+> Use the right function to update frequency value.
+>
+> If rx skb is probe response or beacon, the wrong frequency value can
+> cause problem that bss info can't be updated when it should be.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index d47856b..36f2f5f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -611,6 +611,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
-  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
-  * associated to an AP on the same channel or on the same UNII band
-  * (assuming that the AP is an authorized master).
-+ * In addition allow the GO to operate on a channel on which indoor operation is
-+ * allowed, iff we are currently operating in an indoor environment.
-  */
- static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 					struct ieee80211_channel *chan)
-@@ -619,6 +621,9 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 
- 	ASSERT_RTNL();
- 
-+	if (regulatory_ir_allowed(chan))
-+		return true;
-+
- 	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
- 		return false;
- 
--- 
-1.7.10.4
+Zhao: this fix is great. My development machine was running some
+ancient distro with kernel 2.6.22, so I couldn't test it earlier.
 
+For a long time I got problem with finding AP on channel 13. I reported it in:
+cfg80211: use DS or HT operation IEs to determine BSS channel"
+
+I did 10 tests *without* your patch. wpa_supplicant had to scan 43,
+33, 7, 2, 46, 12, 7, 32, 6, 6 times to find my AP on channel 13.
+With your patch wpa_supplicant finds it in scanning results after the first try!
+
+Thanks a lot for finding and fixing it!
+
+[0] http://lists.infradead.org/pipermail/b43-dev/2013-March/003003.html
