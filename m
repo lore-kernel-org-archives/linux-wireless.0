@@ -1,88 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22396 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:9581 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbaAQQBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 11:01:14 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 9/9] wil6210: Use pci_enable_msi_range()
-Date: Fri, 17 Jan 2014 17:02:23 +0100
-Message-Id: <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com> (sfid-20140117_170220_165115_2D53B5F5)
-In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
+	id S1752396AbaAZMHx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jan 2014 07:07:53 -0500
+Message-ID: <52E4FA7B.7020704@redhat.com> (sfid-20140126_130822_740734_09751061)
+Date: Sun, 26 Jan 2014 13:07:23 +0100
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>, linux-sunxi@googlegroups.com
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com>
+In-Reply-To: <52E4CCFF.1020200@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Hi,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
- 1 files changed, 19 insertions(+), 17 deletions(-)
+On 01/26/2014 09:53 AM, Arend van Spriel wrote:
+> On 01/24/2014 05:34 PM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
+>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> I've been working on updating sunxi-devel to include more
+>>>> recent versions if your gmac patches, as well as adding support
+>>>> for the wifi + bluetooth found on the cubietruck.
+>>>>
+>>>> Here is my current work on this:
+>>>>
+>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+>>>>
+>>>> It is close to working, but unfortunately it does not work,
+>>>> here is what I get in dmesg when I modprove the module:
+>>>>
+>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
+>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>
+>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can have
+>>> a look.
+>>
+>> I've captured a log with these flags until the first "Scanning already"
+>> message, you can find it here:
+>
+> Bedankt, Hans
+>
+> Looking at the log it looks more or less ok. wpa_supplicant (assume you
+> use that) first does three regular scans which end with no APs found.
+> Not sure why that happens unless you are in a shielded room :-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index eeceab3..4e1bf54 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	switch (use_msi) {
- 	case 3:
- 	case 1:
-+		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-+		break;
- 	case 0:
-+		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
- 		break;
- 	default:
--		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
--			use_msi);
-+		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
- 		use_msi = 1;
- 	}
--	wil->n_msi = use_msi;
--	if (wil->n_msi) {
--		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
--		rc = pci_enable_msi_block(pdev, wil->n_msi);
--		if (rc && (wil->n_msi == 3)) {
--			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
--			wil->n_msi = 1;
--			rc = pci_enable_msi_block(pdev, wil->n_msi);
--		}
--		if (rc) {
--			wil_err(wil, "pci_enable_msi failed, use INTx\n");
--			wil->n_msi = 0;
--		}
--	} else {
--		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-+
-+	switch (use_msi) {
-+	case 3:
-+		if (pci_enable_msi_range(pdev, 3, 3) > 0)
-+			break;
-+		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-+		use_msi = 1;
-+		/* fallthrough */
-+	case 1:
-+		if (!pci_enable_msi(pdev))
-+			break;
-+		wil_err(wil, "pci_enable_msi failed, use INTx\n");
-+		use_msi = 0;
- 	}
- 
-+	wil->n_msi = use_msi;
-+
- 	rc = wil6210_init_irq(wil, pdev->irq);
- 	if (rc)
- 		goto stop_master;
--- 
-1.7.7.6
+Actually it seems that wifi reception in my room, combined with the low
+yield of the chip antenna on the cubietruck is actually so bad that
+it is possible for the list to show up empty.
 
+I've verified this with the android image on the cubietruck, and after
+moving the cubietruck around a bit to get better reception I now have
+things working :)
+
+I do wonder about the brcmf_fil_cmd_data errors though, IMHO those should
+be avoided if possible.
+
+Regards,
+
+Hans
