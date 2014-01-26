@@ -1,102 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:50471 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbaA2Msd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 07:48:33 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so900130eaj.15
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 04:48:32 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: configure access category for arp
-Date: Wed, 29 Jan 2014 13:48:16 +0100
-Message-Id: <1390999696-8895-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20140129_134837_060336_BEC75C7F)
+Received: from mx1.redhat.com ([209.132.183.28]:13684 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752198AbaAZPuZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jan 2014 10:50:25 -0500
+Message-ID: <52E52E9B.3060305@redhat.com> (sfid-20140126_165035_715744_C45C7A25)
+Date: Sun, 26 Jan 2014 16:49:47 +0100
+From: Hans de Goede <hdegoede@redhat.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>, linux-sunxi@googlegroups.com
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com> <52E23FB2.7010705@broadcom.com> <52E29607.8040102@redhat.com> <52E4CCFF.1020200@broadcom.com>
+In-Reply-To: <52E4CCFF.1020200@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ARP frames exchange does not work properly for UAPSD enabled AP.
-ARP requests which arrives with access category 0 are processed
-by network stack and send back with access category 0. FW changes
-access category to 6. This is causing problems when UAPSD associated
-STA is sleeping after has sent ARP request. Configure ARP access
-category in FW to best effort (0) solves this problem. ARP frames
-will be send with access category 0.
+Hi,
 
-Simplify arp ac override functionality by removing redundant entry in
-pdev param maping table. There should be only one entry in pdev param
-map but enum has different name for different FW.
+On 01/26/2014 09:53 AM, Arend van Spriel wrote:
+> On 01/24/2014 05:34 PM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 01/24/2014 11:25 AM, Arend van Spriel wrote:
+>>> On 01/23/2014 11:39 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> I've been working on updating sunxi-devel to include more
+>>>> recent versions if your gmac patches, as well as adding support
+>>>> for the wifi + bluetooth found on the cubietruck.
+>>>>
+>>>> Here is my current work on this:
+>>>>
+>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
+>>>>
+>>>> It is close to working, but unfortunately it does not work,
+>>>> here is what I get in dmesg when I modprove the module:
+>>>>
+>>>> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
+>>>> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+>>>> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>>>> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>>>> [  100.322508] usbcore: registered new interface driver brcmfmac
+>>>> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
+>>>> already: status (1)
+>>>
+>>> Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can have
+>>> a look.
+>>
+>> I've captured a log with these flags until the first "Scanning already"
+>> message, you can find it here:
+>
+> Bedankt, Hans
+>
+> Looking at the log it looks more or less ok. wpa_supplicant (assume you
+> use that) first does three regular scans which end with no APs found.
+> Not sure why that happens unless you are in a shielded room :-)
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 17 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
- drivers/net/wireless/ath/ath10k/wmi.h |  1 -
- 3 files changed, 18 insertions(+), 4 deletions(-)
+One last update, although everything works now, after some more testing
+I'm also seeing these messages:
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 776e364..7fd33da 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2100,6 +2100,23 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		ath10k_warn("could not init WMI_PDEV_PARAM_DYNAMIC_BW (%d)\n",
- 			    ret);
- 
-+	/*
-+	 * By default FW set ARP frames ac to voice (6). In that case ARP
-+	 * exchange is not working properly for UAPSD enabled AP. ARP requests
-+	 * which arrives with access category 0 are processed by network stack
-+	 * and send back with access category 0, but FW changes access category
-+	 * to 6. Set ARP frames access category to best effort (0) solves
-+	 * this problem.
-+	 */
-+
-+	ret = ath10k_wmi_pdev_set_param(ar,
-+					ar->wmi.pdev_param->arp_ac_override, 0);
-+	if (ret) {
-+		ath10k_warn("could not init WMI_PDEV_PARAM_ARP_AC_OVERRIDE (%d)\n",
-+			    ret);
-+		goto exit;
-+	}
-+
- 	ath10k_regd_update(ar);
- 
- exit:
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 712a606..ebcc698 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -420,7 +420,6 @@ static struct wmi_pdev_param_map wmi_pdev_param_map = {
- 	.bcnflt_stats_update_period = WMI_PDEV_PARAM_BCNFLT_STATS_UPDATE_PERIOD,
- 	.pmf_qos = WMI_PDEV_PARAM_PMF_QOS,
- 	.arp_ac_override = WMI_PDEV_PARAM_ARP_AC_OVERRIDE,
--	.arpdhcp_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.dcs = WMI_PDEV_PARAM_DCS,
- 	.ani_enable = WMI_PDEV_PARAM_ANI_ENABLE,
- 	.ani_poll_period = WMI_PDEV_PARAM_ANI_POLL_PERIOD,
-@@ -472,8 +471,7 @@ static struct wmi_pdev_param_map wmi_10x_pdev_param_map = {
- 	.bcnflt_stats_update_period =
- 				WMI_10X_PDEV_PARAM_BCNFLT_STATS_UPDATE_PERIOD,
- 	.pmf_qos = WMI_10X_PDEV_PARAM_PMF_QOS,
--	.arp_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
--	.arpdhcp_ac_override = WMI_10X_PDEV_PARAM_ARPDHCP_AC_OVERRIDE,
-+	.arp_ac_override = WMI_10X_PDEV_PARAM_ARPDHCP_AC_OVERRIDE,
- 	.dcs = WMI_10X_PDEV_PARAM_DCS,
- 	.ani_enable = WMI_10X_PDEV_PARAM_ANI_ENABLE,
- 	.ani_poll_period = WMI_10X_PDEV_PARAM_ANI_POLL_PERIOD,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 4b5e7d3..b776bc4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2277,7 +2277,6 @@ struct wmi_pdev_param_map {
- 	u32 bcnflt_stats_update_period;
- 	u32 pmf_qos;
- 	u32 arp_ac_override;
--	u32 arpdhcp_ac_override;
- 	u32 dcs;
- 	u32 ani_enable;
- 	u32 ani_poll_period;
--- 
-1.8.1.2
+[  262.533803] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
+[  262.540078] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
+[ 1059.641594] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
+[ 1059.647872] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
+[ 1061.563182] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning already: status (1)
+[ 1068.564755] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning already: status (1)
+[ 1075.389881] brcmfmac: brcmf_cfg80211_escan: Connecting: status (3)
+[ 1075.396192] brcmfmac: brcmf_cfg80211_scan: scan error (-11)
+[ 1078.172085] brcmfmac: brcmf_cfg80211_escan: Connecting: status (3)
+[ 1078.178394] brcmfmac: brcmf_cfg80211_scan: scan error (-11)
+[ 1079.194131] brcmfmac: brcmf_cfg80211_escan: Connecting: status (3)
+[ 1079.200428] brcmfmac: brcmf_cfg80211_scan: scan error (-11)
 
+etc.
+
+Regards,
+
+Hans
+
+
+
+
+
+
+
+Regards,
+
+Hans
