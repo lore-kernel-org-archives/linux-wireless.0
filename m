@@ -1,137 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52442 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932271AbaAaU04 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58247 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753076AbaA0B2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 15:26:56 -0500
-Message-ID: <1391200013.5159.5.camel@porter.coelho.fi> (sfid-20140131_212659_526742_5B3347BE)
-Subject: Re: wlcore-spi crash
-From: Luca Coelho <luca@coelho.fi>
-To: Charles <hobbesc7@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 31 Jan 2014 22:26:53 +0200
-In-Reply-To: <CAKKnJbcc62+t_sOTPEgERO03niiv+3LTQEjv+rd_+J-H5qL-vg@mail.gmail.com>
-References: <CAKKnJbe=eBMzB3Bp7qkYvwSTr0x=g-bZkz9dQ6HUihZE5rc5iw@mail.gmail.com>
-	 <CAFED-jmUF9u=sLfVuCSy3rjmB4DM9x6BCLhJaq2CrY9MV6Wycg@mail.gmail.com>
-	 <CAKKnJbeVqvUUnW7E7yw3cvF_1DKw5_+xpYJ+jB3U-=VL=vQyVg@mail.gmail.com>
-	 <CAKKnJbe+bqnTv3BOai3YoyMzNZ3w3gY460O0d1GiZDZaZYg5Uw@mail.gmail.com>
-	 <CAKKnJbfTUf01uLxS199GP_BMkjEw5LWBKNGQQ4v1Q98gPkp2qw@mail.gmail.com>
-	 <1391149038.22155.33.camel@porter.coelho.fi>
-	 <CAKKnJbcc62+t_sOTPEgERO03niiv+3LTQEjv+rd_+J-H5qL-vg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 26 Jan 2014 20:28:03 -0500
+Date: Sun, 26 Jan 2014 17:29:05 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [FIRMWARE PATCH] rtlwifi: Add firmware for rtl8821ae
+Message-ID: <20140127012905.GA27746@kroah.com> (sfid-20140127_022827_883301_D8FD80EB)
+References: <20140123163807.GA16360@kroah.com>
+ <1390783732.2735.85.camel@deadeye.wl.decadent.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390783732.2735.85.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-31 at 11:25 -0500, Charles wrote:
-> Thanks Luca,
+On Mon, Jan 27, 2014 at 12:48:52AM +0000, Ben Hutchings wrote:
+> On Thu, 2014-01-23 at 08:38 -0800, Greg Kroah-Hartman wrote:
+> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > 
+> > This firmware is for a driver for the Realtek 8821AE PCI WIFI device.
+> > It came from a tarball from Realtek named
+> > wifi_driver_8821ae_0018.1129.2013.tar.gz and is allowed to be
+> > distributed under the LICENCE.rtlwifi_firmware.txt license.
+> > 
+> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> >  WHENCE                  |   9 +++++++++
+> >  rtlwifi/rtl8821aefw.bin | Bin 0 -> 29198 bytes
+> >  2 files changed, 9 insertions(+)
+> >  create mode 100644 rtlwifi/rtl8821aefw.bin
 > 
-> >
-> > Try this:
-> >
-> >
-> > diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-> > index b2c018d..1278583 100644
-> > --- a/drivers/net/wireless/ti/wlcore/spi.c
-> > +++ b/drivers/net/wireless/ti/wlcore/spi.c
-> > @@ -316,6 +316,16 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
-> >         return 0;
-> >  }
-> >
-> > +static int wl12xx_spi_power(struct device *child, bool enable)
-> > +{
-> > +       struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
-> > +       struct wlcore_platdev_data *pdev_data = glue->core->dev.platform_data;
-> > +
-> > +       pdev_data->pdata->set_power(enable);
-> > +
-> > +       return 0;
-> > +}
-> > +
-> >  static struct wl1271_if_operations spi_ops = {
-> >         .read           = wl12xx_spi_raw_read,
-> >         .write          = wl12xx_spi_raw_write,
-> >
-> > Note that this is only compile-tested, so I have no clue if it really
-> > works.
-> >
-> > I'm *not* saying this is the right way to do it, I just hacked it up
-> > quickly.
-> >
+> Applid, but:
 > 
-> I know there are not many wl1271 spi users out there, so I'm not sure
-> how far down this lonely road I'll head, but we'll see.
-
-Yeah, not many if any at all (besides you).  SPI seems to be so broken
-that I'm pretty sure nobody else is using it with recent kernels. :(
-
-
-> Yes this compiles as you say.  But wlcore_spi crashes when I load it:
+> > diff --git a/WHENCE b/WHENCE
+> > index 00767b179a68..16ab53e2ba75 100644
+> > --- a/WHENCE
+> > +++ b/WHENCE
+> > @@ -1962,6 +1962,15 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+> >  
+> >  --------------------------------------------------------------------------
+> >  
+> > +Driver: rtl8821ae - Realtek 802.11n WLAN driver for RTL8821AE
+> > +
+> > +Info: Taken from Realtek version wifi_driver_8821ae_0018.1129.2013.tar.gz
+> > +File: rtlwifi/rtl8821ae.bin
+> [...]
 > 
-> root@sbc:~# modprobe wl12xx
-> [   72.602903] Disabling lock debugging due to kernel taint
-> [   72.616192] Loading modules backported from Linux version v3.12.8-0-g97f15f1
-> [   72.623593] Backport generated by backports.git v3.12.8-1-0-geb41fad
-> [   72.723635] cfg80211: Calling CRDA to update world regulatory domain
-> root@sbc:~# lsmod
-> Module                  Size  Used by
-> wl12xx                 47146  0
-> wlcore                164050  1 wl12xx
-> mac80211              290411  2 wlcore,wl12xx
-> cfg80211              194677  2 mac80211,wlcore
-> compat                 11642  4 cfg80211,mac80211,wlcore,wl12xx
-> autofs4                24712  2
-> root@sbc:~# modprobe wlcore_spi
+> This didn't match the actual filename.  I fixed it up this time, but
+> please take care to make this match.  (Really I should script a check
+> for this.)
 
-The right order would be to load wlcore_spi and that one would trigger
-the other modules to be loaded.  But I don't think this will make much
-difference in your case.
+Ah, sorry about that, I did it by hand, thanks for fixing it.
 
-
-
-
-> root@sbc:~# [  102.873513] wlcore: loaded
-> [  106.609236] Unable to handle kernel paging request at virtual
-> address 00203fec
-[...]
-> [  107.124658] [<c02a0210>] (omap2_mcspi_transfer+0x0/0x410) from
-> [<c029e280>] (__spi_async+0xb4/0xc0)
-> [  107.134122] [<c029e1cc>] (__spi_async+0x0/0xc0) from [<c029e2dc>]
-> (spi_async_locked+0x18/0x20)
-> [  107.143118]  r6:cf099000 r5:cd015a84 r4:60000013 r3:00000000
-> [  107.149062] [<c029e2c4>] (spi_async_locked+0x0/0x20) from
-> [<c029e528>] (__spi_sync+0x90/0xa4)
-> [  107.157967]  r4:cd015adc r3:00000000
-> [  107.161719] [<c029e498>] (__spi_sync+0x0/0xa4) from [<c029e568>]
-> (spi_sync+0x14/0x18)
-> [  107.169898]  r7:cd08c000 r6:cd015c4c r5:00000000 r4:0000000a
-> [  107.175852] [<c029e554>] (spi_sync+0x0/0x18) from [<bf10145c>]
-> (wl12xx_spi_raw_write+0x13c/0x180 [wlcore_spi])
-> [  107.186412] [<bf101320>] (wl12xx_spi_raw_write+0x0/0x180
-> [wlcore_spi]) from [<bf0c5a04>]
-> (wlcore_boot_upload_firmware+0x1bc/0x488 [wlcore])
-> [  107.199570] [<bf0c5848>] (wlcore_boot_upload_firmware+0x0/0x488
-> [wlcore]) from [<bf0ecd58>] (wl12xx_boot+0x954/0xe08 [wl12xx])
-> [  107.211521] [<bf0ec404>] (wl12xx_boot+0x0/0xe08 [wl12xx]) from
-> [<bf0b855c>] (wl1271_op_add_interface+0x3a0/0x800 [wlcore])
-> [  107.223243] [<bf0b81bc>] (wl1271_op_add_interface+0x0/0x800
-> [wlcore]) from [<bf0658d8>] (ieee80211_do_open+0x508/0xa70 [mac80211])
-> [  107.235627] [<bf0653d0>] (ieee80211_do_open+0x0/0xa70 [mac80211])
-> from [<bf065eb8>] (ieee80211_open+0x78/0x7c [mac80211])
-> [  107.247145] [<bf065e40>] (ieee80211_open+0x0/0x7c [mac80211]) from
-> [<c03a4a0c>] (__dev_open+0xb0/0x104)
-
-This is crashing in a completely different place.
-
-To tell you the truth, I think wlcore_spi should be completely disabled
-in the kernel, because it seems to be *badly* broken.  It would be
-better not to even pretend it is supported. :(
-
-If you're willing to put the effort into fixing it, great! If not,
-switch to SDIO and then we can remove SPI completely from the kernel
-code.
-
---
-Cheers,
-Luca.
-
+greg k-h
