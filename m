@@ -1,194 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59843 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbaAJMvS (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:50445 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753157AbaA0Eav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 07:51:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/13] mac80211_hwsim: minor netlink cleanups
-Date: Fri, 10 Jan 2014 13:51:05 +0100
-Message-Id: <1389358270-20901-9-git-send-email-johannes@sipsolutions.net> (sfid-20140110_135123_668489_0FE539CF)
-In-Reply-To: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
-References: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 26 Jan 2014 23:30:51 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21221.57261.792711.70974@gargle.gargle.HOWL> (sfid-20140127_053054_489395_17FE9493)
+Date: Mon, 27 Jan 2014 09:55:17 +0530
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@meshcoding.com>
+Subject: Re: IBSS can't beacon after rejoin / regression in TSF syncing code?
+In-Reply-To: <201401241826.45121.sw@simonwunderlich.de>
+References: <201401241826.45121.sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Simon Wunderlich wrote:
+> we have found a regression in the IBSS creation/joining part of mac80211 which 
+> is appearently connected to the TSF-syncing patches introduced last year[1]. 
+> It prevents beaconing of an adhoc member after rejoining a cell when this cell 
+> is currently empty. The problem is present in at least 3.10 and 3.13.
+> 
+> To reproduce, use two adhoc peers and let them join/leave in the following 
+> order:
+> 
+> station 1: join
+> station 2: join
+> station 2: leave
+> station 1: leave
+> station 1: join
+> 
+> now we would expect that station 1 sends beacons, but it doesn't. After 
+> inspecting the code, station 1 actually selected the "old" ibss network and 
+> waits for a beacon to sync the tsf which is never received, as all members 
+> already left the network. An easy workaround is to set the IBSS creator always 
+> to true.
 
-Use u8 pointer instead of the struct mac_address and do
-some other small cleanups.
+The race condition is that station-1 (the creator) removes station-2 only
+after a while, based on the expiration/inactive timer.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 64 +++++++++++++----------------------
- 1 file changed, 23 insertions(+), 41 deletions(-)
+The small window that IEEE80211_IBSS_MERGE_INTERVAL introduces when
+ieee80211_ibss_disconnect() is called causes the race, since we assume that
+station-2 is still active and do not remove the BSS from cfg80211.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 8df3d5e..ca156a5 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -298,18 +298,16 @@ static struct genl_family hwsim_genl_family = {
- /* MAC80211_HWSIM netlink policy */
- 
- static struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
--	[HWSIM_ATTR_ADDR_RECEIVER] = { .type = NLA_UNSPEC,
--				       .len = 6*sizeof(u8) },
--	[HWSIM_ATTR_ADDR_TRANSMITTER] = { .type = NLA_UNSPEC,
--					  .len = 6*sizeof(u8) },
-+	[HWSIM_ATTR_ADDR_RECEIVER] = { .type = NLA_UNSPEC, .len = ETH_ALEN },
-+	[HWSIM_ATTR_ADDR_TRANSMITTER] = { .type = NLA_UNSPEC, .len = ETH_ALEN },
- 	[HWSIM_ATTR_FRAME] = { .type = NLA_BINARY,
- 			       .len = IEEE80211_MAX_DATA_LEN },
- 	[HWSIM_ATTR_FLAGS] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_RX_RATE] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_SIGNAL] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_TX_INFO] = { .type = NLA_UNSPEC,
--				 .len = IEEE80211_TX_MAX_RATES*sizeof(
--					struct hwsim_tx_rate)},
-+				 .len = IEEE80211_TX_MAX_RATES *
-+					sizeof(struct hwsim_tx_rate)},
- 	[HWSIM_ATTR_COOKIE] = { .type = NLA_U64 },
- };
- 
-@@ -536,7 +534,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	}
- 
- 	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
--		    sizeof(struct mac_address), data->addresses[1].addr))
-+		    ETH_ALEN, data->addresses[1].addr))
- 		goto nla_put_failure;
- 
- 	/* We get the skb->data */
-@@ -1828,16 +1826,14 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
- 			hwsim_fops_group_read, hwsim_fops_group_write,
- 			"%llx\n");
- 
--static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(
--			     struct mac_address *addr)
-+static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(const u8 *addr)
- {
- 	struct mac80211_hwsim_data *data;
- 	bool _found = false;
- 
- 	spin_lock_bh(&hwsim_radio_lock);
- 	list_for_each_entry(data, &hwsim_radios, list) {
--		if (memcmp(data->addresses[1].addr, addr,
--			  sizeof(struct mac_address)) == 0) {
-+		if (memcmp(data->addresses[1].addr, addr, ETH_ALEN) == 0) {
- 			_found = true;
- 			break;
- 		}
-@@ -1860,27 +1856,23 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	struct hwsim_tx_rate *tx_attempts;
- 	unsigned long ret_skb_ptr;
- 	struct sk_buff *skb, *tmp;
--	struct mac_address *src;
-+	const u8 *src;
- 	unsigned int hwsim_flags;
--
- 	int i;
- 	bool found = false;
- 
- 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
--	   !info->attrs[HWSIM_ATTR_FLAGS] ||
--	   !info->attrs[HWSIM_ATTR_COOKIE] ||
--	   !info->attrs[HWSIM_ATTR_TX_INFO])
-+	    !info->attrs[HWSIM_ATTR_FLAGS] ||
-+	    !info->attrs[HWSIM_ATTR_COOKIE] ||
-+	    !info->attrs[HWSIM_ATTR_TX_INFO])
- 		goto out;
- 
--	src = (struct mac_address *)nla_data(
--				   info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-+	src = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
- 	hwsim_flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
--
- 	ret_skb_ptr = nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
- 
- 	data2 = get_hwsim_data_ref_from_addr(src);
--
--	if (data2 == NULL)
-+	if (!data2)
- 		goto out;
- 
- 	/* look for the skb matching the cookie passed back from user */
-@@ -1937,9 +1929,9 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	struct mac80211_hwsim_data *data2;
- 	struct ieee80211_rx_status rx_status;
--	struct mac_address *dst;
-+	const u8 *dst;
- 	int frame_data_len;
--	char *frame_data;
-+	void *frame_data;
- 	struct sk_buff *skb = NULL;
- 
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
-@@ -1948,27 +1940,23 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	    !info->attrs[HWSIM_ATTR_SIGNAL])
- 		goto out;
- 
--	dst = (struct mac_address *)nla_data(
--				   info->attrs[HWSIM_ATTR_ADDR_RECEIVER]);
--
-+	dst = (void *)nla_data(info->attrs[HWSIM_ATTR_ADDR_RECEIVER]);
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
--	frame_data = (char *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
-+	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
- 
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
- 	if (skb == NULL)
- 		goto err;
- 
--	if (frame_data_len <= IEEE80211_MAX_DATA_LEN) {
--		/* Copy the data */
--		memcpy(skb_put(skb, frame_data_len), frame_data,
--		       frame_data_len);
--	} else
-+	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
- 		goto err;
- 
--	data2 = get_hwsim_data_ref_from_addr(dst);
-+	/* Copy the data */
-+	memcpy(skb_put(skb, frame_data_len), frame_data, frame_data_len);
- 
--	if (data2 == NULL)
-+	data2 = get_hwsim_data_ref_from_addr(dst);
-+	if (!data2)
- 		goto out;
- 
- 	/* check if radio is configured properly */
-@@ -1976,7 +1964,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	if (data2->idle || !data2->started)
- 		goto out;
- 
--	/*A frame is received from user space*/
-+	/* A frame is received from user space */
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	rx_status.freq = data2->channel->center_freq;
- 	rx_status.band = data2->channel->band;
-@@ -1998,18 +1986,12 @@ out:
- static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 				      struct genl_info *info)
- {
--	if (info == NULL)
--		goto out;
--
- 	wmediumd_portid = info->snd_portid;
- 
- 	printk(KERN_DEBUG "mac80211_hwsim: received a REGISTER, "
- 	       "switching to wmediumd mode with pid %d\n", info->snd_portid);
- 
- 	return 0;
--out:
--	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
--	return -EINVAL;
+I am not sure why we have to keep the BSS around when we are leaving the network.
+
+Is this patch the right approach ?
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 771080e..e1688cd 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -688,17 +688,18 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ 	return active;
  }
  
- /* Generic Netlink operations array */
--- 
-1.8.5.1
+-static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata, bool leave)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct cfg80211_bss *cbss;
+ 	struct beacon_data *presp;
+ 	struct sta_info *sta;
+-	int active_ibss;
++	int active_ibss = 0;
+ 	u16 capability;
+ 
+-	active_ibss = ieee80211_sta_active_ibss(sdata);
++	if (!leave)
++		active_ibss = ieee80211_sta_active_ibss(sdata);
+ 
+ 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+ 		capability = WLAN_CAPABILITY_IBSS;
+@@ -765,7 +766,7 @@ static void ieee80211_csa_connection_drop_work(struct work_struct *work)
+ 
+ 	sdata_lock(sdata);
+ 
+-	ieee80211_ibss_disconnect(sdata);
++	ieee80211_ibss_disconnect(sdata, false);
+ 	synchronize_rcu();
+ 	skb_queue_purge(&sdata->skb_queue);
+ 
+@@ -1721,7 +1722,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+-	ieee80211_ibss_disconnect(sdata);
++	ieee80211_ibss_disconnect(sdata, true);
+ 	ifibss->ssid_len = 0;
+ 	memset(ifibss->bssid, 0, ETH_ALEN);
+ 
 
+Sujith
