@@ -1,181 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585AbaAGXPV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 18:15:21 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga11.intel.com ([192.55.52.93]:46421 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753170AbaA0KU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jan 2014 05:20:27 -0500
+From: Ilan Peer <ilan.peer@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 02/12] mac80211_hwsim: prepare for different channel support
-Date: Wed,  8 Jan 2014 00:15:07 +0100
-Message-Id: <1389136517-21216-3-git-send-email-johannes@sipsolutions.net> (sfid-20140108_001526_459401_A81BA5EB)
-In-Reply-To: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
-References: <1389136517-21216-1-git-send-email-johannes@sipsolutions.net>
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
+Date: Mon, 27 Jan 2014 12:21:56 +0200
+Message-Id: <1390818118-27261-5-git-send-email-ilan.peer@intel.com> (sfid-20140127_112047_079973_9230A036)
+In-Reply-To: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add the option to hint the wireless core that it is operating in an indoor
+environment.
 
-Prepare the code to support, in theory, different devices
-with a different number of channels supported. Right now
-this doesn't really change anything, but will allow for
-dynamic device registration in the future.
+In addition add regulatory_ir_allowed(), that can be used to
+test if initiation radiation is allowed based on the channel flags
+and the wireless core indoor hint.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 67 +++++++++++++++++++----------------
- 1 file changed, 36 insertions(+), 31 deletions(-)
+ include/net/cfg80211.h       |   14 +++++++++++
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |   18 +++++++-------
+ net/wireless/reg.c           |   54 +++++++++++++++++++++++++++++++++++++++---
+ net/wireless/reg.h           |    1 +
+ 5 files changed, 77 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 03d7b1d..4e94224 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -332,8 +332,10 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_channel channels_2ghz[ARRAY_SIZE(hwsim_channels_2ghz)];
- 	struct ieee80211_channel channels_5ghz[ARRAY_SIZE(hwsim_channels_5ghz)];
- 	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
-+	struct ieee80211_iface_combination if_combination;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 317bd06..6e6c42c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3627,6 +3627,20 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  */
+ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
  
- 	struct mac_address addresses[2];
-+	int channels;
++/**
++ * regulatory_ir_allowed - is it allowed to initiate radiation on the channel.
++ * @wiphy: the wiphy for which we want to test channel.
++ * @chan: the channel
++ *
++ * Generally, it is not allowed to initiate radiation on a channel marked with
++ * IEEE80211_CHAN_NO_IR. The exception is operation on channels marked with
++ * IEEE80211_CHAN_INDOOR_ONLY. For such channels, initiating radiation is
++ * allowed iff the wireless core was notified that it operates in an indoor
++ * environment.
++ */
++bool regulatory_ir_allowed(struct wiphy *wiphy,
++			   struct ieee80211_channel *chan);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 06440ac..1dbf6d3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2533,10 +2533,13 @@ enum nl80211_dfs_regions {
+  *	present has been registered with the wireless core that
+  *	has listed NL80211_FEATURE_CELL_BASE_REG_HINTS as a
+  *	supported feature.
++ * @NL80211_USER_REG_HINT_INDOOR: a user sent an hint indicating that the
++ *	platform is operating in an indoor environment.
+  */
+ enum nl80211_user_reg_hint_type {
+ 	NL80211_USER_REG_HINT_USER	= 0,
+ 	NL80211_USER_REG_HINT_CELL_BASE = 1,
++	NL80211_USER_REG_HINT_INDOOR    = 2,
+ };
  
- 	struct ieee80211_channel *tmp_chan;
- 	struct delayed_work roc_done;
-@@ -878,7 +880,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 		return;
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b37b36e..b33f346 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4664,7 +4664,6 @@ static int parse_reg_rule(struct nlattr *tb[],
+ 
+ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+-	int r;
+ 	char *data = NULL;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 
+@@ -4677,11 +4676,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (unlikely(!rcu_access_pointer(cfg80211_regdomain)))
+ 		return -EINPROGRESS;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
+-
+-	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+-
+ 	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
+ 		user_reg_hint_type =
+ 		  nla_get_u32(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
+@@ -4691,14 +4685,18 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	switch (user_reg_hint_type) {
+ 	case NL80211_USER_REG_HINT_USER:
+ 	case NL80211_USER_REG_HINT_CELL_BASE:
+-		break;
++		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
++			return -EINVAL;
++
++		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
++		return regulatory_hint_user(data, user_reg_hint_type);
++	case NL80211_USER_REG_HINT_INDOOR:
++		return regulatory_hint_indoor_user();
+ 	default:
+ 		return -EINVAL;
  	}
  
--	if (channels == 1) {
-+	if (data->channels == 1) {
- 		channel = data->channel;
- 	} else if (txi->hw_queue == 4) {
- 		channel = data->tmp_chan;
-@@ -1141,7 +1143,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	data->channel = conf->chandef.chan;
- 
--	WARN_ON(data->channel && channels > 1);
-+	WARN_ON(data->channel && data->channels > 1);
- 
- 	data->power_level = conf->power_level;
- 	if (!data->started || !data->beacon_int)
-@@ -1700,8 +1702,7 @@ static void mac80211_hwsim_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	hwsim_check_chanctx_magic(ctx);
+-	r = regulatory_hint_user(data, user_reg_hint_type);
+-
+-	return r;
++	return 0;
  }
  
--static struct ieee80211_ops mac80211_hwsim_ops =
--{
-+static const struct ieee80211_ops mac80211_hwsim_ops = {
- 	.tx = mac80211_hwsim_tx,
- 	.start = mac80211_hwsim_start,
- 	.stop = mac80211_hwsim_stop,
-@@ -1726,6 +1727,7 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.set_tsf = mac80211_hwsim_set_tsf,
- };
+ static int nl80211_get_mesh_config(struct sk_buff *skb,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec38f5d..2f2d5db 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -110,6 +110,14 @@ const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+  */
+ static int reg_num_devs_support_basehint;
  
-+static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- 
- static void mac80211_hwsim_free(void)
++/*
++ * State variable indicating if the platform on which the devices
++ * are attached is operating in an indoor environment. The state variable
++ * is relevant for all registered devices.
++ * Note: currently not protected by any synchronization primitive.
++ */
++static bool reg_is_indoor;
++
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
  {
-@@ -2206,7 +2208,7 @@ static const struct ieee80211_iface_limit hwsim_if_dfs_limits[] = {
- 	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) },
- };
+ 	return rtnl_dereference(cfg80211_regdomain);
+@@ -1014,6 +1022,13 @@ static bool reg_request_cell_base(struct regulatory_request *request)
+ 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
+ }
  
--static struct ieee80211_iface_combination hwsim_if_comb[] = {
-+static const struct ieee80211_iface_combination hwsim_if_comb[] = {
- 	{
- 		.limits = hwsim_if_limits,
- 		.n_limits = ARRAY_SIZE(hwsim_if_limits),
-@@ -2233,6 +2235,7 @@ static int __init init_mac80211_hwsim(void)
- 	struct mac80211_hwsim_data *data;
- 	struct ieee80211_hw *hw;
- 	enum ieee80211_band band;
-+	const struct ieee80211_ops *ops;
++static bool reg_request_indoor(struct regulatory_request *request)
++{
++	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
++		return false;
++	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
++}
++
+ bool reg_last_request_cell_base(void)
+ {
+ 	return reg_request_cell_base(get_last_request());
+@@ -1450,6 +1465,11 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ {
+ 	struct regulatory_request *lr = get_last_request();
  
- 	if (radios < 1 || radios > 100)
- 		return -EINVAL;
-@@ -2240,28 +2243,20 @@ static int __init init_mac80211_hwsim(void)
- 	if (channels < 1)
- 		return -EINVAL;
++	if (reg_request_indoor(user_request)) {
++		reg_is_indoor = true;
++		return REG_REQ_ALREADY_SET;
++	}
++
+ 	if (reg_request_cell_base(user_request))
+ 		return reg_ignore_cell_hint(user_request);
  
--	if (channels > 1) {
--		hwsim_if_comb[0].num_different_channels = channels;
--		mac80211_hwsim_ops.hw_scan = mac80211_hwsim_hw_scan;
--		mac80211_hwsim_ops.cancel_hw_scan =
--			mac80211_hwsim_cancel_hw_scan;
--		mac80211_hwsim_ops.sw_scan_start = NULL;
--		mac80211_hwsim_ops.sw_scan_complete = NULL;
--		mac80211_hwsim_ops.remain_on_channel =
--			mac80211_hwsim_roc;
--		mac80211_hwsim_ops.cancel_remain_on_channel =
--			mac80211_hwsim_croc;
--		mac80211_hwsim_ops.add_chanctx =
--			mac80211_hwsim_add_chanctx;
--		mac80211_hwsim_ops.remove_chanctx =
--			mac80211_hwsim_remove_chanctx;
--		mac80211_hwsim_ops.change_chanctx =
--			mac80211_hwsim_change_chanctx;
--		mac80211_hwsim_ops.assign_vif_chanctx =
--			mac80211_hwsim_assign_vif_chanctx;
--		mac80211_hwsim_ops.unassign_vif_chanctx =
--			mac80211_hwsim_unassign_vif_chanctx;
--	}
-+	mac80211_hwsim_mchan_ops = mac80211_hwsim_ops;
-+	mac80211_hwsim_mchan_ops.hw_scan = mac80211_hwsim_hw_scan;
-+	mac80211_hwsim_mchan_ops.cancel_hw_scan = mac80211_hwsim_cancel_hw_scan;
-+	mac80211_hwsim_mchan_ops.sw_scan_start = NULL;
-+	mac80211_hwsim_mchan_ops.sw_scan_complete = NULL;
-+	mac80211_hwsim_mchan_ops.remain_on_channel = mac80211_hwsim_roc;
-+	mac80211_hwsim_mchan_ops.cancel_remain_on_channel = mac80211_hwsim_croc;
-+	mac80211_hwsim_mchan_ops.add_chanctx = mac80211_hwsim_add_chanctx;
-+	mac80211_hwsim_mchan_ops.remove_chanctx = mac80211_hwsim_remove_chanctx;
-+	mac80211_hwsim_mchan_ops.change_chanctx = mac80211_hwsim_change_chanctx;
-+	mac80211_hwsim_mchan_ops.assign_vif_chanctx =
-+		mac80211_hwsim_assign_vif_chanctx;
-+	mac80211_hwsim_mchan_ops.unassign_vif_chanctx =
-+		mac80211_hwsim_unassign_vif_chanctx;
+@@ -1685,9 +1705,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
  
- 	spin_lock_init(&hwsim_radio_lock);
- 	INIT_LIST_HEAD(&hwsim_radios);
-@@ -2282,7 +2277,10 @@ static int __init init_mac80211_hwsim(void)
- 	for (i = 0; i < radios; i++) {
- 		printk(KERN_DEBUG "mac80211_hwsim: Initializing radio %d\n",
- 		       i);
--		hw = ieee80211_alloc_hw(sizeof(*data), &mac80211_hwsim_ops);
-+		ops = &mac80211_hwsim_ops;
-+		if (channels > 1)
-+			ops = &mac80211_hwsim_mchan_ops;
-+		hw = ieee80211_alloc_hw(sizeof(*data), ops);
- 		if (!hw) {
- 			printk(KERN_DEBUG "mac80211_hwsim: ieee80211_alloc_hw "
- 			       "failed\n");
-@@ -2321,15 +2319,22 @@ static int __init init_mac80211_hwsim(void)
- 		hw->wiphy->n_addresses = 2;
- 		hw->wiphy->addresses = data->addresses;
+-	if (WARN_ON(!reg_request->alpha2))
+-		return;
+-
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
  
--		hw->wiphy->iface_combinations = hwsim_if_comb;
--		hw->wiphy->n_iface_combinations = ARRAY_SIZE(hwsim_if_comb);
-+		data->channels = channels;
+@@ -1847,6 +1864,22 @@ int regulatory_hint_user(const char *alpha2,
+ 	return 0;
+ }
  
--		if (channels > 1) {
-+		if (data->channels > 1) {
- 			hw->wiphy->max_scan_ssids = 255;
- 			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 			hw->wiphy->max_remain_on_channel_duration = 1000;
- 			/* For channels > 1 DFS is not allowed */
- 			hw->wiphy->n_iface_combinations = 1;
-+			hw->wiphy->iface_combinations = &data->if_combination;
-+			data->if_combination = hwsim_if_comb[0];
-+			data->if_combination.num_different_channels =
-+				data->channels;
-+		} else {
-+			hw->wiphy->iface_combinations = hwsim_if_comb;
-+			hw->wiphy->n_iface_combinations =
-+				ARRAY_SIZE(hwsim_if_comb);
- 		}
++int regulatory_hint_indoor_user(void)
++{
++	struct regulatory_request *request;
++
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = WIPHY_IDX_INVALID;
++	request->initiator = NL80211_REGDOM_SET_BY_USER;
++	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
++	queue_regulatory_request(request);
++
++	return 0;
++}
++
+ /* Driver hints */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+@@ -2014,6 +2047,8 @@ static void restore_regulatory_settings(bool reset_user)
  
- 		INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
+ 	ASSERT_RTNL();
+ 
++	reg_is_indoor = false;
++
+ 	reset_regdomains(true, &world_regdom);
+ 	restore_alpha2(alpha2, reset_user);
+ 
+@@ -2515,6 +2550,19 @@ int cfg80211_get_unii(int freq)
+ 	return -EINVAL;
+ }
+ 
++bool regulatory_ir_allowed(struct wiphy *wiphy, struct ieee80211_channel *chan)
++{
++	if (config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) &&
++	    !(wiphy->regulatory_flags & REGULATORY_DISABLE_RELAX_NO_IR) &&
++	    reg_is_indoor && (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++		return true;
++
++	if (chan->flags & IEEE80211_CHAN_NO_IR)
++		return false;
++	return true;
++}
++EXPORT_SYMBOL(regulatory_ir_allowed);
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 4d44cd4..2960024 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -25,6 +25,7 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
++int regulatory_hint_indoor_user(void);
+ 
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env);
+ void wiphy_regulatory_register(struct wiphy *wiphy);
 -- 
-1.8.5.1
+1.7.10.4
 
