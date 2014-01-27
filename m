@@ -1,42 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61744 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751330AbaAIXXQ (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:50583 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753329AbaA0OZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jan 2014 18:23:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] ieee80211: add definition for WAPI key len
-Date: Thu, 9 Jan 2014 15:22:56 -0800
-Message-ID: <1389309777-19113-1-git-send-email-bzhao@marvell.com> (sfid-20140110_002319_454895_C46BC823)
+	Mon, 27 Jan 2014 09:25:05 -0500
+Date: Mon, 27 Jan 2014 15:24:00 +0100
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 4/6] net: rfkill: gpio: add device tree support
+Message-ID: <20140127142400.GI3867@lukather> (sfid-20140127_152554_002363_E098DE77)
+References: <1389941251-32692-1-git-send-email-wens@csie.org>
+ <1389941251-32692-5-git-send-email-wens@csie.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZYOWEO2dMm2Af3e3"
+In-Reply-To: <1389941251-32692-5-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WAPI key length definition to ieee80211_key_len enum.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/ieee80211.h | 1 +
- 1 file changed, 1 insertion(+)
+--ZYOWEO2dMm2Af3e3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 776cbb8..5c0b4b0 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1857,6 +1857,7 @@ enum ieee80211_key_len {
- 	WLAN_KEY_LEN_CCMP = 16,
- 	WLAN_KEY_LEN_TKIP = 32,
- 	WLAN_KEY_LEN_AES_CMAC = 16,
-+	WLAN_KEY_LEN_WAPI = 32,
- };
- 
- #define IEEE80211_WEP_IV_LEN		4
--- 
-1.8.2.3
+Hi,
 
+On Fri, Jan 17, 2014 at 02:47:29PM +0800, Chen-Yu Tsai wrote:
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+> ---
+>  .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 26 ++++++++++++++++=
+++++++
+>  net/rfkill/rfkill-gpio.c                           | 23 ++++++++++++++++=
++++
+>  2 files changed, 49 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.=
+txt
+>=20
+> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/D=
+ocumentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+> new file mode 100644
+> index 0000000..8a07ea4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+> @@ -0,0 +1,26 @@
+> +GPIO controlled RFKILL devices
+> +
+> +Required properties:
+> +- compatible	: Must be "rfkill-gpio".
+> +- rfkill-name	: Name of RFKILL device
+> +- rfkill-type	: Type of RFKILL device: 1 for WiFi, 2 for BlueTooth
+> +- NAME_shutdown-gpios	: GPIO phandle to shutdown control
+> +			  (phandle must be the second)
+
+Can't it be handled by a regulator?
+
+> +- NAME_reset-gpios	: GPIO phandle to reset control
+
+And this one using the reset framework?
+
+Maxime
+
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+--ZYOWEO2dMm2Af3e3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJS5mwAAAoJEBx+YmzsjxAgPZwP/iX6u84lb83QdNWM8d3+KCD/
+SWxJR9LuvniuU9sEEnAdo5VbsNi4oQiLhe8xHbrmtyv73Pvl5OZ53rL731unXT0n
+d4C3FVApJuLuXW+U1sLqctNUQFCxWCLSJbW+58U/JPUgnpGKJa3kfWNa3cDz99WX
+9L4fjz/X8EptLs28NUILjDTESKFpHZC5ModW/9eoxI/wcZt6L7ojsFZ7wk0wJe4w
+OewXIx4SDVoqy6dB6aAR4esZDmF16gmcycfoljpyGkqboILw6Eo7CvWfKrEH+7Sm
+Sc7cMDmH5nd98l+lqzIJzEVDxX7yHP20OfB+YWOCuP9WvAPhgWpmr3WF2knADOhc
+vaGd66ED5fvhYEdEhNxXE0eKSQqJIsldC8LLrc8oMPm39ddC8/IPBVlV+WGfUwOx
+iJ6PItgg6K0Wa96fkULMKwTt5lG8V0PCMOjUqaXMocKLTzGqm9f8doxHMRRfpt43
+Enw39v3njYHHlzBZzYH6Mj2wOFNQm0ge8MWy+VIA44mkQgib6XBRaspwsP8qTsbI
+PJylAftoU8O0U8fqG0cG6Xhk+kneeu+iAKK4yh+JkyqW18UflRTawQr8g8O6ftGm
+3/pOFn0kY2UMMdoUqU2YpN6Fz9xWLmoNPBeg1wfLXrSVycopSspZnMMk7K6YNLyO
+0QmPdpd4KZrLlrzi8D0F
+=zNdg
+-----END PGP SIGNATURE-----
+
+--ZYOWEO2dMm2Af3e3--
