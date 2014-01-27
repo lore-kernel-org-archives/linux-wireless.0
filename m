@@ -1,86 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:44916 "EHLO
-	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751985AbaA1Ncv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jan 2014 08:32:51 -0500
-Message-ID: <52E7B134.2040404@open-mesh.com> (sfid-20140128_143254_493473_64B18EFA)
-Date: Tue, 28 Jan 2014 14:31:32 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in
- IBSS join
-References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com> <87wqhkgszo.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87wqhkgszo.fsf@kamboji.qca.qualcomm.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG"
+Received: from mga11.intel.com ([192.55.52.93]:12225 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753095AbaA0KU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jan 2014 05:20:27 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor channels
+Date: Mon, 27 Jan 2014 12:21:58 +0200
+Message-Id: <1390818118-27261-7-git-send-email-ilan.peer@intel.com> (sfid-20140127_112045_011046_98DEA116)
+In-Reply-To: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Allow active scanning and frame injection on channels marked with
+IEEE80211_CHAN_NO_IR iff the channel is also marked with
+IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
+operates in an indoor environment.
 
-On 28/01/14 14:01, Kalle Valo wrote:
->> - Patch is getting resent because I did not CC'd the linux-wireless ma=
-iling list in
->> my previous attempt. :)
->=20
-> Oh, I missed that. Anyway, in previous version I  commented about
-> documenting NULL usage. What do you think about that?
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/mac80211/scan.c |   15 +++++++++------
+ net/mac80211/tx.c   |    3 ++-
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-Well documentation is always good :) If it is need I will add it.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 88c8161..e78aa29 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -527,8 +527,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		/* We need to ensure power level is at max for scanning. */
+ 		ieee80211_hw_config(local, 0);
+ 
+-		if ((req->channels[0]->flags &
+-		     IEEE80211_CHAN_NO_IR) ||
++		if (!regulatory_ir_allowed(local->hw.wiphy,
++					   req->channels[0]) ||
+ 		    !local->scan_req->n_ssids) {
+ 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		} else {
+@@ -568,13 +568,14 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static unsigned long
+-ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
++ieee80211_scan_get_channel_time(struct wiphy *wiphy,
++				struct ieee80211_channel *chan)
+ {
+ 	/*
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR)
++	if (!regulatory_ir_allowed(wiphy, chan))
+ 		return IEEE80211_PASSIVE_CHANNEL_TIME;
+ 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+ }
+@@ -588,6 +589,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
+ 	enum mac80211_scan_state next_scan_state;
++	struct wiphy *wiphy = local->hw.wiphy;
+ 
+ 	/*
+ 	 * check if at least one STA interface is associated,
+@@ -623,7 +625,8 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	 */
+ 
+ 	bad_latency = time_after(jiffies +
+-				 ieee80211_scan_get_channel_time(next_chan),
++				 ieee80211_scan_get_channel_time(wiphy,
++								 next_chan),
+ 				 local->leave_oper_channel_time + HZ / 8);
+ 
+ 	if (associated && !tx_empty) {
+@@ -698,7 +701,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 *
+ 	 * In any case, it is not necessary for a passive scan.
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR ||
++	if (!regulatory_ir_allowed(local->hw.wiphy, chan) ||
+ 	    !local->scan_req->n_ssids) {
+ 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		local->next_scan_state = SCAN_DECISION;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 27c990b..171d0c5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1732,7 +1732,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * radar detection by itself. We can do that later by adding a
+ 	 * monitor flag interfaces used for AP support.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
++	if (!regulatory_ir_allowed(local->hw.wiphy, chan) ||
++	    chan->flags & IEEE80211_CHAN_RADAR)
+ 		goto fail_rcu;
+ 
+ 	ieee80211_xmit(sdata, skb, chan->band);
+-- 
+1.7.10.4
 
-However, I'd rather ask you what ath6kl is trying to do in that case,
-since it's the only driver invoking cfg80211_ibss_joined() with a zero
-BSSID (and now a NULL channel) on IBSS leave.
-
-=46rom the cfg80211 prospective, that call is seen like a notification of=
-
-being connected to a new BSS having zero mac and NULL channel. I don't
-see how this can be useful at all, also because after leaving the IBSS I
-imagine that no other operation will take place on that vif unless it
-reconnects again.
-
-
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-
---BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJS57E4AAoJEEKTMo6mOh1VXyUQAIZf/wLL21VHcX9XGKEwtIGb
-9LQqNKHvyRHe2Lxf9pRqhGNu1oySFZf/LB088ejxnak8h47UFriFkqNMIfdQpAIk
-Y20p4WSMpbvi8k+7rdd7eX5wCYQewziXF28tYewJRr+t0ii/TbfBU2zURJ4wWJAZ
-75W9fg7r6BNuk9R/raEkMSyf95RvcCxd/M6kp7hH+hyqf0+DAge0vhOsM9MhO9OH
-sQDrXiDGmGKS3+rOAyzgpVSObRJTFQKIMPTFdiJQO6Pu8iDic7U5cON4s3wgmV59
-SNKMIfTOb5ZyOmAQ6hAIDUHMi2pP70c9FveQGxA2E4AQIDA7Ge0kxzKmuoD8v6pG
-ubR16N08l9VuDEOyZm7WMcZ4AuIhbRgGEEHKRy5YlY7kZ7zhwCXuMbUg15sHFcbz
-L8KNUF0TbzV/WUSshpv75/XvtwZPxGuffJPQVD19HWdUOTX3mghFO2iV7uVJVHAp
-kM6zNeN8Rf44DvYvkohUBWkN4IyXLQhCkZvOpv5zxQ3d4HCBR9OzVD4KAfbPP6YM
-aYKqH668B5XWBuVlr6Lvy022kKD7io1Z3FGx1iEGXhvaI27NbspxI4fQGARyolOs
-GEbnDLRhn/82W2HnyV5oySwDQLNBLQX0UoB+x+UUBzNt//ekhM+Iufr5OGe18xre
-DEaV9K+gb30QOsEdE3qP
-=ltxt
------END PGP SIGNATURE-----
-
---BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG--
