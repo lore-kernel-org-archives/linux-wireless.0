@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbaAONRh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 08:17:37 -0500
-Message-ID: <1389791853.4338.3.camel@jlt4.sipsolutions.net> (sfid-20140115_141740_843781_EC0112E2)
-Subject: Re: [RFC 3/9] mac80211: move csa_active setting in STA CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Jan 2014 14:17:33 +0100
-In-Reply-To: <1389787494-7361-4-git-send-email-michal.kazior@tieto.com> (sfid-20140115_130927_603522_15891A3C)
-References: <1389787494-7361-1-git-send-email-michal.kazior@tieto.com>
-	 <1389787494-7361-4-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140115_130927_603522_15891A3C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:35829 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135AbaA0JJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jan 2014 04:09:29 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: release the channel in error path in start_ap
+Date: Mon, 27 Jan 2014 11:07:42 +0200
+Message-Id: <1390813662-19032-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140127_100951_428869_8F6023AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-15 at 13:04 +0100, Michal Kazior wrote:
-> The sdata->vif.csa_active could be left set after,
-> e.g. channel context contraints check fail in STA
+When the driver cannot start the AP or when the assignement
+of the beacon goes wrong, we need to unassign the vif.
 
-typo: constraints
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/cfg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 53917b7..e410dff 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1021,8 +1021,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 					IEEE80211_P2P_OPPPS_ENABLE_BIT;
+ 
+ 	err = ieee80211_assign_beacon(sdata, &params->beacon);
+-	if (err < 0)
++	if (err < 0) {
++		ieee80211_vif_release_channel(sdata);
+ 		return err;
++	}
+ 	changed |= err;
+ 
+ 	err = drv_start_ap(sdata->local, sdata);
+@@ -1032,6 +1034,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		if (old)
+ 			kfree_rcu(old, rcu_head);
+ 		RCU_INIT_POINTER(sdata->u.ap.beacon, NULL);
++		ieee80211_vif_release_channel(sdata);
+ 		return err;
+ 	}
+ 
+-- 
+1.8.3.2
 
