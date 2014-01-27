@@ -1,121 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:41415 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072AbaAKT5u (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:49231 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398AbaA0N15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jan 2014 14:57:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/3 RESUBMIT 2nd time] b43: Fix lockdep splat
-Date: Sat, 11 Jan 2014 13:57:46 -0600
-Message-Id: <1389470266-13150-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140111_205800_248083_76ECEAB5)
+	Mon, 27 Jan 2014 08:27:57 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Sujith Manoharan <sujith@msujith.org>
+Subject: Re: IBSS can't beacon after rejoin / regression in TSF syncing code?
+Date: Mon, 27 Jan 2014 14:27:51 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@meshcoding.com>,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+References: <201401241826.45121.sw@simonwunderlich.de> <21221.57261.792711.70974@gargle.gargle.HOWL>
+In-Reply-To: <21221.57261.792711.70974@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201401271427.51372.sw@simonwunderlich.de> (sfid-20140127_142800_509485_5413F4C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Hello Sujith,
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=67561, a locking dependency is reported
-when b43 is used with hostapd, and rfkill is used to kill the radio output.
+> Simon Wunderlich wrote:
+> > we have found a regression in the IBSS creation/joining part of mac80211
+> > which is appearently connected to the TSF-syncing patches introduced
+> > last year[1]. It prevents beaconing of an adhoc member after rejoining a
+> > cell when this cell is currently empty. The problem is present in at
+> > least 3.10 and 3.13.
+> > 
+> > To reproduce, use two adhoc peers and let them join/leave in the
+> > following order:
+> > 
+> > station 1: join
+> > station 2: join
+> > station 2: leave
+> > station 1: leave
+> > station 1: join
+> > 
+> > now we would expect that station 1 sends beacons, but it doesn't. After
+> > inspecting the code, station 1 actually selected the "old" ibss network
+> > and waits for a beacon to sync the tsf which is never received, as all
+> > members already left the network. An easy workaround is to set the IBSS
+> > creator always to true.
+> 
+> The race condition is that station-1 (the creator) removes station-2 only
+> after a while, based on the expiration/inactive timer.
+> 
+> The small window that IEEE80211_IBSS_MERGE_INTERVAL introduces when
+> ieee80211_ibss_disconnect() is called causes the race, since we assume that
+> station-2 is still active and do not remove the BSS from cfg80211.
+> 
+> I am not sure why we have to keep the BSS around when we are leaving the
+> network.
+> 
+> Is this patch the right approach ?
 
-The lockdep splat (in part) is as follows:
+Thanks for the prompt answer!
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.12.0 #1 Not tainted
--------------------------------------------------------
-rfkill/10040 is trying to acquire lock:
- (rtnl_mutex){+.+.+.}, at: [<ffffffff8146f282>] rtnl_lock+0x12/0x20
+Yeah, this patch works for my case. I'm not completely sure why we only unlink 
+for this special case (no stations & bssid = zero), I don't see why it would 
+hurt to always throw away that BSS and rescan on the next join?
 
-but task is already holding lock:
- (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa04832ca>] rfkill_fop_write+0x6a/0x170 [rfkill]
+I'm CCing Teemu, who introduced this roughly 3.5 years ago ("mac80211: remove 
+BSS from cfg80211 list when leaving IBSS", 
+5ea096c0c85e80335889539899af9a4717976e0b) , maybe he can explain it more.  I 
+couldn't understand that from the commit message and the corresponding mail 
+thread.
 
---snip--
+If we don't hear anything or there aren't any further objections, I think we 
+can clean this patch and merge it. :)
 
-Chain exists of:
-  rtnl_mutex --> misc_mtx --> rfkill_global_mutex
+Thanks a lot!
+     Simon
 
-The fix is to move the initialization of the hardware random number generator
-outside the code range covered by the rtnl_mutex.
-
-Reported-by: yury <urykhy@gmail.com>
-Tested-by: yury <urykhy@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
-This patch was resubmitted because there was a typo in Stanislaw's address.
-
-Larry
----
-drivers/net/wireless/b43/main.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ccd24f0a..86b2030 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2424,6 +2424,7 @@ error:
- 
- static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
- static void b43_one_core_detach(struct b43_bus_dev *dev);
-+static int b43_rng_init(struct b43_wl *wl);
- 
- static void b43_request_firmware(struct work_struct *work)
- {
-@@ -2475,6 +2476,10 @@ start_ieee80211:
- 		goto err_one_core_detach;
- 	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
-+
-+	/* Register HW RNG driver */
-+	b43_rng_init(wl);
-+
- 	goto out;
- 
- err_one_core_detach:
-@@ -4636,9 +4641,6 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
- 
--	/* Unregister HW RNG driver */
--	b43_rng_exit(dev->wl);
--
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
- 	/* Stop the microcode PSM. */
-@@ -4795,9 +4797,6 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
- 
--	/* Register HW RNG driver */
--	b43_rng_init(dev->wl);
--
- out:
- 	return err;
- 
-@@ -5464,6 +5463,9 @@ static void b43_bcma_remove(struct bcma_device *core)
- 
- 	b43_one_core_detach(wldev->dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	b43_leds_unregister(wl);
- 
- 	ieee80211_free_hw(wl->hw);
-@@ -5541,6 +5543,9 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 
- 	b43_one_core_detach(dev);
- 
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(wl);
-+
- 	if (list_empty(&wl->devlist)) {
- 		b43_leds_unregister(wl);
- 		/* Last core on the chip unregistered.
--- 
-1.8.4
-
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 771080e..e1688cd 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -688,17 +688,18 @@ static int ieee80211_sta_active_ibss(struct
+> ieee80211_sub_if_data *sdata) return active;
+>  }
+> 
+> -static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
+> +static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata,
+> bool leave) {
+>  	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+>  	struct ieee80211_local *local = sdata->local;
+>  	struct cfg80211_bss *cbss;
+>  	struct beacon_data *presp;
+>  	struct sta_info *sta;
+> -	int active_ibss;
+> +	int active_ibss = 0;
+>  	u16 capability;
+> 
+> -	active_ibss = ieee80211_sta_active_ibss(sdata);
+> +	if (!leave)
+> +		active_ibss = ieee80211_sta_active_ibss(sdata);
+> 
+>  	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+>  		capability = WLAN_CAPABILITY_IBSS;
+> @@ -765,7 +766,7 @@ static void ieee80211_csa_connection_drop_work(struct
+> work_struct *work)
+> 
+>  	sdata_lock(sdata);
+> 
+> -	ieee80211_ibss_disconnect(sdata);
+> +	ieee80211_ibss_disconnect(sdata, false);
+>  	synchronize_rcu();
+>  	skb_queue_purge(&sdata->skb_queue);
+> 
+> @@ -1721,7 +1722,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data
+> *sdata) {
+>  	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+> 
+> -	ieee80211_ibss_disconnect(sdata);
+> +	ieee80211_ibss_disconnect(sdata, true);
+>  	ifibss->ssid_len = 0;
+>  	memset(ifibss->bssid, 0, ETH_ALEN);
+> 
+> 
+> Sujith
