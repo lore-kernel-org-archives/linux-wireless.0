@@ -1,58 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:27812 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021AbaAULLJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:33343 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbaA0Jb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 06:11:09 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [RFC 3/5] mac80211: minstrel - implement get_minstrel_best_rate() API
-Date: Tue, 21 Jan 2014 12:09:49 +0100
-Message-Id: <1390302591-3352-4-git-send-email-antonio@meshcoding.com> (sfid-20140121_121122_944148_A028BE3C)
-In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+	Mon, 27 Jan 2014 04:31:59 -0500
+Message-ID: <1390815111.4251.2.camel@jlt4.sipsolutions.net> (sfid-20140127_103202_234051_9E53102A)
+Subject: Re: [PATCH] mac80211: release the channel in error path in start_ap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 Jan 2014 10:31:51 +0100
+In-Reply-To: <1390813662-19032-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1390813662-19032-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Mon, 2014-01-27 at 11:07 +0200, Emmanuel Grumbach wrote:
+> When the driver cannot start the AP or when the assignement
+> of the beacon goes wrong, we need to unassign the vif.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/rc80211_minstrel.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Applied, thanks.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index f3d88b0..748b5db 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -657,6 +657,17 @@ minstrel_free(void *priv)
- 	kfree(priv);
- }
- 
-+static void
-+minstrel_get_minstrel_best_rate(void *priv, void *priv_sta,
-+				struct ieee80211_minstrel_rate_info *info)
-+{
-+	struct minstrel_sta_info *mi = priv_sta;
-+	int idx = mi->max_tp_rate[0];
-+
-+	info->rate.idx = mi->r[idx].rix;
-+	info->prob = MINSTREL_TRUNC(mi->r[idx].probability * 1000);
-+}
-+
- struct rate_control_ops mac80211_minstrel = {
- 	.name = "minstrel",
- 	.tx_status = minstrel_tx_status,
-@@ -670,6 +681,7 @@ struct rate_control_ops mac80211_minstrel = {
- 	.add_sta_debugfs = minstrel_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_remove_sta_debugfs,
- #endif
-+	.get_minstrel_best_rate = minstrel_get_minstrel_best_rate,
- };
- 
- int __init
--- 
-1.8.5.3
+johannes
 
