@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35651 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbaAMLOl (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:17548 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754114AbaA0VgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 06:14:41 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq4so2867437wib.5
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 03:14:40 -0800 (PST)
-Date: Mon, 13 Jan 2014 12:13:57 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Alexander Bondar <alexander.bondar@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Message-ID: <20140113111357.GA4611@magnum.frso.rivierawaves.com> (sfid-20140113_121449_236445_F3D5E265)
-References: <52B0B72A.5070704@gmail.com>
- <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+	Mon, 27 Jan 2014 16:36:17 -0500
+Message-ID: <52E6D148.5020703@broadcom.com> (sfid-20140127_223634_149784_3659A64F)
+Date: Mon, 27 Jan 2014 22:36:08 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Alessandro Gnagni <enterprise.nx@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Trying to add support of 802.11ac broadcom chpiset to openwrt
+References: <52821B80.6000305@gmail.com>	<52826A82.3010505@broadcom.com> <CAJ-Vmo=LtKsGPbvjQ01VQSad-vKCkq5usRaGcD-WdZPcnG7SrQ@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=LtKsGPbvjQ01VQSad-vKCkq5usRaGcD-WdZPcnG7SrQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 10:44:11PM +0200, Emmanuel Grumbach wrote:
-> From: Alexander Bondar <alexander.bondar@intel.com>
+On 01/27/2014 08:10 PM, Adrian Chadd wrote:
+> On 12 November 2013 09:50, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 11/12/2013 01:13 PM, Alessandro Gnagni wrote:
+>>>
+>>> Hi,
+>>> i am trying to implement on a smart city network a solution based on
+>>> high end home routers like the asus RT-AC66U.
+>>> we want to use openwrt for that but unfortunately the broadcom driver
+>>> isn't yet supported.
+>>> I have one rt-ac66u here for development, there is anything that i can
+>>> do for help?
+>>> i came here after a suggestion of one member on openwrt forum:
+>>> https://forum.openwrt.org/viewtopic.php?pid=217341#p217341
+>>>
+>>> i also read this past email:
+>>> http://www.spinics.net/lists/linux-wireless/msg110443.html
+>>
+>>
+>> Not sure what 11ac chipset is used. The upstream brcm80211 drivers currently
+>> only support one 11ac chipset, ie. the bcm4335. This is a single stream with
+>> SDIO host interface supported by the fullmac driver brcmfmac.
+>>
+>> For chipsets like 4360 we need to add AC phy support to brcmsmac. So far we
+>> do not have green light to do so.
+>>
+>> Regards,
+>> Arend
 > 
-> FW still does not support power management on multiple MAC interfaces.
-> Currently the driver enforce this limitation by disabling PM if second
-> interface is added. Change this behavior to allow PM on a single interface
-> even if other interfaces exist but not bound to any specific PHY.
-> PM will be enabled if only one single interface is bound.
+> Hiya,
 > 
-> Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Is this still the status quo? I'd like to start porting updated
+> broadcom support to FreeBSD for Apple Macintosh users who would like
+> 11ac NIC support.
 
-Hi,
+Hi Adrian,
 
-This broke monitor mode:
-(unsetting .power_update_binding does not hang)
+Interesting. A while ago someone wanted to port brcmsmac to a BSD flavor
+(not sure which one). Now brcmsmac as-is today uses BCMA bus driver
+which goes under GPL-v2, which may or may not be a problem. Apple Mac
+users probably have 4360 and that hurdle is also still there.
 
-modprobe iwlmvm
-iw dev wlan0 set type monitor
-iw dev wlan0 set freq 5180 40 5190  # hangs
-
-Can you reproduce it easily or do you need me to post further dbg info ?
-
- 
-Karl
+Gr. AvS
