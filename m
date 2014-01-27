@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:24716 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754099AbaAULLK (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:52531 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310AbaA0Gy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 06:11:10 -0500
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [RFC 4/5] mac80211: minstrel_ht - implement get_minstrel_best_rate() API
-Date: Tue, 21 Jan 2014 12:09:50 +0100
-Message-Id: <1390302591-3352-5-git-send-email-antonio@meshcoding.com> (sfid-20140121_121115_860278_B21B674A)
-In-Reply-To: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>
+	Mon, 27 Jan 2014 01:54:26 -0500
+Date: Mon, 27 Jan 2014 17:54:12 +1100
+From: James Cameron <quozl@laptop.org>
+To: Olivier Langlois <olivier@trillion01.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ISSUE] rtl8192ce appears to interfere with ALSA playback
+Message-ID: <20140127065412.GA25313@us.netrek.org> (sfid-20140127_075434_674091_D6B7F78C)
+References: <1389767820.2436.45.camel@Wailaba2>
+ <52D6BEEF.5050705@lwfinger.net>
+ <1390804323.2436.172.camel@Wailaba2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390804323.2436.172.camel@Wailaba2>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+On Mon, Jan 27, 2014 at 01:32:03AM -0500, Olivier Langlois wrote:
+> Here is the sequence of events that I have traced that seem to cause my
+> audio playback underrun.
+> 
+> 1. wpa_supplicant send a start_scan request to the nl80211 driver
+> 2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
+> 3.   rtl_ips_nic_on is called which disable local irqs
+> 4.     rtl92c_phy_set_rf_power_state() is called
+> 5.       rtl_ps_enable_nic() is called and enable interrupts on the
+> device
+> 6.   as soon as local irqs are reenabled before exiting rtl_ips_nic_on,
+> a RX interrupt is handled and _rtl_pci_interrupt appears to be taking
+> about 340 ms to process the interrupt.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+Good data.  This discovery now points more firmly at the wireless
+driver as a contributing cause.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index c1b5b73..f7b1de2 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1031,6 +1031,35 @@ minstrel_ht_free(void *priv)
- 	mac80211_minstrel.free(priv);
- }
- 
-+static void
-+minstrel_ht_get_minstrel_best_rate(void *priv, void *priv_sta,
-+				   struct ieee80211_minstrel_rate_info *info)
-+{
-+	struct minstrel_ht_sta_priv *msp = priv_sta;
-+	struct minstrel_ht_sta *mi = &msp->ht;
-+	struct ieee80211_sta_rates ratetbl;
-+	struct minstrel_priv *mp = priv;
-+	struct minstrel_rate_stats *mr;
-+	int i, j;
-+
-+	if (!msp->is_ht) {
-+		mac80211_minstrel.get_minstrel_best_rate(priv, priv_sta, info);
-+		return;
-+	}
-+
-+	i = mi->max_tp_rate / MCS_GROUP_RATES;
-+	j = mi->max_tp_rate % MCS_GROUP_RATES;
-+
-+	mr = &mi->groups[i].rates[j];
-+
-+	minstrel_ht_set_rate(mp, mi, &ratetbl, 0, mi->max_tp_rate);
-+
-+	info->rate.idx = ratetbl.rate[0].idx;
-+	info->rate.count = ratetbl.rate[0].count;
-+	info->rate.flags = ratetbl.rate[0].flags;
-+	info->prob = MINSTREL_TRUNC(mr->probability * 1000);
-+}
-+
- static struct rate_control_ops mac80211_minstrel_ht = {
- 	.name = "minstrel_ht",
- 	.tx_status = minstrel_ht_tx_status,
-@@ -1045,6 +1074,7 @@ static struct rate_control_ops mac80211_minstrel_ht = {
- 	.add_sta_debugfs = minstrel_ht_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_ht_remove_sta_debugfs,
- #endif
-+	.get_minstrel_best_rate = minstrel_ht_get_minstrel_best_rate,
- };
- 
- 
+You might further diagnose this by tracing the timing of the interrupt
+handler, to see if it is something the handler calls that causes the
+delay, or if it is device access that does it.
+
 -- 
-1.8.5.3
-
+James Cameron
+http://quozl.linux.org.au/
