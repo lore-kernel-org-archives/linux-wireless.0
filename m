@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:58118 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbaACJni (ORCPT
+Received: from oproxy1-pub.mail.unifiedlayer.com ([66.147.249.253]:58993 "HELO
+	oproxy1-pub.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753005AbaA0HPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jan 2014 04:43:38 -0500
-Received: by mail-pb0-f53.google.com with SMTP id ma3so15424374pbc.40
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2014 01:43:38 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath10k: fix the MAC address of peer statistic
-Date: Fri,  3 Jan 2014 17:43:27 +0800
-Message-Id: <1388742207-15694-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140103_104402_096247_7F67E50F)
+	Mon, 27 Jan 2014 02:15:16 -0500
+Message-ID: <1390806512.2436.180.camel@Wailaba2> (sfid-20140127_081520_992981_F385A552)
+Subject: Re: [ISSUE] rtl8192ce appears to interfere with ALSA playback
+From: Olivier Langlois <olivier@trillion01.com>
+To: James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 Jan 2014 02:08:32 -0500
+In-Reply-To: <20140127065412.GA25313@us.netrek.org>
+References: <1389767820.2436.45.camel@Wailaba2>
+	 <52D6BEEF.5050705@lwfinger.net> <1390804323.2436.172.camel@Wailaba2>
+	 <20140127065412.GA25313@us.netrek.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the MAC address of wmi_peer_stats so that it is
-printed correctly. This is tested and verified using
-firmware version 999.999.0.636.
+On Mon, 2014-01-27 at 17:54 +1100, James Cameron wrote:
+> On Mon, Jan 27, 2014 at 01:32:03AM -0500, Olivier Langlois wrote:
+> > Here is the sequence of events that I have traced that seem to cause my
+> > audio playback underrun.
+> > 
+> > 1. wpa_supplicant send a start_scan request to the nl80211 driver
+> > 2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
+> > 3.   rtl_ips_nic_on is called which disable local irqs
+> > 4.     rtl92c_phy_set_rf_power_state() is called
+> > 5.       rtl_ps_enable_nic() is called and enable interrupts on the
+> > device
+> > 6.   as soon as local irqs are reenabled before exiting rtl_ips_nic_on,
+> > a RX interrupt is handled and _rtl_pci_interrupt appears to be taking
+> > about 340 ms to process the interrupt.
+> 
+> Good data.  This discovery now points more firmly at the wireless
+> driver as a contributing cause.
+> 
+> You might further diagnose this by tracing the timing of the interrupt
+> handler, to see if it is something the handler calls that causes the
+> delay, or if it is device access that does it.
+> 
+Are printk timestamps considered accurate inside irq handlers? I'm a bit
+suspicious about that point because I have added a printk immediatly
+after entering _rtl_pci_interrupt() (that I have omitted to show in my
+previous e-mail) and it has appeared out of order in the dmesg output:
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |    3 +++
- drivers/net/wireless/ath/ath10k/wmi.h   |   14 +++++++-------
- 2 files changed, 10 insertions(+), 7 deletions(-)
+[   69.376012] rtl8192ce:rtl92ce_sw_led_on():<0-1> LedAddr:4E ledpin=1
+[   69.711882] rtl_pci:_rtl_pci_interrupt():<10000-1> entering handler
+[   69.376012] rtlwifi:rtl_ips_nic_on():<0-1> before
+spin_unlock_irqrestore
+[   69.711909] rtl_pci:_rtl_pci_interrupt():<10000-1> after
+interrupt_recognized
+[   69.711920] rtl_pci:_rtl_pci_interrupt():<10000-1> Rx ok interrupt!
+[   69.711948] rtlwifi:rtl_ips_nic_on():<0-0> after
+spin_unlock_irqrestore
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 6bdfad3..eec3439 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -242,6 +242,9 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
- 		}
- 	}
- 
-+	/* The first peer is self MAC address, ignore this */
-+	num_peer_stats--;
-+
- 	if (num_peer_stats) {
- 		struct wmi_peer_stats *peer_stats;
- 		struct ath10k_peer_stat *s;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0087d69..106a23e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -200,12 +200,12 @@ struct wmi_mac_addr {
- 
- /* macro to convert MAC address from WMI word format to char array */
- #define WMI_MAC_ADDR_TO_CHAR_ARRAY(pwmi_mac_addr, c_macaddr) do { \
--	(c_macaddr)[0] =  ((pwmi_mac_addr)->word0) & 0xff; \
--	(c_macaddr)[1] = (((pwmi_mac_addr)->word0) >> 8) & 0xff; \
--	(c_macaddr)[2] = (((pwmi_mac_addr)->word0) >> 16) & 0xff; \
--	(c_macaddr)[3] = (((pwmi_mac_addr)->word0) >> 24) & 0xff; \
--	(c_macaddr)[4] =  ((pwmi_mac_addr)->word1) & 0xff; \
--	(c_macaddr)[5] = (((pwmi_mac_addr)->word1) >> 8) & 0xff; \
-+	(c_macaddr)[0] = (((pwmi_mac_addr)->word0) >> 24) & 0xff; \
-+	(c_macaddr)[1] = (((pwmi_mac_addr)->word0) >> 16) & 0xff; \
-+	(c_macaddr)[2] = (((pwmi_mac_addr)->word0) >> 8) & 0xff; \
-+	(c_macaddr)[3] =  ((pwmi_mac_addr)->word0) & 0xff; \
-+	(c_macaddr)[4] = (((pwmi_mac_addr)->word1) >> 24) & 0xff; \
-+	(c_macaddr)[5] = (((pwmi_mac_addr)->word1) >> 16) & 0xff; \
- 	} while (0)
- 
- struct wmi_cmd_map {
-@@ -2820,9 +2820,9 @@ struct wmi_vdev_stats {
-  * TODO: add more stats
-  */
- struct wmi_peer_stats {
-+	__le32 peer_tx_rate;	/* TBA */
- 	struct wmi_mac_addr peer_macaddr;
- 	__le32 peer_rssi;
--	__le32 peer_tx_rate;
- } __packed;
- 
- struct wmi_vdev_create_cmd {
--- 
-1.7.9.5
+Is there any kernel debug CONFIGs that could be useful to track down irq
+issues?
+
 
