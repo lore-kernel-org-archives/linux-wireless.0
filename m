@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:39824 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755751AbaAFTBL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:33199 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbaA0Ina (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 14:01:11 -0500
-Received: by mail-pa0-f46.google.com with SMTP id kp14so17169410pab.33
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 11:01:11 -0800 (PST)
-Message-ID: <52CAFD73.9060900@lwfinger.net> (sfid-20140106_200117_265159_FE59B04A)
-Date: Mon, 06 Jan 2014 13:01:07 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Julian Gordon <jewelsofthought@gmail.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r92su driver for realtek rtl8192su usb wireless adapter
-References: <CAP+W=6QCwL1hbz5fRKuBr7dCS58_fVFTQ-mFjgW5rTr6y6QO-w@mail.gmail.com>	<1655218.I1JJMSx2BO@debian64> <CAP+W=6Q1=PCcA2T5gaar960Zek8=sO05UjouwWfX6SpDjrcL6Q@mail.gmail.com>
-In-Reply-To: <CAP+W=6Q1=PCcA2T5gaar960Zek8=sO05UjouwWfX6SpDjrcL6Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 27 Jan 2014 03:43:30 -0500
+Message-ID: <1390812204.4251.1.camel@jlt4.sipsolutions.net> (sfid-20140127_094336_043019_6B410115)
+Subject: Re: Scanning regression since "cfg80211: use DS or HT operation IEs
+ to determine BSS channel"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Date: Mon, 27 Jan 2014 09:43:24 +0100
+In-Reply-To: <CACna6ryDakV+oo6pW1BN5rcDPqR9=1khUHtYqmtTf85JR5x2Lg@mail.gmail.com> (sfid-20140126_153740_663759_6A0F67EA)
+References: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com>
+	 <CACna6ryDakV+oo6pW1BN5rcDPqR9=1khUHtYqmtTf85JR5x2Lg@mail.gmail.com>
+	 (sfid-20140126_153740_663759_6A0F67EA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2014 07:38 AM, Julian Gordon wrote:
-> Christian,
->
-> Thanks for the reply. After I sent the email, I continued to do some more
-> investigation, and am presently downloading the OS's needed to upgrade from
-> 12.04 to 13.10 (or 12). I was hoping to be able to remain on 12.04 for its
-> LTS.
->
-> Oh well, that's life in the boonies.
->
-> Thanks for this useful tool - especially of those of us living out of the
-> mainstream, down in the far south of Africa where our device choice is much
-> more limited.
+On Sun, 2014-01-26 at 15:37 +0100, Rafał Miłecki wrote:
 
-You can update the kernel in 12.04 LTS to 3.12.0-031200-generic (that is the 
-32-bit version) without changing the rest of the system. I just did this in a VM 
-and it worked fine. There are a number of postings on how to do this.
+> >     cfg80211: use DS or HT operation IEs to determine BSS channel
+> 
+> This has been finally fixed in 64e5acb09ca6b50c97299cff9ef51299470b29f2 [0].
 
-Larry
+It's no wonder I couldn't find it to be bad in the above commit though -
+the breakage is two years older than that ... oh well. I'm surprised by
+how little problematic this seems to have been.
 
+johannes
 
