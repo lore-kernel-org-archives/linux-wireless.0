@@ -1,107 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60630 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752172AbaASXbK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 18:31:10 -0500
-Message-ID: <1390174259.3651.2.camel@deadeye.wl.decadent.org.uk> (sfid-20140120_003114_447957_4CDEADCD)
-Subject: Re: pull request: firmware for Intel Wireless adapter - 7260 / 3160
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>, hui.xiao@intel.com
-Date: Sun, 19 Jan 2014 23:30:59 +0000
-In-Reply-To: <52C2FE41.3080409@gmail.com>
-References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
-	 <52C2FE41.3080409@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-wlmSgnT2bqv4YAWi7MMx"
-Mime-Version: 1.0
+Received: from nm27-vm2.bullet.mail.ne1.yahoo.com ([98.138.91.215]:31952 "EHLO
+	nm27-vm2.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753170AbaA0V7e convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jan 2014 16:59:34 -0500
+References: <52DF947E.40800@gmail.com>	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>	<52E0BA40.7090203@gmail.com>	<CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com>	<52E0D7D5.6060504@gmail.com>	<CABPxzYLZO9RDDpVOUTjmNWqVz71S_ufVKWy9UsejfsNGbyCcow@mail.gmail.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C38F6@ALA-MBB.corp.ad.wrs.com>	<CABPxzYLMosYvkhTxq+8WJOwhQuxinSxQ64TeSU+3YgqcjhZa0g@mail.gmail.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C3931@ALA-MBB.corp.ad.wrs.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C3977@ALA-MBB.corp.ad.wrs.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C39A2@ALA-MBB.corp.ad.wrs.com>	<CANUX_P16BOvf9XDH41u8exNAQyyn2dKkPdN3kOBB+9N5Pu8T2Q@mail.gmail.com>	<CABPxzYLJwyXA+XZ+nHzoCZrSo99joTfhP7iQUbWMfcw403H_WA@mail.gmail.com>	<DE84205DFC6FCF4A904A2F75D822FABA558C3A05@ALA-MBB.corp.ad.wrs.com>,<CANUX_P2LODJOk3R+oZ-1LHPJiAS22niV4hW904QAqT-3KYxiTw@mail.gmail.com> <DE84205DFC6FCF4A904A2F75D822FABA558C3E9D@ALA-MBB.corp.ad.wrs.com> <1390857716.85513.YahooMailNeo@web122305.mail.ne1.yahoo.com>
+Message-ID: <1390859973.97460.YahooMailNeo@web122305.mail.ne1.yahoo.com> (sfid-20140127_225939_185420_E8E53B54)
+Date: Mon, 27 Jan 2014 13:59:33 -0800 (PST)
+From: Anand Moon <moon.linux@yahoo.com>
+Reply-To: Anand Moon <moon.linux@yahoo.com>
+Subject: Re: 802.11a is supported in AP mode or not?
+To: Anand Moon <moon.linux@yahoo.com>,
+	"Liu, Bopeng" <Bopeng.Liu@windriver.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	zhuyj <zyjzyj2000@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1390857716.85513.YahooMailNeo@web122305.mail.ne1.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi All,
 
---=-wlmSgnT2bqv4YAWi7MMx
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+If you change the frequency of the interface it should work
 
-On Tue, 2013-12-31 at 19:26 +0200, Emmanuel Grumbach wrote:
-> Hi Ben,
->=20
-> This is another pull request for another firmware. I am sorry not to
-> have put this together in the same pull request, but I just didn't know
-> when that new firmware would come out.
-> It doesn't replace the older one:
-> * iwlwifi-{7260,3160}-7.ucode is supported starting from 3.10
-> * iwlwifi-{7260,3160}-8.ucode is supported starting from 3.13
->=20
-> This is why I don't remove the -7.ucode.
-> At some point (maybe around 3.15) we will stop supporting -7.ucode.
+root@moon-ubuntu:~# ifconfig wlan0 down
+root@moon-ubuntu:~# iw dev wlan0 set freq 5180 HT20
+root@moon-ubuntu:~# iwconfig wlan0
+wlan0     IEEE 802.11abgn  ESSID:off/any
+          Mode:Managed  Frequency:5.18 GHz  Access Point: Not-Associated
+          Tx-Power=27 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+root@moon-ubuntu:~# ifconfig wlan0 up
 
-Even then, the -7 files should remain in linux-firmware.git as there is
-not any minimum kernel version.
+Now I modified the hostapd.conf
 
-> Thanks!
->=20
-> The following changes since commit 52d77db9f133afe4d2b26aeccfd603745f45fd=
-a1:
->=20
->   Merge branch 'master' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
-> (2013-12-30 15:22:40 +0100)
->=20
-> are available in the git repository at:
->=20
->=20
->   git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
-> master
->=20
-> for you to fetch changes up to 11fdbda75cebef71e878fd0dfa6bfca984be35f4:
->=20
->   iwlwifi: update firmware for 7260 / 3160 devices (2013-12-30 18:59:33
-> +0200)
+hw_mode=a
+channel=36
 
-Pulled, thanks.
+It worked for me.
 
-Ben.
+-Anand Moon
 
-> ----------------------------------------------------------------
-> Emmanuel Grumbach (1):
->       iwlwifi: update firmware for 7260 / 3160 devices
->=20
->  WHENCE               |    6 ++++++
->  iwlwifi-3160-8.ucode |  Bin 0 -> 662032 bytes
->  iwlwifi-7260-8.ucode |  Bin 0 -> 674628 bytes
->  3 files changed, 6 insertions(+)
->  create mode 100644 iwlwifi-3160-8.ucode
->  create mode 100644 iwlwifi-7260-8.ucode
->=20
->=20
-
---=20
-Ben Hutchings
-friends: People who know you well, but like you anyway.
-
---=-wlmSgnT2bqv4YAWi7MMx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUtxgNOe/yOyVhhEJAQreIw/+MPTK9etT/pMn4zJAZAO3Fb/D44kUon9a
-GzFMVQeHskgYolN9FlBR08SlMY1qZsmj9U2UVq4UDHXlic+YM5TwWBd1oPSuDjXD
-+Yr7KoITQGn/hNkhoiPWMswnAEe80XE1R9UPM0ufID0Gzc9twlgbhZIqnnLTcLAl
-OIrJmcuayjke+nK7/JyESJWnlIvjqATTLlAEA9IlkAumIJwiRRH0FQXSXyhYno6n
-1CD75lQu+js8BWAgm/4/hmFix3LrDXuDnORgBY0Ztnmjpj9U4N92T/4aYVJFAOxy
-sx51J3ANCJk83WgTP79YCDSvk738w5ogQh8EVtCE9sU3NUH4glMX4JWjQBQyXqPu
-mxf0fSxtYLpNUyGhj8u11JzL/TkcdNeskSqP2CsHdxbfKhoTarg1DpSs0Ib5GCFc
-PRcyrrkBAlOcU1OHj+drW+3b+d/VZPW9d+cesEjwo5MSYV3HRRw2VJ0cY2MCADt0
-JfON2/SCos5yap2S9Rrbu7c1JSZ6pKx5pMOZBbXVaWCDLsbKA7xF0/NKGODjJJnW
-gH+fR5XwflVwAh3h3GyIRNFLlr4e2/bGFEEpKqwg9DscRYP/fdo4yqU+dZ6R/+3D
-/Manz3IiR/3WIKzP2kkYIm6yd69Vga3q3hHqHPrf4pcxvHze+zisimCqRLOqpD5F
-Ed9oiX09nKA=
-=X9Jw
------END PGP SIGNATURE-----
-
---=-wlmSgnT2bqv4YAWi7MMx--
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+jA0EAwMCYq3dHqTzwcVgyRxC1j+ oLxS8Yw92EIeKln+x3eAWzd7mM/ pUluRo
+=0RYk
+-----END PGP MESSAGE-----
