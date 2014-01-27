@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12269 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750930AbaAVJQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 04:16:36 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: fix scan done race
-Date: Wed, 22 Jan 2014 11:14:18 +0200
-Message-Id: <1390382059-16689-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140122_101642_122709_2B93E624)
+Received: from s3.neomailbox.net ([178.209.62.157]:48057 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689AbaA0TNt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jan 2014 14:13:49 -0500
+Message-ID: <52E6AF97.4040602@meshcoding.com> (sfid-20140127_201354_259169_E9E5F20F)
+Date: Mon, 27 Jan 2014 20:12:23 +0100
+From: Antonio Quartulli <antonio@meshcoding.com>
+MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>, mail@fuerstflorian.de,
+	ath9k-devel@lists.ath9k.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] [BUG] Atheros AR7010+AR9287: Scheduling while atomic:
+ ksoftirqd/0/3/0x00000302
+References: <trinity-b8018ef9-8037-4688-a363-2deb3aed68fc-1390501815918@3capp-1and1-bs02> <52E1712B.70202@rempel-privat.de>, <52E191B3.2070601@meshcoding.com>, <trinity-14f555a0-3945-448b-a908-b12f1cb532e3-1390546291559@3capp-1and1-bs03> <trinity-c1a620e7-f7e8-4bb0-b583-b36b6fa6bfd8-1390546555391@3capp-1and1-bs03> <52E6AD5C.3020005@rempel-privat.de>
+In-Reply-To: <52E6AD5C.3020005@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="FV1GsER4V2setXQJqNXGrEWNXVVFTlKuS"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--FV1GsER4V2setXQJqNXGrEWNXVVFTlKuS
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-When an interface/wdev is removed, any ongoing scan should be
-cancelled by the driver. This will make it call cfg80211, which
-only queues a work struct. If interface/wdev removal is quick
-enough, this can leave the scan request pending and processed
-only after the interface is gone, causing a use-after-free.
+On 27/01/14 20:02, Oleksij Rempel wrote:
+> Hi Johannes,
+>=20
+> i found this bug report with your response:
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D990955
+> "I don't think adding a workqueue is a good idea because that would
+> significantly delay the calls in many situations."
+>=20
+> The problem on ath9k_htc is that the call is already dramatically
+> delayed. It will try to send WMI command over USB with delay of some
+> _msec_ not usec. There are two options right now, use workqueue or do
+> not support sta_rc_update.
+>=20
 
-Fix this by making sure the scan request is not pending after
-the interface is destroyed. We can't flush or cancel the work
-item due to locking concerns, but when it'll run it shouldn't
-find anything to do. This leaves a potential issue, if a new
-scan gets requested before the work runs, it prematurely stops
-the running scan, potentially causing another crash. I'll fix
-that in the next patch.
+Unfortunately not supporting sta_rc_update() means making adhoc mode
+unusable.. :(
 
-This was particularly observed with P2P_DEVICE wdevs, likely
-because freeing them is quicker than freeing netdevs.
 
-Reported-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Fixes: 4a58e7c38443 ("cfg80211: don't "leak" uncompleted scans")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Cheers,
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 10b30c4..98eefd3 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -209,8 +209,11 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
- 
- 	rdev->opencount--;
- 
--	WARN_ON(rdev->scan_req && rdev->scan_req->wdev == wdev &&
--		!rdev->scan_req->notified);
-+	if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
-+		if (WARN_ON(!rdev->scan_req->notified))
-+			rdev->scan_req->aborted = true;
-+		___cfg80211_scan_done(rdev);
-+	}
- }
- 
- static int cfg80211_rfkill_set_block(void *data, bool blocked)
-@@ -899,8 +902,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		break;
- 	case NETDEV_DOWN:
- 		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
--		WARN_ON(rdev->scan_req && rdev->scan_req->wdev == wdev &&
--			!rdev->scan_req->notified);
-+		if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
-+			if (WARN_ON(!rdev->scan_req->notified))
-+				rdev->scan_req->aborted = true;
-+			___cfg80211_scan_done(rdev);
-+		}
- 
- 		if (WARN_ON(rdev->sched_scan_req &&
- 			    rdev->sched_scan_req->dev == wdev->netdev)) {
--- 
-1.8.3.2
 
+--=20
+Antonio Quartulli
+
+
+--FV1GsER4V2setXQJqNXGrEWNXVVFTlKuS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJS5q+cAAoJEEKTMo6mOh1V4JQQAKCqzGq1Jr2DJaT+9G3DH3Jo
+eGrGcbfPqH0Y9fYt/kDBq9NI2MrF4kNnhgdgwAtqnpTHl2V4kT3+QL77WVzpUbKJ
+1NfdmowkSR6flBpdHKNTmM3W+JHqX6PDchzINsUJHpy4J44PiO1c8xKCVbL3REmI
+urdlHEoW9lS9UpKSriXkOOwUtexKloa0zIV414dtN0AIxQVIktLf9k0mW0CH2cFS
+wkf45PzVF/VZNLOcwjGdL8FXLYQb3NU3RBU/n4rjEu32wYaU6XvnEQSJT7eyn3ft
+MbDNZ1jRL5LeJ33PTnt8ePjlPrnZkqP8x14q+Fppxr37N/ZcZFGfRO8EMeIjMkcE
+RB8iFq7zg1COUH9k+iMYxCt6hja1k3Wpe9tpmr9jco/UQr5wrtUCtIxvVrKme003
+L/zTw1nu27ab9aEKoqGx/6+w2o5gAjkzkvW+kqFEzzRr3lO2LnjsN6qk2+8K9CeV
+AO/hciosbndAeqSNgYaU5ZHUjB5Md1mdQla0OGdIxSVlqBQJau92X3BcQur07kna
+HS7rsxPMMliQ3m8uHB5orBB3ffpwqeM65Zoj7SRZjDevz0yegW8ct36+FzimcYMD
+TqLJX4MBSktQkI6rVESIeQmXvNIJfsyl/cdSMiDw1SsbRGi11/IqRbm8zGMKJdq7
+FSCNjNHH384OWJmplhIC
+=NWWH
+-----END PGP SIGNATURE-----
+
+--FV1GsER4V2setXQJqNXGrEWNXVVFTlKuS--
