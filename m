@@ -1,97 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:34408 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbaAWIXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 03:23:54 -0500
-Received: by mail-ob0-f176.google.com with SMTP id gq1so1684019obb.7
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2014 00:23:54 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:25976 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753822AbaA1IMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jan 2014 03:12:51 -0500
+Date: Tue, 28 Jan 2014 09:14:48 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net
+Subject: [PATCH] ath9k_htc: make ->sta_rc_update atomic for most calls
+Message-ID: <20140128081433.GA1771@redhat.com> (sfid-20140128_091317_595834_7410FBBF)
 MIME-Version: 1.0
-In-Reply-To: <52E0BA40.7090203@gmail.com>
-References: <52DF947E.40800@gmail.com>
-	<CABPxzYLwL5p86jWUSzdyN7Q73ETyiiUhANVPuwBy2sWj=xQomw@mail.gmail.com>
-	<DE84205DFC6FCF4A904A2F75D822FABA558C352A@ALA-MBB.corp.ad.wrs.com>
-	<CABPxzY+URNQRYTteZjbEKAD45Y5QBvtYqx20dM8MqFsaueHSPw@mail.gmail.com>
-	<52E0BA40.7090203@gmail.com>
-Date: Thu, 23 Jan 2014 10:23:53 +0200
-Message-ID: <CANUX_P05h39mPbhPBhKzVZb+vtyxtfsPMwOcv4UgJR_yJRcXdw@mail.gmail.com> (sfid-20140123_092357_708152_D12E7032)
-Subject: Re: 802.11a is supported in AP mode or not?
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: zhuyj <zyjzyj2000@gmail.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	"Liu, Bopeng" <Bopeng.Liu@windriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 8:44 AM, zhuyj <zyjzyj2000@gmail.com> wrote:
-> On 01/23/2014 02:15 PM, Krishna Chaitanya wrote:
->>
->> hostapd -dd -B /etc/hostapd.conf
->
-> root@wind-desktop:~# hostapd -dd -B /etc/hostapd.conf
->
-> random: Trying to read entropy from /dev/random
-> Configuration file: /etc/hostapd.conf
-> ctrl_interface_group=0
-> nl80211: interface wlan0 in phy phy0
-> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
-> nl80211: Using driver-based off-channel TX
-> nl80211: Register frame command failed (type=208): ret=-114 (Operation
-> already in progress)
-> nl80211: Register frame match - hexdump(len=2): 04 0a
-> nl80211: Failed to register Action frame processing - ignore for now
-> nl80211: Add own interface ifindex 3
-> nl80211: Set mode ifindex 3 iftype 3 (AP)
-> nl80211: Create interface iftype 6 (MONITOR)
-> nl80211: New interface mon.wlan0 created: ifindex=4
-> nl80211: Add own interface ifindex 4
-> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-> nl80211: Regulatory information - country=00
-> nl80211: 2402-2472 @ 40 MHz
-> nl80211: 2457-2482 @ 40 MHz
-> nl80211: 2474-2494 @ 20 MHz
-> nl80211: 5170-5250 @ 40 MHz
-> nl80211: 5735-5835 @ 40 MHz
-> nl80211: Added 802.11b mode based on 802.11g information
-> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=15 dBm
-> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=15 dBm
-> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=15 dBm
-> wlan0: IEEE 802.11 Configured channel (1) not found from the channel list of
-> current mode (2) IEEE 802.11a
->
-> wlan0: IEEE 802.11 Hardware does not support configured channel
-> Could not select hw_mode and channel. (-4)
-> wlan0: Unable to setup interface.
-> Flushing old station entries
-> Deauthenticate all stations
-> rmdir[ctrl_interface]: No such file or directory
-> nl80211: Remove interface ifindex=4
-> netlink: Operstate: linkmode=0, operstate=6
-> nl80211: Set mode ifindex 3 iftype 2 (STATION)
-> root@wind-desktop:~#
->
->
-> root@wind-desktop:~# hostapd -v
+sta_rc_update() callback must be atomic, hence we can not take mutexes
+or do other operations, which can sleep in ath9k_htc_sta_rc_update().
 
-I think you have the answer to your question, don't you?
+I think we can just return from ath9k_htc_sta_rc_update(), if it is
+called without IEEE80211_RC_SUPP_RATES_CHANGED bit. That will help 
+with scheduling while atomic bug for most cases (except mesh and IBSS
+modes).
+
+For mesh and IBSS I do not see other solution like creating additional
+workqueue, because sending firmware command require us to sleep, but
+this can be done in additional patch.
+
+Patch partially fixes bug:
+https://bugzilla.redhat.com/show_bug.cgi?id=990955
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 608d739..a57af9b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1315,21 +1315,22 @@ static void ath9k_htc_sta_rc_update(struct ieee80211_hw *hw,
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_htc_target_rate trate;
+ 
++	if (!(changed & IEEE80211_RC_SUPP_RATES_CHANGED))
++		return;
++
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+ 
+-	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
+-		memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
+-		ath9k_htc_setup_rate(priv, sta, &trate);
+-		if (!ath9k_htc_send_rate_cmd(priv, &trate))
+-			ath_dbg(common, CONFIG,
+-				"Supported rates for sta: %pM updated, rate caps: 0x%X\n",
+-				sta->addr, be32_to_cpu(trate.capflags));
+-		else
+-			ath_dbg(common, CONFIG,
+-				"Unable to update supported rates for sta: %pM\n",
+-				sta->addr);
+-	}
++	memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
++	ath9k_htc_setup_rate(priv, sta, &trate);
++	if (!ath9k_htc_send_rate_cmd(priv, &trate))
++		ath_dbg(common, CONFIG,
++			"Supported rates for sta: %pM updated, rate caps: 0x%X\n",
++			sta->addr, be32_to_cpu(trate.capflags));
++	else
++		ath_dbg(common, CONFIG,
++			"Unable to update supported rates for sta: %pM\n",
++			sta->addr);
+ 
+ 	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+-- 
+1.7.11.7
+
