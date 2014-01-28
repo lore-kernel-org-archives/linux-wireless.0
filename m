@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbaAWJ7v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 04:59:51 -0500
-Message-ID: <1390471178.4142.8.camel@jlt4.sipsolutions.net> (sfid-20140123_105955_596415_6E05D1B5)
-Subject: Re: [PATCH] nl80211: Count only ssid attr to know number of match
- sets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Mani, Raja" <rmani@qti.qualcomm.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Jan 2014 10:59:38 +0100
-In-Reply-To: <BD8355E3EE4C424D96D29100D45098AB42C40238@aphydexd01a.ap.qualcomm.com>
-References: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com>
-	 <1390465052.4142.0.camel@jlt4.sipsolutions.net>
-	 <BD8355E3EE4C424D96D29100D45098AB42C40238@aphydexd01a.ap.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:33803 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754791AbaA1JkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jan 2014 04:40:05 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1W859G-0004TI-Jg
+	for linux-wireless@vger.kernel.org; Tue, 28 Jan 2014 10:40:02 +0100
+Received: from ABTS-AP-dynamic-138.164.169.122.airtelbroadband.in ([ABTS-AP-dynamic-138.164.169.122.airtelbroadband.in])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 10:40:02 +0100
+Received: from krama.one by ABTS-AP-dynamic-138.164.169.122.airtelbroadband.in with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 10:40:02 +0100
+To: linux-wireless@vger.kernel.org
+From: krama <krama.one@gmail.com>
+Subject: radiotap header used in packet injection on monitor mode
+Date: Tue, 28 Jan 2014 09:38:02 +0000 (UTC)
+Message-ID: <loom.20140128T102749-448@post.gmane.org> (sfid-20140128_104012_188219_2237A897)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-23 at 09:53 +0000, Mani, Raja wrote:
+Hi,
 
-> >Err, you failed to explain *why* this is a problem. I'm not even convinced you're right anyway.
+In our internal tests we make use of monitor mode (on wireshark) for all the
+debugging, especially with security related issues (as packets are
+already decrypted).
 
-> To know match set count, nl80211 should count only NL80211_SCHED_*_ATTR_SSID.
-> Some cases, wpa_supplicant would pass NL80211_SCHED_*_ATTR_RSSI also alone with
-> NL80211_SCHED_*_ATTR_SSID.  For example, assume  one NL80211_SCHED_*_ATTR_SSID and
-> one NL80211_SCHED_*_ATTR_RSSI passed from wpa_supplicant. In this case, nl80211 count
-> NL80211_SCHED_*_ATTR_RSSI also one of the profile , Finally match set count will be come
-> 2 in this case. (Ideally, match set count should be 1).  The same count value is passed to driver,
-> and driver also would assume there are two SSID available in match set array (request->match_sets).
-> But only one SSID is valid in request->match_sets array in this case.
+As i am "injecting the packet on to the network" using a "simulator" built
+by own (very similar to the file2air) with the help of lorcon library, there
+we are setting the radiotap header as 14 bytes and writing the buffer on to
+the sockets and sending the frame.
 
-You still haven't explained *why* you think that a match set should only
-be considered to be one when it includes an SSID. That doesn't seem to
-be the definition of the API.
+But when the same frame is captured in wireshark is having different header
+length. Why is it happening so ?
 
-johannes
+Is it the problem in setting the radiotap header arguments in lorcon or what.
+
+Thanks & Regards
+Krama
+
+
+
+
+
+
 
