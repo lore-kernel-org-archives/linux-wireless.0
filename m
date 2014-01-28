@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25430 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751829AbaAWKqY (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:44916 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985AbaA1Ncv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 05:46:24 -0500
-From: "Mani, Raja" <rmani@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] nl80211: Count only ssid attr to know number of match
- sets
-Date: Thu, 23 Jan 2014 10:46:17 +0000
-Message-ID: <BD8355E3EE4C424D96D29100D45098AB42C4027A@aphydexd01a.ap.qualcomm.com> (sfid-20140123_114627_754175_A321A021)
-References: <1390451229-3308-1-git-send-email-rmani@qti.qualcomm.com>
-	 <1390465052.4142.0.camel@jlt4.sipsolutions.net>
-	 <BD8355E3EE4C424D96D29100D45098AB42C40238@aphydexd01a.ap.qualcomm.com>
- <1390471178.4142.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1390471178.4142.8.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 28 Jan 2014 08:32:51 -0500
+Message-ID: <52E7B134.2040404@open-mesh.com> (sfid-20140128_143254_493473_64B18EFA)
+Date: Tue, 28 Jan 2014 14:31:32 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
 MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in
+ IBSS join
+References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com> <87wqhkgszo.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wqhkgszo.fsf@kamboji.qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4gPkVyciwgeW91IGZhaWxlZCB0byBleHBsYWluICp3aHkqIHRoaXMgaXMgYSBwcm9ibGVtLiBJ
-J20gbm90IGV2ZW4gY29udmluY2VkIHlvdSdyZSByaWdodCBhbnl3YXkuDQoNCj4+IFRvIGtub3cg
-bWF0Y2ggc2V0IGNvdW50LCBubDgwMjExIHNob3VsZCBjb3VudCBvbmx5IE5MODAyMTFfU0NIRURf
-Kl9BVFRSX1NTSUQuDQo+PiBTb21lIGNhc2VzLCB3cGFfc3VwcGxpY2FudCB3b3VsZCBwYXNzIE5M
-ODAyMTFfU0NIRURfKl9BVFRSX1JTU0kgYWxzbyANCj4+IGFsb25lIHdpdGggTkw4MDIxMV9TQ0hF
-RF8qX0FUVFJfU1NJRC4gIEZvciBleGFtcGxlLCBhc3N1bWUgIG9uZSANCj4+IE5MODAyMTFfU0NI
-RURfKl9BVFRSX1NTSUQgYW5kIG9uZSBOTDgwMjExX1NDSEVEXypfQVRUUl9SU1NJIHBhc3NlZCAN
-Cj4+IGZyb20gd3BhX3N1cHBsaWNhbnQuIEluIHRoaXMgY2FzZSwgbmw4MDIxMSBjb3VudCANCj4+
-IE5MODAyMTFfU0NIRURfKl9BVFRSX1JTU0kgYWxzbyBvbmUgb2YgdGhlIHByb2ZpbGUgLCBGaW5h
-bGx5IG1hdGNoIHNldCANCj4+IGNvdW50IHdpbGwgYmUgY29tZQ0KPj4gMiBpbiB0aGlzIGNhc2Uu
-IChJZGVhbGx5LCBtYXRjaCBzZXQgY291bnQgc2hvdWxkIGJlIDEpLiAgVGhlIHNhbWUgDQo+PiBj
-b3VudCB2YWx1ZSBpcyBwYXNzZWQgdG8gZHJpdmVyLCBhbmQgZHJpdmVyIGFsc28gd291bGQgYXNz
-dW1lIHRoZXJlIGFyZSB0d28gU1NJRCBhdmFpbGFibGUgaW4gbWF0Y2ggc2V0IGFycmF5IChyZXF1
-ZXN0LT5tYXRjaF9zZXRzKS4NCj4+IEJ1dCBvbmx5IG9uZSBTU0lEIGlzIHZhbGlkIGluIHJlcXVl
-c3QtPm1hdGNoX3NldHMgYXJyYXkgaW4gdGhpcyBjYXNlLg0KPg0KPllvdSBzdGlsbCBoYXZlbid0
-IGV4cGxhaW5lZCAqd2h5KiB5b3UgdGhpbmsgdGhhdCBhIG1hdGNoIHNldCBzaG91bGQgb25seSBi
-ZSBjb25zaWRlcmVkIHRvIGJlIG9uZSB3aGVuIGl0IGluY2x1ZGVzIGFuIFNTSUQuIFRoYXQgZG9l
-c24ndCBzZWVtIHRvIGJlIHRoZSBkZWZpbml0aW9uIG9mIHRoZSBBUEkuDQo+DQo+Sm9oYW5uZXMN
-Cg0KRHJpdmVyIGl0ZXJhdGVzIG1hdGNoIHNldCBhcnJheSAocmVxdWVzdC0+bWF0Y2hfc2V0cykg
-YmFzZWQgb24gbWF0Y2ggc2V0IGNvdW50IChyZXF1ZXN0LT5uX21hdGNoX3NldHMpLg0KSW4gYWJv
-dmUgZXhhbXBsZSwgb25seSByZXF1ZXN0LT5uX21hdGNoX3NldHNbMF0gd2lsbCBoYXZlIHZhbGlk
-IFNTSUQgYW5kICByZXF1ZXN0LT5uX21hdGNoX3NldHNbMV0pIHdpbGwgaGF2ZSBaRVJPIGluIGl0
-cyBlbGVtZW50IGFsd2F5cy4NCkJ5IGhhdmluZyBjb3VudCBiZWluZyAyIGFuZCBoYXZpbmcgaW52
-YWxpZCBTU0lEIGluIHJlcXVlc3QtPm5fbWF0Y2hfc2V0c1sxXSBpcyB0aGUgcHJvYmxlbS4gIA0K
-DQpNZW1vcnkgZm9yIHJlcXVlc3QtPm1hdGNoX3NldHMgaXMgYWxsb2NhdGVkIGJhc2VkIG9uIG1h
-dGNoIHNldCBjb3VudCBpbiBubDgwMjExLiAgQnkgcmVkdWNpbmcgdGhlIGNvdW50ICwgIG5sODAy
-MTEgZG9uJ3QgaGF2ZSANClRvIGFsbG9jYXRlIG1lbW9yeSBmb3IgcmVxdWVzdC0+bl9tYXRjaF9z
-ZXRzWzFdIGFuZCBhbHNvIGRyaXZlciBjYW4gZXhhY3RseSBrbm93IHZhbGlkIFNTSUQgY291bnQg
-YXZhaWxhYmxlIGluIG1hdGNoIHNldCBhcnJheSB3aXRoIG15IGNoYW5nZS4NCg==
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On 28/01/14 14:01, Kalle Valo wrote:
+>> - Patch is getting resent because I did not CC'd the linux-wireless ma=
+iling list in
+>> my previous attempt. :)
+>=20
+> Oh, I missed that. Anyway, in previous version I  commented about
+> documenting NULL usage. What do you think about that?
+
+Well documentation is always good :) If it is need I will add it.
+
+However, I'd rather ask you what ath6kl is trying to do in that case,
+since it's the only driver invoking cfg80211_ibss_joined() with a zero
+BSSID (and now a NULL channel) on IBSS leave.
+
+=46rom the cfg80211 prospective, that call is seen like a notification of=
+
+being connected to a new BSS having zero mac and NULL channel. I don't
+see how this can be useful at all, also because after leaving the IBSS I
+imagine that no other operation will take place on that vif unless it
+reconnects again.
+
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+
+--BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJS57E4AAoJEEKTMo6mOh1VXyUQAIZf/wLL21VHcX9XGKEwtIGb
+9LQqNKHvyRHe2Lxf9pRqhGNu1oySFZf/LB088ejxnak8h47UFriFkqNMIfdQpAIk
+Y20p4WSMpbvi8k+7rdd7eX5wCYQewziXF28tYewJRr+t0ii/TbfBU2zURJ4wWJAZ
+75W9fg7r6BNuk9R/raEkMSyf95RvcCxd/M6kp7hH+hyqf0+DAge0vhOsM9MhO9OH
+sQDrXiDGmGKS3+rOAyzgpVSObRJTFQKIMPTFdiJQO6Pu8iDic7U5cON4s3wgmV59
+SNKMIfTOb5ZyOmAQ6hAIDUHMi2pP70c9FveQGxA2E4AQIDA7Ge0kxzKmuoD8v6pG
+ubR16N08l9VuDEOyZm7WMcZ4AuIhbRgGEEHKRy5YlY7kZ7zhwCXuMbUg15sHFcbz
+L8KNUF0TbzV/WUSshpv75/XvtwZPxGuffJPQVD19HWdUOTX3mghFO2iV7uVJVHAp
+kM6zNeN8Rf44DvYvkohUBWkN4IyXLQhCkZvOpv5zxQ3d4HCBR9OzVD4KAfbPP6YM
+aYKqH668B5XWBuVlr6Lvy022kKD7io1Z3FGx1iEGXhvaI27NbspxI4fQGARyolOs
+GEbnDLRhn/82W2HnyV5oySwDQLNBLQX0UoB+x+UUBzNt//ekhM+Iufr5OGe18xre
+DEaV9K+gb30QOsEdE3qP
+=ltxt
+-----END PGP SIGNATURE-----
+
+--BdJrLqsqTsbSQFVjt55V6mqVumXKLCcIG--
