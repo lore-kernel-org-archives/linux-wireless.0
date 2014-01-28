@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40856 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755299AbaAHCyx (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:50661 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754513AbaA1OmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:54:53 -0500
-Message-ID: <52CCBDDC.1050503@huawei.com> (sfid-20140108_035723_618510_E1BA0B7D)
-Date: Wed, 8 Jan 2014 10:54:20 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
+	Tue, 28 Jan 2014 09:42:07 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Sujith Manoharan <sujith@msujith.org>
+Subject: Re: [PATCH] mac80211: Fix IBSS join
+Date: Tue, 28 Jan 2014 15:42:03 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org
+References: <1390874095-28008-1-git-send-email-sujith@msujith.org>
+In-Reply-To: <1390874095-28008-1-git-send-email-sujith@msujith.org>
 MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.6 17/19] mwifiex: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201401281542.03451.sw@simonwunderlich.de> (sfid-20140128_154212_064573_77F68DE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
 
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/net/wireless/mwifiex/11n.c         | 2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 3 +--
- drivers/net/wireless/mwifiex/sta_rx.c      | 2 +-
- 3 files changed, 3 insertions(+), 4 deletions(-)
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Currently, when a station leaves an IBSS network, the
+> corresponding BSS is not dropped from cfg80211 if there are
+> other active stations in the network. But, the small
+> window that is present when trying to determine a station's
+> status based on IEEE80211_IBSS_MERGE_INTERVAL introduces
+> a race.
+> 
+> Instead of trying to keep the BSS, always remove it when
+> leaving an IBSS network. There is not much benefit to retain
+> the BSS entry since it will be added with a subsequent join
+> operation.
+> 
+> This fixes an issue where a dangling BSS entry causes ath9k
+> to wait for a beacon indefinitely.
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 0b803c0..6261f8c 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -483,7 +483,7 @@ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
- 
- 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
- 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
--		if (!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN) &&
-+		if (ether_addr_equal_unaligned(tx_ba_tsr_tbl->ra, ra) &&
- 		    tx_ba_tsr_tbl->tid == tid) {
- 			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
- 					       flags);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 5511946..24523e4 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -782,8 +782,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
- 	}
- 
- 	/* If BSSID is diff, modify current BSS parameters */
--	if (memcmp(priv->curr_bss_params.bss_descriptor.mac_address,
--		   ibss_coal_resp->bssid, ETH_ALEN)) {
-+	if (!ether_addr_equal(priv->curr_bss_params.bss_descriptor.mac_address, ibss_coal_resp->bssid)) {
- 		/* BSSID */
- 		memcpy(priv->curr_bss_params.bss_descriptor.mac_address,
- 		       ibss_coal_resp->bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 0bb510d..4651d67 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -224,7 +224,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
- 	 * directly to os. Don't pass thru rx reordering
- 	 */
- 	if (!IS_11N_ENABLED(priv) ||
--	    memcmp(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest, ETH_ALEN)) {
-+	    !ether_addr_equal_unaligned(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest)) {
- 		mwifiex_process_rx_packet(priv, skb);
- 		return ret;
- 	}
--- 
-1.8.0
+Thank you Sujith, works fine with and without setting a fixed BSSID.
 
+Feel free to add
 
+Tested-by: Simon Wunderlich <sw@simonwunderlich.de>
+
+Cheers,
+    Simon
