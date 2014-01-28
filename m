@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:36421 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbaAFQuJ (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:1587 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790AbaA1QIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 11:50:09 -0500
-Received: by mail-we0-f173.google.com with SMTP id u57so16163269wes.32
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 08:50:08 -0800 (PST)
-From: Julien Massot <jmassot@aldebaran-robotics.com>
-To: ath6kl-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
-	Julien Massot <jmassot@aldebaran-robotics.com>
-Subject: [PATCH 0/2] ath6kl: Fix Tx credits management for ar6004 usb
-Date: Mon,  6 Jan 2014 19:52:46 +0100
-Message-Id: <1389034368-5370-1-git-send-email-jmassot@aldebaran-robotics.com> (sfid-20140106_175016_061865_FE04AD63)
+	Tue, 28 Jan 2014 11:08:52 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Antonio Quartulli <antonio@meshcoding.com>
+Subject: [PATCHv2] ath6kl: remove useless ibss_joined notification on ibss_leave
+Date: Tue, 28 Jan 2014 17:07:36 +0100
+Message-Id: <1390925256-3994-1-git-send-email-antonio@meshcoding.com> (sfid-20140128_170855_787638_B4A32F74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By stressing the communication with different stream, iperf, ping,
-and web browsing, the transmission is stuck after a while. (5-10 minutes)
+When leaving an IBSS there is no need to send cfg80211 a
+fake notification about "having joined a cell with zero
+BSSID".
+This operation has the only effect to create a BSS object
+that is not going to be used.
 
-The driver doesn't update correctly the tx credit,
-and the transmission becomes very slow.
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
+---
 
-The ping latency raise to 20 secs, and finally stop with
-"no buffer space available".
+Change from v1:
+- remove the correct line!
 
-The first patch fixes a babble error in Rx message:
-"ath6kl: ath6kl_usb_recv_complete: recv pipe: 5, stat:-75, len:1536 urb:0xffff8802010dad80".
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-The second patch decreases the Rx read threshold to make sure we read
-the tx credit report as soon as possible.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index eba32f5..d40a8ef 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -866,8 +866,6 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ 				   "%s: ath6k not in ibss mode\n", __func__);
+ 			return;
+ 		}
+-		memset(bssid, 0, ETH_ALEN);
+-		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
+ 		return;
+ 	}
+ 
+-- 
+1.8.5.3
 
-Julien Massot (2):
-  ath6kl: increase usb rx buffer size to 4096
-  ath6kl: set rx urb count threshold to 1
-
- drivers/net/wireless/ath/ath6kl/usb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---
-1.8.4.2
