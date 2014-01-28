@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li674-96.members.linode.com ([212.71.239.96]:44316 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752033AbaAGQih (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:60802 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755636AbaA1TXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 11:38:37 -0500
-Date: Tue, 7 Jan 2014 18:38:34 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: Advertise maximum associated STAs in AP mode
-Message-ID: <20140107163834.GA9771@w1.fi> (sfid-20140107_173840_577509_28203B85)
-References: <20140106081151.GA1613@w1.fi>
- <1389110063.4645.21.camel@jlt4.sipsolutions.net>
- <20140107161241.GA9092@w1.fi>
- <1389112179.4645.37.camel@jlt4.sipsolutions.net>
+	Tue, 28 Jan 2014 14:23:48 -0500
+Received: by mail-lb0-f172.google.com with SMTP id c11so739192lbj.17
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 11:23:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389112179.4645.37.camel@jlt4.sipsolutions.net>
+In-Reply-To: <20140125003418.GF28512@garbanzo.do-not-panic.com>
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+	<20140125003418.GF28512@garbanzo.do-not-panic.com>
+Date: Tue, 28 Jan 2014 20:23:46 +0100
+Message-ID: <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com> (sfid-20140128_202403_475496_04DF1BC0)
+Subject: Re: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzi@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 05:29:39PM +0100, Johannes Berg wrote:
-> Is such a limit advertised anywhere?
+On 25 January 2014 01:34, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Wed, Jan 22, 2014 at 01:43:42PM +0100, Janusz Dziedzic wrote:
+>> Add helper function that will return regdomain.
+>> Follow the driver's regulatory domain, if present,
+>> unless a country IE has been processed or a user
+>> wants to help complaince further.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzi@tieto.com>
+>> ---
+>>  net/wireless/reg.c |   31 ++++++++++++++++++++-----------
+>>  1 file changed, 20 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 9b897fc..d58a09c 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -522,6 +522,25 @@ bool reg_is_valid_request(const char *alpha2)
+>>       return alpha2_equal(lr->alpha2, alpha2);
+>>  }
+>>
+>> +static const struct ieee80211_regdomain *reg_get_regdomain(struct wiphy *wiphy)
+>> +{
+>> +     const struct ieee80211_regdomain *regd;
+>> +     struct regulatory_request *lr = get_last_request();
+>> +
+>> +     /*
+>> +      * Follow the driver's regulatory domain, if present, unless a country
+>> +      * IE has been processed or a user wants to help complaince further
+>> +      */
+>> +     if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+>> +         lr->initiator != NL80211_REGDOM_SET_BY_USER &&
+>> +         wiphy->regd)
+>> +             regd = get_wiphy_regdom(wiphy);
+>> +     else
+>> +             regd = get_cfg80211_regdom();
+>> +
+>> +     return regd;
+>> +}
+>> +
+>>  /* Sanity check on a regulatory rule */
+>>  static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+>>  {
+>> @@ -821,18 +840,8 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+>>                                              u32 center_freq)
+>>  {
+>>       const struct ieee80211_regdomain *regd;
+>> -     struct regulatory_request *lr = get_last_request();
+>>
+>> -     /*
+>> -      * Follow the driver's regulatory domain, if present, unless a country
+>> -      * IE has been processed or a user wants to help complaince further
+>> -      */
+>> -     if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+>> -         lr->initiator != NL80211_REGDOM_SET_BY_USER &&
+>> -         wiphy->regd)
+>> -             regd = get_wiphy_regdom(wiphy);
+>> -     else
+>> -             regd = get_cfg80211_regdom();
+>> +     regd = reg_get_regdomain(wiphy);
+>
+> Nice! I welcome this -- can you also add nl80211 API to expose when
+> a wiphy has its own wiphy->regd and send that to userspace too?
+>
+You mean we should introduce:
+iw wlanX reg get?
+while in last_request we have only last wiphy(lr->wiphy_idx).
 
-Yes, below..
 
-> I can't think of a reason why a
-> static limit would be superior to a dynamic one? Maybe if we'd want to
-> restrict it to 8 to have enough station entries for the other use cases,
-> but then we could do that in the code as well?
-
-It is not really that much of a static vs. dynamic, but more so about
-being able to advertise this before a station tries to start association
-(which, for some P2P devices, may mean having to drop another
-connection).
-
-> Anyway, I'm not really objecting much to this, I'm just not convinced
-> it's sufficient, and if we need a more dynamic mechanism anyway I'm not
-> sure it really buys us much.
-
-Like I said, I think both will be needed.
-
-> > P2P has a P2P Group Limit field which the GO uses to
-> > advertise in Beacon/Probe Response frames to indicate that no more P2P
-> > Clients can join the group. wpa_supplicant supports this functionality,
-> > but currently, requires user (or well, whoever is building the system)
-> > to configure the maximum limit. This is an extra complexity that could
-> > be easily avoided for cases where the driver were able to advertise the
-> > maximum number of associated stations.
-> 
-> Right, indeed. That does indicate a need for such a limit. I wonder if a
-> more dynamic approach (such as an event saying 'I just ran out of
-> space') would be preferable? But it'd obviously be far more complex, so
-> may not be worth it.
-
-That would allow the specific (and only clearly known today, I guess)
-use case of P2P GO to be addressed. Or well, this would actually require
-even more complexity, since there would also need to be another event to
-indicate that more space become available (another operation stopped)..
-While I'm not against adding this type of functionality, I'm not sure it
-really would be worth the effort and it would be yet another alternative
-since there is already support for maximum station count in
-hostapd/wpa_supplicant even if that currently happens to depend on
-manual configuration. The case of add-sta failing will obviously need to
-be supported cleanly, so we (or well, I at least ;-) are pretty much
-stuck with having at least those two.. Adding a third one sounds a bit
-much.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+BR
+Janusz
