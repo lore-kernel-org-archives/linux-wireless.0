@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:41006 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932271AbaAaQSt (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38204 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbaA1NhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 11:18:49 -0500
-Received: by mail-lb0-f175.google.com with SMTP id p9so3535728lbv.6
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jan 2014 08:18:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1391177274.4141.21.camel@jlt4.sipsolutions.net>
-References: <1391071940-4296-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1391177274.4141.21.camel@jlt4.sipsolutions.net>
-Date: Fri, 31 Jan 2014 17:18:47 +0100
-Message-ID: <CALhHN=pWfrsY5HEuXRoAvr=k0VDNAfm=yrk3jF2-qiC-j6gB8A@mail.gmail.com> (sfid-20140131_171852_707432_8F8D8F3B)
-Subject: Re: [PATCH v4] cfg80211: regulatory introduce maximum bandwidth calculation
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 28 Jan 2014 08:37:19 -0500
+Message-ID: <1390916215.4148.5.camel@jlt4.sipsolutions.net> (sfid-20140128_143722_980326_DB15A218)
+Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in
+ IBSS join
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Date: Tue, 28 Jan 2014 14:36:55 +0100
+In-Reply-To: <52E7B134.2040404@open-mesh.com>
+References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com>
+	 <87wqhkgszo.fsf@kamboji.qca.qualcomm.com> <52E7B134.2040404@open-mesh.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 January 2014 15:07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2014-01-30 at 09:52 +0100, Janusz Dziedzic wrote:
->
-> I'll apply this, but I think we should think about this:
->
->> @@ -950,11 +1027,18 @@ static void handle_channel(struct wiphy *wiphy,
->
->> +     max_bandwidth_khz = freq_range->max_bandwidth_khz;
->> +     /* Check if auto calculation requested */
->> +     if (!max_bandwidth_khz) {
->> +             regd = reg_get_regdomain(wiphy);
->> +             max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
->> +     }
->
-> It seems rather odd to have to look up the regdomain here, when we
-> actually came from a regdomain update originally. Or didn't we?
->
-In the handle_channel() function we don't know regd.
+On Tue, 2014-01-28 at 14:31 +0100, Antonio Quartulli wrote:
+> On 28/01/14 14:01, Kalle Valo wrote:
+> >> - Patch is getting resent because I did not CC'd the linux-wireless mailing list in
+> >> my previous attempt. :)
+> > 
+> > Oh, I missed that. Anyway, in previous version I  commented about
+> > documenting NULL usage. What do you think about that?
+> 
+> Well documentation is always good :) If it is need I will add it.
+> 
+> However, I'd rather ask you what ath6kl is trying to do in that case,
+> since it's the only driver invoking cfg80211_ibss_joined() with a zero
+> BSSID (and now a NULL channel) on IBSS leave.
+> 
+> From the cfg80211 prospective, that call is seen like a notification of
+> being connected to a new BSS having zero mac and NULL channel. I don't
+> see how this can be useful at all, also because after leaving the IBSS I
+> imagine that no other operation will take place on that vif unless it
+> reconnects again.
 
-reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq));
+That seems completely pointless and should probably be removed?
 
-from handle_channel() also look up the regdomain.
-So, I did the same.
+johannes
 
-BR
-Janusz
