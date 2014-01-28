@@ -1,63 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:46517 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbaAQNiB convert rfc822-to-8bit (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:20796 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259AbaA1QCz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 08:38:01 -0500
-Received: by mail-bk0-f54.google.com with SMTP id u14so1664869bkz.27
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 05:38:00 -0800 (PST)
+	Tue, 28 Jan 2014 11:02:55 -0500
+Message-ID: <52E7D461.1020708@meshcoding.com> (sfid-20140128_170258_411296_B127B7F4)
+Date: Tue, 28 Jan 2014 17:01:37 +0100
+From: Antonio Quartulli <antonio@meshcoding.com>
 MIME-Version: 1.0
-In-Reply-To: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1389345564-21042-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Fri, 17 Jan 2014 14:38:00 +0100
-Message-ID: <CA+BoTQmexjQy-+Bv-uofBa2Ndcu56yYOAEeNzdBSE3yMCQdZKw@mail.gmail.com> (sfid-20140117_143806_083620_A15583D9)
-Subject: Re: [PATCH v2] ath10k: fix the MAC address of peer statistic
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Antonio Quartulli <antonio@meshcoding.com>,
 	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] ath6kl: removed useless ibss_joined notification on ibss_leave
+References: <1390924815-3714-1-git-send-email-antonio@meshcoding.com>
+In-Reply-To: <1390924815-3714-1-git-send-email-antonio@meshcoding.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="XuCuwdD7QARn82qlJgCER6dptWoRxODN2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 January 2014 10:19, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> Fix the MAC address of wmi_peer_stats so that it is
-> printed correctly. This is tested and verified using
-> firmware version 999.999.0.636.
->
-> Based on the verification, maximum only 3 peer statistics including
-> self STA able to be printed out.
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--XuCuwdD7QARn82qlJgCER6dptWoRxODN2
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On 28/01/14 17:00, Antonio Quartulli wrote:
+> When leaving an IBSS there is no need to send cfg80211 a
+> fake notification about "having joined a cell with zero
+> BSSID".
+> This operation has the only effect to create a BSS object
+> that is not going to be used.
+>=20
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
 > ---
-> v2: offset the stats to ignore the first peer (Chun-Yeow)
->
->  drivers/net/wireless/ath/ath10k/debug.c |    4 ++++
->  drivers/net/wireless/ath/ath10k/wmi.h   |   14 +++++++-------
->  2 files changed, 11 insertions(+), 7 deletions(-)
->
-
-[...]
-
-> @@ -2820,9 +2820,9 @@ struct wmi_vdev_stats {
->   * TODO: add more stats
->   */
->  struct wmi_peer_stats {
-> +       __le32 peer_tx_rate;    /* TBA */
->         struct wmi_mac_addr peer_macaddr;
->         __le32 peer_rssi;
-> -       __le32 peer_tx_rate;
->  } __packed;
-
-This looks wrong too. I've just checked it and it seems the
-`wal_dbg_tx_stats` is out of date. It's missing a `__le32
-stateless_tid_alloc_failure` that has been inserted at some point in
-time in the firmware between `pdev_resets` and `phy_underrun`. You
-should add this missing field instead of moving `peer_tx_rate`.
-
-Unfortunately AP firmware has even more fields inserted in
-`wmi_pdev_stats`. Making this work with both firmwares is a mess.
+>  drivers/net/wireless/ath/ath6kl/cfg80211.c | 1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/w=
+ireless/ath/ath6kl/cfg80211.c
+> index eba32f5..8ce1ce5 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -790,7 +790,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vi=
+f *vif, u16 channel,
+>  	if (nw_type & ADHOC_NETWORK) {
+>  		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
+>  			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
 
 
-Michał
+Of course I messed it up :)
+This is not the right place for this change!!!
+Will send v2.
+
+
+Cheers,
+
+--=20
+Antonio Quartulli
+
+
+--XuCuwdD7QARn82qlJgCER6dptWoRxODN2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJS59RmAAoJEEKTMo6mOh1VBI0P/2gmQun+tJveKNqcjFW667r4
+//BD9pGF/QzWnocIw32hO5vFmDAhVTNiXCzJcT/VwoiKxVEUY7uSdCO0UaeZcuND
+VqA7gPpl+aW0d3kSGp5ops9EhF7nZ/PzSBDfC02nvbE//j9Vouh1Di1kq0n9Bp11
+i5XdR3zItqAqFEbdtvYPjGtcXhrQSdgPfAi4VKPnRLT44IWaJCnHji+LlEQqeibL
+ggyc2UPtOFdKbw9VBUyISsj+WmnYDomzfrqBtD0koB5vAUIVb6m0MSFVRmxv23f3
+EfeTnqT0KdyAs4xaVSgG8H7yiJbqs4c863nPJXxHczGjOkdAUO6CmeYxIgzzo5ZQ
+pWKgEYl3VOeELK0QwE+454ITGVUN4DgOeDCHxQs0IxOEfo5svBfEJTLDdaT0JZbq
+0oW8hYAuT/aNJoGBIyNSCcAhlPB7CMZ3VH54q20BadcwHRXT+UeSDqRtcWCgwD5P
+XFt+8eQpEmS8A3ZV7m1mlSsn7NmJFKPYk9rzQGWb03n9me6+/LbIlwaymF+KgBD7
+E46eO8Deko1KB35T7d2mJxp1F5SEXPab0aTZh3rAYb6iiS5HIms8dJr+uhH+S0uC
+x0BRemnJ/DKJ43Mme8GkrzMjXKtF5wc8+p+RGneCP3KrSikdg8+yWoaTVfkSY4GZ
+Y6M/yzxxej4xSXbOovLb
+=IWV4
+-----END PGP SIGNATURE-----
+
+--XuCuwdD7QARn82qlJgCER6dptWoRxODN2--
