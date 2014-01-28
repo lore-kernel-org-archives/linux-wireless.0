@@ -1,33 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbaAXH2j (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38517 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbaA1NBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 02:28:39 -0500
-Message-ID: <1390548516.4257.1.camel@jlt4.sipsolutions.net> (sfid-20140124_082842_459950_A377103F)
-Subject: Re: Issue with authentication to Aerohive APs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Liu, Bopeng" <Bopeng.Liu@windriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 24 Jan 2014 08:28:36 +0100
-In-Reply-To: <DE84205DFC6FCF4A904A2F75D822FABA558C3D2D@ALA-MBB.corp.ad.wrs.com>
-References: <CF02A704.17362%steven@fndtn.com>
-	,<1390492742.4142.35.camel@jlt4.sipsolutions.net>
-	 <DE84205DFC6FCF4A904A2F75D822FABA558C3D2D@ALA-MBB.corp.ad.wrs.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 28 Jan 2014 08:01:54 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Antonio Quartulli <antonio@meshcoding.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+	<libertas-dev@lists.infradead.org>
+Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in IBSS join
+References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com>
+Date: Tue, 28 Jan 2014 15:01:47 +0200
+In-Reply-To: <1390913540-2127-1-git-send-email-antonio@meshcoding.com>
+	(Antonio Quartulli's message of "Tue, 28 Jan 2014 13:52:20 +0100")
+Message-ID: <87wqhkgszo.fsf@kamboji.qca.qualcomm.com> (sfid-20140128_140209_396369_D5C8F8D4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-24 at 02:28 +0000, Liu, Bopeng wrote:
-> I met a problem when I set to 5Mhz
-> 
-> Mode A can't work...
-> 
-> Do you have some ideas on this issue? 
+Antonio Quartulli <antonio@meshcoding.com> writes:
 
-STOP! Don't hijack other threads, keep your own. Otherwise I'll just
-have to add you to a blacklist and never see email from you again.
+> From: Antonio Quartulli <antonio@open-mesh.com>
+>
+> When receiving an IBSS_JOINED event select the BSS object
+> based on the {bssid, channel} couple rather than the bssid
+> only.
+>
+> With the current approach if another cell having the same
+> BSSID (but using a different channel) exists then cfg80211
+> picks up the wrong BSS object.
+> The result is a mismatching channel configuration between
+> cfg80211 and the driver, that can lead to any sort of
+> problem.
+>
+> The issue can be triggered by having an IBSS sitting on
+> given channel and then asking the driver to create a new
+> cell using the same BSSID but with a different frequency.
+>
+> By passing the channel to cfg80211_get_bss() we can solve
+> this ambiguity and retrieve/create the correct BSS object.
+>
+> All the users of cfg80211_ibss_joined() have been changed
+> accordingly.
+>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+> Cc: libertas-dev@lists.infradead.org
+> Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
+> ---
+>
+> - Patch is getting resent because I did not CC'd the linux-wireless mailing list in
+> my previous attempt. :)
 
-johannes
+Oh, I missed that. Anyway, in previous version I  commented about
+documenting NULL usage. What do you think about that?
 
+-- 
+Kalle Valo
