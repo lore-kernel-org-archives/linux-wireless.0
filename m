@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40538 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbaAZNPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 08:15:06 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1W7PYG-0002ru-NB
-	for linux-wireless@vger.kernel.org; Sun, 26 Jan 2014 14:15:04 +0100
-Received: from p5dc2dc62.dip0.t-ipconnect.de ([93.194.220.98])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2014 14:15:04 +0100
-Received: from beweta by p5dc2dc62.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2014 14:15:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Benedikt Schwarz <beweta@gmx.com>
-Subject: iwlwifi: Upload rate is ten times faster on Windows
-Date: Sun, 26 Jan 2014 14:09:10 +0100
-Message-ID: <lc31d9$sma$1@ger.gmane.org> (sfid-20140126_141530_101891_74A1E2D0)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:63568 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779AbaA1Tm6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jan 2014 14:42:58 -0500
+Received: by mail-lb0-f179.google.com with SMTP id l4so765330lbv.10
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 11:42:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com>
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+ <20140125003418.GF28512@garbanzo.do-not-panic.com> <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 28 Jan 2014 11:42:37 -0800
+Message-ID: <CAB=NE6VfmOMVT3zxE1iEOtT53SycgrrpiKuoi2NPuDXvccz96Q@mail.gmail.com> (sfid-20140128_204303_182672_A9BA5A59)
+Subject: Re: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzi@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Jan 28, 2014 at 11:23 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> On 25 January 2014 01:34, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+>> On Wed, Jan 22, 2014 at 01:43:42PM +0100, Janusz Dziedzic wrote:
+>>> Add helper function that will return regdomain.
+>>>
+>>> +     regd = reg_get_regdomain(wiphy);
+>>
+>> Nice! I welcome this -- can you also add nl80211 API to expose when
+>> a wiphy has its own wiphy->regd and send that to userspace too?
+>>
+> You mean we should introduce:
+> iw wlanX reg get?
 
-the upload rate of my Intel Centrino Wireless-N 100 BGN (REV=0x6C) with
-firmware version 39.31.5.1 build 32895 is about ten times faster on
-Windows 7 (~ 4500 KB/s) than on Linux (~ 500 KB/s) when uploading files
-to my NAS device. I'm running Kubuntu 13.10 with kernel
-3.12.0-031200-generic.
+Sure, and iw dev reg get can also display what it does now but then
+also iterate over all wiphys and also display all wiphy's own regd if
+they have any.
 
-What could be the reason for this problem?
+> while in last_request we have only last wiphy(lr->wiphy_idx).
 
+Right.
 
-Regards,
-Benedikt Schwarz
-
-
-=== dmesg ===
-
-iwlwifi 0000:01:00.0: can't disable ASPM; OS doesn't have ASPM control
-iwlwifi 0000:01:00.0: irq 44 for MSI/MSI-X
-iwlwifi 0000:01:00.0: loaded firmware version 39.31.5.1 build 32895
-op_mode iwldvm
-iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEBUG disabled
-iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
-iwlwifi 0000:01:00.0: Detected Intel(R) Centrino(R) Wireless-N 100 BGN,
-REV=0x6C
-iwlwifi 0000:01:00.0: L1 Enabled; Disabling L0S
-iwlwifi 0000:01:00.0: L1 Enabled; Disabling L0S
-iwlwifi 0000:01:00.0: Radio type=0x0-0x0-0x3
-iwlwifi 0000:01:00.0: L1 Enabled; Disabling L0S
-iwlwifi 0000:01:00.0: Radio type=0x0-0x0-0x3
-
+ Luis
