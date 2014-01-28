@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:59985 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbaAYXXr (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:5925 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754970AbaA1QBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jan 2014 18:23:47 -0500
-Received: by mail-pb0-f41.google.com with SMTP id up15so4559794pbc.14
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jan 2014 15:23:46 -0800 (PST)
-From: Connor Behan <connor.behan@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Connor Behan <connor.behan@gmail.com>
-Subject: [PATCH] Remove executable permissions from firmware files
-Date: Sat, 25 Jan 2014 15:19:06 -0800
-Message-Id: <1390691946-6612-1-git-send-email-connor.behan@gmail.com> (sfid-20140126_002415_611225_542C1390)
-Content-Type: text/plain; charset="utf-8"
+	Tue, 28 Jan 2014 11:01:41 -0500
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Antonio Quartulli <antonio@meshcoding.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: removed useless ibss_joined notification on ibss_leave
+Date: Tue, 28 Jan 2014 17:00:14 +0100
+Message-Id: <1390924815-3714-1-git-send-email-antonio@meshcoding.com> (sfid-20140128_170144_804034_9192D6B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should change these permissions unless there is a reason to keep them
-executable.
+When leaving an IBSS there is no need to send cfg80211 a
+fake notification about "having joined a cell with zero
+BSSID".
+This operation has the only effect to create a BSS object
+that is not going to be used.
 
-Signed-off-by: Connor Behan <connor.behan@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Antonio Quartulli <antonio@meshcoding.com>
 ---
- ar3k/AthrBT_0x41020000.dfu     | Bin
- ar3k/ramps_0x41020000_40.dfu   | Bin
- ar5523.bin                     | Bin
- carl9170fw/carlfw/src/printf.c |   0
- rtlwifi/rtl8723fw.bin          | Bin
- rtlwifi/rtl8723fw_B.bin        | Bin
- 6 files changed, 0 insertions(+), 0 deletions(-)
- mode change 100755 => 100644 ar3k/AthrBT_0x41020000.dfu
- mode change 100755 => 100644 ar3k/ramps_0x41020000_40.dfu
- mode change 100755 => 100644 ar5523.bin
- mode change 100755 => 100644 carl9170fw/carlfw/src/printf.c
- mode change 100755 => 100644 rtlwifi/rtl8723fw.bin
- mode change 100755 => 100644 rtlwifi/rtl8723fw_B.bin
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/ar3k/AthrBT_0x41020000.dfu b/ar3k/AthrBT_0x41020000.dfu
-old mode 100755
-new mode 100644
-diff --git a/ar3k/ramps_0x41020000_40.dfu b/ar3k/ramps_0x41020000_40.dfu
-old mode 100755
-new mode 100644
-diff --git a/ar5523.bin b/ar5523.bin
-old mode 100755
-new mode 100644
-diff --git a/carl9170fw/carlfw/src/printf.c b/carl9170fw/carlfw/src/printf.c
-old mode 100755
-new mode 100644
-diff --git a/rtlwifi/rtl8723fw.bin b/rtlwifi/rtl8723fw.bin
-old mode 100755
-new mode 100644
-diff --git a/rtlwifi/rtl8723fw_B.bin b/rtlwifi/rtl8723fw_B.bin
-old mode 100755
-new mode 100644
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index eba32f5..8ce1ce5 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -790,7 +790,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+ 	if (nw_type & ADHOC_NETWORK) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
+ 			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
+-		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
+ 		cfg80211_put_bss(ar->wiphy, bss);
+ 		return;
+ 	}
 -- 
-1.8.5.2
+1.8.5.3
 
