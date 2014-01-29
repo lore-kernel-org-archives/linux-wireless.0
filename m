@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59850 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:42189 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800AbaATKzk (ORCPT
+	with ESMTP id S1751086AbaA2MMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 05:55:40 -0500
-Message-ID: <1390215337.4335.11.camel@jlt4.sipsolutions.net> (sfid-20140120_115543_059607_B8BFA8F0)
-Subject: Re: [PATCH 4/5] cfg80211: introduce strict bandwidth regulatory flag
+	Wed, 29 Jan 2014 07:12:31 -0500
+Message-ID: <1390997543.4143.6.camel@jlt4.sipsolutions.net> (sfid-20140129_131234_975334_EC863D88)
+Subject: Re: [PATCH RESEND mac80211] cfg80211: fix channel configuration in
+ IBSS join
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Mon, 20 Jan 2014 11:55:37 +0100
-In-Reply-To: <1389947524-6102-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140117_093219_715721_9B28F3F7)
-References: <1389947524-6102-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1389947524-6102-5-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140117_093219_715721_9B28F3F7)
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+	libertas-dev@lists.infradead.org
+Date: Wed, 29 Jan 2014 13:12:23 +0100
+In-Reply-To: <1390997455.4143.5.camel@jlt4.sipsolutions.net> (sfid-20140129_131112_961767_42774948)
+References: <1390913540-2127-1-git-send-email-antonio@meshcoding.com>
+	 <1390997455.4143.5.camel@jlt4.sipsolutions.net>
+	 (sfid-20140129_131112_961767_42774948)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-17 at 09:32 +0100, Janusz Dziedzic wrote:
-> Introduce NL80211_RRF_STRICT_BW regulatory rule flag.
-> This mean we will check only banwidth defined in
-> regulatory database and not check contiguous rules.
+On Wed, 2014-01-29 at 13:10 +0100, Johannes Berg wrote:
+> On Tue, 2014-01-28 at 13:52 +0100, Antonio Quartulli wrote:
+> 
+> > When receiving an IBSS_JOINED event select the BSS object
+> > based on the {bssid, channel} couple rather than the bssid
+> > only.
+> 
+> Applied. I took it for mac80211-next since that's a rather special case.
+> I also squashed in the ij.bssid bugfix since it was in that area.
 
-If you meant for this to alleviate my concerns about crda/db.txt
-compatibility, you didn't do it right. This has no value whatsoever
-since it still breaks things.
+I take that back. Since I'm putting it only into -next, you can fix the
+documentation in the same patch. Also, you should update tracing to
+include the channel.
 
 johannes
-
 
