@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:41545 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbaAXWq6 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:50536 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbaA2LAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 17:46:58 -0500
-Received: by mail-pa0-f42.google.com with SMTP id kl14so3777302pab.29
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2014 14:46:58 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 04/11] rel-html: add 3.14 for backports project release file
-Date: Fri, 24 Jan 2014 14:46:26 -0800
-Message-Id: <1390603593-27728-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20140124_234701_907345_D895663D)
-In-Reply-To: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1390603593-27728-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 29 Jan 2014 06:00:01 -0500
+Message-ID: <1390993191.22155.5.camel@porter.coelho.fi> (sfid-20140129_120007_391032_E595345C)
+Subject: Re: [PATCH 1/5] mac80211: batch CSA bss info notification
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Wed, 29 Jan 2014 12:59:51 +0200
+In-Reply-To: <1390978581-13273-2-git-send-email-michal.kazior@tieto.com>
+References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
+	 <1390978581-13273-2-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is in preparation for the 3.14-rc1 release.
+On Wed, 2014-01-29 at 07:56 +0100, Michal Kazior wrote:
+> Instead of having
+> ieee80211_bss_info_change_notify() scattered all
+> over the place just call it once when finalizing
+> CSA.
+> 
+> As a side effect this patch adds missing error
+> checking for IBSS CSA beacon update.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- projects/backports.cfg | 1 +
- 1 file changed, 1 insertion(+)
+Looks good to me:
 
-diff --git a/projects/backports.cfg b/projects/backports.cfg
-index 2ea2ca3..ae9cdac 100644
---- a/projects/backports.cfg
-+++ b/projects/backports.cfg
-@@ -2,6 +2,7 @@
- rel_html_proj		= backports
- rel_html_proj_aliases	= compat-drivers
- supported =
-+	3.14
- 	3.13
- 	3.12
- 	3.11
--- 
-1.8.5.2
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
 
