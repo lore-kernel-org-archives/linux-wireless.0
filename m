@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6407 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752652AbaAFLk4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbaA2NKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:40:56 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/15] brcmfmac: Limit control message length from host to device.
-Date: Mon, 6 Jan 2014 12:40:38 +0100
-Message-ID: <1389008450-28529-4-git-send-email-arend@broadcom.com> (sfid-20140106_124100_696922_4612FB94)
-In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 29 Jan 2014 08:10:14 -0500
+Message-ID: <1391001002.4143.14.camel@jlt4.sipsolutions.net> (sfid-20140129_141020_386830_B5A232A0)
+Subject: Re: [PATCH v2 2/3] cfg80211: introduce regulatory wide bandwidth
+ flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 29 Jan 2014 14:10:02 +0100
+In-Reply-To: <20140125003255.GE28512@garbanzo.do-not-panic.com> (sfid-20140125_013306_799580_708B4E61)
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1390394624-3927-2-git-send-email-janusz.dziedzic@tieto.com>
+	 <1390492620.4142.33.camel@jlt4.sipsolutions.net>
+	 <20140125003255.GE28512@garbanzo.do-not-panic.com>
+	 (sfid-20140125_013306_799580_708B4E61)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Fri, 2014-01-24 at 16:32 -0800, Luis R. Rodriguez wrote:
 
-An control request or set message length is restricted to
-ETH frame length for the buffer from host to device. This
-is limitation is imposed by the firmware.
+> > This seems reasonable, thanks. Maybe we should require the bandwidth to
+> > not be set at all or something? At least maybe in the regdb parser - it
+> > makes very little sense to have @20 and then ignore it completely?
+> > 
+> > Or maybe the userspace code could just not expose the flag, but rather
+> > set the new "wide_bw" flag when all the rules are marked as @N/A (and
+> > treat a combination of @number and @N/A as a bug)?
+> 
+> The optimizer code I added to CRDA does all this for us, so technically,
+> unless I'm missing something, this could be dealt with magically in
+> userspace. Its also unclear why we'd define this as a regulatory
+> parameter -- this just seems to make sense.
+> 
+> I'd look at extending CRDA binary to use the optimizer on the regulatory
+> domain prior to sending it to the kernel. All of a sudden you get full
+> support for this for free on any kernel.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c |   10 +++++-----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h  |    5 +++++
- 2 files changed, 10 insertions(+), 5 deletions(-)
+I'm not sure I get it. Whatever 'optimisation' you're doing surely can't
+be changing the semantics of the rules, which are currently defined to
+be separate and channels can't cross different rules. This may not be
+all that interesting for most country entries today, but there are a few
+that have overlapping rules and regardless, it's some form of API/ABI.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-index 12c27d1..c229210 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-@@ -41,9 +41,6 @@ struct brcmf_proto_bcdc_dcmd {
- 	__le32 status;	/* status code returned from the device */
- };
- 
--/* Max valid buffer size that can be sent to the dongle */
--#define BCDC_MAX_MSG_SIZE	(ETH_FRAME_LEN+ETH_FCS_LEN)
--
- /* BCDC flag definitions */
- #define BCDC_DCMD_ERROR		0x01		/* 1=cmd failed */
- #define BCDC_DCMD_SET		0x02		/* 0=get, 1=set cmd */
-@@ -133,9 +130,12 @@ brcmf_proto_bcdc_msg(struct brcmf_pub *drvr, int ifidx, uint cmd, void *buf,
- 	if (buf)
- 		memcpy(bcdc->buf, buf, len);
- 
-+	len += sizeof(*msg);
-+	if (len > BRCMF_TX_IOCTL_MAX_MSG_SIZE)
-+		len = BRCMF_TX_IOCTL_MAX_MSG_SIZE;
-+
- 	/* Send request */
--	return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg,
--			       len + sizeof(struct brcmf_proto_bcdc_dcmd));
-+	return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg, len);
- }
- 
- static int brcmf_proto_bcdc_cmplt(struct brcmf_pub *drvr, u32 id, u32 len)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index e299657..939d6b1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -37,6 +37,11 @@
- #define BRCMF_DCMD_MEDLEN	1536
- #define BRCMF_DCMD_MAXLEN	8192
- 
-+/* IOCTL from host to device are limited in lenght. A device can only handle
-+ * ethernet frame size. This limitation is to be applied by protocol layer.
-+ */
-+#define BRCMF_TX_IOCTL_MAX_MSG_SIZE	(ETH_FRAME_LEN+ETH_FCS_LEN)
-+
- #define BRCMF_AMPDU_RX_REORDER_MAXFLOWS		256
- 
- /* Length of firmware version string stored for
--- 
-1.7.10.4
+In any case, no optimiser can actually do what Janusz needs, since he
+needs the ability to split up existing frequency ranges due to different
+flags in parts of those, while keeping the ability to use channels that
+use multiple ranges.
+
+The only thing I could think of an optimiser doing is combine ranges,
+but then it would lose flags which can't be right. And in fact combining
+rules would be breaking the current db.txt format. I won't let you get
+away with that on the kernel/userspace API (hence this patch), but if
+you can get away with breaking it in CRDA I'm only going to roll my eyes
+a bit :-)
+
+johannes
 
