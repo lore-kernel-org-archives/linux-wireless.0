@@ -1,161 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57873 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbaAGMFr (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:49780 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755927AbaA2HB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 07:05:47 -0500
-Date: Tue, 7 Jan 2014 13:05:45 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: pali.rohar@gmail.com, sre@debian.org, sre@ring0.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 02/13] wl1251: retry power save entry
-Message-ID: <20140107120545.GB10836@amd.pavel.ucw.cz> (sfid-20140107_130551_458954_26CCA2EB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Wed, 29 Jan 2014 02:01:28 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so657566eei.35
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 23:01:25 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] mac80211: add missing CSA locking
+Date: Wed, 29 Jan 2014 07:56:21 +0100
+Message-Id: <1390978581-13273-6-git-send-email-michal.kazior@tieto.com> (sfid-20140129_080149_423080_F80071F5)
+In-Reply-To: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
+References: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+The patch adds a missing sdata lock and adds a few
+lockdeps for easier maintenance.
 
-Port of the power save entry retry code from wl1251 driver version included
-in the Maemo Fremantle kernel.
-This tries to enable power save mode up to 3 times before failing.
-
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Signed-off-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wl1251/boot.c   |    3 ++-
- drivers/net/wireless/ti/wl1251/event.c  |   44 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl1251/event.h  |    7 +++++
- drivers/net/wireless/ti/wl1251/main.c   |    2 ++
- drivers/net/wireless/ti/wl1251/wl1251.h |    3 +++
- 5 files changed, 58 insertions(+), 1 deletion(-)
+ net/mac80211/cfg.c   | 7 ++++++-
+ net/mac80211/ibss.c  | 2 ++
+ net/mac80211/iface.c | 2 ++
+ net/mac80211/mesh.c  | 2 ++
+ 4 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/boot.c b/drivers/net/wireless/ti/wl1251/boot.c
-index a2e5241..2000cd5 100644
---- a/drivers/net/wireless/ti/wl1251/boot.c
-+++ b/drivers/net/wireless/ti/wl1251/boot.c
-@@ -299,7 +299,8 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
- 		ROAMING_TRIGGER_LOW_RSSI_EVENT_ID |
- 		ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID |
- 		REGAINED_BSS_EVENT_ID | BT_PTA_SENSE_EVENT_ID |
--		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID;
-+		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID |
-+		PS_REPORT_EVENT_ID;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 18e8687..d7f805e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1053,6 +1053,7 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	int err;
  
- 	ret = wl1251_event_unmask(wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index 74ae8e1..192cebd 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -46,6 +46,43 @@ static int wl1251_event_scan_complete(struct wl1251 *wl,
- 	return ret;
- }
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	sdata_assert_lock(sdata);
  
-+#define WL1251_PSM_ENTRY_RETRIES  3
-+static int wl1251_event_ps_report(struct wl1251 *wl,
-+				  struct event_mailbox *mbox)
-+{
-+	int ret = 0;
-+
-+	wl1251_debug(DEBUG_EVENT, "ps status: %x", mbox->ps_status);
-+
-+	switch (mbox->ps_status) {
-+	case EVENT_ENTER_POWER_SAVE_FAIL:
-+		wl1251_debug(DEBUG_PSM, "PSM entry failed");
-+
-+		if (wl->station_mode != STATION_POWER_SAVE_MODE) {
-+			/* remain in active mode */
-+			wl->psm_entry_retry = 0;
-+			break;
-+		}
-+
-+		if (wl->psm_entry_retry < WL1251_PSM_ENTRY_RETRIES) {
-+			wl->psm_entry_retry++;
-+			ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
-+		} else {
-+			wl1251_error("Power save entry failed, giving up");
-+			wl->psm_entry_retry = 0;
-+		}
-+		break;
-+	case EVENT_ENTER_POWER_SAVE_SUCCESS:
-+	case EVENT_EXIT_POWER_SAVE_FAIL:
-+	case EVENT_EXIT_POWER_SAVE_SUCCESS:
-+	default:
-+		wl->psm_entry_retry = 0;
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
- static void wl1251_event_mbox_dump(struct event_mailbox *mbox)
- {
- 	wl1251_debug(DEBUG_EVENT, "MBOX DUMP:");
-@@ -80,6 +117,13 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 		}
- 	}
+ 	/* don't allow changing the beacon while CSA is in place - offset
+ 	 * of channel switch counter may change
+@@ -1080,6 +1081,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct probe_resp *old_probe_resp;
+ 	struct cfg80211_chan_def chandef;
  
-+	if (vector & PS_REPORT_EVENT_ID) {
-+		wl1251_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
-+		ret = wl1251_event_ps_report(wl, mbox);
-+		if (ret < 0)
-+			return ret;
-+	}
++	sdata_assert_lock(sdata);
 +
- 	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+ 	old_beacon = sdata_dereference(sdata->u.ap.beacon, sdata);
+ 	if (!old_beacon)
+ 		return -ENOENT;
+@@ -3002,6 +3005,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	int err, changed = 0;
  
-diff --git a/drivers/net/wireless/ti/wl1251/event.h b/drivers/net/wireless/ti/wl1251/event.h
-index 30eb5d1..88570a5 100644
---- a/drivers/net/wireless/ti/wl1251/event.h
-+++ b/drivers/net/wireless/ti/wl1251/event.h
-@@ -112,6 +112,13 @@ struct event_mailbox {
- 	u8 padding[19];
- } __packed;
- 
-+enum {
-+	EVENT_ENTER_POWER_SAVE_FAIL = 0,
-+	EVENT_ENTER_POWER_SAVE_SUCCESS,
-+	EVENT_EXIT_POWER_SAVE_FAIL,
-+	EVENT_EXIT_POWER_SAVE_SUCCESS,
-+};
++	sdata_assert_lock(sdata);
 +
- int wl1251_event_unmask(struct wl1251 *wl);
- void wl1251_event_mbox_config(struct wl1251 *wl);
- int wl1251_event_handle(struct wl1251 *wl, u8 mbox);
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index ad2fd18..46a2494 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -480,6 +480,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->next_tx_complete = 0;
- 	wl->elp = false;
- 	wl->station_mode = STATION_ACTIVE_MODE;
-+	wl->psm_entry_retry = 0;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
- 	wl->rssi_thold = 0;
-@@ -1519,6 +1520,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	wl->elp = false;
- 	wl->station_mode = STATION_ACTIVE_MODE;
- 	wl->psm_requested = false;
-+	wl->psm_entry_retry = 0;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
- 	wl->rssi_thold = 0;
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index 50bae8b..de9e418 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -374,6 +374,9 @@ struct wl1251 {
- 	/* PSM mode requested */
- 	bool psm_requested;
+ 	mutex_lock(&local->mtx);
+ 	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+@@ -3086,7 +3091,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_if_mesh __maybe_unused *ifmsh;
+ 	int err, num_chanctx, changed = 0;
  
-+	/* retry counter for PSM entries */
-+	u8 psm_entry_retry;
+-	lockdep_assert_held(&sdata->wdev.mtx);
++	sdata_assert_lock(sdata);
+ 
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+ 		return -EBUSY;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f01d468..b2da79f 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -795,6 +795,8 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	int err;
+ 	u32 sta_flags;
+ 
++	sdata_assert_lock(sdata);
 +
- 	u16 beacon_int;
- 	u8 dtim_period;
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0aa9675..5f25d30 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -822,7 +822,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+ 
+ 	cancel_work_sync(&sdata->recalc_smps);
++	sdata_lock(sdata);
+ 	sdata->vif.csa_active = false;
++	sdata_unlock(sdata);
+ 	cancel_work_sync(&sdata->csa_finalize_work);
+ 
+ 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index bd55115..f70e9cd 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -864,6 +864,8 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	int err;
+ 	u32 sta_flags;
+ 
++	sdata_assert_lock(sdata);
++
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+-- 
+1.8.5.3
+
