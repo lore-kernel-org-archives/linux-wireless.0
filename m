@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33975 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917AbaA3Nrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 08:47:35 -0500
-Date: Thu, 30 Jan 2014 14:49:09 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 3/3] ath10k: Use pci_enable_msi_range()
-Message-ID: <20140130134908.GC31909@dhcp-26-207.brq.redhat.com> (sfid-20140130_144751_918875_448E6D0B)
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:56292 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755573AbaA2HBS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 02:01:18 -0500
+Received: by mail-ee0-f49.google.com with SMTP id d17so663270eek.22
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jan 2014 23:01:17 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] mac80211: minor CSA fixes
+Date: Wed, 29 Jan 2014 07:56:16 +0100
+Message-Id: <1390978581-13273-1-git-send-email-michal.kazior@tieto.com> (sfid-20140129_080203_857917_9C52C933)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Hi,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+These are some patches from my multi-interface
+patchset. It's probably a good idea to apply them
+regardless of current multi-interface
+implementation acceptance.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 563ce77..ad2a6cf 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2411,8 +2411,9 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
- 	/* Try MSI-X */
- 	if (ath10k_pci_irq_mode == ATH10K_PCI_IRQ_AUTO && msix_supported) {
- 		ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
--		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
--		if (ret == 0)
-+		ret = pci_enable_msi_range(ar_pci->pdev, ar_pci->num_msi_intrs,
-+							 ar_pci->num_msi_intrs);
-+		if (ret > 0)
- 			return 0;
- 
- 		/* fall-through */
+I've updated the patches according to feedback on
+the mailing list.
+
+The odd one here seems to be sdata->radar_required
+fix although it is related to CSA.
+
+The last one is a split from the original CSA
+locking patch. I've skipped the part that adds
+local->mtx locking to CSA. It only makes sense
+with my current multi-interface CSA. Since the
+plan is to make CSA more chanctx oriented it
+actually might be better to use chanctx instead of
+mtx for CSA locking purposes.
+
+Michal Kazior (5):
+  mac80211: batch CSA bss info notification
+  mac80211: fix possible memory leak on AP CSA failure
+  mac80211: move csa_active setting in STA CSA
+  mac80211: fix sdata->radar_required locking
+  mac80211: add missing CSA locking
+
+ net/mac80211/cfg.c   | 30 ++++++++++++++++++++----------
+ net/mac80211/chan.c  |  2 ++
+ net/mac80211/ibss.c  | 11 ++++++-----
+ net/mac80211/iface.c |  2 ++
+ net/mac80211/mesh.c  |  7 +++++--
+ net/mac80211/mlme.c  |  2 +-
+ 6 files changed, 36 insertions(+), 18 deletions(-)
+
 -- 
-1.7.7.6
+1.8.5.3
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
