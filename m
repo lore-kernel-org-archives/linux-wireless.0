@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60643 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752233AbaASXfb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jan 2014 18:35:31 -0500
-Message-ID: <1390174519.3651.3.camel@deadeye.wl.decadent.org.uk> (sfid-20140120_003542_967356_F881BAC5)
-Subject: Re: [PATCH] rtlwifi: Add firmware for r8723au
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sun, 19 Jan 2014 23:35:19 +0000
-In-Reply-To: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1388709729-28496-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Cz78EAnih53cvC7uAKgq"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.21]:59810 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751853AbaA2TF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:05:28 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0MKIEQ-1WAF8q0MuU-001g3L for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:05:26 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 00/13] eliminate some ath9k_htc code
+Date: Wed, 29 Jan 2014 20:05:02 +0100
+Message-Id: <1391022315-20946-1-git-send-email-linux@rempel-privat.de> (sfid-20140129_200532_393430_88F665D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch set moves most common RX code from ath9k/recv.c to
+common.c without any additional changes and reworks ath9k_htc RX code 
+to make use of new common functions.
+Since ath9k_htc part was more intrusive I made tests in STA and AP modes. No noticeable regressions was introduced. 
+Last patch is important for debugging FW crashes.
 
---=-Cz78EAnih53cvC7uAKgq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Oleksij Rempel (13):
+  ath: add last_rssi to ath_common
+  ath9k: move ath9k_process_rssi to common.c
+  ath9k: move ath9k_process_rate to common.c
+  ath9k: move ath9k_rx_accept to common.c
+  ath9k_htc: add rx header converter to make it usable by ath9k
+  ath9k_htc: use ath9k_cmn_process_rssi
+  ath9k_htc: use ath9k_cmn_process_rate
+  ath9k_htc: use ath9k_cmn_rx_accept
+  ath9k_htc: sync rx_status-> related code with ath9k
+  ath9k: move ath9k_rx_skb_postprocess to common.c
+  ath9k_htc: use ath9k_cmn_rx_skb_postprocess
+  ath9k_htc: remove useless memcpy
+  ath9k_htc: catch fw panic pattern
 
-On Thu, 2014-01-02 at 18:42 -0600, Larry Finger wrote:
-> This firmware is for a driver that will soon be submitted to the kernel.
-> It occurs as data statements in Realtek driver rtl8723A_WiFi_linux_v4.1.3=
-_6044.20121224.
->=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  WHENCE                         |  13 +++++++++++++
->  rtlwifi/rtl8723aufw_A.bin      | Bin 0 -> 22172 bytes
->  rtlwifi/rtl8723aufw_B.bin      | Bin 0 -> 24118 bytes
->  rtlwifi/rtl8723aufw_B_NoBT.bin | Bin 0 -> 19200 bytes
->  4 files changed, 13 insertions(+)
->  create mode 100644 rtlwifi/rtl8723aufw_A.bin
->  create mode 100644 rtlwifi/rtl8723aufw_B.bin
->  create mode 100644 rtlwifi/rtl8723aufw_B_NoBT.bin
-[...]
+ drivers/net/wireless/ath/ath.h                |   2 +
+ drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
+ drivers/net/wireless/ath/ath9k/common.c       | 244 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h       |  19 ++
+ drivers/net/wireless/ath/ath9k/htc.h          |   1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 180 ++++++-----------
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |  36 ++++
+ drivers/net/wireless/ath/ath9k/htc_hst.h      |  12 ++
+ drivers/net/wireless/ath/ath9k/init.c         |   2 +-
+ drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
+ drivers/net/wireless/ath/ath9k/main.c         |   2 +-
+ drivers/net/wireless/ath/ath9k/recv.c         | 266 ++------------------------
+ 14 files changed, 392 insertions(+), 384 deletions(-)
 
-Applied, thanks.
+-- 
+1.8.5.3
 
-Ben.
-
---=20
-Ben Hutchings
-friends: People who know you well, but like you anyway.
-
---=-Cz78EAnih53cvC7uAKgq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUtxhN+e/yOyVhhEJAQq2rRAAo6ayOFFeVCcmaBlGUJna+3B2Ao1cQ9f5
-dfPTwDogCfqecyI3HtzDY3BIKkHaS/zFQj6xOpcHPaAlzamfUr96DVN+Ywmn9Ym8
-5bQ99s5qD09zbIlpGU3IXEvL8VES3T2ofaslnV4HLYfRkhfvPTDfAQtnVBo0kuVb
-4+juLZ+zR34JTd4wHDdTxcjP1FqveLgKrLKfcgs4ExdX/Gf4vsmtTzgFd8XmrUXE
-lrhmIN40b4CMtZ6nN6ULtRbyG4qIUkl5VFNdWLCCP2Q10PQrx1n/mjXo4CRziced
-60469Dhytv9cbYNDjtjEB4UE4py3yniddAsNVUgACHgpxCorNMRoyZce8gOHh/DP
-1hpU7AyB6go9kXxtUO7eOEdMWIYpepaO9OdBCSNcEotd8QWPnmOsn/H7wyp36BM/
-z0pXRcXGtt2NRn1onGeSsX5yFR7nDEB+w3u2IpUWGPADZdZhJd6VWeAUzRwZ0i+2
-V3lUbSJ5J+8nZmCoMXUd29Vw7l8UHqa0xvZ3JTgOXztAM2usPi/gdKhggHqM+w9j
-bPFWNZnJWT8cArXF8qyawSNDH4+4DisO+mMtkX1yuLFyktadBU5UxhZaxvfv6U1U
-75cRbp78ljPw0n7LzJdtOcGU7wQHbaBKOBpWVZHGhNb7HJTnp+Njm3CWmZwmRnZP
-fyFU8VvFlo8=
-=Oclt
------END PGP SIGNATURE-----
-
---=-Cz78EAnih53cvC7uAKgq--
