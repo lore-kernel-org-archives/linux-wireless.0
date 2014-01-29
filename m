@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42272 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:41803 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbaA2MbQ (ORCPT
+	with ESMTP id S1751035AbaA2J7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jan 2014 07:31:16 -0500
-Message-ID: <1390998668.4143.8.camel@jlt4.sipsolutions.net> (sfid-20140129_133119_656209_308E5C06)
-Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute
- confusion
+	Wed, 29 Jan 2014 04:59:06 -0500
+Message-ID: <1390989537.4143.1.camel@jlt4.sipsolutions.net> (sfid-20140129_105911_365804_C968202D)
+Subject: Re: [PATCH v2 1/3] cfg80211: add helper reg_get_regdomain() function
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Date: Wed, 29 Jan 2014 13:31:08 +0100
-In-Reply-To: <1390997834.4143.7.camel@jlt4.sipsolutions.net> (sfid-20140129_131732_408637_5FF37712)
-References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEc94pTAMXWPYeWhu7o_YLEnD1_9O035-+YXYiR0Uij28w@mail.gmail.com>
-	 <1390810765.4251.0.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEczgVTALA3_4hSBikJs=TXOhHHTHSLzmuU3MGot-hG+1g@mail.gmail.com>
-	 (sfid-20140127_103726_726110_C367B2C8) <1390997834.4143.7.camel@jlt4.sipsolutions.net>
-	 (sfid-20140129_131732_408637_5FF37712)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 29 Jan 2014 10:58:57 +0100
+In-Reply-To: <CAB=NE6VWCSKhfC8+vYaJEbQ9kEthKV1iDtc+A3Cei1p8SJL5zw@mail.gmail.com> (sfid-20140129_104635_696158_18AB5F9B)
+References: <1390394624-3927-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <20140125003418.GF28512@garbanzo.do-not-panic.com>
+	 <CALhHN=p11A-kA3S=ESz85OUSfHr5t+Qqka24wwbvfJuA-bksXQ@mail.gmail.com>
+	 <CAB=NE6VfmOMVT3zxE1iEOtT53SycgrrpiKuoi2NPuDXvccz96Q@mail.gmail.com>
+	 <1390983472.4143.0.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6VDcP1Jq0rm+XVVS6PuGYD5Dmb-EXeY5hOJ9FCfZFvh8Q@mail.gmail.com>
+	 <CAB=NE6VWCSKhfC8+vYaJEbQ9kEthKV1iDtc+A3Cei1p8SJL5zw@mail.gmail.com>
+	 (sfid-20140129_104635_696158_18AB5F9B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-01-29 at 13:17 +0100, Johannes Berg wrote:
-> On Mon, 2014-01-27 at 11:37 +0200, Eliad Peller wrote:
-> 
-> > > I don't think that's true? I looked at the drivers that use this and
-> > > they all skip empty SSIDs, except the one that I fixed.
-> > >
-> > ok. so at least fix the documentation? :)
-> 
-> Umm, ok :)
+On Wed, 2014-01-29 at 01:46 -0800, Luis R. Rodriguez wrote:
+>   janusz.dziedzi@tieto.com bounces BTW
 
-Wait .. not sure what documentation you're looking at?
+that's just because there's a missing 'c' in there :)
 
 johannes
 
