@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42012 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754579AbaADXsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jan 2014 18:48:22 -0500
-Date: Sun, 5 Jan 2014 00:48:02 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [3.12] NFC fix
-Message-ID: <20140104234802.GA10578@zurbaran> (sfid-20140105_004834_081696_8ECE4DB1)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50194 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbaA2NOS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 08:14:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: configure access category for arp
+References: <1390999696-8895-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Wed, 29 Jan 2014 15:14:12 +0200
+In-Reply-To: <1390999696-8895-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Wed, 29 Jan 2014 13:48:16 +0100")
+Message-ID: <87ppnbdj6j.fsf@kamboji.qca.qualcomm.com> (sfid-20140129_141421_325205_B02AC843)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-Hopefully it's not too late for a 3.12 fix for NFC. Please let me know
-if it is, and I'll add it to my 3.13 pull request.
+> ARP frames exchange does not work properly for UAPSD enabled AP.
+> ARP requests which arrives with access category 0 are processed
+> by network stack and send back with access category 0. FW changes
+> access category to 6. This is causing problems when UAPSD associated
+> STA is sleeping after has sent ARP request. Configure ARP access
+> category in FW to best effort (0) solves this problem. ARP frames
+> will be send with access category 0.
+>
+> Simplify arp ac override functionality by removing redundant entry in
+> pdev param maping table. There should be only one entry in pdev param
+> map but enum has different name for different FW.
+>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-This pull request only contains one fix for a regression introduced with
-commit e29a9e2ae165620d. Without this fix, we can not establish a p2p link
-in target mode. Only initiator mode works.
+I had a conflict when I applied this to ath-next-test. Please check that
+I didn't break anything:
 
-The following changes since commit b7e047358449f8eb5cba8197b42280b676b82e54:
+https://github.com/kvalo/ath/commit/2e006642b3aad6a5fb91f9e560a2bbcdf74aa049
 
-  Merge branch 'for-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth (2013-12-18 13:46:08 -0500)
+> +	ret = ath10k_wmi_pdev_set_param(ar,
+> +					ar->wmi.pdev_param->arp_ac_override, 0);
+> +	if (ret) {
+> +		ath10k_warn("could not init WMI_PDEV_PARAM_ARP_AC_OVERRIDE (%d)\n",
+> +			    ret);
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.12-1
-
-for you to fetch changes up to d31652a26bc9e752a99b6ac3b61353129934e451:
-
-  NFC: Fix target mode p2p link establishment (2014-01-04 03:31:32 +0100)
-
-----------------------------------------------------------------
-Arron Wang (1):
-      NFC: Fix target mode p2p link establishment
-
- net/nfc/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I also modified this warning message to follow the style used elsewhere
+in the driver.
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Kalle Valo
