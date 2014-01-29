@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:43897 "EHLO
-	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466AbaAUQK0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 11:10:26 -0500
-Message-ID: <52DE9BAA.6020205@open-mesh.com> (sfid-20140121_171029_383587_DDFFC045)
-Date: Tue, 21 Jan 2014 17:09:14 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Antonio Quartulli <antonio@meshcoding.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/5] cfg80211: export minstrel best rate information through
- get_station()
-References: <1390302591-3352-1-git-send-email-antonio@meshcoding.com>	 <1390302591-3352-2-git-send-email-antonio@meshcoding.com> <1390320014.6199.61.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1390320014.6199.61.camel@jlt4.sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="lmj0JhfVUTdXDIfGhNI8J7c8B97HmG61j"
+Received: from mout.gmx.net ([212.227.15.19]:51020 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753081AbaA2TIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:08:17 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0LuJDv-1VATUF0Lu3-011mn1 for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:16 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 09/13] ath9k_htc: sync rx_status-> related code with ath9k
+Date: Wed, 29 Jan 2014 20:07:00 +0100
+Message-Id: <1391022424-21087-8-git-send-email-linux@rempel-privat.de> (sfid-20140129_200820_640317_D30CA922)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---lmj0JhfVUTdXDIfGhNI8J7c8B97HmG61j
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-On 21/01/14 17:00, Johannes Berg wrote:
-> On Tue, 2014-01-21 at 12:09 +0100, Antonio Quartulli wrote:
->=20
->> + * @prob: probability of success of this birate
->=20
-> typo: bitrate
->=20
->> +struct cfg80211_minstrel_rate_info {
->> +	u32 bitrate;
->> +	u32 prob;
->> +};
->=20
-> Do you actually care about this, rather than bitrate*prob, ie. somethin=
-g
-> like "expected throughput"?=20
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index e55659b..7321b64 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -970,6 +970,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ieee80211_hw *hw = priv->hw;
+ 	struct sk_buff *skb = rxbuf->skb;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath_hw *ah = common->ah;
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status *rx_stats;
+ 	int hdrlen, padsize;
+@@ -1046,10 +1047,10 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+-	rx_status->band = hw->conf.chandef.chan->band;
+-	rx_status->freq = hw->conf.chandef.chan->center_freq;
+-	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
+-	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
++
++	rx_status->band = ah->curchan->chan->band;
++	rx_status->freq = ah->curchan->chan->center_freq;
++	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+ 	kfree(rx_stats);
+-- 
+1.8.5.3
 
-Right now this is the way how we use it in the batman-adv code..but we
-may decide to change it for some reason. This is why I preferred to keep
-the two values separated.
-
-> Actually this isn't expected throughput, but
-> wouldn't something like expected throughput make even more sense?
-
-How should I obtain that if not with the previous operation (bitrate*prob=
-)?
-
-
---=20
-Antonio Quartulli
-
-
---lmj0JhfVUTdXDIfGhNI8J7c8B97HmG61j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJS3putAAoJEEKTMo6mOh1V/hsP/R6DScgSeagUdAfPN8//Y0d8
-Ujrv3pLrCBvvYkfxeKI0O7O2js/IEXxhHM7IxGXXxGrXOGZEP6cJFShMf7/RTwRX
-PW7wHhAFD4LqwvWTC5UEtuzAeDBwgQA6e9a9UNb5NFQ76IX1RpC5nwcMjE4ZP+DM
-+GspOeJssHp9TQwYmjZdXScN+ZJeG2tUyR43e5KkbkZU3ZmM9L+cqi0mUkgVlVdU
-iDYZ0ZtwS3bQF1C8VL8SsjZ9JCa9JZtlcHU4kvB16EIRfFitOWL0iKJnCuiB9V3u
-+u6SbTTJ/xomuviFPlhIXj0nLJG/59aJKQs2LuqdVO1aHSB7TjpCZ5PzXO47brJ5
-VlsxWjCxWzlg6aF62d45GgutZYoaqxnpCDqxN4qCDtnis3O36ZAK5BCe1PEYDTk1
-40p1hBmPqAcuKHyxw05fzJaNC5mJzjf6rrTHLjvrS+7I38+4ZR3G4kDxLfzLZxwY
-a1CXLmfLEbn/4YDMZcI7NSWZBTt7e0KjG8Ji0SU0pIDwo/5Yj71S+DVkbJm9wmCR
-ntdWQ/ymCDK6BG5T3giYPJBzBY4lW0eIn57K1ciT26qTkd9dEcHZvrA0PnkvLTgb
-avwC4g3EVZPU9xdon2o8E+4QtxAdXIo8fJSEKvSjmHVwvWFBrEoAUGnoZpZcYPJ0
-k/ulCfeIZBJ3b1dnv+gT
-=5YL3
------END PGP SIGNATURE-----
-
---lmj0JhfVUTdXDIfGhNI8J7c8B97HmG61j--
