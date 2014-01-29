@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:59523 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbaAQPTt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18478 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbaA2PO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 10:19:49 -0500
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<b43-dev@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH v3 1/2] b43: fix the wrong assignment of status.freq in b43_rx()
-Date: Fri, 17 Jan 2014 23:19:13 +0800
-Message-Id: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com> (sfid-20140117_161955_063280_BEA8D929)
+	Wed, 29 Jan 2014 10:14:29 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Antonio Quartulli <antonio@meshcoding.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"Jussi Kivilinna" <jussi.kivilinna@iki.fi>,
+	<libertas-dev@lists.infradead.org>
+Subject: Re: [PATCHv2] cfg80211: fix channel configuration in IBSS join
+References: <1391002505-3771-1-git-send-email-antonio@meshcoding.com>
+Date: Wed, 29 Jan 2014 17:12:38 +0200
+In-Reply-To: <1391002505-3771-1-git-send-email-antonio@meshcoding.com>
+	(Antonio Quartulli's message of "Wed, 29 Jan 2014 14:35:05 +0100")
+Message-ID: <87eh3q255l.fsf@kamboji.qca.qualcomm.com> (sfid-20140129_161432_343530_8E2293CB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the right function to update status.freq. The wrong frequency
-value can cause problem that bss info can't be updated when it
-should be.
+Antonio Quartulli <antonio@meshcoding.com> writes:
 
-This bug is introduced by commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
-"cfg80211 API for channels/bitrates, mac80211 and driver conversion".
+> From: Antonio Quartulli <antonio@open-mesh.com>
+>
+> When receiving an IBSS_JOINED event select the BSS object
+> based on the {bssid, channel} couple rather than the bssid
+> only.
+> With the current approach if another cell having the same
+> BSSID (but using a different channel) exists then cfg80211
+> picks up the wrong BSS object.
+> The result is a mismatching channel configuration between
+> cfg80211 and the driver, that can lead to any sort of
+> problem.
+>
+> The issue can be triggered by having an IBSS sitting on
+> given channel and then asking the driver to create a new
+> cell using the same BSSID but with a different frequency.
+> By passing the channel to cfg80211_get_bss() we can solve
+> this ambiguity and retrieve/create the correct BSS object.
+> All the users of cfg80211_ibss_joined() have been changed
+> accordingly.
+>
+> Moreover WARN when cfg80211_ibss_joined() gets a NULL
+> channel as argument and remove a bogus call of the same
+> function in ath6kl (it does not make sense to call
+> cfg80211_ibss_joined() with a zero BSSID on ibss-leave).
+>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+> Cc: libertas-dev@lists.infradead.org
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 
-Cc: Stable <stable@vger.kernel.org>
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
----
-v3: change commit log
-    suggested by Luca Coelho, Rafał Miłecki and Jonas Gorski
+For the ath6kl part:
 
-I'm not very familiar with wireless subsystem yet. If commit message needs
-more changes, feel free to point it out.
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
- drivers/net/wireless/b43/xmit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 4ae63f4..50e5ddb 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -821,10 +821,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		 * channel number in b43. */
- 		if (chanstat & B43_RX_CHAN_5GHZ) {
- 			status.band = IEEE80211_BAND_5GHZ;
--			status.freq = b43_freq_to_channel_5ghz(chanid);
-+			status.freq = b43_channel_to_freq_5ghz(chanid);
- 		} else {
- 			status.band = IEEE80211_BAND_2GHZ;
--			status.freq = b43_freq_to_channel_2ghz(chanid);
-+			status.freq = b43_channel_to_freq_2ghz(chanid);
- 		}
- 		break;
- 	default:
 -- 
-1.8.4.2
-
+Kalle Valo
