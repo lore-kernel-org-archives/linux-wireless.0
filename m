@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:62309 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaABT05 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 14:26:57 -0500
-Received: by mail-wg0-f53.google.com with SMTP id k14so12625208wgh.8
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 11:26:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
- <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
- <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
- <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
- <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
- <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com>
- <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com>
- <52C570B6.30500@broadcom.com> <CAGb2v650WNnXqRY+PTwqjbo7pBPDvwHEfzvLM6HaLakZ4Nt1JA@mail.gmail.com>
- <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
-From: Michal Suchanek <hramrach@gmail.com>
-Date: Thu, 2 Jan 2014 20:26:16 +0100
-Message-ID: <CAOMqctTs7VrQVqO50Pa0GF87UF46OrsWAtMW54Gy61Ef8_vn7Q@mail.gmail.com> (sfid-20140102_202701_572505_E824B8EE)
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-To: linux-sunxi <linux-sunxi@googlegroups.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.17.22]:53652 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751853AbaA2TFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:05:32 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0M4Gup-1VI8WQ2JQx-00rrQo for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:05:29 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 01/13] ath: add last_rssi to ath_common
+Date: Wed, 29 Jan 2014 20:05:03 +0100
+Message-Id: <1391022315-20946-2-git-send-email-linux@rempel-privat.de> (sfid-20140129_200534_838068_0F7AA765)
+In-Reply-To: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2014 20:22, Rosimildo DaSilva <rosimildo@gmail.com> wrote:
-> It would be nice to be precise about what is working:
->
-> a) Wifi + BT
-> b) WIFI only
-> c) BT only
->
-> Reading the thread, it seems you got (a) WIFI + BT working. Is this correct
+we need access to this variable from common functions.
 
-No, it's b)
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-There is some bit missing for BT. Possibly setting the power and reset
-gpio pins correctly. Or maybe the uart is set up with wrong
-parameters.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index b59cfbe..6260b83 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -161,6 +161,8 @@ struct ath_common {
+ 	bool btcoex_enabled;
+ 	bool disable_ani;
+ 	bool bt_ant_diversity;
++
++	int last_rssi;
+ };
+ 
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+-- 
+1.8.5.3
 
-Thanks
-
-Michal
