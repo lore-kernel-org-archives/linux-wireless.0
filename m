@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f53.google.com ([209.85.128.53]:34465 "EHLO
-	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbaARO7p (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbaA2NNu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 09:59:45 -0500
-Date: Sat, 18 Jan 2014 09:59:40 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Message-ID: <20140118145940.GE3640@htj.dyndns.org> (sfid-20140118_160025_036300_4836FB0F)
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
- <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+	Wed, 29 Jan 2014 08:13:50 -0500
+Message-ID: <1391001212.4143.16.camel@jlt4.sipsolutions.net> (sfid-20140129_141353_503487_1263101F)
+Subject: Re: [PATCH v3 2/2] cfg80211: regulatory introduce maximum bandwidth
+ calculation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Wed, 29 Jan 2014 14:13:32 +0100
+In-Reply-To: <1390645452-2495-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140125_112424_327803_ADA5FC37)
+References: <1390645452-2495-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1390645452-2495-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140125_112424_327803_ADA5FC37)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
-> On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> >> > As the release is supposedly this weekend, do you prefer
-> >> > the patches to go to your tree or to individual trees after
-> >> > the release?
-> >>
-> >> I'd be happy to merge them, except for the fact that they probably
-> >> wouldn't have any time in -next before I ask Linus to pull them.  So
-> >> how about if we wait until after the release, ask the area maintainers
-> >> to take them, and if they don't take them, I'll put them in my tree
-> >> for v3.15?
-> >
-> > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> > Whatever works for you ;)
-> >
-> > I am only concerned with a regression fix "ahci: Fix broken fallback to
-> > single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> > much too late.
-> 
-> Tejun, if you want to ack that one, I can put it in either the first
-> 3.14 pull request or a subsequent one.  Either way, since it's a
-> regression fix, we should be able to get it in 3.14.
+On Sat, 2014-01-25 at 11:24 +0100, Janusz Dziedzic wrote:
+> In case we will get regulatory request with rule
+> where max_bandwidth_khz is set to 0, handle this case
+> as a special one.
+> Generally
+> max_bandwidth_khz == 0 mean we should calculate maximum
+> available bandwidth base on all frequency contiguous rules.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+That's a pretty good solution too, without a flag, but I think you
+should have a little bit of documentation changes in nl80211.h (and
+probably change nl80211 to not actually require a zero attribute for
+auto?)
 
-Please feel free to route it any way you see fit.
+johannes
 
-Thanks!
-
--- 
-tejun
