@@ -1,94 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:42268 "EHLO mga01.intel.com"
+Received: from mout.gmx.net ([212.227.17.22]:51077 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753125AbaAZWME convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jan 2014 17:12:04 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v2 4/6] cfg80211: Add an option to hint indoor operation
-Date: Sun, 26 Jan 2014 22:11:55 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03336BCAF@HASMSX106.ger.corp.intel.com> (sfid-20140126_231208_905338_ACDFF313)
-References: <1389801162-14488-1-git-send-email-ilan.peer@intel.com>
- <1389801162-14488-5-git-send-email-ilan.peer@intel.com>
- <20140125002002.GB28512@garbanzo.do-not-panic.com>
-In-Reply-To: <20140125002002.GB28512@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1752360AbaA2THk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:07:40 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0MXVr0-1VoC2X23EM-00WYZq for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:07:39 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 04/13] ath9k: move ath9k_rx_accept to common.c
+Date: Wed, 29 Jan 2014 20:06:55 +0100
+Message-Id: <1391022424-21087-3-git-send-email-linux@rempel-privat.de> (sfid-20140129_200743_523833_D921BEBC)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks again,
+we can reuse it on ath9k_htc
 
-Ilan.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/common.c | 88 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  6 +++
+ drivers/net/wireless/ath/ath9k/recv.c   | 88 +--------------------------------
+ 3 files changed, 95 insertions(+), 87 deletions(-)
 
-> > +/*
-> > + * State variable indicating if the platform on which the devices
-> > + * are attached is operating in an indoor environment. The state
-> > +variable
-> > + * is relevant for all registered devices.
-> > + * Note: currently not protected by any synchronization primitive.
-> > + */
-> > +static bool reg_is_indoor;
-> > +
-> 
-> See if it makes sense to instead start building up a single reg data structure
-> that has a slew of members. That's welcomed as a separate patch later...
->
-
-Sure. Will have a look at this.
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 120fd46..5c0d949 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,6 +27,94 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
  
-> > @@ -1475,6 +1493,11 @@ reg_process_hint_user(struct
-> regulatory_request *user_request)
-> >  		return treatment;
-> >  	}
-> >
-> > +	if (reg_request_indoor(user_request) && treatment ==
-> REG_REQ_OK) {
-> > +		reg_is_indoor = true;
-> > +		return REG_REQ_OK;
-> > +	}
-> > +
-> 
-> Are you setting this to false when we disconnect (reset regulatory)?
-> You should.
-> 
++/* Assumes you've already done the endian to CPU conversion */
++bool ath9k_cmn_rx_accept(struct ath_common *common,
++			 struct ieee80211_hdr *hdr,
++			 struct ieee80211_rx_status *rxs,
++			 struct ath_rx_status *rx_stats,
++			 bool *decrypt_error,
++			 unsigned int rxfilter)
++{
++	struct ath_hw *ah = common->ah;
++	bool is_mc, is_valid_tkip, strip_mic, mic_error;
++	__le16 fc;
++
++	fc = hdr->frame_control;
++
++	is_mc = !!is_multicast_ether_addr(hdr->addr1);
++	is_valid_tkip = rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID &&
++		test_bit(rx_stats->rs_keyix, common->tkip_keymap);
++	strip_mic = is_valid_tkip && ieee80211_is_data(fc) &&
++		ieee80211_has_protected(fc) &&
++		!(rx_stats->rs_status &
++		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
++		 ATH9K_RXERR_KEYMISS));
++
++	/*
++	 * Key miss events are only relevant for pairwise keys where the
++	 * descriptor does contain a valid key index. This has been observed
++	 * mostly with CCMP encryption.
++	 */
++	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID ||
++	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
++		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
++
++	mic_error = is_valid_tkip && !ieee80211_is_ctl(fc) &&
++		!ieee80211_has_morefrags(fc) &&
++		!(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
++		(rx_stats->rs_status & ATH9K_RXERR_MIC);
++
++	/*
++	 * The rx_stats->rs_status will not be set until the end of the
++	 * chained descriptors so it can be ignored if rs_more is set. The
++	 * rs_more will be false at the last element of the chained
++	 * descriptors.
++	 */
++	if (rx_stats->rs_status != 0) {
++		u8 status_mask;
++
++		if (rx_stats->rs_status & ATH9K_RXERR_CRC) {
++			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
++			mic_error = false;
++		}
++
++		if ((rx_stats->rs_status & ATH9K_RXERR_DECRYPT) ||
++		    (!is_mc && (rx_stats->rs_status & ATH9K_RXERR_KEYMISS))) {
++			*decrypt_error = true;
++			mic_error = false;
++		}
++
++
++		/*
++		 * Reject error frames with the exception of
++		 * decryption and MIC failures. For monitor mode,
++		 * we also ignore the CRC error.
++		 */
++		status_mask = ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
++			      ATH9K_RXERR_KEYMISS;
++
++		if (ah->is_monitoring && (rxfilter & FIF_FCSFAIL))
++			status_mask |= ATH9K_RXERR_CRC;
++
++		if (rx_stats->rs_status & ~status_mask)
++			return false;
++	}
++
++	/*
++	 * For unicast frames the MIC error bit can have false positives,
++	 * so all MIC error reports need to be validated in software.
++	 * False negatives are not common, so skip software verification
++	 * if the hardware considers the MIC valid.
++	 */
++	if (strip_mic)
++		rxs->flag |= RX_FLAG_MMIC_STRIPPED;
++	else if (is_mc && mic_error)
++		rxs->flag |= RX_FLAG_MMIC_ERROR;
++
++	return true;
++}
++EXPORT_SYMBOL(ath9k_cmn_rx_accept);
++
+ int ath9k_cmn_process_rate(struct ath_common *common,
+ 			   struct ieee80211_hw *hw,
+ 			   struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 729482f..c59d3f5 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -42,6 +42,12 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++bool ath9k_cmn_rx_accept(struct ath_common *common,
++			 struct ieee80211_hdr *hdr,
++			 struct ieee80211_rx_status *rxs,
++			 struct ath_rx_status *rx_stats,
++			 bool *decrypt_error,
++			 unsigned int rxfilter);
+ int ath9k_cmn_process_rate(struct ath_common *common,
+ 			   struct ieee80211_hw *hw,
+ 			   struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ab6a86c..4dedbc2 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -755,92 +755,6 @@ static struct ath_rxbuf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 	return bf;
+ }
+ 
+-/* Assumes you've already done the endian to CPU conversion */
+-static bool ath9k_rx_accept(struct ath_common *common,
+-			    struct ieee80211_hdr *hdr,
+-			    struct ieee80211_rx_status *rxs,
+-			    struct ath_rx_status *rx_stats,
+-			    bool *decrypt_error)
+-{
+-	struct ath_softc *sc = (struct ath_softc *) common->priv;
+-	bool is_mc, is_valid_tkip, strip_mic, mic_error;
+-	struct ath_hw *ah = common->ah;
+-	__le16 fc;
+-
+-	fc = hdr->frame_control;
+-
+-	is_mc = !!is_multicast_ether_addr(hdr->addr1);
+-	is_valid_tkip = rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID &&
+-		test_bit(rx_stats->rs_keyix, common->tkip_keymap);
+-	strip_mic = is_valid_tkip && ieee80211_is_data(fc) &&
+-		ieee80211_has_protected(fc) &&
+-		!(rx_stats->rs_status &
+-		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
+-		 ATH9K_RXERR_KEYMISS));
+-
+-	/*
+-	 * Key miss events are only relevant for pairwise keys where the
+-	 * descriptor does contain a valid key index. This has been observed
+-	 * mostly with CCMP encryption.
+-	 */
+-	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID ||
+-	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
+-		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+-
+-	mic_error = is_valid_tkip && !ieee80211_is_ctl(fc) &&
+-		!ieee80211_has_morefrags(fc) &&
+-		!(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
+-		(rx_stats->rs_status & ATH9K_RXERR_MIC);
+-
+-	/*
+-	 * The rx_stats->rs_status will not be set until the end of the
+-	 * chained descriptors so it can be ignored if rs_more is set. The
+-	 * rs_more will be false at the last element of the chained
+-	 * descriptors.
+-	 */
+-	if (rx_stats->rs_status != 0) {
+-		u8 status_mask;
+-
+-		if (rx_stats->rs_status & ATH9K_RXERR_CRC) {
+-			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
+-			mic_error = false;
+-		}
+-
+-		if ((rx_stats->rs_status & ATH9K_RXERR_DECRYPT) ||
+-		    (!is_mc && (rx_stats->rs_status & ATH9K_RXERR_KEYMISS))) {
+-			*decrypt_error = true;
+-			mic_error = false;
+-		}
+-
+-		/*
+-		 * Reject error frames with the exception of
+-		 * decryption and MIC failures. For monitor mode,
+-		 * we also ignore the CRC error.
+-		 */
+-		status_mask = ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
+-			      ATH9K_RXERR_KEYMISS;
+-
+-		if (ah->is_monitoring && (sc->rx.rxfilter & FIF_FCSFAIL))
+-			status_mask |= ATH9K_RXERR_CRC;
+-
+-		if (rx_stats->rs_status & ~status_mask)
+-			return false;
+-	}
+-
+-	/*
+-	 * For unicast frames the MIC error bit can have false positives,
+-	 * so all MIC error reports need to be validated in software.
+-	 * False negatives are not common, so skip software verification
+-	 * if the hardware considers the MIC valid.
+-	 */
+-	if (strip_mic)
+-		rxs->flag |= RX_FLAG_MMIC_STRIPPED;
+-	else if (is_mc && mic_error)
+-		rxs->flag |= RX_FLAG_MMIC_ERROR;
+-
+-	return true;
+-}
+-
+ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 			      struct ieee80211_rx_status *rxs,
+ 			      u64 tsf)
+@@ -939,7 +853,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
+-	if (!ath9k_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error)) {
++	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error, sc->rx.rxfilter)) {
+ 		ret = -EINVAL;
+ 		goto exit;
+ 	}
+-- 
+1.8.5.3
 
-I wasn't. Fixing.
-
-> > @@ -1658,9 +1681,6 @@ static void reg_process_hint(struct
-> regulatory_request *reg_request)
-> >  	struct wiphy *wiphy = NULL;
-> >  	enum reg_request_treatment treatment;
-> >
-> > -	if (WARN_ON(!reg_request->alpha2))
-> > -		return;
-> > -
-> 
-> last_request checks for the alpha2 are abundent... you'd have to go review
-> such use cases... One strategy might be to not treat this as a pure regulatory
-> request but rather a hint of information, ie, not override last_request for this
-> type of request.
-
-Actually, when the hint is processed, REG_REQ_ALREADY_SET is returned, so the request is immedialty freed, and the last request is not updated. I thought that this should suffice. Do you see any other issue with this?
-
-> > +#endif /* CONFIG_CFG80211_REG_SOFT_CONFIGURATIONS */
-> 
-> config_enabled() would make this look sexier.
-
-Fixing ..
-
-> 
-> > @@ -2502,6 +2551,8 @@ int __init regulatory_init(void)
-> >  	user_alpha2[0] = '9';
-> >  	user_alpha2[1] = '7';
-> >
-> > +	reg_is_indoor = false;
-> 
-> Yeah this is not needed as during init this will be false, but you do want to
-> ensure you set this to flase during reset of regulatory.
-> 
->   Luis
