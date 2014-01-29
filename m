@@ -1,81 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:53188 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797AbaATLUI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 06:20:08 -0500
-Received: by mail-ob0-f180.google.com with SMTP id wp4so1905119obc.39
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2014 03:20:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52DC1761.9080608@openwrt.org>
-References: <CABikg9yZrXX=qfqeR+V77u+Ndegx50D1_POAYMeq63qJuEzv=w@mail.gmail.com>
-	<20140117100613.GD1425@redhat.com>
-	<A411C6B4-8474-47AC-97E1-0D92B24EB675@gmail.com>
-	<1390133995.6945.11.camel@X1Carbon.localdomain>
-	<03574886-F38F-461C-97FC-B10DCCCF30E8@gmail.com>
-	<52DC1761.9080608@openwrt.org>
-Date: Mon, 20 Jan 2014 12:20:05 +0100
-Message-ID: <CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com> (sfid-20140120_122011_608835_F097FE53)
-Subject: Re: USB rt2x00 driver regression
-From: Sergei Antonov <saproj@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.17.20]:57074 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753081AbaA2TIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:08:09 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0MNO33-1WAVEH2SVt-006sqP for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:08 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 08/13] ath9k_htc: use ath9k_cmn_rx_accept
+Date: Wed, 29 Jan 2014 20:06:59 +0100
+Message-Id: <1391022424-21087-7-git-send-email-linux@rempel-privat.de> (sfid-20140129_200813_421036_CEECB99D)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 January 2014 19:20, Gabor Juhos <juhosg@openwrt.org> wrote:
-> Hi Sergei,
->
-> <...>
->
->>>>>> It worked well with older kernels and does not with newer kernels.
->>>>>> Specifically it fails to find any AP when scanning.
->>>>>> The first bad commit is:
->>>>>>
->>>>>> commit 76773f301f2210dcc20c466aebda7118062673eb
->>>>>> Author: Gabor Juhos <juhosg@openwrt.org>
->>>>>> Date:   Sat Aug 17 14:09:30 2013 +0200
->>>>>>
->>>>>>   rt2x00: rt2800lib: use a MCU command for frequency adjustment on USB devices
->>>>>>
->>>>>>   According to the Ralink driver, there is an MCU
->>>>>>   command which can be used to send the frequency
->>>>>>   offset value directly to the USB device without
->>>>>>   going through the RFCSR writing sequence.
->>>>>>
->>>>>>   Based on the DPO_RT5572_LinuxSTA_2.6.0.1_20120629
->>>>>>   driver.
->>>>>>
->>>>>>   Reference:
->>>>>>     RTMPAdjustFrequencyOffset function in common/rt_rf.c
->>>>>>
->>>>>>   Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
->>>>>>   Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>>>>>
->>>>>> After I removed this special USB handling (see the patch) the adapter
->>>>>> works again.
->>>>>
->>>>> Thanks for bisecting! Could you check if following patch fixes the
->>>>> issue?
->>>>
->>>> It does not fix the issue. The same broken behavior remains.
->>> I couldn't understand one string in original RTMPAdjustFrequencyOffset. Could you try follow patch ?
->> Tried your patch with and without Stanislaw's patch. No success.
->
-> I guess that this is a timing issue. Maybe the RT5390 device does not finish the
-> MCU command before the scan runs.
->
-> The Ralink reference driver calls the frequency adjustment code from the
-> NICInitRT5390RFRegisters function but the equivalent call is missing from the
-> rt2x00 driver. Additionaly, the Ralink driver uses 1 ms delay after calling the
-> frequency adjustment code which is also missing from rt2x00.
->
-> The attached patch set adds the missing code to rt2x00. Please test whether it
-> fixes the problem or not.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 45 +++++----------------------
+ 1 file changed, 8 insertions(+), 37 deletions(-)
 
-It does not work.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index de75224..e55659b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -973,6 +973,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status *rx_stats;
+ 	int hdrlen, padsize;
++	bool decrypt_error;
+ 	__le16 fc;
+ 
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+@@ -1016,43 +1017,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	}
+ 	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
+ 
+-	if (rxbuf->rxstatus.rs_status != 0) {
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_CRC)
+-			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_PHY)
+-			goto rx_next;
+-
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT) {
+-			/* FIXME */
+-		} else if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_MIC) {
+-			if (ieee80211_is_ctl(fc))
+-				/*
+-				 * Sometimes, we get invalid
+-				 * MIC failures on valid control frames.
+-				 * Remove these mic errors.
+-				 */
+-				rxbuf->rxstatus.rs_status &= ~ATH9K_RXERR_MIC;
+-			else
+-				rx_status->flag |= RX_FLAG_MMIC_ERROR;
+-		}
+-
+-		/*
+-		 * Reject error frames with the exception of
+-		 * decryption and MIC failures. For monitor mode,
+-		 * we also ignore the CRC error.
+-		 */
+-		if (priv->ah->opmode == NL80211_IFTYPE_MONITOR) {
+-			if (rxbuf->rxstatus.rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
+-			      ATH9K_RXERR_CRC))
+-				goto rx_next;
+-		} else {
+-			if (rxbuf->rxstatus.rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
+-				goto rx_next;
+-			}
+-		}
+-	}
++	/*
++	 * everything but the rate is checked here, the rate check is done
++	 * separately to avoid doing two lookups for a rate for each frame.
++	 */
++	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats,
++			&decrypt_error, priv->rxfilter))
++		goto rx_next;
+ 
+ 	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
+ 		u8 keyix;
+-- 
+1.8.5.3
 
-The minimal change that fixes the problem is removing 'return;' after
-rt2800_mcu_request() allowing the standard freq. adjustment code to
-execute.
