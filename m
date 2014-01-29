@@ -1,57 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58665 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751836AbaAWPq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 10:46:28 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH] iwlwifi: pcie: don't panic on host commands in iwldvm
-References: <52DCFE87.9080103@gmail.com>
-	<1390214977-29202-1-git-send-email-egrumbach@gmail.com>
-Date: Thu, 23 Jan 2014 17:46:26 +0200
-In-Reply-To: <1390214977-29202-1-git-send-email-egrumbach@gmail.com> (Emmanuel
-	Grumbach's message of "Mon, 20 Jan 2014 12:49:36 +0200")
-Message-ID: <87fvoen1kd.fsf@purkki.adurom.net> (sfid-20140123_164631_631391_672075C9)
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:9426 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521AbaA2Ocg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 09:32:36 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/14] brcmfmac: simplify sdio code download routine.
+Date: Wed, 29 Jan 2014 15:32:17 +0100
+Message-ID: <1391005944-3220-8-git-send-email-arend@broadcom.com> (sfid-20140129_153248_451050_1BFB6B3B)
+In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@gmail.com> writes:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->
-> None of the devices supported by iwldvm have support for
-> shadow registers. This means that we wake the NIC
-> when we increment the write pointer on Tx ring.
-> This happened even before my bad commit mentionned below.
-> Since my commit below, we wake up the NIC when we put a
-> host command on the ring regardless of shadow register
-> support. This means that in iwldvm (when the NIC doesn't
-> support shadow register), we wake up the NIC twice:
->
-> pcie_enqueue_hcmd:
-> 	wake up the NIC
-> 	iwl_pcie_txq_inc_wr_ptr:
-> 		wake up the NIC - no shadow reg support
->
-> Since waking up the NIC means that we need to acquire a
-> spinlock, this obviously leads to a recursive spinlock
-> and hence a freeze.
->
-> Fixes: b9439491055a ("iwlwifi: pcie: keep the NIC awake when commands are in flight")
-> Reported-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+brcmf_sdio_download_code_file is using a loop to send small blobs
+of data. This is unnecessarily complex and was simplified with this
+patch.
 
-Ah, this is why my laptop was hanging during boot with latest
-wireless-testing? Thanks for fixing this. 
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   31 +++++---------------
+ 1 file changed, 8 insertions(+), 23 deletions(-)
 
-FWIW:
-
-Tested-by: Kalle Valo <kvalo@adurom.com>
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index d78fffb..be2ec8a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3291,32 +3291,17 @@ static int brcmf_sdio_download_code_file(struct brcmf_sdio *bus,
+ 					 const struct firmware *fw)
+ {
+ 	int err;
+-	int offset;
+-	int address;
+-	int len;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	err = 0;
+-	offset = 0;
+-	address = bus->ci->rambase;
+-	while (offset < fw->size) {
+-		len = ((offset + MEMBLOCK) < fw->size) ? MEMBLOCK :
+-		      fw->size - offset;
+-		err = brcmf_sdiod_ramrw(bus->sdiodev, true, address,
+-					(u8 *)&fw->data[offset], len);
+-		if (err) {
+-			brcmf_err("error %d on writing %d membytes at 0x%08x\n",
+-				  err, len, address);
+-			return err;
+-		}
+-		offset += len;
+-		address += len;
+-	}
+-	if (!err)
+-		if (!brcmf_sdio_verifymemory(bus->sdiodev, bus->ci->rambase,
+-					     (u8 *)fw->data, fw->size))
+-			err = -EIO;
++	err = brcmf_sdiod_ramrw(bus->sdiodev, true, bus->ci->rambase,
++				(u8 *)fw->data, fw->size);
++	if (err)
++		brcmf_err("error %d on writing %d membytes at 0x%08x\n",
++			  err, (int)fw->size, bus->ci->rambase);
++	else if (!brcmf_sdio_verifymemory(bus->sdiodev, bus->ci->rambase,
++					  (u8 *)fw->data, fw->size))
++		err = -EIO;
+ 
+ 	return err;
+ }
 -- 
-Kalle Valo
+1.7.10.4
+
