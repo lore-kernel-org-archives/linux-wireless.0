@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24339 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755049AbaAHJDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:03:10 -0500
-Date: Wed, 8 Jan 2014 10:04:50 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
-Message-ID: <20140108090449.GC20157@dhcp-26-207.brq.redhat.com> (sfid-20140108_100339_598508_C7BA6CE8)
-References: <cover.1389103215.git.agordeev@redhat.com>
- <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
- <87txdehog9.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63709 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702AbaA2Occ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 09:32:32 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Kim <dekim@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 13/14] brcmfmac: correct setting of WEP broadcast/unicast keys
+Date: Wed, 29 Jan 2014 15:32:23 +0100
+Message-ID: <1391005944-3220-14-git-send-email-arend@broadcom.com> (sfid-20140129_153237_656536_C5B9FE2B)
+In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87txdehog9.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 08, 2014 at 10:23:18AM +0200, Kalle Valo wrote:
-> Looks good to me.
-> 
-> Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Daniel Kim <dekim@broadcom.com>
 
-Thanks, Kalle.
+The brcmf_add_keyext() is for setting per-station key for cipher
+algorithms such as WPA1/WPA2 and should not be used to set
+WEP broadcast/unicast keys. This patch fixes connect failure
+problem with AP using 802.1x-WEP.
 
-> Do you want me to take this patch to my ath.git tree or how were you
-> planning to handle it?
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Daniel Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I see no option other than pushing it thru pci.git tree at this stage.
-
-> -- 
-> Kalle Valo
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 843f1c7..fa42c0d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1981,7 +1981,9 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	if (mac_addr) {
++	if (mac_addr &&
++		(params->cipher != WLAN_CIPHER_SUITE_WEP40) &&
++		(params->cipher != WLAN_CIPHER_SUITE_WEP104)) {
+ 		brcmf_dbg(TRACE, "Exit");
+ 		return brcmf_add_keyext(wiphy, ndev, key_idx, mac_addr, params);
+ 	}
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.10.4
+
