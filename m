@@ -1,80 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbaATMAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jan 2014 07:00:08 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.82)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1W5DWP-0007i3-ST
-	for linux-wireless@vger.kernel.org; Mon, 20 Jan 2014 13:00:06 +0100
-Message-ID: <1390219203.4335.22.camel@jlt4.sipsolutions.net> (sfid-20140120_130012_303574_E227372E)
-Subject: [PATCH] mac80211: Fix ROC duration == 0 handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 20 Jan 2014 13:00:03 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.15]:49652 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752708AbaA2TIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:08:34 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0MMHaL-1WBbhc0AGL-007zJ7 for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:33 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 11/13] ath9k_htc: use ath9k_cmn_rx_skb_postprocess
+Date: Wed, 29 Jan 2014 20:07:02 +0100
+Message-Id: <1391022424-21087-10-git-send-email-linux@rempel-privat.de> (sfid-20140129_200837_496725_ED5657B2)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
-
-In case the given ROC duration is 0, update it to a minimal value before
-setting the ieee80211_roc_work parameters, so it also would be valid
-for cases where scan is in progress or there are other ROCs queued.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/mac80211/cfg.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 28 +++------------------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 032081c..e9ae299 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2628,6 +2628,18 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 	if (!roc)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 7321b64..c4368c4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -973,9 +973,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_hw *ah = common->ah;
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status *rx_stats;
+-	int hdrlen, padsize;
+ 	bool decrypt_error;
+-	__le16 fc;
  
-+	/*
-+	 * If the duration is zero, then the driver
-+	 * wouldn't actually do anything. Set it to
-+	 * 10 for now.
-+	 *
-+	 * TODO: cancel the off-channel operation
-+	 *       when we get the SKB's TX status and
-+	 *       the wait time was zero before.
-+	 */
-+	if (!duration)
-+		duration = 10;
-+
- 	roc->chan = channel;
- 	roc->duration = duration;
- 	roc->req_duration = duration;
-@@ -2651,18 +2663,6 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+ 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
+@@ -999,16 +997,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
+ 	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
  
- 	/* otherwise actually kick it off here (for error handling) */
- 
--	/*
--	 * If the duration is zero, then the driver
--	 * wouldn't actually do anything. Set it to
--	 * 10 for now.
--	 *
--	 * TODO: cancel the off-channel operation
--	 *       when we get the SKB's TX status and
--	 *       the wait time was zero before.
--	 */
--	if (!duration)
--		duration = 10;
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = hdr->frame_control;
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
 -
- 	ret = drv_remain_on_channel(local, sdata, channel, duration, type);
- 	if (ret) {
- 		kfree(roc);
+-	padsize = hdrlen & 3;
+-	if (padsize && skb->len >= hdrlen+padsize+FCS_LEN) {
+-		memmove(skb->data + padsize, skb->data, hdrlen);
+-		skb_pull(skb, padsize);
+-	}
+-
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	rx_stats = kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
+@@ -1022,23 +1010,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats,
+ 			&decrypt_error, priv->rxfilter))
+ 		goto rx_next;
+ 
+-	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
+-		u8 keyix;
+-		keyix = rxbuf->rxstatus.rs_keyix;
+-		if (keyix != ATH9K_RXKEYIX_INVALID) {
+-			rx_status->flag |= RX_FLAG_DECRYPTED;
+-		} else if (ieee80211_has_protected(fc) &&
+-			   skb->len >= hdrlen + 4) {
+-			keyix = skb->data[hdrlen + 3] >> 6;
+-			if (test_bit(keyix, common->keymap))
+-				rx_status->flag |= RX_FLAG_DECRYPTED;
+-		}
+-	}
+-
++	ath9k_cmn_rx_skb_postprocess(common, skb, rx_stats,
++				     rx_status, decrypt_error);
+ 
+ 	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status))
+ 		goto rx_next;
 -- 
-1.8.5.1
-
-
+1.8.5.3
 
