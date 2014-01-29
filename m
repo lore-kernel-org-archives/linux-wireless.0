@@ -1,87 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:64646 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbaAPJSh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 04:18:37 -0500
-Received: by mail-pa0-f42.google.com with SMTP id kl14so2422864pab.15
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2014 01:18:36 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath10k: set the AP keepalive timer
-Date: Thu, 16 Jan 2014 17:18:24 +0800
-Message-Id: <1389863904-7159-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140116_101843_266333_489BF9EA)
+Received: from mout.gmx.net ([212.227.17.20]:63455 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751853AbaA2TIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:08:42 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0MZfZi-1VqNxW3gNi-00LY4s for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:08:41 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 12/13] ath9k_htc: remove useless memcpy
+Date: Wed, 29 Jan 2014 20:07:03 +0100
+Message-Id: <1391022424-21087-11-git-send-email-linux@rempel-privat.de> (sfid-20140129_200844_749133_E57C959B)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the AP keepalive timer as following:
-ap_keepalive_min_idle_inactive_time_secs to 60 seconds
-ap_keepalive_max_idle_inactive_time_secs to 120 seconds
-ap_keepalive_max_unresponsive_time_secs to 300 seconds
+after switch to common fucntions we do not need this memcpy any more.
 
-This ensure that the WMI_PEER_STA_KICKOUT_EVENTID is triggered
-by the FW only once the unresponsive timer is expired.
-
-Tested with firmware version 999.999.0.636 but the timer
-is still default to 100 seconds. Tested with firmware 
-version 10.1.467-1, the timer is set according to 
-ap_keepalive_max_unresponsive_time_secs.
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
- 2 files changed, 25 insertions(+)
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 776e364..2141034 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2313,6 +2313,28 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
- 		if (ret)
- 			ath10k_warn("Failed to disable STA KICKOUT\n");
-+
-+		/* Set the AP keepalive timer */
-+		vdev_param =
-+			ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+			WMI_VDEV_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS);
-+		if (ret)
-+			ath10k_warn("Failed to set keepalive min idle timer\n");
-+
-+		vdev_param =
-+			ar->wmi.vdev_param->ap_keepalive_max_idle_inactive_time_secs;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+			WMI_VDEV_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS);
-+		if (ret)
-+			ath10k_warn("Failed to set keepalive max idle timer\n");
-+
-+		vdev_param =
-+			ar->wmi.vdev_param->ap_keepalive_max_unresponsive_time_secs;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+			WMI_VDEV_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS);
-+		if (ret)
-+			ath10k_warn("Failed to set keepalive unresponsive timer\n");
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index c4368c4..17e4d83 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -994,8 +994,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_htc_err_stat_rx(priv, rxstatus);
+ 
+ 	/* Get the RX status information */
+-	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
+-	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
+ 
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+@@ -1004,7 +1002,11 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 		ath_err(common, "rx_stats allocation filed!\n");
+ 		goto err_nofree;
  	}
+-	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
++	/* Copy everything from ath_htc_rx_status (HTC_RX_FRAME_HEADER).
++	 * After this, we can drop this part of skb. */
++	rx_status_htc_to_ath(rx_stats, rxstatus);
++	rx_status->mactime = be64_to_cpu(rxstatus->rs_tstamp);
++	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
  
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 4b5e7d3..7ce002a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3080,6 +3080,9 @@ struct wmi_vdev_param_map {
- };
+ 	/*
+ 	 * everything but the rate is checked here, the rate check is done
+@@ -1024,8 +1026,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	rx_stats->is_mybeacon = ath_is_mybeacon(common, hdr);
+ 	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
  
- #define WMI_VDEV_PARAM_UNSUPPORTED 0
-+#define WMI_VDEV_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS 60
-+#define WMI_VDEV_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS 120
-+#define WMI_VDEV_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS 300
- 
- /* the definition of different VDEV parameters */
- enum wmi_vdev_param {
+-	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+-
+ 	rx_status->band = ah->curchan->chan->band;
+ 	rx_status->freq = ah->curchan->chan->center_freq;
+ 	rx_status->antenna = rx_stats->rs_antenna;
 -- 
-1.7.9.5
+1.8.5.3
 
