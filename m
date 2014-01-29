@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464AbaAGP7u (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:3582 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278AbaA2Oce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jan 2014 10:59:50 -0500
-Message-ID: <1389110387.4645.26.camel@jlt4.sipsolutions.net> (sfid-20140107_165953_380826_C571F25A)
-Subject: Re: [RFC 2/3] cfg80211: MinChannelTime and MaxChannelTime for scan
- requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 07 Jan 2014 16:59:47 +0100
-In-Reply-To: <20140106075126.GA31046@w1.fi>
-References: <20140106075126.GA31046@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 29 Jan 2014 09:32:34 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 11/14] brcmfmac: remove unintended error logging
+Date: Wed, 29 Jan 2014 15:32:21 +0100
+Message-ID: <1391005944-3220-12-git-send-email-arend@broadcom.com> (sfid-20140129_160006_290767_00AE1BAE)
+In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-01-06 at 09:51 +0200, Jouni Malinen wrote:
-> This adds new nl80211 attributes to allow MinChannelTime and
-> MaxChannelTime to be specified for scan requests. The parameters can be
-> used to control the amount of time spent on each channel during a scan
-> as specified in the IEEE Std 802.11-2012 MLME-SCAN.request() primitive.
+In brcmf_contstruct_reginfo() some error logging was added by:
 
-What are the specific use cases for this? Our driver is likely to muck
-around with these in the future, possibly depending on traffic levels
-etc., so I wonder what this addresses and whether it can be unified in
-some way?
+  commit f7c51a1a72f50870f80001ddf528a6f7f992bc16
+  Author: Arend van Spriel <arend@broadcom.com>
+  Date:   Wed Dec 11 16:21:21 2013 +0100
 
-Would you expect these to always be specified, to the point where our
-driver no longer has any flexibility in adjusting things internally?
+      brcmfmac: correct reporting HT40 support in wiphy htcap
 
-> + * @min_chan_time: MinChannelTime in TUs; time to spend waiting for
-> + * PHY-CCA.indication (channel busy) in Active scan; 0 to indicate that driver
-> + * default value to be used
-> + * @max_chan_time: MaxChannelTime in TUs; time to spend waiting for Beacon or
-> + * Probe Response frames; 0 to indicate that driver default value to be used
+This logging was not intended to be delivered and adds a lot
+of messages in the log. The patch removes this logging statement.
 
-missing some indentation
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-> + * @NL80211_ATTR_MIN_CHANNEL_TIME: MinChannelTime - Minimum time (in TU) to
-> + *	spend on each channel when scanning (used for active scans). If not
-> + *	included, the driver will use its default value. u32 attribute.
-
-What about passive scans?
-
-> +	if (info->attrs[NL80211_ATTR_MIN_CHANNEL_TIME])
-> +		request->min_chan_time = nla_get_u32(
-> +			info->attrs[NL80211_ATTR_MIN_CHANNEL_TIME]);
-> +	if (info->attrs[NL80211_ATTR_MAX_CHANNEL_TIME])
-> +		request->max_chan_time = nla_get_u32(
-> +			info->attrs[NL80211_ATTR_MAX_CHANNEL_TIME]);
-> +	if (request->max_chan_time &&
-> +	    request->max_chan_time < request->min_chan_time) {
-> +		err = -EINVAL;
-> +		goto out_free;
-> +	}
-
-If you specify a very long min_chan_time, that's unlikely to please
-drivers. Especially if multi-channel mode is implemented, maybe in
-conjunction with operating as a GO or a client that wants to hear DTIM
-beacons, this might become very complicated.
-
-I'd be really interested in seeing if we can address the use cases here
-in a different way that keeps more flexibility in the
-driver/firmware/... implementation of scan.
-
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 17170a5..843f1c7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -5190,9 +5190,6 @@ static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg,
+ 				ieee80211_channel_to_frequency(ch.chnum, band);
+ 			band_chan_arr[index].hw_value = ch.chnum;
+ 
+-			brcmf_err("channel %d: f=%d bw=%d sb=%d\n",
+-				  ch.chnum, band_chan_arr[index].center_freq,
+-				  ch.bw, ch.sb);
+ 			if (ch.bw == BRCMU_CHAN_BW_40) {
+ 				/* assuming the order is HT20, HT40 Upper,
+ 				 * HT40 lower from chanspecs
+-- 
+1.7.10.4
 
