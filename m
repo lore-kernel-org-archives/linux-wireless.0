@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58861 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaAXKZ6 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63709 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbaA2Ocb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jan 2014 05:25:58 -0500
-Message-ID: <52E23FB2.7010705@broadcom.com> (sfid-20140124_112602_342061_B3188E88)
-Date: Fri, 24 Jan 2014 11:25:54 +0100
+	Wed, 29 Jan 2014 09:32:31 -0500
 From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 02/14] brcmfmac: add owner info to sdio_driver structure
+Date: Wed, 29 Jan 2014 15:32:12 +0100
+Message-ID: <1391005944-3220-3-git-send-email-arend@broadcom.com> (sfid-20140129_153235_229858_6B0E442B)
+In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Hans de Goede <hdegoede@redhat.com>, <linux-sunxi@googlegroups.com>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>,
-	<benn@cubietech.com>
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52CD12D4.5030008@broadcom.com> <CAGb2v64+5Rgs6JxD0iH3bcwXPOm-xyS_LSmWLfx0qiMQwreOeQ@mail.gmail.com> <52E19A27.7000402@redhat.com>
-In-Reply-To: <52E19A27.7000402@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2014 11:39 PM, Hans de Goede wrote:
-> Hi,
-> 
-> I've been working on updating sunxi-devel to include more
-> recent versions if your gmac patches, as well as adding support
-> for the wifi + bluetooth found on the cubietruck.
-> 
-> Here is my current work on this:
-> 
-> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-devel
-> 
-> It is close to working, but unfortunately it does not work,
-> here is what I get in dmesg when I modprove the module:
-> 
-> [   99.700889] brcmfmac_sdio mmc1:0001:1: device tree node not found
-> [  100.020984] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
-> Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
-> [  100.260948] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
-> [  100.281260] brcmfmac: brcmf_fil_cmd_data: Failed err=-23
-> [  100.322508] usbcore: registered new interface driver brcmfmac
-> [  160.445215] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
-> already: status (1)
-> [  203.445404] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
-> already: status (1)
-> [  256.445140] brcmfmac: brcmf_cfg80211_sched_scan_start: Scanning
-> already: status (1)
+From: Franky Lin <frankyl@broadcom.com>
 
-Can you enable debug logging in brcmfmac, ie. debug=0xd416 so I can have
-a look.
+To link module attribute with sdio device driver attribute in sysfs.
 
-Regards,
-Arend
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index fa35b23..9eb6f78 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1115,11 +1115,12 @@ static struct sdio_driver brcmf_sdmmc_driver = {
+ 	.remove = brcmf_ops_sdio_remove,
+ 	.name = BRCMFMAC_SDIO_PDATA_NAME,
+ 	.id_table = brcmf_sdmmc_ids,
+-#ifdef CONFIG_PM_SLEEP
+ 	.drv = {
++		.owner = THIS_MODULE,
++#ifdef CONFIG_PM_SLEEP
+ 		.pm = &brcmf_sdio_pm_ops,
+-	},
+ #endif	/* CONFIG_PM_SLEEP */
++	},
+ };
+ 
+ static int brcmf_sdio_pd_probe(struct platform_device *pdev)
+-- 
+1.7.10.4
+
