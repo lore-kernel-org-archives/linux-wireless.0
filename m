@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:55338 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbaAQWLI (ORCPT
+Received: from mail-vc0-f171.google.com ([209.85.220.171]:64966 "EHLO
+	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560AbaA2ECE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 17:11:08 -0500
-Received: by mail-wg0-f45.google.com with SMTP id n12so5148154wgh.24
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jan 2014 14:11:06 -0800 (PST)
+	Tue, 28 Jan 2014 23:02:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJU+Ws4di0jLBM4pBc-mcQfjKgnZ28nsx-Bky5mB9QvcA@mail.gmail.com>
-References: <1389909758-6807-1-git-send-email-chaitanya.mgit@gmail.com>
- <1389984919.10404.7.camel@jlt4.sipsolutions.net> <CABPxzYJU+Ws4di0jLBM4pBc-mcQfjKgnZ28nsx-Bky5mB9QvcA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 18 Jan 2014 03:40:46 +0530
-Message-ID: <CABPxzYK8fjDfE88mPt=H1c0mYOkS96+zHXueNSnxR2WvamJYbg@mail.gmail.com> (sfid-20140117_231111_837109_D2E1E0EA)
-Subject: Re: [PATCH] cfg80211: Do not call CRDA when using internal regulatory database
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20140127142400.GI3867@lukather>
+References: <1389941251-32692-1-git-send-email-wens@csie.org>
+ <1389941251-32692-5-git-send-email-wens@csie.org> <20140127142400.GI3867@lukather>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Wed, 29 Jan 2014 12:01:42 +0800
+Message-ID: <CAGb2v65cipUXbL52adDTYLqVJB5gMoDjfWVFa6AYYp0EKvkS6g@mail.gmail.com> (sfid-20140129_050231_804536_B042D5CC)
+Subject: Re: [linux-sunxi] Re: [PATCH RFC 4/6] net: rfkill: gpio: add device
+ tree support
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 12:33 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Sat, Jan 18, 2014 at 12:25 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Fri, 2014-01-17 at 03:32 +0530, Chaitanya T K wrote:
->>> When using internal regulatory data base kconfig option
->>> do not try to call crda, this complely defeats the
->>> purposes of enabling internal regulatory db.
->>
->> In general I don't think you can just break user visible behaviour this
->> way.
-> Well, users are habituated the wrong way :-). Any new user seeing the
-> internal_regdb might just forget about CRDA and face problems, in case
-> the DB is different in both.
+Hi,
+
+On Mon, Jan 27, 2014 at 10:24 PM, Maxime Ripard
+<maxime.ripard@free-electrons.com> wrote:
+> Hi,
 >
-> How should we go about it, then?
-When user enabled internal_regdb target, if he forgets to copy the db.txt
-we throw a warn_on and continue with WORLD regdom. So user has to copy
-the db.txt and we will read rules from there.This all happens independent of
-CRDA running/not in userspace. So i dont see any visible user impact
-if at all someone decides to enabled internal_regdb even after seeing
-all the warnings in place (kconfig, doc ..) :-).
+> On Fri, Jan 17, 2014 at 02:47:29PM +0800, Chen-Yu Tsai wrote:
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>> ---
+>>  .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 26 ++++++++++++++++++++++
+>>  net/rfkill/rfkill-gpio.c                           | 23 +++++++++++++++++++
+>>  2 files changed, 49 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+>> new file mode 100644
+>> index 0000000..8a07ea4
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+>> @@ -0,0 +1,26 @@
+>> +GPIO controlled RFKILL devices
+>> +
+>> +Required properties:
+>> +- compatible : Must be "rfkill-gpio".
+>> +- rfkill-name        : Name of RFKILL device
+>> +- rfkill-type        : Type of RFKILL device: 1 for WiFi, 2 for BlueTooth
+>> +- NAME_shutdown-gpios        : GPIO phandle to shutdown control
+>> +                       (phandle must be the second)
+>
+> Can't it be handled by a regulator?
+>
+>> +- NAME_reset-gpios   : GPIO phandle to reset control
+>
+> And this one using the reset framework?
 
-One more bug in the below check:
+The driver is already used in platform device and ACPI fashions.
+AFAIK, ACPI only passes the GPIO lines. Preferably the behavior
+and requirements between the different usages remain the same.
 
-if (call_crda(lr->alpha2))
-        return REG_REQ_IGNORE;
 
-If call_crda fails (kobject_event return negative no) then also
-we return REG_REQ_OK. It should be
-
-if (call_crda(lr->alpha2) < 0)
-        return REG_REQ_IGNORE;
+Cheers
+ChenYu
