@@ -1,130 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5806 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbaAOPuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 10:50:55 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, wireless-regdb@lists.infradead.org,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 0/6] Enable additional channels for use
-Date: Wed, 15 Jan 2014 17:52:36 +0200
-Message-Id: <1389801162-14488-1-git-send-email-ilan.peer@intel.com> (sfid-20140115_165058_178822_D2D57915)
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63709 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbaA2Ocd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 09:32:33 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 05/14] brcmfmac: rename sdio_chip.[ch]
+Date: Wed, 29 Jan 2014 15:32:15 +0100
+Message-ID: <1391005944-3220-6-git-send-email-arend@broadcom.com> (sfid-20140129_160006_692688_5DFA1EB3)
+In-Reply-To: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+References: <1391005944-3220-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Just renaming the file. This file will contain chip related functions
+that are independent of the host interface type.
 
-I'm resending this patch set. Any chance you could review it?
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile                |    4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c                |    1 -
+ drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.c => chip.c} |    4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.h => chip.h} |    0
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c              |    2 +-
+ 5 files changed, 5 insertions(+), 6 deletions(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.c => chip.c} (99%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_chip.h => chip.h} (100%)
 
-Thanks in advance,
-
-Ilan.
-
------
-
-Sorry for the big delay between the previous series and this one ... seems
-that I was too hasty with the previous one ... hope I did a better work this
-time :)
-
-As before, this series addresses the option of enabling additional channels for
-use based on the following relaxations:
-
-1. Indoor operation, where a device can use channels requiring indoor
-   operation, subject to that it can guarantee indoor operation.
-2. Concurrent GO operation, where devices may instantiate a P2P GO
-   while they are under the guidance of an authorized master.
-
-The series includes:
-
-* Some clarification (mainly in documentation) about the intended usage of
-  channels marked as INDOOR_ONLY and CONCURRENT GO.
-* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
-* Support for a user hint that the platform is operating in an indoor
-  environment, i.e., channel marked as INDOOR_ONLY can be used.
-* Allow initiating radiation on channel marked with INDOOR_ONLY also
-  for scanning an frame injection in monitor mode.
-* Some additional fixes for comments I got.
-
-Following is an example of a possible channel map that can be used to allow
-the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
-
-* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
-  information about the current regulatory domain, these channels can be used
-  for GO instantiation based on the concurrent GO relaxation.
-* The above is also true for channels 149-165 (a.k.a U-NII 3).
-* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
-  indoor only. While the Concurrent GO can be used as described above, the
-  indoor only setting allows to use these channels given the platform is
-  identified as an indoor one, i.e., media server.
-
- 2412 MHz [1] (16.0 dBm)
- 2417 MHz [2] (16.0 dBm)
- 2422 MHz [3] (16.0 dBm)
- 2427 MHz [4] (16.0 dBm)
- 2432 MHz [5] (16.0 dBm)
- 2437 MHz [6] (16.0 dBm)
- 2442 MHz [7] (16.0 dBm)
- 2447 MHz [8] (16.0 dBm)
- 2452 MHz [9] (16.0 dBm)
- 2457 MHz [10] (16.0 dBm)
- 2462 MHz [11] (16.0 dBm)
- 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
- 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
- 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
- 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
- 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
- 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
- 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
- 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
- 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
- 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
- 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
- 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
- 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
- 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
- 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
- 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
- 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
- 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
- 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
- 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
- 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
- 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
- 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
-
-Thanks in advance,
-
-Ilan.
-
-David Spinadel (1):
-  cfg80211: Add indoor only and GO concurrent channel attributes
-
-Ilan Peer (5):
-  cfg80211: Add Kconfig option for cellular BS hints
-  cfg80211: Enable GO operation on additional channels
-  cfg80211: Add an option to hint indoor operation
-  cfg80211: Enable GO operation on indoor channels
-  mac80211: Enable initiating radiation on indoor channels
-
- include/net/cfg80211.h       |   39 +++++++++++++++++++-
- include/uapi/linux/nl80211.h |   10 +++++
- net/mac80211/ibss.c          |    9 +++--
- net/mac80211/scan.c          |    8 ++--
- net/mac80211/tx.c            |    2 +-
- net/wireless/Kconfig         |   16 ++++++++
- net/wireless/chan.c          |   73 +++++++++++++++++++++++++++++++++++--
- net/wireless/mesh.c          |    3 +-
- net/wireless/nl80211.c       |   35 +++++++++++-------
- net/wireless/reg.c           |   83 ++++++++++++++++++++++++++++++++++++++++--
- net/wireless/reg.h           |   13 +++++++
- net/wireless/trace.h         |   11 ++++--
- 12 files changed, 266 insertions(+), 36 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 57cddee..1d2ceac 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -24,6 +24,7 @@ ccflags-y += -D__CHECK_ENDIAN__
+ obj-$(CONFIG_BRCMFMAC) += brcmfmac.o
+ brcmfmac-objs += \
+ 		wl_cfg80211.o \
++		chip.o \
+ 		fwil.o \
+ 		fweh.o \
+ 		fwsignal.o \
+@@ -36,8 +37,7 @@ brcmfmac-objs += \
+ 		btcoex.o
+ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+ 		dhd_sdio.o \
+-		bcmsdh.o \
+-		sdio_chip.o
++		bcmsdh.o
+ brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
+ 		usb.o
+ brcmfmac-$(CONFIG_BRCMDBG) += \
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9eb6f78..5711fd6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -43,7 +43,6 @@
+ #include "dhd_bus.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+-#include "sdio_chip.h"
+ 
+ #define SDIOH_API_ACCESS_RETRY_LIMIT	2
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+similarity index 99%
+rename from drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+rename to drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index 1ce8cb7..37fd44a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -30,7 +30,7 @@
+ #include <soc.h>
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+-#include "sdio_chip.h"
++#include "chip.h"
+ 
+ /* chip core base & ramsize */
+ /* bcm4329 */
+@@ -127,7 +127,7 @@ brcmf_sdio_sb_iscoreup(struct brcmf_sdio_dev *sdiodev,
+ 				    NULL);
+ 	regdata &= (SSB_TMSLOW_RESET | SSB_TMSLOW_REJECT |
+ 		    SSB_IMSTATE_REJECT | SSB_TMSLOW_CLOCK);
+-	return (SSB_TMSLOW_CLOCK == regdata);
++	return SSB_TMSLOW_CLOCK == regdata;
+ }
+ 
+ static bool
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
+similarity index 100%
+rename from drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+rename to drivers/net/wireless/brcm80211/brcmfmac/chip.h
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 090ce18..d78fffb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -40,7 +40,7 @@
+ #include <brcm_hw_ids.h>
+ #include <soc.h>
+ #include "sdio_host.h"
+-#include "sdio_chip.h"
++#include "chip.h"
+ #include "nvram.h"
+ 
+ #define DCMD_RESP_TIMEOUT  2000	/* In milli second */
 -- 
 1.7.10.4
 
