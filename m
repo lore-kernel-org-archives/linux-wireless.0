@@ -1,56 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58378 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbaAaMQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jan 2014 07:16:10 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2x00: move frequent messages to debug level
-Date: Fri, 31 Jan 2014 13:18:09 +0100
-Message-Id: <1391170689-23038-1-git-send-email-sgruszka@redhat.com> (sfid-20140131_131614_327218_BA3FA97D)
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:48358 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaA2VsH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 16:48:07 -0500
+Received: by mail-ig0-f172.google.com with SMTP id k19so16143236igc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 13:48:06 -0800 (PST)
+Date: Wed, 29 Jan 2014 14:48:01 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140129214801.GE16825@google.com> (sfid-20140129_224831_638421_2FA724A0)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+ <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+ <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+ <20140118145940.GE3640@htj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140118145940.GE3640@htj.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On commit 28f2bce9f8bbf704c86f8c684337f82c51592c81 I make change that
-print various messages as default. This can cause flood of messages
-related to TX status timeout on some environments. I partially fixed
-problem on commit bb9c298f3193ac5b80e47b325c690700580b6bcf, but forgot
-to move two more messages to debug level.
+On Sat, Jan 18, 2014 at 09:59:40AM -0500, Tejun Heo wrote:
+> On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
+> > On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > >> > As the release is supposedly this weekend, do you prefer
+> > >> > the patches to go to your tree or to individual trees after
+> > >> > the release?
+> > >>
+> > >> I'd be happy to merge them, except for the fact that they probably
+> > >> wouldn't have any time in -next before I ask Linus to pull them.  So
+> > >> how about if we wait until after the release, ask the area maintainers
+> > >> to take them, and if they don't take them, I'll put them in my tree
+> > >> for v3.15?
+> > >
+> > > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+> > > Whatever works for you ;)
+> > >
+> > > I am only concerned with a regression fix "ahci: Fix broken fallback to
+> > > single MSI mode" which would be nice to have in 3.14. But it seems pretty
+> > > much too late.
+> > 
+> > Tejun, if you want to ack that one, I can put it in either the first
+> > 3.14 pull request or a subsequent one.  Either way, since it's a
+> > regression fix, we should be able to get it in 3.14.
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Please feel free to route it any way you see fit.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+I applied the following to my pci/msi branch, since they had acks from
+maintainers (Tejun, I assumed your ack applies to both ahci patches):
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index caddc1b..14a90dd 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -125,9 +125,9 @@ static inline bool rt2800usb_entry_txstatus_timeout(struct queue_entry *entry)
- 
- 	tout = time_after(jiffies, entry->last_action + msecs_to_jiffies(100));
- 	if (unlikely(tout))
--		rt2x00_warn(entry->queue->rt2x00dev,
--			    "TX status timeout for entry %d in queue %d\n",
--			    entry->entry_idx, entry->queue->qid);
-+		rt2x00_dbg(entry->queue->rt2x00dev,
-+			   "TX status timeout for entry %d in queue %d\n",
-+			   entry->entry_idx, entry->queue->qid);
- 	return tout;
- 
- }
-@@ -566,8 +566,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
- 
- 		if (unlikely(rt2x00queue_empty(queue))) {
--			rt2x00_warn(rt2x00dev, "Got TX status for an empty queue %u, dropping\n",
--				    qid);
-+			rt2x00_dbg(rt2x00dev, "Got TX status for an empty queue %u, dropping\n",
-+				   qid);
- 			break;
- 		}
- 
--- 
-1.7.11.7
+    ahci: Fix broken fallback to single MSI mode
+    ahci: Use pci_enable_msi_range()
+    vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
+    wil6210: Use pci_enable_msi_range()
 
+I didn't do anything with these:
+
+    ipr: Get rid of superfluous call to pci_disable_msi/msix()
+    ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
+
+	The conflict with "ipr: Handle early EEH" needs to get resolved
+	first.  Either Alexander's patches need to go via the same tree as
+	the EEH change, or the EEH change needs to be in some published
+	tree so I can cherry-pick it.
+
+    nvme: Fix invalid call to irq_set_affinity_hint()
+    nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
+
+	These don't seem fully baked yet.  If/when Keith acks them, I (or
+	he) can merge them.
+
+    ath10k: Use pci_enable_msi_range()
+
+	This has been acked, but no longer applies to mainline (I'm
+	currently at 0e47c969c65e).
+
+Bjorn
