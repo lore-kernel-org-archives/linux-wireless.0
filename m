@@ -1,93 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:61995 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbaAOMRF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jan 2014 07:17:05 -0500
-Received: by mail-ea0-f177.google.com with SMTP id n15so417369ead.36
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2014 04:17:01 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 1/2] cfg80211/mac80211: DFS pass CAC time as a parameter
-Date: Wed, 15 Jan 2014 13:16:49 +0100
-Message-Id: <1389788210-7246-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140115_131708_578330_9FF1A7A5)
+Received: from mout.gmx.net ([212.227.17.20]:59885 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752079AbaA2THd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jan 2014 14:07:33 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0LcmN9-1VS8uq1drz-00k7Pj for
+ <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2014 20:07:31 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 03/13] ath9k: move ath9k_process_rate to common.c
+Date: Wed, 29 Jan 2014 20:06:54 +0100
+Message-Id: <1391022424-21087-2-git-send-email-linux@rempel-privat.de> (sfid-20140129_200735_548349_9C7B5D0D)
+In-Reply-To: <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>
+ <1391022424-21087-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send Channel Availability Check time as a parameter
-of start_radar_detection() callback.
-We could have different CAC time configuration for
-Off-channel CAC and for weather channels.
+we can reuse this function in ath9k_htc
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
-Based on patches: Implement DFS CAC time as regulatory param
+ drivers/net/wireless/ath/ath9k/common.c | 42 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  4 +++
+ drivers/net/wireless/ath/ath9k/recv.c   | 59 +++++----------------------------
+ 3 files changed, 54 insertions(+), 51 deletions(-)
 
- include/net/cfg80211.h |    3 ++-
- net/mac80211/cfg.c     |    8 ++++----
- net/wireless/nl80211.c |    3 ++-
- 3 files changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f756b94..71ca782 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2487,7 +2487,8 @@ struct cfg80211_ops {
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 7028c52..120fd46 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,6 +27,48 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
  
- 	int	(*start_radar_detection)(struct wiphy *wiphy,
- 					 struct net_device *dev,
--					 struct cfg80211_chan_def *chandef);
-+					 struct cfg80211_chan_def *chandef,
-+					 u32 cac_time_ms);
- 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_update_ft_ies_params *ftie);
- 	int	(*crit_proto_start)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 09d2e58..5c2b69c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2899,11 +2899,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
++int ath9k_cmn_process_rate(struct ath_common *common,
++			   struct ieee80211_hw *hw,
++			   struct ath_rx_status *rx_stats,
++			   struct ieee80211_rx_status *rxs)
++{
++	struct ieee80211_supported_band *sband;
++	enum ieee80211_band band;
++	unsigned int i = 0;
++	struct ath_hw *ah = common->ah;
++
++	band = ah->curchan->chan->band;
++	sband = hw->wiphy->bands[band];
++
++	if (IS_CHAN_QUARTER_RATE(ah->curchan))
++		rxs->flag |= RX_FLAG_5MHZ;
++	else if (IS_CHAN_HALF_RATE(ah->curchan))
++		rxs->flag |= RX_FLAG_10MHZ;
++
++	if (rx_stats->rs_rate & 0x80) {
++		/* HT rate */
++		rxs->flag |= RX_FLAG_HT;
++		rxs->flag |= rx_stats->flag;
++		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
++		return 0;
++	}
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
++			rxs->rate_idx = i;
++			return 0;
++		}
++		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
++			rxs->flag |= RX_FLAG_SHORTPRE;
++			rxs->rate_idx = i;
++			return 0;
++		}
++	}
++
++	return -EINVAL;
++}
++EXPORT_SYMBOL(ath9k_cmn_process_rate);
++
+ void ath9k_cmn_process_rssi(struct ath_common *common,
+ 			    struct ieee80211_hw *hw,
+ 			    struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index aaf4a9b5..729482f 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -42,6 +42,10 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
  
- static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 					   struct net_device *dev,
--					   struct cfg80211_chan_def *chandef)
-+					   struct cfg80211_chan_def *chandef,
-+					   u32 cac_time_ms)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	unsigned long timeout;
- 	int err;
++int ath9k_cmn_process_rate(struct ath_common *common,
++			   struct ieee80211_hw *hw,
++			   struct ath_rx_status *rx_stats,
++			   struct ieee80211_rx_status *rxs);
+ void ath9k_cmn_process_rssi(struct ath_common *common,
+ 			    struct ieee80211_hw *hw,
+ 			    struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5229e63..ab6a86c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -841,56 +841,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	return true;
+ }
  
- 	mutex_lock(&local->mtx);
-@@ -2922,9 +2922,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	if (err)
- 		goto out_unlock;
+-static int ath9k_process_rate(struct ath_common *common,
+-			      struct ieee80211_hw *hw,
+-			      struct ath_rx_status *rx_stats,
+-			      struct ieee80211_rx_status *rxs)
+-{
+-	struct ieee80211_supported_band *sband;
+-	enum ieee80211_band band;
+-	unsigned int i = 0;
+-	struct ath_softc __maybe_unused *sc = common->priv;
+-	struct ath_hw *ah = sc->sc_ah;
+-
+-	band = ah->curchan->chan->band;
+-	sband = hw->wiphy->bands[band];
+-
+-	if (IS_CHAN_QUARTER_RATE(ah->curchan))
+-		rxs->flag |= RX_FLAG_5MHZ;
+-	else if (IS_CHAN_HALF_RATE(ah->curchan))
+-		rxs->flag |= RX_FLAG_10MHZ;
+-
+-	if (rx_stats->rs_rate & 0x80) {
+-		/* HT rate */
+-		rxs->flag |= RX_FLAG_HT;
+-		rxs->flag |= rx_stats->flag;
+-		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+-		return 0;
+-	}
+-
+-	for (i = 0; i < sband->n_bitrates; i++) {
+-		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
+-			rxs->flag |= RX_FLAG_SHORTPRE;
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-	}
+-
+-	/*
+-	 * No valid hardware bitrate found -- we should not get here
+-	 * because hardware has already validated this frame as OK.
+-	 */
+-	ath_dbg(common, ANY,
+-		"unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
+-		rx_stats->rs_rate);
+-	RX_STAT_INC(rx_rate_err);
+-	return -EINVAL;
+-}
+-
+ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 			      struct ieee80211_rx_status *rxs,
+ 			      u64 tsf)
+@@ -1007,7 +957,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		goto exit;
+ 	}
  
--	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	ieee80211_queue_delayed_work(&sdata->local->hw,
--				     &sdata->dfs_cac_timer_work, timeout);
-+				     &sdata->dfs_cac_timer_work,
-+				     msecs_to_jiffies(cac_time_ms));
- 
-  out_unlock:
- 	mutex_unlock(&local->mtx);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 53b31f2..8bb2064 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5764,7 +5764,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
--	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
-+	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
-+					       IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	if (!err) {
- 		wdev->channel = chandef.chan;
- 		wdev->cac_started = true;
+-	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
++	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status)) {
++		/*
++		 * No valid hardware bitrate found -- we should not get here
++		 * because hardware has already validated this frame as OK.
++		 */
++		ath_dbg(common, ANY, "unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
++			rx_stats->rs_rate);
++		RX_STAT_INC(rx_rate_err);
+ 		ret =-EINVAL;
+ 		goto exit;
+ 	}
 -- 
-1.7.9.5
+1.8.5.3
 
