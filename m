@@ -1,59 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:38472 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146AbaABVeh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 16:34:37 -0500
-Received: by mail-ig0-f182.google.com with SMTP id c10so34711697igq.3
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jan 2014 13:34:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
- <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com> <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Jan 2014 14:34:17 -0700
-Message-ID: <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com> (sfid-20140102_223443_446582_20C4393D)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:35052 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751429AbaA3LUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jan 2014 06:20:46 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1W8pfp-0002Ih-2z
+	for linux-wireless@vger.kernel.org; Thu, 30 Jan 2014 12:20:45 +0100
+Received: from gw.alumnux.com ([121.243.14.254])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2014 12:20:45 +0100
+Received: from royujjal by gw.alumnux.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2014 12:20:45 +0100
+To: linux-wireless@vger.kernel.org
+From: Ujjal Roy <royujjal@gmail.com>
+Subject: Re: [PATCHv2] iw: add support to set/get retry limit
+Date: Thu, 30 Jan 2014 11:20:16 +0000 (UTC)
+Message-ID: <loom.20140130T121728-848@post.gmane.org> (sfid-20140130_122058_619761_834D4AB4)
+References: <1389273736-9486-1-git-send-email-royujjal@gmail.com>  (sfid-20140109_142238_521185_44E25359) <1390575602.4257.44.camel@jlt4.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 29, 2013 at 2:23 AM, wzyboy <wzyboy@wzyboy.org> wrote:
-> 2013/12/29 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
->> http://rweverything.com/
->
->
-> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
+Johannes Berg <johannes@...> writes:
 
-ASPM must be configured on both ends of the link, so for completeness,
-can you also collect the "PCI" output for the bridge leading to the
-7260 device?  Based on the Linux lspci output, this should be
-0000:00:1c.1.
+> > +COMMAND(set, retry, "<short limit> [<long limit>]",
+> > +	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
+> > +	"Set retry limit.");
+> 
+> This seems odd to me, why would you want to allow setting the short
+> limit while not changing the long one, but not the other way around?
 
-And I assume the device works well with the Windows driver?
+Sorry for late response and thanks for the suggestion. The modified
+patch is below after 3 dashes.
 
-Bjorn
+---
+Show the retry limit in phy details and also configure the
+retry limit.
+
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+---
+ info.c | 16 ++++++++++++++++
+ phy.c  | 64 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+)
+
+diff --git a/info.c b/info.c
+index a696503..001b317 100644
+--- a/info.c
++++ b/info.c
+@@ -246,6 +246,22 @@ next:
+ 			printf("\tRTS threshold: %d\n", rts);
+ 	}
+ 
++	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT] ||
++	    tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]) {
++		unsigned char retry_short = 0, retry_long = 0;
++
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT])
++			retry_short = 
+nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT]);
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG])
++			retry_long = 
+nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]);
++		if (retry_short == retry_long) {
++			printf("\tRetry short long limit: %d\n", 
+retry_short);
++		} else {
++			printf("\tRetry short limit: %d\n", retry_short);
++			printf("\tRetry long limit: %d\n", retry_long);
++		}
++	}
++
+ 	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+ 		unsigned char coverage;
+ 
+diff --git a/phy.c b/phy.c
+index 68f40f6..517d203 100644
+--- a/phy.c
++++ b/phy.c
+@@ -232,6 +232,70 @@ COMMAND(set, rts, "<rts threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+ 	"Set rts threshold.");
+ 
++static int handle_retry(struct nl80211_state *state,
++			struct nl_cb *cb, struct nl_msg *msg,
++			int argc, char **argv, enum id_input id)
++{
++	unsigned int retry_short = 0, retry_long = 0;
++	bool have_retry_s = false, have_retry_l = false;
++	int i;
++	enum {
++		S_NONE,
++		S_SHORT,
++		S_LONG,
++	} parser_state = S_NONE;
++
++	if (!argc || (argc != 2 && argc != 4))
++		return 1;
++
++	for (i = 0; i < argc; i++) {
++		char *end;
++		unsigned int tmpul;
++
++		if (strcmp(argv[i], "short") == 0) {
++			if (have_retry_s)
++				return 1;
++			parser_state = S_SHORT;
++			have_retry_s = true;
++		} else if (strcmp(argv[i], "long") == 0) {
++			if (have_retry_l)
++				return 1;
++			parser_state = S_LONG;
++			have_retry_l = true;
++		} else {
++			tmpul = strtoul(argv[i], &end, 10);
++			if (*end != '\0')
++				return 1;
++			if (!tmpul || tmpul > 255)
++				return -EINVAL;
++			switch (parser_state) {
++			case S_SHORT:
++				retry_short = tmpul;
++				break;
++			case S_LONG:
++				retry_long = tmpul;
++				break;
++			default:
++				return 1;
++			}
++		}
++	}
++
++	if (!have_retry_s && !have_retry_l)
++		return 1;
++	if (have_retry_s)
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT, 
+retry_short);
++	if (have_retry_l)
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG, retry_long);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, retry, "[short <limit>] [long <limit>]",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
++	"Set retry limit.");
++
+ static int handle_netns(struct nl80211_state *state,
+ 			struct nl_cb *cb,
+ 			struct nl_msg *msg,
+-- 
+1.8.1.4
+
+
