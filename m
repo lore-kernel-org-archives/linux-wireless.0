@@ -1,60 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37280 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbaAWGbI (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48657 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064AbaA3RhX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jan 2014 01:31:08 -0500
-Message-ID: <1390458664.4189.48.camel@porter.coelho.fi> (sfid-20140123_073111_983161_B89A08F1)
-Subject: Re: [PATCH 5/7] mac80211: improve CSA locking
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Jan 2014 08:31:04 +0200
-In-Reply-To: <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
-References: <1390227670-19030-1-git-send-email-michal.kazior@tieto.com>
-	 <1390227670-19030-6-git-send-email-michal.kazior@tieto.com>
-	 <1390316761.6199.27.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmsROawL=bcyiXM+zCWKfKr7KPRvDoojKfoCByV97zSUw@mail.gmail.com>
-	 <1390380726.4334.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQm+DipFGQhVnGoVM4JvLgXZv1EZ0Ve4UNnFwnifsKXoCA@mail.gmail.com>
-	 <1390382020.4334.17.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=iQ26EMyOS4Eroqf2G-uLtUUZHAxN6rD3Eq6CvSUj5Xg@mail.gmail.com>
-	 <1390385995.4334.27.camel@jlt4.sipsolutions.net>
-	 <1390394166.4189.28.camel@porter.coelho.fi>
-	 <1390403432.4334.33.camel@jlt4.sipsolutions.net>
-	 <1390403634.4189.39.camel@porter.coelho.fi>
-	 <CA+BoTQ=+TGFo0f0z1SymiN5DkeLZUPC_p_YVZ59s=FFqpGV3vQ@mail.gmail.com>
+	Thu, 30 Jan 2014 12:37:23 -0500
+Message-ID: <1391103440.4323.24.camel@jlt4.sipsolutions.net> (sfid-20140130_183726_136108_A68FBBD5)
+Subject: Re: [PATCH 3.13.1 3/9] rsi: Packet queueing/dequeueing to device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jahnavi <jahnavi.meher@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 30 Jan 2014 18:37:20 +0100
+In-Reply-To: <52EA75B5.5040002@redpinesignals.com> (sfid-20140130_170030_682221_D838173E)
+References: <52EA75B5.5040002@redpinesignals.com>
+	 (sfid-20140130_170030_682221_D838173E)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-01-23 at 07:22 +0100, Michal Kazior wrote:
-> On 22 January 2014 16:13, Luca Coelho <luca@coelho.fi> wrote:
-> > On Wed, 2014-01-22 at 16:10 +0100, Johannes Berg wrote:
-> >> On Wed, 2014-01-22 at 14:36 +0200, Luca Coelho wrote:
-> >>
-> >> > I don't think we should try to merge the channel switches.  We should
-> >> > just perform them separately, especially because the exact time of the
-> >> > switch will most likely not be the same (since the TBTTs are not in
-> >> > sync).
-> >>
-> >> Do you mean that we shouldn't even have all that new API to switch
-> >> multiple interfaces simultaneously?
-> >
-> > Right, I'm not really sure it's necessary.  PErhaps with non-chanctx we
-> > need something like that, but maybe it would still be better not to do
-> > this in the nl80211 API, but sync/merge in cfg80211/mac80211?
-> 
-> I was thinking about it. This should work, mostly, as long as you're
-> able to submit CSA requests fast enough and you don't use count 0 or
-> 1, in which case it becomes racy.
+On Thu, 2014-01-30 at 21:24 +0530, Jahnavi wrote:
 
-CSA with count 0 or 1 are really tricky in many respects.  But still I
-don't see why it would get racy.  The interfaces will switch
-independently, making their own chanctx reservations and so on...
+> +#include "../include/rsi_main.h"
+> +#include "../include/rsi_device_ops.h"
+> +#include "../include/rsi_hw_intf.h"
 
---
-Luca.
+That also seems a bit odd.
+
+johannes
 
