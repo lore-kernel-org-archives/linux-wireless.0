@@ -1,46 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16523 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753200AbaA3Nq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jan 2014 08:46:56 -0500
-Date: Thu, 30 Jan 2014 14:48:20 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-Message-ID: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> (sfid-20140130_144814_315050_8769A315)
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:48406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916AbaA3QYf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jan 2014 11:24:35 -0500
+Message-ID: <1391099071.4323.21.camel@jlt4.sipsolutions.net> (sfid-20140130_172438_741991_2EE25366)
+Subject: Re: [PATCH 3.13.1 2/9] rsi: OS dependent functions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jahnavi <jahnavi.meher@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 30 Jan 2014 17:24:31 +0100
+In-Reply-To: <52EA759D.8050809@redpinesignals.com> (sfid-20140130_170007_973159_5D8E3EA6)
+References: <52EA759D.8050809@redpinesignals.com>
+	 (sfid-20140130_170007_973159_5D8E3EA6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+On Thu, 2014-01-30 at 21:24 +0530, Jahnavi wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 29fd197..6525e1f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
- 		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
- 		if (ret == 0)
- 			return 0;
--		if (ret > 0)
--			pci_disable_msi(ar_pci->pdev);
- 
- 		/* fall-through */
- 	}
--- 
-1.7.7.6
+> +rsi_common-y := rsi_core.o rsi_osd_ops.o
+> +ifeq ($(CONFIG_RSI_USB), y)
+> +	rsi_common-y += rsi_usb.o
+> +	ccflags-y =-DUSE_USB_INTF
+> +else
+> +	rsi_common-y += rsi_sdio.o
+> +	ccflags-y =-DUSE_SDIO_INTF
+> +endif
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+That can't be right - in the Kconfig you declared that it's valid to
+select both SDIO and USB at the same time. You can also use the syntax
+you used below:
+
+> +obj-$(CONFIG_RSI_91x) := rsi_common.o
+
+for ccflags to clean this up. But you should get rid of the
+-DUSE_XYZ_INTF anyway and use CONFIG_RSI_USB in the code.
+
+> +static int rsi_proc_version_read(struct seq_file *seq, void *data)
+
+/proc? really? definitely staging material from here on ...
+
+> +/**
+> + * This function is used to put the current execution in a queue
+> + * and reschedules itself for execution on "timeout" or when a
+> + * wakeup is generated.
+> + *
+> + * @param  event Pointer to the event structure.
+> + * @param  timeout Timeout value in msecs.
+> + * @return status: 0 on success, -1 on failure.
+> + */
+> +int rsi_wait_event(struct rsi_event *event, unsigned int timeout)
+> +{
+> +	int status = 0;
+> +
+> +	if (!timeout)
+> +		status = wait_event_interruptible(event->event_queue,
+> +				(atomic_read(&event->event_condition) == 0));
+> +	else
+> +		status = wait_event_interruptible_timeout(event->event_queue,
+> +				(atomic_read(&event->event_condition) == 0),
+> +				timeout);
+> +	return status;
+> +}
+
+That's probably better inlined.
+
+Along with the rest of the event and thread functionality - doesn't
+really help readability to obscure things behind layers of "OS
+abstractions"...
+
+> +void rsi_print(int zone, unsigned char *vdata, int len)
+> +{
+> +	unsigned short ii;
+> +
+> +	if (!(zone & rsi_zone_enabled))
+> +		return;
+> +
+> +	if (!vdata)
+> +		return;
+> +
+> +	for (ii = 0; ii < len; ii++) {
+> +		if (!(ii % 16))
+> +			pr_info("\n");
+> +		pr_info("%02x ", (vdata[ii]));
+> +	}
+> +	pr_info("\n");
+> +}
+
+Yeah, umm, see above.
+
+> +	unsigned int bbp_lmac_clk_reg_val:16;
+
+16 bit bitfields? Is there anything wrong with u16 (aka unsigned short)
+on your compiler version?
+
+johannes
+
