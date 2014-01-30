@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:44638 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514AbaAROjR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46024 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbaA3Jvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jan 2014 09:39:17 -0500
-Received: by mail-ie0-f175.google.com with SMTP id ar20so1936966iec.20
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jan 2014 06:39:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 18 Jan 2014 07:38:55 -0700
-Message-ID: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com> (sfid-20140118_153945_039459_61810F83)
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Jan 2014 04:51:47 -0500
+Message-ID: <1391075501.4323.1.camel@jlt4.sipsolutions.net> (sfid-20140130_105153_227716_D813855E)
+Subject: Re: [PATCH v2] mac80211: Fix IBSS disconnect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Date: Thu, 30 Jan 2014 10:51:41 +0100
+In-Reply-To: <1391071648-12863-1-git-send-email-sujith@msujith.org>
+References: <1391071648-12863-1-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
->> > As the release is supposedly this weekend, do you prefer
->> > the patches to go to your tree or to individual trees after
->> > the release?
->>
->> I'd be happy to merge them, except for the fact that they probably
->> wouldn't have any time in -next before I ask Linus to pull them.  So
->> how about if we wait until after the release, ask the area maintainers
->> to take them, and if they don't take them, I'll put them in my tree
->> for v3.15?
->
-> Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> Whatever works for you ;)
->
-> I am only concerned with a regression fix "ahci: Fix broken fallback to
-> single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> much too late.
+On Thu, 2014-01-30 at 14:17 +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Currently, when a station leaves an IBSS network, the
+> corresponding BSS is not dropped from cfg80211 if there are
+> other active stations in the network. But, the small
+> window that is present when trying to determine a station's
+> status based on IEEE80211_IBSS_MERGE_INTERVAL introduces
+> a race.
+> 
+> Instead of trying to keep the BSS, always remove it when
+> leaving an IBSS network. There is not much benefit to retain
+> the BSS entry since it will be added with a subsequent join
+> operation.
+> 
+> This fixes an issue where a dangling BSS entry causes ath9k
+> to wait for a beacon indefinitely.
 
-Tejun, if you want to ack that one, I can put it in either the first
-3.14 pull request or a subsequent one.  Either way, since it's a
-regression fix, we should be able to get it in 3.14.
+Applied.
 
-Bjorn
+johannes
+
