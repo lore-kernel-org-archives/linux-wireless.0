@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47487 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:45712 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299AbaAQP3T (ORCPT
+	with ESMTP id S1751028AbaA3IKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 10:29:19 -0500
-Message-ID: <1389972543.10404.5.camel@jlt4.sipsolutions.net> (sfid-20140117_162935_596578_484FE6E5)
-Subject: Re: [PATCH v3 1/2] b43: fix the wrong assignment of status.freq in
- b43_rx()
+	Thu, 30 Jan 2014 03:10:51 -0500
+Message-ID: <1391069448.4134.0.camel@jlt4.sipsolutions.net> (sfid-20140130_091054_825718_E5F708FB)
+Subject: Re: [PATCH] mac80211: Fix IBSS join
 From: Johannes Berg <johannes@sipsolutions.net>
-To: ZHAO Gang <gamerh2o@gmail.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	Jonas Gorski <jogo@openwrt.org>, Luca Coelho <luca@coelho.fi>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>
-Date: Fri, 17 Jan 2014 16:29:03 +0100
-In-Reply-To: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com> (sfid-20140117_161955_063280_BEA8D929)
-References: <b28b37da08e43e0f459c5094ed210649ab1f7090.1389970392.git.gamerh2o@gmail.com>
-	 (sfid-20140117_161955_063280_BEA8D929)
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 30 Jan 2014 09:10:48 +0100
+In-Reply-To: <21226.184.85287.849137@gargle.gargle.HOWL>
+References: <1390874095-28008-1-git-send-email-sujith@msujith.org>
+	 <1390997315.4143.4.camel@jlt4.sipsolutions.net>
+	 <201401291319.03802.sw@simonwunderlich.de>
+	 <21226.184.85287.849137@gargle.gargle.HOWL>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-01-17 at 23:19 +0800, ZHAO Gang wrote:
-> Use the right function to update status.freq. The wrong frequency
-> value can cause problem that bss info can't be updated when it
-> should be.
+On Thu, 2014-01-30 at 13:05 +0530, Sujith Manoharan wrote:
+> Simon Wunderlich wrote:
+> > In the CSA case the BSS is still used, we modify the BSS entry in 
+> > ieee80211_ibss_finish_csa()  (which is not really clean, but done by all the 
+> > current CSA code).
+> > 
+> > Since the BSS is changed and the node continues to beacon, I think that's ok 
+> > to do it like Sujith proposed.
 > 
-> This bug is introduced by commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
-> "cfg80211 API for channels/bitrates, mac80211 and driver conversion".
-> 
-> Cc: Stable <stable@vger.kernel.org>
-> Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
-> ---
-> v3: change commit log
->     suggested by Luca Coelho, Rafał Miłecki and Jonas Gorski
-> 
-> I'm not very familiar with wireless subsystem yet. If commit message needs
-> more changes, feel free to point it out.
+> I think Johannes is right. If a station receives a CSA and is unable to switch
+> to the new channel, it leaves the IBSS network. In this case we don't need to
+> keep the BSS entry around, since we proceed to scan again.
 
-In general, you should also put a Fixes: pseudo-header (with 12-digit
-commit ID and commit subject) into such commits, so this would be:
-
-Cc: stable@vger.kernel.org
-Fixes: 8318d78a44d4 ("cfg80211 API for channels/bitrates, mac80211 and driver conversion")
-Signed-off-by: ...
-
-
-Thanks for fixing this!
+Hah, I wasn't paying attention ... yeah I think you're right, it's the
+*failure* case, in which we shouldn't care any more. Simon, you were
+thinking of the successful case, but that doesn't call disconnect ...
 
 johannes
 
