@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42981 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbaAFPD5 (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:63372 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753819AbaA3XJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 10:03:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: ZHAO Gang <gamerh2o@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix memory leak in register_hw() error path
-Date: Mon,  6 Jan 2014 16:03:53 +0100
-Message-Id: <1389020633-32021-1-git-send-email-johannes@sipsolutions.net> (sfid-20140106_160400_698237_83451B57)
+	Thu, 30 Jan 2014 18:09:48 -0500
+Received: by mail-pb0-f48.google.com with SMTP id rr13so3728041pbb.35
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2014 15:09:48 -0800 (PST)
+From: Zoran Markovic <zoran.markovic@linaro.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Shaibal Dutta <shaibal.dutta@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Zoran Markovic <zoran.markovic@linaro.org>
+Subject: [RFC PATCH] net: wireless: move regulatory timeout work to power efficient workqueue
+Date: Thu, 30 Jan 2014 15:08:30 -0800
+Message-Id: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org> (sfid-20140131_001003_737717_F111CDCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shaibal Dutta <shaibal.dutta@broadcom.com>
 
-Move the internal scan request allocation below the last
-sanity check in ieee80211_register_hw() to avoid leaking
-memory if the sanity check actually triggers.
+For better use of CPU idle time, allow the scheduler to select the CPU
+on which the timeout work of regulatory settings would be executed.
+This extends CPU idle residency time and saves power.
 
-Reported-by: ZHAO Gang <gamerh2o@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This functionality is enabled when CONFIG_WQ_POWER_EFFICIENT is selected.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Signed-off-by: Shaibal Dutta <shaibal.dutta@broadcom.com>
+[zoran.markovic@linaro.org: Rebased to latest kernel. Added commit message.]
+Signed-off-by: Zoran Markovic <zoran.markovic@linaro.org>
 ---
- net/mac80211/main.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ net/wireless/reg.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2bd5b55..d767cfb 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -846,17 +846,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		/* TODO: consider VHT for RX chains, hopefully it's the same */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b897fc..6e21011 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1703,7 +1703,8 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		if (treatment == REG_REQ_OK ||
+ 		    treatment == REG_REQ_ALREADY_SET)
+ 			return;
+-		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
++		queue_delayed_work(system_power_efficient_wq,
++				   &reg_timeout, msecs_to_jiffies(3142));
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		treatment = reg_process_hint_driver(wiphy, reg_request);
+@@ -2294,7 +2295,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
+ 	if (!request_wiphy) {
+-		schedule_delayed_work(&reg_timeout, 0);
++		queue_delayed_work(system_power_efficient_wq,
++				   &reg_timeout, 0);
+ 		return -ENODEV;
  	}
  
--	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
--				      sizeof(void *) * channels, GFP_KERNEL);
--	if (!local->int_scan_req)
--		return -ENOMEM;
--
--	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
--		if (!local->hw.wiphy->bands[band])
--			continue;
--		local->int_scan_req->rates[band] = (u32) -1;
--	}
--
- 	/* if low-level driver supports AP, we also support VLAN */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
- 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-@@ -880,6 +869,17 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 				return -EINVAL;
+@@ -2354,7 +2356,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
+ 	if (!request_wiphy) {
+-		schedule_delayed_work(&reg_timeout, 0);
++		queue_delayed_work(system_power_efficient_wq,
++				   &reg_timeout, 0);
+ 		return -ENODEV;
  	}
  
-+	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
-+				      sizeof(void *) * channels, GFP_KERNEL);
-+	if (!local->int_scan_req)
-+		return -ENOMEM;
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		if (!local->hw.wiphy->bands[band])
-+			continue;
-+		local->int_scan_req->rates[band] = (u32) -1;
-+	}
-+
- #ifndef CONFIG_MAC80211_MESH
- 	/* mesh depends on Kconfig, but drivers should set it if they want */
- 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
 -- 
-1.8.5.1
+1.7.9.5
 
