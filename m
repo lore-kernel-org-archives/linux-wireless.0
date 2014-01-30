@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59930 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbaAJNEl (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:47139 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbaA3Dae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jan 2014 08:04:41 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/13] mac80211_hwsim: verify wmediumd socket
-Date: Fri, 10 Jan 2014 13:51:07 +0100
-Message-Id: <1389358270-20901-11-git-send-email-johannes@sipsolutions.net> (sfid-20140110_140450_920468_7AD14F1C)
-In-Reply-To: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
-References: <1389358270-20901-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 29 Jan 2014 22:30:34 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	stable@vger.kernel.org
+Subject: [PATCH] ath9k: Do not support PowerSave by default
+Date: Thu, 30 Jan 2014 08:55:01 +0530
+Message-Id: <1391052301-25369-1-git-send-email-sujith@msujith.org> (sfid-20140130_043038_985507_B4092C62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-There can't be two wmediumd instances controlling hwsim,
-so reject registration from a second one and verify in
-the commands that it's the correct instance calling.
+Even though we make sure PowerSave is not enabled by default
+by disabling the flag, WIPHY_FLAG_PS_ON_BY_DEFAULT on init,
+PS could be enabled by userspace based on various factors
+like battery usage etc. Since PS in ath9k is just broken
+and has been untested for years, remove support for it, but
+allow a user to explicitly enable it using a module parameter.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath9k/init.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 1c51c33..4ee88a9 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2112,6 +2112,9 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	int i;
- 	bool found = false;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c36de30..1fc2e5a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -57,6 +57,10 @@ static int ath9k_bt_ant_diversity;
+ module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, 0444);
+ MODULE_PARM_DESC(bt_ant_diversity, "Enable WLAN/BT RX antenna diversity");
  
-+	if (info->snd_portid != wmediumd_portid)
-+		return -EINVAL;
++static int ath9k_ps_enable;
++module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
++MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
 +
- 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
- 	    !info->attrs[HWSIM_ATTR_FLAGS] ||
- 	    !info->attrs[HWSIM_ATTR_COOKIE] ||
-@@ -2185,6 +2188,9 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	void *frame_data;
- 	struct sk_buff *skb = NULL;
+ bool is_ath9k_unloaded;
+ /* We use the hw_value as an index into our private channel structure */
  
-+	if (info->snd_portid != wmediumd_portid)
-+		return -EINVAL;
-+
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
- 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
-@@ -2237,6 +2243,9 @@ out:
- static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 				      struct genl_info *info)
- {
-+	if (wmediumd_portid)
-+		return -EBUSY;
-+
- 	wmediumd_portid = info->snd_portid;
+@@ -903,13 +907,15 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		IEEE80211_HW_SIGNAL_DBM |
+-		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		IEEE80211_HW_SUPPORTS_RC_TABLE |
+ 		IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
  
- 	printk(KERN_DEBUG "mac80211_hwsim: received a REGISTER, "
++	if (ath9k_ps_enable)
++		hw->flags |= IEEE80211_HW_SUPPORTS_PS;
++
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+ 		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+ 
 -- 
-1.8.5.1
+1.8.5.3
 
