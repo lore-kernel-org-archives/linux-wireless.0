@@ -1,259 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:46431 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752652AbaAFLk5 (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:12125 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbaA3P6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 06:40:57 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 06/15] brcmfmac: correct reporting HT40 support in wiphy htcap
-Date: Mon, 6 Jan 2014 12:40:41 +0100
-Message-ID: <1389008450-28529-7-git-send-email-arend@broadcom.com> (sfid-20140106_124109_135723_658F58B5)
-In-Reply-To: <1389008450-28529-1-git-send-email-arend@broadcom.com>
-References: <1389008450-28529-1-git-send-email-arend@broadcom.com>
+	Thu, 30 Jan 2014 10:58:48 -0500
+Message-ID: <52EA7609.30107@redpinesignals.com> (sfid-20140130_165852_648985_0A621F09)
+Date: Thu, 30 Jan 2014 21:25:53 +0530
+From: Jahnavi <jahnavi.meher@redpinesignals.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.13.1 7/9] rsi: Sending pkts to device
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using 'iw phy' only showed HT20 support in the HT capabilities info.
-This patch determines support for HT40 using a firmware query that
-is supposed to work for all supported devices.
+From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This patch has the functions which send the packets to be 
+written onto the device. 
+
+Signed-off-by: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  120 +++++++++++++-------
- .../net/wireless/brcm80211/include/brcmu_wifi.h    |   14 +++
- 2 files changed, 91 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 3966fe0..a7c1afe 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -5087,7 +5087,8 @@ dongle_scantime_out:
- }
- 
- 
--static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg, u32 bw_cap)
-+static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg,
-+				   u32 bw_cap[])
- {
- 	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
- 	struct ieee80211_channel *band_chan_arr;
-@@ -5100,7 +5101,6 @@ static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg, u32 bw_cap)
- 	enum ieee80211_band band;
- 	u32 channel;
- 	u32 *n_cnt;
--	bool ht40_allowed;
- 	u32 index;
- 	u32 ht40_flag;
- 	bool update;
-@@ -5133,18 +5133,17 @@ static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg, u32 bw_cap)
- 			array_size = ARRAY_SIZE(__wl_2ghz_channels);
- 			n_cnt = &__wl_band_2ghz.n_channels;
- 			band = IEEE80211_BAND_2GHZ;
--			ht40_allowed = (bw_cap == WLC_N_BW_40ALL);
- 		} else if (ch.band == BRCMU_CHAN_BAND_5G) {
- 			band_chan_arr = __wl_5ghz_a_channels;
- 			array_size = ARRAY_SIZE(__wl_5ghz_a_channels);
- 			n_cnt = &__wl_band_5ghz_a.n_channels;
- 			band = IEEE80211_BAND_5GHZ;
--			ht40_allowed = !(bw_cap == WLC_N_BW_20ALL);
- 		} else {
--			brcmf_err("Invalid channel Sepc. 0x%x.\n", ch.chspec);
-+			brcmf_err("Invalid channel Spec. 0x%x.\n", ch.chspec);
- 			continue;
- 		}
--		if (!ht40_allowed && ch.bw == BRCMU_CHAN_BW_40)
-+		if (!(bw_cap[band] & WLC_BW_40MHZ_BIT) &&
-+		    ch.bw == BRCMU_CHAN_BW_40)
- 			continue;
- 		update = false;
- 		for (j = 0; (j < *n_cnt && (*n_cnt < array_size)); j++) {
-@@ -5162,7 +5161,10 @@ static s32 brcmf_construct_reginfo(struct brcmf_cfg80211_info *cfg, u32 bw_cap)
- 				ieee80211_channel_to_frequency(ch.chnum, band);
- 			band_chan_arr[index].hw_value = ch.chnum;
- 
--			if (ch.bw == BRCMU_CHAN_BW_40 && ht40_allowed) {
-+			brcmf_err("channel %d: f=%d bw=%d sb=%d\n",
-+				  ch.chnum, band_chan_arr[index].center_freq,
-+				  ch.bw, ch.sb);
-+			if (ch.bw == BRCMU_CHAN_BW_40) {
- 				/* assuming the order is HT20, HT40 Upper,
- 				 * HT40 lower from chanspecs
- 				 */
-@@ -5213,6 +5215,46 @@ exit:
- 	return err;
- }
- 
-+static void brcmf_get_bwcap(struct brcmf_if *ifp, u32 bw_cap[])
+rsi_91x_pkt.c |  231 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+1 file changed, 231 insertions(+)
+
+diff -uprN a/drivers/net/wireless/rsi/91x/rsi_91x_pkt.c b/drivers/net/wireless/rsi/91x/rsi_91x_pkt.c
+--- a/drivers/net/wireless/rsi/91x/rsi_91x_pkt.c	1970-01-01 05:30:00.000000000 +0530
++++ b/drivers/net/wireless/rsi/91x/rsi_91x_pkt.c	2014-01-30 16:25:56.129903584 +0530
+@@ -0,0 +1,231 @@
++/**
++ * @file rsi_91x_pkt.c
++ * @author
++ * @version 1.0
++ *
++ * @section LICENSE
++ * Copyright (c) 2013 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * @section DESCRIPTION
++ *
++ * The file handles the data/mgmt packets transfer to the device.
++ */
++
++#include "../include/rsi_main.h"
++#include "../include/rsi_device_ops.h"
++#include "../include/rsi_mgmt.h"
++
++/**
++ * This function sends the recieved data packet from driver to onair.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  skb Pointer to the socket buffer structure.
++ * @return status: 0 on success, -1 on failure.
++ */
++int rsi_send_data_pkt(struct rsi_common *common,
++		      struct sk_buff *skb)
 +{
-+	u32 band, mimo_bwcap;
-+	int err;
++	unsigned short *frame_desc;
++	unsigned short seq_num = 0;
++	struct ieee80211_hdr *tmp_hdr = NULL;
++	unsigned char ieee80211_size = MIN_802_11_HDR_LEN;
++	unsigned char extnd_size = 0;
++	struct ieee80211_tx_info *info;
++	struct skb_info *tx_params;
++	struct ieee80211_bss_conf *bss = NULL;
++	int status = -1;
 +
-+	band = WLC_BAND_2G;
-+	err = brcmf_fil_iovar_int_get(ifp, "bw_cap", &band);
-+	if (!err) {
-+		bw_cap[IEEE80211_BAND_2GHZ] = band;
-+		band = WLC_BAND_5G;
-+		err = brcmf_fil_iovar_int_get(ifp, "bw_cap", &band);
-+		if (!err) {
-+			bw_cap[IEEE80211_BAND_5GHZ] = band;
-+			return;
-+		}
-+		WARN_ON(1);
-+		return;
-+	}
-+	brcmf_dbg(INFO, "fallback to mimo_bw_cap info\n");
-+	mimo_bwcap = 0;
-+	err = brcmf_fil_iovar_int_get(ifp, "mimo_bw_cap", &mimo_bwcap);
-+	if (err)
-+		/* assume 20MHz if firmware does not give a clue */
-+		mimo_bwcap = WLC_N_BW_20ALL;
++	info = IEEE80211_SKB_CB(skb);
++	bss = &info->control.vif->bss_conf;
++	tx_params = (struct skb_info *)info->driver_data;
 +
-+	switch (mimo_bwcap) {
-+	case WLC_N_BW_40ALL:
-+		bw_cap[IEEE80211_BAND_2GHZ] |= WLC_BW_40MHZ_BIT;
-+		/* fall-thru */
-+	case WLC_N_BW_20IN2G_40IN5G:
-+		bw_cap[IEEE80211_BAND_5GHZ] |= WLC_BW_40MHZ_BIT;
-+		/* fall-thru */
-+	case WLC_N_BW_20ALL:
-+		bw_cap[IEEE80211_BAND_2GHZ] |= WLC_BW_20MHZ_BIT;
-+		bw_cap[IEEE80211_BAND_5GHZ] |= WLC_BW_20MHZ_BIT;
-+		break;
-+	default:
-+		brcmf_err("invalid mimo_bw_cap value\n");
++	if ((common->fsm_state != FSM_MAC_INIT_DONE) || (!bss->assoc))
++		goto err;
++
++	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
++	seq_num = (tmp_hdr->seq_ctrl >> 4);
++
++	extnd_size = ((uintptr_t)skb->data & 0x3);
++
++	if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
++		goto err;
++	} else {
++		skb_push(skb, (FRAME_DESC_SZ + extnd_size));
 +	}
-+}
- 
- static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- {
-@@ -5221,13 +5263,13 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	s32 phy_list;
- 	u32 band_list[3];
- 	u32 nmode;
--	u32 bw_cap = 0;
-+	u32 bw_cap[2] = { 0, 0 };
- 	s8 phy;
- 	s32 err;
- 	u32 nband;
- 	s32 i;
--	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
--	s32 index;
-+	struct ieee80211_supported_band *bands[2] = { NULL, NULL };
-+	struct ieee80211_supported_band *band;
- 
- 	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_PHYLIST,
- 				     &phy_list, sizeof(phy_list));
-@@ -5253,11 +5295,10 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	if (err) {
- 		brcmf_err("nmode error (%d)\n", err);
- 	} else {
--		err = brcmf_fil_iovar_int_get(ifp, "mimo_bw_cap", &bw_cap);
--		if (err)
--			brcmf_err("mimo_bw_cap error (%d)\n", err);
-+		brcmf_get_bwcap(ifp, bw_cap);
- 	}
--	brcmf_dbg(INFO, "nmode=%d, mimo_bw_cap=%d\n", nmode, bw_cap);
-+	brcmf_dbg(INFO, "nmode=%d, bw_cap=(%d, %d)\n", nmode,
-+		  bw_cap[IEEE80211_BAND_2GHZ], bw_cap[IEEE80211_BAND_5GHZ]);
- 
- 	err = brcmf_construct_reginfo(cfg, bw_cap);
- 	if (err) {
-@@ -5266,40 +5307,33 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	}
- 
- 	nband = band_list[0];
--	memset(bands, 0, sizeof(bands));
- 
- 	for (i = 1; i <= nband && i < ARRAY_SIZE(band_list); i++) {
--		index = -1;
-+		band = NULL;
- 		if ((band_list[i] == WLC_BAND_5G) &&
--		    (__wl_band_5ghz_a.n_channels > 0)) {
--			index = IEEE80211_BAND_5GHZ;
--			bands[index] = &__wl_band_5ghz_a;
--			if ((bw_cap == WLC_N_BW_40ALL) ||
--			    (bw_cap == WLC_N_BW_20IN2G_40IN5G))
--				bands[index]->ht_cap.cap |=
--							IEEE80211_HT_CAP_SGI_40;
--		} else if ((band_list[i] == WLC_BAND_2G) &&
--			   (__wl_band_2ghz.n_channels > 0)) {
--			index = IEEE80211_BAND_2GHZ;
--			bands[index] = &__wl_band_2ghz;
--			if (bw_cap == WLC_N_BW_40ALL)
--				bands[index]->ht_cap.cap |=
--							IEEE80211_HT_CAP_SGI_40;
--		}
-+		    (__wl_band_5ghz_a.n_channels > 0))
-+			band = &__wl_band_5ghz_a;
-+		else if ((band_list[i] == WLC_BAND_2G) &&
-+			 (__wl_band_2ghz.n_channels > 0))
-+			band = &__wl_band_2ghz;
++
++	frame_desc = (unsigned short *)&skb->data[0];
++	memset((unsigned char *)frame_desc, 0, FRAME_DESC_SZ);
++
++	if (tmp_hdr->frame_control & IEEE80211_QOS_ENABLED) {
++		ieee80211_size += 2;
++		frame_desc[6] |= cpu_to_le16(BIT(12));
++	}
++
++	if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
++	    (common->secinfo.security_enable)) {
++		if (rsi_is_cipher_wep(common))
++			ieee80211_size += 4;
 +		else
-+			continue;
- 
--		if ((index >= 0) && nmode) {
--			bands[index]->ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
--			bands[index]->ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
--			bands[index]->ht_cap.ht_supported = true;
--			bands[index]->ht_cap.ampdu_factor =
--						IEEE80211_HT_MAX_AMPDU_64K;
--			bands[index]->ht_cap.ampdu_density =
--						IEEE80211_HT_MPDU_DENSITY_16;
--			/* An HT shall support all EQM rates for one spatial
--			 * stream
--			 */
--			bands[index]->ht_cap.mcs.rx_mask[0] = 0xff;
-+		if (bw_cap[band->band] & WLC_BW_40MHZ_BIT) {
-+			band->ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
-+			band->ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 		}
-+		band->ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
-+		band->ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
-+		band->ht_cap.ht_supported = true;
-+		band->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+		band->ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16;
-+		/* An HT shall support all EQM rates for one spatial
-+		 * stream
-+		 */
-+		band->ht_cap.mcs.rx_mask[0] = 0xff;
-+		band->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
-+		bands[band->band] = band;
- 	}
- 
- 	wiphy = cfg_to_wiphy(cfg);
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-index 0505cc0..7ca2aa1 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-@@ -82,6 +82,20 @@
- #define WLC_N_BW_40ALL			1
- #define WLC_N_BW_20IN2G_40IN5G		2
- 
-+#define WLC_BW_20MHZ_BIT		BIT(0)
-+#define WLC_BW_40MHZ_BIT		BIT(1)
-+#define WLC_BW_80MHZ_BIT		BIT(2)
-+#define WLC_BW_160MHZ_BIT		BIT(3)
++			ieee80211_size += 8;
++		frame_desc[6] |= cpu_to_le16(BIT(15));
++	}
 +
-+/* Bandwidth capabilities */
-+#define WLC_BW_CAP_20MHZ		(WLC_BW_20MHZ_BIT)
-+#define WLC_BW_CAP_40MHZ		(WLC_BW_40MHZ_BIT|WLC_BW_20MHZ_BIT)
-+#define WLC_BW_CAP_80MHZ		(WLC_BW_80MHZ_BIT|WLC_BW_40MHZ_BIT| \
-+					 WLC_BW_20MHZ_BIT)
-+#define WLC_BW_CAP_160MHZ		(WLC_BW_160MHZ_BIT|WLC_BW_80MHZ_BIT| \
-+					 WLC_BW_40MHZ_BIT|WLC_BW_20MHZ_BIT)
-+#define WLC_BW_CAP_UNRESTRICTED		0xFF
++	frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
++				(RSI_WIFI_DATA_Q << 12));
++	frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
 +
- /* band types */
- #define	WLC_BAND_AUTO			0	/* auto-select */
- #define	WLC_BAND_5G			1	/* 5 Ghz */
--- 
-1.7.10.4
++	if (common->min_rate != 0xffff) {
++		/* Send fixed rate */
++		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
++		frame_desc[4] = cpu_to_le16(common->min_rate);
++	}
++
++	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
++	frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
++				(skb->priority & 0xf) |
++				(tx_params->sta_id << 8));
++
++	common->common_ops->print(DATA_TX_ZONE, skb->data, skb->len);
++	if (skb->len <= 1594) {
++		status = common->common_ops->host_intf_write_pkt(common->priv,
++								 skb->data,
++								 skb->len);
++		if (status) {
++			rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
++				__func__);
++		}
++	}
++
++err:
++	++common->tx_stats.total_data_pkt_freed[skb->priority];
++	rsi_indicate_tx_status(common->priv, skb, status);
++	return status;
++}
++EXPORT_SYMBOL(rsi_send_data_pkt);
++
++/**
++ * This functions sends the recieved management packet from driver to onair.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  skb Pointer to the socket buffer structure.
++ * @return status: 0 on success, -1 on failure.
++ */
++int rsi_send_mgmt_pkt(struct rsi_common *common,
++		      struct sk_buff *skb)
++{
++	unsigned short *msg = NULL;
++	unsigned char vap_id = 0;
++	struct ieee80211_hdr *wh = NULL;
++	unsigned char extnd_size = 0;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_bss_conf *bss = NULL;
++	struct skb_info *tx_params;
++	int status = -1;
++
++	info = IEEE80211_SKB_CB(skb);
++	tx_params = (struct skb_info *)info->driver_data;
++	extnd_size = ((uintptr_t)skb->data & 0x3);
++
++	if (tx_params->flags & INTERNAL_MGMT_PKT) {
++		if ((extnd_size) > skb_headroom(skb)) {
++			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n",
++				__func__);
++			dev_kfree_skb(skb);
++			return -1;
++		} else {
++			skb_push(skb, extnd_size);
++		}
++		skb->data[extnd_size + 4] = cpu_to_le16(extnd_size);
++		common->common_ops->print(MGMT_TX_ZONE,
++					  (unsigned char *)skb->data,
++					  skb->len);
++		status = common->common_ops->host_intf_write_pkt(common->priv,
++						(unsigned char *)skb->data,
++						skb->len);
++		if (status) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Failed to write the packet\n", __func__);
++			common->common_ops->print(ERR_ZONE,
++						  skb->data,
++						  skb->len);
++		}
++		dev_kfree_skb(skb);
++		return status;
++	}
++
++	bss = &info->control.vif->bss_conf;
++	wh = (struct ieee80211_hdr *)&skb->data[0];
++
++	if (common->fsm_state != FSM_MAC_INIT_DONE)
++		goto err;
++
++	if (FRAME_DESC_SZ > skb_headroom(skb))
++		goto err;
++	else
++		skb_push(skb, FRAME_DESC_SZ);
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	msg = (unsigned short *)skb->data;
++
++	if (skb->len > MAX_MGMT_PKT_SIZE) {
++		rsi_dbg(INFO_ZONE, "%s: Dropping mgmt pkt > 512\n", __func__);
++		goto err;
++	}
++
++	msg[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
++			    (RSI_WIFI_MGMT_Q << 12));
++	msg[1] = cpu_to_le16(TX_DOT11_MGMT);
++	msg[2] = cpu_to_le16(MIN_802_11_HDR_LEN << 8);
++	msg[3] = cpu_to_le16(RATE_INFO_ENABLE);
++	msg[6] = cpu_to_le16(wh->seq_ctrl >> 4);
++
++	if (wh->addr1[0] & 0x1)
++		msg[3] |= cpu_to_le16(RSI_BROADCAST_PKT);
++
++	if (common->band == IEEE80211_BAND_2GHZ)
++		msg[4] = cpu_to_le16(RSI_11B_MODE);
++	else
++		msg[4] = cpu_to_le16(0xB | RSI_11G_MODE);
++
++	/* Indicate to firmware to give cfm */
++	if ((skb->data[16] == 0x40) && (!bss->assoc)) {
++		msg[1] |= cpu_to_le16(1 << 10);
++		msg[7] = cpu_to_le16(PROBEREQ_CONFIRM);
++		common->mgmt_q_block = true;
++	}
++
++	msg[7] |= cpu_to_le16(vap_id << 8);
++
++	common->common_ops->print(MGMT_TX_ZONE,
++				  (unsigned char *)msg,
++				  skb->len);
++
++	status = common->common_ops->host_intf_write_pkt(common->priv,
++							 (unsigned char *)msg,
++							 skb->len);
++	if (status) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n",
++			__func__);
++		common->common_ops->print(ERR_ZONE,
++					  (unsigned char *)msg,
++					  skb->len);
++	}
++
++err:
++	rsi_indicate_tx_status(common->priv, skb, status);
++	return status;
++}
++EXPORT_SYMBOL(rsi_send_mgmt_pkt);
+
+
 
