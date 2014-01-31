@@ -1,68 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12541 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbaABU3c (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:34645 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076AbaAaKws (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jan 2014 15:29:32 -0500
-Message-ID: <52C5CC27.8020809@broadcom.com> (sfid-20140102_212935_834925_F309E722)
-Date: Thu, 2 Jan 2014 21:29:27 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 31 Jan 2014 05:52:48 -0500
+Message-ID: <52EB8083.2050507@redpinesignals.com> (sfid-20140131_115252_482006_4B69A490)
+Date: Fri, 31 Jan 2014 16:22:51 +0530
+From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
 MIME-Version: 1.0
-To: Rosimildo DaSilva <rosimildo@gmail.com>,
-	<linux-sunxi@googlegroups.com>
-CC: Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Olliver Schinagl <oliver+list@schinagl.nl>,
-	<benn@cubietech.com>
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> <52BD68BA.3080304@broadcom.com> <CAGb2v67Q=q4vyOftb+BLhAYR-6d04dDP3+kY3b88U8_vCvAmgQ@mail.gmail.com> <52C570B6.30500@broadcom.com> <CAGb2v650WNnXqRY+PTwqjbo7pBPDvwHEfzvLM6HaLakZ4Nt1JA@mail.gmail.com> <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
-In-Reply-To: <5ce9ab14-5794-4c0d-a859-7a158655f58e@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.13.1 1/9] rsi: Add RS9113 driver
+References: <52EA7584.4040508@redpinesignals.com>	 (sfid-20140130_165938_444207_B3C8ACC3) <1391098706.4323.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1391098706.4323.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2014 08:22 PM, Rosimildo DaSilva wrote:
-> It would be nice to be precise about what is working:
-> 
-> a) Wifi + BT
-> b) WIFI only
-> c) BT only
-> 
-> Reading the thread, it seems you got (a) WIFI + BT working. Is this correct 
-> ?
+Hi Johannes, 
+Thank you for the review comments, will make the changes
+as you have suggested. A-MPDU indication frames are sent 
+to the firmware to start/stop tx/rx ampdu aggregation.
 
-I think you need to read the thread once more. Wifi is working, no life
-sign from the BT using UART, ie. (b).
+Regards,
+Jahnavi
 
-Gr. AvS
+On 01/30/2014 09:48 PM, Johannes Berg wrote:
+> On Thu, 2014-01-30 at 21:23 +0530, Jahnavi wrote:
+>> From: Jahnavi Meher <jahnavi.meher@redpinesignals.com>
+>>
+>> This driver supports the RS9113 chipset from Redpine Signals Inc. This
+>> chipset supports the 802.11a/b/g/n standards, but this driver currently
+>> supports only b/g/n. Both SDIO and USB interfaces are supported. Can be
+>> upgraded to 91x quite easily. More information can be found at:
+>> http://www.redpinesignals.com/Technologies_&_Chipsets/Chipsets/RS9113.php
+> You should probably propose it for staging... let me take a few minutes
+> and make a quick review pass.
+>
+>> +/**
+>> + * @file rsi_device_ops.h
+>> + * @author
+>> + * @version 1.0
+>> + *
+>> + * @section LICENSE
+> Those lines are all useless
+>
+>> + * Copyright (c) 2013 Redpine Signals Inc.
+> It's 2014 now, surely you want to claim copyright this year?
+>
+>> + * @section DESCRIPTION
+> That's unnecessary.
+>
+>> + * This file contians the data structures and variables/ macros commonly
+> contains
+>
+>> +#define RSI_HEADER_SIZE                 18
+> That should probably be some struct, and the define doing sizeof()?
+>
+>> +static inline unsigned int rsi_get_queueno(unsigned char *addr,
+>> +					   unsigned short offset)
+>> +{
+>> +	return (le16_to_cpu(*(unsigned short *)&addr[offset]) & 0x7000) >> 12;
+>> +static inline unsigned int rsi_get_length(unsigned char *addr,
+>> +					  unsigned short offset)
+>> +static inline unsigned char rsi_get_extended_desc(unsigned char *addr,
+>> +						  unsigned short offset)
+>> +static inline unsigned char rsi_get_rssi(unsigned char *addr)
+>> +static inline unsigned char rsi_get_channel(unsigned char *addr)
+> These seem like they should then just be replaced by
+>
+> 	some_struct_ptr->rssi
+>
+> and similar?
+>
+>> +int rsi_send_ampdu_indication_frame(struct rsi_common *common,
+>> +				    unsigned short tid,
+>> +				    unsigned short ssn, unsigned char buf_size,
+>> +				    unsigned char event);
+> what are "A-MPDU indication frame[s]"?
+>
+>> +#ifdef USE_USB_INTF
+> Shouldn't that be just CONFIG_RSI_SOMETHING?
+>
+>> +typedef void (*SD_INTERRUPT)(void *pcontext);
+> no typedefs please
+>
+>> +#define SDIO_BLOCK_SIZE                         256
+> Seems like there should be a define for that already?
+>
+>
+>> +++ b/drivers/net/wireless/rsi/include/rsi_mac80211.h	2014-01-30 16:01:00.194777922 +0530
+>> +static const struct ieee80211_channel rsi_2ghz_channels[] = {
+>> +static const struct ieee80211_channel rsi_5ghz_channels[] = {
+>> +static struct ieee80211_rate rsi_rates[] = {
+>> +static const unsigned short rsi_mcsrates[] = {
+> None of this belongs into a header file.
+>
+>> + * This file contians the os dependent( Linux) specific function prototypes
+>> + * and macros
+> That kind of thing is generally frowned upon.
+>
+>> +void rsi_print(int zone, unsigned char *vdata, int len);
+> Unless it's more than just a simple printk wrapper?
+>
+>> +struct module_ps_config {
+>> +	unsigned int not_in_use:1;
+>> +	unsigned int clock_gate:1;
+>> +	unsigned int logical_prgm:1;
+>> +	unsigned int logical_poweroff:1;
+>> +	unsigned int power_off:1;
+>> +	unsigned int resvd:27;
+>> +};
+> Uh, no, you can't use bitfields in hardware/firmware communication
+> structs. They also need to be __packed, in most cases.
+>
+>> +struct rsi_mac_frame {
+> All those unions seem a bit ... overblown? Probably better to define
+> separate structs for different usages and cast appropriately.
+>
+> johannes
+>
+>
+>
 
-> R
-> 
-> 
-> On Thursday, January 2, 2014 11:09:12 AM UTC-6, Chen-Yu Tsai wrote:
->>
->> Hi, 
->>
->> On Thu, Jan 2, 2014 at 9:59 PM, Arend van Spriel <ar...@broadcom.com<javascript:>> 
->> wrote: 
->> [snip] 
->>> Hi Chen-Yu, 
->>>
->>> I confirmed the patch is working with a revision 0 of the device. What 
->>> chip revision does it give in your log (need to load brcmfmac with 
->>> module parameter debug=4). 
->>
->> Mine is revision 1. Managed mode confirmed working. 
->>
->> Logs: 
->> brcmfmac: F1 signature read @0x18000000=0x1591a962 
->> brcmfmac: brcmf_sdio_chip_recognition chipid=0xa962 chiprev=1 
->> brcmfmac: brcmf_sdio_chip_buscoresetup ccrev=39, pmurev=13, buscore 
->> rev/type=10/0x829 
->>
->>
->> ChenYu 
->>
-> 
 
