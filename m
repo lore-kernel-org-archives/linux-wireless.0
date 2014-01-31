@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:42328 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754AbaAPVlg (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45565 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbaAaF2E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jan 2014 16:41:36 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Fri, 31 Jan 2014 00:28:04 -0500
+Date: Fri, 31 Jan 2014 06:29:21 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Olivier Langlois <olivier@trillion01.com>
+Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 2/2] retry hw init when it fails
+Message-ID: <20140131052921.GA27202@kroah.com> (sfid-20140131_062827_584096_73CFDC82)
+References: <1391145383-18652-1-git-send-email-olivier@trillion01.com>
+ <1391145383-18652-2-git-send-email-olivier@trillion01.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21208.20686.79159.966434@gargle.gargle.HOWL> (sfid-20140116_224139_261790_6C9AFC9A)
-Date: Fri, 17 Jan 2014 03:06:14 +0530
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k: Fix TX IQ calibration for SoC chips
-In-Reply-To: <52D7C62F.2030307@neratec.com>
-References: <1384665016-12022-1-git-send-email-sujith@msujith.org>
-	<1384665016-12022-5-git-send-email-sujith@msujith.org>
-	<52CE934D.1020400@neratec.com>
-	<21198.40916.260973.48444@gargle.gargle.HOWL>
-	<52CEA5A3.2040308@neratec.com>
-	<21198.43395.235654.597422@gargle.gargle.HOWL>
-	<52CEAB24.5090700@neratec.com>
-	<52D3F962.1010302@neratec.com>
-	<21204.319.492595.58625@gargle.gargle.HOWL>
-	<52D402C3.3070606@neratec.com>
-	<21204.1991.201080.986559@gargle.gargle.HOWL>
-	<21204.2384.710460.402183@gargle.gargle.HOWL>
-	<21204.3832.404821.109119@gargle.gargle.HOWL>
-	<52D63EBB.7020607@neratec.com>
-	<21206.17284.157496.206327@gargle.gargle.HOWL>
-	<52D6472B.2060207@neratec.com>
-	<21207.48441.292580.481850@gargle.gargle.HOWL>
-	<21207.49245.151249.759167@gargle.gargle.HOWL>
-	<52D7C62F.2030307@neratec.com>
+In-Reply-To: <1391145383-18652-2-git-send-email-olivier@trillion01.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik wrote:
-> I guess I won't be able to reproduce bad scan results with wireless 
-> testing since I have
-> changed scan reporting to pure rssi in my openwrt compat.
-> In normal case you get a sum of rssi and noise floor and it will be 
-> correct i.e. when
-> NF is shifted by 14db so will be rssi.
-> So it's just my use case.
+On Fri, Jan 31, 2014 at 12:16:23AM -0500, Olivier Langlois wrote:
+> rtl_ps_enable_nic() is called from loops that will loop until this function returns true or a
+> maximum number of retries is performed.
 > 
-> Anyway I have just solved the issue by applying calibrated noise floor 
-> values from eeprom
-> instead of nominal in nf_get functions and nf histogram. Now the rssi 
-> seems stable in my test
-> environment. I have just started testing but it looks promising.
+> hw_init() returns non-zero on error. In that situation return false to
+> restore the original design intent to retry hw init when it fails.
+> 
+> Signed-off-by: Olivier Langlois <olivier@trillion01.com>
+> ---
+>  drivers/net/wireless/rtlwifi/ps.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't see how that would fix the issue. The race still remains since
-there is a window between NF cal init and completion. The results
-of the calibration depends on the environment and using default values
-from the eeprom will not fix this, I think.
 
-Sujith
+<formletter>
+
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
+
+</formletter>
+
+Same goes for aptch 1/2 as well...
