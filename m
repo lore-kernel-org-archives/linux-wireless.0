@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:52638 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbaBCLWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 06:22:49 -0500
-Received: from [192.168.1.100] ([93.196.93.204]) by mail.gmx.com (mrgmx101)
- with ESMTPSA (Nemesis) id 0MVZuV-1Vk20V212F-00YzCg for
- <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:22:32 +0100
-Message-ID: <52EF7BEB.5080605@rempel-privat.de> (sfid-20140203_122255_685768_B47F62B2)
-Date: Mon, 03 Feb 2014 12:22:19 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/13] ath9k_htc: add rx header converter to make it usable
- by ath9k
-References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-4-git-send-email-linux@rempel-privat.de> <21230.64089.741.909535@gargle.gargle.HOWL>
-In-Reply-To: <21230.64089.741.909535@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="vSXEuX96LN70dvfw4PATcmuh94GqBMUpT"
+Received: from s3.sipsolutions.net ([144.76.43.152]:54115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbaAaXdh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jan 2014 18:33:37 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix fragmentation code, particularly for encryption
+Date: Sat,  1 Feb 2014 00:33:29 +0100
+Message-Id: <1391211209-14284-1-git-send-email-johannes@sipsolutions.net> (sfid-20140201_003340_747333_16673024)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---vSXEuX96LN70dvfw4PATcmuh94GqBMUpT
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Johannes Berg <johannes.berg@intel.com>
 
-Am 03.02.2014 03:09, schrieb Sujith Manoharan:
-> Oleksij Rempel wrote:
->> +	rx_stats =3D kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
->> +	if (unlikely(rx_stats =3D=3D NULL)) {
->> +		ath_err(common, "rx_stats allocation filed!\n");
->> +		goto err_nofree;
->> +	}
->> +	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
->> +
+The "new" fragmentation code (since my rewrite almost 5 years ago)
+erroneously sets skb->len rather than using skb_trim() to adjust
+the length of the first fragment after copying out all the others.
+This leaves the skb tail pointer pointing to after where the data
+originally ended, and thus causes the encryption MIC to be written
+at that point, rather than where it belongs: immediately after the
+data.
 
-> This seems a little expensive, since this would happen for every packet=
-,
-> and a memcpy is already done earlier, for storing the RX status in
-> rxbuf->rxstatus. Instead of using 'struct ath_htc_rx_status' in
-> 'struct ath9k_htc_rxbuf', why can't 'struct ath_rx_status' be used ?
-> The values can be converted and stored directly, avoiding this alloc.
+The impact of this is that if software encryption is done, then
+ a) encryption doesn't work for the first fragment, the connection
+    becomes unusable as the first fragment will never be properly
+    verified at the receiver, the MIC is practically guaranteed to
+    be wrong
+ b) we leak up to 8 bytes of plaintext (!) of the packet out into
+    the air
 
-Do you mean kzalloc or converter?
-then memcpy is removed by patch 12/13. Converter is not effective but it
-should prevent from confusions. At least until FW use same flags and
-struct ath_rx_status do.
-But i'm open for other ideas too.
+This is only mitigated by the fact that many devices are capable
+of doing encryption in hardware, in which case this can't happen
+as the tail pointer is irrelevant in that case. Additionally,
+fragmentation is not used very frequently and would normally have
+to be configured manually.
 
---=20
-Regards,
-Oleksij
+Fix this by using skb_trim() properly.
 
+Cc: stable@vger.kernel.org
+Fixes: 2de8e0d999b8 ("mac80211: rewrite fragmentation")
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---vSXEuX96LN70dvfw4PATcmuh94GqBMUpT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a6ee535..6403c2e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -871,7 +871,7 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
+ 	}
+ 
+ 	/* adjust first fragment's length */
+-	skb->len = hdrlen + per_fragm;
++	skb_trim(skb, hdrlen + per_fragm);
+ 	return 0;
+ }
+ 
+-- 
+1.8.5.2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlLve/IACgkQHwImuRkmbWl8ZwD/UHCz8WTXSc0Jq2f6vvbZPUcJ
-Kxz3YTCBaBkuXP6IwKkA/1yInKyaInhtz7Ijh7OtPbn9IRTRdLZALQ33cFl/kXNF
-=a9sB
------END PGP SIGNATURE-----
-
---vSXEuX96LN70dvfw4PATcmuh94GqBMUpT--
