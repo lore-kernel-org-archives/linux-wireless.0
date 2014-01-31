@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:49320 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078AbaAMQRL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52120 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbaAaNjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jan 2014 11:17:11 -0500
-Received: by mail-wg0-f42.google.com with SMTP id l18so2949953wgh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jan 2014 08:17:10 -0800 (PST)
-Message-ID: <1389629824.2590.0.camel@canaries32-MCP7A> (sfid-20140113_171720_495848_8B22420D)
-Subject: [PATCH 1/6] staging: vt6656: sparse fixes: dpc.c missing dpc.h
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 13 Jan 2014 16:17:04 +0000
+	Fri, 31 Jan 2014 08:39:10 -0500
+Message-ID: <1391175537.4141.9.camel@jlt4.sipsolutions.net> (sfid-20140131_143931_460886_FA00FA43)
+Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to
+ power efficient workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zoran Markovic <zoran.markovic@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Fri, 31 Jan 2014 14:38:57 +0100
+In-Reply-To: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org> (sfid-20140131_000951_185024_42790CBB)
+References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
+	 (sfid-20140131_000951_185024_42790CBB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sparse warnings
-dpc.c:249:5: warning: symbol 'RXbBulkInProcessData' was not declared. Should it be static?
-dpc.c:1295:6: warning: symbol 'RXvWorkItem' was not declared. Should it be static?
-dpc.c:1321:6: warning: symbol 'RXvFreeRCB' was not declared. Should it be static?
-dpc.c:1356:6: warning: symbol 'RXvMngWorkItem' was not declared. Should it be static?
+On Thu, 2014-01-30 at 15:08 -0800, Zoran Markovic wrote:
+> From: Shaibal Dutta <shaibal.dutta@broadcom.com>
+> 
+> For better use of CPU idle time, allow the scheduler to select the CPU
+> on which the timeout work of regulatory settings would be executed.
+> This extends CPU idle residency time and saves power.
+> 
+> This functionality is enabled when CONFIG_WQ_POWER_EFFICIENT is selected.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/dpc.c | 1 +
- 1 file changed, 1 insertion(+)
+Applied.
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 7b050e9..eca04c0 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -38,6 +38,7 @@
-  *
-  */
- 
-+#include "dpc.h"
- #include "device.h"
- #include "rxtx.h"
- #include "tether.h"
--- 
-1.8.5.2
-
+johannes
 
