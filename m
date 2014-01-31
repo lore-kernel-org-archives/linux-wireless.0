@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:64705 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755793AbaAFQrP (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51395 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbaAaJmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jan 2014 11:47:15 -0500
-Received: by mail-we0-f178.google.com with SMTP id u57so16170614wes.9
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jan 2014 08:47:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389023718.5891.31.camel@jlt4.sipsolutions.net>
-References: <1388869583-2767-1-git-send-email-chaitanya.mgit@gmail.com>
- <1389019739.5891.16.camel@jlt4.sipsolutions.net> <CABPxzY+yP1N1xLBHcVvMss_E=+2_3M95bQCEaxbkzvF+wbtnCQ@mail.gmail.com>
- <1389021322.5891.25.camel@jlt4.sipsolutions.net> <CABPxzY+En=1GxfBWHYgaSYSLv61MMYiFHz=hnJnsGnfBWpBJSQ@mail.gmail.com>
- <1389023718.5891.31.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 6 Jan 2014 22:16:53 +0530
-Message-ID: <CABPxzYJwEimPKw3YWi-zAZQCMTR4H2GzrLx+uyespD8ooHcW0g@mail.gmail.com> (sfid-20140106_174724_577181_BD84FC90)
-Subject: Re: [PATCH] mac80211: Fix the buffer length in debugfs for smps
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 31 Jan 2014 04:42:33 -0500
+Message-ID: <1391161343.4141.3.camel@jlt4.sipsolutions.net> (sfid-20140131_104332_412493_74D09C61)
+Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to
+ power efficient workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Zoran Markovic <zoran.markovic@linaro.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Fri, 31 Jan 2014 10:42:23 +0100
+In-Reply-To: <20140131093531.GA25559@mtj.dyndns.org> (sfid-20140131_103536_949453_61FB57CB)
+References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
+	 <1391160084.4141.1.camel@jlt4.sipsolutions.net>
+	 <20140131093531.GA25559@mtj.dyndns.org>
+	 (sfid-20140131_103536_949453_61FB57CB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 6, 2014 at 9:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2014-01-06 at 21:02 +0530, Krishna Chaitanya wrote:
->> On Mon, Jan 6, 2014 at 8:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Mon, 2014-01-06 at 20:35 +0530, Krishna Chaitanya wrote:
->> >> On Mon, Jan 6, 2014 at 8:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> > On Sun, 2014-01-05 at 02:36 +0530, Chaitanya T K wrote:
->> >> >> This was blocking sending SMPS action frames
->> >> >> through debugfs.
->> >> >
->> >> > I don't see any issue here, explain.
->> >> >
->> >> > johannes
->> >> >
->> >> buflen includes the new line character as well, hence the comparison
->> >> strncmp fails for all combiantions.
->> >>
->> >> echo "static" > ieee80211/phyX/netdev\:wlanX/smps
->> >> Then
->> >>
->> >> buf=static\n
->> >> buflen=7
->> >>
->> >> But the comparison is with "static" which doesn't include "\n"
->> >> hence the comparison fails.
->> >
->> > Err, ok, so you can just do "echo -n static", right?
->> >
->> > And then your patch breaks the way it currently works, which is about
->> > the worst you can do.
->> >
->> Ok, if one works other fails.
->>
->> So instead why cant we use strlen(local_string)
->> instead of using buflen(remote). That way we can make sure we only
->> compare the characters we need and leave out the extra ones.
->
-> It wouldn't fix the problem and would introduce a buffer overflow bug.
->
-We can add some checks to make sure it doesn't overflow, but its not
-worth it.
+On Fri, 2014-01-31 at 04:35 -0500, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Jan 31, 2014 at 10:21:24AM +0100, Johannes Berg wrote:
+> > I'm not sure if this is part of a larger patchset actually adding that
+> > "system_power_efficient_wq", but maybe it'd be better to expose a
+> > function as an API rather than the wq struct?
+> > 
+> > Something like
+> > 
+> > scheduled_delayed_work_pwr_efficient(...)?
+> 
+> While there are some benefits to using dedicated functions for
+> specific workqueues, I don't think it brings enough benefits to
+> justify adding dedicated API and am unlikely to add new ones.
 
-My intention is as most of the users are familiar with "echo" and
-not "echo -n", its better to have a solution which works with "echo".
+Fair enough, I guess I'll take those patches in.
 
-Also if we use buflen-1 and give "echo -n" it still works but problem is
-it compares 1 less character.
+johannes
 
-Anyways either one is fine with me.
-
-Thanks.
