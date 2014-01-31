@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21734 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbaAVAza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jan 2014 19:55:30 -0500
-Date: Wed, 22 Jan 2014 01:55:07 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "Mark A. Greer" <mgreer@animalcreek.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Subject: Re: [PATCH v2 2/3] NFC: iso15693 - Add Digital Layer support for
- ISO/IEC 15693
-Message-ID: <20140122005507.GJ19138@zurbaran> (sfid-20140122_015534_075994_4E4057F4)
-References: <1389747131-2577-1-git-send-email-mgreer@animalcreek.com>
- <1389747131-2577-3-git-send-email-mgreer@animalcreek.com>
- <20140121232359.GA32300@animalcreek.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140121232359.GA32300@animalcreek.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:52255 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbaAaON4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jan 2014 09:13:56 -0500
+Message-ID: <1391177634.4141.24.camel@jlt4.sipsolutions.net> (sfid-20140131_151400_103529_F40773F2)
+Subject: Re: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Fri, 31 Jan 2014 15:13:54 +0100
+In-Reply-To: <1390818118-27261-5-git-send-email-ilan.peer@intel.com> (sfid-20140127_112047_079973_9230A036)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+	 <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140127_112047_079973_9230A036)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mark,
+On Mon, 2014-01-27 at 12:21 +0200, Ilan Peer wrote:
 
-On Tue, Jan 21, 2014 at 04:23:59PM -0700, Mark A. Greer wrote:
-> Add support for ISO/IEC 15693 to the digital layer.  The code
-> currently uses single-slot anticollision only since the digital
-> layer infrastructure only supports one tag per adapter (making
-> it pointless to do 16-slot anticollision).
-> 
-> The code uses two new framing types:
-> 'NFC_DIGITAL_FRAMING_ISO15693_INVENTORY' and
-> 'NFC_DIGITAL_FRAMING_ISO15693_TVT'.  The former is used to
-> tell the driver to prepare for an Inventory command and the
-> ensuing anticollision sequence.  The latter is used to tell
-> the driver that the anticollision sequence is over and to
-> prepare for non-inventory commands.
-> 
-> Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
-> ---
-> 
-> Changes since v1:
->  - rewrote kzalloc line to use sizeof(*target) instead of target's type
->  - initialized the mask_len part of the 15693 inventory request
-Thanks, all 3 patches applied to nfc-next now.
+>  	switch (user_reg_hint_type) {
+>  	case NL80211_USER_REG_HINT_USER:
+>  	case NL80211_USER_REG_HINT_CELL_BASE:
+> -		break;
+> +		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+> +			return -EINVAL;
+> +
+> +		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+> +		return regulatory_hint_user(data, user_reg_hint_type);
+> +	case NL80211_USER_REG_HINT_INDOOR:
+> +		return regulatory_hint_indoor_user();
+>  	default:
+>  		return -EINVAL;
+>  	}
+>  
+> -	r = regulatory_hint_user(data, user_reg_hint_type);
+> -
+> -	return r;
+> +	return 0;
 
-Cheers,
-Samuel.
+Isn't that "return 0" dead code now?
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+johannes
+
