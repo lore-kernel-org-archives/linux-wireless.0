@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58529 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752041AbaAREiq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jan 2014 23:38:46 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 17 Jan 2014 20:38:42 -0800
-Subject: RE: [PATCH] mwifiex: fix wakeup on magic packet
-Message-ID: <477F20668A386D41ADCC57781B1F70430F53691DB1@SC-VEXCH1.marvell.com> (sfid-20140118_053910_847707_9C8BCC78)
-References: <CALtMJEDwkCV_wXiPGecoBG-bnG-2OzNMQB-hLHbV9gVr3hZE-A@mail.gmail.com>
- <1389968780-27268-1-git-send-email-afenkart@gmail.com>
-In-Reply-To: <1389968780-27268-1-git-send-email-afenkart@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from qproxy1-pub.mail.unifiedlayer.com ([173.254.64.10]:39074 "HELO
+	qproxy1.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1750897AbaAaFRV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jan 2014 00:17:21 -0500
+From: Olivier Langlois <olivier@trillion01.com>
+To: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Olivier Langlois <olivier@trillion01.com>
+Subject: [PATCH 2/2] retry hw init when it fails
+Date: Fri, 31 Jan 2014 00:16:23 -0500
+Message-Id: <1391145383-18652-2-git-send-email-olivier@trillion01.com> (sfid-20140131_061808_402072_D6F1D272)
+In-Reply-To: <1391145383-18652-1-git-send-email-olivier@trillion01.com>
+References: <1391145383-18652-1-git-send-email-olivier@trillion01.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+rtl_ps_enable_nic() is called from loops that will loop until this function returns true or a
+maximum number of retries is performed.
 
->  8 bytes preamble
-> 14 bytes src/dst/eth_type
->  6 bytes 0xff:0xff..
-> 
-> http://en.wikipedia.org/wiki/Wake-on-LAN#Magic_packet
-> http://en.wikipedia.org/wiki/EtherType
-> 
-> This will fail if we VLAN or the magic packet is encapsulated
-> as a UDP packet...
-> 
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+hw_init() returns non-zero on error. In that situation return false to
+restore the original design intent to retry hw init when it fails.
 
-Thanks for your patch.
+Signed-off-by: Olivier Langlois <olivier@trillion01.com>
+---
+ drivers/net/wireless/rtlwifi/ps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Regards,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/cfg80211.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> index aeaea0e..7e91587 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -2438,7 +2438,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
->  		       ETH_ALEN);
->  		mef_entry->filter[filt_num].byte_seq[MWIFIEX_MEF_MAX_BYTESEQ] =
->  								ETH_ALEN;
-> -		mef_entry->filter[filt_num].offset = 14;
-> +		mef_entry->filter[filt_num].offset = 28;
->  		mef_entry->filter[filt_num].filt_type = TYPE_EQ;
->  		if (filt_num)
->  			mef_entry->filter[filt_num].filt_action = TYPE_OR;
-> --
-> 1.7.10.4
+diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+index 0d81f76..a56e9b3 100644
+--- a/drivers/net/wireless/rtlwifi/ps.c
++++ b/drivers/net/wireless/rtlwifi/ps.c
+@@ -48,7 +48,7 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+ 
+ 	/*<2> Enable Adapter */
+ 	if (rtlpriv->cfg->ops->hw_init(hw))
+-		return 1;
++		return false;
+ 	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 
+ 	/*<3> Enable Interrupt */
+-- 
+1.8.5.2
 
