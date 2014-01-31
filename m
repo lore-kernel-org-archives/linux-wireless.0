@@ -1,88 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60541 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbaA1CAT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52242 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932238AbaAaOLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jan 2014 21:00:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix IBSS join
-Date: Tue, 28 Jan 2014 07:24:55 +0530
-Message-Id: <1390874095-28008-1-git-send-email-sujith@msujith.org> (sfid-20140128_030023_231303_D26316F7)
+	Fri, 31 Jan 2014 09:11:25 -0500
+Message-ID: <1391177479.4141.23.camel@jlt4.sipsolutions.net> (sfid-20140131_151128_617707_AE9AE5A8)
+Subject: Re: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
+ channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Fri, 31 Jan 2014 15:11:19 +0100
+In-Reply-To: <1390818118-27261-4-git-send-email-ilan.peer@intel.com> (sfid-20140127_112147_514798_01405A03)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+	 <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140127_112147_514798_01405A03)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, 2014-01-27 at 12:21 +0200, Ilan Peer wrote:
 
-Currently, when a station leaves an IBSS network, the
-corresponding BSS is not dropped from cfg80211 if there are
-other active stations in the network. But, the small
-window that is present when trying to determine a station's
-status based on IEEE80211_IBSS_MERGE_INTERVAL introduces
-a race.
+> It is assumed that such restrictions are enforced by user space.
+> Furthermore, it is assumed, that if the conditions that allowed for
+> the operation of the GO on such a channel change, i.e., the station
+> interface disconnected from the AP, it is the responsibility of user
+> space to evacuate the GO from the channel.
 
-Instead of trying to keep the BSS, always remove it when
-leaving an IBSS network. There is not much benefit to retain
-the BSS entry since it will be added with a subsequent join
-operation.
+For the latter here, don't we need some sort of flag with userspace
+saying "trust me, I know what I'm doing"? Or put another way - how does
+this not make us break compliance when running with old versions of
+wpa_supplicant?
 
-This fixes an issue where a dangling BSS entry causes ath9k
-to wait for a beacon indefinitely.
-
-Cc: <stable@vger.kernel.org>
-Reported-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- net/mac80211/ibss.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 771080e..e1688cd 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -688,17 +688,18 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
- 	return active;
- }
- 
--static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata, bool leave)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct cfg80211_bss *cbss;
- 	struct beacon_data *presp;
- 	struct sta_info *sta;
--	int active_ibss;
-+	int active_ibss = 0;
- 	u16 capability;
- 
--	active_ibss = ieee80211_sta_active_ibss(sdata);
-+	if (!leave)
-+		active_ibss = ieee80211_sta_active_ibss(sdata);
- 
- 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
- 		capability = WLAN_CAPABILITY_IBSS;
-@@ -765,7 +766,7 @@ static void ieee80211_csa_connection_drop_work(struct work_struct *work)
- 
- 	sdata_lock(sdata);
- 
--	ieee80211_ibss_disconnect(sdata);
-+	ieee80211_ibss_disconnect(sdata, false);
- 	synchronize_rcu();
- 	skb_queue_purge(&sdata->skb_queue);
- 
-@@ -1721,7 +1722,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	ieee80211_ibss_disconnect(sdata);
-+	ieee80211_ibss_disconnect(sdata, true);
- 	ifibss->ssid_len = 0;
- 	memset(ifibss->bssid, 0, ETH_ALEN);
- 
--- 
-1.8.5.3
+johannes
 
