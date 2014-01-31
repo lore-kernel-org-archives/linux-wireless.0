@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:55015 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbaAVUrh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbaAaNji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jan 2014 15:47:37 -0500
-Received: by mail-ee0-f51.google.com with SMTP id b57so23897eek.10
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jan 2014 12:47:36 -0800 (PST)
-In-Reply-To: <1390418495.4334.49.camel@jlt4.sipsolutions.net>
-References: <1390391564-18481-1-git-send-email-karl.beldan@gmail.com> <1390394079.4334.30.camel@jlt4.sipsolutions.net> <20140122130924.GA18365@magnum.frso.rivierawaves.com> <CAGXE3d_V2vST4nkFLUeXgTwbzB_GfPYM3HzBC1QjLuG_=LP2Kw@mail.gmail.com> <20140122152845.GB18365@magnum.frso.rivierawaves.com> <CAGXE3d8_qukp_gb4P0PnJkQJT8MtsypYgzPojE+RqpzEK_R62Q@mail.gmail.com> <20140122164122.GC18365@magnum.frso.rivierawaves.com> <1390416713.4334.46.camel@jlt4.sipsolutions.net> <20140122191610.GD18365@magnum.frso.rivierawaves.com> (sfid-20140122_201711_730750_BBD5790C) <1390418495.4334.49.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH] mac80211: send {add,del}ba on AC_VO like other mgmt frames, as per spec
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Date: Wed, 22 Jan 2014 21:47:27 +0100
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Karl Beldan <karl.beldan@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Message-ID: <970cacf7-158d-4f3f-8a7e-c77a43f3185b@email.android.com> (sfid-20140122_214741_839099_BD1DC81E)
+	Fri, 31 Jan 2014 08:39:38 -0500
+Message-ID: <1391175575.4141.10.camel@jlt4.sipsolutions.net> (sfid-20140131_143959_602950_9DBFC4A3)
+Subject: Re: [RFC PATCH] net: rfkill: move poll work to power efficient
+ workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zoran Markovic <zoran.markovic@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Fri, 31 Jan 2014 14:39:35 +0100
+In-Reply-To: <1391121814-6026-1-git-send-email-zoran.markovic@linaro.org> (sfid-20140130_234406_943564_50677846)
+References: <1391121814-6026-1-git-send-email-zoran.markovic@linaro.org>
+	 (sfid-20140130_234406_943564_50677846)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2014-01-30 at 14:43 -0800, Zoran Markovic wrote:
+> From: Shaibal Dutta <shaibal.dutta@broadcom.com>
+> 
+> This patch moves the rfkill poll_work to the power efficient workqueue.
+> This work does not have to be bound to the CPU that scheduled it, hence
+> the selection of CPU that executes it would be left to the scheduler.
+> Net result is that CPU idle times would be extended, resulting in power
+> savings.
+> 
+> This behaviour is enabled when CONFIG_WQ_POWER_EFFICIENT is selected.
 
+Applied.
 
+johannes
 
-
-Johannes Berg <johannes@sipsolutions.net> schrieb:
->On Wed, 2014-01-22 at 20:16 +0100, Karl Beldan wrote:
->
->> > Given the fact that we only send the frame from
->> > ieee80211_stop_tx_ba_cb() I don't see any problem. Even if we were
->to
->> > send the frame directly after calling the ampdu_action, it seems it
->> > would be fine, since the callback (now) requires sending the
->remaining
->> > frames unaggregated. (Given that, I'm not even sure why we required
->the
->> > packets to be sent unaggregated, Emmanuel, do you remember?)
->> > 
->> I'd expect most device to not block ack such frames, and they'd be
->> right to do so, sending them unaggregated seems the right thing to
->do.
->
->Oh, I roughly remember now - we didn't want to separate the cases of us
->sending a delBA and us receiving a delBA. If we receive a delBA, we
->should stop sending aggregated frames immediately (actually for iwlwifi
->the firmware will do that) or as quickly as possible, hence the
->requirement
->
->If we decide to tear down the session ourselves then we could continue
->sending until later, but it's not worth it.
->
->> So, I guess you are taking what I sent ?
->
->Haven't really made up my mind yet ... I think it's more correct, so I
->should, but I also don't really want to break the ralink drivers over
->what seems to me to be a fairly small issue.
-
-I think I'm fine with this now. Let's just see if someone experiences any issues ...
-
- Furthermore I think i even remember that you can force ralink HW to stop a BA session. But all in all lets better comply with the spec ...
-
-Helmut
