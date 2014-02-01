@@ -1,86 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbaBYQZn (ORCPT
+Received: from oproxy1-pub.mail.unifiedlayer.com ([66.147.249.253]:52726 "HELO
+	oproxy1-pub.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750962AbaBAGLT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 11:25:43 -0500
-Message-ID: <1393345524.4170.19.camel@jlt4.sipsolutions.net> (sfid-20140225_172546_051409_FC568A1E)
-Subject: pull-request: mac80211 2014-02-25
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Feb 2014 17:25:24 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-ikVgUmlLXe2hYq7zdmKA"
-Mime-Version: 1.0
+	Sat, 1 Feb 2014 01:11:19 -0500
+From: Olivier Langlois <olivier@trillion01.com>
+To: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Olivier Langlois <olivier@trillion01.com>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/2] rtlwifi: rtl8192ce: Fix too long disable of IRQs
+Date: Sat,  1 Feb 2014 01:11:09 -0500
+Message-Id: <1391235070-23180-1-git-send-email-olivier@trillion01.com> (sfid-20140201_071149_392524_3E01ED93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rtl8192ce is disabling for too long the local interrupts during hw initiatialisation when performing scans
 
---=-ikVgUmlLXe2hYq7zdmKA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The observable symptoms in dmesg can be:
 
-John,
+- underruns from ALSA playback
+- clock freezes (tstamps do not change for several dmesg entries until irqs are finaly reenabled):
 
-Two more fixes ...
+[  250.817669] rtlwifi:rtl_op_config():<0-0-0> 0x100
+[  250.817685] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-1-0> IPS Set eRf nic enable
+[  250.817732] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.817796] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.817910] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818024] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818139] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818253] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818367] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+[  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:98053f15:10
+[  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
+[  250.818472] rtl8192c_common:rtl92c_download_fw():<0-1-0> Firmware Version(49), Signature(0x88c1),Size(32)
+[  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
+[  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> The SECR-value cc
+[  250.818472] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-1-0> Schedule TxPowerTracking direct call!!
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> rtl92c_dm_txpower_tracking_callback_thermalmeter
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial pathA ele_d reg0xc80 = 0x40000000, ofdm_index=0xc
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial reg0xa24 = 0x90e1317, cck_index=0xc, ch14 0
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf delta 0x1 delta_lck 0x0 delta_iqk 0x0
+[  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> <===
+[  250.818472] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-1-0> pMgntInfo->txpower_tracking = 1
+[  250.818472] rtl8192ce:rtl92ce_led_control():<0-1-0> ledaction 3
+[  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
+[  250.818472] rtlwifi:rtl_ips_nic_on():<0-1-0> before spin_unlock_irqrestore
+[  251.154656] PCM: Lost interrupts? [Q]-0 (stream=0, delta=15903, new_hw_ptr=293408, old_hw_ptr=277505)
 
-There's one fix from Janusz for a regulatory issue, and one fix from
-myself for an issue with 80 MHz connections when the regulatory database
-wasn't updated, which leads to not being able to connect at all, clearly
-a problem.
+The exact code flow that causes that is:
 
-Let me know if there's any problem.
+1. wpa_supplicant send a start_scan request to the nl80211 driver
+2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
+3.   rtl_ips_nic_on is called which disable local irqs
+4.     rtl92c_phy_set_rf_power_state() is called
+5.       rtl_ps_enable_nic() is called and hw_init()is executed and then the interrupts on the device are enabled
 
-johannes
+A good solution could be to refactor the code to avoid calling rtl92ce_hw_init() with the irqs disabled
+but a quick and dirty solution that has proven to work is
+to reenable the irqs during the function rtl92ce_hw_init().
 
-The following changes since commit e3685e03b40f5ec7926d9a75bf63467fc4071df9=
-:
+I think that it is safe doing so since the device interrupt will only be enabled after the init function succeed.
 
-  mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
+Signed-off-by: Olivier Langlois <olivier@trillion01.com>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 092008abeed1e4168c08826262695ea67657e1aa:
-
-  cfg80211: regulatory: reset regdomain in case of error (2014-02-25 16:27:=
-04 +0100)
-
-----------------------------------------------------------------
-Janusz Dziedzic (1):
-      cfg80211: regulatory: reset regdomain in case of error
-
-Johannes Berg (1):
-      mac80211: don't validate unchanged AP bandwidth while tracking
-
- net/mac80211/mlme.c | 22 ++++++++++++++++++++++
- net/wireless/reg.c  | 10 +++++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
-
-
---=-ikVgUmlLXe2hYq7zdmKA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTDMP0AAoJEDBSmw7B7bqro5QQALkIX6FSGcZLTZMzcMnmiXA9
-98Wm1uzYe+2qgs0mj6DCiFQW3qhBqUH5FHkY3K37kK70kE1xz9l0mmeqEFB9swrS
-oDzWJ/hTedmVnD2r/GEgpxCym+mbYdqnT+iKl6gZvtJICYBHb973BamZGAx4TZ57
-Gr5UZpy7zSktSV0p3TAWefXG1zW4kkearH7EsgQpM9SoYAaKHuhaFuxZ26OBeesm
-6hpWYKzo2nF35fOin1oVpqWgybRDBQaW9pepGu9QrqZkrUNxNseOxUpF7T1S/sVC
-gSYsykmLM8QQo2Apk41p0aqvNGT4Y3Q2IfBnWzaUpTAtc7lbjeMr196RuAN2JISd
-tv++KXw8WKL+sr3NMiRtG6/HQ+csdH9STBjPhsbmIB68rBMAyJYV75mMoJY0GMZF
-Iu6NCAmkR/hQlR00/c674su52G+s/m5ztX3a2vX/i0Gr0dU7ifiik6xZUqYVluUz
-xx1la9+Vjqe3JuUekDf3WSFHv+iJ0PqcKIA/ITXKUexCleHB14D9E2n7iDwWlafO
-b/tSP8ZSiaeJTqNNooAQJ2S2xIBRxxmyd+/wIO8lvK7UG30SrHttGwf4H47deWHW
-GUZBR9pkDsDrwby5rrHkd/90E8KtX5FXNUideef4XQm0FLRa9U6sgJez6udgFi+X
-aHzfC8fPgR/wbGcY5y7x
-=W+lp
------END PGP SIGNATURE-----
-
---=-ikVgUmlLXe2hYq7zdmKA--
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index a82b30a..2eb0b38 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -937,14 +937,26 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+ 	bool is92c;
+ 	int err;
+ 	u8 tmp_u1b;
++	unsigned long flags;
+ 
+ 	rtlpci->being_init_adapter = true;
++
++	/* Since this function can take a very long time (up to 350 ms)
++	 * and can be called with irqs disabled, reenable the irqs
++	 * to let the other devices continue being serviced.
++	 *
++	 * It is safe doing so since our own interrupts will only be enabled
++	 * in a subsequent step.
++	 */
++	local_save_flags(flags);
++	local_irq_enable();
++
+ 	rtlpriv->intf_ops->disable_aspm(hw);
+ 	rtstatus = _rtl92ce_init_mac(hw);
+ 	if (!rtstatus) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
+ 		err = 1;
+-		return err;
++		goto exit;
+ 	}
+ 
+ 	err = rtl92c_download_fw(hw);
+@@ -952,7 +964,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+ 			 "Failed to download FW. Init HW without FW now..\n");
+ 		err = 1;
+-		return err;
++		goto exit;
+ 	}
+ 
+ 	rtlhal->last_hmeboxnum = 0;
+@@ -1032,6 +1044,8 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
+ 	}
+ 	rtl92c_dm_init(hw);
++exit:
++	local_irq_restore(flags);
+ 	rtlpci->being_init_adapter = false;
+ 	return err;
+ }
+-- 
+1.8.5.2
 
