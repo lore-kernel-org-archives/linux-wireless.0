@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61971 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbaBRSlM (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:57446 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbaBBC45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 13:41:12 -0500
-Date: Tue, 18 Feb 2014 20:41:08 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Enable U-APSD AP mode support
-Message-ID: <20140218184108.GA24197@jouni.qca.qualcomm.com> (sfid-20140218_194116_149252_F9CC32B2)
+	Sat, 1 Feb 2014 21:56:57 -0500
+Received: by mail-wg0-f42.google.com with SMTP id l18so2398253wgh.5
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Feb 2014 18:56:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Andrew Wiley <wiley.andrew.j@gmail.com>
+Date: Sat, 1 Feb 2014 20:56:36 -0600
+Message-ID: <CAAUTuq83oJJ02tMpT6sK4krkwNFEVZYuzfvsTtRoUX=fVYT9-w@mail.gmail.com> (sfid-20140202_035701_814823_95568802)
+Subject: mwifiex and SD8787: How to create AP interface?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 handles the actual operations, so ath9k can just indicate
-support for this. Based on initial tests, this combination seems to
-work fine.
+Hello linux-wireless,
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- 1 file changed, 1 insertion(+)
+I'm trying to get AP mode to work on a Marvell Kirkwood-based
+Dreamplug with an SD8787 SDIO wireless chipset.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 07a0315..4856a17 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -949,6 +949,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+	hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
- 
- 	hw->queues = 4;
- 	hw->max_rates = 4;
--- 
-1.7.9.5
+Originally, the mwifiex driver would create three interfaces when it
+loaded - mlan0, uap0, and ptp0, for station mode, AP mode, and PTP
+mode, respectively. That behavior was removed in commit 1211c (
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mwifiex?id=1211c961170cedb21c30d5bb7e2033c8720b38db
+) because NetworkManager was trying to use all of the interfaces
+rather than just mlan0.
 
+As I understand it, the normal workflow for this is that hostapd
+changes an interface from station mode to AP mode when it starts up,
+but when it tries to do this on the mlan0 interface, nl80211 returns
+Operation Not Supported. Depending on the version of hostapd, it
+either bails out there or tries to continue and bails out later in
+setup.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+If I revert the patch I linked above, the driver creates the uap0
+interface and I can run an AP with hostapd (although it has some other
+issues - more on that in a later post).
+
+What is the "correct" way to access AP mode with this driver? As far
+as I'm aware, there are no userspace utilities to directly create an
+AP-mode interface, and mwifiex doesn't seem to support the normal
+workflow that hostapd is trying to do.
+
+Thanks,
+Andrew
