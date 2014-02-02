@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18638 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbaBEOts (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 09:49:48 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: move VHT related RX_FLAG to another variable
-References: <1391611031-29099-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Wed, 5 Feb 2014 16:49:43 +0200
-In-Reply-To: <1391611031-29099-1-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Wed, 5 Feb 2014 16:37:11 +0200")
-Message-ID: <87ppn1k41k.fsf@kamboji.qca.qualcomm.com> (sfid-20140205_154952_014327_2A272C6A)
+Received: from mga14.intel.com ([143.182.124.37]:58909 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752049AbaBBTUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Feb 2014 14:20:54 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: RE: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
+ channels
+Date: Sun, 2 Feb 2014 19:20:50 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333705C1@HASMSX106.ger.corp.intel.com> (sfid-20140202_202121_268515_FCB85703)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+	 <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140127_112147_514798_01405A03)
+ <1391177479.4141.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1391177479.4141.23.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
-
-> ieee80211_rx_status.flags is full. Define a new vht_flag
-> variable to be able to set more VHT related flags and make
-> room in flags.
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
-> v2: Fix ath10k compilation
-> ---
->  drivers/net/wireless/ath/ath10k/txrx.c |  4 ++--
->  drivers/net/wireless/iwlwifi/mvm/rx.c  |  4 ++--
->  include/net/mac80211.h                 | 23 +++++++++++++++++------
->  net/mac80211/cfg.c                     |  6 +++---
->  net/mac80211/rx.c                      |  9 +++++----
->  net/mac80211/sta_info.h                |  2 ++
->  net/mac80211/util.c                    |  6 +++---
->  7 files changed, 34 insertions(+), 20 deletions(-)
-
-For ath10k changes:
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
--- 
-Kalle Valo
+SGkgSm9oYW5uZXMsIA0KDQo+ID4gSXQgaXMgYXNzdW1lZCB0aGF0IHN1Y2ggcmVzdHJpY3Rpb25z
+IGFyZSBlbmZvcmNlZCBieSB1c2VyIHNwYWNlLg0KPiA+IEZ1cnRoZXJtb3JlLCBpdCBpcyBhc3N1
+bWVkLCB0aGF0IGlmIHRoZSBjb25kaXRpb25zIHRoYXQgYWxsb3dlZCBmb3INCj4gPiB0aGUgb3Bl
+cmF0aW9uIG9mIHRoZSBHTyBvbiBzdWNoIGEgY2hhbm5lbCBjaGFuZ2UsIGkuZS4sIHRoZSBzdGF0
+aW9uDQo+ID4gaW50ZXJmYWNlIGRpc2Nvbm5lY3RlZCBmcm9tIHRoZSBBUCwgaXQgaXMgdGhlIHJl
+c3BvbnNpYmlsaXR5IG9mIHVzZXINCj4gPiBzcGFjZSB0byBldmFjdWF0ZSB0aGUgR08gZnJvbSB0
+aGUgY2hhbm5lbC4NCj4gDQo+IEZvciB0aGUgbGF0dGVyIGhlcmUsIGRvbid0IHdlIG5lZWQgc29t
+ZSBzb3J0IG9mIGZsYWcgd2l0aCB1c2Vyc3BhY2Ugc2F5aW5nDQo+ICJ0cnVzdCBtZSwgSSBrbm93
+IHdoYXQgSSdtIGRvaW5nIj8gT3IgcHV0IGFub3RoZXIgd2F5IC0gaG93IGRvZXMgdGhpcyBub3QN
+Cj4gbWFrZSB1cyBicmVhayBjb21wbGlhbmNlIHdoZW4gcnVubmluZyB3aXRoIG9sZCB2ZXJzaW9u
+cyBvZg0KPiB3cGFfc3VwcGxpY2FudD8NCj4gDQoNCkkgZG8gbm90IHRoaW5rIHRoYXQgdGhpcyB3
+aWxsIGJlIG5lZWRlZCwgYXMgY3VycmVudCB3cGFfc3VwcGxpY2FudCBsb2dpYyBpcyBub3QgYXdh
+cmUgb2YgdGhlIEdPX0NPTkNVUlJFTlQgYW5kIElORE9PUl9PTkxZIGZsYWdzIChsZWF2aW5nIHRo
+ZW0gaWdub3JlZCkgYW5kIGRvZXMgbm90IGFsbG93IGluc3RhbnRpYXRpbmcgYW4gQVAvR08gb24g
+Y2hhbm5lbHMgbWFya2VkIHdpdGggTk9fSVIuIEluIGFkZGl0aW9uIGFzIHRoaXMgZmVhdHVyZSBt
+dXN0IGJlIGVuYWJsZWQgdW5kZXIgQ09ORklHX09OVVMsIEkgZXhwZWN0IHRoYXQgd2hvZXZlciB1
+c2VzIGl0IHVzZXMga25vdyB3aGF0J3MgaXMgZG9pbmcuDQoNClN1Y2ggbG9naWMgbWlnaHQgYmUg
+bmVlZGVkIGlmIGtlcm5lbCBlbmZvcmNlcyByZWd1bGF0b3J5IGNvbXBsaWFuY2UgYWZ0ZXIgdGhl
+IEdPX0NPTkNVUlJFTlQgcmVsYXhhdGlvbiBjb25kaXRpb25zIGFyZSBubyBsb25nZXIgbWV0IChz
+dGF0aW9uIGludGVyZmFjZSBsZWF2ZXMgdGhlIGNoYW5uZWwpLCB3aGVyZSBpZiBzdWNoIGEgY2Fz
+ZSBpcyB0cnVlLCBpdCB3b3VsZCBiZSBhcHByb3ByaWF0ZSB0byBhZGQgYW4gaW5kaWNhdGlvbiB0
+byB0aGUga2VybmVsIHRlbGxpbmcgaXQgdGhhdCB1c2VyIHNwYWNlIGtub3dzIHdoYXQgaXQncyBk
+b2luZywgc28gdGhlIGtlcm5lbCB3aWxsIG5vdCBkbyBhbnkgcXVpZXNjaW5nIGxvZ2ljIChzaW1p
+bGFyIHRvIHdoYXQgTHVpcyBzdWdnZXN0ZWQpLg0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQoNCg0K
+DQo=
