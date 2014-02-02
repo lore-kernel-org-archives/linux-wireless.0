@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:40005 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbaBSAPH (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:59347 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbaBBFBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 19:15:07 -0500
-Received: by mail-pb0-f47.google.com with SMTP id rp16so17534280pbb.20
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:15:07 -0800 (PST)
-Date: Tue, 18 Feb 2014 16:15:01 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
- channels
-Message-ID: <20140219001458.GF14296@garbanzo.do-not-panic.com> (sfid-20140219_011512_791316_51C501CA)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
+	Sun, 2 Feb 2014 00:01:24 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so10486776wgh.31
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Feb 2014 21:01:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
+In-Reply-To: <CAAUTuq--5EUYgKb1Bg9UWZnDAZRqcPZFd=GRVEo-YKictJJWwg@mail.gmail.com>
+References: <CAAUTuq83oJJ02tMpT6sK4krkwNFEVZYuzfvsTtRoUX=fVYT9-w@mail.gmail.com>
+ <CAJwzM1=0xBkQ0cw-T+zMcAHSZVJsJ7vJmK6O9eisqttn_qGyMA@mail.gmail.com> <CAAUTuq--5EUYgKb1Bg9UWZnDAZRqcPZFd=GRVEo-YKictJJWwg@mail.gmail.com>
+From: Andrew Wiley <wiley.andrew.j@gmail.com>
+Date: Sat, 1 Feb 2014 23:01:02 -0600
+Message-ID: <CAAUTuq-O1BFBmJfYe2xuRfLmNDNKY=V9CkMCM-QCq1iujE3n2w@mail.gmail.com> (sfid-20140202_060149_668983_B2BB32F8)
+Subject: Fwd: mwifiex and SD8787: How to create AP interface?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 12:21:58PM +0200, Ilan Peer wrote:
-> Allow active scanning and frame injection on channels marked with
-> IEEE80211_CHAN_NO_IR iff the channel is also marked with
-> IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
-> operates in an indoor environment.
-> 
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Hello Avinash,
 
-I don't see why being indoor should allow to override the NO-IR
-flag. I do see however why being indoor should enable to IR if
-you are IR if you have the indoor flag. Enabling to IR if you are
-indoor for all NO-IR channels is... pretty permissive I do not
-see the correlation.
+Thanks! That works for me. Would it be possible to add this to the
+mwifiex page on wireless.kernel.org? As far as I know, this command is
+completely undocumented within iw, and I know I'm not the only
+Dreamplug owner experiencing this problem.
 
-  Luis
+As for other issues, I'm seeing a hang in the TX queue on the device
+after running an AP for a while, but I'm still gathering information
+on that. I'll follow up with another thread.
+
+Thanks,
+Andrew
+
+On Sat, Feb 1, 2014 at 9:48 PM, Avinash Patil <avinashapatil@gmail.com> wrote:
+> Hi Andrew,
+>
+> AP interface can be created using iw utility. Command is as follows:
+>
+> iw dev mlan0 interface add uap0 type __ap
+>
+> There onwards hostapd can be used to start mwifiex AP operations. Please let
+> me know if you face any issues.
+>
+> Thanks,
+> Avinashw
+>
+> On Feb 2, 2014 8:28 AM, "Andrew Wiley" <wiley.andrew.j@gmail.com> wrote:
+>>
+>> Hello linux-wireless,
+>>
+>> I'm trying to get AP mode to work on a Marvell Kirkwood-based
+>> Dreamplug with an SD8787 SDIO wireless chipset.
+>>
+>> Originally, the mwifiex driver would create three interfaces when it
+>> loaded - mlan0, uap0, and ptp0, for station mode, AP mode, and PTP
+>> mode, respectively. That behavior was removed in commit 1211c (
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mwifiex?id=1211c961170cedb21c30d5bb7e2033c8720b38db
+>> ) because NetworkManager was trying to use all of the interfaces
+>> rather than just mlan0.
+>>
+>> As I understand it, the normal workflow for this is that hostapd
+>> changes an interface from station mode to AP mode when it starts up,
+>> but when it tries to do this on the mlan0 interface, nl80211 returns
+>> Operation Not Supported. Depending on the version of hostapd, it
+>> either bails out there or tries to continue and bails out later in
+>> setup.
+>>
+>> If I revert the patch I linked above, the driver creates the uap0
+>> interface and I can run an AP with hostapd (although it has some other
+>> issues - more on that in a later post).
+>>
+>> What is the "correct" way to access AP mode with this driver? As far
+>> as I'm aware, there are no userspace utilities to directly create an
+>> AP-mode interface, and mwifiex doesn't seem to support the normal
+>> workflow that hostapd is trying to do.
+>>
+>> Thanks,
+>> Andrew
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
