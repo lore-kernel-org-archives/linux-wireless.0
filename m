@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-relay06-dus.antispameurope.com ([94.100.134.206]:48795 "EHLO
-	mx-relay06-dus.antispameurope.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752794AbaBDOfU (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:37169 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462AbaBBWOj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 09:35:20 -0500
-Message-ID: <52F0FA96.7090903@fokus.fraunhofer.de> (sfid-20140204_153529_116541_F702E88B)
-Date: Tue, 4 Feb 2014 15:35:02 +0100
-From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+	Sun, 2 Feb 2014 17:14:39 -0500
+Received: by mail-ee0-f51.google.com with SMTP id b57so3290226eek.24
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Feb 2014 14:14:38 -0800 (PST)
+Message-ID: <52EEC34B.2030208@gmail.com> (sfid-20140202_231446_148544_0603B18C)
+Date: Sun, 02 Feb 2014 23:14:35 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Daniel Borkmann <dborkman@redhat.com>
-CC: <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>
-Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
-References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com> <52F0E771.8070904@fokus.fraunhofer.de> <52F0F86C.3050402@redhat.com>
-In-Reply-To: <52F0F86C.3050402@redhat.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+CC: users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: move frequent messages to debug
+ level
+References: <1391170689-23038-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1391170689-23038-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2014 03:25 PM, Daniel Borkmann wrote:
-> On 02/04/2014 02:13 PM, Mathias Kretschmer wrote:
->> On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
->>> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
-> ...
->>>> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
->>>> user space using PF_PACKET sockets via RX_RING/TX_RING.
->>>>
->>>> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
->>>> proper optimization for our purposes.
->>>>
->>>> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
->>>> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
->>>> an older AMD Geode LX embedded board (ALiX).
->>>>
->>>> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
->>>> might be an interaction with the ieee80211 sub system.
->>>
->>> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
->>> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
->>> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
->>> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
->>> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
->>> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
->>> be the best option in your case, perhaps you will run into increased power usage
->>> in your NIC as a side-effect?
->>
->> I'm not familiar with the exact implementation details, but from the description
->> of this option, it seems to me that this is exactly what one would want to use if
->> the goal is to send an Ethernet frame out on a particular interface without any
->> further processing by the kernel.
->>
->> Why would this increase the power usage on the NIC ?  Due to a higher achievable
->> packet rate ?  That would be acceptable :)
->
-> I'm not too familiar with the ieee80211 sub system, so I let Felix answer side
-> effects and if actually the WARN_ON() is needed. ;) PACKET_QDISC_BYPASS is, as
-> documented, designed for advanced pktgen resp. traffic generator like scenarios
-> where you just sort of "brute force" packets to your NIC to stress test a remote
-> machine for further analysis. I don't think it's very useful in your scenario
-> when you have a wired/wireless MPLS switch, you rather might want to buffer/queue
-> and therefore use qdisc layer instead.
+On 01/31/14 13:18, Stanislaw Gruszka wrote:
+> On commit 28f2bce9f8bbf704c86f8c684337f82c51592c81 I make change that
+> print various messages as default. This can cause flood of messages
+> related to TX status timeout on some environments. I partially fixed
+> problem on commit bb9c298f3193ac5b80e47b325c690700580b6bcf, but forgot
+> to move two more messages to debug level.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Hm, I was hoping/assuming that we still get to use hardware queues, if provided by 
-the driver. The main goal was to avoid any further PF_PACKET framework overhead.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-If the WARN_ON() issue gets solved, we will revisit this option and evaluate its 
-applicability.
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index caddc1b..14a90dd 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -125,9 +125,9 @@ static inline bool rt2800usb_entry_txstatus_timeout(struct queue_entry *entry)
+>  
+>  	tout = time_after(jiffies, entry->last_action + msecs_to_jiffies(100));
+>  	if (unlikely(tout))
+> -		rt2x00_warn(entry->queue->rt2x00dev,
+> -			    "TX status timeout for entry %d in queue %d\n",
+> -			    entry->entry_idx, entry->queue->qid);
+> +		rt2x00_dbg(entry->queue->rt2x00dev,
+> +			   "TX status timeout for entry %d in queue %d\n",
+> +			   entry->entry_idx, entry->queue->qid);
+>  	return tout;
+>  
+>  }
+> @@ -566,8 +566,8 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+>  		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
+>  
+>  		if (unlikely(rt2x00queue_empty(queue))) {
+> -			rt2x00_warn(rt2x00dev, "Got TX status for an empty queue %u, dropping\n",
+> -				    qid);
+> +			rt2x00_dbg(rt2x00dev, "Got TX status for an empty queue %u, dropping\n",
+> +				   qid);
+>  			break;
+>  		}
+>  
+> 
 
-Thanks,
 
-Mathias
-
+-- 
+---
+Gertjan
