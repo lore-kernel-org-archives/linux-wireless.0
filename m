@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41584 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750851AbaBRXmI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43230 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbaBCQPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 18:42:08 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, <stable@vger.kernel.org>
-Subject: [PATCH 3.14 1/3] mwifiex: clean pcie ring only when device is present
-Date: Tue, 18 Feb 2014 15:41:54 -0800
-Message-ID: <1392766916-10734-1-git-send-email-bzhao@marvell.com> (sfid-20140219_004218_334238_08163F6A)
+	Mon, 3 Feb 2014 11:15:19 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1WAMAy-0002gl-13
+	for linux-wireless@vger.kernel.org; Mon, 03 Feb 2014 11:15:12 -0500
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.6) with ESMTP id s13G46XJ018196
+	for <linux-wireless@vger.kernel.org>; Mon, 3 Feb 2014 11:04:06 -0500
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.7/Submit) id s13G45N8018195
+	for linux-wireless@vger.kernel.org; Mon, 3 Feb 2014 11:04:06 -0500
+Date: Mon, 3 Feb 2014 11:04:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing rebased on v3.14-rc1
+Message-ID: <20140203160405.GA13887@tuxdriver.com> (sfid-20140203_171525_779921_206B9C39)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+I have rebased the wireless-testing tree on v3.14-rc1.  There is
+nothing else there (except localversion-wireless) at the moment.
 
-Write io memory to clean PCIe buffer only when PCIe device is
-present else this results into crash because of invalid memory
-access.
+Please be aware of the rebase when pulling from wireless-testing,
+and be sure to do the needful.
 
-Cc: <stable@vger.kernel.org> # 3.9+
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index e0ba011..1c5f2b6 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -554,7 +554,8 @@ mwifiex_clean_txrx(struct mwifiex_private *priv)
- 	mwifiex_wmm_delete_all_ralist(priv);
- 	memcpy(tos_to_tid, ac_to_tid, sizeof(tos_to_tid));
- 
--	if (priv->adapter->if_ops.clean_pcie_ring)
-+	if (priv->adapter->if_ops.clean_pcie_ring &&
-+	    !priv->adapter->surprise_removed)
- 		priv->adapter->if_ops.clean_pcie_ring(priv->adapter);
- 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
- 
+John
 -- 
-1.8.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
