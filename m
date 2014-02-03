@@ -1,91 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:50508 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753100AbaBDJ2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:44 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0M2ts6-1VLP250hfi-00sgDm for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:43 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 08/13] ath9k_htc: use ath9k_cmn_rx_accept
-Date: Tue,  4 Feb 2014 10:27:45 +0100
-Message-Id: <1391506070-8636-9-git-send-email-linux@rempel-privat.de> (sfid-20140204_102848_747854_EAED8283)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:32902 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753434AbaBCU7Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 15:59:25 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so3859022eei.7
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:24 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 42/62] iwlwifi: mvm: add D0i3 ref/unref for ROC commands
+Date: Mon,  3 Feb 2014 22:57:48 +0200
+Message-Id: <1391461088-8082-42-git-send-email-egrumbach@gmail.com> (sfid-20140203_223008_304856_8B7988CA)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 45 +++++----------------------
- 1 file changed, 8 insertions(+), 37 deletions(-)
+From: Eliad Peller <eliad@wizery.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 6bd7ef8..8aba265 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -974,6 +974,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct ath_htc_rx_status *rxstatus;
- 	struct ath_rx_status rx_stats;
- 	int hdrlen, padsize;
-+	bool decrypt_error;
- 	__le16 fc;
+Take a reference when ROC command is started, and
+unref it on completion.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h        |    1 +
+ drivers/net/wireless/iwlwifi/mvm/time-event.c |    2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 3a3e9f1..19a90d1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -242,6 +242,7 @@ enum iwl_mvm_smps_type_request {
+ enum iwl_mvm_ref_type {
+ 	IWL_MVM_REF_UCODE_DOWN,
+ 	IWL_MVM_REF_SCAN,
++	IWL_MVM_REF_ROC,
  
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
-@@ -1012,43 +1013,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	IWL_MVM_REF_COUNT,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index b4c2aba..e145dd4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -126,6 +126,7 @@ static void iwl_mvm_roc_finished(struct iwl_mvm *mvm)
+ 	 * in iwl_mvm_te_handle_notif).
+ 	 */
+ 	clear_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status);
++	iwl_mvm_unref(mvm, IWL_MVM_REF_ROC);
  
- 	rx_status_htc_to_ath(&rx_stats, &rxbuf->rxstatus);
+ 	/*
+ 	 * Of course, our status bit is just as racy as mac80211, so in
+@@ -210,6 +211,7 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
  
--	if (rxbuf->rxstatus.rs_status != 0) {
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_CRC)
--			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_PHY)
--			goto rx_next;
--
--		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT) {
--			/* FIXME */
--		} else if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_MIC) {
--			if (ieee80211_is_ctl(fc))
--				/*
--				 * Sometimes, we get invalid
--				 * MIC failures on valid control frames.
--				 * Remove these mic errors.
--				 */
--				rxbuf->rxstatus.rs_status &= ~ATH9K_RXERR_MIC;
--			else
--				rx_status->flag |= RX_FLAG_MMIC_ERROR;
--		}
--
--		/*
--		 * Reject error frames with the exception of
--		 * decryption and MIC failures. For monitor mode,
--		 * we also ignore the CRC error.
--		 */
--		if (priv->ah->opmode == NL80211_IFTYPE_MONITOR) {
--			if (rxbuf->rxstatus.rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
--			      ATH9K_RXERR_CRC))
--				goto rx_next;
--		} else {
--			if (rxbuf->rxstatus.rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
--				goto rx_next;
--			}
--		}
--	}
-+	/*
-+	 * everything but the rate is checked here, the rate check is done
-+	 * separately to avoid doing two lookups for a rate for each frame.
-+	 */
-+	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, &rx_stats,
-+			&decrypt_error, priv->rxfilter))
-+		goto rx_next;
- 
- 	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
- 		u8 keyix;
+ 		if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
+ 			set_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status);
++			iwl_mvm_ref(mvm, IWL_MVM_REF_ROC);
+ 			ieee80211_ready_on_channel(mvm->hw);
+ 		}
+ 	} else {
 -- 
-1.9.rc1
+1.7.9.5
 
