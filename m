@@ -1,116 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42553 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbaBMUP0 (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:49434 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbaBCU7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 15:15:26 -0500
-Date: Thu, 13 Feb 2014 15:14:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@venema.h4ckr.net>,
-	open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	Florian Fainelli <florian@openwrt.org>
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-Message-ID: <20140213201421.GJ22203@tuxdriver.com> (sfid-20140213_211559_653114_327AAECD)
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at>
- <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at>
- <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de>
- <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
- <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
- <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
- <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+	Mon, 3 Feb 2014 15:59:51 -0500
+Received: by mail-ea0-f169.google.com with SMTP id h10so4019717eak.14
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:50 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 59/62] iwlwifi: mvm: store latest power command for debugfs read
+Date: Mon,  3 Feb 2014 22:58:05 +0200
+Message-Id: <1391461088-8082-59-git-send-email-egrumbach@gmail.com> (sfid-20140203_223007_458467_FBF0DF03)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
-> 2014-02-11 3:43 GMT+04:00 Sergey Ryazanov <ryazanov.s.a@gmail.com>:
-> > 2014-02-11 2:37 GMT+04:00 Florian Fainelli <florian@openwrt.org>:
-> >> 2014-02-10 4:38 GMT-08:00 Sergey Ryazanov <ryazanov.s.a@gmail.com>:
-> >>> 2014-02-10 16:17 GMT+04:00 Oleksij Rempel <linux@rempel-privat.de>:
-> >>>> Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
-> >>>>> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
-> >>>>>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
-> >>>>>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
-> >>>>>>>> The symbol is an orphan, get rid of it.
-> >>>>>>>>
-> >>>>>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
-> >>>>>>>> ---
-> >>>>>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
-> >>>>>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
-> >>>>>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
-> >>>>>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
-> >>>>>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
-> >>>>>>>>
-> >>>>>>>
-> >>>>>>> This code is used in OpenWrt with an out of tree arch code for the
-> >>>>>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
-> >>>>>>> this code to mainline Linux kernel, because of lack of time/interest.
-> >>>>>>
-> >>>>>> Sorry, we don't maintain out of tree code.
-> >>>>>>
-> >>>>>
-> >>>>> Oleksij, Jonathan do you still working to make ar231x devices work
-> >>>>> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
-> >>>>> team would like to add upstream support?
-> >>>>>
-> >>>>> 1. https://lkml.org/lkml/2013/5/13/321
-> >>>>> 2. https://lkml.org/lkml/2013/5/13/358
-> >>>>>
-> >>>>
-> >>>> Hi,
-> >>>> my current target was to provide barebox and openocd support.
-> >>>> - ar2313 is already upstream on barebox.
-> >>>> - ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
-> >>>> - openocd (EJTAG) support is ready and i'll push it ASUP.
-> >>>>
-> >>> WOW, Impressive.
-> >>
-> >> That's a nice toy project, although since there are is an existing
-> >> bootloader with sources, I would have shifted the priority towards
-> >> getting the kernel support merged such that the bootloader can be used
-> >> for something. BTW I sent a few devices to Jonathan, not sure if he
-> >> ever got those...
-> >>
-> >>>
-> >>>> I hope Jonathan do kernel part. If not, i can provide some work, since i
-> >>>> have testing boards and expiriance on this hardware.
-> >>>>
-> >>> If you need, I can test kernel part, or even do some porting work. I
-> >>> have some AR231x based boards, e.g. Ubnt LS2 and NS2.
-> >>
-> >> I guess you could start splitting the OpenWrt patches into a format
-> >> that makes them suitable for being merged upstream and starting with
-> >> the MIPS parts. There might be a bunch of checkpatch.pl cleanup work
-> >> to do before getting those submitted.
-> >
-> > I will do that if Jonathan does not have a working solution, which he
-> > would like to push upstream. So, let's wait for his reply.
-> >
-> 
-> John, can you delay the merging of this patch for a few months, I will
-> try to prepare the necessary patches to add AR231x architecture to the
-> kernel and send them to linux-mips.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-OK -- looking forward to your patches.
+Instead of re-building the power command upon debugfs read,
+store the latest command sent to the firmware.
+This reduces the code complexity by reducing the number of
+entries in the power code.
 
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h   |    1 +
+ drivers/net/wireless/iwlwifi/mvm/power.c |   12 +++++++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 93e6c18..2d76e228 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -347,6 +347,7 @@ struct iwl_mvm_vif {
+ 	struct dentry *dbgfs_slink;
+ 	struct iwl_dbgfs_pm dbgfs_pm;
+ 	struct iwl_dbgfs_bf dbgfs_bf;
++	struct iwl_mac_power_cmd mac_pwr_cmd;
+ #endif
+ 
+ 	enum ieee80211_smps_mode smps_requests[NUM_IWL_MVM_SMPS_REQ];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 15c9c78..ac6d2c8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -431,6 +431,9 @@ static int _iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
+ 
+ 	iwl_mvm_power_build_cmd(mvm, vif, &cmd);
+ 	iwl_mvm_power_log(mvm, &cmd);
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	memcpy(&iwl_mvm_vif_from_mac80211(vif)->mac_pwr_cmd, &cmd, sizeof(cmd));
++#endif
+ 
+ 	return iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, CMD_SYNC,
+ 				    sizeof(cmd), &cmd);
+@@ -475,6 +478,7 @@ static int iwl_mvm_power_mac_disable(struct iwl_mvm *mvm,
+ 	if (mvmvif->dbgfs_pm.mask & MVM_DEBUGFS_PM_DISABLE_POWER_OFF &&
+ 	    mvmvif->dbgfs_pm.disable_power_off)
+ 		cmd.flags &= cpu_to_le16(~POWER_FLAGS_POWER_SAVE_ENA_MSK);
++	memcpy(&mvmvif->mac_pwr_cmd, &cmd, sizeof(cmd));
+ #endif
+ 	iwl_mvm_power_log(mvm, &cmd);
+ 
+@@ -615,10 +619,13 @@ static int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
+ 					struct ieee80211_vif *vif, char *buf,
+ 					int bufsz)
+ {
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mac_power_cmd cmd = {};
+ 	int pos = 0;
+ 
+-	iwl_mvm_power_build_cmd(mvm, vif, &cmd);
++	mutex_lock(&mvm->mutex);
++	memcpy(&cmd, &mvmvif->mac_pwr_cmd, sizeof(cmd));
++	mutex_unlock(&mvm->mutex);
+ 
+ 	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD))
+ 		pos += scnprintf(buf+pos, bufsz-pos, "disable_power_off = %d\n",
+@@ -807,6 +814,9 @@ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
+ 		cmd.skip_dtim_periods = 300 / dtimper_msec;
+ 	}
+ 	iwl_mvm_power_log(mvm, &cmd);
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	memcpy(&mvmvif->mac_pwr_cmd, &cmd, sizeof(cmd));
++#endif
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, flags,
+ 				   sizeof(cmd), &cmd);
+ 	if (ret)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
