@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:42614 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754713AbaBRLcr (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:46062 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753557AbaBCU7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 06:32:47 -0500
-Received: by mail-lb0-f171.google.com with SMTP id c11so12093168lbj.16
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 03:32:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140218105755.GD1741@redhat.com>
-References: <20120418203543.GA16000@x61.home>
-	<20120425122554.GD2466@redhat.com>
-	<20120503182853.GA12461@mac.home>
-	<20121226185425.GA12627@x61.home>
-	<20130107110759.GC6931@redhat.com>
-	<20130603085239.GA26920@mac.home>
-	<20130603141804.GA2146@redhat.com>
-	<20130611185120.GA8751@x61.home>
-	<20140218105755.GD1741@redhat.com>
-Date: Tue, 18 Feb 2014 13:32:44 +0200
-Message-ID: <CANUX_P1TdHUXdauuB=dnShtg9PdMBCi=G3hn0gZ9m8F4b7o=jw@mail.gmail.com> (sfid-20140218_123251_050241_80B10207)
-Subject: Re: Power saving features for iwl4965
+	Mon, 3 Feb 2014 15:59:46 -0500
+Received: by mail-ea0-f182.google.com with SMTP id r15so3966033ead.41
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:45 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pedro Francisco <pedrogfrancisco@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 52/62] iwlwifi: fix kerneldoc format
+Date: Mon,  3 Feb 2014 22:57:58 +0200
+Message-Id: <1391461088-8082-52-git-send-email-egrumbach@gmail.com> (sfid-20140203_223008_019237_31EBB0D5)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 12:57 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Jun 11, 2013 at 08:51:20PM +0200, Tino Keitel wrote:
->> On Mon, Jun 03, 2013 at 16:18:05 +0200, Stanislaw Gruszka wrote:
->>
->> > Could you try this experimental patch?
->>
->> Hi,
->>
->> on top of kernel 3.9.4 (with TuxOnIce patch), iwconfig wlan0 power on
->> now saves more than 1 W on my ThinkPad X61s with iwl4965. I can finally
->> switch to a recent kernel. Thanks a lot.
->
-> This patch stuck on mailing list far too long, I'll post it. Even if it
-> crash firmware on 3945, power save is disabled by default.
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I'd be very surprised if this patch helped. I guess you took the code
-from iwlwifi in which we have enabled shadow registers for 7000
-series. This HW is problematic but it doesn't exit on 4965.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index f83b244..5d78207 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -159,7 +159,7 @@ void iwl_opmode_deregister(const char *name);
+ 
+ /**
+  * struct iwl_op_mode - operational mode
+- * @ops - pointer to its own ops
++ * @ops: pointer to its own ops
+  *
+  * This holds an implementation of the mac80211 / fw API.
+  */
+-- 
+1.7.9.5
+
