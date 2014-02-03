@@ -1,151 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:42491 "EHLO
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:37341 "EHLO
 	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbaB1M43 convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752819AbaBCU7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 07:56:29 -0500
-Received: by mail-ee0-f43.google.com with SMTP id e53so2027317eek.16
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 04:56:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1393589841.13669.32.camel@dubbel>
-References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
-	<1393512081-31453-4-git-send-email-luca@coelho.fi>
-	<CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
-	<1393589841.13669.32.camel@dubbel>
-Date: Fri, 28 Feb 2014 13:56:28 +0100
-Message-ID: <CA+BoTQmaF+johnB5ia+ez5dFKYPWWwk7E=482Q3hzLv=YvZAvQ@mail.gmail.com> (sfid-20140228_135633_365557_41996D97)
-Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 3 Feb 2014 15:59:08 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c41so3931669eek.30
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:07 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/62] iwlwifi: pcie: retrieve and parse ACPI power limitations
+Date: Mon,  3 Feb 2014 22:57:38 +0200
+Message-Id: <1391461088-8082-32-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_116842_D8A6415E)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 13:17, Luca Coelho <luca@coelho.fi> wrote:
-> On Thu, 2014-02-27 at 16:29 +0100, Michal Kazior wrote:
->> On 27 February 2014 15:41, Luca Coelho <luca@coelho.fi> wrote:
->> > Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
->> > reserved so nobody else can use it (since we know it's going to
->> > change).  In the future, we may allow several vifs to use the same
->> > reservation as long as they plan to use the chanctx on the same
->> > future channel.
->>
->> I don't really think you need a separate mode for that.
->>
->> Since reserved_chanctx is protected by chanctx_mtx you can safely
->> iterate over interfaces and check if any vif is reserving the same
->> chanctx it is assigned to.
->
-> I think it's much simpler to keep this new mode.  Reserved channel
-> contexts are almost like exclusive contexts (as I was doing in my first
-> RFC), but not exactly the same, since they can be used for other
-> reservations.
+From: Ido Yariv <ido@wizery.com>
 
-I still argue the new mode is unnecessary. The nature of chanctx is
-not going to change (it's either shared or not) due to chanctx
-reservation. Also the name "reserved" is ambiguous because you have a
-ieee80211_vif_reserve_chanctx() which doesn't necessarily end up with
-chanctx mode being changed to RESERVED.
+Some platforms may have power limitations on PCIe cards connected to
+specific root ports.
 
-The check is simply I have in mind is simply:
+This information is encoded as part of the ACPI tables, for instance:
+<snip>
+           Name (SPLX, Package (0x02)
+           {
+               Zero,
+               Package (0x03)
+               {
+                   0x07,
+                   0x00000500,
+                   0x80000000
+               }
+           })
 
-bool ieee80211_chanctx_needs_channel_change(struct ieee80211_local
-*local, struct ieee80211_chanctx *ctx) {
- lockdep_assert_held(&local->chanctx_mtx);
- rcu_read_lock();
- list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-  if (sdata->reserved_chanctx != ctx)
-   continue;
-  if (get_current_chanctx(sdata) == sdata->reserved_chanctx)
-   return true;
- }
- rcu_read_unlock();
- return false;
-}
+           Method (SPLC, 0, Serialized)
+           {
+               Return (SPLX)
+           }
+</snip>
 
-IOW if there's a least one vif bound to given chanctx and the vif has
-both current and future chanctx the same, then the chanctx requires
-in-place channel change (and this matches your original condition
-(mode == RESERVED)).
+The structure returned contains the domain type, the default power
+limitation and the default time window (reserved for future use).
 
-This should be future proof for multi-interface/channel.
+Upon PCI probing, call the relevant ACPI method, parse the returned
+structure, and save the power limitation.
 
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    3 ++
+ drivers/net/wireless/iwlwifi/pcie/drv.c  |   78 ++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+)
 
->> > @@ -622,7 +629,9 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
->> >         if (WARN_ON(!sdata->reserved_chanctx))
->> >                 return -EINVAL;
->> >
->> > -       if (--sdata->reserved_chanctx->refcount == 0)
->> > +       if (sdata->reserved_chanctx->mode == IEEE80211_CHANCTX_RESERVED)
->> > +               sdata->reserved_chanctx->mode = sdata->reserved_mode;
->> > +       else if (--sdata->reserved_chanctx->refcount == 0)
->> >                 ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
->> >
->> >         sdata->reserved_chanctx = NULL;
->> > @@ -652,19 +661,42 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
->> >         /* try to find another context with the chandef we want */
->> >         new_ctx = ieee80211_find_chanctx(local, chandef,
->> >                                          IEEE80211_CHANCTX_SHARED);
->> > -       if (!new_ctx) {
->> > -               /* create a new context */
->> > +       if (new_ctx) {
->> > +               /* reserve the existing compatible context */
->> > +               sdata->reserved_chanctx = new_ctx;
->> > +               new_ctx->refcount++;
->> > +       } else if (curr_ctx->refcount == 1 &&
->> > +                  (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
->> > +               /* TODO: when implementing support for multiple
->> > +                * interfaces switching at the same time, we may want
->> > +                * other vifs to reserve it as well, as long as
->> > +                * they're planning to switch to the same channel.  In
->> > +                * that case, we probably have to save the future
->> > +                * chandef and the reserved_mode in the context
->> > +                * itself.
->> > +                */
->>
->> We already save the future chandef (csa_chandef). reserved_mode is not
->> necessary as per my comment above. Again, if you guarantee csa_chandef
->> to be set under chanctx_mtx you can safely iterate over interfaces and
->> calculate compat chandef.
->
-> But the calculated "compat chandef" is not exactly what was required in
-> the first place.  In sdata->u.bss_conf.chandef we need to have the
-> chandef we want for *this* vif.  We need this to recalculate the
-> combined chandef if, for instance, another vif leaves our chanctx.
->
-> I think we should keep saving the reserved_chandef in sdata (the one
-> that was requested when making the reservation) and also save the future
-> chandef as a compat combination of all the reservations for that
-> chanctx.
->
-> You're right that we already have the future chandef.  I just added it
-> as "reserved_chandef" in the previous patch. ;) I'll reword this.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 1f065cf..a350abe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -523,6 +523,7 @@ enum iwl_trans_state {
+  *	starting the firmware, used for tracing
+  * @rx_mpdu_cmd_hdr_size: used for tracing, amount of data before the
+  *	start of the 802.11 header in the @rx_mpdu_cmd
++ * @dflt_pwr_limit: default power limit fetched from the platform (ACPI)
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+@@ -551,6 +552,8 @@ struct iwl_trans {
+ 	struct lockdep_map sync_cmd_lockdep_map;
+ #endif
+ 
++	u64 dflt_pwr_limit;
++
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __aligned(sizeof(void *));
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 4b3a49b..8577939 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -66,6 +66,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/pci-aspm.h>
++#include <linux/acpi.h>
+ 
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+@@ -395,6 +396,81 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ };
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
+ 
++#ifdef CONFIG_ACPI
++#define SPL_METHOD		"SPLC"
++#define SPL_DOMAINTYPE_MODULE	BIT(0)
++#define SPL_DOMAINTYPE_WIFI	BIT(1)
++#define SPL_DOMAINTYPE_WIGIG	BIT(2)
++#define SPL_DOMAINTYPE_RFEM	BIT(3)
++
++static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
++{
++	union acpi_object *limits, *domain_type, *power_limit;
++
++	if (splx->type != ACPI_TYPE_PACKAGE ||
++	    splx->package.count != 2 ||
++	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
++	    splx->package.elements[0].integer.value != 0) {
++		IWL_ERR(trans, "Unsupported splx structure");
++		return 0;
++	}
++
++	limits = &splx->package.elements[1];
++	if (limits->type != ACPI_TYPE_PACKAGE ||
++	    limits->package.count < 2 ||
++	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
++	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
++		IWL_ERR(trans, "Invalid limits element");
++		return 0;
++	}
++
++	domain_type = &limits->package.elements[0];
++	power_limit = &limits->package.elements[1];
++	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
++		IWL_DEBUG_INFO(trans, "WiFi power is not limited");
++		return 0;
++	}
++
++	return power_limit->integer.value;
++}
++
++static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
++{
++	acpi_handle pxsx_handle;
++	acpi_handle handle;
++	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
++	acpi_status status;
++
++	pxsx_handle = ACPI_HANDLE(&pdev->dev);
++	if (!pxsx_handle) {
++		IWL_ERR(trans, "Could not retrieve root port ACPI handle");
++		return;
++	}
++
++	/* Get the method's handle */
++	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
++	if (ACPI_FAILURE(status)) {
++		IWL_DEBUG_INFO(trans, "SPL method not found");
++		return;
++	}
++
++	/* Call SPLC with no arguments */
++	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
++	if (ACPI_FAILURE(status)) {
++		IWL_ERR(trans, "SPLC invocation failed (0x%x)", status);
++		return;
++	}
++
++	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
++	IWL_DEBUG_INFO(trans, "Default power limit set to %lld",
++		       trans->dflt_pwr_limit);
++	kfree(splx.pointer);
++}
++
++#else /* CONFIG_ACPI */
++static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev) {}
++#endif
++
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+ 
+@@ -419,6 +495,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_free_trans;
+ 	}
+ 
++	set_dflt_pwr_limit(iwl_trans, pdev);
++
+ 	/* register transport layer debugfs here */
+ 	ret = iwl_trans_dbgfs_register(iwl_trans, iwl_trans->dbgfs_dir);
+ 	if (ret)
+-- 
+1.7.9.5
 
-I'm confused now.
-
-Where did you introduce "reserved_chandef"? Didn't you introduce
-"reserved_chanCTX"?
-
-To make this clear: the future chanctx chandef can be computed as follows:
-
-get_compat_future_chanctx_chandef(local, ctx) {
-  list_for_each(sdata, local) {
-    if (sdata->reserved_chanctx != ctx)
-      continue;
-    compat = get_compat_chandef(compat, sdata->csa_chandef);
-    if (!compat) break;
-  }
-  return compat;
-}
-
-IOW there's no need for chanctx->future_chandef. This is actually
-safer because if you cancel a reservation (e.g. iface is brought down)
-you need to downgrade the future chanctx chandef to the minimum, don't
-you?
-
-
-Michał
