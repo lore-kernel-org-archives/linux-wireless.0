@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51429 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751186AbaBKKSU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 05:18:20 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:59672 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbaBCU7s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 15:59:48 -0500
+Received: by mail-ee0-f42.google.com with SMTP id b15so2055371eek.15
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:47 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 1/2] ath9k: support only one P2P interface
-Date: Tue, 11 Feb 2014 11:18:09 +0100
-Message-Id: <1392113890-5097-1-git-send-email-nbd@openwrt.org> (sfid-20140211_111827_533104_9CFEA103)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 55/62] iwlwifi: mvm: remove duplicate assignment to ap_ibss_active
+Date: Mon,  3 Feb 2014 22:58:01 +0200
+Message-Id: <1391461088-8082-55-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_803919_91D37F86)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for adding P2P powersave and multi-channel support.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1fc2e5a..72ace06 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -862,13 +862,13 @@ void ath9k_reload_chainmask_settings(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 3ef7d78..43dd644 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1314,8 +1314,6 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out_remove;
  
- static const struct ieee80211_iface_limit if_limits[] = {
- 	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				 BIT(NL80211_IFTYPE_WDS) },
- 	{ .max = 8,	.types =
- #ifdef CONFIG_MAC80211_MESH
- 				 BIT(NL80211_IFTYPE_MESH_POINT) |
- #endif
--				 BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_AP) },
-+	{ .max = 1,	.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				 BIT(NL80211_IFTYPE_P2P_GO) },
- };
- 
+-	mvmvif->ap_ibss_active = true;
+-
+ 	/* Send the bcast station. At this stage the TBTT and DTIM time events
+ 	 * are added and applied to the scheduler */
+ 	ret = iwl_mvm_send_bcast_sta(mvm, vif, &mvmvif->bcast_sta);
 -- 
-1.8.3.4 (Apple Git-47)
+1.7.9.5
 
