@@ -1,157 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:40405 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbaB0Or1 (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:53341 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbaBCU7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:47:27 -0500
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH 1/4] net: add name_assign_type netdev attribute
-Date: Thu, 27 Feb 2014 15:47:11 +0100
-Message-Id: <1393512434-1325-2-git-send-email-dh.herrmann@gmail.com> (sfid-20140227_154832_966059_359CA966)
-In-Reply-To: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
-References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
+	Mon, 3 Feb 2014 15:59:51 -0500
+Received: by mail-ea0-f180.google.com with SMTP id o10so3988893eaj.39
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:50 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 61/62] iwlwifi: mvm: remove iwl_mvm_power_mac_disable
+Date: Mon,  3 Feb 2014 22:58:07 +0200
+Message-Id: <1391461088-8082-61-git-send-email-egrumbach@gmail.com> (sfid-20140203_220010_347995_4419D973)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The name_assign_type attribute gives hints where the interface name of a
-given net-device comes from. Three different values are currently defined:
-  NET_NAME_ENUM:
-    This is the default. The ifname is provided by the kernel with an
-    enumerated suffix. Names may be reused and unstable.
-  NET_NAME_USER:
-    The ifname was provided by user-space during net-device setup.
-  NET_NAME_RENAMED:
-    The net-device has been renamed via RTNL. Once this type is set, it
-    cannot change again.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This attribute comes in handy for reliable net-device names. If an ifname
-is provided by user-space, we can safely assume that the naming-policy
-avoids reuse and is stable. Only if it was set by the kernel, the
-interfaces might need to be renamed.
+Its logic can be implemented with
+iwl_mvm_power_mac_update_mode.
 
-The NET_NAME_RENAMED value allows us to detect whether some-one else
-already renamed the device, in which case we shouldn't touch it again. The
-NET_NAME_USER value allows us to detect whether some other naming policy
-created the device, in which case there's no need to rename it.
-
-The most significant use-case is to detect virtual wifi-P2P devices, which
-are named by wpa_supplicant et al. We shouldn't rename them as wpas
-already provides a proper naming-policy.
-
-Note that this patch only provides the core infrastructure. The different
-net-dev types need to be manually fixed to use NET_NAME_USER instead of
-the default (NET_NAME_ENUM). NET_NAME_ENUM is the least restrictive,
-though, so it seems safe to use it as fallback for non-converted net-dev
-types.
-
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/linux/netdevice.h | 6 ++++++
- net/core/dev.c            | 7 +++++++
- net/core/net-sysfs.c      | 2 ++
- net/core/rtnetlink.c      | 2 ++
- 4 files changed, 17 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    2 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |    1 -
+ drivers/net/wireless/iwlwifi/mvm/power.c    |   30 ---------------------------
+ 3 files changed, 1 insertion(+), 32 deletions(-)
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index e8eeebd..d3a11c8 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -74,6 +74,11 @@ void netdev_set_default_ethtool_ops(struct net_device *dev,
- #define NET_RX_SUCCESS		0	/* keep 'em coming, baby */
- #define NET_RX_DROP		1	/* packet dropped */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 01b4500..9d29069 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -717,7 +717,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out_release;
  
-+/* interface name assignment types */
-+#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
-+#define NET_NAME_USER		1	/* provided by user-space */
-+#define NET_NAME_RENAMED	2	/* renamed by user-space */
-+
- /*
-  * Transmit return codes: transmit return codes originate from three different
-  * namespaces:
-@@ -1165,6 +1170,7 @@ struct net_device {
- 	 * of the interface.
- 	 */
- 	char			name[IFNAMSIZ];
-+	unsigned char		name_assign_type; /* name assignment type */
+-	iwl_mvm_power_mac_disable(mvm, vif);
++	iwl_mvm_power_mac_update_mode(mvm, vif);
  
- 	/* device name hash chain, please keep it close to name[] */
- 	struct hlist_node	name_hlist;
-diff --git a/net/core/dev.c b/net/core/dev.c
-index b1b0c8d..3608fb2 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1083,6 +1083,7 @@ static int dev_get_valid_name(struct net *net,
- int dev_change_name(struct net_device *dev, const char *newname)
- {
- 	char oldname[IFNAMSIZ];
-+	unsigned char old_assign_type;
- 	int err = 0;
- 	int ret;
- 	struct net *net;
-@@ -1109,10 +1110,14 @@ int dev_change_name(struct net_device *dev, const char *newname)
- 		return err;
- 	}
+ 	/* beacon filtering */
+ 	ret = iwl_mvm_disable_beacon_filter(mvm, vif, CMD_SYNC);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 0c12c32..bf6b602 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -814,7 +814,6 @@ int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm);
  
-+	old_assign_type = dev->name_assign_type;
-+	dev->name_assign_type = NET_NAME_RENAMED;
-+
- rollback:
- 	ret = device_rename(&dev->dev, dev->name);
- 	if (ret) {
- 		memcpy(dev->name, oldname, IFNAMSIZ);
-+		dev->name_assign_type = old_assign_type;
- 		write_seqcount_end(&devnet_rename_seq);
- 		return ret;
- 	}
-@@ -1141,6 +1146,8 @@ rollback:
- 			write_seqcount_begin(&devnet_rename_seq);
- 			memcpy(dev->name, oldname, IFNAMSIZ);
- 			memcpy(oldname, newname, IFNAMSIZ);
-+			dev->name_assign_type = old_assign_type;
-+			old_assign_type = NET_NAME_RENAMED;
- 			goto rollback;
- 		} else {
- 			pr_err("%s: name change rollback failed: %d\n",
-diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
-index 9388624..72a8ce5 100644
---- a/net/core/net-sysfs.c
-+++ b/net/core/net-sysfs.c
-@@ -104,6 +104,7 @@ static ssize_t netdev_store(struct device *dev, struct device_attribute *attr,
+ int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
+ 				  struct ieee80211_vif *vif);
+-int iwl_mvm_power_mac_disable(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_power_update_device(struct iwl_mvm *mvm);
+ void iwl_mvm_power_update_binding(struct iwl_mvm *mvm,
+ 				  struct ieee80211_vif *vif, bool assign);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 2eea5b3..5671b83 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -461,36 +461,6 @@ int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
+ 	return iwl_mvm_update_beacon_abort(mvm, vif, ba_enable);
  }
  
- NETDEVICE_SHOW_RO(dev_id, fmt_hex);
-+NETDEVICE_SHOW_RO(name_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_len, fmt_dec);
- NETDEVICE_SHOW_RO(iflink, fmt_dec);
-@@ -375,6 +376,7 @@ static struct attribute *net_class_attrs[] = {
- 	&dev_attr_dev_id.attr,
- 	&dev_attr_iflink.attr,
- 	&dev_attr_ifindex.attr,
-+	&dev_attr_name_assign_type.attr,
- 	&dev_attr_addr_assign_type.attr,
- 	&dev_attr_addr_len.attr,
- 	&dev_attr_link_mode.attr,
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index 1a0dac2..e10baa0 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -1962,6 +1962,8 @@ replay:
- 		}
- 
- 		dev->ifindex = ifm->ifi_index;
-+		if (tb[IFLA_IFNAME])
-+			dev->name_assign_type = NET_NAME_USER;
- 
- 		if (ops->newlink) {
- 			err = ops->newlink(net, dev, tb, data);
+-int iwl_mvm_power_mac_disable(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+-{
+-	struct iwl_mac_power_cmd cmd = {};
+-	struct iwl_mvm_vif *mvmvif __maybe_unused =
+-		iwl_mvm_vif_from_mac80211(vif);
+-
+-	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT))
+-		return 0;
+-
+-	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
+-		return 0;
+-
+-	cmd.id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+-							   mvmvif->color));
+-
+-	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM)
+-		cmd.flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
+-
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-	if (mvmvif->dbgfs_pm.mask & MVM_DEBUGFS_PM_DISABLE_POWER_OFF &&
+-	    mvmvif->dbgfs_pm.disable_power_off)
+-		cmd.flags &= cpu_to_le16(~POWER_FLAGS_POWER_SAVE_ENA_MSK);
+-	memcpy(&mvmvif->mac_pwr_cmd, &cmd, sizeof(cmd));
+-#endif
+-	iwl_mvm_power_log(mvm, &cmd);
+-
+-	return iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, CMD_ASYNC,
+-				    sizeof(cmd), &cmd);
+-}
+-
+ static int _iwl_mvm_power_update_device(struct iwl_mvm *mvm, bool force_disable)
+ {
+ 	struct iwl_device_power_cmd cmd = {
 -- 
-1.9.0
+1.7.9.5
 
