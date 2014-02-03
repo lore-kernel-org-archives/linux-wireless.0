@@ -1,122 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:34617 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbaBCNS0 (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:34919 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbaBCU7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 08:18:26 -0500
-Received: by mail-ee0-f42.google.com with SMTP id b15so1820788eek.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 05:18:25 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+	Mon, 3 Feb 2014 15:59:11 -0500
+Received: by mail-ea0-f179.google.com with SMTP id q10so3349900ead.10
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:10 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH V7] mac80211: Update opmode during adding new station
-Date: Mon,  3 Feb 2014 14:17:51 +0100
-Message-Id: <1391433471-13308-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140203_141829_891591_792FC800)
+Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/62] iwlwifi: 7265: add power limit/tx backoff translation table
+Date: Mon,  3 Feb 2014 22:57:40 +0200
+Message-Id: <1391461088-8082-34-git-send-email-egrumbach@gmail.com> (sfid-20140203_223007_309870_741CB8A7)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating mode is needed when User Space received Assoc
-Request contains Operating mode notification element.
----
- net/mac80211/cfg.c         |   10 ++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/vht.c         |   27 ++++++++++++++++++++-------
- 3 files changed, 33 insertions(+), 7 deletions(-)
+From: Ido Yariv <ido@wizery.com>
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f9ae9b8..767185a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1341,6 +1341,16 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
- 						    params->vht_capa, sta);
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index a43e4d1..fbd262f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -197,6 +197,17 @@ const struct iwl_cfg iwl3160_n_cfg = {
+ 	.host_interrupt_operation_mode = true,
+ };
  
-+	if (params->opmode_notif_used) {
-+		enum ieee80211_band band =
-+			ieee80211_get_sdata_band(sdata);
++static const struct iwl_pwr_tx_backoff iwl7265_pwr_tx_backoffs[] = {
++	{.pwr = 1600, .backoff = 0},
++	{.pwr = 1300, .backoff = 467},
++	{.pwr = 900,  .backoff = 1900},
++	{.pwr = 800, .backoff = 2630},
++	{.pwr = 700, .backoff = 3720},
++	{.pwr = 600, .backoff = 5550},
++	{.pwr = 500, .backoff = 9350},
++	{0},
++};
 +
-+		/* ignore returned value is not needed */
-+		__ieee80211_vht_handle_opmode(sdata, sta,
-+					      params->opmode_notif,
-+					      band, false);
-+	}
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		u32 changed = 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3701930..b1f04a8 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1553,6 +1553,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+                                  struct sta_info *sta, u8 opmode,
-+                                  enum ieee80211_band band, bool nss_only);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index d75f35c..04f906c 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -349,9 +349,9 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
- }
+ const struct iwl_cfg iwl7265_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 7265",
+ 	.fw_name_pre = IWL7265_FW_PRE,
+@@ -204,6 +215,7 @@ const struct iwl_cfg iwl7265_2ac_cfg = {
+ 	.ht_params = &iwl7000_ht_params,
+ 	.nvm_ver = IWL7265_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
++	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
  
--void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				  struct sta_info *sta, u8 opmode,
-+				  enum ieee80211_band band, bool nss_only)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -363,7 +363,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ const struct iwl_cfg iwl7265_2n_cfg = {
+@@ -213,6 +225,7 @@ const struct iwl_cfg iwl7265_2n_cfg = {
+ 	.ht_params = &iwl7000_ht_params,
+ 	.nvm_ver = IWL7265_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
++	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
  
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
--		return;
-+		return 0;
+ const struct iwl_cfg iwl7265_n_cfg = {
+@@ -222,6 +235,7 @@ const struct iwl_cfg iwl7265_n_cfg = {
+ 	.ht_params = &iwl7000_ht_params,
+ 	.nvm_ver = IWL7265_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
++	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
  
- 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
-@@ -375,7 +375,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (nss_only)
--		goto change;
-+		return changed;
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
-@@ -398,7 +398,20 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 	}
- 
-- change:
--	if (changed)
-+	return changed;
-+}
-+
-+void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta, u8 opmode,
-+				 enum ieee80211_band band, bool nss_only)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+
-+	u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
-+						    band, nss_only);
-+
-+	if (changed > 0)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
-+
+ MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
 -- 
 1.7.9.5
 
