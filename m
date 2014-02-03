@@ -1,64 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f65.google.com ([74.125.82.65]:38727 "EHLO
-	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbaBYQQH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 11:16:07 -0500
-Received: by mail-wg0-f65.google.com with SMTP id l18so171871wgh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 08:16:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAJZjf_yu99H2dNLph8ynWhXwSso-4HStrO9HA66MD5kE5DhRjw@mail.gmail.com>
-References: <20120418203543.GA16000@x61.home>
-	<20120425122554.GD2466@redhat.com>
-	<20120503182853.GA12461@mac.home>
-	<20121226185425.GA12627@x61.home>
-	<20130107110759.GC6931@redhat.com>
-	<20130603085239.GA26920@mac.home>
-	<20130603141804.GA2146@redhat.com>
-	<20130611185120.GA8751@x61.home>
-	<20140218105755.GD1741@redhat.com>
-	<CAJZjf_yu99H2dNLph8ynWhXwSso-4HStrO9HA66MD5kE5DhRjw@mail.gmail.com>
-Date: Tue, 25 Feb 2014 16:16:06 +0000
-Message-ID: <CAKFtS+oUopJYoXfs+KbzJx1=OWjYikyf2YK7S6NZhmAygyKJKA@mail.gmail.com> (sfid-20140225_171612_476268_ED83277F)
-Subject: Re: Power saving features for iwl4965
-From: Pedro Francisco <pedrogfrancisco.public@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>,
-	Pedro Francisco <pedrogfrancisco@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:2788 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751301AbaBCLMY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 06:12:24 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
+Date: Mon,  3 Feb 2014 13:14:32 +0200
+Message-Id: <1391426072-14331-1-git-send-email-ilan.peer@intel.com> (sfid-20140203_121304_927764_331C45ED)
+In-Reply-To: <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
+References: <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-20 12:08 GMT+00:00 Pedro Francisco <pedrogfrancisco@gmail.com>:
-> On Tue, Feb 18, 2014 at 10:57 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Tue, Jun 11, 2013 at 08:51:20PM +0200, Tino Keitel wrote:
->>> On Mon, Jun 03, 2013 at 16:18:05 +0200, Stanislaw Gruszka wrote:
->>>
->>> > Could you try this experimental patch?
->>>
->>> Hi,
->>>
->>> on top of kernel 3.9.4 (with TuxOnIce patch), iwconfig wlan0 power on
->>> now saves more than 1 W on my ThinkPad X61s with iwl4965. I can finally
->>> switch to a recent kernel. Thanks a lot.
->>
->> This patch stuck on mailing list far too long, I'll post it. Even if it
->> crash firmware on 3945, power save is disabled by default.
->
-> Ok!
-> The patch was not forgotten, just indefinitely delayed :/
-> Now that I can compile a kernel in 10 minutes instead of >1h, I'll try
-> to test it :)
+Add the option to hint the wireless core that it is operating in an indoor
+environment.
 
-Leaving the computer running for 24h gave no signs of any kind of
-issues, besides a few AP timeout after 500ms.
+In addition add regulatory_ir_allowed(), that can be used to
+test if initiation radiation is allowed based on the channel flags
+and the wireless core indoor hint.
 
-If you wish me to further test more patches, please do include me in CC.
-However, my access to the 3945 hardware is now very reduced, so I'll
-probably take several weeks to test the patches, if at all.
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ include/net/cfg80211.h       |   14 +++++++++++
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |   18 ++++++--------
+ net/wireless/reg.c           |   54 +++++++++++++++++++++++++++++++++++++++---
+ net/wireless/reg.h           |    1 +
+ 5 files changed, 76 insertions(+), 14 deletions(-)
 
-Thank you for your patience, time and code since my first half-made
-debugging of the HW scan crash in the iwl3945 firmware :)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 317bd06..6e6c42c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3627,6 +3627,20 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  */
+ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
+ 
++/**
++ * regulatory_ir_allowed - is it allowed to initiate radiation on the channel.
++ * @wiphy: the wiphy for which we want to test channel.
++ * @chan: the channel
++ *
++ * Generally, it is not allowed to initiate radiation on a channel marked with
++ * IEEE80211_CHAN_NO_IR. The exception is operation on channels marked with
++ * IEEE80211_CHAN_INDOOR_ONLY. For such channels, initiating radiation is
++ * allowed iff the wireless core was notified that it operates in an indoor
++ * environment.
++ */
++bool regulatory_ir_allowed(struct wiphy *wiphy,
++			   struct ieee80211_channel *chan);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 06440ac..1dbf6d3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2533,10 +2533,13 @@ enum nl80211_dfs_regions {
+  *	present has been registered with the wireless core that
+  *	has listed NL80211_FEATURE_CELL_BASE_REG_HINTS as a
+  *	supported feature.
++ * @NL80211_USER_REG_HINT_INDOOR: a user sent an hint indicating that the
++ *	platform is operating in an indoor environment.
+  */
+ enum nl80211_user_reg_hint_type {
+ 	NL80211_USER_REG_HINT_USER	= 0,
+ 	NL80211_USER_REG_HINT_CELL_BASE = 1,
++	NL80211_USER_REG_HINT_INDOOR    = 2,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b37b36e..cac9ae4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4664,7 +4664,6 @@ static int parse_reg_rule(struct nlattr *tb[],
+ 
+ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+-	int r;
+ 	char *data = NULL;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 
+@@ -4677,11 +4676,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (unlikely(!rcu_access_pointer(cfg80211_regdomain)))
+ 		return -EINPROGRESS;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
+-
+-	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+-
+ 	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
+ 		user_reg_hint_type =
+ 		  nla_get_u32(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
+@@ -4691,14 +4685,16 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	switch (user_reg_hint_type) {
+ 	case NL80211_USER_REG_HINT_USER:
+ 	case NL80211_USER_REG_HINT_CELL_BASE:
+-		break;
++		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
++			return -EINVAL;
++
++		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
++		return regulatory_hint_user(data, user_reg_hint_type);
++	case NL80211_USER_REG_HINT_INDOOR:
++		return regulatory_hint_indoor_user();
+ 	default:
+ 		return -EINVAL;
+ 	}
+-
+-	r = regulatory_hint_user(data, user_reg_hint_type);
+-
+-	return r;
+ }
+ 
+ static int nl80211_get_mesh_config(struct sk_buff *skb,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec38f5d..2f2d5db 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -110,6 +110,14 @@ const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+  */
+ static int reg_num_devs_support_basehint;
+ 
++/*
++ * State variable indicating if the platform on which the devices
++ * are attached is operating in an indoor environment. The state variable
++ * is relevant for all registered devices.
++ * Note: currently not protected by any synchronization primitive.
++ */
++static bool reg_is_indoor;
++
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ {
+ 	return rtnl_dereference(cfg80211_regdomain);
+@@ -1014,6 +1022,13 @@ static bool reg_request_cell_base(struct regulatory_request *request)
+ 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
+ }
+ 
++static bool reg_request_indoor(struct regulatory_request *request)
++{
++	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
++		return false;
++	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
++}
++
+ bool reg_last_request_cell_base(void)
+ {
+ 	return reg_request_cell_base(get_last_request());
+@@ -1450,6 +1465,11 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ {
+ 	struct regulatory_request *lr = get_last_request();
+ 
++	if (reg_request_indoor(user_request)) {
++		reg_is_indoor = true;
++		return REG_REQ_ALREADY_SET;
++	}
++
+ 	if (reg_request_cell_base(user_request))
+ 		return reg_ignore_cell_hint(user_request);
+ 
+@@ -1685,9 +1705,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
+ 
+-	if (WARN_ON(!reg_request->alpha2))
+-		return;
+-
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+ 
+@@ -1847,6 +1864,22 @@ int regulatory_hint_user(const char *alpha2,
+ 	return 0;
+ }
+ 
++int regulatory_hint_indoor_user(void)
++{
++	struct regulatory_request *request;
++
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = WIPHY_IDX_INVALID;
++	request->initiator = NL80211_REGDOM_SET_BY_USER;
++	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
++	queue_regulatory_request(request);
++
++	return 0;
++}
++
+ /* Driver hints */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+@@ -2014,6 +2047,8 @@ static void restore_regulatory_settings(bool reset_user)
+ 
+ 	ASSERT_RTNL();
+ 
++	reg_is_indoor = false;
++
+ 	reset_regdomains(true, &world_regdom);
+ 	restore_alpha2(alpha2, reset_user);
+ 
+@@ -2515,6 +2550,19 @@ int cfg80211_get_unii(int freq)
+ 	return -EINVAL;
+ }
+ 
++bool regulatory_ir_allowed(struct wiphy *wiphy, struct ieee80211_channel *chan)
++{
++	if (config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) &&
++	    !(wiphy->regulatory_flags & REGULATORY_DISABLE_RELAX_NO_IR) &&
++	    reg_is_indoor && (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++		return true;
++
++	if (chan->flags & IEEE80211_CHAN_NO_IR)
++		return false;
++	return true;
++}
++EXPORT_SYMBOL(regulatory_ir_allowed);
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 4d44cd4..2960024 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -25,6 +25,7 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
++int regulatory_hint_indoor_user(void);
+ 
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env);
+ void wiphy_regulatory_register(struct wiphy *wiphy);
 -- 
-Pedro
+1.7.10.4
+
