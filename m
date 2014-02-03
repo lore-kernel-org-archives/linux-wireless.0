@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:63722 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbaBXS52 (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:56504 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085AbaBCU6a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 13:57:28 -0500
-Received: by mail-la0-f48.google.com with SMTP id gf5so3244188lab.21
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Feb 2014 10:57:27 -0800 (PST)
-Message-ID: <530BA424.8070007@cogentembedded.com> (sfid-20140224_195732_299002_01E646D4)
-Date: Mon, 24 Feb 2014 22:57:24 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Simon Wunderlich <sw@simonwunderlich.de>, netdev@vger.kernel.org
-CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de
-Subject: Re: [net-next v3 3/3] cfg80211: add MPLS and 802.21 classification
-References: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de> <1393244920-15903-4-git-send-email-sw@simonwunderlich.de>
-In-Reply-To: <1393244920-15903-4-git-send-email-sw@simonwunderlich.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 3 Feb 2014 15:58:30 -0500
+Received: by mail-ea0-f173.google.com with SMTP id d10so3908618eaj.18
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:29 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/62] iwlwifi: 7000: warn about old firmware
+Date: Mon,  3 Feb 2014 22:57:15 +0200
+Message-Id: <1391461088-8082-9-git-send-email-egrumbach@gmail.com> (sfid-20140203_215835_715104_F50CBB51)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On 02/24/2014 03:28 PM, Simon Wunderlich wrote:
+iwlwifi-7260-8.ucode has been release. Warn if it is not
+on the file system.
+iwlwifi-7260-7.ucode is still supported for another kernel
+version.
 
-> MPLS labels may contain traffic control information, which should be
-> evaluated and used by the wireless subsystem if present.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Also check for IEEE 802.21 which is always network control traffic.
-
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-> ---
-> Changes to second version:
-
->   * rely on skb->protocol instead of checking ethertype
-
-> Changes to first version:
->
->   * include linux/mpls.h, not the UAPI one
->   * change __constant_htons to htons
-> ---
->   net/wireless/util.c |   16 ++++++++++++++++
->   1 file changed, 16 insertions(+)
-
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index d39c371..6799d5a 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-[...]
-> @@ -717,6 +718,21 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
->   	case htons(ETH_P_IPV6):
->   		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
->   		break;
-> +	case htons(ETH_P_MPLS_UC):
-> +	case htons(ETH_P_MPLS_MC): {
-> +		struct mpls_label_stack mpls_tmp, *mpls;
-> +
-> +		mpls = skb_header_pointer(skb, sizeof(struct ethhdr),
-> +					  sizeof(*mpls), &mpls_tmp);
-> +		if (!mpls)
-> +			return 0;
-> +
-> +		return (ntohl(mpls->entry) & MPLS_LS_TC_MASK)
-> +			>> MPLS_LS_TC_SHIFT;
-> +		}
-
-    Brace is over-indented here, it can't be at the same level as the 
-statements it embraces.
-
-WBR, Sergei
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 1270f0c..a43e4d1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -71,8 +71,8 @@
+ #define IWL3160_UCODE_API_MAX	8
+ 
+ /* Oldest version we won't warn about */
+-#define IWL7260_UCODE_API_OK	7
+-#define IWL3160_UCODE_API_OK	7
++#define IWL7260_UCODE_API_OK	8
++#define IWL3160_UCODE_API_OK	8
+ 
+ /* Lowest firmware API version supported */
+ #define IWL7260_UCODE_API_MIN	7
+-- 
+1.7.9.5
 
