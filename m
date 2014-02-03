@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:65402 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbaBYUyA (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:37906 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbaBCU7D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 15:54:00 -0500
-Received: by mail-wg0-f41.google.com with SMTP id l18so920158wgh.12
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 12:53:58 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/10] staging: vt6656: Remove pointer cast to urb->context.
-Date: Tue, 25 Feb 2014 20:51:51 +0000
-Message-Id: <1393361512-13805-9-git-send-email-tvboxspy@gmail.com> (sfid-20140225_215408_778190_0B122CEB)
-In-Reply-To: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
-References: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 3 Feb 2014 15:59:03 -0500
+Received: by mail-ee0-f45.google.com with SMTP id b15so3893456eek.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:02 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/62] iwlwifi: mvm: add vif type in debugfs output
+Date: Mon,  3 Feb 2014 22:57:35 +0200
+Message-Id: <1391461088-8082-29-git-send-email-egrumbach@gmail.com> (sfid-20140203_220007_571463_4759B472)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary cast to void * urb->context
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Add the vif type when we print the mac params.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 1477def..54c68a5 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -347,7 +347,7 @@ int PIPEnsInterruptRead(struct vnt_private *priv)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 9194709..f6bed07 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -225,6 +225,29 @@ static ssize_t iwl_dbgfs_mac_params_read(struct file *file,
  
- static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- {
--	struct vnt_private *priv = (struct vnt_private *)urb->context;
-+	struct vnt_private *priv = urb->context;
- 	int status;
+ 	ap_sta_id = mvmvif->ap_sta_id;
  
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-@@ -465,7 +465,7 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
- 
- static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- {
--	struct vnt_rcb *rcb = (struct vnt_rcb *)urb->context;
-+	struct vnt_rcb *rcb = urb->context;
- 	struct vnt_private *priv = rcb->pDevice;
- 	int re_alloc_skb = false;
- 
-@@ -592,8 +592,7 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- 
- static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- {
--	struct vnt_usb_send_context *context =
--			(struct vnt_usb_send_context *)urb->context;
-+	struct vnt_usb_send_context *context = urb->context;
- 	struct vnt_private *priv = context->pDevice;
- 	u8 context_type = context->type;
- 	unsigned long buf_len = context->uBufLen;
++	switch (ieee80211_vif_type_p2p(vif)) {
++	case NL80211_IFTYPE_ADHOC:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: ibss\n");
++		break;
++	case NL80211_IFTYPE_STATION:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: bss\n");
++		break;
++	case NL80211_IFTYPE_AP:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: ap\n");
++		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p client\n");
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p go\n");
++		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p dev\n");
++		break;
++	default:
++		break;
++	}
++
+ 	pos += scnprintf(buf+pos, bufsz-pos, "mac id/color: %d / %d\n",
+ 			 mvmvif->id, mvmvif->color);
+ 	pos += scnprintf(buf+pos, bufsz-pos, "bssid: %pM\n",
 -- 
-1.9.0
+1.7.9.5
 
