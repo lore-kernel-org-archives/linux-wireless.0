@@ -1,104 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30163 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752823AbaBSNCW (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:58459 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750713AbaBCFKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 08:02:22 -0500
-Date: Wed, 19 Feb 2014 18:18:30 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/3 v2] mwl8k: Implement sw_scan start/stop cbs
-Message-ID: <20140219124830.GA5369@markyou.marvell.com> (sfid-20140219_140224_712822_EA883261)
+	Mon, 3 Feb 2014 00:10:50 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 277D7207F0
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Feb 2014 00:10:49 -0500 (EST)
+Message-Id: <1391404248.15536.78512217.1C6885ED@webmail.messagingengine.com> (sfid-20140203_061055_058498_20F75710)
+From: Alexander <alex@legion.mm.st>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
+Subject: Intel Wireless AC 7260 driver
+Date: Mon, 03 Feb 2014 12:10:48 +0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement sw_scan start and stop callbacks.
-Reset BBP registers for channel, RX busy and
-average noise stats which clear on read.
-
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ea52ce1..afca172 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -81,6 +81,9 @@ MODULE_PARM_DESC(ap_mode_default,
-  */
- 
- #define	MWL8K_HW_TIMER_REGISTER			0x0000a600
-+#define BBU_RXRDY_CNT_REG			0x0000a860
-+#define NOK_CCA_CNT_REG				0x0000a6a0
-+#define BBU_AVG_NOISE_VAL			0x67
- 
- #define MWL8K_A2H_EVENTS	(MWL8K_A2H_INT_DUMMY | \
- 				 MWL8K_A2H_INT_CHNL_SWITCHED | \
-@@ -289,6 +292,9 @@ struct mwl8k_priv {
- 
- 	/* bitmap of running BSSes */
- 	u32 running_bsses;
-+
-+	/* ACS related */
-+	bool sw_scan_start;
- };
- 
- #define MAX_WEP_KEY_LEN         13
-@@ -5448,6 +5454,38 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return rc;
- }
- 
-+static void mwl8k_sw_scan_start(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+
-+	priv->sw_scan_start = true;
-+}
-+
-+static void mwl8k_sw_scan_complete(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	priv->sw_scan_start = false;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+}
-+
- static const struct ieee80211_ops mwl8k_ops = {
- 	.tx			= mwl8k_tx,
- 	.start			= mwl8k_start,
-@@ -5466,6 +5504,8 @@ static const struct ieee80211_ops mwl8k_ops = {
- 	.get_stats		= mwl8k_get_stats,
- 	.get_survey		= mwl8k_get_survey,
- 	.ampdu_action		= mwl8k_ampdu_action,
-+	.sw_scan_start		= mwl8k_sw_scan_start,
-+	.sw_scan_complete	= mwl8k_sw_scan_complete,
- };
- 
- static void mwl8k_finalize_join_worker(struct work_struct *work)
--- 
-1.8.3.4
-
+Hello. I have some troubles with Intel Wireless AC 7260 notebook
+adapter. I have only N-speed (up to 300 mbps) with my AC router (ASUS
+RT-AC56U), but AC-speed is working in windows 8.1, iwconfig output has
+"IEEE 802.11abgn", Power Management is off. I tried Ubuntu 13.04 and
+13.10 with 3.11 and 3.12 kernels. Can you help me?
