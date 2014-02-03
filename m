@@ -1,187 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:42432 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbaBWT5R (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:34658 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbaBCU6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:57:17 -0500
-Received: by mail-wg0-f42.google.com with SMTP id k14so2191252wgh.5
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:15 -0800 (PST)
+	Mon, 3 Feb 2014 15:58:47 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c41so3848593eek.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:46 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/17] iwlwifi: make various things const
-Date: Sun, 23 Feb 2014 21:56:53 +0200
-Message-Id: <1393185428-8524-2-git-send-email-egrumbach@gmail.com> (sfid-20140223_205727_770363_16AB065E)
-In-Reply-To: <530A51A4.6000007@gmail.com>
-References: <530A51A4.6000007@gmail.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/62] iwlwifi: mvm: BT Coex - change SMPS settings in AP mode
+Date: Mon,  3 Feb 2014 22:57:27 +0200
+Message-Id: <1391461088-8082-21-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_519810_82813957)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-There are a number of things in the .data section that should
-really be in .rodata, for example all ops structs and strings.
-Mark everything const that can be, leaving the .data section
-pretty much empty.
+Based on the Bluetooth activity grading, we can stop using
+the shared antenna and ask the stations to honor the new
+SMPS state.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/agn.h       |    4 ++--
- drivers/net/wireless/iwlwifi/dvm/devices.c   |    2 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c  |    2 +-
- drivers/net/wireless/iwlwifi/dvm/rx.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h     |    2 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c  |    2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h       |    3 +--
- drivers/net/wireless/iwlwifi/mvm/ops.c       |    2 +-
- drivers/net/wireless/iwlwifi/mvm/utils.c     |    4 ++--
- drivers/net/wireless/iwlwifi/pcie/internal.h |    2 +-
- 10 files changed, 12 insertions(+), 13 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c |   85 ++++++++++++++++++----------
+ drivers/net/wireless/iwlwifi/mvm/utils.c   |    7 ++-
+ 2 files changed, 60 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/agn.h b/drivers/net/wireless/iwlwifi/dvm/agn.h
-index 562772d..c160dad 100644
---- a/drivers/net/wireless/iwlwifi/dvm/agn.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/agn.h
-@@ -109,7 +109,7 @@ extern const struct iwl_dvm_cfg iwl_dvm_6030_cfg;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+index d38c4ae..ed20f4e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+@@ -568,29 +568,74 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	struct iwl_mvm *mvm = data->mvm;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	enum ieee80211_smps_mode smps_mode;
++	u32 bt_activity_grading;
+ 	int ave_rssi;
  
- struct iwl_ucode_capabilities;
+ 	lockdep_assert_held(&mvm->mutex);
  
--extern struct ieee80211_ops iwlagn_hw_ops;
-+extern const struct ieee80211_ops iwlagn_hw_ops;
+-	if (vif->type != NL80211_IFTYPE_STATION &&
+-	    vif->type != NL80211_IFTYPE_AP)
+-		return;
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		/* default smps_mode for BSS / P2P client is AUTOMATIC */
++		smps_mode = IEEE80211_SMPS_AUTOMATIC;
++		data->num_bss_ifaces++;
++
++		/*
++		 * Count unassoc BSSes, relax SMSP constraints
++		 * and disable reduced Tx Power
++		 */
++		if (!vif->bss_conf.assoc) {
++			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++					    smps_mode);
++			if (iwl_mvm_bt_coex_reduced_txp(mvm,
++							mvmvif->ap_sta_id,
++							false))
++				IWL_ERR(mvm, "Couldn't send BT_CONFIG cmd\n");
++			return;
++		}
++		break;
++	case NL80211_IFTYPE_AP:
++		/* default smps_mode for AP / GO is OFF */
++		smps_mode = IEEE80211_SMPS_OFF;
++		if (!mvmvif->ap_ibss_active) {
++			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++					    smps_mode);
++			return;
++		}
  
- static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- {
-@@ -480,7 +480,7 @@ do {									\
- } while (0)
- #endif				/* CONFIG_IWLWIFI_DEBUG */
+-	smps_mode = IEEE80211_SMPS_AUTOMATIC;
++		/* the Ack / Cts kill mask must be default if AP / GO */
++		data->reduced_tx_power = false;
++		break;
++	default:
++		return;
++	}
  
--extern const char *iwl_dvm_cmd_strings[REPLY_MAX];
-+extern const char *const iwl_dvm_cmd_strings[REPLY_MAX];
+ 	chanctx_conf = rcu_dereference(vif->chanctx_conf);
  
- static inline const char *iwl_dvm_get_cmd_string(u8 cmd)
- {
-diff --git a/drivers/net/wireless/iwlwifi/dvm/devices.c b/drivers/net/wireless/iwlwifi/dvm/devices.c
-index 7b140e4..758c54e 100644
---- a/drivers/net/wireless/iwlwifi/dvm/devices.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/devices.c
-@@ -317,7 +317,7 @@ static const struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 	.nrg_th_cca = 62,
- };
+ 	/* If channel context is invalid or not on 2.4GHz .. */
+ 	if ((!chanctx_conf ||
+ 	     chanctx_conf->def.chan->band != IEEE80211_BAND_2GHZ)) {
+-		/* ... and it is an associated STATION, relax constraints */
+-		if (vif->type == NL80211_IFTYPE_STATION && vif->bss_conf.assoc)
+-			iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
+-					    smps_mode);
+-		iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
++		/* ... relax constraints and disable rssi events */
++		iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX,
++				    smps_mode);
++		if (vif->type == NL80211_IFTYPE_STATION)
++			iwl_mvm_bt_coex_enable_rssi_event(mvm, vif, false, 0);
+ 		return;
+ 	}
  
--static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
-+static const struct iwl_sensitivity_ranges iwl5150_sensitivity = {
- 	.min_nrg_cck = 95,
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index c24d1d3..f576089 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1564,7 +1564,7 @@ static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
++	bt_activity_grading = le32_to_cpu(data->notif->bt_activity_grading);
++	if (bt_activity_grading >= BT_HIGH_TRAFFIC)
++		smps_mode = IEEE80211_SMPS_STATIC;
++	else if (bt_activity_grading >= BT_LOW_TRAFFIC)
++		smps_mode = vif->type == NL80211_IFTYPE_AP ?
++				IEEE80211_SMPS_OFF :
++				IEEE80211_SMPS_DYNAMIC;
++	IWL_DEBUG_COEX(data->mvm,
++		       "mac %d: bt_status %d bt_activity_grading %d smps_req %d\n",
++		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
++		       smps_mode);
++
++	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
++
+ 	/* low latency is always primary */
+ 	if (iwl_mvm_vif_low_latency(mvmvif)) {
+ 		data->primary_ll = true;
+@@ -603,9 +648,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		if (!mvmvif->ap_ibss_active)
+ 			return;
  
--struct ieee80211_ops iwlagn_hw_ops = {
-+const struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
- 	.stop = iwlagn_mac_stop,
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
-index 7a1bc1c..cd83773 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-@@ -39,7 +39,7 @@
+-		/* the Ack / Cts kill mask must be default if AP / GO */
+-		data->reduced_tx_power = false;
+-
+ 		if (chanctx_conf == data->primary)
+ 			return;
  
- #define IWL_CMD_ENTRY(x) [x] = #x
+@@ -623,12 +665,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		return;
+ 	}
  
--const char *iwl_dvm_cmd_strings[REPLY_MAX] = {
-+const char *const iwl_dvm_cmd_strings[REPLY_MAX] = {
- 	IWL_CMD_ENTRY(REPLY_ALIVE),
- 	IWL_CMD_ENTRY(REPLY_ERROR),
- 	IWL_CMD_ENTRY(REPLY_ECHO),
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 7b19274..8cdb0dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -393,7 +393,7 @@ struct iwl_trans_config {
- 	bool rx_buf_size_8k;
- 	bool bc_table_dword;
- 	unsigned int queue_watchdog_timeout;
--	const char **command_names;
-+	const char *const *command_names;
- };
+-	data->num_bss_ifaces++;
+-
+-	/* we are now a STA / P2P Client, and take associated ones only */
+-	if (!vif->bss_conf.assoc)
+-		return;
+-
+ 	/*
+ 	 * STA / P2P Client, try to be primary if first vif. If we are in low
+ 	 * latency mode, we are already in primary and just don't do much
+@@ -639,19 +675,6 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		/* if secondary is not NULL, it might be a GO */
+ 		data->secondary = chanctx_conf;
  
- struct iwl_trans;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index ba4dcab..42f7046 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2233,7 +2233,7 @@ static int iwl_mvm_mac_testmode_cmd(struct ieee80211_hw *hw,
- }
- #endif
- 
--struct ieee80211_ops iwl_mvm_hw_ops = {
-+const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.tx = iwl_mvm_mac_tx,
- 	.ampdu_action = iwl_mvm_mac_ampdu_action,
- 	.start = iwl_mvm_mac_start,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index ebea5f2..bde8190 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -91,8 +91,7 @@ enum iwl_mvm_tx_fifo {
- 	IWL_MVM_TX_FIFO_MCAST = 5,
- };
- 
--extern struct ieee80211_ops iwl_mvm_hw_ops;
--extern const struct iwl_mvm_power_ops pm_mac_ops;
-+extern const struct ieee80211_ops iwl_mvm_hw_ops;
- 
- /**
-  * struct iwl_mvm_mod_params - module parameters for iwlmvm
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index a46f0b8..ae347fb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -245,7 +245,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- #undef RX_HANDLER
- #define CMD(x) [x] = #x
- 
--static const char *iwl_mvm_cmd_strings[REPLY_MAX] = {
-+static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(MVM_ALIVE),
- 	CMD(REPLY_ERROR),
- 	CMD(INIT_COMPLETE_NOTIF),
+-	if (le32_to_cpu(data->notif->bt_activity_grading) >= BT_HIGH_TRAFFIC)
+-		smps_mode = IEEE80211_SMPS_STATIC;
+-	else if (le32_to_cpu(data->notif->bt_activity_grading) >=
+-		 BT_LOW_TRAFFIC)
+-		smps_mode = IEEE80211_SMPS_DYNAMIC;
+-
+-	IWL_DEBUG_COEX(data->mvm,
+-		       "mac %d: bt_status %d bt_activity_grading %d smps_req %d\n",
+-		       mvmvif->id,  data->notif->bt_status,
+-		       data->notif->bt_activity_grading, smps_mode);
+-
+-	iwl_mvm_update_smps(mvm, vif, IWL_MVM_SMPS_REQ_BT_COEX, smps_mode);
+-
+ 	/* don't reduce the Tx power if in loose scheme */
+ 	if (iwl_get_coex_type(mvm, vif) == BT_COEX_LOOSE_LUT ||
+ 	    mvm->cfg->bt_shared_single_ant) {
 diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index f4598cb..2021b57 100644
+index c7ee2f3..1aadede 100644
 --- a/drivers/net/wireless/iwlwifi/mvm/utils.c
 +++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -289,8 +289,8 @@ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx)
- 	return last_idx;
- }
+@@ -514,7 +514,7 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			 enum ieee80211_smps_mode smps_request)
+ {
+ 	struct iwl_mvm_vif *mvmvif;
+-	enum ieee80211_smps_mode smps_mode = IEEE80211_SMPS_AUTOMATIC;
++	enum ieee80211_smps_mode smps_mode;
+ 	int i;
  
--static struct {
--	char *name;
-+static const struct {
-+	const char *name;
- 	u8 num;
- } advanced_lookup[] = {
- 	{ "NMI_INTERRUPT_WDG", 0x34 },
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index e851f26..3120bc5 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -304,7 +304,7 @@ struct iwl_trans_pcie {
- 	bool bc_table_dword;
- 	u32 rx_page_order;
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -523,6 +523,11 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (num_of_ant(iwl_fw_valid_rx_ant(mvm->fw)) == 1)
+ 		return;
  
--	const char **command_names;
-+	const char *const *command_names;
- 
- 	/* queue watchdog */
- 	unsigned long wd_timeout;
++	if (vif->type == NL80211_IFTYPE_AP)
++		smps_mode = IEEE80211_SMPS_OFF;
++	else
++		smps_mode = IEEE80211_SMPS_AUTOMATIC;
++
+ 	mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	mvmvif->smps_requests[req_type] = smps_request;
+ 	for (i = 0; i < NUM_IWL_MVM_SMPS_REQ; i++) {
 -- 
 1.7.9.5
 
