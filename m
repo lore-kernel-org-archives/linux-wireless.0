@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:32970 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaBTPOS (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:45100 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114AbaBCWRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 10:14:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: document sched_scan_stop synchronous behaviour
-Date: Thu, 20 Feb 2014 16:14:10 +0100
-Message-Id: <1392909251-5557-1-git-send-email-johannes@sipsolutions.net> (sfid-20140220_161422_053235_8F6171D1)
+	Mon, 3 Feb 2014 17:17:03 -0500
+Received: by mail-we0-f181.google.com with SMTP id w61so3257636wes.40
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 14:17:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAAUTuq9oU7+=_sjcix0WuSUp5_5OVRXK1cJdtRDtR1obaJrV1Q@mail.gmail.com>
+References: <CAAUTuq_bgXcfKquXR+ATumO7xkyTE_WLUvUOMZ7bPYCP0_XnuQ@mail.gmail.com>
+ <CAJwzM1kzbvy7UnjJerJ8EmUxvp5GYPeKS-9988SgxfoQrv-Zjw@mail.gmail.com>
+ <CAAUTuq_LnUCTBaHndBiLDk0ge+055YJJMY4Ni+bV7PrYq_KSHA@mail.gmail.com>
+ <CAJwzM1kQJvfZwPi_suBSgCEquAHvYduwRWcM01==nT_TVd0d0g@mail.gmail.com> <CAAUTuq9oU7+=_sjcix0WuSUp5_5OVRXK1cJdtRDtR1obaJrV1Q@mail.gmail.com>
+From: Andrew Wiley <wiley.andrew.j@gmail.com>
+Date: Mon, 3 Feb 2014 16:16:42 -0600
+Message-ID: <CAAUTuq9dcKvGk0PWhP16=yyK79mE-T-1gbGPpd5G__imimHvBQ@mail.gmail.com> (sfid-20140203_231708_333706_04209F28)
+Subject: Re: mwifiex and SD8787: TX queue timeout in AP mode
+To: Avinash Patil <avinashapatil@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Feb 3, 2014 at 4:02 PM, Andrew Wiley <wiley.andrew.j@gmail.com> wrote:
+> On Mon, Feb 3, 2014 at 12:47 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
+>> Does this issue happens with station interface as well?
+>
+> I haven't really made use of station mode much, but I just tried it
+> and it seems stable. The first time I tried to connect, the driver had
+> a command timeout while scanning and the card dropped out, but the
+> second time, it connected and has stayed stable for 30 minutes or so.
+> The network I'm connected to uses WPA2. I'll continue to monitor the
+> box to see if the queue hangs.
+>
 
-Due to userspace assumptions, the sched_scan_stop operation must
-be synchronous, i.e. once it returns a new scheduled scan must be
-able to start immediately. Document this in the API.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       | 7 ++++++-
- include/uapi/linux/nl80211.h | 5 +++--
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c89a5b5bd103..7c9fe4b05927 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2206,7 +2206,12 @@ struct cfg80211_qos_map {
-  * @set_cqm_txe_config: Configure connection quality monitor TX error
-  *	thresholds.
-  * @sched_scan_start: Tell the driver to start a scheduled scan.
-- * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan.
-+ * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan. This
-+ *	call must stop the scheduled scan and be ready for starting a new one
-+ *	before it returns, i.e. @sched_scan_start may be called immediately
-+ *	after that again and should not fail in that case. The driver should
-+ *	not call cfg80211_sched_scan_stopped() for a requested stop (when this
-+ *	method returns 0.)
-  *
-  * @mgmt_frame_register: Notify driver that a management frame type was
-  *	registered. Note that this callback may not sleep, and cannot run
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 47d7087513e0..81481cff1dc1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -303,8 +303,9 @@
-  *	passed, all channels allowed for the current regulatory domain
-  *	are used.  Extra IEs can also be passed from the userspace by
-  *	using the %NL80211_ATTR_IE attribute.
-- * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan.  Returns -ENOENT
-- *	if scheduled scan is not running.
-+ * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan. Returns -ENOENT if
-+ *	scheduled scan is not running. The caller may assume that as soon
-+ *	as the call returns, it is safe to start a new scheduled scan again.
-  * @NL80211_CMD_SCHED_SCAN_RESULTS: indicates that there are scheduled scan
-  *	results available.
-  * @NL80211_CMD_SCHED_SCAN_STOPPED: indicates that the scheduled scan has
--- 
-1.8.5.3
-
+A few minutes after I wrote this, the box hung. No kernel errors were
+logged in the serial console - it just stopped responding.
+I'll have to investigate this further.
