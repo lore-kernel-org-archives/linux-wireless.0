@@ -1,66 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:35388 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284AbaBJRNk (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:37864 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753544AbaBCU7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 12:13:40 -0500
-Received: by mail-ea0-f177.google.com with SMTP id m10so525134eaj.22
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 09:13:39 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: change simulate_fw_crash to work with 10.1 firmware
-Date: Mon, 10 Feb 2014 18:13:25 +0100
-Message-Id: <1392052405-15337-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20140210_181344_171195_C965F7A3)
+	Mon, 3 Feb 2014 15:59:40 -0500
+Received: by mail-ee0-f49.google.com with SMTP id d17so3881261eek.8
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:38 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 51/62] iwlwifi: mvm: abort scheduled scan on scan request
+Date: Mon,  3 Feb 2014 22:57:57 +0200
+Message-Id: <1391461088-8082-51-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_932365_A64ED1C9)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wmi command WMI_FORCE_FW_HANG_CMDID is not supported
-in firmware 10.1. In order to have firmware crash simulation
-functionality also in firmware 10.1 driver can force firmware
-crash by performing not allowed operation. Driver can deliberately
-crash firmware when setting vdev param for vdev id out of range.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Command to trigger firmware crash:
-echo "crash" > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
+Some older versions of wpa_supplicant don't necessarily stop
+scheduled scan before starting a regular scan, and there's
+nothing in the API that requires it either. As a consequence
+our driver's behaviour of not allowing scan while scheduled
+scan was in progress broke userspace.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+However, it is valid to unilaterally stop scheduled scan at
+any point in time, so when a regular scan request comes just
+abort the scheduled scan and run the regular scan.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   25 ++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |    2 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     |    7 ++++++-
+ 3 files changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 6debd28..84b79c5 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -482,11 +482,23 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 	ath10k_info("simulating firmware crash\n");
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 59b5b7a..9d9a2d0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1449,6 +1449,8 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 			       struct cfg80211_scan_request *req)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_notification_wait wait_scan_done;
++	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
+ 	int ret;
  
- 	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
--	if (ret)
-+	if (ret == 0) {
-+		ret = count;
-+		goto exit;
-+	}
+ 	if (req->n_channels == 0 || req->n_channels > MAX_NUM_SCAN_CHANNELS)
+@@ -1456,7 +1458,28 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
++	switch (mvm->scan_status) {
++	case IWL_MVM_SCAN_SCHED:
++		iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
++					   scan_done_notif,
++					   ARRAY_SIZE(scan_done_notif),
++					   NULL, NULL);
++		iwl_mvm_sched_scan_stop(mvm);
++		ret = iwl_wait_notification(&mvm->notif_wait,
++					    &wait_scan_done, HZ);
++		if (ret) {
++			ret = -EBUSY;
++			goto out;
++		}
++		/* iwl_mvm_rx_scan_offload_complete_notif() will be called
++		 * soon but will not reset the scan status as it won't be
++		 * IWL_MVM_SCAN_SCHED any more since we queue the next scan
++		 * immediately (below)
++		 */
++		break;
++	case IWL_MVM_SCAN_NONE:
++		break;
++	default:
+ 		ret = -EBUSY;
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 4b7fa7a..e268c15 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -228,7 +228,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(SCAN_REQUEST_CMD, iwl_mvm_rx_scan_response, false),
+ 	RX_HANDLER(SCAN_COMPLETE_NOTIFICATION, iwl_mvm_rx_scan_complete, false),
+ 	RX_HANDLER(SCAN_OFFLOAD_COMPLETE,
+-		   iwl_mvm_rx_scan_offload_complete_notif, false),
++		   iwl_mvm_rx_scan_offload_complete_notif, true),
+ 	RX_HANDLER(MATCH_FOUND_NOTIFICATION, iwl_mvm_rx_sched_scan_results,
+ 		   false),
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 8477902..a827a13 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -511,11 +511,16 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_scan_offload_complete *scan_notif = (void *)pkt->data;
+ 
++	/* scan status must be locked for proper checking */
++	lockdep_assert_held(&mvm->mutex);
 +
-+	if (ret != -EOPNOTSUPP) {
- 		ath10k_warn("failed to force fw hang (%d)\n", ret);
-+		goto exit;
-+	}
+ 	IWL_DEBUG_SCAN(mvm, "Scheduled scan completed, status %s\n",
+ 		       scan_notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
+ 		       "completed" : "aborted");
  
--	if (ret == 0)
--		ret = count;
-+	/*
-+	 * Firmware does not support WMI_FORCE_FW_HANG_ASSERT.
-+	 * Force firmware crash by setting any vdev parameter for
-+	 * not allowed vdev id.
-+	 */
-+	ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
-+				  ar->wmi.vdev_param->rts_threshold, 0);
+-	mvm->scan_status = IWL_MVM_SCAN_NONE;
++	/* might already be something else again, don't reset if so */
++	if (mvm->scan_status == IWL_MVM_SCAN_SCHED)
++		mvm->scan_status = IWL_MVM_SCAN_NONE;
+ 	ieee80211_sched_scan_stopped(mvm->hw);
  
- exit:
- 	mutex_unlock(&ar->conf_mutex);
+ 	return 0;
 -- 
-1.8.1.2
+1.7.9.5
 
