@@ -1,111 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12175 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755703AbaBEUiO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 15:38:14 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Date: Wed, 5 Feb 2014 12:38:06 -0800
-Subject: RE: [PATCH 00/30] mwifiex updates for 3.15
-Message-ID: <477F20668A386D41ADCC57781B1F70430F53858E6D@SC-VEXCH1.marvell.com> (sfid-20140205_213823_921624_7F4321C9)
-References: <1391632290-11441-1-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1391632290-11441-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:41711 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbaBCU6X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 15:58:23 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so3996660eaj.40
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:22 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/62] iwlwifi: pcie: disable APMG configurations for family 8000
+Date: Mon,  3 Feb 2014 22:57:10 +0200
+Message-Id: <1391461088-8082-4-git-send-email-egrumbach@gmail.com> (sfid-20140203_215827_602121_DD73AB91)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Eran Harary <eran.harary@intel.com>
 
-> This series includes updates for 11ac cleanups, PCIe improvements
-> and TDLS support.
+APMG HW block was removed in this NIC, hence, no need to
+configure it.
 
-Please ignore this series.
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c    |    7 ++++---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |   27 ++++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/pcie/tx.c    |    5 +++--
+ 3 files changed, 23 insertions(+), 16 deletions(-)
 
-My SMTP server has problem. Only partial of the patches went out.
-I will resend the series later.
-
-Thanks,
-Bing
-
-> 
-> 
-> Aaron Durbin (2):
->   mwifiex: balance dma map/unmap sizes
->   mwifiex: don't leak DMA command skbuffs
-> 
-> Amitkumar Karwar (7):
->   mwifiex: change beacon parameter structure
->   mwifiex: separate out response buffer parsing code
->   mwifiex: separate out next scan command queueing logic
->   mwifiex: implement extended scan feature
->   mwifiex: update beamforming capability field for HT
->   mwifiex: advertise correct beamforming information for VHT
->   mwifiex: cleanup in mwifiex_fill_cap_info()
-> 
-> Avinash Patil (17):
->   mwifiex: handle AMPDU supported check for AP interface
->   mwifiex: make tos_to_tid_inv part of mwifiex_private structure
->   mwifiex: move station list functions to common code
->   mwifiex: add tdls_mgmt handler support
->   mwifiex: parse TDLS action frames during RX
->   mwifiex: add cfg80211 tdls_oper handler support
->   mwifiex: add cfg80211 add_station handler support
->   mwifiex: add cfg80211 change_station handler support
->   mwifiex: provision for holding and restoring packets during TDLS setup
->   mwifiex: tdls related handling for data packets addressed to TDLS peer
->   mwifiex: AMPDU support for TDLS link
->   mwifiex: pass ieee80211_vht_cap to mwifiex_fill_vht_cap_tlv
->   mwifiex: add VHT support for TDLS
->   mwifiex: separate BA params for TDLS link if 11ac is supported
->   mwifiex: disable all TDLS link during disconnection
->   mwifiex: parse API version from FW
->   mwifiex: add key material v2 support
-> 
-> Bing Zhao (4):
->   mwifiex: make use of IEEE80211_VHT_MCS_NOT_SUPPORTED
->   mwifiex: make 11ac mcs rate tables global and const
->   mwifiex: improve readability in 11ac mcsmap to maxrate conversion
->   mwifiex: remove unsupported code in 11ac
-> 
->  drivers/net/wireless/mwifiex/11ac.c          |  192 +++--
->  drivers/net/wireless/mwifiex/11ac.h          |    2 +
->  drivers/net/wireless/mwifiex/11n.c           |   51 +-
->  drivers/net/wireless/mwifiex/11n.h           |   44 +-
->  drivers/net/wireless/mwifiex/11n_rxreorder.c |   27 +-
->  drivers/net/wireless/mwifiex/Makefile        |    1 +
->  drivers/net/wireless/mwifiex/cfg80211.c      |  176 ++++-
->  drivers/net/wireless/mwifiex/cfp.c           |  203 +++--
->  drivers/net/wireless/mwifiex/cmdevt.c        |   54 +-
->  drivers/net/wireless/mwifiex/decl.h          |   23 +
->  drivers/net/wireless/mwifiex/fw.h            |  181 ++++-
->  drivers/net/wireless/mwifiex/init.c          |    5 +
->  drivers/net/wireless/mwifiex/ioctl.h         |   22 +-
->  drivers/net/wireless/mwifiex/join.c          |   14 +-
->  drivers/net/wireless/mwifiex/main.h          |   88 ++-
->  drivers/net/wireless/mwifiex/pcie.c          |  138 ++--
->  drivers/net/wireless/mwifiex/scan.c          |  598 ++++++++++-----
->  drivers/net/wireless/mwifiex/sta_cmd.c       |  373 ++++++++-
->  drivers/net/wireless/mwifiex/sta_cmdresp.c   |  112 ++-
->  drivers/net/wireless/mwifiex/sta_event.c     |   12 +
->  drivers/net/wireless/mwifiex/sta_ioctl.c     |   38 +-
->  drivers/net/wireless/mwifiex/sta_rx.c        |   13 +-
->  drivers/net/wireless/mwifiex/sta_tx.c        |    3 +
->  drivers/net/wireless/mwifiex/tdls.c          | 1043 ++++++++++++++++++++++++++
->  drivers/net/wireless/mwifiex/uap_event.c     |  118 ---
->  drivers/net/wireless/mwifiex/util.c          |  114 +++
->  drivers/net/wireless/mwifiex/util.h          |   20 +-
->  drivers/net/wireless/mwifiex/wmm.c           |   96 ++-
->  drivers/net/wireless/mwifiex/wmm.h           |   18 +
->  29 files changed, 3110 insertions(+), 669 deletions(-)
->  create mode 100644 drivers/net/wireless/mwifiex/tdls.c
-> 
-> --
-> 1.8.2.3
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 7a2e488..f38ed9f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -185,9 +185,10 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
+ 	 * (PCIe power is lost before PERST# is asserted), causing ME FW
+ 	 * to lose ownership and not being able to obtain it back.
+ 	 */
+-	iwl_set_bits_mask_prph(mvm->trans, APMG_PS_CTRL_REG,
+-			       APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
+-			       ~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
++	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
++		iwl_set_bits_mask_prph(mvm->trans, APMG_PS_CTRL_REG,
++				       APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
++				       ~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
+ }
+ 
+ struct iwl_rx_handlers {
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index f950780..f7e85d3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -203,19 +203,23 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ 	/*
+ 	 * Enable DMA clock and wait for it to stabilize.
+ 	 *
+-	 * Write to "CLK_EN_REG"; "1" bits enable clocks, while "0" bits
+-	 * do not disable clocks.  This preserves any hardware bits already
+-	 * set by default in "CLK_CTRL_REG" after reset.
++	 * Write to "CLK_EN_REG"; "1" bits enable clocks, while "0"
++	 * bits do not disable clocks.  This preserves any hardware
++	 * bits already set by default in "CLK_CTRL_REG" after reset.
+ 	 */
+-	iwl_write_prph(trans, APMG_CLK_EN_REG, APMG_CLK_VAL_DMA_CLK_RQT);
+-	udelay(20);
++	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
++		iwl_write_prph(trans, APMG_CLK_EN_REG,
++			       APMG_CLK_VAL_DMA_CLK_RQT);
++		udelay(20);
+ 
+-	/* Disable L1-Active */
+-	iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
+-			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
++		/* Disable L1-Active */
++		iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
++				  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
+-	/* Clear the interrupt in APMG if the NIC is in RFKILL */
+-	iwl_write_prph(trans, APMG_RTC_INT_STT_REG, APMG_RTC_INT_STT_RFKILL);
++		/* Clear the interrupt in APMG if the NIC is in RFKILL */
++		iwl_write_prph(trans, APMG_RTC_INT_STT_REG,
++			       APMG_RTC_INT_STT_RFKILL);
++	}
+ 
+ 	set_bit(STATUS_DEVICE_ENABLED, &trans->status);
+ 
+@@ -273,7 +277,8 @@ static int iwl_pcie_nic_init(struct iwl_trans *trans)
+ 
+ 	spin_unlock(&trans_pcie->irq_lock);
+ 
+-	iwl_pcie_set_pwr(trans, false);
++	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
++		iwl_pcie_set_pwr(trans, false);
+ 
+ 	iwl_op_mode_nic_config(trans->op_mode);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 3d54900..2541264 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -705,8 +705,9 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ 			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+ 
+ 	/* Enable L1-Active */
+-	iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
+-			    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
++	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
++		iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
++				    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ }
+ 
+ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
+-- 
+1.7.9.5
 
