@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:40169 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbaBRTHM (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:44297 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbaBCUj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 14:07:12 -0500
-Received: by mail-ve0-f174.google.com with SMTP id pa12so14039898veb.33
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 11:07:11 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <20140218182714.GO26776@mwanda>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
- <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
- <20140218093135.GJ26776@mwanda> <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
- <20140218182714.GO26776@mwanda>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Tue, 18 Feb 2014 20:06:51 +0100
-Message-ID: <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com> (sfid-20140218_200736_792601_04A382BB)
-Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
- initializing RX ring
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 3 Feb 2014 15:39:29 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so3946147eek.9
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:28 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/8] iwlwifi: mvm: make local pointer non-static
+Date: Mon,  3 Feb 2014 22:39:15 +0200
+Message-Id: <1391459962-7381-1-git-send-email-egrumbach@gmail.com> (sfid-20140203_213933_929769_9F84580D)
+In-Reply-To: <52EFFCE8.6070505@gmail.com>
+References: <52EFFCE8.6070505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank for pointing out this. Yes, I probably exaggerated trying hard
-to allocate memory.
+From: Johannes Berg <johannes.berg@intel.com>
 
-If your point is about if pci_map_single may or not ever fail in real
-life (that is was I thought you meant in your first mail), then I
-think that it's worth to keep the  check anyway (I think it could
-happen).
+The address pointer used in the function shouldn't be static
+since it's local data only. Having it static causes races if
+a single machine has two devices, as the pointer would be
+shared between instances.
 
-If your point is that it can be not so much useful to try and retry
-hard the allocation (I must admit I'm not even sure that after freeing
-the skb the kernel will not likely re-allocate the same one at the
-next try), then I will keep the error check, but I can remove code
-that retries allocation (failing at the first error as you suggested).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-BTW consider that the allocation is done in ieee80211 start callback,
-that is called every time the interface is brought down/up, and not
-once at the begining.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index ec18121..3397f59 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -652,7 +652,7 @@ int iwl_mvm_send_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	static const u8 _baddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+-	static const u8 *baddr = _baddr;
++	const u8 *baddr = _baddr;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-- 
+1.7.9.5
 
-On one hand I cared avoiding wasting memory when the interface is not up.
-On the other hand I had thought also to move memory allocation in
-initialization, exactly to increase success probability as you pointed
-out..
-
-I chosen the first option because after the interface is brought up,
-the RX ant TX processes will start to perform a lot of other skb
-allocations and dma maps.
-If we assume, as you pointed out, they will likely ALL fail or
-succeeds, not just few of them, then probably even if we allocated
-some memory at init time, we have gained not advantage.
-
-Do you agree ?
-
-Thank you
-Andrea
-
-On Tue, Feb 18, 2014 at 7:27 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> I guess what I was going to suggest is that you are overthinking the
-> error handling.  Your code tries very hard to allocate 32 buffers.  But
-> I bet it's just a matter of allocating the buffers and if it doesn't
-> work then clean up and return an error.  Probably it alocates 32 buffers
-> successfully or it doesn't allocate any, it's less likely that we will
-> allocate a partial number of buffers.
->
-> If this were in the receive path or something like that then maybe we
-> would worry about situations like that.  Although even in that case
-> probably the right approach would be to drop everything and let the
-> protocol handle the error...  Offtopic.  What I mean is that this is in
-> the init path so everything will likely work except in manufactured
-> situations.
->
-> regards,
-> dan carpenter
->
