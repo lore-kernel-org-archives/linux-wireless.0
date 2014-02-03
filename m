@@ -1,118 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:41711 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbaBCU6X (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:48897 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114AbaBCUSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:23 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so3996660eaj.40
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:22 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/62] iwlwifi: pcie: disable APMG configurations for family 8000
-Date: Mon,  3 Feb 2014 22:57:10 +0200
-Message-Id: <1391461088-8082-4-git-send-email-egrumbach@gmail.com> (sfid-20140203_215827_602121_DD73AB91)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 3 Feb 2014 15:18:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <20140203201228.GE26722@mwanda>
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
+	<20140202160512.GA4946@redhat.com>
+	<201402021807.37772.s.L-H@gmx.de>
+	<52EFCC66.9020304@lwfinger.net>
+	<20140203201228.GE26722@mwanda>
+Date: Mon, 3 Feb 2014 12:18:53 -0800
+Message-ID: <CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com> (sfid-20140203_211940_455911_333EF5E9)
+Subject: Re: rtl8821ae.
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Driver Project <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Mon, Feb 3, 2014 at 12:12 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> On Mon, Feb 03, 2014 at 11:05:42AM -0600, Larry Finger wrote:
+>> A combined driver would require very many branches based on chip
+>> number and would certainly execute much more slowly.
+>
+> I seriously doubt there are performance issues with merging the drivers.
 
-APMG HW block was removed in this NIC, hence, no need to
-configure it.
+Quite frankly, merging drivers can be a f*cking pain. I would
+seriously suggest avoiding it *unless* the hardware is literally
+almost identical, or the drivers have been written with multi-chip
+support from the ground up by people who actually understood the
+hardware.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c    |    7 ++++---
- drivers/net/wireless/iwlwifi/pcie/trans.c |   27 ++++++++++++++++-----------
- drivers/net/wireless/iwlwifi/pcie/tx.c    |    5 +++--
- 3 files changed, 23 insertions(+), 16 deletions(-)
+But the reason isn't performance - it's subtle breakage. Merged
+drivers have a tendency to break support for chip A when you fix
+something for chip B. And the end result is a driver that nobody
+understands, and nobody can sanely test.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 7a2e488..f38ed9f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -185,9 +185,10 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
- 	 * (PCIe power is lost before PERST# is asserted), causing ME FW
- 	 * to lose ownership and not being able to obtain it back.
- 	 */
--	iwl_set_bits_mask_prph(mvm->trans, APMG_PS_CTRL_REG,
--			       APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
--			       ~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
-+	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
-+		iwl_set_bits_mask_prph(mvm->trans, APMG_PS_CTRL_REG,
-+				       APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
-+				       ~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
- }
- 
- struct iwl_rx_handlers {
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index f950780..f7e85d3 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -203,19 +203,23 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
- 	/*
- 	 * Enable DMA clock and wait for it to stabilize.
- 	 *
--	 * Write to "CLK_EN_REG"; "1" bits enable clocks, while "0" bits
--	 * do not disable clocks.  This preserves any hardware bits already
--	 * set by default in "CLK_CTRL_REG" after reset.
-+	 * Write to "CLK_EN_REG"; "1" bits enable clocks, while "0"
-+	 * bits do not disable clocks.  This preserves any hardware
-+	 * bits already set by default in "CLK_CTRL_REG" after reset.
- 	 */
--	iwl_write_prph(trans, APMG_CLK_EN_REG, APMG_CLK_VAL_DMA_CLK_RQT);
--	udelay(20);
-+	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-+		iwl_write_prph(trans, APMG_CLK_EN_REG,
-+			       APMG_CLK_VAL_DMA_CLK_RQT);
-+		udelay(20);
- 
--	/* Disable L1-Active */
--	iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
--			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
-+		/* Disable L1-Active */
-+		iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
-+				  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- 
--	/* Clear the interrupt in APMG if the NIC is in RFKILL */
--	iwl_write_prph(trans, APMG_RTC_INT_STT_REG, APMG_RTC_INT_STT_RFKILL);
-+		/* Clear the interrupt in APMG if the NIC is in RFKILL */
-+		iwl_write_prph(trans, APMG_RTC_INT_STT_REG,
-+			       APMG_RTC_INT_STT_RFKILL);
-+	}
- 
- 	set_bit(STATUS_DEVICE_ENABLED, &trans->status);
- 
-@@ -273,7 +277,8 @@ static int iwl_pcie_nic_init(struct iwl_trans *trans)
- 
- 	spin_unlock(&trans_pcie->irq_lock);
- 
--	iwl_pcie_set_pwr(trans, false);
-+	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
-+		iwl_pcie_set_pwr(trans, false);
- 
- 	iwl_op_mode_nic_config(trans->op_mode);
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 3d54900..2541264 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -705,8 +705,9 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
- 			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
- 
- 	/* Enable L1-Active */
--	iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
--			    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
-+	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
-+		iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
-+				    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- }
- 
- void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
--- 
-1.7.9.5
+Sometimes it's simply better to leave old drivers alone.
 
+                  Linus
