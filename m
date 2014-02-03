@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:53138 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbaBVFAQ (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:40111 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbaBCUMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 00:00:16 -0500
-Received: by mail-oa0-f42.google.com with SMTP id j17so3151551oag.15
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 21:00:16 -0800 (PST)
+	Mon, 3 Feb 2014 15:12:49 -0500
+Date: Mon, 3 Feb 2014 23:12:29 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Andrea Merello <andrea.merello@gmail.com>,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Driver Project <devel@linuxdriverproject.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: rtl8821ae.
+Message-ID: <20140203201228.GE26722@mwanda> (sfid-20140203_211317_461841_20EEF710)
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
+ <20140202160512.GA4946@redhat.com>
+ <201402021807.37772.s.L-H@gmx.de>
+ <52EFCC66.9020304@lwfinger.net>
 MIME-Version: 1.0
-Date: Fri, 21 Feb 2014 21:00:14 -0800
-Message-ID: <CAC45b7kjErBZ=bZEnbsmdbXkEowQRtkkoN-obSxpn3cRLrCvwQ@mail.gmail.com> (sfid-20140222_060021_280703_A165C4EB)
-Subject: RX laggy/choppy/stuck without TX on Intel Wireless 7260 with iwlwifi
-From: Stephen Kent <smkent@smkent.net>
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52EFCC66.9020304@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Resending as plain text)
+On Mon, Feb 03, 2014 at 11:05:42AM -0600, Larry Finger wrote:
+> A combined driver would require very many branches based on chip
+> number and would certainly execute much more slowly.
 
-I have a strange issue with my Intel Wireless 7260 adapter on my Dell
-XPS 13 (Haswell). It seems that packets are received but aren't
-processed by the kernel or something until more packets are
-transmitted. The net effect is that the laptop's wireless seems
-somewhat choppy. I can demonstrate this by running something in a
-remote ssh session that generates periodic output, and that output
-doesn't appear until I generate more outgoing traffic. It's hard to
-describe it beyond that, but I took a screen capture which
-demonstrates this very well:
-http://www.youtube.com/watch?v=4RMURSMszmc
+I seriously doubt there are performance issues with merging the drivers.
 
-lspci shows the wireless card as: 02:00.0 Network controller: Intel
-Corporation Wireless 7260 (rev 6b)
-uname -a: Linux dalek 3.11.0-12-generic #19-Ubuntu SMP Wed Oct 9
-16:20:46UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+regards,
+dan carpenter
 
-I googled this without success. I can gather diagnostic information if
-you send me instructions, I'm just not sure where to start or what to
-look for. Is this a bug in the driver? Maybe in the card microcode
-itself? Has anyone else reported this issue? It seems very strange.
-Any help is appreciated.
-
-Thanks,
-
-Stephen
