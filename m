@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50844 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750922AbaBLJqD convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:34245 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbaBCUjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 04:46:03 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
-Subject: RE: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
-Date: Wed, 12 Feb 2014 09:45:58 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D66477@HASMSX103.ger.corp.intel.com> (sfid-20140212_104613_522739_42301DB1)
-References: <52FB360D.2060502@gmail.com>
-	<1392195269-5514-1-git-send-email-egrumbach@gmail.com>
-	<20140212091008.GB1315@redhat.com>	<20140212092150.GC1315@redhat.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
- <21243.16970.514799.362874@gargle.gargle.HOWL>
-In-Reply-To: <21243.16970.514799.362874@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 3 Feb 2014 15:39:40 -0500
+Received: by mail-ee0-f44.google.com with SMTP id c13so3874793eek.31
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:39 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 7/8] iwlwifi: mvm: BT Coex - disable BT when TXing probe request in scan
+Date: Mon,  3 Feb 2014 22:39:21 +0200
+Message-Id: <1391459962-7381-7-git-send-email-egrumbach@gmail.com> (sfid-20140203_214000_018623_D56597C5)
+In-Reply-To: <52EFFCE8.6070505@gmail.com>
+References: <52EFFCE8.6070505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Grumbach, Emmanuel wrote:
-> > I have seen reports from many users and many devices - and
-> > unfortunately I have never been able to reproduce - so I can't know if
-> > it affects all the devices. All I can see is that I saw reports on
-> > very old devices (5150) and with more recent devices (2230).
-> 
-> Is 5100 a very old device ? I have one of those cards in a laptop and starting
-> 11n TX traffic usually results in a crash like this:
-> http://pastebin.com/HtUdCLR3
-> 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-5100 is the first device supported by iwldvm. I think it was shipped in 2008.
+Not doing so will let BT kill our probe requests leading to
+failures in scan.
+
+Cc: <stable@vger.kernel.org> [3.10+]
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index c35f35c..742afc4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -344,7 +344,8 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 
+ 	iwl_mvm_scan_fill_ssids(cmd, req, basic_ssid ? 1 : 0);
+ 
+-	cmd->tx_cmd.tx_flags = cpu_to_le32(TX_CMD_FLG_SEQ_CTL);
++	cmd->tx_cmd.tx_flags = cpu_to_le32(TX_CMD_FLG_SEQ_CTL |
++					   TX_CMD_FLG_BT_DIS);
+ 	cmd->tx_cmd.sta_id = mvm->aux_sta.sta_id;
+ 	cmd->tx_cmd.life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+ 	cmd->tx_cmd.rate_n_flags =
+-- 
+1.7.9.5
 
