@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36422 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbaBNJC4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36969 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbaBCKyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 04:02:56 -0500
-Date: Fri, 14 Feb 2014 12:02:44 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: patila@marvell.com
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
-Subject: re: mwifiex: parse TDLS action frames during RX
-Message-ID: <20140214090244.GA13684@elgon.mountain> (sfid-20140214_100331_655666_8B148305)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 3 Feb 2014 05:54:23 -0500
+Message-ID: <1391424860.4488.6.camel@jlt4.sipsolutions.net> (sfid-20140203_115425_840496_4702646A)
+Subject: Re: [PATCH] [iw] Make the build system automake based
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cristian =?ISO-8859-1?Q?Rodr=EDguez?= <crrodriguez@opensuse.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Feb 2014 11:54:20 +0100
+In-Reply-To: <1391424732.4488.4.camel@jlt4.sipsolutions.net> (sfid-20140203_115223_694753_9E04CB22)
+References: <1391319050-100614-1-git-send-email-crrodriguez@opensuse.org>
+	 <1391424732.4488.4.camel@jlt4.sipsolutions.net>
+	 (sfid-20140203_115223_694753_9E04CB22)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Avinash Patil,
+On Mon, 2014-02-03 at 11:52 +0100, Johannes Berg wrote:
 
-The patch 5f2caaf32bc6: "mwifiex: parse TDLS action frames during RX"
-from Feb 7, 2014, leads to the following static checker warning:
+> I *might* be open to switching to something like
+> cmake
 
-	drivers/net/wireless/mwifiex/tdls.c:820 mwifiex_process_tdls_action_frame()
-	error: memcpy() '&sta_ptr->tdls_cap.rsn_ie' too small (256 vs 257)
+[...] something *sane* like cmake [...]
 
-drivers/net/wireless/mwifiex/tdls.c
-   814                  case WLAN_EID_EXT_CAPABILITY:
-   815                          memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
-   816                                 sizeof(struct ieee_types_header) +
-   817                                 min_t(u8, pos[1], 8));
-   818                          break;
-   819                  case WLAN_EID_RSN:
-   820                          memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
-   821                                 sizeof(struct ieee_types_header) + pos[1]);
+(FWIW, don't even argue that part about auto*, it's decidedly not sane
+to have a build system that needs roughly two dozen versions installed
+concurrently to build different software)
 
-Smatch thinks pos[] is untrusted data because it comes from skb->data
-in mwifiex_process_rx_packet().
+johannes
 
-sta_ptr->tdls_cap.rsn_ie is defined like:
-
-struct ieee_types_generic {
-        struct ieee_types_header ieee_hdr;
-        u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
-} __packed;
-
-So it is IEEE_MAX_IE_SIZE (256) bytes long.  Meanwhile the memcpy()
-limit is 2 + 0xff, so it's 257 and we are corrupting a byte past the end
-of the struct.
-
-   822                          break;
-   823                  case WLAN_EID_QOS_CAPA:
-   824                          sta_ptr->tdls_cap.qos_info = pos[2];
-   825                          break;
-
-regards,
-dan carpenter
