@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55935 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbaBTFKU (ORCPT
+Received: from mail-ea0-f196.google.com ([209.85.215.196]:56392 "EHLO
+	mail-ea0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752005AbaBCOr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 00:10:20 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v2 4/7] mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
-Date: Thu, 20 Feb 2014 07:10:10 +0200
-Message-Id: <1392873013-21772-5-git-send-email-luca@coelho.fi> (sfid-20140220_061052_431182_56D28555)
-In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
-References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+	Mon, 3 Feb 2014 09:47:27 -0500
+Received: by mail-ea0-f196.google.com with SMTP id l9so1068098eaj.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 06:47:26 -0800 (PST)
+Message-ID: <52EFABEE.2050004@gmail.com> (sfid-20140203_154730_718794_B75653AC)
+Date: Mon, 03 Feb 2014 15:47:10 +0100
+From: coputer engineer <computer.engineer.ds@gmail.com>
+MIME-Version: 1.0
+To: luca@coelho.fi
+CC: linux-wireless@vger.kernel.org
+Subject: wl12xx interrupt watchdog!!
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi
 
-Error codes returned by cfg80211_chandef_dfs_required() are ignored
-when trying to join an IBSS.  Fix this by printing an error and
-returning.
+I have the wl12xx interrupt watchdog!!
+I am using wl127x-fw-4-sr.bin firmware with Rev (6.3.5.0.98 ) with 
+driver version R5_00_18
+The kernel is 2.6.37 with this processor DM368.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ibss.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Do you know some patch or witch is the solution for this problem ?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 9c84b75..b558468 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -283,6 +283,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 
- 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
- 					    &chandef);
-+	if (err < 0) {
-+		sdata_info(sdata,
-+			   "Failed to join IBSS, invalid chandef\n");
-+		return;
-+	}
- 	if (err > 0) {
- 		if (!ifibss->userspace_handles_dfs) {
- 			sdata_info(sdata,
--- 
-1.8.5.3
+Thanks and best regards,
+
+George
 
