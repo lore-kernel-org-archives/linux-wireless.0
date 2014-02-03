@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55598 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753497AbaBQQ4T (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62896 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536AbaBCUja (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 11:56:19 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v2 2/3] UAPI: add MPLS label stack definition
-Date: Mon, 17 Feb 2014 17:56:12 +0100
-Message-Id: <1392656174-14791-3-git-send-email-sw@simonwunderlich.de> (sfid-20140217_175635_938055_858DD3B9)
-In-Reply-To: <1392656174-14791-1-git-send-email-sw@simonwunderlich.de>
-References: <1392656174-14791-1-git-send-email-sw@simonwunderlich.de>
+	Mon, 3 Feb 2014 15:39:30 -0500
+Received: by mail-ee0-f46.google.com with SMTP id c13so3813865eek.5
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:29 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/8] iwlwifi: mvm: disable scheduled scan
+Date: Mon,  3 Feb 2014 22:39:16 +0200
+Message-Id: <1391459962-7381-2-git-send-email-egrumbach@gmail.com> (sfid-20140203_213935_713158_2F0CD21B)
+In-Reply-To: <52EFFCE8.6070505@gmail.com>
+References: <52EFFCE8.6070505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Labels for the Multiprotocol Label Switching are defined in RFC 3032
-which was superseded by RFC 5462. Add the definition to UAPI and a stub
-header for include/linux.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+The iwlwifi scheduled scan implementation doesn't adhere to the
+userspace API correctly - the API assumes that any new incoming
+'incompatible' request (like scan or remain-on-channel for this
+driver) will just cancel the scheduled scan. Instead our driver
+relies on userspace cancelling it, thus breaking existing wpa_s
+versions.
+
+Cc: stable@vger.kernel.org [3.13]
+Fixes: 35a000b7c1bb ("iwlwifi: mvm: support sched scan if supported by the fw")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-Changes to first version:
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- * add stub mpls header in include/linux/mpls.h for users inside the
-   kernel
----
- include/linux/mpls.h      |    6 ++++++
- include/uapi/linux/mpls.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
- create mode 100644 include/linux/mpls.h
- create mode 100644 include/uapi/linux/mpls.h
-
-diff --git a/include/linux/mpls.h b/include/linux/mpls.h
-new file mode 100644
-index 0000000..9999145
---- /dev/null
-+++ b/include/linux/mpls.h
-@@ -0,0 +1,6 @@
-+#ifndef _LINUX_MPLS_H
-+#define _LINUX_MPLS_H
-+
-+#include <uapi/linux/mpls.h>
-+
-+#endif  /* _LINUX_MPLS_H */
-diff --git a/include/uapi/linux/mpls.h b/include/uapi/linux/mpls.h
-new file mode 100644
-index 0000000..15c8260
---- /dev/null
-+++ b/include/uapi/linux/mpls.h
-@@ -0,0 +1,34 @@
-+#ifndef _UAPI_MPLS_H
-+#define _UAPI_MPLS_H
-+
-+#include <linux/types.h>
-+#include <asm/byteorder.h>
-+
-+/* Reference: RFC 5462, RFC 3032
-+ *
-+ *  0                   1                   2                   3
-+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ * |                Label                  | TC  |S|       TTL     |
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ *
-+ *	Label:  Label Value, 20 bits
-+ *	TC:     Traffic Class field, 3 bits
-+ *	S:      Bottom of Stack, 1 bit
-+ *	TTL:    Time to Live, 8 bits
-+ */
-+
-+struct mpls_label_stack {
-+	__be32 entry;
-+};
-+
-+#define MPLS_LS_LABEL_MASK      0xFFFFF000
-+#define MPLS_LS_LABEL_SHIFT     12
-+#define MPLS_LS_TC_MASK         0x00000E00
-+#define MPLS_LS_TC_SHIFT        9
-+#define MPLS_LS_S_MASK          0x00000100
-+#define MPLS_LS_S_SHIFT         8
-+#define MPLS_LS_TTL_MASK        0x000000FF
-+#define MPLS_LS_TTL_SHIFT       0
-+
-+#endif /* _UAPI_MPLS_H */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index c49b507..6bf9766 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -246,7 +246,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	else
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+-	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_SCHED_SCAN) {
++	if (0 && mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_SCHED_SCAN) {
+ 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
+ 		hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
+ 		hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
 -- 
-1.7.10.4
+1.7.9.5
 
