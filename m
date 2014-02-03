@@ -1,114 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:32823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754804AbaBTOa6 (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:39826 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472AbaBCU7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 09:30:58 -0500
-Message-ID: <1392906648.5073.31.camel@jlt4.sipsolutions.net> (sfid-20140220_153103_239073_374D6E8D)
-Subject: Re: pull-request: mac80211 2014-02-20
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 20 Feb 2014 15:30:48 +0100
-In-Reply-To: <1392887140.5073.10.camel@jlt4.sipsolutions.net> (sfid-20140220_100613_323680_C04BED1E)
-References: <1392887140.5073.10.camel@jlt4.sipsolutions.net>
-	 (sfid-20140220_100613_323680_C04BED1E)
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-85Zna94B9/dl6pTjp++E"
-Mime-Version: 1.0
+	Mon, 3 Feb 2014 15:59:13 -0500
+Received: by mail-ee0-f45.google.com with SMTP id b15so3893522eek.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:12 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 35/62] iwlwifi: add D0i3 references boiler plate
+Date: Mon,  3 Feb 2014 22:57:41 +0200
+Message-Id: <1391461088-8082-35-git-send-email-egrumbach@gmail.com> (sfid-20140203_223008_755521_6AE15733)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Eliad Peller <eliad@wizery.com>
 
---=-85Zna94B9/dl6pTjp++E
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+D0i3 is bus power saving feature. It involves the
+firmware - the driver needs to send a list of commands
+to the firmware before entering this state. Wake up from
+d0i3 also requires a few commands to the firmware.
 
-John,
+The trigger to enter D0i3 is an idle timeout that will be
+implemented later and will most probably rely on RUNTIME_PM
+infrastructure.
 
-I've got a few more fixes for some issues here now.
+In order to prevent entrance to D0i3 in critical flows, we
+implement here a reference infrastructure. When a ref is
+taken, we can't enter D0i3.
 
-This time, I have a fix from Arik for scheduled scan recovery (something
-that only recently went into the tree), a memory leak fix from Eytan and
-a small regulatory bugfix from Inbal. The EAPOL change from Felix makes
-rekeying more stable while lots of traffic is flowing, and there's
-Emmanuel's and my fixes for a race in the code handling powersaving
-clients.
+PCIe does't support D0i3.
 
-Please pull.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-config.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-trans.h  |   19 +++++++++++++++++++
+ 2 files changed, 21 insertions(+)
 
-Thanks,
-johannes
-
-
-The following changes since commit fab57a6cc227468ca9e6a4c7ff8d3b10727785ee=
-:
-
-  mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0=
-100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to e3685e03b40f5ec7926d9a75bf63467fc4071df9:
-
-  mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      mac80211: fix sched_scan restart on recovery
-
-Emmanuel Grumbach (1):
-      mac80211: fix AP powersave TX vs. wakeup race
-
-Eytan Lifshitz (1):
-      mac80211: fix memory leak
-
-Felix Fietkau (1):
-      mac80211: send control port protocol frames to the VO queue
-
-Inbal Hacohen (1):
-      cfg80211: bugfix in regulatory user hint process
-
-Johannes Berg (2):
-      mac80211: insert stations before adding to driver
-      mac80211: fix station wakeup powersave race
-
- net/mac80211/ieee80211_i.h | 10 ++-----
- net/mac80211/mlme.c        |  1 +
- net/mac80211/rx.c          |  7 +++++
- net/mac80211/sta_info.c    | 66 +++++++++++++++++++++++++++++-------------=
-----
- net/mac80211/sta_info.h    |  7 +++--
- net/mac80211/tx.c          | 15 +++++++++++
- net/mac80211/util.c        | 48 ++++++++++++++++-----------------
- net/mac80211/wme.c         |  5 ++++
- net/wireless/reg.c         |  2 +-
- 9 files changed, 98 insertions(+), 63 deletions(-)
-
-
---=-85Zna94B9/dl6pTjp++E
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTBhGYAAoJEDBSmw7B7bqrUOsP/2AwzScubPkatIVUnmW9kKLn
-4Ua6VrflGgHADiproviaVqmQ0WZcciOHD+EESblTbv9nnpezIifgHvPPvxCRUM9y
-KEr67c2hbvU2GjCOLgp588l90tdPzcEUZjcFpgDMjxJ6k0vYxolgnL10kV6DgJNY
-QFiZmbc8eHRFmBaulHYeJO9xsBEmmadFNYroZnQPa40+DIunDEBleJZOfWabxAyl
-WvbCmoqVrxyVm0NSgdk3Hp1EHjNp1vLaSQiD7W5uxzarmST/r72wHGel1Edg9Cgd
-unZaxL/s47XNzsCRg+pu0W6jt41ou1leiY7m+Gmv+fee/AQSn3j/y292YPypB32y
-BssnOm1jpb+6r8NjnweTCyuE2TBngWNW5+uvcqwyUcvmYLU2putScshV7+nK594Z
-Ah8lVZ8Smd1I3AdxcgT3LylVmVQf+W/is4FxUAzI1yVVphS0oYVZXZbK4LZAQJmv
-ayHxw+C93GukBS3Evf2U8dpJogk4Z5vrF0x8QQewX0N+XhNIHZ2jgmkFZXBfHBIm
-iELOZjl10K7qxCJFPe7tVsTB64oW5ESyTFlQCVXMgWJNlTWlJvm8FEFi/6/tdyTT
-QV3PqiBawBlFsjyoIoShB+4rQv31UiYkFsr4bhEkWjIUt0hBQH1QtXlnTVwLBOir
-wsXAi/fcHQIGkXOItr4s
-=cE3u
------END PGP SIGNATURE-----
-
---=-85Zna94B9/dl6pTjp++E--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 456fcca..2ce89d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -227,6 +227,7 @@ struct iwl_pwr_tx_backoff {
+  * @high_temp: Is this NIC is designated to be in high temperature.
+  * @host_interrupt_operation_mode: device needs host interrupt operation
+  *	mode set
++ * @d0i3: device uses d0i3 instead of d3
+  * @nvm_hw_section_num: the ID of the HW NVM section
+  * @pwr_tx_backoffs: translation table between power limits and backoffs
+  *
+@@ -259,6 +260,7 @@ struct iwl_cfg {
+ 	const bool internal_wimax_coex;
+ 	const bool host_interrupt_operation_mode;
+ 	bool high_temp;
++	bool d0i3;
+ 	u8   nvm_hw_section_num;
+ 	const struct iwl_pwr_tx_backoff *pwr_tx_backoffs;
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index a350abe..1b2ac31 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -443,6 +443,11 @@ struct iwl_trans;
+  * @release_nic_access: let the NIC go to sleep. The "flags" parameter
+  *	must be the same one that was sent before to the grab_nic_access.
+  * @set_bits_mask - set SRAM register according to value and mask.
++ * @ref: grab a reference to the transport/FW layers, disallowing
++ *	certain low power states
++ * @unref: release a reference previously taken with @ref. Note that
++ *	initially the reference count is 1, making an initial @unref
++ *	necessary to allow low power states.
+  */
+ struct iwl_trans_ops {
+ 
+@@ -489,6 +494,8 @@ struct iwl_trans_ops {
+ 				   unsigned long *flags);
+ 	void (*set_bits_mask)(struct iwl_trans *trans, u32 reg, u32 mask,
+ 			      u32 value);
++	void (*ref)(struct iwl_trans *trans);
++	void (*unref)(struct iwl_trans *trans);
+ };
+ 
+ /**
+@@ -630,6 +637,18 @@ static inline int iwl_trans_d3_resume(struct iwl_trans *trans,
+ 	return trans->ops->d3_resume(trans, status, test);
+ }
+ 
++static inline void iwl_trans_ref(struct iwl_trans *trans)
++{
++	if (trans->ops->ref)
++		trans->ops->ref(trans);
++}
++
++static inline void iwl_trans_unref(struct iwl_trans *trans)
++{
++	if (trans->ops->unref)
++		trans->ops->unref(trans);
++}
++
+ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 				     struct iwl_host_cmd *cmd)
+ {
+-- 
+1.7.9.5
 
