@@ -1,173 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60112 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:37481 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbaBTJdm (ORCPT
+	with ESMTP id S1751025AbaBCNYe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:33:42 -0500
+	Mon, 3 Feb 2014 08:24:34 -0500
+Message-ID: <1391433871.4488.18.camel@jlt4.sipsolutions.net> (sfid-20140203_142437_137242_497D5AB3)
+Subject: Re: [RFC 0/2] cfg80211: add channel switching awareness
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2 3.14] mac80211: fix AP powersave TX vs. wakeup race
-Date: Thu, 20 Feb 2014 10:33:36 +0100
-Message-Id: <1392888816-15349-1-git-send-email-johannes@sipsolutions.net> (sfid-20140220_103353_742456_7E2ECA8C)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Feb 2014 14:24:31 +0100
+In-Reply-To: <1391431407.4488.9.camel@jlt4.sipsolutions.net> (sfid-20140203_134402_047400_66535498)
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140203_110347_817013_693B94E8) <1391431407.4488.9.camel@jlt4.sipsolutions.net>
+	 (sfid-20140203_134402_047400_66535498)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, 2014-02-03 at 13:43 +0100, Johannes Berg wrote:
 
-There is a race between the TX path and the STA wakeup: while
-a station is sleeping, mac80211 buffers frames until it wakes
-up, then the frames are transmitted. However, the RX and TX
-path are concurrent, so the packet indicating wakeup can be
-processed while a packet is being transmitted.
+> > The channel switch is split into two phases now -
+> > start and finalize. This is required to make
+> > cfg80211 in control of the whole channel
+> > switching process. It also makes it apparent that
+> > mac80211's STA CSA offload doesn't work quite well
+> > here. Can we kill it?
+> 
+> No. Well, you could make cfg80211 be in charge, but not wpa_supplicant,
+> I think.
 
-This can lead to a situation where the buffered frames list
-is emptied on the one side, while a frame is being added on
-the other side, as the station is still seen as sleeping in
-the TX path.
+Actually, that might not make sense either, most non-mac80211 devices
+would probably do that in firmware anyway and locking in the API to do
+it "like mac80211" would thus probably be a bad idea.
 
-As a result, the newly added frame will not be send anytime
-soon. It might be sent much later (and out of order) when the
-station goes to sleep and wakes up the next time.
-
-Additionally, it can lead to the crash below.
-
-Fix all this by synchronising both paths with a new lock.
-Both path are not fastpath since they handle PS situations.
-
-In a later patch we'll remove the extra skb queue locks to
-reduce locking overhead.
-
-BUG: unable to handle kernel
-NULL pointer dereference at 000000b0
-IP: [<ff6f1791>] ieee80211_report_used_skb+0x11/0x3e0 [mac80211]
-*pde = 00000000
-Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-EIP: 0060:[<ff6f1791>] EFLAGS: 00210282 CPU: 1
-EIP is at ieee80211_report_used_skb+0x11/0x3e0 [mac80211]
-EAX: e5900da0 EBX: 00000000 ECX: 00000001 EDX: 00000000
-ESI: e41d00c0 EDI: e5900da0 EBP: ebe458e4 ESP: ebe458b0
- DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-CR0: 8005003b CR2: 000000b0 CR3: 25a78000 CR4: 000407d0
-DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-DR6: ffff0ff0 DR7: 00000400
-Process iperf (pid: 3934, ti=ebe44000 task=e757c0b0 task.ti=ebe44000)
-iwlwifi 0000:02:00.0: I iwl_pcie_enqueue_hcmd Sending command LQ_CMD (#4e), seq: 0x0903, 92 bytes at 3[3]:9
-Stack:
- e403b32c ebe458c4 00200002 00200286 e403b338 ebe458cc c10960bb e5900da0
- ff76a6ec ebe458d8 00000000 e41d00c0 e5900da0 ebe458f0 ff6f1b75 e403b210
- ebe4598c ff723dc1 00000000 ff76a6ec e597c978 e403b758 00000002 00000002
-Call Trace:
- [<ff6f1b75>] ieee80211_free_txskb+0x15/0x20 [mac80211]
- [<ff723dc1>] invoke_tx_handlers+0x1661/0x1780 [mac80211]
- [<ff7248a5>] ieee80211_tx+0x75/0x100 [mac80211]
- [<ff7249bf>] ieee80211_xmit+0x8f/0xc0 [mac80211]
- [<ff72550e>] ieee80211_subif_start_xmit+0x4fe/0xe20 [mac80211]
- [<c149ef70>] dev_hard_start_xmit+0x450/0x950
- [<c14b9aa9>] sch_direct_xmit+0xa9/0x250
- [<c14b9c9b>] __qdisc_run+0x4b/0x150
- [<c149f732>] dev_queue_xmit+0x2c2/0xca0
-
-Cc: stable@vger.kernel.org
-Reported-by: Yaara Rozenblum <yaara.rozenblum@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
-[reword commit log, use a separate lock]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |  4 ++++
- net/mac80211/sta_info.h |  7 +++----
- net/mac80211/tx.c       | 15 +++++++++++++++
- 3 files changed, 22 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index decd30c1e290..62a5f0889583 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -330,6 +330,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	rcu_read_unlock();
- 
- 	spin_lock_init(&sta->lock);
-+	spin_lock_init(&sta->ps_lock);
- 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
- 	mutex_init(&sta->ampdu_mlme.mtx);
-@@ -1109,6 +1110,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 
- 	skb_queue_head_init(&pending);
- 
-+	/* sync with ieee80211_tx_h_unicast_ps_buf */
-+	spin_lock(&sta->ps_lock);
- 	/* Send all buffered frames to the station */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		int count = skb_queue_len(&pending), tmp;
-@@ -1128,6 +1131,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 	}
- 
- 	ieee80211_add_pending_skbs_fn(local, &pending, clear_sta_ps_flags, sta);
-+	spin_unlock(&sta->ps_lock);
- 
- 	/* This station just woke up and isn't aware of our SMPS state */
- 	if (!ieee80211_smps_is_restrictive(sta->known_smps_mode,
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index d77ff7090630..d3a6d8208f2f 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -267,6 +267,7 @@ struct ieee80211_tx_latency_stat {
-  * @drv_unblock_wk: used for driver PS unblocking
-  * @listen_interval: listen interval of this station, when we're acting as AP
-  * @_flags: STA flags, see &enum ieee80211_sta_info_flags, do not use directly
-+ * @ps_lock: used for powersave (when mac80211 is the AP) related locking
-  * @ps_tx_buf: buffers (per AC) of frames to transmit to this station
-  *	when it leaves power saving state or polls
-  * @tx_filtered: buffers (per AC) of frames we already tried to
-@@ -356,10 +357,8 @@ struct sta_info {
- 	/* use the accessors defined below */
- 	unsigned long _flags;
- 
--	/*
--	 * STA powersave frame queues, no more than the internal
--	 * locking required.
--	 */
-+	/* STA powersave lock and frame queues */
-+	spinlock_t ps_lock;
- 	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
- 	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
- 	unsigned long driver_buffered_tids;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 97a02d3f7d87..4080c615636f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -478,6 +478,20 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		       sta->sta.addr, sta->sta.aid, ac);
- 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
- 			purge_old_ps_buffers(tx->local);
-+
-+		/* sync with ieee80211_sta_ps_deliver_wakeup */
-+		spin_lock(&sta->ps_lock);
-+		/*
-+		 * STA woke up the meantime and all the frames on ps_tx_buf have
-+		 * been queued to pending queue. No reordering can happen, go
-+		 * ahead and Tx the packet.
-+		 */
-+		if (!test_sta_flag(sta, WLAN_STA_PS_STA) &&
-+		    !test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
-+			spin_unlock(&sta->ps_lock);
-+			return TX_CONTINUE;
-+		}
-+
- 		if (skb_queue_len(&sta->ps_tx_buf[ac]) >= STA_MAX_TX_BUFFER) {
- 			struct sk_buff *old = skb_dequeue(&sta->ps_tx_buf[ac]);
- 			ps_dbg(tx->sdata,
-@@ -492,6 +506,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
- 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
-+		spin_unlock(&sta->ps_lock);
- 
- 		if (!timer_pending(&local->sta_cleanup))
- 			mod_timer(&local->sta_cleanup,
--- 
-1.8.5.3
+johannes
 
