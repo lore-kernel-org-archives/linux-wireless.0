@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:37906 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbaBCU7D (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46074 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbaBCUSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:03 -0500
-Received: by mail-ee0-f45.google.com with SMTP id b15so3893456eek.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:02 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 29/62] iwlwifi: mvm: add vif type in debugfs output
-Date: Mon,  3 Feb 2014 22:57:35 +0200
-Message-Id: <1391461088-8082-29-git-send-email-egrumbach@gmail.com> (sfid-20140203_220007_571463_4759B472)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 3 Feb 2014 15:18:10 -0500
+Date: Mon, 3 Feb 2014 21:19:43 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Linux Driver Project <devel@linuxdriverproject.org>
+Subject: Re: rtl8821ae.
+Message-ID: <20140203201943.GA9393@kroah.com> (sfid-20140203_211814_381794_E560A0F4)
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
+ <20140202160512.GA4946@redhat.com>
+ <201402021807.37772.s.L-H@gmx.de>
+ <52EFCC66.9020304@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52EFCC66.9020304@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Feb 03, 2014 at 11:05:42AM -0600, Larry Finger wrote:
+> I am trying to improve the quality of this pile of ****, but I am only one 
+> person who was a life-long Fortran-coding scientist until I retired 15 years 
+> ago. Since then, I have been learning C and kernel-style coding practices. 
+> Certainly there is both a lot to do and a lot to learn.
 
-Add the vif type when we print the mac params.
+I greatly appreciate all of the work you have done here, with this
+almost impossible task (no specs, random code drops from external
+people, limited feedback loop from the company, etc.)
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+I blame the company for the situation here, not you at all, and its
+great that the PCI division is doing much better now.  Hopefully the USB
+side will come around over time.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index 9194709..f6bed07 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -225,6 +225,29 @@ static ssize_t iwl_dbgfs_mac_params_read(struct file *file,
- 
- 	ap_sta_id = mvmvif->ap_sta_id;
- 
-+	switch (ieee80211_vif_type_p2p(vif)) {
-+	case NL80211_IFTYPE_ADHOC:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: ibss\n");
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: bss\n");
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: ap\n");
-+		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p client\n");
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p go\n");
-+		break;
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p dev\n");
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	pos += scnprintf(buf+pos, bufsz-pos, "mac id/color: %d / %d\n",
- 			 mvmvif->id, mvmvif->color);
- 	pos += scnprintf(buf+pos, bufsz-pos, "bssid: %pM\n",
--- 
-1.7.9.5
+thanks,
 
+greg k-h
