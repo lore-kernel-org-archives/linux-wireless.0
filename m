@@ -1,126 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55920 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbaBTFKT (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:53650 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbaBCU6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 00:10:19 -0500
-From: Luciano Coelho <luca@coelho.fi>
+	Mon, 3 Feb 2014 15:58:45 -0500
+Received: by mail-ee0-f44.google.com with SMTP id c13so3936586eek.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:45 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v2 2/7] cfg80211: remove radar requirements check from cfg80211_can_use_iftype_chan()
-Date: Thu, 20 Feb 2014 07:10:08 +0200
-Message-Id: <1392873013-21772-3-git-send-email-luca@coelho.fi> (sfid-20140220_061048_676035_54A8AEB8)
-In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
-References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/62] iwlwifi: mvm: BT Coex - set low latency vif as primary
+Date: Mon,  3 Feb 2014 22:57:26 +0200
+Message-Id: <1391461088-8082-20-git-send-email-egrumbach@gmail.com> (sfid-20140203_220010_079529_6D6A7CDC)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We don't have to double check whether the parameters passed to
-cfg80211_can_use_iftype_chan() are correct.  We should just make sure
-they *are* when we call this function.
+If a vif is in low latency mode, it should be in primary
+channel.
+Also tell BT Coex about the change when a vif enters or
+exits low latency mode.
 
-Remove the radar_detect argument check in
-cfg80211_can_use_iftype_chan() to simplify the code.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/wireless/ibss.c | 10 ++++------
- net/wireless/mesh.c |  6 ++++++
- net/wireless/util.c | 31 +------------------------------
- 3 files changed, 11 insertions(+), 36 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c |   29 +++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/utils.c   |    3 +++
+ 2 files changed, 27 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 1470b90..c66c524 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -127,14 +127,12 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 	wdev->wext.ibss.chandef = params->chandef;
- #endif
- 	check_chan = params->chandef.chan;
--	if (params->userspace_handles_dfs) {
--		/* use channel NULL to check for radar even if the current
--		 * channel is not a radar channel - it might decide to change
--		 * to DFS channel later.
-+	if (params->userspace_handles_dfs)
-+		/* Check for radar even if the current channel is not
-+		 * a radar channel - it might decide to change to DFS
-+		 * channel later.
- 		 */
- 		radar_detect_width = BIT(params->chandef.width);
--		check_chan = NULL;
--	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+index b1a572e..d38c4ae 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+@@ -542,6 +542,7 @@ struct iwl_bt_iterator_data {
+ 	bool reduced_tx_power;
+ 	struct ieee80211_chanctx_conf *primary;
+ 	struct ieee80211_chanctx_conf *secondary;
++	bool primary_ll;
+ };
  
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   check_chan,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index d42a3fc..5af5cc6 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -236,6 +236,12 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 		if (!netif_running(wdev->netdev))
- 			return -ENETDOWN;
+ static inline
+@@ -590,7 +591,14 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		return;
+ 	}
  
-+		/* cfg80211_can_use_chan() calls
-+		 * cfg80211_can_use_iftype_chan() with no radar
-+		 * detection, so if we're trying to use a radar
-+		 * channel here, something is wrong.
-+		 */
-+		WARN_ON_ONCE(chandef->chan->flags & IEEE80211_CHAN_RADAR);
- 		err = cfg80211_can_use_chan(rdev, wdev, chandef->chan,
- 					    CHAN_MODE_SHARED);
- 		if (err)
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 780b454..57b3ce7 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1269,7 +1269,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
- 	int total = 1;
--	bool radar_required = false;
- 	int i, j;
+-	/* SoftAP / GO will always be primary */
++	/* low latency is always primary */
++	if (iwl_mvm_vif_low_latency(mvmvif)) {
++		data->primary_ll = true;
++
++		data->secondary = data->primary;
++		data->primary = chanctx_conf;
++	}
++
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+ 		if (!mvmvif->ap_ibss_active)
+ 			return;
+@@ -601,9 +609,17 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		if (chanctx_conf == data->primary)
+ 			return;
  
- 	ASSERT_RTNL();
-@@ -1277,35 +1276,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	if (WARN_ON(hweight32(radar_detect) > 1))
- 		return -EINVAL;
+-		/* downgrade the current primary no matter what its type is */
+-		data->secondary = data->primary;
+-		data->primary = chanctx_conf;
++		if (!data->primary_ll) {
++			/*
++			 * downgrade the current primary no matter what its
++			 * type is.
++			 */
++			data->secondary = data->primary;
++			data->primary = chanctx_conf;
++		} else {
++			/* there is low latency vif - we will be secondary */
++			data->secondary = chanctx_conf;
++		}
+ 		return;
+ 	}
  
--	switch (iftype) {
--	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_MESH_POINT:
--	case NL80211_IFTYPE_P2P_GO:
--	case NL80211_IFTYPE_WDS:
--		/* if the interface could potentially choose a DFS channel,
--		 * then mark DFS as required.
--		 */
--		if (!chan) {
--			if (chanmode != CHAN_MODE_UNDEFINED && radar_detect)
--				radar_required = true;
--			break;
--		}
--		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
--		break;
--	case NL80211_IFTYPE_P2P_CLIENT:
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_P2P_DEVICE:
--	case NL80211_IFTYPE_MONITOR:
--		break;
--	case NUM_NL80211_IFTYPES:
--	case NL80211_IFTYPE_UNSPECIFIED:
--	default:
--		return -EINVAL;
--	}
--
--	if (radar_required && !radar_detect)
-+	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
- 		return -EINVAL;
+@@ -613,7 +629,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	if (!vif->bss_conf.assoc)
+ 		return;
  
- 	/* Always allow software iftypes */
+-	/* STA / P2P Client, try to be primary if first vif */
++	/*
++	 * STA / P2P Client, try to be primary if first vif. If we are in low
++	 * latency mode, we are already in primary and just don't do much
++	 */
+ 	if (!data->primary || data->primary == chanctx_conf)
+ 		data->primary = chanctx_conf;
+ 	else if (!data->secondary)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 790da1b..c7ee2f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -550,5 +550,8 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	res = iwl_mvm_update_quotas(mvm, NULL);
+ 	if (res)
+ 		return res;
++
++	iwl_mvm_bt_coex_vif_change(mvm);
++
+ 	return iwl_mvm_power_update_mode(mvm, vif);
+ }
 -- 
-1.8.5.3
+1.7.9.5
 
