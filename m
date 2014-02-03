@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39091 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752357AbaBRXsC (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:64741 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaBCGQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 18:48:02 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: remove redundant del_timer
-Date: Tue, 18 Feb 2014 15:47:56 -0800
-Message-ID: <1392767277-10941-2-git-send-email-bzhao@marvell.com> (sfid-20140219_004814_434871_D9FBA708)
-In-Reply-To: <1392767277-10941-1-git-send-email-bzhao@marvell.com>
-References: <1392767277-10941-1-git-send-email-bzhao@marvell.com>
+	Mon, 3 Feb 2014 01:16:43 -0500
+Received: by mail-la0-f53.google.com with SMTP id e16so5000114lan.40
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Feb 2014 22:16:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANUX_P0fa+5+U_8W4r6mG128MEH+9mLZp0u6RKy65fbWrYCK=w@mail.gmail.com>
+References: <1391404248.15536.78512217.1C6885ED@webmail.messagingengine.com>
+	<CANUX_P0fa+5+U_8W4r6mG128MEH+9mLZp0u6RKy65fbWrYCK=w@mail.gmail.com>
+Date: Mon, 3 Feb 2014 08:16:41 +0200
+Message-ID: <CANUX_P0BRQU=72__-sGBhFHf6L10o2yZ5GX1rNdScMURFGd4VA@mail.gmail.com> (sfid-20140203_071649_990592_35E5A37F)
+Subject: Re: Intel Wireless AC 7260 driver
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Alexander <alex@legion.mm.st>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Mon, Feb 3, 2014 at 8:13 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, Feb 3, 2014 at 7:10 AM, Alexander <alex@legion.mm.st> wrote:
+>> Hello. I have some troubles with Intel Wireless AC 7260 notebook
+>> adapter. I have only N-speed (up to 300 mbps) with my AC router (ASUS
+>> RT-AC56U), but AC-speed is working in windows 8.1, iwconfig output has
+>> "IEEE 802.11abgn", Power Management is off. I tried Ubuntu 13.04 and
+>> 13.10 with 3.11 and 3.12 kernels. Can you help me?
+>
+>
+> As I already wrote on another mailing list: 11ac rates are not
+> supported on 3.12. The first kernel that supports 11ac rates is 3.13.
+> You can also install backport to update your wireless stack without
+> changing your underlying kernel:
 
-While modifying timer, we need not delete timer.
+Here is the links you may want to check:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_rxreorder.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 1cfdbfe..eb17282 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -466,7 +466,6 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 	start_win = tbl->start_win;
- 	win_size = tbl->win_size;
- 	end_win = ((start_win + win_size) - 1) & (MAX_TID_VALUE - 1);
--	del_timer(&tbl->timer_context.timer);
- 	mod_timer(&tbl->timer_context.timer,
- 		  jiffies + msecs_to_jiffies(MIN_FLUSH_TIMER_MS * win_size));
- 
--- 
-1.8.2.3
-
+https://backports.wiki.kernel.org/index.php/Main_Page
+http://drvbp1.linux-foundation.org/~mcgrof/rel-html/backports/
