@@ -1,104 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60026 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842AbaBTJF5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:05:57 -0500
-Message-ID: <1392887140.5073.10.camel@jlt4.sipsolutions.net> (sfid-20140220_100613_323680_C04BED1E)
-Subject: pull-request: mac80211 2014-02-20
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 20 Feb 2014 10:05:40 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-0shdzrvx2TaNOzWtY8/B"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.20]:65514 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750965AbaBCNMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 08:12:00 -0500
+Received: from [192.168.1.221] ([93.196.93.204]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0LbdE3-1VPC8D3wmx-00lABV for
+ <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 14:11:59 +0100
+Message-ID: <52EF9594.40303@rempel-privat.de> (sfid-20140203_141217_454709_A067CCFD)
+Date: Mon, 03 Feb 2014 14:11:48 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>,
+	Sujith Manoharan <sujith@msujith.org>
+CC: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/13] ath9k_htc: add rx header converter to make it usable
+ by ath9k
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-4-git-send-email-linux@rempel-privat.de> <21230.64089.741.909535@gargle.gargle.HOWL> <52EF7BEB.5080605@rempel-privat.de> <52EF8699.2000305@openwrt.org>
+In-Reply-To: <52EF8699.2000305@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Vqn6C8eugs9fVsfCIcV7Mr1ocs3jNv69t"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-0shdzrvx2TaNOzWtY8/B
-Content-Type: text/plain; charset="UTF-8"
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Vqn6C8eugs9fVsfCIcV7Mr1ocs3jNv69t
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-John,
+Am 03.02.2014 13:07, schrieb Felix Fietkau:
+> On 2014-02-03 12:22, Oleksij Rempel wrote:
+>> Am 03.02.2014 03:09, schrieb Sujith Manoharan:
+>>> Oleksij Rempel wrote:
+>>>> +	rx_stats =3D kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
+>>>> +	if (unlikely(rx_stats =3D=3D NULL)) {
+>>>> +		ath_err(common, "rx_stats allocation filed!\n");
+>>>> +		goto err_nofree;
+>>>> +	}
+>>>> +	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
+>>>> +
+>>
+>>> This seems a little expensive, since this would happen for every pack=
+et,
+>>> and a memcpy is already done earlier, for storing the RX status in
+>>> rxbuf->rxstatus. Instead of using 'struct ath_htc_rx_status' in
+>>> 'struct ath9k_htc_rxbuf', why can't 'struct ath_rx_status' be used ?
+>>> The values can be converted and stored directly, avoiding this alloc.=
 
-I've got a few more fixes for some issues here now.
+>>
+>> Do you mean kzalloc or converter?
+>> then memcpy is removed by patch 12/13. Converter is not effective but =
+it
+>> should prevent from confusions. At least until FW use same flags and
+>> struct ath_rx_status do.
+>> But i'm open for other ideas too.
+> You should at least keep rx_stats on stack instead of using kzalloc,
+> that would make it much faster.
 
-This time, I have a fix from Arik for scheduled scan recovery (something
-that only recently went into the tree), a memory leak fix from Eytan and
-a small regulatory bugfix from Inbal. The EAPOL change from Felix makes
-rekeying stable while lots of traffic is flowing, and there's
-Emmanuel/my fix for a race in the code handling powersaving clients.
+You right, i'll do it.
 
-Please pull.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit fab57a6cc227468ca9e6a4c7ff8d3b10727785ee=
-:
-
-  mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0=
-100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 51f94933f1bcea26a0c309702d1ec51f02864ca5:
-
-  mac80211: fix AP powersave TX vs. wakeup race (2014-02-20 09:52:53 +0100)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      mac80211: fix sched_scan restart on recovery
-
-Emmanuel Grumbach (1):
-      mac80211: fix AP powersave TX vs. wakeup race
-
-Eytan Lifshitz (1):
-      mac80211: fix memory leak
-
-Felix Fietkau (1):
-      mac80211: send control port protocol frames to the VO queue
-
-Inbal Hacohen (1):
-      cfg80211: bugfix in regulatory user hint process
-
- net/mac80211/mlme.c     |  1 +
- net/mac80211/sta_info.c |  4 ++++
- net/mac80211/sta_info.h |  7 +++----
- net/mac80211/tx.c       | 14 ++++++++++++++
- net/mac80211/util.c     | 40 ++++++++++++++++++++--------------------
- net/mac80211/wme.c      |  5 +++++
- net/wireless/reg.c      |  2 +-
- 7 files changed, 48 insertions(+), 25 deletions(-)
+Beside what is the smallest stack size in kernel i need to count on?
 
 
---=-0shdzrvx2TaNOzWtY8/B
+--=20
+Regards,
+Oleksij
+
+
+--Vqn6C8eugs9fVsfCIcV7Mr1ocs3jNv69t
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQIcBAABCAAGBQJTBcVkAAoJEDBSmw7B7bqrlswP/jxKRPwADNAHsP76g7Zjdr3v
-DHrtTe+MgvvBpSGKDAxfn/mIsRaHemeXGS0aI0CGMDuRtK91XBEegU568JF/g9WG
-TI+Yuw3eLWO5CuskM9mkClRYekhyINDPzwS3dxoktHAxAskOoS1fQsUb/D+JJh2p
-LngG7dGmnnkqQPEx8IgVBo9V7tYjworSnVRTNXaFsgUYCBD5eFPCjZL0+kqSQ8vY
-TnXJXXhp9K5Ec9WBD+uBC15XHtzPOG+BFkPa++Ln2vgCH/Ndc1rfKeop9ZY8aU2L
-e2t550SqydpRemRdUDzFk0obQ978Md8+e+v3DjJ1gkcnxADYcoFK2xyeF9gMgcBp
-RWnj5G42ydQ9dg8ISGc122u5kyNK+nNf42ge2j9kw5ndqDj+faOOEjiAg7uK1JJH
-vswJBoh+08h6P7xAVjB3yrtYDqg3t5HACXpKfr6bDVmX8LKK3JTJ6eOqGcbQQ6Io
-Y7k7vC7gHayJ1QM/brhOnppXl32u7ArILBnWh+pQkk7U54VRzcjibk1TcNLD5vu4
-nIbbmMJR4CIs9YQElqARcocp+ae/rhyhL3cXAxEUvwL75o8d7UbgWk4STkzDrKCF
-vV3pE3t790fBj4rJPDbB8ineBmX3u9umkA/e7XpLIcPti+iDKrV1jLBeZMjEvRDV
-99K9rhUTEtypr4Fn2OcH
-=ckEo
+iF4EAREIAAYFAlLvlZsACgkQHwImuRkmbWkD7QD/d84/KeI7lqg414ky/IsIqGUf
+lU4r6/P+aq+d8vTdxhIA/2LoQiu89WuAmYuiildH80PAd518w4V+NA6K9VazGx6u
+=s18v
 -----END PGP SIGNATURE-----
 
---=-0shdzrvx2TaNOzWtY8/B--
-
+--Vqn6C8eugs9fVsfCIcV7Mr1ocs3jNv69t--
