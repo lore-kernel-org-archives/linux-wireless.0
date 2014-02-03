@@ -1,110 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:55612 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbaBHUme (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34232 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbaBCKoA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Feb 2014 15:42:34 -0500
+	Mon, 3 Feb 2014 05:44:00 -0500
+Received: by mail-ie0-f174.google.com with SMTP id tp5so6157401ieb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 02:43:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140208012225.d7a311c7.billfink@mindspring.com>
-References: <1391802529-29861-1-git-send-email-marek@goldelico.com>
-	<20140208012225.d7a311c7.billfink@mindspring.com>
-Date: Sat, 8 Feb 2014 21:42:33 +0100
-Message-ID: <CAAfyv34gykgnR6aTXwkH80A7CSphY-a99Ds7PgpNAO7t3cwxjg@mail.gmail.com> (sfid-20140208_214255_185835_9CF7A71F)
-Subject: Re: [PATCH] net: rfkill-regulator: Add devicetree support.
-From: Belisko Marek <marek.belisko@gmail.com>
-To: Bill Fink <billfink@mindspring.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Rob Landley <rob@landley.net>,
-	linville <linville@tuxdriver.com>,
-	johannes <johannes@sipsolutions.net>,
-	davem <davem@davemloft.net>,
-	Grant Likely <grant.likely@linaro.org>,
-	NeilBrown <neilb@suse.de>,
-	"Dr. H. Nikolaus Schaller" <hns@goldelico.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1391422193.4488.2.camel@jlt4.sipsolutions.net>
+References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
+	<CAB3XZEc94pTAMXWPYeWhu7o_YLEnD1_9O035-+YXYiR0Uij28w@mail.gmail.com>
+	<1390810765.4251.0.camel@jlt4.sipsolutions.net>
+	<CAB3XZEczgVTALA3_4hSBikJs=TXOhHHTHSLzmuU3MGot-hG+1g@mail.gmail.com>
+	<1390997834.4143.7.camel@jlt4.sipsolutions.net>
+	<1390998668.4143.8.camel@jlt4.sipsolutions.net>
+	<CAB3XZEdmQzyYXYNh7=myKxDrqKCpZ+399a5QdvZcw8CrNd+Lwg@mail.gmail.com>
+	<1391422193.4488.2.camel@jlt4.sipsolutions.net>
+Date: Mon, 3 Feb 2014 12:43:59 +0200
+Message-ID: <CAB3XZEdLip=kyZaG271nG+VEvwW1RqgOowaGH8ayZgFLdjFS9A@mail.gmail.com> (sfid-20140203_114402_586807_314F10ED)
+Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute confusion
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 8, 2014 at 7:22 AM, Bill Fink <billfink@mindspring.com> wrote:
-> On Fri,  7 Feb 2014, Marek Belisko wrote:
+On Mon, Feb 3, 2014 at 12:09 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2014-02-02 at 10:04 +0200, Eliad Peller wrote:
 >
->> Signed-off-by: NeilBrown <neilb@suse.de>
->> Signed-off-by: Marek Belisko <marek@goldelico.com>
->> ---
->> Based on Neil's patch and extend for documentation and bindings include.
+>> i referred to this:
 >>
->>  .../bindings/net/rfkill/rfkill-relugator.txt       | 28 ++++++++++++++++
->
->                                   ^^^^^^^^^
->                                   Typo in file name.
-Ah. Right. Thanks.
->
->                                         -Bill
->
->
->
->>  include/dt-bindings/net/rfkill-regulator.h         | 23 +++++++++++++
-I also think this should be renamed to rfkill.h because same defines
-could be used for rfkill-gpio driver.
->>  net/rfkill/rfkill-regulator.c                      | 38 ++++++++++++++++++++++
->>  3 files changed, 89 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
->>  create mode 100644 include/dt-bindings/net/rfkill-regulator.h
+>>  * @match_sets: sets of parameters to be matched for a scan result
+>>  * entry to be considered valid and to be passed to the host
+>>  * (others are filtered out).
+>>  * If ommited, all results are passed.
 >>
->> diff --git a/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
->> new file mode 100644
->> index 0000000..cdb7dd7
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
->> @@ -0,0 +1,28 @@
->> +Regulator consumer for rfkill devices
->> +
->> +Required properties:
->> +- compatible   : Must be "rfkill-regulator".
->> +- label  : Name of rfkill device.
->> +- type  : Type of rfkill device.
->> +
->> +Possible values (defined in include/dt-bindings/net/rfkill-regulator.h):
->> +     RFKILL_TYPE_ALL
->> +     RFKILL_TYPE_WLAN
->> +     RFKILL_TYPE_BLUETOOTH
->> +     RFKILL_TYPE_UWB
->> +     RFKILL_TYPE_WIMAX
->> +     RFKILL_TYPE_WWAN
->> +     RFKILL_TYPE_GPS
->> +     RFKILL_TYPE_FM
->> +     RFKILL_TYPE_NFC
->> +
->> +- vrfkill-supply - regulator device.
->> +
->> +Example:
->> +     gps-rfkill {
->> +             compatible = "rfkill-regulator";
->> +             label = "GPS";
->> +             type = <RFKILL_TYPE_GPS>;
->> +             vrfkill-supply = <&reg>;
->> +     };
->> +
+>> it should probably mention the empty-ssid case as well.
+>
+> Well, hmm, that part seems fine, maybe the documentation for struct
+> cfg80211_match_set should say that the SSID can be blank/zero length.
+>
+thanks.
+the new patch looks good to me.
 
-BR,
-
-marek
-
--- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
-
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
+Eliad.
