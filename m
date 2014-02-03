@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:47338 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751928AbaBYNbf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:31:35 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ into info->control.flags
-From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1393244624.4190.8.camel@jlt4.sipsolutions.net>
-Date: Tue, 25 Feb 2014 14:31:32 +0100
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Message-Id: <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de> (sfid-20140225_143140_186605_2071414A)
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393244624.4190.8.camel@jlt4.sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:37531 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbaBCU6s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 15:58:48 -0500
+Received: by mail-ea0-f173.google.com with SMTP id d10so3998694eaj.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:48 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/62] iwlwifi: mvm: change the format of the SRAM dump
+Date: Mon,  3 Feb 2014 22:57:28 +0200
+Message-Id: <1391461088-8082-22-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_660150_B56EC3D0)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
->> Flag IEEE80211_TX_CTL_ASSIGN_SEQ is only used within the tx path while
->> ieee80211_tx_info->control is valid. Therefore this patch moves this flag
->> from info->flags structure into the info->control.flags and renames it to
->> IEEE80211_TX_CTRL_ASSIGN_SEQ.
-> 
-> I'm not convinced this patch is correct, so you need to convince me.
-> What happens to software-retry frames? They probably *shouldn't* get a
-> new seqno, but if the driver doesn't modify the SKB (say because
-> hardware/firmware assigns it) then this is certainly not right.
-> 
+As a debug tool, we dump the SRAM from the device when an
+error occurs. The main users of this want it in a different
+format, so change the format to suit their needs.
+Also - add a short delay between the prints to make sure
+that the user space logger can catch up.
 
-As far as I can see, software-retry frames get in status.c the flag IEEE80211_TX_INTFL_RETRANSMISSION
-assigned (in function ieee80211_handle_filtered_frame). And this flag prevents in function
-invoke_tx_handlers() the call of ieee80211_tx_h_sequence(), so there is not new seqno assigned in case of a software-retry within tx.c.
+This happens only when the firmware asserts, and only when
+fw_restart is set to 0 which is typically a testing
+configuration.
 
-But in case of a software retry there is info->control set to zero. After I would move IEEE80211_TX_CTL_ASSIGN_SEQ into info->control.flags this flag is zero.
-Hence also drivers do not assign a new sequence number.
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/utils.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Do I miss something here ?
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 1aadede..b216232 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -457,7 +457,8 @@ void iwl_mvm_dump_sram(struct iwl_mvm *mvm)
+ {
+ 	const struct fw_img *img;
+ 	int ofs, len = 0;
+-	u8 *buf;
++	int i;
++	__le32 *buf;
+ 
+ 	if (!mvm->ucode_loaded)
+ 		return;
+@@ -471,7 +472,12 @@ void iwl_mvm_dump_sram(struct iwl_mvm *mvm)
+ 		return;
+ 
+ 	iwl_trans_read_mem_bytes(mvm->trans, ofs, buf, len);
+-	iwl_print_hex_error(mvm->trans, buf, len);
++	len = len >> 2;
++	for (i = 0; i < len; i++) {
++		IWL_ERR(mvm, "0x%08X\n", le32_to_cpu(buf[i]));
++		/* Add a small delay to let syslog catch up */
++		udelay(10);
++	}
+ 
+ 	kfree(buf);
+ }
+-- 
+1.7.9.5
 
-
-Greetings Thomas
