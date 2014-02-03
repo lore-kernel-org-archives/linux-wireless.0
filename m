@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37650 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750706AbaBHA1n (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:59819 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528AbaBCUjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:27:43 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 13/30] mwifiex: handle AMPDU supported check for AP interface
-Date: Fri, 7 Feb 2014 16:27:28 -0800
-Message-ID: <1391819254-21130-3-git-send-email-bzhao@marvell.com> (sfid-20140208_012746_948331_9910760F)
-In-Reply-To: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
-References: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 3 Feb 2014 15:39:41 -0500
+Received: by mail-ee0-f41.google.com with SMTP id e51so1765561eek.28
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:40 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 8/8] iwlwifi: mvm: don't allow A band if SKU forbids it
+Date: Mon,  3 Feb 2014 22:39:22 +0200
+Message-Id: <1391459962-7381-8-git-send-email-egrumbach@gmail.com> (sfid-20140203_214002_254014_AACE1C31)
+In-Reply-To: <52EFFCE8.6070505@gmail.com>
+References: <52EFFCE8.6070505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch fixes a bug where we were checking for AP's AMPDU param
-setting even when transmitting traffic to associated station.
-Patch adds provision to pass additional parameter ra_list pointer
-to function which checks if AMPDU is allowed. If current BSS type is
-AP, we check station's AMPDU params else we check AP's AMPDU params.
+The driver wasn't reading the NVM properly. While this
+didn't lead to any issue until now, it seems that there
+is an old version of the NVM in the wild.
+In this version, the A band channels appear to be valid
+but the SKU capabilities (another field of the NVM) says
+that A band isn't supported at all.
+With this specific version of the NVM, the driver would
+think that A band is supported while the HW / firmware
+don't. This leads to asserts.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: <stable@vger.kernel.org> [3.10+]
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/11n.h | 26 ++++++++++++++++++++------
- drivers/net/wireless/mwifiex/wmm.c |  2 +-
- 2 files changed, 21 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 375db01..353032d 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -64,14 +64,28 @@ int mwifiex_cmd_amsdu_aggr_ctrl(struct host_cmd_ds_command *cmd,
- 				struct mwifiex_ds_11n_amsdu_aggr_ctrl *aa_ctrl);
- void mwifiex_del_tx_ba_stream_tbl_by_ra(struct mwifiex_private *priv, u8 *ra);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index f06f4cb..725e954 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -182,6 +182,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
  
--/*
-- * This function checks whether AMPDU is allowed or not for a particular TID.
-- */
- static inline u8
--mwifiex_is_ampdu_allowed(struct mwifiex_private *priv, int tid)
-+mwifiex_is_station_ampdu_allowed(struct mwifiex_private *priv,
-+				 struct mwifiex_ra_list_tbl *ptr, int tid)
- {
--	return ((priv->aggr_prio_tbl[tid].ampdu_ap != BA_STREAM_NOT_ALLOWED)
--		? true : false);
-+	struct mwifiex_sta_node *node = mwifiex_get_sta_entry(priv, ptr->ra);
+ 	for (ch_idx = 0; ch_idx < IWL_NUM_CHANNELS; ch_idx++) {
+ 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
 +
-+	if (unlikely(!node))
-+		return false;
++		if (ch_idx >= NUM_2GHZ_CHANNELS &&
++		    !data->sku_cap_band_52GHz_enable)
++			ch_flags &= ~NVM_CHANNEL_VALID;
 +
-+	return (node->ampdu_sta[tid] != BA_STREAM_NOT_ALLOWED) ? true : false;
-+}
-+
-+/* This function checks whether AMPDU is allowed or not for a particular TID. */
-+static inline u8
-+mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
-+			 struct mwifiex_ra_list_tbl *ptr, int tid)
-+{
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP)
-+		return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
-+	else
-+		return (priv->aggr_prio_tbl[tid].ampdu_ap !=
-+			BA_STREAM_NOT_ALLOWED) ? true : false;
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 13eaeed..ee44789 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -1226,7 +1226,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 		/* ra_list_spinlock has been freed in
- 		   mwifiex_send_single_packet() */
- 	} else {
--		if (mwifiex_is_ampdu_allowed(priv, tid) &&
-+		if (mwifiex_is_ampdu_allowed(priv, ptr, tid) &&
- 		    ptr->ba_pkt_count > ptr->ba_packet_thr) {
- 			if (mwifiex_space_avail_for_new_ba_stream(adapter)) {
- 				mwifiex_create_ba_tbl(priv, ptr->ra, tid,
+ 		if (!(ch_flags & NVM_CHANNEL_VALID)) {
+ 			IWL_DEBUG_EEPROM(dev,
+ 					 "Ch. %d Flags %x [%sGHz] - No traffic\n",
 -- 
-1.8.2.3
+1.7.9.5
 
