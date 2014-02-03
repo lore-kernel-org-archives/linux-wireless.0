@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:63409 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbaBWT5e (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:61227 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536AbaBCUjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:57:34 -0500
-Received: by mail-we0-f173.google.com with SMTP id x48so4010470wes.18
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:33 -0800 (PST)
+	Mon, 3 Feb 2014 15:39:33 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so3911075eaj.21
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:32 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
+Cc: Oren Givon <oren.givon@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/17] iwlwifi: nvm: remove reading valid antennas from NVM
-Date: Sun, 23 Feb 2014 21:57:05 +0200
-Message-Id: <1393185428-8524-14-git-send-email-egrumbach@gmail.com> (sfid-20140223_211709_868596_AAD612AB)
-In-Reply-To: <530A51A4.6000007@gmail.com>
-References: <530A51A4.6000007@gmail.com>
+Subject: [PATCH 4/8] iwlwifi: add more 7265 HW IDs
+Date: Mon,  3 Feb 2014 22:39:18 +0200
+Message-Id: <1391459962-7381-4-git-send-email-egrumbach@gmail.com> (sfid-20140203_213939_255605_FB56653B)
+In-Reply-To: <52EFFCE8.6070505@gmail.com>
+References: <52EFFCE8.6070505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Oren Givon <oren.givon@intel.com>
 
-These values aren't used as the firmware values should be used,
-so reading them is pointless and hides potential errors when
-somebody uses these values. Leave them zero to make it clearer
-that they can't be used. We can't remove the struct members as
-the DVM driver does read the values from EEPROM/OTP and the
-structure is shared between drivers.
+Add 6 new HW IDs for the 7265 series.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: <stable@vger.kernel.org> [3.13]
+Signed-off-by: Oren Givon <oren.givon@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |   17 -----------------
- drivers/net/wireless/iwlwifi/mvm/fw.c        |    2 --
- 2 files changed, 19 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/drv.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 80c4096..eeb3a83 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -425,8 +425,6 @@ static void iwl_set_radio_cfg(const struct iwl_cfg *cfg,
- 		data->radio_cfg_step = NVM_RF_CFG_STEP_MSK(radio_cfg);
- 		data->radio_cfg_dash = NVM_RF_CFG_DASH_MSK(radio_cfg);
- 		data->radio_cfg_pnum = NVM_RF_CFG_PNUM_MSK(radio_cfg);
--		data->valid_tx_ant = NVM_RF_CFG_TX_ANT_MSK(radio_cfg);
--		data->valid_rx_ant = NVM_RF_CFG_RX_ANT_MSK(radio_cfg);
- 		return;
- 	}
- 
-@@ -435,8 +433,6 @@ static void iwl_set_radio_cfg(const struct iwl_cfg *cfg,
- 	data->radio_cfg_step = NVM_RF_CFG_STEP_MSK_FAMILY_8000(radio_cfg);
- 	data->radio_cfg_dash = NVM_RF_CFG_DASH_MSK_FAMILY_8000(radio_cfg);
- 	data->radio_cfg_pnum = NVM_RF_CFG_FLAVOR_MSK_FAMILY_8000(radio_cfg);
--	data->valid_tx_ant = NVM_RF_CFG_TX_ANT_MSK_FAMILY_8000(radio_cfg);
--	data->valid_rx_ant = NVM_RF_CFG_RX_ANT_MSK_FAMILY_8000(radio_cfg);
- }
- 
- static void iwl_set_hw_address(const struct iwl_cfg *cfg,
-@@ -496,19 +492,6 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
- 		data->sku_cap_11n_enable = false;
- 
--	/* check overrides (some devices have wrong NVM) */
--	if (cfg->valid_tx_ant)
--		data->valid_tx_ant = cfg->valid_tx_ant;
--	if (cfg->valid_rx_ant)
--		data->valid_rx_ant = cfg->valid_rx_ant;
--
--	if (!data->valid_tx_ant || !data->valid_rx_ant) {
--		IWL_ERR_DEV(dev, "invalid antennas (0x%x, 0x%x)\n",
--			    data->valid_tx_ant, data->valid_rx_ant);
--		kfree(data);
--		return NULL;
--	}
--
- 	data->n_hw_addrs = iwl_get_n_hw_addrs(cfg, nvm_sw);
- 
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 979b35b..93e1b4d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -358,8 +358,6 @@ out:
- 					GFP_KERNEL);
- 		if (!mvm->nvm_data)
- 			return -ENOMEM;
--		mvm->nvm_data->valid_rx_ant = 1;
--		mvm->nvm_data->valid_tx_ant = 1;
- 		mvm->nvm_data->bands[0].channels = mvm->nvm_data->channels;
- 		mvm->nvm_data->bands[0].n_channels = 1;
- 		mvm->nvm_data->bands[0].n_bitrates = 1;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 3040924..f47bcbe 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -359,20 +359,25 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ /* 7265 Series */
+ 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5110, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5112, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5100, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x510A, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5310, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5302, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5210, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5012, iwl7265_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x095A, 0x500A, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5410, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5400, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x1010, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5000, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x500A, iwl7265_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5200, iwl7265_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5002, iwl7265_n_cfg)},
+ 	{IWL_PCI_DEVICE(0x095B, 0x5202, iwl7265_n_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9010, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9012, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9112, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9510, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9310, iwl7265_2ac_cfg)},
 -- 
 1.7.9.5
 
