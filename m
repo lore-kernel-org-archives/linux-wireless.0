@@ -1,54 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35150 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbaB0QE6 (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:46681 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbaBCNpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:04:58 -0500
-Message-ID: <1393517094.4648.3.camel@jlt4.sipsolutions.net> (sfid-20140227_170502_188216_4653623F)
-Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Nelson <tim.l.nelson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Feb 2014 17:04:54 +0100
-In-Reply-To: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com> (sfid-20140227_161437_552680_8A64D0B7)
-References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
-	 (sfid-20140227_161437_552680_8A64D0B7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 3 Feb 2014 08:45:11 -0500
+Received: by mail-ea0-f172.google.com with SMTP id l9so2285277eaj.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 05:45:10 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH v8] mac80211: Update opmode during adding new station
+Date: Mon,  3 Feb 2014 14:44:44 +0100
+Message-Id: <1391435084-17883-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140203_144516_832957_BDF11516)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 10:14 -0500, Tim Nelson wrote:
-> I am currently running a mainline ubuntu 3.13.5 lowlatency kernel with
-> the lastest intel firmware:
-> 
-> iwlwifi-7260-ucode-22.15.8.0.tgz
-> 
-> Linux nix-tn 3.13.5-031305-lowlatency #201402221823 SMP PREEMPT Sat
-> Feb 22 23:51:31 UTC 2014 i686 i686 i686 GNU/Linux
-> 
-> I am unable to connect to the wireless AC radios on my 3702
-> Lightweight AP that is connected to a Cisco 5508 controller.  On the
-> controller, I do see clients hitting the AC radios on the SSID.  I am
-> only connecting to the A/N radio however at 5ghz.
-> 
-> Is AC truly supported currently?  I heard the patches for it would be
-> applied in 3.13 but when I do a iwconfig wlan0 I only see:
-> wlan0     IEEE 802.11abgn
-> 
-> This leads me to believe that it's not actually supported yet.
+Update Operating mode is needed when User Space received Assoc
+Request contains Operating mode notification element.
 
-11ac is definitely supported, since long before 3.13 in fact, though
-11ac TX rates were only added later.
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ net/mac80211/cfg.c         |   10 ++++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/vht.c         |   27 ++++++++++++++++++++-------
+ 3 files changed, 33 insertions(+), 7 deletions(-)
 
-> However, this could be something aesthetic with iwconfig.
-
-It's just the thing iwconfig reads not having been updated in forever...
-
-What kind of problem did you run into? We recently saw this bug pop up
-which might be what you're seeing:
-https://bugzilla.kernel.org/show_bug.cgi?id=70881
-There's a fix for that on the way.
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f9ae9b8..767185a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1341,6 +1341,16 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+ 						    params->vht_capa, sta);
+ 
++	if (params->opmode_notif_used) {
++		enum ieee80211_band band =
++			ieee80211_get_sdata_band(sdata);
++
++		/* ignore returned value is not needed */
++		__ieee80211_vht_handle_opmode(sdata, sta,
++					      params->opmode_notif,
++					      band, false);
++	}
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		u32 changed = 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3701930..b1f04a8 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1553,6 +1553,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++                                  struct sta_info *sta, u8 opmode,
++                                  enum ieee80211_band band, bool nss_only);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index d75f35c..04f906c 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -349,9 +349,9 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
+ }
+ 
+-void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+-				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band, bool nss_only)
++u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				  struct sta_info *sta, u8 opmode,
++				  enum ieee80211_band band, bool nss_only)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+@@ -363,7 +363,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* ignore - no support for BF yet */
+ 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
+-		return;
++		return 0;
+ 
+ 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
+ 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
+@@ -375,7 +375,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (nss_only)
+-		goto change;
++		return changed;
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+ 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+@@ -398,7 +398,20 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 	}
+ 
+- change:
+-	if (changed)
++	return changed;
++}
++
++void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				 struct sta_info *sta, u8 opmode,
++				 enum ieee80211_band band, bool nss_only)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
++
++	u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
++						    band, nss_only);
++
++	if (changed > 0)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
++
+-- 
+1.7.9.5
 
