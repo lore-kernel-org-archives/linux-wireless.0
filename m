@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:59846 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbaBRBKg (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:58118 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753212AbaBCU6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 20:10:36 -0500
-Received: by mail-ee0-f49.google.com with SMTP id d17so7466516eek.36
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 17:10:35 -0800 (PST)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	liuhq11@mails.tsinghua.edu.cn,
-	andrea merello <andrea.merello@gmail.com>
-Subject: [PATCH 2/7] rtl818x: pci_iomap() should pair with pci_iounmap()
-Date: Tue, 18 Feb 2014 02:10:41 +0100
-Message-Id: <1392685846-10116-3-git-send-email-andrea.merello@gmail.com> (sfid-20140218_021040_728519_A1F97E37)
-In-Reply-To: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+	Mon, 3 Feb 2014 15:58:34 -0500
+Received: by mail-ee0-f47.google.com with SMTP id d49so3859806eek.20
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:33 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/62] iwlwifi: mvm: check ARRAY_SIZE(mvm->fw_id_to_mac_id) = IWL_MVM_STATION_COUNT
+Date: Mon,  3 Feb 2014 22:57:18 +0200
+Message-Id: <1391461088-8082-12-git-send-email-egrumbach@gmail.com> (sfid-20140203_223006_570401_EE5BEEA4)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: andrea merello <andrea.merello@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Currently the driver uses pci_iomap() but iounmap() is called in
-the error path
+Since we use IWL_MVM_STATION_COUNT all over the driver, we
+need to make sure that it is the right constant to look at.
 
-Change to use pci_iounmap() instead.
-
-Reported-by: Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/ops.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 470a1e3..bf59ff9 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -1137,7 +1137,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index f38ed9f..5e4d56e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -338,6 +338,13 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	};
+ 	int err, scan_size;
  
-  err_iounmap:
--	iounmap(priv->map);
-+	pci_iounmap(pdev, priv->map);
- 
-  err_free_dev:
- 	ieee80211_free_hw(dev);
++	/*
++	 * We use IWL_MVM_STATION_COUNT to check the validity of the station
++	 * index all over the driver - check that its value corresponds to the
++	 * array size.
++	 */
++	BUILD_BUG_ON(ARRAY_SIZE(mvm->fw_id_to_mac_id) != IWL_MVM_STATION_COUNT);
++
+ 	/********************************
+ 	 * 1. Allocating and configuring HW data
+ 	 ********************************/
 -- 
-1.8.3.2
+1.7.9.5
 
