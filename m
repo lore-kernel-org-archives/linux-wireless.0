@@ -1,177 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:57989 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbaBDJ2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:22 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0Lk7T8-1Ve2NF1x2g-00c6jq for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:20 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 03/13] ath9k: move ath9k_process_rate to common.c
-Date: Tue,  4 Feb 2014 10:27:40 +0100
-Message-Id: <1391506070-8636-4-git-send-email-linux@rempel-privat.de> (sfid-20140204_102825_204273_AF68052A)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:49181 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536AbaBCU7g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 15:59:36 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so3871384eek.37
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:35 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 48/62] iwlwifi: mvm: remove unneeded calculations
+Date: Mon,  3 Feb 2014 22:57:54 +0200
+Message-Id: <1391461088-8082-48-git-send-email-egrumbach@gmail.com> (sfid-20140203_220011_228652_FD7951B8)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we can reuse this function in ath9k_htc
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+In iwl_mvm_calc_rssi() some values are calculated but then
+never used, remove the calculations.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/common.c | 42 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |  4 +++
- drivers/net/wireless/ath/ath9k/recv.c   | 59 +++++----------------------------
- 3 files changed, 54 insertions(+), 51 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rx.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 7028c52..120fd46 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -27,6 +27,48 @@ MODULE_AUTHOR("Atheros Communications");
- MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
- MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index a85b60f..ef727df 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -129,22 +129,16 @@ static void iwl_mvm_calc_rssi(struct iwl_mvm *mvm,
+ 			      struct ieee80211_rx_status *rx_status)
+ {
+ 	int rssi_a, rssi_b, rssi_a_dbm, rssi_b_dbm, max_rssi_dbm;
+-	int rssi_all_band_a, rssi_all_band_b;
+-	u32 agc_a, agc_b, max_agc;
++	u32 agc_a, agc_b;
+ 	u32 val;
  
-+int ath9k_cmn_process_rate(struct ath_common *common,
-+			   struct ieee80211_hw *hw,
-+			   struct ath_rx_status *rx_stats,
-+			   struct ieee80211_rx_status *rxs)
-+{
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
-+	unsigned int i = 0;
-+	struct ath_hw *ah = common->ah;
-+
-+	band = ah->curchan->chan->band;
-+	sband = hw->wiphy->bands[band];
-+
-+	if (IS_CHAN_QUARTER_RATE(ah->curchan))
-+		rxs->flag |= RX_FLAG_5MHZ;
-+	else if (IS_CHAN_HALF_RATE(ah->curchan))
-+		rxs->flag |= RX_FLAG_10MHZ;
-+
-+	if (rx_stats->rs_rate & 0x80) {
-+		/* HT rate */
-+		rxs->flag |= RX_FLAG_HT;
-+		rxs->flag |= rx_stats->flag;
-+		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
-+		return 0;
-+	}
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
-+			rxs->flag |= RX_FLAG_SHORTPRE;
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+	}
-+
-+	return -EINVAL;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_process_rate);
-+
- void ath9k_cmn_process_rssi(struct ath_common *common,
- 			    struct ieee80211_hw *hw,
- 			    struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index aaf4a9b5..729482f 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -42,6 +42,10 @@
- #define ATH_EP_RND(x, mul) 						\
- 	(((x) + ((mul)/2)) / (mul))
+ 	val = le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_AGC_IDX]);
+ 	agc_a = (val & IWL_OFDM_AGC_A_MSK) >> IWL_OFDM_AGC_A_POS;
+ 	agc_b = (val & IWL_OFDM_AGC_B_MSK) >> IWL_OFDM_AGC_B_POS;
+-	max_agc = max_t(u32, agc_a, agc_b);
  
-+int ath9k_cmn_process_rate(struct ath_common *common,
-+			   struct ieee80211_hw *hw,
-+			   struct ath_rx_status *rx_stats,
-+			   struct ieee80211_rx_status *rxs);
- void ath9k_cmn_process_rssi(struct ath_common *common,
- 			    struct ieee80211_hw *hw,
- 			    struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 5229e63..ab6a86c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -841,56 +841,6 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	return true;
- }
+ 	val = le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_RSSI_AB_IDX]);
+ 	rssi_a = (val & IWL_OFDM_RSSI_INBAND_A_MSK) >> IWL_OFDM_RSSI_A_POS;
+ 	rssi_b = (val & IWL_OFDM_RSSI_INBAND_B_MSK) >> IWL_OFDM_RSSI_B_POS;
+-	rssi_all_band_a = (val & IWL_OFDM_RSSI_ALLBAND_A_MSK) >>
+-				IWL_OFDM_RSSI_ALLBAND_A_POS;
+-	rssi_all_band_b = (val & IWL_OFDM_RSSI_ALLBAND_B_MSK) >>
+-				IWL_OFDM_RSSI_ALLBAND_B_POS;
  
--static int ath9k_process_rate(struct ath_common *common,
--			      struct ieee80211_hw *hw,
--			      struct ath_rx_status *rx_stats,
--			      struct ieee80211_rx_status *rxs)
--{
--	struct ieee80211_supported_band *sband;
--	enum ieee80211_band band;
--	unsigned int i = 0;
--	struct ath_softc __maybe_unused *sc = common->priv;
--	struct ath_hw *ah = sc->sc_ah;
--
--	band = ah->curchan->chan->band;
--	sband = hw->wiphy->bands[band];
--
--	if (IS_CHAN_QUARTER_RATE(ah->curchan))
--		rxs->flag |= RX_FLAG_5MHZ;
--	else if (IS_CHAN_HALF_RATE(ah->curchan))
--		rxs->flag |= RX_FLAG_10MHZ;
--
--	if (rx_stats->rs_rate & 0x80) {
--		/* HT rate */
--		rxs->flag |= RX_FLAG_HT;
--		rxs->flag |= rx_stats->flag;
--		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
--		return 0;
--	}
--
--	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
--			rxs->rate_idx = i;
--			return 0;
--		}
--		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
--			rxs->flag |= RX_FLAG_SHORTPRE;
--			rxs->rate_idx = i;
--			return 0;
--		}
--	}
--
--	/*
--	 * No valid hardware bitrate found -- we should not get here
--	 * because hardware has already validated this frame as OK.
--	 */
--	ath_dbg(common, ANY,
--		"unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
--		rx_stats->rs_rate);
--	RX_STAT_INC(rx_rate_err);
--	return -EINVAL;
--}
--
- static void ath9k_process_tsf(struct ath_rx_status *rs,
- 			      struct ieee80211_rx_status *rxs,
- 			      u64 tsf)
-@@ -1007,7 +957,14 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 		goto exit;
- 	}
- 
--	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
-+	if (ath9k_cmn_process_rate(common, hw, rx_stats, rx_status)) {
-+		/*
-+		 * No valid hardware bitrate found -- we should not get here
-+		 * because hardware has already validated this frame as OK.
-+		 */
-+		ath_dbg(common, ANY, "unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
-+			rx_stats->rs_rate);
-+		RX_STAT_INC(rx_rate_err);
- 		ret =-EINVAL;
- 		goto exit;
- 	}
+ 	/*
+ 	 * dBm = rssi dB - agc dB - constant.
 -- 
-1.9.rc1
+1.7.9.5
 
