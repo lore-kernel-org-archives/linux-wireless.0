@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:35731 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbaBVQ4w (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbaBCNSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 11:56:52 -0500
-Received: by mail-ea0-f180.google.com with SMTP id o10so2212615eaj.39
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 08:56:51 -0800 (PST)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: dan.carpenter@oracle.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de,
-	andrea merello <andrea.merello@gmail.com>
-Subject: [PATCH 3/7 V2] rtl818x: check for pci_map_single() success when initializing RX ring
-Date: Sat, 22 Feb 2014 17:57:23 +0100
-Message-Id: <1393088243-22740-1-git-send-email-andrea.merello@gmail.com> (sfid-20140222_175702_109464_FBD77EAA)
-In-Reply-To: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com>
-References: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com>
+	Mon, 3 Feb 2014 08:18:42 -0500
+Message-ID: <1391433519.4488.17.camel@jlt4.sipsolutions.net> (sfid-20140203_141844_583477_11C3103A)
+Subject: Re: [RFC 1/2] mac80211: merge STA CSA code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Feb 2014 14:18:39 +0100
+In-Reply-To: <1391421529-6067-2-git-send-email-michal.kazior@tieto.com> (sfid-20140203_110353_085758_75CBE901)
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140203_110353_085758_75CBE901)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: andrea merello <andrea.merello@gmail.com>
+On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
+> + * @timestamp: value in microseconds of the 64-bit Time Synchronization
+> + *	Function (TSF) timer when the frame containing the channel switch
+> + *	announcement was received. This is simply the rx.mactime parameter
+> + *	the driver passed in.
 
-During initialization a number of RX skbs are allocated and mapped
-for DMA.
-Currently if pci_map_single() fails, it will result in passing to the
-HW a wrong DMA address (to write to!).
+That doesn't make a lot of sense, since "rx.mactime" is a mac80211
+thing, so you should probably describe this. I'm not sure it really
+needs to be mactime/TSF, does that even make sense? It seems more likely
+you'd actually need the device time, i.e. something that works across
+multiple vifs?
 
-This patch adds check for this condition and eventually causes the
-driver not to initialize, avoiding at least dangerous DMAs.
+Not sure this even belongs into this patch anyway though?
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index bf59ff9..0102da2 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -483,6 +483,13 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 		mapping = (dma_addr_t *)skb->cb;
- 		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
- 					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+
-+		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
-+			kfree_skb(skb);
-+			wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
-+			return -ENOMEM;
-+		}
-+
- 		entry->rx_buf = cpu_to_le32(*mapping);
- 		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
- 					   MAX_RX_SIZE);
--- 
-1.8.3.2
+johannes
 
