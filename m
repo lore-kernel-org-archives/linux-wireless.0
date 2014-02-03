@@ -1,286 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbaBCKLA (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:34653 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753391AbaBCU6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 05:11:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 3 Feb 2014 15:58:41 -0500
+Received: by mail-ee0-f52.google.com with SMTP id e53so3885907eek.39
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:39 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: eliad@wizery.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute confusion
-Date: Mon,  3 Feb 2014 11:10:56 +0100
-Message-Id: <1391422256-21795-1-git-send-email-johannes@sipsolutions.net> (sfid-20140203_111105_246591_D3045022)
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/62] iwlwifi: mvm: add low-latency framework
+Date: Mon,  3 Feb 2014 22:57:22 +0200
+Message-Id: <1391461088-8082-16-git-send-email-egrumbach@gmail.com> (sfid-20140203_220008_553370_7A154955)
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The scheduled scan matchsets were intended to be a list of filters,
-with the found BSS having to pass at least one of them to be passed
-to the host. When the RSSI attribute was added, however, this was
-broken and currently wpa_supplicant adds that attribute in its own
-matchset; however, it doesn't intend that to mean that anything
-that passes the RSSI filter should be passed to the host, instead
-it wants it to mean that everything needs to also have higher RSSI.
+For various traffic use cases, we want to be able to treat multi-
+channel scenarios differently. Introduce a low-latency framework
+that currently only has a debugfs file to enable low-latency mode,
+but can later be extended.
 
-This is semantically problematic because we have a list of filters
-like [ SSID1, SSID2, SSID3, RSSI ] with no real indication which
-one should be OR'ed and which one AND'ed.
-
-To fix this, move the RSSI filter attribute into each matchset. As
-we need to stay backward compatible, treat a matchset with only the
-RSSI attribute as a "default RSSI filter" for all other matchsets,
-but only if there are other matchsets (an RSSI-only matchset by
-itself is still desirable.)
-
-To make driver implementation easier, keep a global min_rssi_thold
-for the entire request as well. The only affected driver is ath6kl.
-
-I found this when I looked into the code after Raja Mani submitted
-a patch fixing the n_match_sets calculation to disregard the RSSI,
-but that patch didn't address the semantic issue.
-
-Reported-by: Raja Mani <rmani@qti.qualcomm.com>
-Acked-by: Luciano Coelho <luciano.coelho@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 19 +++++---
- drivers/net/wireless/iwlwifi/mvm/scan.c    |  3 ++
- include/net/cfg80211.h                     |  9 ++--
- include/uapi/linux/nl80211.h               | 10 ++++-
- net/wireless/nl80211.c                     | 70 ++++++++++++++++++++++++++----
- 5 files changed, 92 insertions(+), 19 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |   38 ++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |   25 +++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/utils.c       |   12 ++++++++
+ 3 files changed, 74 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index fd4c89d..eba32f5 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3256,6 +3256,15 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 	u16 interval;
- 	int ret, rssi_thold;
-+	int n_match_sets = request->n_match_sets;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 0e29cd8..19ecade 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -460,6 +460,41 @@ static ssize_t iwl_dbgfs_bf_params_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
++static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
++					   size_t count, loff_t *ppos)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm *mvm = mvmvif->mvm;
++	u8 value;
++	int ret;
 +
++	ret = kstrtou8(buf, 0, &value);
++	if (ret)
++		return ret;
++	if (value > 1)
++		return -EINVAL;
++
++	mutex_lock(&mvm->mutex);
++	iwl_mvm_update_low_latency(mvm, vif, value);
++	mutex_unlock(&mvm->mutex);
++
++	return count;
++}
++
++static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
++					  char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct ieee80211_vif *vif = file->private_data;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	char buf[3];
++
++	buf[0] = mvmvif->low_latency ? '1' : '0';
++	buf[1] = '\n';
++	buf[2] = '\0';
++	return simple_read_from_buffer(user_buf, count, ppos, buf, sizeof(buf));
++}
++
+ #define MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz) \
+ 	_MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct ieee80211_vif)
+ #define MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz) \
+@@ -473,6 +508,7 @@ static ssize_t iwl_dbgfs_bf_params_read(struct file *file,
+ MVM_DEBUGFS_READ_FILE_OPS(mac_params);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(pm_params, 32);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bf_params, 256);
++MVM_DEBUGFS_READ_WRITE_FILE_OPS(low_latency, 10);
+ 
+ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
+@@ -505,6 +541,8 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	MVM_DEBUGFS_ADD_FILE_VIF(mac_params, mvmvif->dbgfs_dir,
+ 				 S_IRUSR);
++	MVM_DEBUGFS_ADD_FILE_VIF(low_latency, mvmvif->dbgfs_dir,
++				 S_IRUSR | S_IWUSR);
+ 
+ 	if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
+ 	    mvmvif == mvm->bf_allowed_vif)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 02e4bdc..00bc4ce 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -269,7 +269,9 @@ struct iwl_mvm_vif_bf_data {
+  * @ap_ibss_active: indicates that AP/IBSS is configured and that the interface
+  *	should get quota etc.
+  * @monitor_active: indicates that monitor context is configured, and that the
+- * interface should get quota etc.
++ *	interface should get quota etc.
++ * @low_latency: indicates that this interface is in low-latency mode
++ *	(VMACLowLatencyMode)
+  * @queue_params: QoS params for this MAC
+  * @bcast_sta: station used for broadcast packets. Used by the following
+  *  vifs: P2P_DEVICE, GO and AP.
+@@ -285,6 +287,7 @@ struct iwl_mvm_vif {
+ 	bool uploaded;
+ 	bool ap_ibss_active;
+ 	bool monitor_active;
++	bool low_latency;
+ 	struct iwl_mvm_vif_bf_data bf_data;
+ 
+ 	u32 ap_beacon_time;
+@@ -909,6 +912,26 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				enum iwl_mvm_smps_type_request req_type,
+ 				enum ieee80211_smps_mode smps_request);
+ 
++/* Low latency */
++int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			       bool value);
++/* get VMACLowLatencyMode */
++static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
++{
 +	/*
-+	 * If there's a matchset w/o an SSID, then assume it's just for
-+	 * the RSSI (nothing else is currently supported) and ignore it.
-+	 * The device only supports a global RSSI filter that we set below.
++	 * should this consider associated/active/... state?
++	 *
++	 * Normally low-latency should only be active on interfaces
++	 * that are active, but at least with debugfs it can also be
++	 * enabled on interfaces that aren't active. However, when
++	 * interface aren't active then they aren't added into the
++	 * binding, so this has no real impact. For now, just return
++	 * the current desired low-latency state.
 +	 */
-+	if (n_match_sets == 1 && !request->match_sets[0].ssid.ssid_len)
-+		n_match_sets = 0;
- 
- 	if (ar->state != ATH6KL_STATE_ON)
- 		return -EIO;
-@@ -3268,11 +3277,11 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
- 				      request->n_ssids,
- 				      request->match_sets,
--				      request->n_match_sets);
-+				      n_match_sets);
- 	if (ret < 0)
- 		return ret;
- 
--	if (!request->n_match_sets) {
-+	if (!n_match_sets) {
- 		ret = ath6kl_wmi_bssfilter_cmd(ar->wmi, vif->fw_vif_idx,
- 					       ALL_BSS_FILTER, 0);
- 		if (ret < 0)
-@@ -3286,12 +3295,12 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 
- 	if (test_bit(ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
- 		     ar->fw_capabilities)) {
--		if (request->rssi_thold <= NL80211_SCAN_RSSI_THOLD_OFF)
-+		if (request->min_rssi_thold <= NL80211_SCAN_RSSI_THOLD_OFF)
- 			rssi_thold = 0;
--		else if (request->rssi_thold < -127)
-+		else if (request->min_rssi_thold < -127)
- 			rssi_thold = -127;
- 		else
--			rssi_thold = request->rssi_thold;
-+			rssi_thold = request->min_rssi_thold;
- 
- 		ret = ath6kl_wmi_set_rssi_filter_cmd(ar->wmi, vif->fw_vif_idx,
- 						     rssi_thold);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 4ce9bb5..d876fa7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -590,6 +590,9 @@ static void iwl_scan_offload_build_ssid(struct cfg80211_sched_scan_request *req,
- 	 * config match list.
- 	 */
- 	for (i = 0; i < req->n_match_sets && i < PROBE_OPTION_MAX; i++) {
-+		/* skip empty SSID matchsets */
-+		if (!req->match_sets[i].ssid.ssid_len)
-+			continue;
- 		scan->direct_scan[i].id = WLAN_EID_SSID;
- 		scan->direct_scan[i].len = req->match_sets[i].ssid.ssid_len;
- 		memcpy(scan->direct_scan[i].ssid, req->match_sets[i].ssid.ssid,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5e57bf..009290e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1394,10 +1394,12 @@ struct cfg80211_scan_request {
- /**
-  * struct cfg80211_match_set - sets of attributes to match
-  *
-- * @ssid: SSID to be matched
-+ * @ssid: SSID to be matched; may be zero-length for no match (RSSI only)
-+ * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
-  */
- struct cfg80211_match_set {
- 	struct cfg80211_ssid ssid;
-+	s32 rssi_thold;
- };
- 
- /**
-@@ -1420,7 +1422,8 @@ struct cfg80211_match_set {
-  * @dev: the interface
-  * @scan_start: start time of the scheduled scan
-  * @channels: channels to scan
-- * @rssi_thold: don't report scan results below this threshold (in s32 dBm)
-+ * @min_rssi_thold: for drivers only supporting a single threshold, this
-+ *	contains the minimum over all matchsets
-  */
- struct cfg80211_sched_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -1433,7 +1436,7 @@ struct cfg80211_sched_scan_request {
- 	u32 flags;
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
--	s32 rssi_thold;
-+	s32 min_rssi_thold;
- 
- 	/* internal */
- 	struct wiphy *wiphy;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 53e56cf..474ce32 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2467,9 +2467,15 @@ enum nl80211_reg_rule_attr {
-  * enum nl80211_sched_scan_match_attr - scheduled scan match attributes
-  * @__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID: attribute number 0 is reserved
-  * @NL80211_SCHED_SCAN_MATCH_ATTR_SSID: SSID to be used for matching,
-- * only report BSS with matching SSID.
-+ *	only report BSS with matching SSID.
-  * @NL80211_SCHED_SCAN_MATCH_ATTR_RSSI: RSSI threshold (in dBm) for reporting a
-- *	BSS in scan results. Filtering is turned off if not specified.
-+ *	BSS in scan results. Filtering is turned off if not specified. Note that
-+ *	if this attribute is in a match set of its own, then it is treated as
-+ *	the default value for all matchsets with an SSID, rather than being a
-+ *	matchset of its own without an RSSI filter. This is due to problems with
-+ *	how this API was implemented in the past. Also, due to the same problem,
-+ *	the only way to create a matchset with only an RSSI filter (with this
-+ *	attribute) is if there's only a single matchset with the RSSI attribute.
-  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
-  *	attribute number currently defined
-  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1b54423..6753203 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5495,6 +5495,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	enum ieee80211_band band;
- 	size_t ie_len;
- 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
-+	s32 default_match_rssi = NL80211_SCAN_RSSI_THOLD_OFF;
- 
- 	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN) ||
- 	    !rdev->ops->sched_scan_start)
-@@ -5529,11 +5530,40 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	if (n_ssids > wiphy->max_sched_scan_ssids)
- 		return -EINVAL;
- 
--	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH])
-+	/*
-+	 * First, count the number of 'real' matchsets. Due to an issue with
-+	 * the old implementation, matchsets containing only the RSSI attribute
-+	 * (NL80211_SCHED_SCAN_MATCH_ATTR_RSSI) are considered as the 'default'
-+	 * RSSI for all matchsets, rather than their own matchset for reporting
-+	 * all APs with a strong RSSI. This is needed to be compatible with
-+	 * older userspace that treated a matchset with only the RSSI as the
-+	 * global RSSI for all other matchsets - if there are other matchsets.
-+	 */
-+	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH]) {
- 		nla_for_each_nested(attr,
- 				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
--				    tmp)
--			n_match_sets++;
-+				    tmp) {
-+			struct nlattr *rssi;
 +
-+			err = nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
-+					nla_data(attr), nla_len(attr),
-+					nl80211_match_policy);
-+			if (err)
-+				return err;
-+			/* add other standalone attributes here */
-+			if (tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID]) {
-+				n_match_sets++;
-+				continue;
-+			}
-+			rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
-+			if (rssi)
-+				default_match_rssi = nla_get_s32(rssi);
-+		}
-+	}
++	return mvmvif->low_latency;
++}
 +
-+	/* However, if there's no other matchset, add the RSSI one */
-+	if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
-+		n_match_sets = 1;
+ /* Thermal management and CT-kill */
+ void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
+ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index a4a5e25..e2cc876 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -536,3 +536,15 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- 	if (n_match_sets > wiphy->max_match_sets)
- 		return -EINVAL;
-@@ -5661,6 +5691,15 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 				goto out_free;
- 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
- 			if (ssid) {
-+				if (WARN_ON(i >= n_match_sets)) {
-+					/* this indicates a programming error,
-+					 * the loop above should have verified
-+					 * things properly
-+					 */
-+					err = -EINVAL;
-+					goto out_free;
-+				}
+ 	ieee80211_request_smps(vif, smps_mode);
+ }
 +
- 				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
- 					err = -EINVAL;
- 					goto out_free;
-@@ -5669,15 +5708,28 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 				       nla_data(ssid), nla_len(ssid));
- 				request->match_sets[i].ssid.ssid_len =
- 					nla_len(ssid);
-+				/* special attribute - old implemenation w/a */
-+				request->match_sets[i].rssi_thold =
-+					default_match_rssi;
-+				rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
-+				if (rssi)
-+					request->match_sets[i].rssi_thold =
-+						nla_get_s32(rssi);
- 			}
--			rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
--			if (rssi)
--				request->rssi_thold = nla_get_u32(rssi);
--			else
--				request->rssi_thold =
--						   NL80211_SCAN_RSSI_THOLD_OFF;
- 			i++;
- 		}
++int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			       bool value)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 +
-+		/* there was no other matchset, so the RSSI one is alone */
-+		if (i == 0)
-+			request->match_sets[0].rssi_thold = default_match_rssi;
++	lockdep_assert_held(&mvm->mutex);
 +
-+		request->min_rssi_thold = INT_MAX;
-+		for (i = 0; i < n_match_sets; i++)
-+			request->min_rssi_thold =
-+				min(request->match_sets[i].rssi_thold,
-+				    request->min_rssi_thold);
-+	} else {
-+		request->min_rssi_thold = NL80211_SCAN_RSSI_THOLD_OFF;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
++	mvmvif->low_latency = value;
++
++	return iwl_mvm_update_quotas(mvm, NULL);
++}
 -- 
-1.8.5.3
+1.7.9.5
 
