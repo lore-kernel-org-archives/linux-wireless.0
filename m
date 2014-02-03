@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:58227 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbaBSW3j (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:58862 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114AbaBCWb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 17:29:39 -0500
-Received: by mail-wg0-f43.google.com with SMTP id a1so872294wgh.22
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:29:38 -0800 (PST)
-Message-ID: <5305304B.5050004@gmail.com> (sfid-20140219_232943_245486_88E4A921)
-Date: Wed, 19 Feb 2014 22:29:31 +0000
-From: Malcolm Priestley <tvboxspy@gmail.com>
+	Mon, 3 Feb 2014 17:31:28 -0500
+Received: by mail-vc0-f180.google.com with SMTP id ks9so5114394vcb.25
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 14:31:27 -0800 (PST)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
-References: <1392846993.20211.15.camel@canaries64-MCP7A> <1392848134.24844.16.camel@joe-AO722>
-In-Reply-To: <1392848134.24844.16.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 3 Feb 2014 23:31:27 +0100
+Message-ID: <CALn6Ws7UOy69crLjQg-CL0N+HfkWV6fCfu_ScnAruC00nMMaHw@mail.gmail.com> (sfid-20140203_233134_086284_0C7543E5)
+Subject: Help on how to properly use the mac80211 library to manage the Access Point
+From: Massimo Vellucci <vemax78@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/02/14 22:15, Joe Perches wrote:
-> On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
->> Replace with enum
->> assign as u8 type.
-> []
->> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-> []
->> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
->>   	struct sk_buff *pPacket;
->>   	struct urb *pUrb;
->>   	unsigned int uBufLen;
->> -	CONTEXT_TYPE Type;
->> +	u8 type;
->
-> This doesn't really save any space in the struct.
-> You might move it immediately before or after bBoolInUse.
->
->>   	struct ethhdr sEthHeader;
->>   	void *Next;
->>   	bool bBoolInUse;
->
->
-No, but there are dead members in the structure that need removing.
+Hello,
+    I'm trying to implement an application that manages the AP profile
+for embedded devices that integrates the CAPWAP control protocol. I
+had to start from scratch because it would be too complex to change
+the logical structure of hostapd for integrate CAPWAP protocol.
+However
+I learned how to use mac80211 looking at the implementation of hostapd.
 
-sEthHeader and Next are dead
+My development environment is CentOS 6.4 with kernel version 2.6.32
+and I used mac80211_hwsim module as wireless interface. I have call
+all mac80211 message needed to generate the
+IEEE802.11 Management Beacon, IEEE802.11 Management Authentication and
+IEEE802.11 Association Response. The stations are able to associate to
+my AP and everything seems to work.
+
+Testing my AP on a Fedora 20 with kernel version 3.12.8 the same code
+does not work. The problem is when I setup the beacon message
+(NL80211_CMD_START_AP) and change, using netlink, the operating mode
+of the wireless interface with value IF_OPER_UP. In a first moment the
+wireless interface goes into a state UP with the flags [UP] [RUNNING]
+[LOWER_UP]. But soon after his the state becomes DORMANT and flags are
+[UP] [LOWER_UP].
+
+After many attempts I noticed that waiting a few seconds after
+enabling the wireless interface (using ioctl[SIOCSIFFLAGS]) and before
+calling the command mac80211 NL80211_CMD_START_AP, it all back to
+work. During this waiting the mac80211 driver has time to start an
+active scan on the wireless interface (the wireless interface is of
+type AP before being activated). If I enable the beacons without sleep
+the driver will never start the automatic active scan. Without this
+automatic scanning I have not found a way to activate the wireless
+interface.
+In the kernel 2.6.32 this automatic scan was not necessary.
+
+Why the driver mac80211 start this first scan ?
+This automatic scan is mandatory ?
+Can i disable this scan ?
 
 
+
+Thanks for your help, bye
+Massimo
