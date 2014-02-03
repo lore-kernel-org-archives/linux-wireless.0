@@ -1,105 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38024 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbaBMOrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 09:47:03 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: implement sta_rc_update()
-References: <1391676841-11107-1-git-send-email-michal.kazior@tieto.com>
-	<1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 13 Feb 2014 16:46:46 +0200
-In-Reply-To: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 10 Feb 2014 15:35:15 +0100")
-Message-ID: <8738jn9ijt.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_154707_134642_9DAE3D34)
+Received: from nbd.name ([46.4.11.11]:53291 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752465AbaBCMIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 07:08:13 -0500
+Message-ID: <52EF8699.2000305@openwrt.org> (sfid-20140203_130954_263961_5D43C101)
+Date: Mon, 03 Feb 2014 13:07:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	Sujith Manoharan <sujith@msujith.org>
+CC: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/13] ath9k_htc: add rx header converter to make it usable
+ by ath9k
+References: <1391022315-20946-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-1-git-send-email-linux@rempel-privat.de>	<1391022424-21087-4-git-send-email-linux@rempel-privat.de> <21230.64089.741.909535@gargle.gargle.HOWL> <52EF7BEB.5080605@rempel-privat.de>
+In-Reply-To: <52EF7BEB.5080605@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 2014-02-03 12:22, Oleksij Rempel wrote:
+> Am 03.02.2014 03:09, schrieb Sujith Manoharan:
+>> Oleksij Rempel wrote:
+>>> +	rx_stats = kzalloc(sizeof(struct ath_rx_status), GFP_KERNEL);
+>>> +	if (unlikely(rx_stats == NULL)) {
+>>> +		ath_err(common, "rx_stats allocation filed!\n");
+>>> +		goto err_nofree;
+>>> +	}
+>>> +	rx_status_htc_to_ath(rx_stats, &rxbuf->rxstatus);
+>>> +
+> 
+>> This seems a little expensive, since this would happen for every packet,
+>> and a memcpy is already done earlier, for storing the RX status in
+>> rxbuf->rxstatus. Instead of using 'struct ath_htc_rx_status' in
+>> 'struct ath9k_htc_rxbuf', why can't 'struct ath_rx_status' be used ?
+>> The values can be converted and stored directly, avoiding this alloc.
+> 
+> Do you mean kzalloc or converter?
+> then memcpy is removed by patch 12/13. Converter is not effective but it
+> should prevent from confusions. At least until FW use same flags and
+> struct ath_rx_status do.
+> But i'm open for other ideas too.
+You should at least keep rx_stats on stack instead of using kzalloc,
+that would make it much faster.
 
-> This allows dynamic changes of bandwidth/nss/smps,
-> e.g. via ht/vht operation mode change
-> notification.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-[...]
-
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -228,6 +228,17 @@ struct ath10k_peer {
->  	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
->  };
->  
-> +struct ath10k_sta {
-> +	struct ath10k_vif *arvif;
-> +
-> +	u32 changed; /* IEEE80211_RC_* */
-> +	u32 bw;
-> +	u32 nss;
-> +	u32 smps;
-> +
-> +	struct work_struct update_wk;
-> +};
-
-Apparently this structure is protected with data_lock, but it would be
-good to document that in the code to make it clear.
-
-> +static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
-> +				 struct ieee80211_vif *vif,
-> +				 struct ieee80211_sta *sta,
-> +				 u32 changed)
-> +{
-> +	struct ath10k *ar = hw->priv;
-> +	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-> +	u32 bw, smps;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +
-> +	if (changed & IEEE80211_RC_BW_CHANGED) {
-> +		bw = WMI_PEER_CHWIDTH_20MHZ;
-> +
-> +		switch (sta->bandwidth) {
-> +		case IEEE80211_STA_RX_BW_20:
-> +			bw = WMI_PEER_CHWIDTH_20MHZ;
-> +			break;
-> +		case IEEE80211_STA_RX_BW_40:
-> +			bw = WMI_PEER_CHWIDTH_40MHZ;
-> +			break;
-> +		case IEEE80211_STA_RX_BW_80:
-> +			bw = WMI_PEER_CHWIDTH_80MHZ;
-> +			break;
-> +		case IEEE80211_STA_RX_BW_160:
-> +			ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
-> +			bw = WMI_PEER_CHWIDTH_20MHZ;
-> +			break;
-
-I think it would be also useful to print STA's address in the warning.
-
-> +	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-> +		smps = WMI_PEER_SMPS_PS_NONE;
-> +
-> +		switch (sta->smps_mode) {
-> +		case IEEE80211_SMPS_AUTOMATIC:
-> +		case IEEE80211_SMPS_OFF:
-> +			smps = WMI_PEER_SMPS_PS_NONE;
-> +			break;
-> +		case IEEE80211_SMPS_STATIC:
-> +			smps = WMI_PEER_SMPS_STATIC;
-> +			break;
-> +		case IEEE80211_SMPS_DYNAMIC:
-> +			smps = WMI_PEER_SMPS_DYNAMIC;
-> +			break;
-> +		case IEEE80211_SMPS_NUM_MODES:
-> +			ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
-> +			smps = WMI_PEER_SMPS_PS_NONE;
-> +			break;
-
-Maybe here as well?
-
--- 
-Kalle Valo
+- Felix
