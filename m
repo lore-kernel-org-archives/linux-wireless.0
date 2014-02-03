@@ -1,87 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58320 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:1357 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933960AbaBDWRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 17:17:52 -0500
-Message-ID: <52F166FD.1040309@redhat.com> (sfid-20140204_231823_806902_E1724E53)
-Date: Tue, 04 Feb 2014 23:17:33 +0100
-From: Daniel Borkmann <dborkman@redhat.com>
+	id S1751025AbaBCNY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 08:24:28 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: RE: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
+ channels
+Date: Mon, 3 Feb 2014 13:24:23 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033370E60@HASMSX106.ger.corp.intel.com> (sfid-20140203_142433_060354_60C65907)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+	 <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140127_112147_514798_01405A03)
+ <1391177479.4141.23.camel@jlt4.sipsolutions.net>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A0333705C1@HASMSX106.ger.corp.intel.com>
+ <1391431612.4488.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1391431612.4488.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>
-Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
-References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com> <52F0E771.8070904@fokus.fraunhofer.de> <52F0F86C.3050402@redhat.com> <52F0FA96.7090903@fokus.fraunhofer.de> <52F0FDD9.6060901@openwrt.org>
-In-Reply-To: <52F0FDD9.6060901@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2014 03:48 PM, Felix Fietkau wrote:
-> On 2014-02-04 15:35, Mathias Kretschmer wrote:
->> On 02/04/2014 03:25 PM, Daniel Borkmann wrote:
->>> On 02/04/2014 02:13 PM, Mathias Kretschmer wrote:
->>>> On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
->>>>> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
->>> ...
->>>>>> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
->>>>>> user space using PF_PACKET sockets via RX_RING/TX_RING.
->>>>>>
->>>>>> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
->>>>>> proper optimization for our purposes.
->>>>>>
->>>>>> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
->>>>>> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
->>>>>> an older AMD Geode LX embedded board (ALiX).
->>>>>>
->>>>>> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
->>>>>> might be an interaction with the ieee80211 sub system.
->>>>>
->>>>> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
->>>>> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
->>>>> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
->>>>> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
->>>>> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
->>>>> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
->>>>> be the best option in your case, perhaps you will run into increased power usage
->>>>> in your NIC as a side-effect?
->>>>
->>>> I'm not familiar with the exact implementation details, but from the description
->>>> of this option, it seems to me that this is exactly what one would want to use if
->>>> the goal is to send an Ethernet frame out on a particular interface without any
->>>> further processing by the kernel.
->>>>
->>>> Why would this increase the power usage on the NIC ?  Due to a higher achievable
->>>> packet rate ?  That would be acceptable :)
->>>
->>> I'm not too familiar with the ieee80211 sub system, so I let Felix answer side
->>> effects and if actually the WARN_ON() is needed. ;) PACKET_QDISC_BYPASS is, as
->>> documented, designed for advanced pktgen resp. traffic generator like scenarios
->>> where you just sort of "brute force" packets to your NIC to stress test a remote
->>> machine for further analysis. I don't think it's very useful in your scenario
->>> when you have a wired/wireless MPLS switch, you rather might want to buffer/queue
->>> and therefore use qdisc layer instead.
->>
->> Hm, I was hoping/assuming that we still get to use hardware queues, if provided by
->> the driver. The main goal was to avoid any further PF_PACKET framework overhead.
->>
->> If the WARN_ON() issue gets solved, we will revisit this option and evaluate its
->> applicability.
-> The reason for the WARN_ON is probably either the .ndo_select_queue call
-> is not run, or its queue selection result is changed before the frame
-> hits the driver's tx call.
-> This call sets both the queue and the TID (similar to 802.1d tag), which
-> makes it into the packet via 802.11e (WMM, QoS).
-> It is important to the driver that the TID is in sync with the queue
-> selection, if that is not the case, then pending frame counters can get
-> messed up.
-> If you really want to bypass qdisc, make sure that at least
-> ndo_select_queue is called before passing the frame to the netdev.
-
-Ok, thanks for the input, we'll look further into it and eventually come up
-with something.
-
-> - Felix
->
+IA0KPiA+IFN1Y2ggbG9naWMgbWlnaHQgYmUgbmVlZGVkIGlmIGtlcm5lbCBlbmZvcmNlcyByZWd1
+bGF0b3J5IGNvbXBsaWFuY2UNCj4gPiBhZnRlciB0aGUgR09fQ09OQ1VSUkVOVCByZWxheGF0aW9u
+IGNvbmRpdGlvbnMgYXJlIG5vIGxvbmdlciBtZXQNCj4gPiAoc3RhdGlvbiBpbnRlcmZhY2UgbGVh
+dmVzIHRoZSBjaGFubmVsKSwgd2hlcmUgaWYgc3VjaCBhIGNhc2UgaXMgdHJ1ZSwNCj4gPiBpdCB3
+b3VsZCBiZSBhcHByb3ByaWF0ZSB0byBhZGQgYW4gaW5kaWNhdGlvbiB0byB0aGUga2VybmVsIHRl
+bGxpbmcgaXQNCj4gPiB0aGF0IHVzZXIgc3BhY2Uga25vd3Mgd2hhdCBpdCdzIGRvaW5nLCBzbyB0
+aGUga2VybmVsIHdpbGwgbm90IGRvIGFueQ0KPiA+IHF1aWVzY2luZyBsb2dpYyAoc2ltaWxhciB0
+byB3aGF0IEx1aXMgc3VnZ2VzdGVkKS4NCj4gDQo+IEknbSBub3QgY29udmluY2VkIHRoYXQgaXMg
+bmVjZXNzYXJ5IC0gdGhlICJxdWllc2NpbmciIHdvdWxkIGJlIGdvb2QgSQ0KPiBzdXBwb3NlLCBi
+dXQgdGhlcmUgc2hvdWxkIGJlIHBsZW50eSBvZiB0aW1lIGJlZm9yZSBpdCBmb3IgdXNlcnNwYWNl
+IHRvDQo+IHJlcXVlc3QgYW4gYXBwcm9wcmlhdGUgQ1NBIHNvIEkgZG9uJ3QgdGhpbmsgYW55IGFk
+ZGl0aW9uYWwgZmxhZyBpcyBuZWVkZWQuDQo+IA0KPiBBc3N1bWluZyB3ZSdyZSB0YWxraW5nIGFi
+b3V0IHRoZSBzYW1lIHNjZW5hcmlvPyBJIGd1ZXNzIGl0IHNob3VsZCBiZSBsaWtlDQo+IHRoaXM6
+DQo+IA0KPiAgLSBTVEEgY29ubmVjdGVkIHRvIEFQIG9uIGFuICJhZGRpdGlvbmFsIiBjaGFubmVs
+DQo+ICAtIEdPIG9wZXJhdGluZyBvbiB0aGUgc2FtZSBjaGFubmVsDQo+ICAtIEFQIHN0YXJ0cyB0
+byBhZHZlcnRpc2UgQ1NBDQo+ICAtIHdwYV9zIHdpbGwgcmVxdWVzdCBDU0EgZm9yIEdPIGFzIHdl
+bGwNCg0KVGhpcyBhbHNvIHJlcXVpcmVzIGEgZml4LCBhcyBjdXJyZW50bHkgdGhlIHdwYV9zdXBw
+bGljYW50IGlzIG5vdCBhd2FyZSBvZiB0aGUgc3RhdGlvbiBzd2l0Y2hpbmcgY2hhbm5lbCBkdWUg
+dG8gQVAncyBDU0EuDQoNCj4gIC0gYWxsIHdpbGwgYmUgZmluZQ0KDQpZZXMuIFRoZSB3cGFfc3Vw
+cGxpY2FudCBzaG91bGQgYmUgYXdhcmUgb2YgdGhlIGN1cnJlbnQgdXNhZ2Ugb2YgdGhlIGNoYW5u
+ZWxzIGFuZCBhY3QgYWNjb3JkaW5nbHksIGkuZS4sIGlmIHRoZSBHTyBpcyBlc3RhYmxpc2hlZCBv
+biBhIGNoYW5uZWwgZHVlIHRvIEdPX0NPTkNVUlJFTlQgcmVsYXhhdGlvbiwgaXQgc2hvdWxkIGV2
+YWN1YXRlIHRoZSBjaGFubmVsIG9uY2UgdGhlcmUgaXMgbm8gc3RhdGlvbiBvbiB0aGF0IGNoYW5u
+ZWwgKG9yIG9uIHRoYXQgVU5JSSBiYW5kKS4gSSdtIGN1cnJlbnRseSBlbmFibGluZyB0aGlzIGxv
+Z2ljIGluIHRoZSB3cGFfc3VwcGxpY2FudC4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
