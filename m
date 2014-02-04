@@ -1,107 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15624 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753479AbaB0OWH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:22:07 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 13/16] wil6210: Provide signal strength indication
-Date: Thu, 27 Feb 2014 16:20:52 +0200
-Message-ID: <1393510855-17566-14-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152214_654082_D0BD5578)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26499 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753738AbaBDTIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 14:08:07 -0500
+Date: Tue, 4 Feb 2014 20:09:36 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
+ pci_disable_msi()
+Message-ID: <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> (sfid-20140204_200828_672846_63CC1CD2)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+ <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When notifying about Rx mgmt (ex: during scan), extract
-signal strength reported by the hardware.
-signal is not MBM, it is arbitrary units 0..100
+On Tue, Feb 04, 2014 at 08:32:12PM +0200, Kalle Valo wrote:
+> Alexander Gordeev <agordeev@redhat.com> writes:
+> 
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > ---
+> >  drivers/net/wireless/ath/ath10k/pci.c |    2 --
+> >  1 files changed, 0 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> > index 29fd197..6525e1f 100644
+> > --- a/drivers/net/wireless/ath/ath10k/pci.c
+> > +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> > @@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
+> >  		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
+> >  		if (ret == 0)
+> >  			return 0;
+> > -		if (ret > 0)
+> > -			pci_disable_msi(ar_pci->pdev);
+> 
+> I don't understand how this is superfluous. When I read the
+> documentation for pci_enable_msi_block() it states that if it can't
+> allocate all requests, it will return the number requests it could
+> allocate. And in that case we want to fall back other modes.
+> 
+> Am I missing something?
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  7 ++++---
- drivers/net/wireless/ath/wil6210/wmi.c      | 12 ++++++------
- 2 files changed, 10 insertions(+), 9 deletions(-)
+Yep. The documentation states 'could have been allocated', not 'could
+allocate'. IOW, MSIs are *not* enabled if a positive value returned.
+The code I changed tries to disable MSIs in such case, although it is
+not necessary, nor required. Just superfluous.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 12e0539..c19e895 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -125,12 +125,13 @@ static int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
- 
- 	wil_dbg_wmi(wil, "Link status for CID %d: {\n"
- 		    "  MCS %d TSF 0x%016llx\n"
--		    "  BF status 0x%08x SNR 0x%08x\n"
-+		    "  BF status 0x%08x SNR 0x%08x SQI %d%%\n"
- 		    "  Tx Tpt %d goodput %d Rx goodput %d\n"
- 		    "  Sectors(rx:tx) my %d:%d peer %d:%d\n""}\n",
- 		    cid, le16_to_cpu(reply.evt.bf_mcs),
- 		    le64_to_cpu(reply.evt.tsf), reply.evt.status,
- 		    le32_to_cpu(reply.evt.snr_val),
-+		    reply.evt.sqi,
- 		    le32_to_cpu(reply.evt.tx_tpt),
- 		    le32_to_cpu(reply.evt.tx_goodput),
- 		    le32_to_cpu(reply.evt.rx_goodput),
-@@ -163,7 +164,7 @@ static int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
- 
- 	if (test_bit(wil_status_fwconnected, &wil->status)) {
- 		sinfo->filled |= STATION_INFO_SIGNAL;
--		sinfo->signal = 12; /* TODO: provide real value */
-+		sinfo->signal = reply.evt.sqi;
- 	}
- 
- 	return rc;
-@@ -698,7 +699,7 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- 	wiphy->bands[IEEE80211_BAND_60GHZ] = &wil_band_60ghz;
- 
- 	/* TODO: figure this out */
--	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-+	wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
- 
- 	wiphy->cipher_suites = wil_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(wil_cipher_suites);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 8de7ffd..70b3a9b 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -307,14 +307,14 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 	u32 freq = ieee80211_channel_to_frequency(ch_no,
- 			IEEE80211_BAND_60GHZ);
- 	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
--	/* TODO convert LE to CPU */
--	s32 signal = 0; /* TODO */
-+	s32 signal = data->info.sqi;
- 	__le16 fc = rx_mgmt_frame->frame_control;
- 	u32 d_len = le32_to_cpu(data->info.len);
- 	u16 d_status = le16_to_cpu(data->info.status);
- 
--	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d\n",
--		    data->info.channel, data->info.mcs, data->info.snr);
-+	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d SQI %d%%\n",
-+		    data->info.channel, data->info.mcs, data->info.snr,
-+		    data->info.sqi);
- 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
- 		    le16_to_cpu(fc));
- 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
-@@ -487,11 +487,11 @@ static void wmi_evt_notify(struct wil6210_priv *wil, int id, void *d, int len)
- 	wil->stats.peer_rx_sector = le16_to_cpu(evt->other_rx_sector);
- 	wil->stats.peer_tx_sector = le16_to_cpu(evt->other_tx_sector);
- 	wil_dbg_wmi(wil, "Link status, MCS %d TSF 0x%016llx\n"
--		    "BF status 0x%08x SNR 0x%08x\n"
-+		    "BF status 0x%08x SNR 0x%08x SQI %d%%\n"
- 		    "Tx Tpt %d goodput %d Rx goodput %d\n"
- 		    "Sectors(rx:tx) my %d:%d peer %d:%d\n",
- 		    wil->stats.bf_mcs, wil->stats.tsf, evt->status,
--		    wil->stats.snr, le32_to_cpu(evt->tx_tpt),
-+		    wil->stats.snr, evt->sqi, le32_to_cpu(evt->tx_tpt),
- 		    le32_to_cpu(evt->tx_goodput), le32_to_cpu(evt->rx_goodput),
- 		    wil->stats.my_rx_sector, wil->stats.my_tx_sector,
- 		    wil->stats.peer_rx_sector, wil->stats.peer_tx_sector);
+HTH.
+
 -- 
-1.8.3.2
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
