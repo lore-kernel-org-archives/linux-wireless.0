@@ -1,247 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37647 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbaBNK3I (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56529 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaBDMHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 05:29:08 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, sw@simonwunderlich.de
-Subject: [PATCH] cfg80211: remove radar requirements check from cfg80211_can_use_iftype_chan()
-Date: Fri, 14 Feb 2014 12:29:03 +0200
-Message-Id: <1392373743-12757-1-git-send-email-luca@coelho.fi> (sfid-20140214_112912_703704_17F53767)
+	Tue, 4 Feb 2014 07:07:04 -0500
+Message-ID: <1391515621.26522.99.camel@porter.coelho.fi> (sfid-20140204_130707_589008_B9365122)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>
+Date: Tue, 04 Feb 2014 14:07:01 +0200
+In-Reply-To: <1391515050.4134.6.camel@jlt4.sipsolutions.net>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	 <1391508433.26522.61.camel@porter.coelho.fi>
+	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
+	 <1391512311.26522.75.camel@porter.coelho.fi>
+	 <1391513092.4134.4.camel@jlt4.sipsolutions.net>
+	 <1391514164.26522.89.camel@porter.coelho.fi>
+	 <1391515050.4134.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, 2014-02-04 at 12:57 +0100, Johannes Berg wrote:
+> On Tue, 2014-02-04 at 13:42 +0200, Luca Coelho wrote:
+> > > Nothing! As far as that's permissible. Ilan's patchset might change
+> > > that, but that's mostly a regulatory thing, rather than a CSA thing.
+> > 
+> > Ah, you have some insider information! :P
+> 
+> Not really, he posted those patches ... :)
 
-We don't have to double check whether the parameters passed to
-cfg80211_can_use_iftype_chan() are correct.  We should just make sure
-they *are* when we call this function.
+Heh, I should read the mailing list more carefully instead of marking
+everything as read without reading. ;)
 
-Remove the radar_detect argument check in
-cfg80211_can_use_iftype_chan() to simplify the code.
 
-Added comments in every place where this function is called (directly
-or indirectly) explaining how we make sure that the radar_detect
-argument is correct.
+> > Sure, but how does the userspace know that the other interface *needs*
+> > to be moved, regardless of regulatory problems? It needs to know that
+> > there are not enough contexts to keep the interfaces in different
+> > channels...
+> 
+> It has all that information, it can know the channels, channel contexts,
+> etc.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
+Okay, so I assume it also knows how many vifs can be in the same context
+and all the possible vif type combinations.  And do the same checks that
+cfg80211 already does...
 
-This patch is small in actual content, but I added a lot of comments
-explaining why I believe it's okay to remove the checks.  They were
-mostly written for myself while I analysed the possibility of removing
-the radar_detect check from the function.  But I think they are good,
-at least during review, as an argumentation point in favor of removing
-the check.  I can send a v2 without the comments if people think
-they're just noise. ;)
 
-This is done in order to simplify the combinations check and make it
-easier to move the check out of cfg80211.
+> > > > ...and, if the userspace doesn't react, we disconnect the GO.  I think
+> > > > it's safer this way for the GO-follows-STA case.
+> > > 
+> > > That would be a consequence of Ilan's work, yes.
+> > 
+> > Okay, if that's going to be guaranteed, I'm fine with it.
+> 
+> Not yet, but Ilan probably needs to take care of that.
+> 
+> > > This typically won't happen, since userspace will do something else, but
+> > > we need to have some default policy. I don't think anything else makes
+> > > much sense?
+> > 
+> > My point was that a CSA could have been triggered due to regulatory
+> > (which the AP/GO is monitoring), so the safest would be to move everyone
+> > out of the channel by default.
+> 
+> But the kernel can't do that, it needs userspace to do it.
 
- net/wireless/core.h    |  6 ++++++
- net/wireless/ibss.c    | 15 +++++++++------
- net/wireless/mesh.c    |  8 ++++++++
- net/wireless/mlme.c    | 12 ++++++++++++
- net/wireless/nl80211.c |  9 +++++++++
- net/wireless/util.c    | 33 +--------------------------------
- 6 files changed, 45 insertions(+), 38 deletions(-)
+Right, but by "moving out of the channel by default" I meant
+disconnecting those who don't so we are sure there's no one left.
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9895ab1..db35f7f 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -406,6 +406,7 @@ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 			      struct wireless_dev *wdev,
- 			      enum nl80211_iftype iftype)
- {
-+	/* Channel is NULL, no need for radar detection */
- 	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
- 					    CHAN_MODE_UNDEFINED, 0);
- }
-@@ -426,6 +427,11 @@ cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
- 		      struct ieee80211_channel *chan,
- 		      enum cfg80211_chan_mode chanmode)
- {
-+	/*
-+	 * The only place that could call us without checking whether
-+	 * radar detection is needed is cfg80211_set_mesh_channel() --
-+	 * and for libertas only -- but we added a WARN_ON there.
-+	 */
- 	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					    chan, chanmode, 0);
- }
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 1470b90..59f2c43 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -127,15 +127,18 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 	wdev->wext.ibss.chandef = params->chandef;
- #endif
- 	check_chan = params->chandef.chan;
--	if (params->userspace_handles_dfs) {
--		/* use channel NULL to check for radar even if the current
--		 * channel is not a radar channel - it might decide to change
--		 * to DFS channel later.
-+	if (params->userspace_handles_dfs)
-+		/*
-+		 * Check for radar even if the current channel is not
-+		 * a radar channel - it might decide to change to DFS
-+		 * channel later.
- 		 */
- 		radar_detect_width = BIT(params->chandef.width);
--		check_chan = NULL;
--	}
- 
-+	/*
-+	 * We're guaranteeing with the code above that radar detection
-+	 * will always be enabled if the userspace can handle DFS.
-+	 */
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   check_chan,
- 					   (params->channel_fixed &&
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index d42a3fc..7a98440 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -184,6 +184,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 	if (err)
- 		radar_detect_width = BIT(setup->chandef.width);
- 
-+	/* We're checking if radar detection is needed above */
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   setup->chandef.chan,
- 					   CHAN_MODE_SHARED,
-@@ -236,6 +237,13 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 		if (!netif_running(wdev->netdev))
- 			return -ENETDOWN;
- 
-+		/*
-+		 * cfg80211_can_use_chan() calls
-+		 * cfg80211_can_use_iftype_chan() with no radar
-+		 * detection, so if we're trying to use a radar
-+		 * channel here, something is wrong.
-+		 */
-+		WARN_ON_ONCE(chandef->chan->flags & IEEE80211_CHAN_RADAR);
- 		err = cfg80211_can_use_chan(rdev, wdev, chandef->chan,
- 					    CHAN_MODE_SHARED);
- 		if (err)
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index d47c9d1..b09a12c 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -233,6 +233,12 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 	if (!req.bss)
- 		return -ENOENT;
- 
-+	/*
-+	 * For managed mode, we don't have to check for radar, so
-+	 * there's no problem to call cfg80211+can_use_channel() which
-+	 * calls cfg80211_can_use_iftype_chan() with no radar
-+	 * detection.
-+	 */
- 	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
- 				    CHAN_MODE_SHARED);
- 	if (err)
-@@ -306,6 +312,12 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 	if (!req->bss)
- 		return -ENOENT;
- 
-+	/*
-+	 * For managed mode, we don't have to check for radar, so
-+	 * there's no problem to call cfg80211+can_use_channel() which
-+	 * calls cfg80211_can_use_iftype_chan() with no radar
-+	 * detection.
-+	 */
- 	err = cfg80211_can_use_chan(rdev, wdev, chan, CHAN_MODE_SHARED);
- 	if (err)
- 		goto out;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b78d734..2f46c2d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3263,6 +3263,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		params.radar_required = true;
- 	}
- 
-+	/* We're checking if radar detection is needed above */
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   params.chandef.chan,
- 					   CHAN_MODE_SHARED,
-@@ -5794,6 +5795,10 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (!rdev->ops->start_radar_detection)
- 		return -EOPNOTSUPP;
- 
-+	/*
-+	 * This is only called if radar detection is required and we
-+	 * pass the radar_detect_width properly below.
-+	 */
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   chandef.chan, CHAN_MODE_SHARED,
- 					   BIT(chandef.width));
-@@ -5924,6 +5929,10 @@ skip_beacons:
- 		}
- 	}
- 
-+	/*
-+	 * We guarantee with the code above that radar_detect_width is
-+	 * correctly set for the interface types that need it.
-+	 */
- 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
- 					   params.chandef.chan,
- 					   CHAN_MODE_SHARED,
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 780b454..6a4023a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1269,45 +1269,14 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
- 	int total = 1;
--	bool radar_required = false;
- 	int i, j;
-+	int ret;
- 
- 	ASSERT_RTNL();
- 
- 	if (WARN_ON(hweight32(radar_detect) > 1))
- 		return -EINVAL;
- 
--	switch (iftype) {
--	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_MESH_POINT:
--	case NL80211_IFTYPE_P2P_GO:
--	case NL80211_IFTYPE_WDS:
--		/* if the interface could potentially choose a DFS channel,
--		 * then mark DFS as required.
--		 */
--		if (!chan) {
--			if (chanmode != CHAN_MODE_UNDEFINED && radar_detect)
--				radar_required = true;
--			break;
--		}
--		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
--		break;
--	case NL80211_IFTYPE_P2P_CLIENT:
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_P2P_DEVICE:
--	case NL80211_IFTYPE_MONITOR:
--		break;
--	case NUM_NL80211_IFTYPES:
--	case NL80211_IFTYPE_UNSPECIFIED:
--	default:
--		return -EINVAL;
--	}
--
--	if (radar_required && !radar_detect)
--		return -EINVAL;
--
- 	/* Always allow software iftypes */
- 	if (rdev->wiphy.software_iftypes & BIT(iftype)) {
- 		if (radar_detect)
--- 
-1.8.5.3
+
+>  And if the
+> CSA was triggered due to regulatory, then the GO that follow the client
+> can only be on this channel with Ilan's work, otherwise it's allowed to
+> be standalone there.
+
+Okay, I'll check Ilan's patches.
+
+--
+Luca.
+
+
 
