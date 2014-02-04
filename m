@@ -1,112 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm5-vm4.bullet.mail.ir2.yahoo.com ([212.82.96.111]:33047 "EHLO
-	nm5-vm4.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752746AbaBJXTl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 18:19:41 -0500
-Message-ID: <1392074031.26053.BPMail_high_noncarrier@web172302.mail.ir2.yahoo.com> (sfid-20140211_001945_771002_C41A3D3E)
-Date: Mon, 10 Feb 2014 23:13:51 +0000 (GMT)
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-Subject: Re: [PATCH] rtl8187: fix regression on MIPS without coherent DMA
-To: larry.finger@lwfinger.net, stf_xl@wp.pl,
-	linux-wireless@vger.kernel.org
-Cc: herton@canonical.com, linux-mips@linux-mips.org
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:40125 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbaBDDAL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Feb 2014 22:00:11 -0500
+Received: by mail-qc0-f176.google.com with SMTP id e16so12521782qcx.21
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 19:00:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <52EF9C2E.5030202@opensuse.org>
+References: <1391319050-100614-1-git-send-email-crrodriguez@opensuse.org>
+ <1391424732.4488.4.camel@jlt4.sipsolutions.net> <1391424860.4488.6.camel@jlt4.sipsolutions.net>
+ <52EF9C2E.5030202@opensuse.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 4 Feb 2014 13:59:48 +1100
+Message-ID: <CAGRGNgUuTm7kbo23_F42Q-vD23vQ3ZWMnmBY1DQJpKvb=tWPYQ@mail.gmail.com> (sfid-20140204_040017_266801_324B600F)
+Subject: Re: [PATCH] [iw] Make the build system automake based
+To: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Cristian,
 
-
-
-
-
-------------------------------
-On Mon, Feb 10, 2014 10:50 PM GMT Larry Finger wrote:
-
->On 02/10/2014 03:38 PM, Stanislaw Gruszka wrote:
->> This patch fixes regression caused by commit a16dad77634 "MIPS: Fix
->> potencial corruption". That commit fixes one corruption scenario in
->> cost of adding another one, which actually start to cause crashes
->> on Yeeloong laptop when rtl8187 driver is used.
->>
->> For correct DMA read operation on machines without DMA coherence, kernel
->> have to invalidate cache, such it will refill later with new data that
->> device wrote to memory, when that data is needed to process. We can only
->> invalidate full cache line. Hence when cache line includes both dma
->> buffer and some other data (written in cache, but not yet in main
->> memory), the other data can not hit memory due to invalidation. That
->> happen on rtl8187 where struct rtl8187_priv fields are located just
->> before and after small buffers that are passed to USB layer and DMA
->> is performed on them.
->>
->> To fix the problem we align buffers and reserve space after them to make
->> them match cache line.
->>
->> This patch does not resolve all possible MIPS problems entirely, for
->> that we have to assure that we always map cache aligned buffers for DMA,
->> what can be complex or even not possible. But patch fixes visible and
->> reproducible regression and seems other possible corruptions do not
->> happen in practice, since Yeeloong laptop works stable without rtl8187
->> driver.
->>
->> Bug report:
->> https://bugzilla.kernel.org/show_bug.cgi?id=54391
->>
->> Reported-by: Petr Pisar <petr.pisar@atlas.cz>
->> Bisected-by: Tom Li <biergaizi2009@gmail.com>
->> Reported-and-tested-by: Tom Li <biergaizi2009@gmail.com>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->> ---
+On Tue, Feb 4, 2014 at 12:39 AM, Cristian Rodríguez
+<crrodriguez@opensuse.org> wrote:
+> El 03/02/14 07:54,  escribió:
 >
->Congratulations to all for sorting this out. It could not have been too easy.
->
->The only effect I see on architectures with DMA coherence is that the private 
->data area has grown a little. Certainly, my RTL8187B device still works on x86_64.
->
->Acked-by: Larry Finger <Larry.Finger@lwfinger.next>
->
->Larry
->
->>   drivers/net/wireless/rtl818x/rtl8187/rtl8187.h |   10 ++++++++--
->>   1 files changed, 8 insertions(+), 2 deletions(-)
+>> On Mon, 2014-02-03 at 11:52 +0100, Johannes Berg wrote:
 >>
->> diff --git a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
->> index 56aee06..a6ad79f 100644
->> --- a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
->> +++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
->> @@ -15,6 +15,8 @@
->>   #ifndef RTL8187_H
->>   #define RTL8187_H
+>>> I *might* be open to switching to something like
+>>> cmake
 >>
->> +#include <linux/cache.h>
->> +
->>   #include "rtl818x.h"
->>   #include "leds.h"
+>> [...] something *sane* like cmake [...]
 >>
->> @@ -139,7 +141,10 @@ struct rtl8187_priv {
->>   	u8 aifsn[4];
->>   	u8 rfkill_mask;
->>   	struct {
->> -		__le64 buf;
->> +		union {
->> +			__le64 buf;
->> +			u8 dummy1[L1_CACHE_BYTES];
->> +		} ____cacheline_aligned;
->>   		struct sk_buff_head queue;
->>   	} b_tx_status; /* This queue is used by both -b and non-b devices */
->>   	struct mutex io_mutex;
->> @@ -147,7 +152,8 @@ struct rtl8187_priv {
->>   		u8 bits8;
->>   		__le16 bits16;
->>   		__le32 bits32;
->> -	} *io_dmabuf;
->> +		u8 dummy2[L1_CACHE_BYTES];
->> +	} *io_dmabuf ____cacheline_aligned;
->>   	bool rfkill_off;
->>   	u16 seqno;
->>   };
+>> (FWIW, don't even argue that part about auto*, it's decidedly not sane
+>> to have a build system that needs roughly two dozen versions installed
+>> concurrently to build different software)
+>>
+>> johannes
 >>
 >
+> Well, unfortunately we disagree on everything. cmake is NOT sane though I
+> could write an equivalent in few minutes, read the book, been there, done
+> that.. it sucks.
+>
+> Autotools does not require two dozen versions installed to build anything,
+> this is a apparently an insanity found only in debian distributions.
+>
+> Looks like I am going to stop wasting keystrokes about now..people who have
+> similar opinions invariably do not understand the problems faced by
+> distributors or packagers.
 
+Opinions will always differ.
+
+Is there some way that the makefile could be improved / simplified to
+meet your goals / requirements without a complete automake based
+rewrite?
+
+I understand that custom makefiles can be a maintenance burden, but if
+you could describe the exact issue you're having, and maybe propose a
+less invasive patch, you might get a more positive response. (By
+"invasive", I mean increasing the build dependencies, not necessarily
+changing a lot of code.)
+
+Another option could be to add an automake build system in parallel
+with the current make based one and offer to maintain it.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
