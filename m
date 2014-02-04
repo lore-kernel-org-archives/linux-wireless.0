@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2122 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744AbaBRJ6I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 04:58:08 -0500
-Message-ID: <53032EAB.5070905@broadcom.com> (sfid-20140218_105815_092977_BD23A63A)
-Date: Tue, 18 Feb 2014 10:58:03 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Samuel Ortiz <sameo@linux.intel.com>
-CC: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	<frankyl@broadcom.com>
-Subject: Re: brcmfmac NVRAM files
-References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE> <530248DD.1050408@broadcom.com> <20140217180033.GM18868@zurbaran>
-In-Reply-To: <20140217180033.GM18868@zurbaran>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mout.gmx.net ([212.227.15.15]:50508 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753100AbaBDJ2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:44 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0M2ts6-1VLP250hfi-00sgDm for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:43 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 08/13] ath9k_htc: use ath9k_cmn_rx_accept
+Date: Tue,  4 Feb 2014 10:27:45 +0100
+Message-Id: <1391506070-8636-9-git-send-email-linux@rempel-privat.de> (sfid-20140204_102848_747854_EAED8283)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2014 07:00 PM, Samuel Ortiz wrote:
-> Hi Arend,
-> 
-> On Mon, Feb 17, 2014 at 06:37:33PM +0100, Arend van Spriel wrote:
->> Hi Bernd,
->>
->> The hint to solve this is found on wireless.kernel.org [1] and the
->> answer is as Samuel suspects. This file is very board specific so
->> OEMs manufacturing/selling the board should provide it either upon
->> request or through some distribution like a SDK.
-> There are several Win8 2-in-1 devices that do run the SDIO Full MAC
-> chipsets and obviously there is no SDK for those. Which means no distro
-> will ever be able to run out of the box on those.
-> I may be completely off the mark here, but isn't there a sensible
-> template for those guys ? Nothing optimised, but just something that
-> would at least make things work...
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 45 +++++----------------------
+ 1 file changed, 8 insertions(+), 37 deletions(-)
 
-Last time I got the question I extracted the nvram from the windows
-driver installer archive. However, it may end up in (U)EFI variable
-space. Guess that could be accessed from Linux as well. Anyway, it may
-be an area where we can and maybe should improve. I will discuss this
-with Franky and the rest of the team over here.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 6bd7ef8..8aba265 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -974,6 +974,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status rx_stats;
+ 	int hdrlen, padsize;
++	bool decrypt_error;
+ 	__le16 fc;
+ 
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+@@ -1012,43 +1013,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 
+ 	rx_status_htc_to_ath(&rx_stats, &rxbuf->rxstatus);
+ 
+-	if (rxbuf->rxstatus.rs_status != 0) {
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_CRC)
+-			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_PHY)
+-			goto rx_next;
+-
+-		if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT) {
+-			/* FIXME */
+-		} else if (rxbuf->rxstatus.rs_status & ATH9K_RXERR_MIC) {
+-			if (ieee80211_is_ctl(fc))
+-				/*
+-				 * Sometimes, we get invalid
+-				 * MIC failures on valid control frames.
+-				 * Remove these mic errors.
+-				 */
+-				rxbuf->rxstatus.rs_status &= ~ATH9K_RXERR_MIC;
+-			else
+-				rx_status->flag |= RX_FLAG_MMIC_ERROR;
+-		}
+-
+-		/*
+-		 * Reject error frames with the exception of
+-		 * decryption and MIC failures. For monitor mode,
+-		 * we also ignore the CRC error.
+-		 */
+-		if (priv->ah->opmode == NL80211_IFTYPE_MONITOR) {
+-			if (rxbuf->rxstatus.rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
+-			      ATH9K_RXERR_CRC))
+-				goto rx_next;
+-		} else {
+-			if (rxbuf->rxstatus.rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
+-				goto rx_next;
+-			}
+-		}
+-	}
++	/*
++	 * everything but the rate is checked here, the rate check is done
++	 * separately to avoid doing two lookups for a rate for each frame.
++	 */
++	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, &rx_stats,
++			&decrypt_error, priv->rxfilter))
++		goto rx_next;
+ 
+ 	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
+ 		u8 keyix;
+-- 
+1.9.rc1
 
-> Also, the hint for pre 3.13 kernel is to copy the .bin into a .txt. Is
-> that still the case for post 3.13 ?
-
-I certainly hope you misread that. Before 3.13 the driver always look
-for brcmfmac-sdio.bin and brcmfmac-sdio.txt regardless the device being
-used. That has changed so the firmware file now includes the chip id and
-for some even the revision, eg. brcmfmac43241b4-sdio.bin and
-brcmfmac43241b4-sdio.txt. The nvram file has a totally different format
-as the bin file so copying will fail for sure.
-
-Regards,
-Arend
