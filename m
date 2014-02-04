@@ -1,65 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:50907 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbaB1Jyd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 04:54:33 -0500
-Received: by mail-ea0-f169.google.com with SMTP id d10so2518306eaj.14
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 01:54:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87txbjbn7s.fsf@kamboji.qca.qualcomm.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-5-git-send-email-michal.kazior@tieto.com>
-	<8738j3d2t2.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQn8GTu3A4LdRGtpJeVr0SnaApTwnNZAoZ8=3Vj5qF+W=g@mail.gmail.com>
-	<87txbjbn7s.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Feb 2014 10:54:31 +0100
-Message-ID: <CA+BoTQkgxNL9tkxR=b2Qif5+6Z_cFQOc2uL5QD5scd=Nx1y50g@mail.gmail.com> (sfid-20140228_105443_370325_4380078F)
-Subject: Re: [PATCH v3 4/8] ath10k: bypass htc for htt tx path
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.18]:59287 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbaBDJ2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:14 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0MdrK9-1VsG6Z46pB-00Pdvp for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:13 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 02/13] ath9k: move ath9k_process_rssi to common.c
+Date: Tue,  4 Feb 2014 10:27:39 +0100
+Message-Id: <1391506070-8636-3-git-send-email-linux@rempel-privat.de> (sfid-20140204_102819_074421_F5E1ABCE)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 10:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> On 28 February 2014 10:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Michal Kazior <michal.kazior@tieto.com> writes:
->>>
->>>> --- a/drivers/net/wireless/ath/ath10k/htc.c
->>>> +++ b/drivers/net/wireless/ath/ath10k/htc.c
->>>> @@ -202,10 +202,8 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
->>>>       struct ath10k_htc *htc = &ar->htc;
->>>>       struct ath10k_htc_ep *ep = &htc->endpoint[eid];
->>>>
->>>> -     if (!skb) {
->>>> -             ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
->>>> +     if (WARN_ON(!skb))
->>>>               return 0;
->>>> -     }
->>>
->>> WARN_ON() is a bit dangerous here as it might cause excessive spamming.
->>> Why did you want to change this? I think either ath10k_warn() or
->>> WARN_ON_ONCE() would be safer, but not sure which one to use.
->>
+we can reuse this fucntion on ath9k_htc.
+Now we will need to use common version last_rssi, so switch
+it too.
 
-[...]
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
+ drivers/net/wireless/ath/ath9k/common.c | 62 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  4 +++
+ drivers/net/wireless/ath/ath9k/init.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/recv.c   | 64 +--------------------------------
+ 6 files changed, 69 insertions(+), 66 deletions(-)
 
->> Perhaps WARN_ON() is a bit over the top here, but since this is now
->> more of a logic issue rather than runtime issue I decided to change it
->> from ath10k_warn to WARN_ON(). It's probably still a good idea to make
->> it _ONCE generally, although if you actually get skbuff it's already
->> too late or it should be screaming loudly because someone must've
->> changed the code in an incorrect/incomplete way.
->
-> So I change it to WARN_ON_ONCE(), ok?
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b5ac32c..4ce3787 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -757,7 +757,6 @@ struct ath_softc {
+ #endif
+ 
+ 	struct ath9k_hw_cal_data caldata;
+-	int last_rssi;
+ 
+ #ifdef CONFIG_ATH9K_DEBUGFS
+ 	struct ath9k_debug debug;
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 768c733..7028c52 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,6 +27,68 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
++void ath9k_cmn_process_rssi(struct ath_common *common,
++			    struct ieee80211_hw *hw,
++			    struct ath_rx_status *rx_stats,
++			    struct ieee80211_rx_status *rxs)
++{
++	struct ath_hw *ah = common->ah;
++	int last_rssi;
++	int rssi = rx_stats->rs_rssi;
++	int i, j;
++
++	/*
++	 * RSSI is not available for subframes in an A-MPDU.
++	 */
++	if (rx_stats->rs_moreaggr) {
++		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
++		return;
++	}
++
++	/*
++	 * Check if the RSSI for the last subframe in an A-MPDU
++	 * or an unaggregated frame is valid.
++	 */
++	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
++		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
++		return;
++	}
++
++	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
++		s8 rssi;
++
++		if (!(ah->rxchainmask & BIT(i)))
++			continue;
++
++		rssi = rx_stats->rs_rssi_ctl[i];
++		if (rssi != ATH9K_RSSI_BAD) {
++		    rxs->chains |= BIT(j);
++		    rxs->chain_signal[j] = ah->noise + rssi;
++		}
++		j++;
++	}
++
++	/*
++	 * Update Beacon RSSI, this is used by ANI.
++	 */
++	if (rx_stats->is_mybeacon &&
++	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
++	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
++		ATH_RSSI_LPF(common->last_rssi, rx_stats->rs_rssi);
++		last_rssi = common->last_rssi;
++
++		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
++		if (rssi < 0)
++			rssi = 0;
++
++		ah->stats.avgbrssi = rssi;
++	}
++
++	rxs->signal = ah->noise + rx_stats->rs_rssi;
++}
++EXPORT_SYMBOL(ath9k_cmn_process_rssi);
++
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index eb85e1b..aaf4a9b5 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -42,6 +42,10 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++void ath9k_cmn_process_rssi(struct ath_common *common,
++			    struct ieee80211_hw *hw,
++			    struct ath_rx_status *rx_stats,
++			    struct ieee80211_rx_status *rxs);
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
+ struct ath9k_channel *ath9k_cmn_get_channel(struct ieee80211_hw *hw,
+ 					    struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c36de30..00e0f60 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -534,7 +534,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 
+ 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
+ 
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
++	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5924f72..c3e15f8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1609,7 +1609,7 @@ static void ath9k_set_assoc_state(struct ath_softc *sc,
+ 	common->curaid = bss_conf->aid;
+ 	ath9k_hw_write_associd(sc->sc_ah);
+ 
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
++	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a0ebdd0..5229e63 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -891,68 +891,6 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	return -EINVAL;
+ }
+ 
+-static void ath9k_process_rssi(struct ath_common *common,
+-			       struct ieee80211_hw *hw,
+-			       struct ath_rx_status *rx_stats,
+-			       struct ieee80211_rx_status *rxs)
+-{
+-	struct ath_softc *sc = hw->priv;
+-	struct ath_hw *ah = common->ah;
+-	int last_rssi;
+-	int rssi = rx_stats->rs_rssi;
+-	int i, j;
+-
+-	/*
+-	 * RSSI is not available for subframes in an A-MPDU.
+-	 */
+-	if (rx_stats->rs_moreaggr) {
+-		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
+-		return;
+-	}
+-
+-	/*
+-	 * Check if the RSSI for the last subframe in an A-MPDU
+-	 * or an unaggregated frame is valid.
+-	 */
+-	if (rx_stats->rs_rssi == ATH9K_RSSI_BAD) {
+-		rxs->flag |= RX_FLAG_NO_SIGNAL_VAL;
+-		return;
+-	}
+-
+-	for (i = 0, j = 0; i < ARRAY_SIZE(rx_stats->rs_rssi_ctl); i++) {
+-		s8 rssi;
+-
+-		if (!(ah->rxchainmask & BIT(i)))
+-			continue;
+-
+-		rssi = rx_stats->rs_rssi_ctl[i];
+-		if (rssi != ATH9K_RSSI_BAD) {
+-		    rxs->chains |= BIT(j);
+-		    rxs->chain_signal[j] = ah->noise + rssi;
+-		}
+-		j++;
+-	}
+-
+-	/*
+-	 * Update Beacon RSSI, this is used by ANI.
+-	 */
+-	if (rx_stats->is_mybeacon &&
+-	    ((ah->opmode == NL80211_IFTYPE_STATION) ||
+-	     (ah->opmode == NL80211_IFTYPE_ADHOC))) {
+-		ATH_RSSI_LPF(sc->last_rssi, rx_stats->rs_rssi);
+-		last_rssi = sc->last_rssi;
+-
+-		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+-		if (rssi < 0)
+-			rssi = 0;
+-
+-		ah->stats.avgbrssi = rssi;
+-	}
+-
+-	rxs->signal = ah->noise + rx_stats->rs_rssi;
+-}
+-
+ static void ath9k_process_tsf(struct ath_rx_status *rs,
+ 			      struct ieee80211_rx_status *rxs,
+ 			      u64 tsf)
+@@ -1074,7 +1012,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 		goto exit;
+ 	}
+ 
+-	ath9k_process_rssi(common, hw, rx_stats, rx_status);
++	ath9k_cmn_process_rssi(common, hw, rx_stats, rx_status);
+ 
+ 	rx_status->band = ah->curchan->chan->band;
+ 	rx_status->freq = ah->curchan->chan->center_freq;
+-- 
+1.9.rc1
 
-Sure. Thanks!
-
-
-Michał
