@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38345 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239AbaBRRbD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 12:31:03 -0500
-Message-ID: <530398B6.2060806@broadcom.com> (sfid-20140218_183114_255963_3B608786)
-Date: Tue, 18 Feb 2014 18:30:30 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>,
-	<mathias.kretschmer@fokus.fraunhofer.de>
-CC: <sw@simonwunderlich.de>, <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [net-next v2 3/3] cfg80211: add MPLS and 802.21 classification
-References: <1392656174-14791-4-git-send-email-sw@simonwunderlich.de>	<5302474B.6090609@broadcom.com>	<D53252F45158EF44B1DF124FDC9AF2A35AD9E12C@FEYNMAN.fokus.fraunhofer.de> <20140217.140653.1309552047403078220.davem@davemloft.net>
-In-Reply-To: <20140217.140653.1309552047403078220.davem@davemloft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mout.gmx.net ([212.227.15.19]:56397 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753100AbaBDJ2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:48 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0MFuWk-1Vz1Cd22Le-00EtUE for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:47 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 09/13] ath9k_htc: sync rx_status-> related code with ath9k
+Date: Tue,  4 Feb 2014 10:27:46 +0100
+Message-Id: <1391506070-8636-10-git-send-email-linux@rempel-privat.de> (sfid-20140204_102852_732484_48047908)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2014 08:06 PM, David Miller wrote:
-> From: "Kretschmer, Mathias" <mathias.kretschmer@fokus.fraunhofer.de>
-> Date: Mon, 17 Feb 2014 17:34:34 +0000
-> 
->> Thought so, as well. But it seems that skb->protocol is not properly
->> set when the packet originates from a packet socket.  And in our
->> case we cannot set it to a fixed etherType in the bind() call since
->> we use three different etherTypes on the same socket.
-> 
-> So many things break if the skb->protocol isn't set correctly that I
-> would consider such SKBs mal-formed.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-That was my take as well, but how does the kernel code consider this?
-
-> You can specify the protocol number in the msghdr passed into the
-> send.
-> 
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 8aba265..e36bf61 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -971,6 +971,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ieee80211_hw *hw = priv->hw;
+ 	struct sk_buff *skb = rxbuf->skb;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath_hw *ah = common->ah;
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status rx_stats;
+ 	int hdrlen, padsize;
+@@ -1042,10 +1043,10 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_cmn_process_rssi(common, hw, &rx_stats, rx_status);
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+-	rx_status->band = hw->conf.chandef.chan->band;
+-	rx_status->freq = hw->conf.chandef.chan->center_freq;
+-	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
+-	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
++
++	rx_status->band = ah->curchan->chan->band;
++	rx_status->freq = ah->curchan->chan->center_freq;
++	rx_status->antenna = rx_stats.rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+ 	return true;
+-- 
+1.9.rc1
 
