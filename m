@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4752 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753804AbaBSP2p convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42484 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753374AbaBDPzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 10:28:45 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
- channels
-Date: Wed, 19 Feb 2014 15:28:29 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03338353E@HASMSX106.ger.corp.intel.com> (sfid-20140219_162858_003556_35111C6B)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
- <20140219001458.GF14296@garbanzo.do-not-panic.com>
-In-Reply-To: <20140219001458.GF14296@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 4 Feb 2014 10:55:51 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.14] mac80211: fix virtual monitor interface iteration
+Date: Tue,  4 Feb 2014 16:55:48 +0100
+Message-Id: <1391529348-26807-1-git-send-email-johannes@sipsolutions.net> (sfid-20140204_165555_050785_B19147CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll abandon this change ... 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks,
+During channel context assignment, the interface should
+be found by interface iteration, so we need to assign the
+pointer before the channel context.
 
-Ilan.
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
-> Rodriguez
-> Sent: Wednesday, February 19, 2014 02:15
-> To: Peer, Ilan
-> Cc: linux-wireless@vger.kernel.org; wireless-regdb@lists.infradead.org
-> Subject: Re: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
-> channels
-> 
-> On Mon, Jan 27, 2014 at 12:21:58PM +0200, Ilan Peer wrote:
-> > Allow active scanning and frame injection on channels marked with
-> > IEEE80211_CHAN_NO_IR iff the channel is also marked with
-> > IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
-> > operates in an indoor environment.
-> >
-> > Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-> 
-> I don't see why being indoor should allow to override the NO-IR flag. I do see
-> however why being indoor should enable to IR if you are IR if you have the
-> indoor flag. Enabling to IR if you are indoor for all NO-IR channels is... pretty
-> permissive I do not see the correlation.
-> 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ae2eb14..d6d1f1d 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -418,20 +418,24 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 		return ret;
+ 	}
+ 
++	mutex_lock(&local->iflist_mtx);
++	rcu_assign_pointer(local->monitor_sdata, sdata);
++	mutex_unlock(&local->iflist_mtx);
++
+ 	mutex_lock(&local->mtx);
+ 	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
+ 					IEEE80211_CHANCTX_EXCLUSIVE);
+ 	mutex_unlock(&local->mtx);
+ 	if (ret) {
++		mutex_lock(&local->iflist_mtx);
++		rcu_assign_pointer(local->monitor_sdata, NULL);
++		mutex_unlock(&local->iflist_mtx);
++		synchronize_net();
+ 		drv_remove_interface(local, sdata);
+ 		kfree(sdata);
+ 		return ret;
+ 	}
+ 
+-	mutex_lock(&local->iflist_mtx);
+-	rcu_assign_pointer(local->monitor_sdata, sdata);
+-	mutex_unlock(&local->iflist_mtx);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.8.5.3
 
-Make sense. I did not have such relaxations defined, just thought that similar relaxations could also be used in cases of scanning etc. but I guess this is not always true. 
