@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450AbaBXMXt (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:57260 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754117AbaBDM7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 07:23:49 -0500
-Message-ID: <1393244624.4190.8.camel@jlt4.sipsolutions.net> (sfid-20140224_132351_635714_0370A337)
-Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ
- into info->control.flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@nbd.name
-Date: Mon, 24 Feb 2014 13:23:44 +0100
-In-Reply-To: <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Feb 2014 07:59:32 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: michal.kazior@tieto.com, johannes@sipsolutions.net,
+	kvalo@adurom.com
+Subject: [RCF/WIP 0/3] multi-vif/multi-channel CSA implementation
+Date: Tue,  4 Feb 2014 14:59:24 +0200
+Message-Id: <1391518767-25847-1-git-send-email-luca@coelho.fi> (sfid-20140204_135948_486745_013D765A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
-> Flag IEEE80211_TX_CTL_ASSIGN_SEQ is only used within the tx path while
-> ieee80211_tx_info->control is valid. Therefore this patch moves this flag
-> from info->flags structure into the info->control.flags and renames it to
-> IEEE80211_TX_CTRL_ASSIGN_SEQ.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I'm not convinced this patch is correct, so you need to convince me.
-What happens to software-retry frames? They probably *shouldn't* get a
-new seqno, but if the driver doesn't modify the SKB (say because
-hardware/firmware assigns it) then this is certainly not right.
+Hi,
 
-johannes
+These are the patches I've been working on.  There are still some
+rough edges (check the TODOs) and this is work-in-progress.
+
+The concept seems to work fine, with my very limited testing.
+
+Please comment.  Now it's your chance to get your revenge for my
+annoying comments! :P
+
+--
+Luca.
+
+Luciano Coelho (3):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: implement channel switch for multiple vifs and multiple
+    channels
+  mac80211: add usage of CS channel reservation for STA
+
+ net/mac80211/chan.c        | 190 ++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |   8 ++
+ net/mac80211/mlme.c        |  71 +++++++----------
+ 3 files changed, 207 insertions(+), 62 deletions(-)
+
+-- 
+1.8.5.3
 
