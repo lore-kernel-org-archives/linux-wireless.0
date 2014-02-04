@@ -1,73 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:34533 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbaBLJh7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 04:37:59 -0500
-Received: by mail-pb0-f52.google.com with SMTP id jt11so8991663pbb.25
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 01:37:59 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath10k: set the mactime of ieee80211_rx_status
-Date: Wed, 12 Feb 2014 17:37:46 +0800
-Message-Id: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140212_103804_702837_7FADC902)
+Received: from mout.gmx.net ([212.227.15.19]:54212 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753542AbaBDJ2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:50 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0M2ts6-1VLP2F2cwo-00sgDm for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:49 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 10/13] ath9k: move ath9k_rx_skb_postprocess to common.c
+Date: Tue,  4 Feb 2014 10:27:47 +0100
+Message-Id: <1391506070-8636-11-git-send-email-linux@rempel-privat.de> (sfid-20140204_102856_748062_1382EC5E)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Retrieve the mactime of ieee80211_rx_status based on received
-data frame. The value is obtained from the htt_rx_indication_ppdu
-structure and only available in 32-bit.
+and rename it to ath9k_cmn_rx_skb_postprocess. We will use it
+on ath9k_htc.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    |    1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |    1 +
- drivers/net/wireless/ath/ath10k/txrx.c   |    6 ++++++
- 3 files changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath9k/common.c | 52 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |  5 +++
+ drivers/net/wireless/ath/ath9k/recv.c   | 55 ++-------------------------------
+ 3 files changed, 59 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index b93ae35..bf6b415 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1181,6 +1181,7 @@ struct htt_rx_info {
- 		u32 info1;
- 		u32 info2;
- 	} rate;
-+	u32 tsf;
- 	bool fcs_err;
- 	bool amsdu_more;
- 	bool mic_err;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 820c8ba..4ec2b5d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -989,6 +989,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			info.rate.info0 = rx->ppdu.info0;
- 			info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
- 			info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
-+			info.tsf = __le32_to_cpu(rx->ppdu.tsf);
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 5c0d949..c6dd7f1 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -115,6 +115,58 @@ bool ath9k_cmn_rx_accept(struct ath_common *common,
+ }
+ EXPORT_SYMBOL(ath9k_cmn_rx_accept);
  
- 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index b11e478..4713bdb 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -258,6 +258,12 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	status->band = ch->band;
- 	status->freq = ch->center_freq;
- 
-+	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
-+		/* TSF available only in 32-bit */
-+		status->mactime = info->tsf & 0xffffffff;
-+		status->flag |= RX_FLAG_MACTIME_END;
++void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
++				  struct sk_buff *skb,
++				  struct ath_rx_status *rx_stats,
++				  struct ieee80211_rx_status *rxs,
++				  bool decrypt_error)
++{
++	struct ath_hw *ah = common->ah;
++	struct ieee80211_hdr *hdr;
++	int hdrlen, padpos, padsize;
++	u8 keyix;
++	__le16 fc;
++
++	/* see if any padding is done by the hw and remove it */
++	hdr = (struct ieee80211_hdr *) skb->data;
++	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	fc = hdr->frame_control;
++	padpos = ieee80211_hdrlen(fc);
++
++	/* The MAC header is padded to have 32-bit boundary if the
++	 * packet payload is non-zero. The general calculation for
++	 * padsize would take into account odd header lengths:
++	 * padsize = (4 - padpos % 4) % 4; However, since only
++	 * even-length headers are used, padding can only be 0 or 2
++	 * bytes and we can optimize this a bit. In addition, we must
++	 * not try to remove padding from short control frames that do
++	 * not have payload. */
++	padsize = padpos & 3;
++	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
++		memmove(skb->data + padsize, skb->data, padpos);
++		skb_pull(skb, padsize);
 +	}
 +
- 	ath10k_dbg(ATH10K_DBG_DATA,
- 		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
- 		   info->skb,
++	keyix = rx_stats->rs_keyix;
++
++	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
++	    ieee80211_has_protected(fc)) {
++		rxs->flag |= RX_FLAG_DECRYPTED;
++	} else if (ieee80211_has_protected(fc)
++		   && !decrypt_error && skb->len >= hdrlen + 4) {
++		keyix = skb->data[hdrlen + 3] >> 6;
++
++		if (test_bit(keyix, common->keymap))
++			rxs->flag |= RX_FLAG_DECRYPTED;
++	}
++	if (ah->sw_mgmt_crypto &&
++	    (rxs->flag & RX_FLAG_DECRYPTED) &&
++	    ieee80211_is_mgmt(fc))
++		/* Use software decrypt for management frames. */
++		rxs->flag &= ~RX_FLAG_DECRYPTED;
++}
++EXPORT_SYMBOL(ath9k_cmn_rx_skb_postprocess);
++
+ int ath9k_cmn_process_rate(struct ath_common *common,
+ 			   struct ieee80211_hw *hw,
+ 			   struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index c59d3f5..38b5609 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -48,6 +48,11 @@ bool ath9k_cmn_rx_accept(struct ath_common *common,
+ 			 struct ath_rx_status *rx_stats,
+ 			 bool *decrypt_error,
+ 			 unsigned int rxfilter);
++void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
++				  struct sk_buff *skb,
++				  struct ath_rx_status *rx_stats,
++				  struct ieee80211_rx_status *rxs,
++				  bool decrypt_error);
+ int ath9k_cmn_process_rate(struct ath_common *common,
+ 			   struct ieee80211_hw *hw,
+ 			   struct ath_rx_status *rx_stats,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4dedbc2..076dae1 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -901,57 +901,6 @@ exit:
+ 	return ret;
+ }
+ 
+-static void ath9k_rx_skb_postprocess(struct ath_common *common,
+-				     struct sk_buff *skb,
+-				     struct ath_rx_status *rx_stats,
+-				     struct ieee80211_rx_status *rxs,
+-				     bool decrypt_error)
+-{
+-	struct ath_hw *ah = common->ah;
+-	struct ieee80211_hdr *hdr;
+-	int hdrlen, padpos, padsize;
+-	u8 keyix;
+-	__le16 fc;
+-
+-	/* see if any padding is done by the hw and remove it */
+-	hdr = (struct ieee80211_hdr *) skb->data;
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-	fc = hdr->frame_control;
+-	padpos = ieee80211_hdrlen(fc);
+-
+-	/* The MAC header is padded to have 32-bit boundary if the
+-	 * packet payload is non-zero. The general calculation for
+-	 * padsize would take into account odd header lengths:
+-	 * padsize = (4 - padpos % 4) % 4; However, since only
+-	 * even-length headers are used, padding can only be 0 or 2
+-	 * bytes and we can optimize this a bit. In addition, we must
+-	 * not try to remove padding from short control frames that do
+-	 * not have payload. */
+-	padsize = padpos & 3;
+-	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
+-		memmove(skb->data + padsize, skb->data, padpos);
+-		skb_pull(skb, padsize);
+-	}
+-
+-	keyix = rx_stats->rs_keyix;
+-
+-	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
+-	    ieee80211_has_protected(fc)) {
+-		rxs->flag |= RX_FLAG_DECRYPTED;
+-	} else if (ieee80211_has_protected(fc)
+-		   && !decrypt_error && skb->len >= hdrlen + 4) {
+-		keyix = skb->data[hdrlen + 3] >> 6;
+-
+-		if (test_bit(keyix, common->keymap))
+-			rxs->flag |= RX_FLAG_DECRYPTED;
+-	}
+-	if (ah->sw_mgmt_crypto &&
+-	    (rxs->flag & RX_FLAG_DECRYPTED) &&
+-	    ieee80211_is_mgmt(fc))
+-		/* Use software decrypt for management frames. */
+-		rxs->flag &= ~RX_FLAG_DECRYPTED;
+-}
+-
+ /*
+  * Run the LNA combining algorithm only in these cases:
+  *
+@@ -1101,8 +1050,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			skb_pull(skb, ah->caps.rx_status_len);
+ 
+ 		if (!rs.rs_more)
+-			ath9k_rx_skb_postprocess(common, hdr_skb, &rs,
+-						 rxs, decrypt_error);
++			ath9k_cmn_rx_skb_postprocess(common, hdr_skb, &rs,
++						     rxs, decrypt_error);
+ 
+ 		if (rs.rs_more) {
+ 			RX_STAT_INC(rx_frags);
 -- 
-1.7.9.5
+1.9.rc1
 
