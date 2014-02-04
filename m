@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63183 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752390AbaBRXsD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 18:48:03 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/3] mwifiex: enable obss scan offload feature flag
-Date: Tue, 18 Feb 2014 15:47:57 -0800
-Message-ID: <1392767277-10941-3-git-send-email-bzhao@marvell.com> (sfid-20140219_004817_787131_D82A8DB6)
-In-Reply-To: <1392767277-10941-1-git-send-email-bzhao@marvell.com>
-References: <1392767277-10941-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.15]:50891 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753487AbaBDJ2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:53 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0Meg8W-1VqsV13Y3k-00OGsy for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:52 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 11/13] ath9k_htc: use ath9k_cmn_rx_skb_postprocess
+Date: Tue,  4 Feb 2014 10:27:48 +0100
+Message-Id: <1391506070-8636-12-git-send-email-linux@rempel-privat.de> (sfid-20140204_103006_627402_698889B5)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-We don't perform OBSS scan internally. As we intend to use
-corresponding feature in application, we will enable this flag.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 28 +++------------------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 436ba43..dca2a7b 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2908,7 +2908,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index e36bf61..c30af6d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -974,9 +974,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_hw *ah = common->ah;
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status rx_stats;
+-	int hdrlen, padsize;
+ 	bool decrypt_error;
+-	__le16 fc;
  
- 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_INACTIVITY_TIMER |
--			   NL80211_FEATURE_LOW_PRIORITY_SCAN;
-+			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
-+			   NL80211_FEATURE_NEED_OBSS_SCAN;
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+ 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
+@@ -1000,16 +998,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
+ 	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
  
- 	/* Reserve space for mwifiex specific private data for BSS */
- 	wiphy->bss_priv_size = sizeof(struct mwifiex_bss_priv);
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = hdr->frame_control;
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-
+-	padsize = hdrlen & 3;
+-	if (padsize && skb->len >= hdrlen+padsize+FCS_LEN) {
+-		memmove(skb->data + padsize, skb->data, hdrlen);
+-		skb_pull(skb, padsize);
+-	}
+-
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	rx_status_htc_to_ath(&rx_stats, &rxbuf->rxstatus);
+@@ -1018,23 +1006,13 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, &rx_stats,
+ 			&decrypt_error, priv->rxfilter))
+ 		goto rx_next;
+ 
+-	if (!(rxbuf->rxstatus.rs_status & ATH9K_RXERR_DECRYPT)) {
+-		u8 keyix;
+-		keyix = rxbuf->rxstatus.rs_keyix;
+-		if (keyix != ATH9K_RXKEYIX_INVALID) {
+-			rx_status->flag |= RX_FLAG_DECRYPTED;
+-		} else if (ieee80211_has_protected(fc) &&
+-			   skb->len >= hdrlen + 4) {
+-			keyix = skb->data[hdrlen + 3] >> 6;
+-			if (test_bit(keyix, common->keymap))
+-				rx_status->flag |= RX_FLAG_DECRYPTED;
+-		}
+-	}
+-
++	ath9k_cmn_rx_skb_postprocess(common, skb, &rx_stats,
++				     rx_status, decrypt_error);
+ 
+ 	if (ath9k_cmn_process_rate(common, hw, &rx_stats, rx_status))
+ 		goto rx_next;
 -- 
-1.8.2.3
+1.9.rc1
 
