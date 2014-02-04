@@ -1,86 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:50972 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287AbaBZIo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 03:44:26 -0500
-Received: from [192.168.1.221] ([93.218.100.117]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0Lk81O-1WpzB343J4-00c7IQ for
- <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 09:44:24 +0100
-Message-ID: <530DA962.4050706@rempel-privat.de> (sfid-20140226_094429_245074_23EA90DF)
-Date: Wed, 26 Feb 2014 09:44:18 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:58750 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbaBDHKW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 02:10:22 -0500
+Received: by mail-yk0-f175.google.com with SMTP id q200so45425062ykb.6
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 23:10:21 -0800 (PST)
 MIME-Version: 1.0
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	Sujith Manoharan <sujith@msujith.org>
-Subject: Re: [PATCH 0/7] ath9k|ath9k_htc: remove code dups
-References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="GEiqMPV1C2TkfLfe6PSWxEAujutBWGQXe"
+In-Reply-To: <21232.24855.201543.400943@gargle.gargle.HOWL>
+References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
+	<1391483274-20331-2-git-send-email-sujith@msujith.org>
+	<1391484878.2538.11.camel@joe-AO722>
+	<21232.24855.201543.400943@gargle.gargle.HOWL>
+Date: Tue, 4 Feb 2014 08:03:45 +0100
+Message-ID: <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com> (sfid-20140204_081038_868616_9398A8DD)
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Joe Perches <joe@perches.com>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---GEiqMPV1C2TkfLfe6PSWxEAujutBWGQXe
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
+cannot handle large values because of lost-of-precision.
 
-Hi Sujith,
-
-i need you ACK btw NACK :)
-
-Am 25.02.2014 14:48, schrieb Oleksij Rempel:
-> ath9k code moved to common-init.c and then reused in ath9k_htc.
->=20
-> Oleksij Rempel (7):
->   ath9k: move ath9k_init_channels_rates to common-init
->   ath9k_htc: use ath9k_cmn_init_channels_rates
->   ath9k: move setup_ht_cap to common-init
->   ath9k_htc: use ath9k_cmn_setup_ht_cap
->   ath9k-common: set maxstream=3D1 for ar9271
->   ath9k: move ath9k_reload_chainmask_settings to common
->   ath9k_htc: use ath9k_cmn_reload_chainmask
->=20
->  drivers/net/wireless/ath/ath.h                |   1 +
->  drivers/net/wireless/ath/ath9k/Makefile       |   3 +-
->  drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
->  drivers/net/wireless/ath/ath9k/beacon.c       |   2 +-
->  drivers/net/wireless/ath/ath9k/common-init.c  | 244 ++++++++++++++++++=
-++++++++
->  drivers/net/wireless/ath/ath9k/common-init.h  |  20 +++
->  drivers/net/wireless/ath/ath9k/common.h       |   2 +
->  drivers/net/wireless/ath/ath9k/htc.h          |   1 -
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 176 +-----------------=
--
->  drivers/net/wireless/ath/ath9k/init.c         | 230 +-----------------=
-------
->  drivers/net/wireless/ath/ath9k/main.c         |   2 +-
->  drivers/net/wireless/ath/ath9k/xmit.c         |   3 +-
->  12 files changed, 286 insertions(+), 399 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath9k/common-init.c
->  create mode 100644 drivers/net/wireless/ath/ath9k/common-init.h
->
-
---=20
-Regards,
-Oleksij
-
-
---GEiqMPV1C2TkfLfe6PSWxEAujutBWGQXe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlMNqWIACgkQHwImuRkmbWn8hAD+Knp/OSM30YCzA8Ct77cVw4uo
-VbeLgaYkNyxRzX0EP1AA/R+QDiKBfUnu8iv0esXyOsKtx/JEfqNEqGwmbc3iMdGS
-=2dj7
------END PGP SIGNATURE-----
-
---GEiqMPV1C2TkfLfe6PSWxEAujutBWGQXe--
+IMHO udelay on ARM is broken, because it also cannot work with fast
+ARM processors (where bogomips >= 3355, which is in sight now). It's
+just not broken enought that someone did something against it ...   so
+the current kludge is good enought.
