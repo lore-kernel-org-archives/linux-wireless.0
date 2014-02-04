@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:64748 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbaBWTXD (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38345 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaBDLLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:23:03 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] iwlwifi: dvm: clear IWL_STA_UCODE_INPROGRESS when assoc fails
-Date: Sun, 23 Feb 2014 21:22:52 +0200
-Message-Id: <1393183372-5625-1-git-send-email-egrumbach@gmail.com> (sfid-20140223_202307_997637_FD2C2EAE)
-In-Reply-To: <530A49C8.8060502@gmail.com>
-References: <530A49C8.8060502@gmail.com>
+	Tue, 4 Feb 2014 06:11:54 -0500
+Message-ID: <1391512311.26522.75.camel@porter.coelho.fi> (sfid-20140204_121157_736415_60DC7D22)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 04 Feb 2014 13:11:51 +0200
+In-Reply-To: <1391509992.4134.1.camel@jlt4.sipsolutions.net>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	 <1391508433.26522.61.camel@porter.coelho.fi>
+	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2014-02-04 at 11:33 +0100, Johannes Berg wrote:
+> On Tue, 2014-02-04 at 12:07 +0200, Luca Coelho wrote:
+> 
+> > > Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
+> > > possible (userspace CSA) or cause the switching interface to disconnect,
+> > > rather than *others*??
+> > 
+> > It depends.  And this logic is too complicated to stay in the kernel,
+> > IMHO.  If we are in a GO-follows-STA scenario, we want to disconnect the
+> > GO.  Now, if you have an AP (with tons of STAs connected to it) and a
+> > P2P client gets a CSA for whatever reason, do we really want to stop the
+> > AP?
+> 
+> Well, what I was describing was really only the default policy if
+> userspace didn't do anything useful, which IMHO should really just be:
+> 
+>  * client receives CSA - disconnect if it can't be done
+>  * AP/GO wants CSA - refuse if it can't be done, let userspace sort it
+> out
+> 
+> In the first case, userspace still has the time between receiving the
+> CSA and actually acting on it to make another decision.
 
-We set IWL_STA_UCODE_INPROGRESS flag when we add a station
-and clear it when we send the LQ command for it. But the LQ
-command is sent only when the association succeeds.
-If the association doesn't succeed, we would leave this flag
-set and that wouldn't indicate the station entry as vacant.
+Right, this is okay, but the point is, what happens to the *other*
+interfaces?
 
-This probably fixes:
-https://bugzilla.redhat.com/show_bug.cgi?id=1065663
+What does "it can't be done" mean for the client? If there's a GO in the
+same context and no free contexts for the switch, do we simply
+disconnect the client (and leave the GO hanging in the same channel)? We
+should probably tell the userspace and let it decide.
 
-Cc: <stable@vger.kernel.org>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/sta.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/sta.c b/drivers/net/wireless/iwlwifi/dvm/sta.c
-index c0d070c..9cdd91c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/sta.c
-@@ -590,6 +590,7 @@ void iwl_deactivate_station(struct iwl_priv *priv, const u8 sta_id,
- 			sizeof(priv->tid_data[sta_id][tid]));
- 
- 	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
-+	priv->stations[sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
- 
- 	priv->num_stations--;
- 
--- 
-1.7.9.5
+--
+Luca.
 
