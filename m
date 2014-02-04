@@ -1,58 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44137 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752256AbaBTKHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 05:07:08 -0500
-Date: Thu, 20 Feb 2014 11:09:25 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
-Message-ID: <20140220100924.GF23439@redhat.com> (sfid-20140220_110713_142678_F5A5B76D)
-References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
- <20140220092154.GD23439@redhat.com>
- <1392888468.5073.11.camel@jlt4.sipsolutions.net>
- <20140220094057.GE23439@redhat.com>
- <1392889368.5073.17.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392889368.5073.17.camel@jlt4.sipsolutions.net>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:57271 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754204AbaBDM7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 07:59:33 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: michal.kazior@tieto.com, johannes@sipsolutions.net,
+	kvalo@adurom.com
+Subject: [RCF/WIP 3/3] mac80211: add usage of CS channel reservation for STA
+Date: Tue,  4 Feb 2014 14:59:27 +0200
+Message-Id: <1391518767-25847-4-git-send-email-luca@coelho.fi> (sfid-20140204_135947_313326_79180096)
+In-Reply-To: <1391518767-25847-1-git-send-email-luca@coelho.fi>
+References: <1391518767-25847-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 10:42:48AM +0100, Johannes Berg wrote:
-> On Thu, 2014-02-20 at 10:40 +0100, Stanislaw Gruszka wrote:
-> 
-> > > This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
-> > > clear until after WLAN_STA_PS_DRIVER is?
-> > 
-> > Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
-> > flag currently cleared.
-> > 
-> > tatic void sta_unblock(struct work_struct *wk)
-> > {
-> >         if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
-> >                 local_bh_disable();
-> >                 ieee80211_sta_ps_deliver_wakeup(sta);
-> >                 local_bh_enable();
-> > 
-> > so on TX we should rather check WLAN_STA_PS_DRIVER flag .
-> 
-> But that flag may never be set if the driver doesn't support/use it
-> (which means it's racy, but anyway), so we need to check both.
-> 
-> Now I'm confused though. It seems the intent here was to clear the
-> WLAN_STA_PS_STA flag in something like sta_ps_end() in the RX path, but
-> we don't do that. I'm not sure how it works now, but I know from testing
-> that it does ;-)
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-LOL. There is another call to ieee80211_sta_ps_deliver_wakeup() from
-sta_ps_end(), I missed this somehow. Anyway, we need to check both
-flags.
+For simplicity, and as a proof of concept, only the STA case is
+covered for now.  But the P2P GO and AP cases should also work with
+this new concept.
 
-> Do you think the v2 patch is fine?
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/mlme.c | 71 ++++++++++++++++++++---------------------------------
+ 1 file changed, 27 insertions(+), 44 deletions(-)
 
-Yes, I think it's ok.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6160483..899989c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -927,18 +927,19 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 	if (!ifmgd->associated)
+ 		goto out;
+ 
+-	mutex_lock(&local->mtx);
+-	ret = ieee80211_vif_change_channel(sdata, &changed);
+-	mutex_unlock(&local->mtx);
+-	if (ret) {
+-		sdata_info(sdata,
+-			   "vif channel switch failed, disconnecting\n");
+-		ieee80211_queue_work(&sdata->local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		goto out;
+-	}
+-
++	/* TODO: maybe this if block can be moved to use_reserved()? */
+ 	if (!local->use_chanctx) {
++		mutex_lock(&local->mtx);
++		ret = ieee80211_vif_change_channel(sdata, &changed);
++		mutex_unlock(&local->mtx);
++		if (ret) {
++			sdata_info(sdata,
++				   "vif channel switch failed, disconnecting\n");
++			ieee80211_queue_work(&sdata->local->hw,
++					     &ifmgd->csa_connection_drop_work);
++			goto out;
++		}
++
+ 		local->_oper_chandef = sdata->csa_chandef;
+ 		/* Call "hw_config" only if doing sw channel switch.
+ 		 * Otherwise update the channel directly
+@@ -947,6 +948,17 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 			ieee80211_hw_config(local, 0);
+ 		else
+ 			local->hw.conf.chandef = local->_oper_chandef;
++	} else {
++		mutex_lock(&local->mtx);
++		ret = ieee80211_vif_use_reserved_context(sdata, &changed);
++		mutex_unlock(&local->mtx);
++		if (ret) {
++			sdata_info(sdata,
++				   "using reserved context during channel switch failed, disconnecting\n");
++			ieee80211_queue_work(&sdata->local->hw,
++					     &ifmgd->csa_connection_drop_work);
++			goto out;
++		}
+ 	}
+ 
+ 	/* XXX: shouldn't really modify cfg80211-owned data! */
+@@ -998,7 +1010,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct cfg80211_bss *cbss = ifmgd->associated;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum ieee80211_band current_band;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	int res;
+@@ -1039,44 +1050,16 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
+ 
+-	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+-
+-	mutex_lock(&local->chanctx_mtx);
+-	if (local->use_chanctx) {
+-		u32 num_chanctx = 0;
+-		list_for_each_entry(chanctx, &local->chanctx_list, list)
+-		       num_chanctx++;
+-
+-		if (num_chanctx > 1 ||
+-		    !(local->hw.flags & IEEE80211_HW_CHANCTX_STA_CSA)) {
+-			sdata_info(sdata,
+-				   "not handling chan-switch with channel contexts\n");
+-			ieee80211_queue_work(&local->hw,
+-					     &ifmgd->csa_connection_drop_work);
+-			mutex_unlock(&local->chanctx_mtx);
+-			return;
+-		}
+-	}
+-
+-	if (WARN_ON(!rcu_access_pointer(sdata->vif.chanctx_conf))) {
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		mutex_unlock(&local->chanctx_mtx);
+-		return;
+-	}
+-	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
+-			       struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
++	res = ieee80211_vif_reserve_chanctx(sdata, &csa_ie.chandef);
++	if (res) {
+ 		sdata_info(sdata,
+-			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
++			   "reserving context for channel switch failed, disconnecting\n");
+ 		ieee80211_queue_work(&local->hw,
+ 				     &ifmgd->csa_connection_drop_work);
+-		mutex_unlock(&local->chanctx_mtx);
+ 		return;
+ 	}
+-	mutex_unlock(&local->chanctx_mtx);
+ 
+-	sdata->csa_chandef = csa_ie.chandef;
++	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+ 	sdata->vif.csa_active = true;
+ 
+ 	if (csa_ie.mode)
+-- 
+1.8.5.3
 
-Stanislaw 
