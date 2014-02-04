@@ -1,115 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12365 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753545AbaBYTaq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbaBDMMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 14:30:46 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 10/14] brcmfmac: Use atomic functions for intstatus update.
-Date: Tue, 25 Feb 2014 20:30:34 +0100
-Message-ID: <1393356639-19169-11-git-send-email-arend@broadcom.com> (sfid-20140225_203111_791832_6CAEAB6D)
-In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 4 Feb 2014 07:12:23 -0500
+Message-ID: <1391515939.4134.8.camel@jlt4.sipsolutions.net> (sfid-20140204_131226_648563_CFBD43C0)
+Subject: Re: [RFC 1/2] mac80211: merge STA CSA code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 04 Feb 2014 13:12:19 +0100
+In-Reply-To: <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com> (sfid-20140204_122947_345678_74D2DD3F)
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-2-git-send-email-michal.kazior@tieto.com>
+	 <1391504990.26522.34.camel@porter.coelho.fi>
+	 <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
+	 (sfid-20140204_122947_345678_74D2DD3F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Tue, 2014-02-04 at 12:29 +0100, Michal Kazior wrote:
 
-The intstatus in sdio code can be updated from different
-threads. To protect intstatus access, atomic functions are
-used. One of them is set_bit, but this function is not
-guaranteed atomic on all platforms. The loop was replaced
-with local created OR function.
+> >> +void ieee80211_csa_disconnect(struct ieee80211_sub_if_data *sdata)
+> >> +{
+> >> +     struct ieee80211_local *local = sdata->local;
+> >> +     struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> >> +
+> >> +     switch (sdata->vif.type) {
+> >> +     case NL80211_IFTYPE_STATION:
+> >> +     case NL80211_IFTYPE_P2P_CLIENT:
+> >> +             ieee80211_queue_work(&local->hw,
+> >> +                                  &ifmgd->csa_connection_drop_work);
+> >> +             break;
+> >> +     default:
+> >> +             /* XXX: other iftypes should be halted too */
+> >
+> > Good point.  This case would suck, but we need to do something because
+> > the stations will think that we're on the different channel at this
+> > point.  But maybe instead the userspace should be notified instead of
+> > halting here? It could retry with a count 0, for example.
+> 
+> Ideally cfg80211 should be the one stopping interfaces. This way you'd
+> get AP stopped event (recently done by Johannes) and userspace can do
+> something about (e.g. re-start APs from scratch).
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++++++++++----------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+Well, if mac80211 ends up doing that, we just need an API call to send
+the event and reset cfg80211's info. I didn't add one yet because the
+locking might get a bit tricky, but others actually wanted such an API
+for firmware bugs anyway.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index ac61419..90ff406 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2444,12 +2444,21 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- 	}
- }
- 
-+static void atomic_orr(int val, atomic_t *v)
-+{
-+	int old_val;
-+
-+	old_val = atomic_read(v);
-+	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
-+		old_val = atomic_read(v);
-+}
-+
- static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- {
- 	struct brcmf_core *buscore;
- 	u32 addr;
- 	unsigned long val;
--	int n, ret;
-+	int ret;
- 
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-@@ -2457,7 +2466,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
- 	if (ret != 0)
--		val = 0;
-+		return ret;
- 
- 	val &= bus->hostintmask;
- 	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
-@@ -2466,13 +2475,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	if (val) {
- 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
- 		bus->sdcnt.f1regdata++;
--	}
--
--	if (ret) {
--		atomic_set(&bus->intstatus, 0);
--	} else if (val) {
--		for_each_set_bit(n, &val, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
-+		atomic_orr(val, &bus->intstatus);
- 	}
- 
- 	return ret;
-@@ -2484,7 +2487,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	unsigned long intstatus;
- 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
- 	uint framecnt;			/* Temporary counter of tx/rx frames */
--	int err = 0, n;
-+	int err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2588,10 +2591,8 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	}
- 
- 	/* Keep still-pending events for next scheduling */
--	if (intstatus) {
--		for_each_set_bit(n, &intstatus, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
--	}
-+	if (intstatus)
-+		atomic_orr(intstatus, &bus->intstatus);
- 
- 	brcmf_sdio_clrintr(bus);
- 
--- 
-1.7.10.4
+johannes
 
