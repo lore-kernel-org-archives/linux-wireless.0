@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13770 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752823AbaBSNCD (ORCPT
+Received: from smtprelay0029.hostedemail.com ([216.40.44.29]:48870 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752394AbaBDDen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 08:02:03 -0500
-Date: Wed, 19 Feb 2014 18:18:09 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 1/3 v2] mwl8k: Adding support to access BBP registers
-Message-ID: <20140219124809.GA5357@markyou.marvell.com> (sfid-20140219_140207_812300_5CFC944C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 3 Feb 2014 22:34:43 -0500
+Message-ID: <1391484878.2538.11.camel@joe-AO722> (sfid-20140204_043446_506156_CD9118F2)
+Subject: Re: [PATCH 1/3] ath9k: Fix build error on ARM
+From: Joe Perches <joe@perches.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Date: Mon, 03 Feb 2014 19:34:38 -0800
+In-Reply-To: <1391483274-20331-2-git-send-email-sujith@msujith.org>
+References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
+	 <1391483274-20331-2-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding AP firmware command to access BBP
-regs. This will be used for retrieving
-different counters CCA/RX needed for ACS
+On Tue, 2014-02-04 at 08:37 +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Use mdelay instead of udelay to fix this error:
+> 
+> ERROR: "__bad_udelay" [drivers/net/wireless/ath/ath9k/ath9k_hw.ko] undefined!
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
+> 
+> Reported-by: Josh Boyer <jwboyer@fedoraproject.org>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index fbf43c0..11eab9f 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -1316,7 +1316,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+>  	if (AR_SREV_9300_20_OR_LATER(ah))
+>  		udelay(50);
+>  	else if (AR_SREV_9100(ah))
+> -		udelay(10000);
+> +		mdelay(10);
+>  	else
+>  		udelay(100);
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
+How can this help?
+There are udelays above and below this line.
 
-v2: Freeing allocated buffer before returning.
-	Reported-by: Jonas Gorski <jogo@openwrt.org>
+>  
+> @@ -2051,9 +2051,8 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah)
+>  
+>  	REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
+>  		    AR_RTC_FORCE_WAKE_EN);
+> -
+>  	if (AR_SREV_9100(ah))
+> -		udelay(10000);
+> +		mdelay(10);
+>  	else
+>  		udelay(50);
+>  
 
- drivers/net/wireless/mwl8k.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 4987c3f..ea52ce1 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -396,6 +396,7 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
- #define MWL8K_CMD_SET_HW_SPEC		0x0004
- #define MWL8K_CMD_MAC_MULTICAST_ADR	0x0010
- #define MWL8K_CMD_GET_STAT		0x0014
-+#define MWL8K_CMD_BBP_REG_ACCESS	0x001a
- #define MWL8K_CMD_RADIO_CONTROL		0x001c
- #define MWL8K_CMD_RF_TX_POWER		0x001e
- #define MWL8K_CMD_TX_POWER		0x001f
-@@ -2987,6 +2988,47 @@ static int mwl8k_cmd_set_pre_scan(struct ieee80211_hw *hw)
- }
- 
- /*
-+ * CMD_BBP_REG_ACCESS.
-+ */
-+struct mwl8k_cmd_bbp_reg_access {
-+	struct mwl8k_cmd_pkt header;
-+	__le16 action;
-+	__le16 offset;
-+	u8 value;
-+	u8 rsrv[3];
-+} __packed;
-+
-+static int
-+mwl8k_cmd_bbp_reg_access(struct ieee80211_hw *hw,
-+			 u16 action,
-+			 u16 offset,
-+			 u8 *value)
-+{
-+	struct mwl8k_cmd_bbp_reg_access *cmd;
-+	int rc;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (cmd == NULL)
-+		return -ENOMEM;
-+
-+	cmd->header.code = cpu_to_le16(MWL8K_CMD_BBP_REG_ACCESS);
-+	cmd->header.length = cpu_to_le16(sizeof(*cmd));
-+	cmd->action = cpu_to_le16(action);
-+	cmd->offset = cpu_to_le16(offset);
-+
-+	rc = mwl8k_post_cmd(hw, &cmd->header);
-+
-+	if (!rc)
-+		*value = cmd->value;
-+	else
-+		*value = 0;
-+
-+	free(cmd);
-+
-+	return rc;
-+}
-+
-+/*
-  * CMD_SET_POST_SCAN.
-  */
- struct mwl8k_cmd_set_post_scan {
--- 
-1.8.3.4
 
