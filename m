@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:53834 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbaBZJ6w (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26021 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357AbaBDScS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:58:52 -0500
-Message-ID: <1393408729.13669.1.camel@dubbel> (sfid-20140226_105856_775176_DAE2E6B1)
-Subject: Re: [PATCH v5 3/4] cfg80211/mac80211: move interface counting for
- combination check to mac80211
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Date: Wed, 26 Feb 2014 11:58:49 +0200
-In-Reply-To: <1393331984-21692-4-git-send-email-luca@coelho.fi>
-References: <1393331984-21692-1-git-send-email-luca@coelho.fi>
-	 <1393331984-21692-4-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Feb 2014 13:32:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+References: <cover.1389904166.git.agordeev@redhat.com>
+	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+Date: Tue, 4 Feb 2014 20:32:12 +0200
+In-Reply-To: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> (Alexander
+	Gordeev's message of "Thu, 30 Jan 2014 14:48:20 +0100")
+Message-ID: <87y51qohjn.fsf@kamboji.qca.qualcomm.com> (sfid-20140204_193236_346778_36336E27)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-25 at 14:39 +0200, Luciano Coelho wrote:
-> +		if (sdata_iter == sdata ||
-> +		    rcu_access_pointer(sdata->vif.chanctx_conf) == NULL ||
-> +		    local->hw.wiphy->software_iftypes & BIT(wdev_iter->iftype))
-> +			continue;
+Alexander Gordeev <agordeev@redhat.com> writes:
 
-There is a typo here, we should check sdata_iter->vif.chanctx_conf
-instead of sdata...
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 29fd197..6525e1f 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
+>  		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
+>  		if (ret == 0)
+>  			return 0;
+> -		if (ret > 0)
+> -			pci_disable_msi(ar_pci->pdev);
 
-v6 coming soon.
+I don't understand how this is superfluous. When I read the
+documentation for pci_enable_msi_block() it states that if it can't
+allocate all requests, it will return the number requests it could
+allocate. And in that case we want to fall back other modes.
 
---
-Luca.
+Am I missing something?
 
+-- 
+Kalle Valo
