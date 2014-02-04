@@ -1,111 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:61736 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557AbaBYUx5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbaBDI5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 15:53:57 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so906980wes.16
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 12:53:56 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/10] staging: vt6656: Cleanup PIPEnsBulkInUsbRead
-Date: Tue, 25 Feb 2014 20:51:50 +0000
-Message-Id: <1393361512-13805-8-git-send-email-tvboxspy@gmail.com> (sfid-20140225_215404_215097_269709F7)
-In-Reply-To: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
-References: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 4 Feb 2014 03:57:11 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] mac80211: order IEs in association request correctly
+Date: Tue,  4 Feb 2014 09:57:03 +0100
+Message-Id: <1391504223-12060-3-git-send-email-johannes@sipsolutions.net> (sfid-20140204_095716_626026_E8B26047)
+In-Reply-To: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
+References: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove camel case and white space.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Camel case changes
-pDevice -> priv
-pRCB -> rcb
-ntStatus -> status
-pUrb -> urb
+In association request frames, there may be IEs passed from
+userspace (such as interworking IEs) between HT and VHT, so
+add code to insert those inbetween them.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 52 +++++++++++++++++++---------------------
- 1 file changed, 25 insertions(+), 27 deletions(-)
+ net/mac80211/mlme.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 8092c9a..1477def 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -409,45 +409,43 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
-  *
-  */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6c9ebca..6160483 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -756,6 +756,34 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
+ 				    sband, chan, sdata->smps_mode);
  
--int PIPEnsBulkInUsbRead(struct vnt_private *pDevice, struct vnt_rcb *pRCB)
-+int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
- {
--	int ntStatus = 0;
--	struct urb *pUrb;
-+	int status = 0;
-+	struct urb *urb;
- 
--    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsStartBulkInUsbRead\n");
-+	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsStartBulkInUsbRead\n");
- 
--    if (pDevice->Flags & fMP_DISCONNECTED)
--        return STATUS_FAILURE;
-+	if (priv->Flags & fMP_DISCONNECTED)
-+		return STATUS_FAILURE;
- 
--    pDevice->ulBulkInPosted++;
-+	priv->ulBulkInPosted++;
- 
--	pUrb = pRCB->pUrb;
--    //
--    // Now that we have created the urb, we will send a
--    // request to the USB device object.
--    //
--    if (pRCB->skb == NULL) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"pRCB->skb is null \n");
--        return ntStatus;
--    }
-+	urb = rcb->pUrb;
-+	if (rcb->skb == NULL) {
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"rcb->skb is null\n");
-+		return status;
++	/* if present, add any custom IEs that go before VHT */
++	if (assoc_data->ie_len) {
++		static const u8 before_vht[] = {
++			WLAN_EID_SSID,
++			WLAN_EID_SUPP_RATES,
++			WLAN_EID_EXT_SUPP_RATES,
++			WLAN_EID_PWR_CAPABILITY,
++			WLAN_EID_SUPPORTED_CHANNELS,
++			WLAN_EID_RSN,
++			WLAN_EID_QOS_CAPA,
++			WLAN_EID_RRM_ENABLED_CAPABILITIES,
++			WLAN_EID_MOBILITY_DOMAIN,
++			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
++			WLAN_EID_HT_CAPABILITY,
++			WLAN_EID_BSS_COEX_2040,
++			WLAN_EID_EXT_CAPABILITY,
++			WLAN_EID_QOS_TRAFFIC_CAPA,
++			WLAN_EID_TIM_BCAST_REQ,
++			WLAN_EID_INTERWORKING,
++		};
++		noffset = ieee80211_ie_split(assoc_data->ie, assoc_data->ie_len,
++					     before_vht, ARRAY_SIZE(before_vht),
++					     offset);
++		pos = skb_put(skb, noffset - offset);
++		memcpy(pos, assoc_data->ie + offset, noffset - offset);
++		offset = noffset;
 +	}
- 
--	usb_fill_bulk_urb(pUrb,
--		pDevice->usb,
--		usb_rcvbulkpipe(pDevice->usb, 2),
--		(void *) (pRCB->skb->data),
-+	usb_fill_bulk_urb(urb,
-+		priv->usb,
-+		usb_rcvbulkpipe(priv->usb, 2),
-+		(void *) (rcb->skb->data),
- 		MAX_TOTAL_SIZE_WITH_ALL_HEADERS,
- 		s_nsBulkInUsbIoCompleteRead,
--		pRCB);
-+		rcb);
- 
--	ntStatus = usb_submit_urb(pUrb, GFP_ATOMIC);
--	if (ntStatus != 0) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Submit Rx URB failed %d\n", ntStatus);
-+	status = usb_submit_urb(urb, GFP_ATOMIC);
-+	if (status != 0) {
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+				"Submit Rx URB failed %d\n", status);
- 		return STATUS_FAILURE ;
- 	}
--    pRCB->Ref = 1;
--    pRCB->bBoolInUse= true;
- 
--    return ntStatus;
-+	rcb->Ref = 1;
-+	rcb->bBoolInUse = true;
 +
-+	return status;
- }
- 
- /*
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 		ieee80211_add_vht_ie(sdata, skb, sband,
+ 				     &assoc_data->ap_vht_cap);
 -- 
-1.9.0
+1.8.5.3
 
