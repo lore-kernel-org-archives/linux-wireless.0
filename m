@@ -1,92 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:61198 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbaBCU73 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24430 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753792AbaBDAkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:29 -0500
-Received: by mail-ea0-f180.google.com with SMTP id o10so3927561eaj.25
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:28 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 43/62] iwlwifi: mvm: add D0i3 ref/unref when ap, ibss or p2p_cli vifs are running
-Date: Mon,  3 Feb 2014 22:57:49 +0200
-Message-Id: <1391461088-8082-43-git-send-email-egrumbach@gmail.com> (sfid-20140203_220006_895953_29889D61)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 3 Feb 2014 19:40:39 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 27/30] mwifiex: separate BA params for TDLS link if 11ac is supported
+Date: Mon, 3 Feb 2014 16:40:02 -0800
+Message-ID: <1391474404-8103-8-git-send-email-bzhao@marvell.com> (sfid-20140204_020006_156329_323B48DC)
+In-Reply-To: <1391474404-8103-1-git-send-email-bzhao@marvell.com>
+References: <1391474404-8103-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+From: Avinash Patil <patila@marvell.com>
 
-We don't want to go into D0i3, when P2P_CLI, AP (including
-GO) or IBSS interfaces are running, so take appropriate
-references.
+If TDLS link is 11ac enabled i.e. we as well as peer station
+supports VHT, configure seprate TX & RX window sizes during
+BA setup. So even if BSS does not support 11ac, we can use VHT
+capabilities and higher window sizes on direct link.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |    9 +++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |    2 ++
- 2 files changed, 11 insertions(+)
+ drivers/net/wireless/mwifiex/11n.c           | 22 +++++++++++++++++++---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c | 21 +++++++++++++++++++--
+ 2 files changed, 38 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 64d9efd..827510e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1202,6 +1202,8 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 4812829..2f2b991 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -537,16 +537,32 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
+ {
+ 	struct host_cmd_ds_11n_addba_req add_ba_req;
++	struct mwifiex_sta_node *sta_ptr;
++	u32 tx_win_size = priv->add_ba_param.tx_win_size;
+ 	static u8 dialog_tok;
+ 	int ret;
  
- 			iwl_mvm_sf_update(mvm, vif, false);
- 			iwl_mvm_power_vif_assoc(mvm, vif);
-+			if (vif->p2p)
-+				iwl_mvm_ref(mvm, IWL_MVM_REF_P2P_CLIENT);
- 		} else if (mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
- 			/*
- 			 * If update fails - SF might be running in associated
-@@ -1219,6 +1221,9 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 			ret = iwl_mvm_update_quotas(mvm, NULL);
- 			if (ret)
- 				IWL_ERR(mvm, "failed to update quotas\n");
+ 	dev_dbg(priv->adapter->dev, "cmd: %s: tid %d\n", __func__, tid);
+ 
++	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
++	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
++	    priv->adapter->is_hw_11ac_capable &&
++	    memcmp(priv->cfg_bssid, peer_mac, ETH_ALEN)) {
++		sta_ptr = mwifiex_get_sta_entry(priv, peer_mac);
++		if (!sta_ptr) {
++			dev_warn(priv->adapter->dev,
++				 "BA setup with unknown TDLS peer %pM!\n",
++				peer_mac);
++			return -1;
++		}
++		if (sta_ptr->is_11ac_enabled)
++			tx_win_size = MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE;
++	}
 +
-+			if (vif->p2p)
-+				iwl_mvm_unref(mvm, IWL_MVM_REF_P2P_CLIENT);
- 		}
+ 	add_ba_req.block_ack_param_set = cpu_to_le16(
+ 		(u16) ((tid << BLOCKACKPARAM_TID_POS) |
+-			 (priv->add_ba_param.
+-			  tx_win_size << BLOCKACKPARAM_WINSIZE_POS) |
+-			 IMMEDIATE_BLOCK_ACK));
++		       tx_win_size << BLOCKACKPARAM_WINSIZE_POS |
++		       IMMEDIATE_BLOCK_ACK));
+ 	add_ba_req.block_ack_tmo = cpu_to_le16((u16)priv->add_ba_param.timeout);
  
- 		iwl_mvm_recalc_multicast(mvm);
-@@ -1327,6 +1332,8 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	if (vif->p2p && mvm->p2p_device_vif)
- 		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif);
+ 	++dialog_tok;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 3767399..b361257 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -362,10 +362,28 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
+ 				  *cmd_addba_req)
+ {
+ 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &cmd->params.add_ba_rsp;
++	struct mwifiex_sta_node *sta_ptr;
++	u32 rx_win_size = priv->add_ba_param.rx_win_size;
+ 	u8 tid;
+ 	int win_size;
+ 	uint16_t block_ack_param_set;
  
-+	iwl_mvm_ref(mvm, IWL_MVM_REF_AP_IBSS);
++	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
++	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
++	    priv->adapter->is_hw_11ac_capable &&
++	    memcmp(priv->cfg_bssid, cmd_addba_req->peer_mac_addr, ETH_ALEN)) {
++		sta_ptr = mwifiex_get_sta_entry(priv,
++						cmd_addba_req->peer_mac_addr);
++		if (!sta_ptr) {
++			dev_warn(priv->adapter->dev,
++				 "BA setup with unknown TDLS peer %pM!\n",
++				 cmd_addba_req->peer_mac_addr);
++			return -1;
++		}
++		if (sta_ptr->is_11ac_enabled)
++			rx_win_size = MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE;
++	}
 +
- 	iwl_mvm_bt_coex_vif_change(mvm);
+ 	cmd->command = cpu_to_le16(HostCmd_CMD_11N_ADDBA_RSP);
+ 	cmd->size = cpu_to_le16(sizeof(*add_ba_rsp) + S_DS_GEN);
  
- 	mutex_unlock(&mvm->mutex);
-@@ -1360,6 +1367,8 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
- 
- 	iwl_mvm_bt_coex_vif_change(mvm);
- 
-+	iwl_mvm_unref(mvm, IWL_MVM_REF_AP_IBSS);
-+
- 	/* Need to update the P2P Device MAC (only GO, IBSS is single vif) */
- 	if (vif->p2p && mvm->p2p_device_vif)
- 		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 19a90d1..fe3896c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -243,6 +243,8 @@ enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_UCODE_DOWN,
- 	IWL_MVM_REF_SCAN,
- 	IWL_MVM_REF_ROC,
-+	IWL_MVM_REF_P2P_CLIENT,
-+	IWL_MVM_REF_AP_IBSS,
- 
- 	IWL_MVM_REF_COUNT,
- };
+@@ -382,8 +400,7 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
+ 	block_ack_param_set &= ~IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK;
+ 	/* We donot support AMSDU inside AMPDU, hence reset the bit */
+ 	block_ack_param_set &= ~BLOCKACKPARAM_AMSDU_SUPP_MASK;
+-	block_ack_param_set |= (priv->add_ba_param.rx_win_size <<
+-					     BLOCKACKPARAM_WINSIZE_POS);
++	block_ack_param_set |= rx_win_size << BLOCKACKPARAM_WINSIZE_POS;
+ 	add_ba_rsp->block_ack_param_set = cpu_to_le16(block_ack_param_set);
+ 	win_size = (le16_to_cpu(add_ba_rsp->block_ack_param_set)
+ 					& IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
 -- 
-1.7.9.5
+1.8.2.3
 
