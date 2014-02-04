@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4579 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbaB0Qim (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:34872 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbaBDIvg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:38:42 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: set the mactime of ieee80211_rx_status
-References: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Thu, 27 Feb 2014 18:38:36 +0200
-In-Reply-To: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
-	(Chun-Yeow Yeoh's message of "Wed, 12 Feb 2014 17:37:46 +0800")
-Message-ID: <87ppm8ecj7.fsf@kamboji.qca.qualcomm.com> (sfid-20140227_173845_437345_ACF32CBD)
+	Tue, 4 Feb 2014 03:51:36 -0500
+Received: from smtp28.msg.oleane.net (smtp28.mail.priv [172.17.20.150])
+	by smtp-out06.msg.oleane.net with ESMTP id s148pYco003944
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Feb 2014 09:51:34 +0100
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp28.msg.oleane.net (MTA) with ESMTP id s148Ut7R013219
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Feb 2014 09:30:55 +0100
+Subject: Support wifi tags
+Date: Tue, 4 Feb 2014 09:30:53 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901733656@sbs2003.acksys.local> (sfid-20140204_095139_926355_9835A212)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
+	I will like to use a wifi tag (like aeroscout tags) with my AP.
+At this time, I am using hostapd/mac80211/ath9 software on openwrt.
 
-> Retrieve the mactime of ieee80211_rx_status based on received
-> data frame. The value is obtained from the htt_rx_indication_ppdu
-> structure and only available in 32-bit.
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+	Do you know how I can handle these tags? 
+	To save the battery, the association with the AP is not in
+accordance with the 802.11 standard. Do you know how it works?
 
-Thanks, applied.
+	Thanks for your help.
 
-If we learn better way to do this with full TSF, let's do that in a
-followup patch.
+Cedric Voncken 
 
--- 
-Kalle Valo
