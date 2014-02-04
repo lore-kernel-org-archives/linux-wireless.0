@@ -1,154 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12240 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753553AbaBDAk3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 19:40:29 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 16/30] mwifiex: cleanup in mwifiex_fill_cap_info()
-Date: Mon, 3 Feb 2014 16:40:00 -0800
-Message-ID: <1391474403-8060-6-git-send-email-bzhao@marvell.com> (sfid-20140204_014036_643281_0A4E3FFC)
-In-Reply-To: <1391474403-8060-1-git-send-email-bzhao@marvell.com>
-References: <1391474403-8060-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.15]:63101 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbaBDJ2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:05 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0MTTKZ-1VmBHh2YrP-00SSI3 for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:02 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 00/13] eliminate some ath9k_htc code
+Date: Tue,  4 Feb 2014 10:27:37 +0100
+Message-Id: <1391506070-8636-1-git-send-email-linux@rempel-privat.de> (sfid-20140204_102810_332919_AECE2D19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+This patch set moves most common RX code from ath9k/recv.c to
+common.c without any additional changes and reworks ath9k_htc RX code 
+to make use of new common functions.
+Since ath9k_htc part was more intrusive I made tests in STA and AP modes. No noticeable regressions was introduced. 
+Last patch is important for debugging FW crashes.
 
-Pass 'struct ieee80211_ht_cap' pointer to
-mwifiex_fill_cap_info() instead of
-'struct mwifiex_ie_types_htcap' pointer, because the routine
-internally uses the later one.
-This patch also adds WARN_ON_ONCE check for NULL band.
+Oleksij Rempel (13):
+  ath: add last_rssi to ath_common
+  ath9k: move ath9k_process_rssi to common.c
+  ath9k: move ath9k_process_rate to common.c
+  ath9k: move ath9k_rx_accept to common.c
+  ath9k_htc: add rx header converter to make it usable by ath9k
+  ath9k_htc: use ath9k_cmn_process_rssi
+  ath9k_htc: use ath9k_cmn_process_rate
+  ath9k_htc: use ath9k_cmn_rx_accept
+  ath9k_htc: sync rx_status-> related code with ath9k
+  ath9k: move ath9k_rx_skb_postprocess to common.c
+  ath9k_htc: use ath9k_cmn_rx_skb_postprocess
+  ath9k_htc: remove useless memcpy
+  ath9k_htc: catch fw panic pattern
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c  | 29 +++++++++++++++++------------
- drivers/net/wireless/mwifiex/11n.h  |  4 ++--
- drivers/net/wireless/mwifiex/join.c |  2 +-
- drivers/net/wireless/mwifiex/scan.c |  2 +-
- 4 files changed, 21 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath.h                |   2 +
+ drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
+ drivers/net/wireless/ath/ath9k/common.c       | 244 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h       |  19 ++
+ drivers/net/wireless/ath/ath9k/htc.h          |   1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 176 ++++++-----------
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |  36 ++++
+ drivers/net/wireless/ath/ath9k/htc_hst.h      |  12 ++
+ drivers/net/wireless/ath/ath9k/init.c         |   2 +-
+ drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
+ drivers/net/wireless/ath/ath9k/main.c         |   2 +-
+ drivers/net/wireless/ath/ath9k/recv.c         | 266 ++------------------------
+ 14 files changed, 386 insertions(+), 386 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 0c86751..4812829 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -34,22 +34,26 @@
-  *
-  * RD responder bit to set to clear in the extended capability header.
-  */
--void
--mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
--		      struct mwifiex_ie_types_htcap *ht_cap)
-+int mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
-+			  struct ieee80211_ht_cap *ht_cap)
- {
--	uint16_t ht_ext_cap = le16_to_cpu(ht_cap->ht_cap.extended_ht_cap_info);
-+	uint16_t ht_ext_cap = le16_to_cpu(ht_cap->extended_ht_cap_info);
- 	struct ieee80211_supported_band *sband =
- 					priv->wdev->wiphy->bands[radio_type];
- 
--	ht_cap->ht_cap.ampdu_params_info =
-+	if (WARN_ON_ONCE(!sband)) {
-+		dev_err(priv->adapter->dev, "Invalid radio type!\n");
-+		return -EINVAL;
-+	}
-+
-+	ht_cap->ampdu_params_info =
- 		(sband->ht_cap.ampdu_factor &
- 		 IEEE80211_HT_AMPDU_PARM_FACTOR) |
- 		((sband->ht_cap.ampdu_density <<
- 		 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT) &
- 		 IEEE80211_HT_AMPDU_PARM_DENSITY);
- 
--	memcpy((u8 *) &ht_cap->ht_cap.mcs, &sband->ht_cap.mcs,
-+	memcpy((u8 *)&ht_cap->mcs, &sband->ht_cap.mcs,
- 	       sizeof(sband->ht_cap.mcs));
- 
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
-@@ -57,17 +61,18 @@ mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
- 	     (priv->adapter->sec_chan_offset !=
- 					IEEE80211_HT_PARAM_CHA_SEC_NONE)))
- 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
--		SETHT_MCS32(ht_cap->ht_cap.mcs.rx_mask);
-+		SETHT_MCS32(ht_cap->mcs.rx_mask);
- 
- 	/* Clear RD responder bit */
- 	ht_ext_cap &= ~IEEE80211_HT_EXT_CAP_RD_RESPONDER;
- 
--	ht_cap->ht_cap.cap_info = cpu_to_le16(sband->ht_cap.cap);
--	ht_cap->ht_cap.extended_ht_cap_info = cpu_to_le16(ht_ext_cap);
-+	ht_cap->cap_info = cpu_to_le16(sband->ht_cap.cap);
-+	ht_cap->extended_ht_cap_info = cpu_to_le16(ht_ext_cap);
- 
- 	if (ISSUPP_BEAMFORMING(priv->adapter->hw_dot_11n_dev_cap))
--		ht_cap->ht_cap.tx_BF_cap_info =
--				cpu_to_le32(MWIFIEX_DEF_11N_TX_BF_CAP);
-+		ht_cap->tx_BF_cap_info = cpu_to_le32(MWIFIEX_DEF_11N_TX_BF_CAP);
-+
-+	return 0;
- }
- 
- /*
-@@ -316,7 +321,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
- 		       sizeof(struct ieee_types_header),
- 		       le16_to_cpu(ht_cap->header.len));
- 
--		mwifiex_fill_cap_info(priv, radio_type, ht_cap);
-+		mwifiex_fill_cap_info(priv, radio_type, &ht_cap->ht_cap);
- 
- 		*buffer += sizeof(struct mwifiex_ie_types_htcap);
- 		ret_len += sizeof(struct mwifiex_ie_types_htcap);
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 353032d..fde39fe 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -34,8 +34,8 @@ int mwifiex_cmd_11n_cfg(struct mwifiex_private *priv,
- int mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
- 			       struct mwifiex_bssdescriptor *bss_desc,
- 			       u8 **buffer);
--void mwifiex_fill_cap_info(struct mwifiex_private *, u8 radio_type,
--			   struct mwifiex_ie_types_htcap *);
-+int mwifiex_fill_cap_info(struct mwifiex_private *, u8 radio_type,
-+			  struct ieee80211_ht_cap *);
- int mwifiex_set_get_11n_htcap_cfg(struct mwifiex_private *priv,
- 				  u16 action, int *htcap_cfg);
- void mwifiex_11n_delete_tx_ba_stream_tbl_entry(struct mwifiex_private *priv,
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index d3934c6..34472ea 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -982,7 +982,7 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
- 		       cpu_to_le16(sizeof(struct ieee80211_ht_cap));
- 		radio_type = mwifiex_band_to_radio_type(
- 					priv->adapter->config_bands);
--		mwifiex_fill_cap_info(priv, radio_type, ht_cap);
-+		mwifiex_fill_cap_info(priv, radio_type, &ht_cap->ht_cap);
- 
- 		if (adapter->sec_chan_offset ==
- 					IEEE80211_HT_PARAM_CHA_SEC_NONE) {
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 2ed85a3..ef47fd2 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -957,7 +957,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 				cpu_to_le16(sizeof(struct ieee80211_ht_cap));
- 		radio_type =
- 			mwifiex_band_to_radio_type(priv->adapter->config_bands);
--		mwifiex_fill_cap_info(priv, radio_type, ht_cap);
-+		mwifiex_fill_cap_info(priv, radio_type, &ht_cap->ht_cap);
- 		tlv_pos += sizeof(struct mwifiex_ie_types_htcap);
- 	}
- 
 -- 
-1.8.2.3
+1.9.rc1
 
