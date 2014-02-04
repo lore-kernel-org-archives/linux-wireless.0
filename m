@@ -1,63 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:35468 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812AbaB0Q3t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:29:49 -0500
-Received: by mail-ve0-f172.google.com with SMTP id jx11so4063265veb.31
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 08:29:48 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58320 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933960AbaBDWRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 17:17:52 -0500
+Message-ID: <52F166FD.1040309@redhat.com> (sfid-20140204_231823_806902_E1724E53)
+Date: Tue, 04 Feb 2014 23:17:33 +0100
+From: Daniel Borkmann <dborkman@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
-References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
-	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
-	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
-	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
-	<CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
-Date: Thu, 27 Feb 2014 11:29:48 -0500
-Message-ID: <CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com> (sfid-20140227_172952_536266_36A3667C)
-Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
-From: Tim Nelson <tim.l.nelson@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jesper Dangaard Brouer <jbrouer@redhat.com>
+Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
+References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com> <52F0E771.8070904@fokus.fraunhofer.de> <52F0F86C.3050402@redhat.com> <52F0FA96.7090903@fokus.fraunhofer.de> <52F0FDD9.6060901@openwrt.org>
+In-Reply-To: <52F0FDD9.6060901@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As an example, I have screenshot what you see from the controller:
+On 02/04/2014 03:48 PM, Felix Fietkau wrote:
+> On 2014-02-04 15:35, Mathias Kretschmer wrote:
+>> On 02/04/2014 03:25 PM, Daniel Borkmann wrote:
+>>> On 02/04/2014 02:13 PM, Mathias Kretschmer wrote:
+>>>> On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
+>>>>> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
+>>> ...
+>>>>>> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
+>>>>>> user space using PF_PACKET sockets via RX_RING/TX_RING.
+>>>>>>
+>>>>>> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
+>>>>>> proper optimization for our purposes.
+>>>>>>
+>>>>>> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
+>>>>>> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
+>>>>>> an older AMD Geode LX embedded board (ALiX).
+>>>>>>
+>>>>>> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
+>>>>>> might be an interaction with the ieee80211 sub system.
+>>>>>
+>>>>> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
+>>>>> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
+>>>>> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
+>>>>> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
+>>>>> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
+>>>>> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
+>>>>> be the best option in your case, perhaps you will run into increased power usage
+>>>>> in your NIC as a side-effect?
+>>>>
+>>>> I'm not familiar with the exact implementation details, but from the description
+>>>> of this option, it seems to me that this is exactly what one would want to use if
+>>>> the goal is to send an Ethernet frame out on a particular interface without any
+>>>> further processing by the kernel.
+>>>>
+>>>> Why would this increase the power usage on the NIC ?  Due to a higher achievable
+>>>> packet rate ?  That would be acceptable :)
+>>>
+>>> I'm not too familiar with the ieee80211 sub system, so I let Felix answer side
+>>> effects and if actually the WARN_ON() is needed. ;) PACKET_QDISC_BYPASS is, as
+>>> documented, designed for advanced pktgen resp. traffic generator like scenarios
+>>> where you just sort of "brute force" packets to your NIC to stress test a remote
+>>> machine for further analysis. I don't think it's very useful in your scenario
+>>> when you have a wired/wireless MPLS switch, you rather might want to buffer/queue
+>>> and therefore use qdisc layer instead.
+>>
+>> Hm, I was hoping/assuming that we still get to use hardware queues, if provided by
+>> the driver. The main goal was to avoid any further PF_PACKET framework overhead.
+>>
+>> If the WARN_ON() issue gets solved, we will revisit this option and evaluate its
+>> applicability.
+> The reason for the WARN_ON is probably either the .ndo_select_queue call
+> is not run, or its queue selection result is changed before the frame
+> hits the driver's tx call.
+> This call sets both the queue and the TID (similar to 802.1d tag), which
+> makes it into the packet via 802.11e (WMM, QoS).
+> It is important to the driver that the TID is in sync with the queue
+> selection, if that is not the case, then pending frame counters can get
+> messed up.
+> If you really want to bypass qdisc, make sure that at least
+> ndo_select_queue is called before passing the frame to the netdev.
 
-http://i.imgur.com/tEd701u.jpg
+Ok, thanks for the input, we'll look further into it and eventually come up
+with something.
 
-These are clients actually associating with the AC radio inside the AP.
-
-On Thu, Feb 27, 2014 at 11:27 AM, Tim Nelson <tim.l.nelson@gmail.com> wrote:
-> On a Cisco 5508 controller with a lightweight AP, you can see the
-> protocol the radio the client connects to.  If they are in fact AC
-> capable, you will see them connect to the AC radio inside the AP
-> through the controller.  While I see this with many devices, it never
-> happens under linux.  The AP has multiple radios in it.
+> - Felix
 >
-> On Thu, Feb 27, 2014 at 11:13 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2014-02-27 at 11:10 -0500, Tim Nelson wrote:
->>> Although it is a similar setup, no.  I am able to connect on ALL
->>> radios but the AC radio's on the 3702's.  I encounter no bugs, no loss
->>> of connection.  However, I NEVER connect to the AC radio on the AP.  I
->>> know it works due to my Nexus 5 connecting to the AC radio
->>> immediately.  If the 3702 saw that my adapter was AC capable, it would
->>> use the AC radio and not the A/N.  Also, every other device with
->>> wireless AC connects fine without issue, even the same laptop on it's
->>> Windows 8 partition.
->>
->> All of this doesn't make a lot of sense to me. What do you even mean by
->> "AC radio" in this context? Is there a separate SSID? BSSID? something
->> else?
->>
->>> If it is AC capable, how do I get it to connect to the AC radio's on
->>> the AP?  It is entirely possible it is something Cisco/Linux related
->>> with how they communicate as well.
->>
->> I don't see how the AP would be able to choose where the client
->> connects, without maybe some CCX stuff that Linux doesn't have.
->>
->> johannes
->>
