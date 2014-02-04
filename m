@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34646 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbaBCICT (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:48974 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaBDLPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 03:02:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath9k: Fix TX power calculation
-Date: Mon,  3 Feb 2014 13:31:37 +0530
-Message-Id: <1391414497-17263-1-git-send-email-sujith@msujith.org> (sfid-20140203_090222_222986_889D0BB3)
+	Tue, 4 Feb 2014 06:15:05 -0500
+Message-ID: <1391512500.26522.77.camel@porter.coelho.fi> (sfid-20140204_121508_954738_A22C9096)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 04 Feb 2014 13:15:00 +0200
+In-Reply-To: <1391512311.26522.75.camel@porter.coelho.fi>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	 <1391508433.26522.61.camel@porter.coelho.fi>
+	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
+	 <1391512311.26522.75.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2014-02-04 at 13:11 +0200, Luca Coelho wrote:
+> On Tue, 2014-02-04 at 11:33 +0100, Johannes Berg wrote:
+> > On Tue, 2014-02-04 at 12:07 +0200, Luca Coelho wrote:
+> > 
+> > > > Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
+> > > > possible (userspace CSA) or cause the switching interface to disconnect,
+> > > > rather than *others*??
+> > > 
+> > > It depends.  And this logic is too complicated to stay in the kernel,
+> > > IMHO.  If we are in a GO-follows-STA scenario, we want to disconnect the
+> > > GO.  Now, if you have an AP (with tons of STAs connected to it) and a
+> > > P2P client gets a CSA for whatever reason, do we really want to stop the
+> > > AP?
+> > 
+> > Well, what I was describing was really only the default policy if
+> > userspace didn't do anything useful, which IMHO should really just be:
+> > 
+> >  * client receives CSA - disconnect if it can't be done
+> >  * AP/GO wants CSA - refuse if it can't be done, let userspace sort it
+> > out
+> > 
+> > In the first case, userspace still has the time between receiving the
+> > CSA and actually acting on it to make another decision.
+> 
+> Right, this is okay, but the point is, what happens to the *other*
+> interfaces?
+> 
+> What does "it can't be done" mean for the client? If there's a GO in the
+> same context and no free contexts for the switch, do we simply
+> disconnect the client (and leave the GO hanging in the same channel)? We
+> should probably tell the userspace and let it decide.
 
-The commit, "ath9k_hw: Fix incorrect Tx control power in AR9003 template"
-fixed the incorrect values in the eeprom templates, but if
-boards have already been calibrated with incorrect values,
-they would still be using the wrong TX power. Fix this by assigning
-a default value in such cases.
+...and, if the userspace doesn't react, we disconnect the GO.  I think
+it's safer this way for the GO-follows-STA case.
 
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25243cb..b8daff7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5065,6 +5065,10 @@ static u16 ar9003_hw_get_max_edge_power(struct ar9300_eeprom *eep,
- 			break;
- 		}
- 	}
-+
-+	if (is2GHz && !twiceMaxEdgePower)
-+		twiceMaxEdgePower = 60;
-+
- 	return twiceMaxEdgePower;
- }
- 
--- 
-1.8.5.3
+--
+Luca.
 
