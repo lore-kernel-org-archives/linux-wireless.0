@@ -1,42 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:61090 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbaBSBZQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 20:25:16 -0500
-Received: by mail-lb0-f178.google.com with SMTP id u14so13041496lbd.9
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 17:25:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389108924.4645.14.camel@jlt4.sipsolutions.net>
-References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
- <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com> <1389108924.4645.14.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 18 Feb 2014 17:24:55 -0800
-Message-ID: <CAB=NE6UOT2s84ApFuBbZyjZfGNywV1WeZqHJ6eMtRHzY=15RYA@mail.gmail.com> (sfid-20140219_022521_078743_E2AE658D)
-Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.19]:60908 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753100AbaBDJ2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 04:28:36 -0500
+Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0LqzEB-1VXgiv37ZL-00eZid for
+ <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:34 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 06/13] ath9k_htc: use ath9k_cmn_process_rssi
+Date: Tue,  4 Feb 2014 10:27:43 +0100
+Message-Id: <1391506070-8636-7-git-send-email-linux@rempel-privat.de> (sfid-20140204_102839_476297_4590588E)
+In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 7:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
->> This adds a trigger to review any pending regulatory
->> requests whenever an 802.11 device interface is brought
->> down or up. We use this as an opportunistic trigger
->> for checking the regulatory work queues as otherwise
->> they they're only checked upon an initial regulatory
->> request or when beacon hints are found.
->>
->> This opportunistic mechanism can be used to trigger
->> kicking the queues regulatory queues at any time from
->> userspace without having to change the regulatory state.
->
-> I don't like this. Can't we just have a self-contained timeout on the
-> userspace request instead?
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |  1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |  1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 21 ++-------------------
+ drivers/net/wireless/ath/ath9k/mac.h          |  9 +++------
+ 5 files changed, 7 insertions(+), 26 deletions(-)
 
-Sure I'll add this and send a v2 series.
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 58da346..c75493f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -275,7 +275,6 @@ struct ath9k_htc_rxbuf {
+ };
+ 
+ struct ath9k_htc_rx {
+-	int last_rssi; /* FIXME: per-STA */
+ 	struct list_head rxbuf;
+ 	spinlock_t rxbuflock;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index f4e1de2..9db8aef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -607,6 +607,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+ 
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 
++	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	priv->ah->opmode = NL80211_IFTYPE_STATION;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 608d739..228549a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1457,6 +1457,7 @@ static void ath9k_htc_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 
+ 	if ((vif->type == NL80211_IFTYPE_STATION) && bss_conf->assoc) {
+ 		common->curaid = bss_conf->aid;
++		common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index a3f2201..fcf7f5a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -927,7 +927,6 @@ void ath9k_host_rx_init(struct ath9k_htc_priv *priv)
+ 	ath9k_hw_rxena(priv->ah);
+ 	ath9k_htc_opmode_init(priv);
+ 	ath9k_hw_startpcureceive(priv->ah, test_bit(OP_SCANNING, &priv->op_flags));
+-	priv->rx.last_rssi = ATH_RSSI_DUMMY_MARKER;
+ }
+ 
+ static void ath9k_process_rate(struct ieee80211_hw *hw,
+@@ -1011,7 +1010,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status rx_stats;
+ 	int hdrlen, padsize;
+-	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	__le16 fc;
+ 
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+@@ -1104,24 +1102,9 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
+ 			   rxbuf->rxstatus.rs_flags);
+ 
+-	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
+-	    !rxbuf->rxstatus.rs_moreaggr)
+-		ATH_RSSI_LPF(priv->rx.last_rssi,
+-			     rxbuf->rxstatus.rs_rssi);
+ 
+-	last_rssi = priv->rx.last_rssi;
+-
+-	if (ath_is_mybeacon(common, hdr)) {
+-		s8 rssi = rxbuf->rxstatus.rs_rssi;
+-
+-		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+-
+-		if (rssi < 0)
+-			rssi = 0;
+-
+-		priv->ah->stats.avgbrssi = rssi;
+-	}
++	rx_stats.is_mybeacon = ath_is_mybeacon(common, hdr);
++	ath9k_cmn_process_rssi(common, hw, &rx_stats, rx_status);
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.chandef.chan->band;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 1027137..89df634 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -155,12 +155,8 @@ struct ath_htc_rx_status {
+ 	u8 rs_status;
+ 	u8 rs_phyerr;
+ 	int8_t rs_rssi;
+-	int8_t rs_rssi_ctl0;
+-	int8_t rs_rssi_ctl1;
+-	int8_t rs_rssi_ctl2;
+-	int8_t rs_rssi_ext0;
+-	int8_t rs_rssi_ext1;
+-	int8_t rs_rssi_ext2;
++	int8_t rs_rssi_ctl[3];
++	int8_t rs_rssi_ext[3];
+ 	u8 rs_keyix;
+ 	u8 rs_rate;
+ 	u8 rs_antenna;
+@@ -170,6 +166,7 @@ struct ath_htc_rx_status {
+ 	u8 rs_num_delims;
+ 	u8 rs_flags;
+ 	u8 rs_dummy;
++	/* FIXME: evm* never used? */
+ 	__be32 evm0;
+ 	__be32 evm1;
+ 	__be32 evm2;
+-- 
+1.9.rc1
 
-  Luis
