@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:39526 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752916AbaBOV7H (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920AbaBDI5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Feb 2014 16:59:07 -0500
-Received: by mail-wg0-f47.google.com with SMTP id k14so1265713wgh.26
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 13:59:05 -0800 (PST)
-Message-ID: <1392501535.4022.5.camel@canaries32-MCP7A> (sfid-20140215_225910_586259_D9AFE301)
-Subject: [PATCH 2/3 RESEND] staging: vt6656: remove typedef VIA_PKT_TYPE.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 15 Feb 2014 21:58:55 +0000
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 4 Feb 2014 03:57:11 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] mac80211: order IEs in probe request correctly
+Date: Tue,  4 Feb 2014 09:57:02 +0100
+Message-Id: <1391504223-12060-2-git-send-email-johannes@sipsolutions.net> (sfid-20140204_095717_280762_E9A64B46)
+In-Reply-To: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
+References: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The packet types PK_TYPE_11* are already defined in baseband.h as macros
+From: Johannes Berg <johannes.berg@intel.com>
 
-assign variable as u8 type.
+In probe request frames, the VHT IEs should come before any
+vendor IEs, but after interworking and similar, so add code
+to order them correctly wrt. the IEs passed from userspace.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/device.h | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ net/mac80211/util.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 2bca7c0..c195a9c 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -221,15 +221,6 @@ typedef enum _VIA_BB_TYPE
-     BB_TYPE_11G
- } VIA_BB_TYPE, *PVIA_BB_TYPE;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 503bbce..caa0cd4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1281,13 +1281,32 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	 * that calculates local->scan_ies_len.
+ 	 */
  
--/* 0:11a, 1:11b, 2:11gb (only CCK in BasicRate), 3:11ga(OFDM in BasicRate) */
--typedef enum _VIA_PKT_TYPE
--{
--    PK_TYPE_11A = 0,
--    PK_TYPE_11B,
--    PK_TYPE_11GB,
--    PK_TYPE_11GA
--} VIA_PKT_TYPE, *PVIA_PKT_TYPE;
--
- /*++ NDIS related */
+-	/* add any remaining custom IEs */
++	/* insert custom IEs that go before VHT */
+ 	if (ie && ie_len) {
+-		noffset = ie_len;
++		static const u8 before_vht[] = {
++			WLAN_EID_SSID,
++			WLAN_EID_SUPP_RATES,
++			WLAN_EID_REQUEST,
++			WLAN_EID_EXT_SUPP_RATES,
++			WLAN_EID_DS_PARAMS,
++			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
++			WLAN_EID_HT_CAPABILITY,
++			WLAN_EID_BSS_COEX_2040,
++			WLAN_EID_EXT_CAPABILITY,
++			WLAN_EID_SSID_LIST,
++			WLAN_EID_CHANNEL_USAGE,
++			WLAN_EID_INTERWORKING,
++			/* mesh ID can't happen here */
++			/* 60 GHz can't happen here right now */
++		};
++		noffset = ieee80211_ie_split(ie, ie_len,
++					     before_vht, ARRAY_SIZE(before_vht),
++					     offset);
+ 		if (end - pos < noffset - offset)
+ 			goto out_err;
+ 		memcpy(pos, ie + offset, noffset - offset);
+ 		pos += noffset - offset;
++		offset = noffset;
+ 	}
  
- typedef enum __DEVICE_NDIS_STATUS {
-@@ -550,7 +541,7 @@ struct vnt_private {
+ 	if (sband->vht_cap.vht_supported) {
+@@ -1297,6 +1316,15 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 						 sband->vht_cap.cap);
+ 	}
  
- 	/* Rate */
- 	VIA_BB_TYPE byBBType; /* 0: 11A, 1:11B, 2:11G */
--	VIA_PKT_TYPE byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
-+	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
- 	u16 wBasicRate;
- 	u8 byACKRate;
- 	u8 byTopOFDMBasicRate;
++	/* add any remaining custom IEs */
++	if (ie && ie_len) {
++		noffset = ie_len;
++		if (end - pos < noffset - offset)
++			goto out_err;
++		memcpy(pos, ie + offset, noffset - offset);
++		pos += noffset - offset;
++	}
++
+ 	return pos - buffer;
+  out_err:
+ 	WARN_ONCE(1, "not enough space for preq IEs\n");
 -- 
-1.9.rc1
+1.8.5.3
 
