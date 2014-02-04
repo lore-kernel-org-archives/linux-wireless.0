@@ -1,30 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:63989 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047AbaB0RVC (ORCPT
+Received: from smtprelay0226.hostedemail.com ([216.40.44.226]:47715 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753604AbaBDQgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:21:02 -0500
-Received: by mail-la0-f48.google.com with SMTP id gf5so1873480lab.21
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 09:21:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXffSTA__zwYDzzyHB2B1mLZaL0sXT8prmUvdb-w_QA4_pg@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
- <1393376982-28276-4-git-send-email-mcgrof@do-not-panic.com> <CA+XVXffSTA__zwYDzzyHB2B1mLZaL0sXT8prmUvdb-w_QA4_pg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 27 Feb 2014 09:20:40 -0800
-Message-ID: <CAB=NE6Wv3aKsc_zWk_1qGnzezPtdHKWpTRUPE8Wf2+Jwbbo-2Q@mail.gmail.com> (sfid-20140227_182107_017052_BD20F2B5)
-Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 4 Feb 2014 11:36:41 -0500
+Message-ID: <1391531796.2538.21.camel@joe-AO722> (sfid-20140204_173645_754949_05EA8F72)
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
+From: Joe Perches <joe@perches.com>
+To: Holger Schurig <holgerschurig@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Tue, 04 Feb 2014 08:36:36 -0800
+In-Reply-To: <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
+References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
+	 <1391483274-20331-2-git-send-email-sujith@msujith.org>
+	 <1391484878.2538.11.camel@joe-AO722>
+	 <21232.24855.201543.400943@gargle.gargle.HOWL>
+	 <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 5:21 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> Seems the actual patch is missing?
+On Tue, 2014-02-04 at 08:03 +0100, Holger Schurig wrote:
+> Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
+> cannot handle large values because of lost-of-precision.
+> 
+> IMHO udelay on ARM is broken, because it also cannot work with fast
+> ARM processors (where bogomips >= 3355, which is in sight now). It's
+> just not broken enought that someone did something against it ...   so
+> the current kludge is good enought.
 
-Yeah sorry I sent out a v3.
+Maybe something like this would be better?
 
- Luis
+---
+ arch/arm/include/asm/delay.h | 33 +++++++++++++++++++++++++++++----
+ 1 file changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/include/asm/delay.h b/arch/arm/include/asm/delay.h
+index dff714d..ac33c56 100644
+--- a/arch/arm/include/asm/delay.h
++++ b/arch/arm/include/asm/delay.h
+@@ -15,6 +15,8 @@
+ 
+ #ifndef __ASSEMBLY__
+ 
++#include <linux/printk.h>
++
+ struct delay_timer {
+ 	unsigned long (*read_current_timer)(void);
+ 	unsigned long freq;
+@@ -51,11 +53,34 @@ extern void __bad_udelay(void);
+ #define __udelay(n)		arm_delay_ops.udelay(n)
+ #define __const_udelay(n)	arm_delay_ops.const_udelay(n)
+ 
++#ifdef DEBUG
++#define __udelay_debug_max_delay(n)					\
++do {									\
++	if (n > MAX_UDELAY_MS * 1000) {					\
++		pr_debug("udelay(%d) too large - Convert to mdelay\n", n); \
++		dump_stack();						\
++	}								\
++} while (0)
++#else
++#define __udelay_debug_max_delay(n)					\
++	do {} while (0)
++#endif
++
+ #define udelay(n)							\
+-	(__builtin_constant_p(n) ?					\
+-	  ((n) > (MAX_UDELAY_MS * 1000) ? __bad_udelay() :		\
+-			__const_udelay((n) * UDELAY_MULT)) :		\
+-	  __udelay(n))
++({									\
++	if (__builtin_constant_p(n)) {					\
++		typeof n _n = n;					\
++		while (_n > MAX_UDELAY_MS * 1000) {			\
++			__const_udelay(MAX_UDELAY_MS * 1000 * UDELAY_MULT); \
++			_n -= MAX_UDELAY_MS * 1000;			\
++		}							\
++		if (_n)							\
++			__const_udelay(_n * 1000 * UDELAY_MULT);	\
++	} else {							\
++		__udelay_debug_max_delay(n);				\
++		__udelay(n);						\
++	}								\
++})
+ 
+ /* Loop-based definitions for assembly code. */
+ extern void __loop_delay(unsigned long loops);
+
+
