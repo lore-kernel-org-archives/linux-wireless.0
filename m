@@ -1,82 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48187 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751795AbaBTJck convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:33274 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753940AbaBDM1A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:32:40 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>
-Subject: RE: [PATCH v4 1/5] cfg80211: Add indoor only and GO concurrent
- channel attributes
-Date: Thu, 20 Feb 2014 09:32:37 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03338424D@HASMSX106.ger.corp.intel.com> (sfid-20140220_103246_693750_A2438C54)
-References: <1392824377-18254-1-git-send-email-ilan.peer@intel.com>
- <1392824377-18254-2-git-send-email-ilan.peer@intel.com>
- <20140219161101.GJ14296@garbanzo.do-not-panic.com>
-In-Reply-To: <20140219161101.GJ14296@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 4 Feb 2014 07:27:00 -0500
+Received: by mail-bk0-f49.google.com with SMTP id v15so3172007bkz.8
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 04:26:59 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1391509638.26522.72.camel@porter.coelho.fi>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	<1391431407.4488.9.camel@jlt4.sipsolutions.net>
+	<1391509638.26522.72.camel@porter.coelho.fi>
+Date: Tue, 4 Feb 2014 13:26:58 +0100
+Message-ID: <CA+BoTQ=xoqfyNurLibYTqptYq88uCT2Sna3dVPQue8Uw-XNWvg@mail.gmail.com> (sfid-20140204_132704_661014_6C2EE428)
+Subject: Re: [RFC 0/2] cfg80211: add channel switching awareness
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.
-> > + * @IEEE80211_CHAN_INDOOR_ONLY: Only indoor use is permitted on
-> this channel.
-> > + *	A channel marked with IEEE80211_CHAN_INDOOR_ONLY can only be
-> used when
-> > + *	there is a clear assessment that the device is operating in an indoor
-> > + *	surroundings, i.e., it is connected to AC power (and not through
-> > + *	portable DC inverters) or is under the control of a master that is
-> > + *	acting as an AP and is connected to AC power.
-> > + * @IEEE80211_CHAN_GO_CONCURRENT: GO operation is allowed on this
-> channel if
-> > + *	it's connected concurrently to a BSS on the same channel on the 2
-> GHz
-> > + *	band or to a channel in the same UNII band (on the 5 GHz band), and
-> > + *	IEEE80211_CHAN_RADAR is not set
-> > + *	Instantiating a GO on a channel marked with
-> IEEE80211_CHAN_GO_CONCURRENT
-> > + *	can be done when there is a clear assessment that the device is
-> > + *	operating under the guidance of an authorized master, i.e., setting
-> up a
-> > + *	GO while the device is also connected to an AP with DFS and radar
-> > + *	detection on the UNII band.
-> 
-> 
-> Would make sense to add here a comment indicating what you mentioned
-> on the other thread about userspace being responsible for this verification.
-> In this case the supplicant (wpa_supplicant).
+On 4 February 2014 11:27, Luca Coelho <luca@coelho.fi> wrote:
+> On Mon, 2014-02-03 at 13:43 +0100, Johannes Berg wrote:
+>> On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
+>> > This makes it possible for more elegant channel
+>> > switching behavior by moving the decision up to
+>> > cfg80211.
+>> >
+>> > Until now mac80211 could start channel switching
+>> > internally for STA, mesh and IBSS interfaces
+>> > without userspace interaction. This bypassed
+>> > interface combination checks at the very least.
+>> >
+>> > Now mac80211 requests cfg80211 to channel switch
+>> > an interface, in a similar manner as userspace
+>> > asks cfg80211 for a channel switch. This makes it
+>> > possible to perform interface combination checks
+>> > (albeit it is not implemented yet).
+>>
+>> Couldn't you just return the decision to mac80211? It would also have to
+>> keep track of start/end of the CSA period, I guess, since a few things
+>> that Ilan is working on shouldn't be allowed while the AP announces CSA.
+>
+> mac80211 could keep track of the start/finalize callbacks.  But I don't
+> think that's a good idea, as I mentioned in the other email.
+>
+> I think mac80211 should keep the client CSA control and the userspace
+> should control the host interfaces.  cfg80211 should keep track of the
+> channel switches and be asked if the switch is okay (so it can take the
+> interface combinations and regulatory into consideration).
 
-Sure.
- 
-> >   *	using this channel as the primary or any of the secondary channels
-> >   *	isn't possible
-> > + * @NL80211_FREQUENCY_ATTR_INDOOR_ONLY: Indoor only use is
-> permitted
-> > + *	on this channel in current regulatory domain
-> 
-> I'd prefer the more verbose documentation to go here as this is the
-> userspace API. What you can do is on the IEEE80211_CHAN_INDOOR_ONLY
-> documetnation refer for further information to
-> %NL80211_FREQUENCY_ATTR_INDOOR_ONLY.
-> 
+Why does mac80211 need to keep CSA control? Does it solve anything?
 
-Done.
 
-> > + * @NL80211_FREQUENCY_ATTR_GO_CONCURRENT: GO operation is
-> allowed on this
-> > + *      channel if it's connected concurrently to a BSS on the same channel
-> on
-> > + *      the 2 GHz band or to a channel in the same UNII band (on the 5 GHz
-> > + *      band), and NL80211_FREQUENCY_ATTR_RADAR is not set
-> 
-> Same here.
+> Maybe mac80211 could call a cfg80211_reserve_channel() function? If that
+> call fails, it means the switch cannot be done.  If it succeeds,
+> cfg80211 keeps the reservation.  Same thing if the switch is coming from
+> userspace, nl80211 could call cfg80211_reserve_channel() in the same
+> way.
 
-Done.
+The problem is you need RTNL for this to make any sense (interface
+combinations need it). You can't make a directly callable cfg80211
+function available in mac80211 that takes RTNL. It just won't work.
+The only way I see it, is you need an asynchronous call with a
+callback.
 
-Regards,
 
-Ilan.
-
+Michał
