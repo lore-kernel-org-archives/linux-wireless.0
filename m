@@ -1,42 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:59171 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478AbaBSAbj (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:44123 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbaBDLuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 19:31:39 -0500
-Received: by mail-la0-f46.google.com with SMTP id b8so12808083lan.33
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:31:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 18 Feb 2014 16:31:18 -0800
-Message-ID: <CAB=NE6XXxW4dtP9=xsL_vjiA1kKbRvb3SheVdyrx8jXJXgxU+A@mail.gmail.com> (sfid-20140219_013143_184364_7CBBCCA7)
-Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+	Tue, 4 Feb 2014 06:50:03 -0500
+Message-ID: <1391514600.26522.93.camel@porter.coelho.fi> (sfid-20140204_125007_334254_6B29EAF3)
+Subject: Re: [RFC 1/2] mac80211: merge STA CSA code
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 04 Feb 2014 13:50:00 +0200
+In-Reply-To: <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-2-git-send-email-michal.kazior@tieto.com>
+	 <1391504990.26522.34.camel@porter.coelho.fi>
+	 <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 10:54 AM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> Introduce DFS CAC time as a regd param, configured
-> per REG_RULE and set per channel in cfg80211.
-> DFS CAC time is close connected with regulatory
-> database configuration. Instead of using hardcoded
-> values, get DFS CAC time form regulatory database.
-> Pass DFS CAC time to user mode (mainly for iw reg get,
-> iw list, iw info). Allow setting DFS CAC time via CRDA.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On Tue, 2014-02-04 at 12:29 +0100, Michal Kazior wrote:
+> On 4 February 2014 10:09, Luca Coelho <luca@coelho.fi> wrote:
+> > On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
+> >> +void ieee80211_csa_disconnect(struct ieee80211_sub_if_data *sdata)
+> >> +{
+> >> +     struct ieee80211_local *local = sdata->local;
+> >> +     struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> >> +
+> >> +     switch (sdata->vif.type) {
+> >> +     case NL80211_IFTYPE_STATION:
+> >> +     case NL80211_IFTYPE_P2P_CLIENT:
+> >> +             ieee80211_queue_work(&local->hw,
+> >> +                                  &ifmgd->csa_connection_drop_work);
+> >> +             break;
+> >> +     default:
+> >> +             /* XXX: other iftypes should be halted too */
+> >
+> > Good point.  This case would suck, but we need to do something because
+> > the stations will think that we're on the different channel at this
+> > point.  But maybe instead the userspace should be notified instead of
+> > halting here? It could retry with a count 0, for example.
+> 
+> Ideally cfg80211 should be the one stopping interfaces. This way you'd
+> get AP stopped event (recently done by Johannes) and userspace can do
+> something about (e.g. re-start APs from scratch).
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Yeah, this is a tricky case and the best we can do is probably just stop
+the interface.
 
-Please also send a respective patch follow up (v2) that also addresses
-the intersection of the cac time on the userspace equivalent of the
-intersection.
 
-  Luis
+> >> -int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+> >> -                          struct cfg80211_csa_settings *params)
+> >> +int __ieee80211_channel_switch(struct ieee80211_sub_if_data *sdata,
+> >> +                            struct cfg80211_csa_settings *params)
+> >
+> > Why did you have to split this function? All cases where you call
+> > __ieee80211_channel_switch() you lock->call->unlock anyway.
+> 
+> It was shorter. The function does a bunch of return's so I'd have to
+> do err+goto. Since it asserts sdata lock is held I decided to assert
+> chanctx_mtx is held as well and lock the thing from call sites.
+
+Fair enough.
+
+
+> >> @@ -998,6 +944,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+> >>       if (res)
+> >>               return;
+> >>
+> >> +     /* FIXME: This check should be moved to cfg80211 */
+> >
+> > This is not really related to this patch.
+> >
+> >
+> >>       if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
+> >>                                    IEEE80211_CHAN_DISABLED)) {
+> >>               sdata_info(sdata,
+> 
+> Ideally mac80211 shouldn't be the one checking that - it should be
+> cfg80211, shouldn't it?
+
+Yes, but this patch doesn't change anything regarding this.  In any
+case, it's an informative FIXME, so I guess it can go together with any
+patch (it would be silly to have a separate patch just to add the
+FIXME).  So, fine by me. :)
+
+--
+Luca.
+
