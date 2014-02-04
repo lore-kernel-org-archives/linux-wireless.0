@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:56589 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137AbaBRR1I (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:57160 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbaBDPmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 12:27:08 -0500
-Message-ID: <530397D2.3030207@broadcom.com> (sfid-20140218_182727_241566_CD641207)
-Date: Tue, 18 Feb 2014 18:26:42 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 4 Feb 2014 10:42:35 -0500
+Message-ID: <52F10A68.60606@lwfinger.net> (sfid-20140204_164240_397591_F8DE0759)
+Date: Tue, 04 Feb 2014 09:42:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>, Denys Vlasenko <dvlasenk@redhat.com>
-CC: Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c:
- deinline brcmf_sdio_chip_cr4_enterdl, save 440 bytes
-References: <1392732320-18973-1-git-send-email-dvlasenk@redhat.com> <1392732925.22752.26.camel@joe-AO722> <53039767.1060907@broadcom.com>
-In-Reply-To: <53039767.1060907@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: andrea.merello@gmail.com, Dan Carpenter <dan.carpenter@oracle.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Driver Project <devel@linuxdriverproject.org>
+Subject: Re: rtl8821ae.
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail> <20140202160512.GA4946@redhat.com> <201402021807.37772.s.L-H@gmx.de> <52EFCC66.9020304@lwfinger.net> <20140203201228.GE26722@mwanda> <CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com> <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com> <20140204092836.GG26776@mwanda> <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
+In-Reply-To: <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/18/2014 06:24 PM, Arend van Spriel wrote:
-> On 02/18/2014 03:15 PM, Joe Perches wrote:
->> On Tue, 2014-02-18 at 15:05 +0100, Denys Vlasenko wrote:
->>> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
->>
->> Hi Denys
->>
->> Perhaps these patch subjects would be better without
->> the file path, but shortened to something like:
->>
->> brcmfmac: sdio_chip: deinline function to reduce object size
-> 
-> Indeed, only the driver name prefix is nice to have so
-> 
-> brcmfmac: deinline <func_name> to reduce object size
-> 
-> Given that you are updating sdio_chip.c makes me conclude that you did
-> not make these changes in the wireless-next repository. Can you please
-> resubmit them for wireless-next/master.
+On 02/04/2014 08:41 AM, Andrea Merello wrote:
+> Yes, I attach a cumulative patch for latest version of my work.
+>
+> When I will send this asking for merge in kernel, I will split it in
+> some patches, because I also also included fix and improvements for
+> other already supported cards (not directly related to rtl8187se
+> support).
+>
+> About this, I will produce separate patches for rtl8180 driver if
+> finally the drivers will be merged and also in case I'll split them..
+>
+> Any suggestion/advice will be appreciated :)
+>
+> Thanks
+> Andrea
+>
+> On Tue, Feb 4, 2014 at 10:28 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>> Nice.  Thanks for doing that.  Do you have some patches we could review
+>> of the merged driver?
 
-O, and the patch should be sent to John Linville as he is the wireless
-maintainer.
+Andrea,
 
-> Regards,
-> Arend
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+In the case of the RTL8187SE driver, you only have three chips to deal with, two 
+of them are already in the driver, 802.11g devices are rather simple, and it is 
+extremely unlikely that any new devices will be added. For those reasons, I 
+think it is appropriate to make a combined driver. As there has been quite a bit 
+of testing on the current version, my vote is to stay with it.
+
+I will test the latest revision soon. I'm not sure my laptop will hibernate, but 
+I will test that operation if I can.
+
+Larry
+
 
