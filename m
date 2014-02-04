@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30694 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbaBWHVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 02:21:05 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v5 5/5] cfg80211: Enable GO operation on indoor channels
-Date: Sun, 23 Feb 2014 07:21:02 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033385F5B@HASMSX106.ger.corp.intel.com> (sfid-20140223_082128_679979_E9486072)
-References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
- <1392896671-4288-6-git-send-email-ilan.peer@intel.com>
- <CAB=NE6Vo2WsVc7zwpB3xnRre1MWL2FeQLvqMsheRFXG5hOxwTw@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A033385CFB@HASMSX106.ger.corp.intel.com>
- <CAB=NE6XZ3y_Nf0-9KpJdMjGMDmUTSvsC8jgGBV2iGpaNtAkSGw@mail.gmail.com>
-In-Reply-To: <CAB=NE6XZ3y_Nf0-9KpJdMjGMDmUTSvsC8jgGBV2iGpaNtAkSGw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ve0-f180.google.com ([209.85.128.180]:41800 "EHLO
+	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125AbaBDSAM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Feb 2014 13:00:12 -0500
 MIME-Version: 1.0
+In-Reply-To: <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
+	<20140202160512.GA4946@redhat.com>
+	<201402021807.37772.s.L-H@gmx.de>
+	<52EFCC66.9020304@lwfinger.net>
+	<20140203201228.GE26722@mwanda>
+	<CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com>
+	<CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
+Date: Tue, 4 Feb 2014 10:00:11 -0800
+Message-ID: <CA+55aFyF05NqDrRFnuVmUAwQFQz9k41+exSo1xVz69t_PJakOA@mail.gmail.com> (sfid-20140204_190033_346955_C595C38B)
+Subject: Re: rtl8821ae.
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Driver Project <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBTYXQsIEZlYiAyMiwgMjAxNCBhdCAxMTo1NCBBTSwgUGVlciwgSWxhbiA8aWxhbi5wZWVy
-QGludGVsLmNvbT4gd3JvdGU6DQo+ID4+ID4gIHN0YXRpYyBib29sIGNmZzgwMjExX2dvX3Blcm1p
-c3NpdmVfY2hhbihzdHJ1Y3QNCj4gPj4gY2ZnODAyMTFfcmVnaXN0ZXJlZF9kZXZpY2UgKnJkZXYs
-DQo+ID4+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBp
-ZWVlODAyMTFfY2hhbm5lbA0KPiA+PiA+ICpjaGFuKSBAQCAtNjIxLDggKzYyMywxNCBAQCBzdGF0
-aWMgYm9vbA0KPiA+PiBjZmc4MDIxMV9nb19wZXJtaXNzaXZlX2NoYW4oc3RydWN0IGNmZzgwMjEx
-X3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2LA0KPiA+PiA+ICAgICAgICAgQVNTRVJUX1JUTkwoKTsN
-Cj4gPj4gPg0KPiA+PiA+ICAgICAgICAgaWYgKCFjb25maWdfZW5hYmxlZChDT05GSUdfQ0ZHODAy
-MTFfUkVHX1JFTEFYX05PX0lSKSB8fA0KPiA+PiA+IC0gICAgICAgICAgICEod2lwaHktPnJlZ3Vs
-YXRvcnlfZmxhZ3MgJg0KPiBSRUdVTEFUT1JZX0VOQUJMRV9SRUxBWF9OT19JUikNCj4gPj4gfHwN
-Cj4gPj4gPiAtICAgICAgICAgICAhKGNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fR09fQ09O
-Q1VSUkVOVCkpDQo+ID4+ID4gKyAgICAgICAgICAgISh3aXBoeS0+cmVndWxhdG9yeV9mbGFncyAm
-DQo+IFJFR1VMQVRPUllfRU5BQkxFX1JFTEFYX05PX0lSKSkNCj4gPj4gPiArICAgICAgICAgICAg
-ICAgcmV0dXJuIGZhbHNlOw0KPiA+PiA+ICsNCj4gPj4gPiArICAgICAgIGlmIChyZWd1bGF0b3J5
-X2luZG9vcl9hbGxvd2VkKCkgJiYNCj4gPj4gPiArICAgICAgICAgICAoY2hhbi0+ZmxhZ3MgJiBJ
-RUVFODAyMTFfQ0hBTl9JTkRPT1JfT05MWSkpDQo+ID4+ID4gKyAgICAgICAgICAgICAgIHJldHVy
-biB0cnVlOw0KPiA+PiA+ICsNCj4gPj4gPiArICAgICAgIGlmICghKGNoYW4tPmZsYWdzICYgSUVF
-RTgwMjExX0NIQU5fR09fQ09OQ1VSUkVOVCkpDQo+ID4+ID4gICAgICAgICAgICAgICAgIHJldHVy
-biBmYWxzZTsNCj4gPj4NCj4gPj4gU2hvdWxkbid0IHRoaXMgY2hlY2sgZ28gYmVmb3JlIHRoZSBp
-bmRvb3Igb25lPw0KPiA+Pg0KPiA+DQo+ID4gSSBkbyBub3QgdGhpbmsgc28sIGFzIHRoaXMgcmVs
-YXhhdGlvbnMgaXMgb3J0aG9nb25hbCB0byB0aGUgR08gY29uY3VycmVudCBvbmUuDQo+IEl0IG1l
-YW5zIHRoYXQgSWYgYSBjaGFubmVsIGlzIGVuYWJsZWQgYnV0IG9ubHkgdW5kZXIgaW5kb29yIGFu
-ZCBpbmRvb3INCj4gb3BlcmF0aW9uIGlzIGhpbnRlZCB0aGUgcmVsYXhhdGlvbiByZW1vdmVzIHRo
-ZSBOT19JUiByZXN0cmljdGlvbiBpZiBzdWNoDQo+IGV4aXN0cyAod2l0aG91dCB0aGUgcmVsYXhh
-dGlvbiBpbmRvb3Igb3BlcmF0aW9uIHdvdWxkIGJlICBhbGxvd2VkIGJ1dCBub3QNCj4gZm9yIEdP
-KS4NCj4gDQo+IEFoIHllcywgdGhlIGZpcnN0IGNoZWNrIHJlbWFpbnMgYXMgdGhpcyB0aGVuIHRo
-b3VnaDoNCj4gDQo+IGlmICghY29uZmlnX2VuYWJsZWQoQ09ORklHX0NGRzgwMjExX1JFR19SRUxB
-WF9OT19JUikgfHwNCj4gICAgISh3aXBoeS0+cmVndWxhdG9yeV9mbGFncyAmIFJFR1VMQVRPUllf
-RU5BQkxFX1JFTEFYX05PX0lSKSkNCj4gICAgICAgICAgICAgIHJldHVybiBmYWxzZTsNCj4gDQo+
-IFRoYXQgc2VlbXMgd3JvbmcgZm9yIHRoZSBnZW5lcmFsIGNhc2UuDQo+IA0KDQpTb3JyeSBidXQg
-SSBkbyBub3QgZm9sbG93IC4uLiB3aGF0J3MgdGhlIGJ1Zz8NCg0KVGhhbmtzLA0KDQpJbGFuLg0K
+On Mon, Feb 3, 2014 at 6:22 PM, Andrea Merello <andrea.merello@gmail.com> wrote:
+> Right now I have merged rtl8187se support in rtl8180 driver. But I must
+> admit that I ever been in doubt about whether to produce a separate driver
+> rather than going on merging.
+
+If you've already merged them, and you think it works, keep it that way.
+
+I was just saying that merging drivers isn't necessarily always the
+right thing to do, and can be painful as hell.
+
+                  Linus
