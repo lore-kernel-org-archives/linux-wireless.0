@@ -1,46 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55677 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbaBNTAP (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15143 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753218AbaBDAkT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 14:00:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] crda: Add DESTDIR support in install-libreg* rules in Makefile
-Date: Fri, 14 Feb 2014 13:58:44 -0500
-Message-Id: <1392404324-5153-1-git-send-email-linville@tuxdriver.com> (sfid-20140214_200021_222823_30F92BBF)
+	Mon, 3 Feb 2014 19:40:19 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 05/30] mwifiex: change beacon parameter structure
+Date: Mon, 3 Feb 2014 16:39:59 -0800
+Message-ID: <1391474402-7986-1-git-send-email-bzhao@marvell.com> (sfid-20140204_014029_136383_1A7953B1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- Makefile | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/Makefile b/Makefile
-index 4a351c645bf4..807a53819453 100644
---- a/Makefile
-+++ b/Makefile
-@@ -119,13 +119,13 @@ $(LIBREG): regdb.h reglib.h reglib.c
+'mwifiex_bcn_param' structure contains five parameters which
+are present in beacon buffer in case of legacy scan.
+
+'rssi' field won't be there in this buffer for extended scan.
+Hence 'bssid' and 'rssi' are removed from the structure and it is
+renamed as 'mwifiex_fixed_bcn_param' so that we can have common
+parsing logic later for both.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   |  4 +---
+ drivers/net/wireless/mwifiex/scan.c | 25 +++++++++++++++----------
+ 2 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index d8014c8..9b26790 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1047,9 +1047,7 @@ struct host_cmd_ds_rf_ant_siso {
+ 	__le16 ant_mode;
+ };
  
- install-libreg-headers:
- 	$(NQ) '  INSTALL  libreg-headers'
--	$(Q)mkdir -p $(INCLUDE_DIR)
--	$(Q)cp *.h $(INCLUDE_DIR)/
-+	$(Q)mkdir -p $(DESTDIR)/$(INCLUDE_DIR)
-+	$(Q)cp *.h $(DESTDIR)/$(INCLUDE_DIR)/
+-struct mwifiex_bcn_param {
+-	u8 bssid[ETH_ALEN];
+-	u8 rssi;
++struct mwifiex_fixed_bcn_param {
+ 	__le64 timestamp;
+ 	__le16 beacon_period;
+ 	__le16 cap_info_bitmap;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 0a8a26e..b0be830 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1689,7 +1689,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 		u16 cap_info_bitmap;
+ 		u8 *current_ptr;
+ 		u64 timestamp;
+-		struct mwifiex_bcn_param *bcn_param;
++		struct mwifiex_fixed_bcn_param *bcn_param;
+ 		struct mwifiex_bss_priv *bss_priv;
  
- install-libreg:
- 	$(NQ) '  INSTALL  libreg'
--	$(Q)mkdir -p $(LIBDIR)
--	$(Q)cp $(LIBREG) $(LIBDIR)/
-+	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
-+	$(Q)cp $(LIBREG) $(DESTDIR)/$(LIBDIR)/
- 	$(Q)ldconfig
+ 		if (bytes_left >= sizeof(beacon_size)) {
+@@ -1716,25 +1716,30 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
  
- %.o: %.c regdb.h $(LIBREG)
+ 		curr_bcn_bytes = beacon_size;
+ 
+-		/*
+-		 * First 5 fields are bssid, RSSI, time stamp, beacon interval,
+-		 *   and capability information
++		/* First 5 fields are bssid, RSSI(for legacy scan only),
++		 * time stamp, beacon interval, and capability information
+ 		 */
+-		if (curr_bcn_bytes < sizeof(struct mwifiex_bcn_param)) {
++		if (curr_bcn_bytes < ETH_ALEN + sizeof(u8) +
++		    sizeof(struct mwifiex_fixed_bcn_param)) {
+ 			dev_err(adapter->dev,
+ 				"InterpretIE: not enough bytes left\n");
+ 			continue;
+ 		}
+-		bcn_param = (struct mwifiex_bcn_param *)current_ptr;
+-		current_ptr += sizeof(*bcn_param);
+-		curr_bcn_bytes -= sizeof(*bcn_param);
+ 
+-		memcpy(bssid, bcn_param->bssid, ETH_ALEN);
++		memcpy(bssid, current_ptr, ETH_ALEN);
++		current_ptr += ETH_ALEN;
++		curr_bcn_bytes -= ETH_ALEN;
+ 
+-		rssi = (s32) bcn_param->rssi;
++		rssi = (s32) *(u8 *)current_ptr;
+ 		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
++		current_ptr += sizeof(u8);
++		curr_bcn_bytes -= sizeof(u8);
+ 		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%d\n", rssi);
+ 
++		bcn_param = (struct mwifiex_fixed_bcn_param *)current_ptr;
++		current_ptr += sizeof(*bcn_param);
++		curr_bcn_bytes -= sizeof(*bcn_param);
++
+ 		timestamp = le64_to_cpu(bcn_param->timestamp);
+ 		beacon_period = le16_to_cpu(bcn_param->beacon_period);
+ 
 -- 
-1.8.5.3
+1.8.2.3
 
