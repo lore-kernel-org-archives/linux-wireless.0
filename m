@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36679 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbaBNJDf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 04:03:35 -0500
-Date: Fri, 14 Feb 2014 12:03:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>, Avinash Patil <patila@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: memory corruption in mwifiex_tdls_add_vht_capab()
-Message-ID: <20140214090312.GB13684@elgon.mountain> (sfid-20140214_100350_855962_BFCEC43B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from vsmtp1.tin.it ([212.216.176.141]:38392 "EHLO vsmtp1.tin.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751274AbaBELgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Feb 2014 06:36:43 -0500
+Received: from [192.168.1.103] (62.211.204.225) by vsmtp1.tin.it (8.6.060.28) (authenticated as a_siracusano@tin.it)
+        id 52E62DC700ADE285 for linux-wireless@vger.kernel.org; Wed, 5 Feb 2014 12:30:50 +0100
+Message-ID: <1391599819.4118.3.camel@Core2> (sfid-20140205_123648_303891_D67D3994)
+Subject: Reduce tx power
+From: Giuseppe Siracusano <a_siracusano@tin.it>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 05 Feb 2014 12:30:19 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a typo here because the names are confusingly similar.  The
-intent was sizeof(struct ieee80211_vht_cap) (size 12) but sizeof(struct
-ieee80211_ht_cap) (size 32) was used.
 
-Anway, it's cleaner to just specify the variable instead of the type.
+Hi to all
 
-Fixes: 5f6d5983394f ('mwifiex: add VHT support for TDLS')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Is it possible to set the trasmission power to a value  lower than 1 mW
+(0 dBm) ? If the answer is no, why.  Is there a  phyisical limit in the
+chip or is just a driver limit?
 
-diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
-index 5efd456af571..9d6849f60603 100644
---- a/drivers/net/wireless/mwifiex/tdls.c
-+++ b/drivers/net/wireless/mwifiex/tdls.c
-@@ -180,7 +180,7 @@ static int mwifiex_tdls_add_vht_capab(struct mwifiex_private *priv,
- 	memset(&vht_cap, 0, sizeof(struct ieee80211_vht_cap));
- 
- 	mwifiex_fill_vht_cap_tlv(priv, &vht_cap, priv->curr_bss_params.band);
--	memcpy(pos, &vht_cap, sizeof(struct ieee80211_ht_cap));
-+	memcpy(pos, &vht_cap, sizeof(vht_cap));
- 
- 	return 0;
- }
+I'm trying to simulate a large wireless mesh network using machines that
+are close toghether, so now every machine has the complete "visibility"
+of the network. My goal is to limit the visibility to only a subset of
+nodes. I can not move the machines, and the drivers that I'm using are
+ath5k.
+
+Bye
+
+Giuseppe Siracusano
+
+
