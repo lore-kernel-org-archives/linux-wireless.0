@@ -1,183 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:47007 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715AbaBGFAn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 00:00:43 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 5/7] ath9k: Modify IQ calibration for AR955x
-Date: Fri,  7 Feb 2014 10:29:53 +0530
-Message-Id: <1391749195-24381-6-git-send-email-sujith@msujith.org> (sfid-20140207_060101_483702_15B579C4)
-In-Reply-To: <1391749195-24381-1-git-send-email-sujith@msujith.org>
-References: <1391749195-24381-1-git-send-email-sujith@msujith.org>
+Received: from mga02.intel.com ([134.134.136.20]:37627 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750980AbaBEKuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Feb 2014 05:50:50 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] mac80211: move VHT related RX_FLAG to another variable
+Date: Wed,  5 Feb 2014 12:48:52 +0200
+Message-Id: <1391597333-6398-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140205_115055_110791_B9383CDB)
+In-Reply-To: <1391597333-6398-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1391597333-6398-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ieee80211_rx_status.flags is full. Define a new vht_flag
+variable to be able to set more VHT related flags and make
+room in flags.
 
-IQ calibration post-processing for AR955x is different
-from other chips - instead of just doing it as part
-of AGC calibration once, it is triggered 3 times and
-a median is determined. This patch adds initial support
-for changing the calibration behavior for AR955x.
-
-Also, to simplify things, a helper routine to issue/poll
-AGC calibration is used.
-
-For non-AR955x chips, the iqcal_idx (which will be used
-in subsequent patches) is set to zero.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 81 +++++++++++++++++++--------
- 1 file changed, 59 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rx.c |  4 ++--
+ include/net/mac80211.h                | 23 +++++++++++++++++------
+ net/mac80211/cfg.c                    |  6 +++---
+ net/mac80211/rx.c                     |  9 +++++----
+ net/mac80211/sta_info.h               |  2 ++
+ net/mac80211/util.c                   |  6 +++---
+ 6 files changed, 32 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 6d4cb00..4a02ceb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -23,6 +23,7 @@
- #define MAX_MEASUREMENT	MAX_IQCAL_MEASUREMENT
- #define MAX_MAG_DELTA	11
- #define MAX_PHS_DELTA	10
-+#define MAXIQCAL        3
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index ef727df..fa3c139 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -358,10 +358,10 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 		rx_status.flag |= RX_FLAG_40MHZ;
+ 		break;
+ 	case RATE_MCS_CHAN_WIDTH_80:
+-		rx_status.flag |= RX_FLAG_80MHZ;
++		rx_status.vht_flag |= RX_VHT_FLAG_80MHZ;
+ 		break;
+ 	case RATE_MCS_CHAN_WIDTH_160:
+-		rx_status.flag |= RX_FLAG_160MHZ;
++		rx_status.vht_flag |= RX_VHT_FLAG_160MHZ;
+ 		break;
+ 	}
+ 	if (rate_n_flags & RATE_MCS_SGI_MSK)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cef0f38..83137fb 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -808,9 +808,6 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
+  * @RX_FLAG_VHT: VHT MCS was used and rate_index is MCS index
+  * @RX_FLAG_40MHZ: HT40 (40 MHz) was used
+- * @RX_FLAG_80MHZ: 80 MHz was used
+- * @RX_FLAG_80P80MHZ: 80+80 MHz was used
+- * @RX_FLAG_160MHZ: 160 MHz was used
+  * @RX_FLAG_SHORT_GI: Short guard interval was used
+  * @RX_FLAG_NO_SIGNAL_VAL: The signal strength value is not present.
+  *	Valid only for data frames (mainly A-MPDU)
+@@ -866,9 +863,6 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_AMPDU_DELIM_CRC_KNOWN	= BIT(20),
+ 	RX_FLAG_MACTIME_END		= BIT(21),
+ 	RX_FLAG_VHT			= BIT(22),
+-	RX_FLAG_80MHZ			= BIT(23),
+-	RX_FLAG_80P80MHZ		= BIT(24),
+-	RX_FLAG_160MHZ			= BIT(25),
+ 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
+ 	RX_FLAG_10MHZ			= BIT(28),
+ 	RX_FLAG_5MHZ			= BIT(29),
+@@ -878,6 +872,21 @@ enum mac80211_rx_flags {
+ #define RX_FLAG_STBC_SHIFT		26
  
- struct coeff {
- 	int mag_coeff[AR9300_MAX_CHAINS][MAX_MEASUREMENT];
-@@ -800,7 +801,7 @@ static bool ar9003_hw_calc_iq_corr(struct ath_hw *ah,
- 	if (q_q_coff > 63)
- 		q_q_coff = 63;
- 
--	iqc_coeff[0] = (q_q_coff * 128) + q_i_coff;
-+	iqc_coeff[0] = (q_q_coff * 128) + (0x7f & q_i_coff);
- 
- 	ath_dbg(common, CALIBRATE, "tx chain %d: iq corr coeff=%x\n",
- 		chain_idx, iqc_coeff[0]);
-@@ -831,7 +832,7 @@ static bool ar9003_hw_calc_iq_corr(struct ath_hw *ah,
- 	if (q_q_coff > 63)
- 		q_q_coff = 63;
- 
--	iqc_coeff[1] = (q_q_coff * 128) + q_i_coff;
-+	iqc_coeff[1] = (q_q_coff * 128) + (0x7f & q_i_coff);
- 
- 	ath_dbg(common, CALIBRATE, "rx chain %d: iq corr coeff=%x\n",
- 		chain_idx, iqc_coeff[1]);
-@@ -994,7 +995,9 @@ static bool ar9003_hw_tx_iq_cal_run(struct ath_hw *ah)
- 	return true;
+ /**
++ * enum mac80211_rx_vht_flags - receive VHT flags
++ *
++ * These flags are used with the @vht_flag member of
++ *	&struct ieee80211_rx_status.
++ * @RX_VHT_FLAG_80MHZ: 80 MHz was used
++ * @RX_VHT_FLAG_80P80MHZ: 80+80 MHz was used
++ * @RX_VHT_FLAG_160MHZ: 160 MHz was used
++ */
++enum mac80211_rx_vht_flags {
++	RX_VHT_FLAG_80MHZ		= BIT(0),
++	RX_VHT_FLAG_80P80MHZ		= BIT(1),
++	RX_VHT_FLAG_160MHZ		= BIT(2),
++};
++
++/**
+  * struct ieee80211_rx_status - receive status
+  *
+  * The low-level driver should provide this information (the subset
+@@ -902,6 +911,7 @@ enum mac80211_rx_flags {
+  *	HT or VHT is used (%RX_FLAG_HT/%RX_FLAG_VHT)
+  * @vht_nss: number of streams (VHT only)
+  * @flag: %RX_FLAG_*
++ * @vht_flag: %RX_VHT_FLAG_*
+  * @rx_flags: internal RX flags for mac80211
+  * @ampdu_reference: A-MPDU reference number, must be a different value for
+  *	each A-MPDU but the same for each subframe within one A-MPDU
+@@ -913,6 +923,7 @@ struct ieee80211_rx_status {
+ 	u32 ampdu_reference;
+ 	u32 flag;
+ 	u16 freq;
++	u8 vht_flag;
+ 	u8 rate_idx;
+ 	u8 vht_nss;
+ 	u8 rx_flags;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e410dff..6fd7bcc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -451,11 +451,11 @@ void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
+ 		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+ 	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
+ 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	if (sta->last_rx_rate_flag & RX_FLAG_80MHZ)
++	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_80MHZ)
+ 		rinfo->flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
+-	if (sta->last_rx_rate_flag & RX_FLAG_80P80MHZ)
++	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_80P80MHZ)
+ 		rinfo->flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
+-	if (sta->last_rx_rate_flag & RX_FLAG_160MHZ)
++	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_160MHZ)
+ 		rinfo->flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
  }
  
--static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
-+static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah,
-+					  int iqcal_idx,
-+					  bool is_reusable)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	const u32 txiqcal_status[AR9300_MAX_CHAINS] = {
-@@ -1413,7 +1416,7 @@ skip_tx_iqcal:
- 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5dc0661..72ed9ef 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -321,7 +321,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
  
- 	if (txiqcal_done)
--		ar9003_hw_tx_iq_cal_post_proc(ah, is_reusable);
-+		ar9003_hw_tx_iq_cal_post_proc(ah, 0, is_reusable);
- 	else if (caldata && test_bit(TXIQCAL_DONE, &caldata->cal_flags))
- 		ar9003_hw_tx_iq_cal_reload(ah);
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_VHT);
+ 		/* known field - how to handle 80+80? */
+-		if (status->flag & RX_FLAG_80P80MHZ)
++		if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
+ 			known &= ~IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
+ 		put_unaligned_le16(known, pos);
+ 		pos += 2;
+@@ -330,11 +330,11 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			*pos |= IEEE80211_RADIOTAP_VHT_FLAG_SGI;
+ 		pos++;
+ 		/* bandwidth */
+-		if (status->flag & RX_FLAG_80MHZ)
++		if (status->vht_flag & RX_VHT_FLAG_80MHZ)
+ 			*pos++ = 4;
+-		else if (status->flag & RX_FLAG_80P80MHZ)
++		else if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
+ 			*pos++ = 0; /* marked not known above */
+-		else if (status->flag & RX_FLAG_160MHZ)
++		else if (status->vht_flag & RX_VHT_FLAG_160MHZ)
+ 			*pos++ = 11;
+ 		else if (status->flag & RX_FLAG_40MHZ)
+ 			*pos++ = 1;
+@@ -1218,6 +1218,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 			if (ieee80211_is_data(hdr->frame_control)) {
+ 				sta->last_rx_rate_idx = status->rate_idx;
+ 				sta->last_rx_rate_flag = status->flag;
++				sta->last_rx_rate_vht_flag = status->vht_flag;
+ 				sta->last_rx_rate_vht_nss = status->vht_nss;
+ 			}
+ 		}
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 49f2aa3..63d7fb4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -261,6 +261,7 @@ struct ieee80211_tx_latency_stat {
+  *	"the" transmit rate
+  * @last_rx_rate_idx: rx status rate index of the last data packet
+  * @last_rx_rate_flag: rx status flag of the last data packet
++ * @last_rx_rate_vht_flag: rx status vht flag of the last data packet
+  * @last_rx_rate_vht_nss: rx status nss of last data packet
+  * @lock: used for locking all fields that require locking, see comments
+  *	in the header file.
+@@ -397,6 +398,7 @@ struct sta_info {
+ 	struct ieee80211_tx_rate last_tx_rate;
+ 	int last_rx_rate_idx;
+ 	u32 last_rx_rate_flag;
++	u32 last_rx_rate_vht_flag;
+ 	u8 last_rx_rate_vht_nss;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
  
-@@ -1459,6 +1462,29 @@ skip_tx_iqcal:
- 	return true;
- }
- 
-+static bool do_ar9003_agc_cal(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	bool status;
-+
-+	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-+		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-+		  AR_PHY_AGC_CONTROL_CAL);
-+
-+	status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
-+			       AR_PHY_AGC_CONTROL_CAL,
-+			       0, AH_WAIT_TIMEOUT);
-+	if (!status) {
-+		ath_dbg(common, CALIBRATE,
-+			"offset calibration failed to complete in %d ms,"
-+			"noisy environment?\n",
-+			AH_WAIT_TIMEOUT / 1000);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 				   struct ath9k_channel *chan)
- {
-@@ -1467,6 +1493,7 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 	bool txiqcal_done = false;
- 	bool status = true;
- 	bool run_agc_cal = false, sep_iq_cal = false;
-+	int i = 0;
- 
- 	/* Use chip chainmask only for calibration */
- 	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
-@@ -1521,27 +1548,37 @@ skip_tx_iqcal:
- 		if (AR_SREV_9330_11(ah))
- 			ar9003_hw_manual_peak_cal(ah, 0, IS_CHAN_2GHZ(chan));
- 
--		/* Calibrate the AGC */
--		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
--			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
--			  AR_PHY_AGC_CONTROL_CAL);
--
--		/* Poll for offset calibration complete */
--		status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
--				       AR_PHY_AGC_CONTROL_CAL,
--				       0, AH_WAIT_TIMEOUT);
--	}
-+		/*
-+		 * For non-AR9550 chips, we just trigger AGC calibration
-+		 * in the HW, poll for completion and then process
-+		 * the results.
-+		 *
-+		 * For AR955x, we run it multiple times and use
-+		 * median IQ correction.
-+		 */
-+		if (!AR_SREV_9550(ah)) {
-+			status = do_ar9003_agc_cal(ah);
-+			if (!status)
-+				return false;
- 
--	if (!status) {
--		ath_dbg(common, CALIBRATE,
--			"offset calibration failed to complete in %d ms; noisy environment?\n",
--			AH_WAIT_TIMEOUT / 1000);
--		return false;
-+			if (txiqcal_done)
-+				ar9003_hw_tx_iq_cal_post_proc(ah, 0, false);
-+		} else {
-+			if (!txiqcal_done) {
-+				status = do_ar9003_agc_cal(ah);
-+				if (!status)
-+					return false;
-+			} else {
-+				for (i = 0; i < MAXIQCAL; i++) {
-+					status = do_ar9003_agc_cal(ah);
-+					if (!status)
-+						return false;
-+					ar9003_hw_tx_iq_cal_post_proc(ah, i, false);
-+				}
-+			}
-+		}
- 	}
- 
--	if (txiqcal_done)
--		ar9003_hw_tx_iq_cal_post_proc(ah, false);
--
- 	/* Revert chainmask to runtime parameters */
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
- 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index bc0b2b2..38813ed 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2300,11 +2300,11 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 		ri.nss = status->vht_nss;
+ 		if (status->flag & RX_FLAG_40MHZ)
+ 			ri.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+-		if (status->flag & RX_FLAG_80MHZ)
++		if (status->vht_flag & RX_VHT_FLAG_80MHZ)
+ 			ri.flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
+-		if (status->flag & RX_FLAG_80P80MHZ)
++		if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
+ 			ri.flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
+-		if (status->flag & RX_FLAG_160MHZ)
++		if (status->vht_flag & RX_VHT_FLAG_160MHZ)
+ 			ri.flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
+ 		if (status->flag & RX_FLAG_SHORT_GI)
+ 			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
 -- 
-1.8.5.3
+1.8.3.2
 
