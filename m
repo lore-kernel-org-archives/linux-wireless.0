@@ -1,95 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:46785 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181AbaBYJNg (ORCPT
+Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:60729 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752155AbaBEPFT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 04:13:36 -0500
-Received: by mail-oa0-f52.google.com with SMTP id i4so101540oah.39
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 01:13:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5306E599.7020605@wwwdotorg.org>
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
-	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
-	<53062F97.3050407@wwwdotorg.org>
-	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
-	<5306E599.7020605@wwwdotorg.org>
-Date: Tue, 25 Feb 2014 10:13:35 +0100
-Message-ID: <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com> (sfid-20140225_101409_206693_80E49C0B)
-Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Cc: Chen-Yu Tsai <wens@csie.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
+	Wed, 5 Feb 2014 10:05:19 -0500
+Message-ID: <1391612715.2538.84.camel@joe-AO722> (sfid-20140205_160526_658835_99A5C13F)
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
+From: Joe Perches <joe@perches.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Gross <mark.gross@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 05 Feb 2014 07:05:15 -0800
+In-Reply-To: <20140205142126.GR26684@n2100.arm.linux.org.uk>
+References: <1391484878.2538.11.camel@joe-AO722>
+	 <21232.24855.201543.400943@gargle.gargle.HOWL>
+	 <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
+	 <1391531796.2538.21.camel@joe-AO722>
+	 <20140205115035.GO26684@n2100.arm.linux.org.uk>
+	 <1391603566.2538.63.camel@joe-AO722>
+	 <20140205124127.GP26684@n2100.arm.linux.org.uk>
+	 <1391605494.2538.68.camel@joe-AO722>
+	 <20140205133956.GQ26684@n2100.arm.linux.org.uk>
+	 <1391608993.2538.74.camel@joe-AO722>
+	 <20140205142126.GR26684@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 6:35 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-> On 02/20/2014 06:55 PM, Chen-Yu Tsai wrote:
+On Wed, 2014-02-05 at 14:21 +0000, Russell King - ARM Linux wrote:
+> On Wed, Feb 05, 2014 at 06:03:13AM -0800, Joe Perches wrote:
+> > On Wed, 2014-02-05 at 13:39 +0000, Russell King - ARM Linux wrote:
+> > > On Wed, Feb 05, 2014 at 05:04:54AM -0800, Joe Perches wrote:
+> > > > On Wed, 2014-02-05 at 12:41 +0000, Russell King - ARM Linux wrote:
+> > > > > On Wed, Feb 05, 2014 at 04:32:46AM -0800, Joe Perches wrote:
+> > > > > > Apparently, people just convert stupidly large udelay()s
+> > > > > > to mdelay and not be bothered.
+> > > > > 
+> > > > > And that's the correct answer.  Having udelay(10000) rather than mdelay(10)
+> > > > > is a sign that they weren't paying that much attention when writing the
+> > > > > code.
+> > > > 
+> > > > Not really.
+> > []
+> > > > It's not so much not paying attention as not
+> > > > knowing ARM is broken for large udelay().
+> > > 
+> > > And now read my suggestion about how to avoid the "not knowing" problem. :)
+> > 
+> > I'd read it already.  I didn't and don't disagree.
+> 
+> Please explain /why/ you don't agree.
 
->> That's correct. However using con_id to pass this results in different
->> behavior across DT and ACPI. A better way is to export the labeling
->> function so consumers can set meaningful labels themselves.
->
-> But this code is the consumer of those GPIOs. IF the parameter to
-> devm_gpiod_get_index() isn't intended to be used, why does it exist?
+Please reread what I wrote.
 
-Kerneldoc says:
+We agree a lot more than you seem to think.
 
-/**
- * gpiod_get_index - obtain a GPIO from a multi-index GPIO function
- * @dev:        GPIO consumer, can be NULL for system-global GPIOs
- * @con_id:     function within the GPIO consumer
- * @idx:        index of the GPIO to obtain in the consumer
- *
+> > I still think adding a #warning on large static udelay()s
+> > would be sensible.  Maybe adding another option like
+> > #define UDELAY_TOO_BIG_I_KNOW_ALREADY_DONT_BOTHER_ME
+> > guard to avoid seeing the #warning when there's no other
+> > option.
+> 
+> How does that help?  It's /not/ a warning situation - if you ask for
+> udelay(10000) on ARM, you will /not/ get a 10ms delay.  You'll instead
+> get something much shorter because the arithmetic will overflow.
 
-Basically it is just exposing the fact that of_find_gpio() and
-acpi_find_gpio() both take a con_id as argument.
+> Now, you could argue that maybe ARM's udelay() implementation should
+> know about this and implement a loop around the underlying udelay()
+> implementation to achieve it,
 
-If we drill into this, we find that it is used to conjure the
-arbitrary string before the gpios in the DT case, like:
+I suggested something like that was possible.
 
-foo-gpios = <...>;
+> and I might agree with you - but I
+> don't for one very simple reason: we /already/ have such an
+> implementation.  It's called mdelay():
 
-As in tegra30-beaver.dts...
+I think mdelay should be for the case where the range
+is too big for a udelay.  I think arm's 11 bit range
+is unfortunately small.
 
-    sdhci@78000000 {
-            status = "okay";
-            cd-gpios = <&gpio TEGRA_GPIO(I, 5) GPIO_ACTIVE_LOW>;
-            wp-gpios = <&gpio TEGRA_GPIO(T, 3) GPIO_ACTIVE_HIGH>;
-            power-gpios = <&gpio TEGRA_GPIO(D, 7) GPIO_ACTIVE_HIGH>;
-            bus-width = <4>;
-    };
+I think we agree be nice to get a generic compiler
+#warning when a __builtin_constant_p value is too large
+and a ratelimited dmesg/warning for the runtime case.
 
-Instead of passing the GPIOs as index 0,1,2 they are named
-and I do admit this has a nice "things are under control" aspect
-to it.
 
-In the ACPI case the con_id is not used for anything.
-
-So it is basically there to satisfy the habit in some device
-tree bindings to name gpio arrays instead of just passing gpios = <...>;
-(The latter should be encouraged going forward.)
-
-As DT is ABI we need to keep this forever, and driver may need to
-look for foo-gpios=<> and gpios=<> alike for backward compatibility
-if we'd change it, sweet isn't it? :-)
-
-I don't quite like this, as it is adding stupid nonsens arguments for
-ACPI GPIO producers (which only take an index AFAICT), but it is a
-first sacrifice on the altar of trying to mask the differences between DT
-and ACPI probe paths about which I have mixed feelings.
-
-Yours,
-LInus Walleij
