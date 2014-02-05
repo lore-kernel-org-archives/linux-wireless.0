@@ -1,78 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:34919 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbaBCU7L (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:47009 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbaBEOuT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:11 -0500
-Received: by mail-ea0-f179.google.com with SMTP id q10so3349900ead.10
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:10 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 34/62] iwlwifi: 7265: add power limit/tx backoff translation table
-Date: Mon,  3 Feb 2014 22:57:40 +0200
-Message-Id: <1391461088-8082-34-git-send-email-egrumbach@gmail.com> (sfid-20140203_223007_309870_741CB8A7)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Wed, 5 Feb 2014 09:50:19 -0500
+MIME-Version: 1.0
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <20140205123446.GI26722@mwanda>
+References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
+ <20140202160512.GA4946@redhat.com> <201402021807.37772.s.L-H@gmx.de>
+ <52EFCC66.9020304@lwfinger.net> <20140203201228.GE26722@mwanda>
+ <CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com>
+ <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
+ <20140204092836.GG26776@mwanda> <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
+ <20140205123446.GI26722@mwanda>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Wed, 5 Feb 2014 15:49:58 +0100
+Message-ID: <CAN8YU5NuFZfK4gGAsx34ZruBVx6U_cMGSogiTdWWv8LfpsFb=w@mail.gmail.com> (sfid-20140205_155024_019196_6C51CB58)
+Subject: Re: rtl8821ae.
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Dave Jones <davej@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Driver Project <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+> Looks good.  It would be best to submit the bugfixes first like where
+> you add error checking for pci_map_single().
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-7000.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Yes, this is exactly what I started to do this morning :)
+I'm preparing a patchseries where I extracting fixes or improvements
+unrelated to rtl8187se, including pci_map_single fixes
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index a43e4d1..fbd262f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -197,6 +197,17 @@ const struct iwl_cfg iwl3160_n_cfg = {
- 	.host_interrupt_operation_mode = true,
- };
- 
-+static const struct iwl_pwr_tx_backoff iwl7265_pwr_tx_backoffs[] = {
-+	{.pwr = 1600, .backoff = 0},
-+	{.pwr = 1300, .backoff = 467},
-+	{.pwr = 900,  .backoff = 1900},
-+	{.pwr = 800, .backoff = 2630},
-+	{.pwr = 700, .backoff = 3720},
-+	{.pwr = 600, .backoff = 5550},
-+	{.pwr = 500, .backoff = 9350},
-+	{0},
-+};
-+
- const struct iwl_cfg iwl7265_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 7265",
- 	.fw_name_pre = IWL7265_FW_PRE,
-@@ -204,6 +215,7 @@ const struct iwl_cfg iwl7265_2ac_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7265_NVM_VERSION,
- 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
-+	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
- };
- 
- const struct iwl_cfg iwl7265_2n_cfg = {
-@@ -213,6 +225,7 @@ const struct iwl_cfg iwl7265_2n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7265_NVM_VERSION,
- 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
-+	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
- };
- 
- const struct iwl_cfg iwl7265_n_cfg = {
-@@ -222,6 +235,7 @@ const struct iwl_cfg iwl7265_n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7265_NVM_VERSION,
- 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
-+	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
- };
- 
- MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
--- 
-1.7.9.5
+> You add too many blank lines btw, you should never have two
+> consecutive blank lines.  Don't add a blank line in the middle of the
+> declaration block or before a close curly brace '}' line.
 
+OK
+
+> After that
+> maybe the patch to change "if (priv->r8185)" to
+> "if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185)". Then the patch
+> to add rtl8225se support.
+
+Yes, this is also my plan :)
+
+> Some minor things below.
+
+Ok, I have reviewed all your advices.
+I agree with them.
+I also commended the ones where you asked something about.
+
+> regards,
+> dan carpenter
+
+Thank you a lot for your review!
+
+Andrea
+
+>> +#include "rtl8225se.h"
+>> +
+>
+> Don't include this twice.  Only put one blank line, not two consecutive
+> blank lines.
+
+OK
+
+> This comment is out of date.  RTL8180_NR_TX_QUEUES is 2.  I haven't
+> really understood the changes to rtl8180_queues_map[].  It used to have
+> 4 elements and now it only has 2.  Is this change needed to support
+> rtl8225se or is it a separate bugfix which should go in a separate
+> patch?
+
+It's for rtl8187se.
+That card uses more queues to enable WMM
+
+> Also this change which I have pulled out of context:
+>
+> +     if (ring->entries - skb_queue_len(&ring->queue) < 2) {
+> +             if (prio != dev->queues)
+> +                     ieee80211_stop_queue(dev, prio);
+> +             else
+> +                     priv->beacon_queue_stop = 1;
+> +     }
+>
+> This is a separate bugfix?
+
+Yes, the old driver uses ieee80211_stop_queue and ieee80211_wake_queue
+on the beacon queue, that is indeed handled in the driver and not by
+ieee80211
+This one of the things that I will include in patches for
+rtl8180/rtl8185 fixes before merging real rtl8187se code
+
+>> +static void rtl8180_write_phy_(struct ieee80211_hw *dev, u8 addr, u32 data)
+>
+> This is a temporary name to not conflight with rtl8180_write_phy()?
+
+No, this is the aux function that does the real work, but should not
+be called directly in the driver code, as rtl8180_write_phy() should
+be called.
+Maybe I have to move the underscore at the beginning of the name.
+
+>
+> These don't go over the 80 character limit so we don't need the line
+> breaks.  The casts are not needed either.
+
+OK
+
+>> +     if ((addr == 0xa) && (
+>> +                 priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185))
+>> +             rb_mask = 0x7f;
+>
+> Write it like this:
+>
+>         if (addr == 0xa && priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185)
+>                 rb_mask = 0x7f;
+>
+> If you really want to add parenthesis then do this:
+>
+>         if ((addr == 0xa) &&
+>             (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185))
+>                 rb_mask = 0x7f;
+
+OK
+
+>> -     buf = (data << 8) | addr;
+>> +     if (tmp & 0x80)
+>> +             printk(KERN_WARNING
+>> +                    "rtl818x failed to write BB (busy) adr:%x data:%x\n",
+>> +                    addr, data);
+>
+> Checkpatch.pl will complain that you should use netdev_warn() or
+> something.
+
+OK
+
+
+>
+> Don't put a blank line here in the middle of the declaration block.
+>
+
+OK
+
+
+>> +             frame_duration =  priv->ack_time + le16_to_cpu(
+>> +                     ieee80211_generic_frame_duration(dev, priv->vif,
+>> +                                     IEEE80211_BAND_2GHZ, skb->len,
+>> +                                     ieee80211_get_tx_rate(dev, info)));
+>
+> Use a temporary variable:
+>
+>                 __le16 duration;
+
+I agree. Will do.
+
+>> +     /* must be written last */
+>>       entry->flags = cpu_to_le32(tx_flags);
+>
+> Why must this be written last?  The CPU can re-order it anyway unless
+> there is some locking.
+
+Because that marks the descriptor as good for the NIC to be processed.
+I suppose a wmb() is needed before this line to ensure it is the last written
+and another wmb() is needed to ensure that the descriptor is fully
+written before polling the NIC for performing DMA (I think that,
+depending by the situation, the HW may wait for this register write on
+not).
+
+
+>> +     /* Enable DA10 TX power saving */
+>> +     rtl818x_iowrite8(priv, &priv->map->PHY_PR,
+>> +                      rtl818x_ioread8(priv, &priv->map->PHY_PR) | 0x04);
+>
+> Use a temporary variable:
+>
+>         reg = rtl818x_ioread8(priv, &priv->map->PHY_PR);
+>         rtl818x_iowrite8(priv, &priv->map->PHY_PR, reg | 0x40);
+>
+
+OK
+
+>> +static void rtl8187se_set_antenna_config(struct ieee80211_hw *dev, u8 def_ant,
+>> +                                      bool use_diver)
+>
+> Could you rename "use_diver" to "diversity"?  I misread it every time.
+
+It makes sense.
+
+
+>> +#if 0
+>> +static void rtl8187se_power_tracking(struct ieee80211_hw *dev)
+>> +{
+>> +     struct rtl8180_priv *priv = dev->priv;
+>> +     u8 tmp = rtl818x_ioread8(priv, REG_ADDR1(0x238));
+>> +     u8 current_temp;
+>> +     int i;
+>> +     char cck_idx, ofdm_idx;
+>> +
+>> +     current_temp = (tmp & 0xF0) >> 4;
+>> +     current_temp = (current_temp > 0x0C) ? current_temp : 0x0C;
+>
+>         curent_temp = max_t(u8, current_temp, 0x0C);
+>
+> I prefer max_t because it looks more deliberate and people won't think
+> you intended to use the minimum value.
+
+This function is switched off by a #if 0
+It will be not included yet, and I have to review it, so it might change.
+BTW I will certainly consider your advices
+
+>> +     int chan =
+>> +             ieee80211_frequency_to_channel(conf->chandef.chan->center_freq);
+>> +
+>
+> You could avoid the split line by doing this:
+>
+>         struct ieee80211_conf *conf = &dev->conf;
+>         int chan;
+>
+>         chan = ieee80211_frequency_to_channel(conf->chandef.chan->center_freq);
+>
+
+OK
