@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15624 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493AbaB0OWI (ORCPT
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:35203 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbaBERpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:22:08 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 14/16] wil6210: use ether_addr_equal
-Date: Thu, 27 Feb 2014 16:20:53 +0200
-Message-ID: <1393510855-17566-15-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152213_241047_803F5375)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 5 Feb 2014 12:45:07 -0500
+Received: by mail-oa0-f48.google.com with SMTP id l6so860602oag.7
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 09:45:05 -0800 (PST)
+Message-ID: <52F278A0.3050605@lwfinger.net> (sfid-20140205_184512_006545_EE4F0772)
+Date: Wed, 05 Feb 2014 11:45:04 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: PHY transmission errors
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+In https://bugzilla.kernel.org/show_bug.cgi?id=70031, there is a report of a 
+regression in 3.14-rc1 for a 14e4:4331 device. Kernel 3.13 is OK. Can anyone 
+with a 4331 confirm that PHY transmission errors are a lot more prevalent with 
+either mainline 3.14-rc1 or the current wireless-testing than with 3.13?
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 361c693..a0ea135 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -16,6 +16,7 @@
- 
- #include <linux/moduleparam.h>
- #include <linux/if_arp.h>
-+#include <linux/etherdevice.h>
- 
- #include "wil6210.h"
- #include "txrx.h"
-@@ -436,7 +437,7 @@ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac)
- 
- 	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
- 		if ((wil->sta[i].status != wil_sta_unused) &&
--		    (0 == memcmp(wil->sta[i].addr, mac, ETH_ALEN))) {
-+		    ether_addr_equal(wil->sta[i].addr, mac)) {
- 			rc = i;
- 			break;
- 		}
--- 
-1.8.3.2
+I do not have that particular device, but I do not see any changes for my 
+14e4:4315; however, the 4331 has a different PHY than does the 4315.
 
+A review of the commits between 3.13 and 3.14-rc1 shows nothing for bcma that 
+should cause this effect. For b43, the only one that might cause this is commit 
+64e5acb entitled "b43: fix the wrong assignment of status.freq in b43_rx()". 
+That was clearly a bug and it fixed thing for my system, but we must consider if 
+that bug was also masking some other problem that is now revealed.
+
+I have asked the bug reporter at b.k.o if it is possible to bisect the problem.
+
+Larry
