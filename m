@@ -1,114 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:38797 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932261AbaBEGwX (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:54984 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368AbaBEK3Y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 01:52:23 -0500
-Received: by mail-wg0-f42.google.com with SMTP id l18so5142782wgh.5
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 22:52:21 -0800 (PST)
+	Wed, 5 Feb 2014 05:29:24 -0500
+Received: by mail-bk0-f48.google.com with SMTP id ej10so157828bkb.21
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 02:29:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAJwzM1mhN7+ydLvF3tV25theZW8jcqjzrKuXFBoUO9SW43xfUA@mail.gmail.com>
-References: <CAAUTuq_bgXcfKquXR+ATumO7xkyTE_WLUvUOMZ7bPYCP0_XnuQ@mail.gmail.com>
- <CAJwzM1kzbvy7UnjJerJ8EmUxvp5GYPeKS-9988SgxfoQrv-Zjw@mail.gmail.com>
- <CAAUTuq_LnUCTBaHndBiLDk0ge+055YJJMY4Ni+bV7PrYq_KSHA@mail.gmail.com>
- <CAJwzM1kQJvfZwPi_suBSgCEquAHvYduwRWcM01==nT_TVd0d0g@mail.gmail.com>
- <CAAUTuq9oU7+=_sjcix0WuSUp5_5OVRXK1cJdtRDtR1obaJrV1Q@mail.gmail.com>
- <CAAUTuq9dcKvGk0PWhP16=yyK79mE-T-1gbGPpd5G__imimHvBQ@mail.gmail.com>
- <CAAUTuq-WBMOLQE7FYFd32TrCN=3KwfFKgALs2pZGuBpKqkSDFg@mail.gmail.com> <CAJwzM1mhN7+ydLvF3tV25theZW8jcqjzrKuXFBoUO9SW43xfUA@mail.gmail.com>
-From: Andrew Wiley <wiley.andrew.j@gmail.com>
-Date: Wed, 5 Feb 2014 00:52:01 -0600
-Message-ID: <CAAUTuq-HfQj6KZBjnzosRy7pjEtzo5TBa1ko+fjJOO8JA8UyXw@mail.gmail.com> (sfid-20140205_075329_541693_CA1FFF65)
-Subject: Re: mwifiex and SD8787: TX queue timeout in AP mode
-To: Avinash Patil <avinashapatil@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1391585999.16723.7.camel@porter.coelho.fi>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	<1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	<1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	<1391508433.26522.61.camel@porter.coelho.fi>
+	<CA+BoTQngW4Ycuv0H=ba5KWs2qDcqPQtKJWp-9XEwdqQv+Xu6CA@mail.gmail.com>
+	<1391585999.16723.7.camel@porter.coelho.fi>
+Date: Wed, 5 Feb 2014 11:29:22 +0100
+Message-ID: <CA+BoTQkXjAYR0H4nHxagYz3Kn5atWJ048UUY1=gPrW77Gvqp+Q@mail.gmail.com> (sfid-20140205_112931_307684_E96DEE31)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Avinash,
-
-On Tue, Feb 4, 2014 at 9:57 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
-> Hi Andrew,
+On 5 February 2014 08:39, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2014-02-04 at 13:14 +0100, Michal Kazior wrote:
+>> On 4 February 2014 11:07, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Mon, 2014-02-03 at 14:41 +0100, Johannes Berg wrote:
+>> >> On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
+>> >> >  * inform userspace what interfaces will be
+>> >> >    possibly disconnected by a channel switch,
+>> >>
+>> >> Huh? Not sure I get that part, why would userspace ever be notified
+>> >> about something that *will* happen? Either the interface disconnects
+>> >> when the CSA is received, or it just switches and userspace gets a "CSA
+>> >> will happen" event?
+>>
+>> True. Userspace can probably deduce from interface combinations some
+>> interfaces require attention due to channel switching.
+>>
+>>
+>> > How do we get the "target" beacon from userspace if the interface just
+>> > switches?
+>>
+>> Do you really need the beacon? What for?
 >
-> I think this issue not specific to any interface as such.
+> I meant if we would switch the AP/GO interfaces automatically.  We need
+> the beacon that should be transmitted in the new channel (like the one
+> we need to pass in the existing channel switch request API).
+
+I think Johannes made it clear that switching AP/GO automatically
+isn't possible because it requires too much information that mac80211
+(nor cfg80211) doesn't have.
+
+
+>> >> >  * disconnect non-complying interfaces that were
+>> >> >    sharing a channel that is being abandoned by
+>> >> >    channel switching interface(s),
+>> >>
+>> >> Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
+>> >> possible (userspace CSA) or cause the switching interface to disconnect,
+>> >> rather than *others*??
+>> >
+>> > It depends.  And this logic is too complicated to stay in the kernel,
+>> > IMHO.  If we are in a GO-follows-STA scenario, we want to disconnect the
+>> > GO.  Now, if you have an AP (with tons of STAs connected to it) and a
+>> > P2P client gets a CSA for whatever reason, do we really want to stop the
+>> > AP?
+>>
+>> Agreed.
+>>
+>> But doesn't this imply STA CSA shouldn't be started within kernel
+>> itself? Otherwise you leave a corner case when STA CSA is very short
+>> making it impossible for userspace to take any action.
 >
-> Do you have following fix in your tree:
+> I don't see how involving the userspace in the STA CSA decision would
+> make any difference.  Doesn't it actually make it worse, because the STA
+> CSA *itself* may fail because userspace doesn't have the time to react?
+
+If you have STA CSA started inside mac80211 userspace may not have
+enough time to react and request GO to switch in the GO-follows-STA.
+
+This really depends how strongly you want to enforce interface
+combinations and how much proactive/reactive CSA should be.
+
+
+>> >> > - * @channel_switch: initiate channel-switch procedure (with CSA)
+>> >> > + * @ch_switch_start: initiate channel-switch procedure (with CSA). This should
+>> >> > + * prompt the driver to perform preparation work (start some timers,
+>> >> > + * include CS IEs in beacons, etc) but don't do an actual channel switch.
+>> >> > + * Once driver has completed all preparations and is ready for the actual
+>> >> > + * switch (after CSA counter is completed) it must call
+>> >> > + * cfg80211_ch_switch_complete(wdev). After that ch_switch_finalize() MAY
+>> >> > + * be called, but it doesn't necessarily happen immediately as cfg80211
+>> >> > + * may need to synchronize with other interfaces. If channel switch is
+>> >> > + * cancelled for some reason ch_switch_finalize() is not called and driver
+>> >> > + * should free up resources/cleanup state in interface disconnection flow.
+>> >> > + * @ch_switch_finalize: finalize channel-switch procedure, i.e. perform the
+>> >> > + * actual switch.
+>> >>
+>> >> I don't like this at all. This totally assumes that every driver behaves
+>> >> like mac80211, which clearly is not the case. The split between
+>> >> "starting" and "finalizing" it should not be part of the API.
+>> >
+>> > I agree, especially if the driver offloads the channel switch, in which
+>> > case it wouldn't be possible for cfg80211 to hold the finalize call to
+>> > sync all the interfaces.
+>>
+>> This implies we don't care if channel switching breaks interface
+>> combinations, right?
 >
-> http://www.spinics.net/lists/linux-wireless/msg112753.html
+> Those decisions need to be made *before* the channel switch starts.
 
-Yes.
-I'm running 3.13.1, which includes that fix.
+The purpose of ch_switch_finalize() is to perform the final switch
+atomically and make sure non-complying interfaces are disconnected
+before channel is actually switched (this could include Ilan's GO case
+in a clean way).
 
->
-> Also can you please try printing adapter->int_status during AP TX data timeout?
+If you want to move this to drivers you'll need RTNL to check
+interface combinations at least.
 
-I added a printk after the TX timeout warning and got this:
+Or.. cfg80211 can simply not give a damn :)
 
-[  437.677151] ------------[ cut here ]------------
-[  437.681815] WARNING: CPU: 0 PID: 423 at net/sched/sch_generic.c:264
-dev_watchdog+0x2d0/0x2f0()
-[  437.690485] NETDEV WATCHDOG: uap0 (mwifiex_sdio): transmit queue 1 timed out
-[  437.697580] Modules linked in: iptable_raw ipt_MASQUERADE xt_nat
-iptable_nat nf_nat_ipv4 nf_nat iptable_mangle xt_policy
-nf_conntrack_ipv4 xt_tcpudp nf_defrag_ipv4 bridge nf_conntrack_ipv6
-nf_defrag_ipv6 stp llc xt_conntrack nf_conntrack iptable_filter
-ip6table_filter ip6_tables ip_tables x_tables hid_generic
-snd_usb_audio snd_usbmidi_lib mwifiex_sdio mwifiex snd_hwdep
-snd_rawmidi snd_seq_device snd_pcm snd_page_alloc snd_timer cfg80211
-snd usbhid soundcore hid rfkill mv_cesa usbip_host(C) usbip_core(C)
-ipv6 autofs4
-[  437.743904] CPU: 0 PID: 423 Comm: tmux Tainted: G         C
-3.13.1-2-ARCH #1
-[  437.751189] [<c000f01c>] (unwind_backtrace+0x0/0x128) from
-[<c000c394>] (show_stack+0x10/0x14)
-[  437.759892] [<c000c394>] (show_stack+0x10/0x14) from [<c001aa80>]
-(warn_slowpath_common+0x70/0x90)
-[  437.768923] [<c001aa80>] (warn_slowpath_common+0x70/0x90) from
-[<c001aad0>] (warn_slowpath_fmt+0x30/0x40)
-[  437.778563] [<c001aad0>] (warn_slowpath_fmt+0x30/0x40) from
-[<c04c6e50>] (dev_watchdog+0x2d0/0x2f0)
-[  437.787673] [<c04c6e50>] (dev_watchdog+0x2d0/0x2f0) from
-[<c0025bf8>] (call_timer_fn+0x30/0x170)
-[  437.796512] [<c0025bf8>] (call_timer_fn+0x30/0x170) from
-[<c00261b4>] (run_timer_softirq+0x1f8/0x368)
-[  437.805798] [<c00261b4>] (run_timer_softirq+0x1f8/0x368) from
-[<c001ef00>] (__do_softirq+0xdc/0x304)
-[  437.814997] [<c001ef00>] (__do_softirq+0xdc/0x304) from
-[<c001f4a4>] (irq_exit+0xb0/0xf8)
-[  437.823228] [<c001f4a4>] (irq_exit+0xb0/0xf8) from [<c0009cc0>]
-(handle_IRQ+0x34/0x84)
-[  437.831199] [<c0009cc0>] (handle_IRQ+0x34/0x84) from [<c054cb38>]
-(__irq_usr+0x38/0xa0)
-[  437.839248] ---[ end trace 14ce7b4e4b0c47cb ]---
-[  437.843888] mwifiex_sdio mmc0:0001:1: 12617 : Tx timeout(#1),
-bss_type-num = 1-0
-[  437.851335] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  447.676774] mwifiex_sdio mmc0:0001:1: 13601 : Tx timeout(#2),
-bss_type-num = 1-0
-[  447.684238] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  457.676409] mwifiex_sdio mmc0:0001:1: 14601 : Tx timeout(#3),
-bss_type-num = 1-0
-[  457.683848] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  467.676042] mwifiex_sdio mmc0:0001:1: 15601 : Tx timeout(#4),
-bss_type-num = 1-0
-[  467.683501] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  477.675679] mwifiex_sdio mmc0:0001:1: 16601 : Tx timeout(#5),
-bss_type-num = 1-0
-[  477.683116] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  487.675308] mwifiex_sdio mmc0:0001:1: 17601 : Tx timeout(#6),
-bss_type-num = 1-0
-[  487.682760] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  497.674942] mwifiex_sdio mmc0:0001:1: 18601 : Tx timeout(#7),
-bss_type-num = 1-0
-[  497.682383] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-[  497.688188] mwifiex_sdio mmc0:0001:1: tx_timeout_cnt exceeds
-threshold. Triggering card reset!
-[  497.698397] mwifiex_sdio: Resetting card...
 
-The full log is at
-http://www.cs.utexas.edu/users/wiley/mwifiexlog_2.txt if you want to
-take a look - I didn't trim it down this time. It has debug output for
-mwifiex and mwifiex_sdio.
-
-Thanks,
-Andrew
+Michał
