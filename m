@@ -1,68 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:33454 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbaBYRfb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 12:35:31 -0500
-Message-ID: <530CD45A.8050803@wwwdotorg.org> (sfid-20140225_183554_860824_47271A89)
-Date: Tue, 25 Feb 2014 10:35:22 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12175 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755703AbaBEUiO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Feb 2014 15:38:14 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Date: Wed, 5 Feb 2014 12:38:06 -0800
+Subject: RE: [PATCH 00/30] mwifiex updates for 3.15
+Message-ID: <477F20668A386D41ADCC57781B1F70430F53858E6D@SC-VEXCH1.marvell.com> (sfid-20140205_213823_921624_7F4321C9)
+References: <1391632290-11441-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1391632290-11441-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-CC: Chen-Yu Tsai <wens@csie.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Gross <mark.gross@intel.com>
-Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>	<53062F97.3050407@wwwdotorg.org>	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>	<5306E599.7020605@wwwdotorg.org> <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
-In-Reply-To: <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2014 02:13 AM, Linus Walleij wrote:
-> On Fri, Feb 21, 2014 at 6:35 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->> On 02/20/2014 06:55 PM, Chen-Yu Tsai wrote:
-> 
->>> That's correct. However using con_id to pass this results in different
->>> behavior across DT and ACPI. A better way is to export the labeling
->>> function so consumers can set meaningful labels themselves.
-...
-> As in tegra30-beaver.dts...
-> 
->     sdhci@78000000 {
->             status = "okay";
->             cd-gpios = <&gpio TEGRA_GPIO(I, 5) GPIO_ACTIVE_LOW>;
->             wp-gpios = <&gpio TEGRA_GPIO(T, 3) GPIO_ACTIVE_HIGH>;
->             power-gpios = <&gpio TEGRA_GPIO(D, 7) GPIO_ACTIVE_HIGH>;
->             bus-width = <4>;
->     };
-> 
-> Instead of passing the GPIOs as index 0,1,2 they are named
-> and I do admit this has a nice "things are under control" aspect
-> to it.
-> 
-> In the ACPI case the con_id is not used for anything.
-> 
-> So it is basically there to satisfy the habit in some device
-> tree bindings to name gpio arrays instead of just passing gpios = <...>;
-> (The latter should be encouraged going forward.)
+Hi John,
 
-Do you really want to switch from named GPIO lookups to index-based GPIO
-lookups? Index-based lookups make it much harder to extend the DT
-binding in a backwards-compatible fashion, especially in the face of
-optional GPIOs (of which all of CD, WP, power are).
+> This series includes updates for 11ac cleanups, PCIe improvements
+> and TDLS support.
 
-If we switch to a single gpios property, I'd assert we should still do
-named-based lookups using a parallel gpio-names property, just like most
-(all?) other resource types now support. If we do that, we'll still need
-the name parameter.
+Please ignore this series.
+
+My SMTP server has problem. Only partial of the patches went out.
+I will resend the series later.
+
+Thanks,
+Bing
+
+> 
+> 
+> Aaron Durbin (2):
+>   mwifiex: balance dma map/unmap sizes
+>   mwifiex: don't leak DMA command skbuffs
+> 
+> Amitkumar Karwar (7):
+>   mwifiex: change beacon parameter structure
+>   mwifiex: separate out response buffer parsing code
+>   mwifiex: separate out next scan command queueing logic
+>   mwifiex: implement extended scan feature
+>   mwifiex: update beamforming capability field for HT
+>   mwifiex: advertise correct beamforming information for VHT
+>   mwifiex: cleanup in mwifiex_fill_cap_info()
+> 
+> Avinash Patil (17):
+>   mwifiex: handle AMPDU supported check for AP interface
+>   mwifiex: make tos_to_tid_inv part of mwifiex_private structure
+>   mwifiex: move station list functions to common code
+>   mwifiex: add tdls_mgmt handler support
+>   mwifiex: parse TDLS action frames during RX
+>   mwifiex: add cfg80211 tdls_oper handler support
+>   mwifiex: add cfg80211 add_station handler support
+>   mwifiex: add cfg80211 change_station handler support
+>   mwifiex: provision for holding and restoring packets during TDLS setup
+>   mwifiex: tdls related handling for data packets addressed to TDLS peer
+>   mwifiex: AMPDU support for TDLS link
+>   mwifiex: pass ieee80211_vht_cap to mwifiex_fill_vht_cap_tlv
+>   mwifiex: add VHT support for TDLS
+>   mwifiex: separate BA params for TDLS link if 11ac is supported
+>   mwifiex: disable all TDLS link during disconnection
+>   mwifiex: parse API version from FW
+>   mwifiex: add key material v2 support
+> 
+> Bing Zhao (4):
+>   mwifiex: make use of IEEE80211_VHT_MCS_NOT_SUPPORTED
+>   mwifiex: make 11ac mcs rate tables global and const
+>   mwifiex: improve readability in 11ac mcsmap to maxrate conversion
+>   mwifiex: remove unsupported code in 11ac
+> 
+>  drivers/net/wireless/mwifiex/11ac.c          |  192 +++--
+>  drivers/net/wireless/mwifiex/11ac.h          |    2 +
+>  drivers/net/wireless/mwifiex/11n.c           |   51 +-
+>  drivers/net/wireless/mwifiex/11n.h           |   44 +-
+>  drivers/net/wireless/mwifiex/11n_rxreorder.c |   27 +-
+>  drivers/net/wireless/mwifiex/Makefile        |    1 +
+>  drivers/net/wireless/mwifiex/cfg80211.c      |  176 ++++-
+>  drivers/net/wireless/mwifiex/cfp.c           |  203 +++--
+>  drivers/net/wireless/mwifiex/cmdevt.c        |   54 +-
+>  drivers/net/wireless/mwifiex/decl.h          |   23 +
+>  drivers/net/wireless/mwifiex/fw.h            |  181 ++++-
+>  drivers/net/wireless/mwifiex/init.c          |    5 +
+>  drivers/net/wireless/mwifiex/ioctl.h         |   22 +-
+>  drivers/net/wireless/mwifiex/join.c          |   14 +-
+>  drivers/net/wireless/mwifiex/main.h          |   88 ++-
+>  drivers/net/wireless/mwifiex/pcie.c          |  138 ++--
+>  drivers/net/wireless/mwifiex/scan.c          |  598 ++++++++++-----
+>  drivers/net/wireless/mwifiex/sta_cmd.c       |  373 ++++++++-
+>  drivers/net/wireless/mwifiex/sta_cmdresp.c   |  112 ++-
+>  drivers/net/wireless/mwifiex/sta_event.c     |   12 +
+>  drivers/net/wireless/mwifiex/sta_ioctl.c     |   38 +-
+>  drivers/net/wireless/mwifiex/sta_rx.c        |   13 +-
+>  drivers/net/wireless/mwifiex/sta_tx.c        |    3 +
+>  drivers/net/wireless/mwifiex/tdls.c          | 1043 ++++++++++++++++++++++++++
+>  drivers/net/wireless/mwifiex/uap_event.c     |  118 ---
+>  drivers/net/wireless/mwifiex/util.c          |  114 +++
+>  drivers/net/wireless/mwifiex/util.h          |   20 +-
+>  drivers/net/wireless/mwifiex/wmm.c           |   96 ++-
+>  drivers/net/wireless/mwifiex/wmm.h           |   18 +
+>  29 files changed, 3110 insertions(+), 669 deletions(-)
+>  create mode 100644 drivers/net/wireless/mwifiex/tdls.c
+> 
+> --
+> 1.8.2.3
+
