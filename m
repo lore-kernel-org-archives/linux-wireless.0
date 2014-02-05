@@ -1,112 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8386 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751223AbaBHAa5 (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:40209 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbaBETzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:30:57 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 28/30] mwifiex: disable all TDLS link during disconnection
-Date: Fri, 7 Feb 2014 16:30:41 -0800
-Message-ID: <1391819442-21239-9-git-send-email-bzhao@marvell.com> (sfid-20140208_020008_974790_E73BCC95)
-In-Reply-To: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
-References: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 5 Feb 2014 14:55:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/16] Add new driver for RTL8723BE
+Date: Wed,  5 Feb 2014 13:54:44 -0600
+Message-Id: <1391630100-13504-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140205_205534_830243_AB02921A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+This set of patches modifies rtlwifi to incorporate a new driver for
+the RTL8723BE wireless device. New variables are needed in the common
+structs, and some routines that are common to rtl8723ae and rtl8723be
+are moved into a common mini driver.
 
-During deauthenticate/link lost event, disable all TDLS links as
-TDLS would not work when infra connection is not active.
-Also this will avoid an issue where ping to peer station doesn't
-work after reassociation to AP where we had created TDLS link in
-earlier association.
+This driver is intended for the -next stream for 3.15.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/mwifiex/main.h      |  1 +
- drivers/net/wireless/mwifiex/sta_event.c |  4 ++++
- drivers/net/wireless/mwifiex/tdls.c      | 35 ++++++++++++++++++++++++++++++++
- 3 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 631e07f..9bb66ea 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1234,6 +1234,7 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 				       u8 *buf, int len);
- int mwifiex_tdls_oper(struct mwifiex_private *priv, u8 *peer, u8 action);
- int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac);
-+void mwifiex_disable_all_tdls_links(struct mwifiex_private *priv);
- bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
- u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
- 				 u32 pri_chan, u8 chan_bw);
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index de4a6af..92ff7b3 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -54,6 +54,10 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- 
- 	priv->scan_block = false;
- 
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info))
-+		mwifiex_disable_all_tdls_links(priv);
-+
- 	/* Free Tx and Rx packets, report disconnect to upper layer */
- 	mwifiex_clean_txrx(priv);
- 
-diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
-index 770dcd7..5efd456 100644
---- a/drivers/net/wireless/mwifiex/tdls.c
-+++ b/drivers/net/wireless/mwifiex/tdls.c
-@@ -1007,3 +1007,38 @@ int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac)
- 
- 	return TDLS_NOT_SETUP;
- }
-+
-+void mwifiex_disable_all_tdls_links(struct mwifiex_private *priv)
-+{
-+	struct mwifiex_sta_node *sta_ptr;
-+	struct mwifiex_ds_tdls_oper tdls_oper;
-+	unsigned long flags;
-+
-+	if (list_empty(&priv->sta_list))
-+		return;
-+
-+	list_for_each_entry(sta_ptr, &priv->sta_list, list) {
-+		memset(&tdls_oper, 0, sizeof(struct mwifiex_ds_tdls_oper));
-+
-+		if (sta_ptr->is_11n_enabled) {
-+			mwifiex_11n_cleanup_reorder_tbl(priv);
-+			spin_lock_irqsave(&priv->wmm.ra_list_spinlock,
-+					  flags);
-+			mwifiex_11n_delete_all_tx_ba_stream_tbl(priv);
-+			spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
-+					       flags);
-+		}
-+
-+		mwifiex_restore_tdls_packets(priv, sta_ptr->mac_addr,
-+					     TDLS_LINK_TEARDOWN);
-+		memcpy(&tdls_oper.peer_mac, sta_ptr->mac_addr, ETH_ALEN);
-+		tdls_oper.tdls_action = MWIFIEX_TDLS_DISABLE_LINK;
-+		if (mwifiex_send_cmd_async(priv, HostCmd_CMD_TDLS_OPER,
-+					   HostCmd_ACT_GEN_SET, 0, &tdls_oper))
-+			dev_warn(priv->adapter->dev,
-+				 "Disable link failed for TDLS peer %pM",
-+				 sta_ptr->mac_addr);
-+	}
-+
-+	mwifiex_del_all_sta_list(priv);
-+}
+Larry Finger (16):
+  rtlwifi: btcoexist: Add headers for new mini driver
+  rtlwifi: btcoexist: Add source for new mini driver - part 1
+  rtlwifi: btcoexist: Add source for new mini driver - part 2
+  rtlwifi: Prepare existing drivers for new driver
+  rtlwifi: rtl8723ae: rtl8723-common: Create new driver for common code
+  rtlwifi: rtl8723ae: rtl8723-common: Copy common firmware code
+  rtlwifi: rtl8723ae: rtl8723-common: Copy common dynamic power
+    management code
+  rtlwifi: rtl8723be: Add files for new driver - part 1
+  rtlwifi: rtl8723be: Add files for new driver - part 2
+  rtlwifi: rtl8723be: Add files for new driver - part 3
+  rtlwifi: rtl8723be: Add files for new driver - part 4
+  rtlwifi: rtl8723be: Add files for new driver - part 5
+  rtlwifi: rtl8723be: Add files for new driver - part 6
+  rtlwifi: rtl8723be: Add files for new driver - part 7
+  rtlwifi: rtl8723be: Add files for new driver - part 8
+  rtlwifi: rtl8723be: Turn on building of new driver
+
+ drivers/net/wireless/rtlwifi/Kconfig               |   27 +-
+ drivers/net/wireless/rtlwifi/Makefile              |    3 +
+ drivers/net/wireless/rtlwifi/btcoexist/Makefile    |    7 +
+ .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |   87 +
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.c   | 3698 ++++++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |  173 +
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  | 1011 ++++++
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  559 +++
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |  218 ++
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |   52 +
+ drivers/net/wireless/rtlwifi/core.c                |   12 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |    4 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   18 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |    5 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |   42 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  260 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   18 +-
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |    2 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |   36 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |  482 +--
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |   21 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |   13 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |    6 -
+ drivers/net/wireless/rtlwifi/rtl8723be/Makefile    |   20 +
+ drivers/net/wireless/rtlwifi/rtl8723be/def.h       |  248 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c        | 1325 +++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h        |  310 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c        |  628 ++++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.h        |  248 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c        | 2523 +++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.h        |   64 +
+ drivers/net/wireless/rtlwifi/rtl8723be/led.c       |  153 +
+ drivers/net/wireless/rtlwifi/rtl8723be/led.h       |   35 +
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.c       | 2175 ++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.h       |  217 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.c    |  106 +
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h    |  305 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c |  140 +
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.h |   95 +
+ drivers/net/wireless/rtlwifi/rtl8723be/reg.h       | 2293 ++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.c        |  504 +++
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.h        |   43 +
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c        |  385 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.h        |   35 +
+ drivers/net/wireless/rtlwifi/rtl8723be/table.c     |  572 +++
+ drivers/net/wireless/rtlwifi/rtl8723be/table.h     |   43 +
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c       |  959 +++++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h       |  616 ++++
+ drivers/net/wireless/rtlwifi/rtl8723com/Makefile   |    9 +
+ .../net/wireless/rtlwifi/rtl8723com/dm_common.c    |   65 +
+ .../net/wireless/rtlwifi/rtl8723com/dm_common.h    |   33 +
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    |  329 ++
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.h    |  126 +
+ drivers/net/wireless/rtlwifi/rtl8723com/main.c     |   33 +
+ .../net/wireless/rtlwifi/rtl8723com/phy_common.c   |  434 +++
+ .../net/wireless/rtlwifi/rtl8723com/phy_common.h   |   89 +
+ drivers/net/wireless/rtlwifi/usb.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |  309 +-
+ 67 files changed, 21367 insertions(+), 905 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbt_precomp.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/trx.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/fw_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/fw_common.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/main.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h
+
 -- 
-1.8.2.3
+1.8.4
 
