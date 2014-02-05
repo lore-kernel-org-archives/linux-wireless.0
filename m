@@ -1,98 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:41428 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752253AbaBJVgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 16:36:13 -0500
-Received: from ip-94-112-189-223.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.189.223])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 10 Feb 2014 22:36:09 +0100
-Date: Mon, 10 Feb 2014 22:38:28 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-mips@linux-mips.org
-Subject: [PATCH] rtl8187: fix regression on MIPS without coherent DMA
-Message-ID: <20140210213828.GA15903@localhost.localdomain> (sfid-20140210_223616_972021_DF544B6A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:43728 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754363AbaBEVhq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Feb 2014 16:37:46 -0500
+Received: by mail-ea0-f178.google.com with SMTP id a15so508425eae.23
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 13:37:45 -0800 (PST)
+From: andrea merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"andrea.merello" <andrea.merello@gmail.com>
+Subject: [PATCH 1/4] In rtl8180/rtl8187 drivers, few register bit definitions have misleading names. Fix them
+Date: Wed,  5 Feb 2014 22:38:04 +0100
+Message-Id: <1391636287-17712-2-git-send-email-andrea.merello@gmail.com> (sfid-20140205_223750_119721_3883C51B)
+In-Reply-To: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com>
+References: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes regression caused by commit a16dad77634 "MIPS: Fix
-potencial corruption". That commit fixes one corruption scenario in
-cost of adding another one, which actually start to cause crashes
-on Yeeloong laptop when rtl8187 driver is used.
+From: "andrea.merello" <andrea.merello@gmail.com>
 
-For correct DMA read operation on machines without DMA coherence, kernel
-have to invalidate cache, such it will refill later with new data that
-device wrote to memory, when that data is needed to process. We can only
-invalidate full cache line. Hence when cache line includes both dma
-buffer and some other data (written in cache, but not yet in main
-memory), the other data can not hit memory due to invalidation. That
-happen on rtl8187 where struct rtl8187_priv fields are located just
-before and after small buffers that are passed to USB layer and DMA
-is performed on them.
+- names of form FOOBAR_SHIFT, suggesting they should be used as
+  shift offset, for example
+  reg |= (1 << ENABLE_FOO_SHIFT).
 
-To fix the problem we align buffers and reserve space after them to make
-them match cache line.
+  However they are actually defined as (1 << x) and thus they are
+  used (correctly) like
+  reg |= ENABLE_FOO_SHIFT;
 
-This patch does not resolve all possible MIPS problems entirely, for
-that we have to assure that we always map cache aligned buffers for DMA,
-what can be complex or even not possible. But patch fixes visible and
-reproducible regression and seems other possible corruptions do not
-happen in practice, since Yeeloong laptop works stable without rtl8187
-driver.
+- RTL818X_TX_CONF_HW_SEQNUM  that actually means _disable_ hardware
+  sequence number
 
-Bug report:
-https://bugzilla.kernel.org/show_bug.cgi?id=54391
+This patch kills the misleading _SHIFT suffix and changes
+RTL818X_TX_CONF_HW_SEQNUM with RTL818X_TX_CONF_SW_SEQNUM
 
-Reported-by: Petr Pisar <petr.pisar@atlas.cz>
-Bisected-by: Tom Li <biergaizi2009@gmail.com>
-Reported-and-tested-by: Tom Li <biergaizi2009@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: andrea.merello <andrea.merello@gmail.com>
+Signed-off-by: andrea merello <andrea.merello@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187/rtl8187.h |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 10 +++++-----
+ drivers/net/wireless/rtl818x/rtl8187/dev.c | 16 ++++++++--------
+ drivers/net/wireless/rtl818x/rtl818x.h     | 12 ++++++------
+ 3 files changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-index 56aee06..a6ad79f 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-+++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-@@ -15,6 +15,8 @@
- #ifndef RTL8187_H
- #define RTL8187_H
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 8ec17aa..79b9398 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -602,13 +602,13 @@ static int rtl8180_start(struct ieee80211_hw *dev)
  
-+#include <linux/cache.h>
-+
- #include "rtl818x.h"
- #include "leds.h"
+ 	if (priv->r8185) {
+ 		reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+-		reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
+-		reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++		reg &= ~RTL818X_CW_CONF_PERPACKET_CW;
++		reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
+ 		rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
  
-@@ -139,7 +141,10 @@ struct rtl8187_priv {
- 	u8 aifsn[4];
- 	u8 rfkill_mask;
- 	struct {
--		__le64 buf;
-+		union {
-+			__le64 buf;
-+			u8 dummy1[L1_CACHE_BYTES];
-+		} ____cacheline_aligned;
- 		struct sk_buff_head queue;
- 	} b_tx_status; /* This queue is used by both -b and non-b devices */
- 	struct mutex io_mutex;
-@@ -147,7 +152,8 @@ struct rtl8187_priv {
- 		u8 bits8;
- 		__le16 bits16;
- 		__le32 bits32;
--	} *io_dmabuf;
-+		u8 dummy2[L1_CACHE_BYTES];
-+	} *io_dmabuf ____cacheline_aligned;
- 	bool rfkill_off;
- 	u16 seqno;
- };
+ 		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
+-		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
+-		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
+ 		reg |=  RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
+ 		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
+ 
+@@ -623,7 +623,7 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 	if (priv->r8185)
+ 		reg &= ~RTL818X_TX_CONF_PROBE_DTS;
+ 	else
+-		reg &= ~RTL818X_TX_CONF_HW_SEQNUM;
++		reg &= ~RTL818X_TX_CONF_SW_SEQNUM;
+ 
+ 	/* different meaning, same value on both rtl8185 and rtl8180 */
+ 	reg &= ~RTL818X_TX_CONF_SAT_HWPLCP;
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+index fd78df8..b0b1730 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -785,7 +785,7 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite16(priv, (__le16 *)0xFF34, 0x0FFF);
+ 
+ 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+-	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++	reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
+ 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
+ 
+ 	/* Auto Rate Fallback Register (ARFR): 1M-54M setting */
+@@ -943,13 +943,13 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
+ 		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
+-		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
+-		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
+ 		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
+ 		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
+ 
+ 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+-				  RTL818X_TX_CONF_HW_SEQNUM |
++				  RTL818X_TX_CONF_SW_SEQNUM |
+ 				  RTL818X_TX_CONF_DISREQQSIZE |
+ 				  (RETRY_COUNT << 8  /* short retry limit */) |
+ 				  (RETRY_COUNT << 0  /* long retry limit */) |
+@@ -986,13 +986,13 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
+ 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+-	reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
+-	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++	reg &= ~RTL818X_CW_CONF_PERPACKET_CW;
++	reg |= RTL818X_CW_CONF_PERPACKET_RETRY;
+ 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
+ 
+ 	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
+-	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
+-	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN;
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL;
+ 	reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
+ 	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
+ 
+diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
+index ce23dfd..89fe1d3 100644
+--- a/drivers/net/wireless/rtl818x/rtl818x.h
++++ b/drivers/net/wireless/rtl818x/rtl818x.h
+@@ -71,7 +71,7 @@ struct rtl818x_csr {
+ #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
+ #define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
+ #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
+-#define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
++#define RTL818X_TX_CONF_SW_SEQNUM	(1 << 30)
+ #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
+ 	__le32	RX_CONF;
+ #define RTL818X_RX_CONF_MONITOR		(1 <<  0)
+@@ -144,9 +144,9 @@ struct rtl818x_csr {
+ 	__le32	HSSI_PARA;
+ 	u8	reserved_13[4];
+ 	u8	TX_AGC_CTL;
+-#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
+-#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
+-#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT			(1 << 2)
++#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN	(1 << 0)
++#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL	(1 << 1)
++#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT		(1 << 2)
+ 	u8	TX_GAIN_CCK;
+ 	u8	TX_GAIN_OFDM;
+ 	u8	TX_ANTENNA;
+@@ -158,8 +158,8 @@ struct rtl818x_csr {
+ 	u8	SLOT;
+ 	u8	reserved_16[5];
+ 	u8	CW_CONF;
+-#define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
+-#define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
++#define RTL818X_CW_CONF_PERPACKET_CW	(1 << 0)
++#define RTL818X_CW_CONF_PERPACKET_RETRY	(1 << 1)
+ 	u8	CW_VAL;
+ 	u8	RATE_FALLBACK;
+ #define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
 -- 
-1.7.4.4
+1.8.3.2
 
