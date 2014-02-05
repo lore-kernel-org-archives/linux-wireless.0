@@ -1,221 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4293 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059AbaBNGGS (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:38397 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbaBEHkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 01:06:18 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k:  add vdev-id, return code to error codes
-References: <1392318562-32440-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 14 Feb 2014 08:06:13 +0200
-In-Reply-To: <1392318562-32440-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Thu, 13 Feb 2014 11:09:21
-	-0800")
-Message-ID: <87bnya6xey.fsf@kamboji.qca.qualcomm.com> (sfid-20140214_070622_549343_5B7F4EE3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 5 Feb 2014 02:40:01 -0500
+Message-ID: <1391585999.16723.7.camel@porter.coelho.fi> (sfid-20140205_084007_134740_55F0D436)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 05 Feb 2014 09:39:59 +0200
+In-Reply-To: <CA+BoTQngW4Ycuv0H=ba5KWs2qDcqPQtKJWp-9XEwdqQv+Xu6CA@mail.gmail.com>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	 <1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	 <1391508433.26522.61.camel@porter.coelho.fi>
+	 <CA+BoTQngW4Ycuv0H=ba5KWs2qDcqPQtKJWp-9XEwdqQv+Xu6CA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+On Tue, 2014-02-04 at 13:14 +0100, Michal Kazior wrote:
+> On 4 February 2014 11:07, Luca Coelho <luca@coelho.fi> wrote:
+> > On Mon, 2014-02-03 at 14:41 +0100, Johannes Berg wrote:
+> >> On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
+> >> >  * inform userspace what interfaces will be
+> >> >    possibly disconnected by a channel switch,
+> >>
+> >> Huh? Not sure I get that part, why would userspace ever be notified
+> >> about something that *will* happen? Either the interface disconnects
+> >> when the CSA is received, or it just switches and userspace gets a "CSA
+> >> will happen" event?
+> 
+> True. Userspace can probably deduce from interface combinations some
+> interfaces require attention due to channel switching.
+> 
+> 
+> > How do we get the "target" beacon from userspace if the interface just
+> > switches?
+> 
+> Do you really need the beacon? What for?
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> When using multiple vdevs (stations, aps, etc), it is
-> nice to be able to associate log messages with specific
-> interfaces.  So, add vdev-id to most logging messages.
-> Add return code as well, where it was missing.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-
-I did some changes just to have consistent style for warning messages,
-see my incremental diff patch below. Let me know if you agree with my
-changes, the full patch is in ath-next-test branch.
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7a593e0..ead6f4d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -878,7 +878,7 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
- 	ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
- 				 arvif->bssid);
- 	if (ret) {
--		ath10k_warn("Failed to bring up VDEV: %d ret %i\n",
-+		ath10k_warn("Failed to bring up vdev %d: %i\n",
- 			    arvif->vdev_id, ret);
- 		ath10k_vdev_stop(arvif);
- 		return;
-@@ -959,7 +959,7 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id, param,
- 						  conf->dynamic_ps_timeout);
- 		if (ret) {
--			ath10k_warn("Failed to set inactivity time for VDEV: %d ret %i\n",
-+			ath10k_warn("Failed to set inactivity time for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 			return ret;
- 		}
-@@ -1212,7 +1212,7 @@ static int ath10k_peer_assoc_qos_ap(struct ath10k *ar,
- 						 WMI_AP_PS_PEER_PARAM_UAPSD,
- 						 uapsd);
- 		if (ret) {
--			ath10k_warn("failed to set ap ps peer param uapsd, vdev %i: %d\n",
-+			ath10k_warn("failed to set ap ps peer param uapsd for vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 			return ret;
- 		}
-@@ -1222,7 +1222,7 @@ static int ath10k_peer_assoc_qos_ap(struct ath10k *ar,
- 						 WMI_AP_PS_PEER_PARAM_MAX_SP,
- 						 max_sp);
- 		if (ret) {
--			ath10k_warn("failed to set ap ps peer param max sp, vdev %i: %d\n",
-+			ath10k_warn("failed to set ap ps peer param max sp for vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 			return ret;
- 		}
-@@ -1234,7 +1234,7 @@ static int ath10k_peer_assoc_qos_ap(struct ath10k *ar,
- 		ret = ath10k_wmi_set_ap_ps_param(ar, arvif->vdev_id, sta->addr,
- 					WMI_AP_PS_PEER_PARAM_AGEOUT_TIME, 10);
- 		if (ret) {
--			ath10k_warn("failed to set ap ps peer param ageout time, vdev %i: %d\n",
-+			ath10k_warn("failed to set ap ps peer param ageout time for vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 			return ret;
- 		}
-@@ -1542,20 +1542,20 @@ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
- 
- 	ret = ath10k_setup_peer_smps(ar, arvif, sta->addr, &sta->ht_cap);
- 	if (ret) {
--		ath10k_warn("failed to setup peer SMPS: %d\n", ret);
-+		ath10k_warn("failed to setup peer SMPS for vdev: %d\n", ret);
- 		return ret;
- 	}
- 
- 	ret = ath10k_install_peer_wep_keys(arvif, sta->addr);
- 	if (ret) {
--		ath10k_warn("could not install peer wep keys, vdev %i (%d)\n",
-+		ath10k_warn("could not install peer wep keys for vdev %i: %d\n",
- 			    arvif->vdev_id, ret);
- 		return ret;
- 	}
- 
- 	ret = ath10k_peer_assoc_qos_ap(ar, arvif, sta);
- 	if (ret) {
--		ath10k_warn("could not set qos params for STA %pM, vdev %i %d\n",
-+		ath10k_warn("could not set qos params for STA %pM for vdev %i: %d\n",
- 			    sta->addr, arvif->vdev_id, ret);
- 		return ret;
- 	}
-@@ -1572,7 +1572,7 @@ static int ath10k_station_disassoc(struct ath10k *ar, struct ath10k_vif *arvif,
- 
- 	ret = ath10k_clear_peer_keys(arvif, sta->addr);
- 	if (ret) {
--		ath10k_warn("could not clear all peer wep keys, vdev %i (%d)\n",
-+		ath10k_warn("could not clear all peer wep keys for vdev %i: %d\n",
- 			    arvif->vdev_id, ret);
- 		return ret;
- 	}
-@@ -2775,7 +2775,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 			   arvif->vdev_id, arvif->beacon_interval);
- 
- 		if (ret)
--			ath10k_warn("Failed to set beacon interval for VDEV %d: %i\n",
-+			ath10k_warn("Failed to set beacon interval for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -2788,7 +2788,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_pdev_set_param(ar, pdev_param,
- 						WMI_BEACON_STAGGERED_MODE);
- 		if (ret)
--			ath10k_warn("Failed to set beacon mode for VDEV %d: %i\n",
-+			ath10k_warn("Failed to set beacon mode for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -2803,7 +2803,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 						arvif->dtim_period);
- 		if (ret)
--			ath10k_warn("Failed to set dtim period for VDEV %d: %i\n",
-+			ath10k_warn("Failed to set dtim period for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -2876,7 +2876,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 						cts_prot);
- 		if (ret)
--			ath10k_warn("Failed to set CTS prot for VDEV: %d ret %i\n",
-+			ath10k_warn("Failed to set CTS prot for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -2895,7 +2895,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 						slottime);
- 		if (ret)
--			ath10k_warn("Failed to set erp slot for VDEV: %d ret %i\n",
-+			ath10k_warn("Failed to set erp slot for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -2914,7 +2914,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 						preamble);
- 		if (ret)
--			ath10k_warn("Failed to set preamble for VDEV: %d ret %i\n",
-+			ath10k_warn("Failed to set preamble for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
- 	}
- 
-@@ -3107,7 +3107,7 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	ret = ath10k_install_key(arvif, key, cmd, peer_addr);
- 	if (ret) {
--		ath10k_warn("ath10k_install_key failed for vdev %i peer %pM (%d)\n",
-+		ath10k_warn("key installation failed for vdev %i peer %pM: %d\n",
- 			    arvif->vdev_id, peer_addr, ret);
- 		goto exit;
- 	}
-@@ -3252,7 +3252,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   arvif->vdev_id, sta->addr);
- 		ret = ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
- 		if (ret)
--			ath10k_warn("Failed to delete peer: %pM for VDEV: %d ret %i\n",
-+			ath10k_warn("Failed to delete peer %pM for vdev %d: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
- 
- 		if (vif->type == NL80211_IFTYPE_STATION)
-@@ -3269,7 +3269,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 
- 		ret = ath10k_station_assoc(ar, arvif, sta);
- 		if (ret)
--			ath10k_warn("Failed to associate station: %pM vdev %i ret %i\n",
-+			ath10k_warn("Failed to associate station %pM for vdev %i: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTH &&
-@@ -4390,7 +4390,7 @@ struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id)
- 						   ath10k_get_arvif_iter,
- 						   &arvif_iter);
- 	if (!arvif_iter.arvif) {
--		ath10k_warn("No VIF found for VDEV: %d\n", vdev_id);
-+		ath10k_warn("No VIF found for vdev %d\n", vdev_id);
- 		return NULL;
- 	}
- 
-@@ -4529,7 +4529,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ret = ath_regd_init(&ar->ath_common.regulatory, ar->hw->wiphy,
- 			    ath10k_reg_notifier);
- 	if (ret) {
--		ath10k_err("Regulatory initialization failed, ret %i\n", ret);
-+		ath10k_err("Regulatory initialization failed: %i\n", ret);
- 		goto err_free;
- 	}
- 
+I meant if we would switch the AP/GO interfaces automatically.  We need
+the beacon that should be transmitted in the new channel (like the one
+we need to pass in the existing channel switch request API).
 
 
--- 
-Kalle Valo
+> > Now a bit of brain burp: I think that the "count" decision should remain
+> > in the userspace so it can decide to give more time for its stations to
+> > switch.  Eg. if the client interface got a CSA with count == x and a
+> > host interface has dtim_interval > x, the userspace can send a "quiet"
+> > CSA with count == dtim_interval + 1.  The two requests would be "merged"
+> > and the highest count would win.  The client would be a bit late on the
+> > new channel, but at least the AP wouldn't lose most of its clients.
+> > Does this make any sense? I'm not sure myself. :)
+> 
+> Makes sense.
+
+Let's keep this in mind as an improvement for later.
+
+
+> >> >  * disconnect non-complying interfaces that were
+> >> >    sharing a channel that is being abandoned by
+> >> >    channel switching interface(s),
+> >>
+> >> Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
+> >> possible (userspace CSA) or cause the switching interface to disconnect,
+> >> rather than *others*??
+> >
+> > It depends.  And this logic is too complicated to stay in the kernel,
+> > IMHO.  If we are in a GO-follows-STA scenario, we want to disconnect the
+> > GO.  Now, if you have an AP (with tons of STAs connected to it) and a
+> > P2P client gets a CSA for whatever reason, do we really want to stop the
+> > AP?
+> 
+> Agreed.
+> 
+> But doesn't this imply STA CSA shouldn't be started within kernel
+> itself? Otherwise you leave a corner case when STA CSA is very short
+> making it impossible for userspace to take any action.
+
+I don't see how involving the userspace in the STA CSA decision would
+make any difference.  Doesn't it actually make it worse, because the STA
+CSA *itself* may fail because userspace doesn't have the time to react?
+
+
+> >> > - * @channel_switch: initiate channel-switch procedure (with CSA)
+> >> > + * @ch_switch_start: initiate channel-switch procedure (with CSA). This should
+> >> > + * prompt the driver to perform preparation work (start some timers,
+> >> > + * include CS IEs in beacons, etc) but don't do an actual channel switch.
+> >> > + * Once driver has completed all preparations and is ready for the actual
+> >> > + * switch (after CSA counter is completed) it must call
+> >> > + * cfg80211_ch_switch_complete(wdev). After that ch_switch_finalize() MAY
+> >> > + * be called, but it doesn't necessarily happen immediately as cfg80211
+> >> > + * may need to synchronize with other interfaces. If channel switch is
+> >> > + * cancelled for some reason ch_switch_finalize() is not called and driver
+> >> > + * should free up resources/cleanup state in interface disconnection flow.
+> >> > + * @ch_switch_finalize: finalize channel-switch procedure, i.e. perform the
+> >> > + * actual switch.
+> >>
+> >> I don't like this at all. This totally assumes that every driver behaves
+> >> like mac80211, which clearly is not the case. The split between
+> >> "starting" and "finalizing" it should not be part of the API.
+> >
+> > I agree, especially if the driver offloads the channel switch, in which
+> > case it wouldn't be possible for cfg80211 to hold the finalize call to
+> > sync all the interfaces.
+> 
+> This implies we don't care if channel switching breaks interface
+> combinations, right?
+
+Those decisions need to be made *before* the channel switch starts.
+
+--
+Luca.
+
