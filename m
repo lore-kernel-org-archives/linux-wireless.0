@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:60870 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbaBYH01 (ORCPT
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:38016 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303AbaBEJZQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 02:26:27 -0500
-Received: by mail-ee0-f48.google.com with SMTP id c13so937465eek.35
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Feb 2014 23:26:23 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	mcgrof@do-not-panic.com, linville@tuxdriver.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/2] crda: add AUTO-BW rule flag support
-Date: Tue, 25 Feb 2014 08:26:03 +0100
-Message-Id: <1393313163-9568-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140225_082631_240215_A80364D5)
-In-Reply-To: <1393313163-9568-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393313163-9568-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 5 Feb 2014 04:25:16 -0500
+Date: Wed, 5 Feb 2014 04:25:12 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Zoran Markovic <zoran.markovic@linaro.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to power
+ efficient workqueue
+Message-ID: <20140205092512.GB32349@htj.dyndns.org> (sfid-20140205_102522_588900_9F9EC1CE)
+References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
+ <1391160084.4141.1.camel@jlt4.sipsolutions.net>
+ <20140131093531.GA25559@mtj.dyndns.org>
+ <20140205091742.GA1978@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140205091742.GA1978@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- regdb.h  |    1 +
- reglib.c |    4 ++++
- 2 files changed, 5 insertions(+)
+Hello,
 
-diff --git a/regdb.h b/regdb.h
-index 20f29e9..3ffb781 100644
---- a/regdb.h
-+++ b/regdb.h
-@@ -81,6 +81,7 @@ enum reg_rule_flags {
- 					 * Point links */
- 	RRF_NO_IR		= 1<<7, /* do not initiate radiation */
- 	__RRF_NO_IBSS		= 1<<8, /* old no-IBSS rule, maps to no-ir */
-+	RRF_AUTO_BW		= 1<<11, /* Auto BW calculations */
- };
- 
- #define RRF_NO_IR_ALL	(RRF_NO_IR | __RRF_NO_IBSS)
-diff --git a/reglib.c b/reglib.c
-index 1e57634..3deca4a 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -750,6 +750,8 @@ static void print_reg_rule(const struct ieee80211_reg_rule *rule)
- 		printf(", PTMP-ONLY");
- 	if (rule->flags & RRF_NO_IR_ALL)
- 		printf(", NO-IR");
-+	if (rule->flags & RRF_AUTO_BW)
-+		printf(", AUTO-BW");
- 
- 	printf("\n");
- }
-@@ -793,6 +795,8 @@ static uint32_t reglib_parse_rule_flag(char *flag_s)
- 		return RRF_PTMP_ONLY;
- 	if (strncmp(flag_s, "NO-IR", 5) == 0)
- 		return RRF_NO_IR;
-+	if (strncmp(flag_s, "AUTO-BW", 7) == 0)
-+		return RRF_AUTO_BW;
- 
- 	return 0;
- }
+On Wed, Feb 05, 2014 at 10:17:42AM +0100, Stanislaw Gruszka wrote:
+> What are selection criteria when choosing between system_wq or
+> system_power_efficient_wq on drivers ? IOW if I would be writing
+> a new driver which workqueue should I use and when ?
+
+Yeah, it's a bit ad-hoc at the moment.  The original intention was
+just marking the ones which can be shown to have noticeable power
+impacts which weren't expected to be too many but we may now have an
+self-feeding feedback loop growing new usages, likely somewhat
+overzealously and be better off making things more generic.
+
+> I think that should be driver independent, at least for most of drivers.
+> If system have to run in low power mode, system_power_efficient_wq
+> should be chosen automatically by schedule_work(), otherwise when high
+> performance is more important schedule_work() should use system_wq.
+
+The problem there is that system_wq has traditionally guaranteed
+per-cpu execution.  It can't automatically be switched to unbound
+behavior.  The best long term solution would be isolating the users
+which depend on per-cpu behavior and mark them specially rather than
+the other way around that we're doing now, making per-cpu guarantee
+the special case rather than the norm.  That's gonna take a lot of
+auditing tho.
+
+Thanks.
+
 -- 
-1.7.9.5
-
+tejun
