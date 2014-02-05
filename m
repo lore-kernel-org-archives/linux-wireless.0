@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55591 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbaBQQ4S (ORCPT
+Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:57687 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750775AbaBENE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 11:56:18 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v2 0/3] 802.21 and MPLS headers and classification
-Date: Mon, 17 Feb 2014 17:56:10 +0100
-Message-Id: <1392656174-14791-1-git-send-email-sw@simonwunderlich.de> (sfid-20140217_175639_775999_7C2F881C)
+	Wed, 5 Feb 2014 08:04:59 -0500
+Message-ID: <1391605494.2538.68.camel@joe-AO722> (sfid-20140205_140502_398664_1DC9EF90)
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
+From: Joe Perches <joe@perches.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 05 Feb 2014 05:04:54 -0800
+In-Reply-To: <20140205124127.GP26684@n2100.arm.linux.org.uk>
+References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
+	 <1391483274-20331-2-git-send-email-sujith@msujith.org>
+	 <1391484878.2538.11.camel@joe-AO722>
+	 <21232.24855.201543.400943@gargle.gargle.HOWL>
+	 <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
+	 <1391531796.2538.21.camel@joe-AO722>
+	 <20140205115035.GO26684@n2100.arm.linux.org.uk>
+	 <1391603566.2538.63.camel@joe-AO722>
+	 <20140205124127.GP26684@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2014-02-05 at 12:41 +0000, Russell King - ARM Linux wrote:
+> On Wed, Feb 05, 2014 at 04:32:46AM -0800, Joe Perches wrote:
+> > Apparently, people just convert stupidly large udelay()s
+> > to mdelay and not be bothered.
+> 
+> And that's the correct answer.  Having udelay(10000) rather than mdelay(10)
+> is a sign that they weren't paying that much attention when writing the
+> code.
 
-this series contains a header file proposal for MPLS labels. These
-labels do not seem to be properly defined in the kernel so far. We are
-developing a wired/wireless 802.21/MPLS switch and need to check the
-MPLS labels to use the traffic control info for transmissions over
-802.11 networks.
+Not really.
 
-Thanks to Joe Perches for comments - changes have been made according
-to his suggestions, check the individual patches for details.
+Look at the code that brought this up in the first place.
 
-Thanks,
-     Simon
+On Tue, 2014-02-04 at 08:37 +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Use mdelay instead of udelay to fix this error:
+> 
+> ERROR: "__bad_udelay" [drivers/net/wireless/ath/ath9k/ath9k_hw.ko] undefined!
+[]
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+[]
+> @@ -1316,7 +1316,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+>  	if (AR_SREV_9300_20_OR_LATER(ah))
+>  		udelay(50);
+>  	else if (AR_SREV_9100(ah))
+> -		udelay(10000);
+> +		mdelay(10);
+>  	else
+>  		udelay(100);
+>  
+> 
+> >     if (AR_SREV_9300_20_OR_LATER(ah))
+> >             udelay(50);
+> >     else if (AR_SREV_9100(ah))
+> > -           udelay(10000);
+> > +           mdelay(10);
+> >     else
+> >             udelay(100);
 
-Simon Wunderlich (3):
-  if_ether.h: add IEEE 802.21 Ethertype
-  UAPI: add MPLS label stack definition
-  cfg80211: add MPLS and 802.21 classification
+One chip needs a larger delay than the others.
 
- include/linux/mpls.h          |    6 ++++++
- include/uapi/linux/if_ether.h |    1 +
- include/uapi/linux/mpls.h     |   34 ++++++++++++++++++++++++++++++++++
- net/wireless/util.c           |   24 ++++++++++++++++++++++++
- 4 files changed, 65 insertions(+)
- create mode 100644 include/linux/mpls.h
- create mode 100644 include/uapi/linux/mpls.h
+It's not so much not paying attention as not
+knowing ARM is broken for large udelay().
 
--- 
-1.7.10.4
 
