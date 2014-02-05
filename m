@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52702 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbaBLKmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 05:42:43 -0500
-Date: Wed, 12 Feb 2014 11:41:47 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
-Subject: Re: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
-Message-ID: <20140212104146.GD1315@redhat.com> (sfid-20140212_114248_738090_23045866)
-References: <52FB360D.2060502@gmail.com>
- <1392195269-5514-1-git-send-email-egrumbach@gmail.com>
- <20140212091008.GB1315@redhat.com>
- <20140212092150.GC1315@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
+Received: from smtprelay0065.hostedemail.com ([216.40.44.65]:35678 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750723AbaBEMcu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Feb 2014 07:32:50 -0500
+Message-ID: <1391603566.2538.63.camel@joe-AO722> (sfid-20140205_133317_223890_6A8E43B3)
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
+From: Joe Perches <joe@perches.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 05 Feb 2014 04:32:46 -0800
+In-Reply-To: <20140205115035.GO26684@n2100.arm.linux.org.uk>
+References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
+	 <1391483274-20331-2-git-send-email-sujith@msujith.org>
+	 <1391484878.2538.11.camel@joe-AO722>
+	 <21232.24855.201543.400943@gargle.gargle.HOWL>
+	 <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
+	 <1391531796.2538.21.camel@joe-AO722>
+	 <20140205115035.GO26684@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 09:35:03AM +0000, Grumbach, Emmanuel wrote:
+On Wed, 2014-02-05 at 11:50 +0000, Russell King - ARM Linux wrote:
+> On Tue, Feb 04, 2014 at 08:36:36AM -0800, Joe Perches wrote:
+> > On Tue, 2014-02-04 at 08:03 +0100, Holger Schurig wrote:
+> > > Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
+> > > cannot handle large values because of lost-of-precision.
+> > > 
+> > > IMHO udelay on ARM is broken, because it also cannot work with fast
+> > > ARM processors (where bogomips >= 3355, which is in sight now). It's
+> > > just not broken enought that someone did something against it ...   so
+> > > the current kludge is good enought.
 > > 
-> > On Wed, Feb 12, 2014 at 10:10:08AM +0100, Stanislaw Gruszka wrote:
-> > > On Wed, Feb 12, 2014 at 10:54:29AM +0200, Emmanuel Grumbach wrote:
-> > > > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > > >
-> > > > We have had a bug in TX AMPDU in iwldvm for a very long time. This
-> > > > bug has been raised in many bugzillas and threads on linux-wireless
-> > > > mailing list.
-> > > >
-> > > > The bug is in firmware and we won't be able to fix it in the near
-> > > > future. Hence, we prefer to disable TX AMPDU by default in iwldvm.
-> > > > This doesn't affect iwlmvm which supports 7160 /
-> > > > 3160 and up.
-> > >
-> > > ...
-> > >
-> > > >  #define IWL_DISABLE_HT_ALL	BIT(0)
-> > > > -#define IWL_DISABLE_HT_TXAGG	BIT(1)
-> > >
-> > > Whouln't simple change, by setting disable_11=2 by default, make the
-> > > same effect, and allow easly to enable TX aggregation (without kernel
-> > > recompile) ?
-> > 
+> > Maybe something like this would be better?
 > 
-> I guess at that point, I prefer to have a compilation flag. In Redhat / Fedora you'd disable it by default right?
+> No, the point of __bad_udelay() is that people doing stupidly large
+> udelay()s result in build errors,
 
-No, we do not have any extra options in /etc/modprobe.d/ for iwlwifi,
-all is running with default settings.
- 
-> Also the module parameter is for iwlwifi which includes iwlmvm. When I did this change I mainly thought about distros not wanting to  change their modprobe.conf files. I want to give the possibility for distro to disable TX AMPDU for iwldvm and keep it enable for iwlmvm. We can move the module parameter to be iwldvm only, this would be the best, but it'd require distro to make changes... Ignoring the disable_11n module parameter in iwlmvm seems odd (even if this is what I do know for IWL_DISABLE_HT_ALL and IWL_DISABLE_HT_RXAGG).
-> If you (as a distro representative) have a better idea, I am willing to hear. After all, this change is mostly intended to make distro's life easier...
+Apparently, people just convert stupidly large udelay()s
+to mdelay and not be bothered.
 
-If somebody has working aggregation and we will remove that from kernel,
-we will get complains. Telling that he/she have to recompile kernel to
-get functionality back, will not make live easier to anyone. Setting
-module option is much much easier. 
-
-In the past we have in iwlwifi module parameters initialized differently
-for different devices. Though, it does not work with many devices on the
-system, this is not an issue since normal users have only one device.
-I guess the same could be used here:
-0 - default (device specific), 1 - disable TX AGG, 2 - disable RX AGG,
-4 - force enable TX AGG, 8 - force enable RX AGG.
-
-> > Also, does the bug affect all iwldvm devices ? They have different firmware
-> > images, so I wonder if this is needed for all DVM devices.
+>  rather than having to run the kernel
+> and trip over a non-existent debugging message beacuse they haven't
+> built the kernel with DEBUG defined.
 > 
-> I have seen reports from many users and many devices - and unfortunately I have never been able to reproduce
+> NAK.
 
-So, that is argument to do not remove support for TX agg. If someone
-has that working, he/she still should be able to use it.
+<shrug>
 
-Stanislaw
+Perhaps there should be some runtime udelay > maximum
+supported check.
+
