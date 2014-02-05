@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:58291 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbaBTOl4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18638 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799AbaBEOts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 09:41:56 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: allow drivers to request SMPS off
-Date: Thu, 20 Feb 2014 16:41:51 +0200
-Message-Id: <1392907311-13655-1-git-send-email-luca@coelho.fi> (sfid-20140220_154159_486901_383256EA)
+	Wed, 5 Feb 2014 09:49:48 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: move VHT related RX_FLAG to another variable
+References: <1391611031-29099-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Wed, 5 Feb 2014 16:49:43 +0200
+In-Reply-To: <1391611031-29099-1-git-send-email-emmanuel.grumbach@intel.com>
+	(Emmanuel Grumbach's message of "Wed, 5 Feb 2014 16:37:11 +0200")
+Message-ID: <87ppn1k41k.fsf@kamboji.qca.qualcomm.com> (sfid-20140205_154952_014327_2A272C6A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
 
-Previously we were warning and using automatic when a driver sent an
-update request with SMPS off.  This patch makes it possible for
-drivers to disable SMPS at runtime, for whatever reason.
+> ieee80211_rx_status.flags is full. Define a new vht_flag
+> variable to be able to set more VHT related flags and make
+> room in flags.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> v2: Fix ath10k compilation
+> ---
+>  drivers/net/wireless/ath/ath10k/txrx.c |  4 ++--
+>  drivers/net/wireless/iwlwifi/mvm/rx.c  |  4 ++--
+>  include/net/mac80211.h                 | 23 +++++++++++++++++------
+>  net/mac80211/cfg.c                     |  6 +++---
+>  net/mac80211/rx.c                      |  9 +++++----
+>  net/mac80211/sta_info.h                |  2 ++
+>  net/mac80211/util.c                    |  6 +++---
+>  7 files changed, 34 insertions(+), 20 deletions(-)
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ht.c | 2 --
- 1 file changed, 2 deletions(-)
+For ath10k changes:
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index afbe2b2..c150b68 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -482,8 +482,6 @@ void ieee80211_request_smps(struct ieee80211_vif *vif,
- 		return;
- 
- 	if (vif->type == NL80211_IFTYPE_STATION) {
--		if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
--			smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 		if (sdata->u.mgd.driver_smps_mode == smps_mode)
- 			return;
- 		sdata->u.mgd.driver_smps_mode = smps_mode;
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
 -- 
-1.8.5.3
-
+Kalle Valo
