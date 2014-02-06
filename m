@@ -1,128 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:55779 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932239AbaBUNzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 08:55:22 -0500
-Received: from fb07-iapwap2.localnet ([134.176.19.122]) by mail.gmx.com
- (mrgmx101) with ESMTPSA (Nemesis) id 0MXUmw-1Wjwgb1bWg-00WX6H for
- <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 14:55:20 +0100
-From: Marc Dietrich <marvin24@gmx.de>
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] net: rfkill: gpio: remove unused and obsolete platform parameters
-Date: Fri, 21 Feb 2014 14:55:14 +0100
-Message-ID: <1723302.jKkc8NDNRI@fb07-iapwap2> (sfid-20140221_145637_590292_36DC3077)
-In-Reply-To: <1392900697-27577-2-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com> <1392900697-27577-2-git-send-email-heikki.krogerus@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([144.76.43.152]:57318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbaBFQMP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Feb 2014 11:12:15 -0500
+Message-ID: <1391703129.12789.17.camel@jlt4.sipsolutions.net> (sfid-20140206_171218_406541_B24A963A)
+Subject: Re: [RFC] mac80211: add NAPI support back
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 06 Feb 2014 17:12:09 +0100
+In-Reply-To: <52F3B3D1.8050807@openwrt.org> (sfid-20140206_171000_437555_4D94073B)
+References: <1391637437-5381-1-git-send-email-johannes@sipsolutions.net>
+	 <52F3B3D1.8050807@openwrt.org> (sfid-20140206_171000_437555_4D94073B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Heikki,
+On Thu, 2014-02-06 at 17:09 +0100, Felix Fietkau wrote:
 
-Am Donnerstag, 20. Februar 2014, 14:51:34 schrieb Heikki Krogerus:
-> After upgrading to descriptor based gpios, the gpio numbers
-> are not used anymore. The power_clk_name and the platform
-> specific setup and close hooks are not used by anybody, and
-> we should not encourage use of such things, so removing them.
+> Why do you call napi_gro_receive at all?
+> Without device GRO support it seems to be just a fancy way of doing
+> netif_receive_skb with a bit more unnecessary indirection.
 
-arch/arm/mach-tegra/board-paz00.c is still using platform data. Is there some 
-prerequisite patch I'm missing (3.14-rc3) or how can this file be converted? 
-We are waiting for DT support to arrive so we can finally remove this file.
+Because I want GRO, of course :-)
 
-Marc
+GRO is also enabled by default in netif flags (since 2.6.39 or
+something) so any mac80211 driver that ends up using NAPI will also take
+advantage of GRO.
 
-> 
-> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> ---
->  include/linux/rfkill-gpio.h | 10 ----------
->  net/rfkill/rfkill-gpio.c    | 15 +--------------
->  2 files changed, 1 insertion(+), 24 deletions(-)
-> 
-> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
-> index 4d09f6e..20bcb55 100644
-> --- a/include/linux/rfkill-gpio.h
-> +++ b/include/linux/rfkill-gpio.h
-> @@ -27,21 +27,11 @@
->   * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
-> * for unused gpio's, the expected value is -1.
->   * @name:		name for the gpio rf kill instance
-> - * @reset_gpio:		GPIO which is used for reseting rfkill switch
-> - * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
-> - * @power_clk_name:	[optional] name of clk to turn off while blocked
-> - * @gpio_runtime_close:	clean up platform specific gpio configuration
-> - * @gpio_runtime_setup:	set up platform specific gpio configuration
->   */
-> 
->  struct rfkill_gpio_platform_data {
->  	char			*name;
-> -	int			reset_gpio;
-> -	int			shutdown_gpio;
-> -	const char		*power_clk_name;
->  	enum rfkill_type	type;
-> -	void	(*gpio_runtime_close)(struct platform_device *);
-> -	int	(*gpio_runtime_setup)(struct platform_device *);
->  };
-> 
->  #endif /* __RFKILL_GPIO_H */
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index bd2a5b9..0adda44 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
-> {
->  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
->  	struct rfkill_gpio_data *rfkill;
-> -	const char *clk_name = NULL;
->  	struct gpio_desc *gpio;
->  	int ret;
->  	int len;
-> @@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device
-> *pdev) if (ret)
->  			return ret;
->  	} else if (pdata) {
-> -		clk_name = pdata->power_clk_name;
->  		rfkill->name = pdata->name;
->  		rfkill->type = pdata->type;
->  	} else {
-> @@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device
-> *pdev) snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
-> snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
-> 
-> -	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
-> +	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
-> 
->  	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
->  	if (!IS_ERR(gpio)) {
-> @@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device
-> *pdev) return -EINVAL;
->  	}
-> 
-> -	if (pdata && pdata->gpio_runtime_setup) {
-> -		ret = pdata->gpio_runtime_setup(pdev);
-> -		if (ret) {
-> -			dev_err(&pdev->dev, "can't set up gpio\n");
-> -			return ret;
-> -		}
-> -	}
-> -
->  	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
->  					  rfkill->type, &rfkill_gpio_ops,
->  					  rfkill);
-> @@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device
-> *pdev) static int rfkill_gpio_remove(struct platform_device *pdev)
->  {
->  	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
-> -	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
-> 
-> -	if (pdata && pdata->gpio_runtime_close)
-> -		pdata->gpio_runtime_close(pdev);
->  	rfkill_unregister(rfkill->rfkill_dev);
->  	rfkill_destroy(rfkill->rfkill_dev);
+johannes
 
