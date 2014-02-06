@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:41800 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125AbaBDSAM (ORCPT
+Received: from smtp01.msg.oleane.net ([62.161.4.1]:57826 "EHLO
+	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754884AbaBFQit convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 13:00:12 -0500
+	Thu, 6 Feb 2014 11:38:49 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Felix Fietkau'" <nbd@openwrt.org>,
+	<linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A3190173371A@sbs2003.acksys.local> <52F39F41.2010300@openwrt.org>
+In-Reply-To: <52F39F41.2010300@openwrt.org>
+Subject: RE: ATH9K software retry
+Date: Thu, 6 Feb 2014 17:38:38 +0100
+Message-ID: <009301cf2359$e35f0330$aa1d0990$@acksys.fr> (sfid-20140206_173907_697661_A1762952)
 MIME-Version: 1.0
-In-Reply-To: <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
-References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
-	<20140202160512.GA4946@redhat.com>
-	<201402021807.37772.s.L-H@gmx.de>
-	<52EFCC66.9020304@lwfinger.net>
-	<20140203201228.GE26722@mwanda>
-	<CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com>
-	<CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
-Date: Tue, 4 Feb 2014 10:00:11 -0800
-Message-ID: <CA+55aFyF05NqDrRFnuVmUAwQFQz9k41+exSo1xVz69t_PJakOA@mail.gmail.com> (sfid-20140204_190033_346955_C595C38B)
-Subject: Re: rtl8821ae.
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Andrea Merello <andrea.merello@gmail.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Dave Jones <davej@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux Driver Project <devel@linuxdriverproject.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 3, 2014 at 6:22 PM, Andrea Merello <andrea.merello@gmail.com> wrote:
-> Right now I have merged rtl8187se support in rtl8180 driver. But I must
-> admit that I ever been in doubt about whether to produce a separate driver
-> rather than going on merging.
+> -----Message d'origine-----
+> De : Felix Fietkau [mailto:nbd@openwrt.org]
+> Envoyé : jeudi 6 février 2014 15:42
+> À : Cedric VONCKEN; linux-wireless@vger.kernel.org
+> Objet : Re: ATH9K software retry
+> 
+> On 2014-02-06 14:06, Cedric VONCKEN wrote:
+> > In xmit.c the function ath_tx_complete_aggr test if the fi->retries <
+> > ATH_MAX_SW_RETRIES.
+> >
+> > If this condition is true, ATH9K handle software retry.
+> >
+> > Minstrel set in the frame one or more rates, for each rate minstrel
+> > set a retries count. I think is sufficient.
+> >
+> > Why ATH9K need to manage the software retries?
+> The retries configured for minstrel_ht are used for hardware retries of
+single
+> frames and full A-MPDU transmissions. Software retries are used for
+> individual subframes that are sent as part of A-MPDUs.
+> This is required, because failed subframes are frequent with higher MCS
+rates
+> and A-MPDU.
+> 
+Is it possible to only applied software retrying for A-MPDU frame with more
+one frame?
+If I correctly understood the code, the function ath_tx_count_frames return
+the number of frame in the A-MPDU. If nframes == 1 we don't use the software
+retry.
 
-If you've already merged them, and you think it works, keep it that way.
+> > With the test we have a minimal of 30 retries (ATH_MAX_SW_RETRIES is
+> > set to 30).
 
-I was just saying that merging drivers isn't necessarily always the
-right thing to do, and can be painful as hell.
+Regards
 
-                  Linus
+Cedric Voncken
+
