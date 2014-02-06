@@ -1,104 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:49902 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbaBYLvI (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58470 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681AbaBFRKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 06:51:08 -0500
-Message-ID: <1393329065.4534.4.camel@porter.coelho.fi> (sfid-20140225_125113_180070_50C8DCF0)
-Subject: Re: [PATCH v4 3/4] cfg80211/mac80211: move interface counting for
- combination check to mac80211
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de, Bing Zhao <bzhao@marvell.com>,
-	arend@broadcom.com
-Date: Tue, 25 Feb 2014 13:51:05 +0200
-In-Reply-To: <CA+BoTQ=o4UXSa68Sr8y_ZRt9EAhRGrfYqdvY-33-bEf4TA34kw@mail.gmail.com>
-References: <1393275270-7255-1-git-send-email-luca@coelho.fi>
-	 <1393275270-7255-4-git-send-email-luca@coelho.fi>
-	 <CA+BoTQ=o4UXSa68Sr8y_ZRt9EAhRGrfYqdvY-33-bEf4TA34kw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Feb 2014 12:10:20 -0500
+Message-ID: <52F3C1F1.3090509@candelatech.com> (sfid-20140206_181024_055873_00CCB8D3)
+Date: Thu, 06 Feb 2014 09:10:09 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
+References: <1391662375-28781-1-git-send-email-sujith@msujith.org> <52F3B155.6010308@candelatech.com> <21235.46879.960127.346448@gargle.gargle.HOWL>
+In-Reply-To: <21235.46879.960127.346448@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-25 at 10:22 +0100, Michal Kazior wrote:
-> On 24 February 2014 21:54, Luciano Coelho <luca@coelho.fi> wrote:
+On 02/06/2014 08:23 AM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> Can you let us know the details on how your set up that TCP
+>> traffic?  For instance, number of streams, write size, socket
+>> buffer sizes, etc?  Upload, download, or are both similar
+>> throughput in your testing?
 > 
-> [...]
+> Stock OpenWrt (trunk) running on a 3x3 Scorpion board (AP136/AP135) as AP.
+> Windows 7 as client, using a 3x3 AR9300 card.
 > 
-> > --- a/net/mac80211/util.c
-> > +++ b/net/mac80211/util.c
-> > @@ -2801,3 +2801,79 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
-> >
-> >         ps->dtim_count = dtim_count;
-> >  }
-> > +
-> > +int ieee80211_check_combinations(struct ieee80211_local *local,
-> > +                                struct ieee80211_sub_if_data *sdata,
-> > +                                const struct cfg80211_chan_def *chandef,
-> > +                                enum ieee80211_chanctx_mode chanmode,
-> > +                                u8 radar_detect)
-> > +{
-> > +       struct ieee80211_sub_if_data *sdata_iter;
-> > +       enum nl80211_iftype iftype = sdata->wdev.iftype;
-> > +       u32 used_iftypes = 0;
-> > +       int num[NUM_NL80211_IFTYPES];
-> > +       struct ieee80211_chanctx *ctx;
-> > +       int num_different_channels = 1;
-> > +       int total = 1;
-> > +
-> > +       lockdep_assert_held(&local->chanctx_mtx);
-> > +
-> > +       if (WARN_ON(hweight32(radar_detect) > 1))
-> > +               return -EINVAL;
-> > +
-> > +       if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
-> > +               return -EINVAL;
-> > +
-> > +       if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
-> > +               return -EINVAL;
-> > +
-> > +       /* Always allow software iftypes */
-> > +       if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
-> > +               if (radar_detect)
-> > +                       return -EINVAL;
-> > +               return 0;
-> > +       }
-> > +
-> > +       memset(num, 0, sizeof(num));
-> > +
-> > +       if (iftype != NL80211_IFTYPE_UNSPECIFIED) {
-> > +               used_iftypes = BIT(iftype);
-> > +               num[iftype] = 1;
-> > +       }
-> > +
-> 
-> > +       list_for_each_entry(ctx, &local->chanctx_list, list) {
-> > +               if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
-> > +                       num_different_channels++;
-> > +                       continue;
-> > +               }
-> > +               if ((chanmode == IEEE80211_CHANCTX_SHARED) &&
-> > +                   cfg80211_chandef_compatible(chandef,
-> > +                                               &ctx->conf.def))
-> > +                       continue;
-> > +               num_different_channels++;
-> > +               if (ctx->conf.radar_enabled)
-> > +                       radar_detect |= BIT(ctx->conf.def.width);
-> > +       }
-> 
-> Hmm.. now that I think about it -- is it correct to skip updating
-> radar_detect when a chanctx is exclusive? Shouldn't the radar_enabled
-> check be done at the beginning of each iteration?
+> iperf with window size 512k, 4 parallel threads. With both
+> TX and RX, 290+ Mbps is seen. UDP traffic: 330 Mbps in both directions.
+> Environment: open air and the station is located about 1 meter from the AP.
 
-Yes, you're right.  It makes sense also for shared, because we need to
-take into consideration the existing context's width, because the
-channels may be compatible but with different widths.
+We get similar UDP throughput (and maybe up to 340Mbps using ath9k
+rate control), but not so good on TCP.
 
-I'll fix and send v5.
+All our tests so far are on 3.9 kernel, so maybe things are better on
+later kernels.
 
---
-Luca.
+Someday soon-ish we'll be moving to newer kernels and will test it
+again.
+
+>> I find that those settings influence throughput a great deal,
+>> and I have not yet been able to reach 295Mbps of TCP throughput
+>> in our testing w/out hacking the tcp-ack logic to increase ack delays.
+> 
+> By adjusting TCP parameters using sysctl or hacking the code ?
+
+There is no sysctl for this in upstream code as far as I know
+...I ended up hacking code by modifying some delayed-ack patches
+someone else posted some time back.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
