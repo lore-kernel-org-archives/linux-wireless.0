@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:49961 "EHLO mga11.intel.com"
+Received: from nbd.name ([46.4.11.11]:41554 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750754AbaBWHXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 02:23:39 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
- channels
-Date: Sun, 23 Feb 2014 07:23:35 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033385F7A@HASMSX106.ger.corp.intel.com> (sfid-20140223_082342_539746_0684F08C)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
- <20140219001458.GF14296@garbanzo.do-not-panic.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A03338353E@HASMSX106.ger.corp.intel.com>
- <20140219160301.GH14296@garbanzo.do-not-panic.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A033383EED@HASMSX106.ger.corp.intel.com>
- <CAB=NE6WD93GCtsKpXUJB8pZ-+9wOcF1E4QxNX4rRyed26JCHoQ@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A033385C8E@HASMSX106.ger.corp.intel.com>
- <CAB=NE6VHVuRkxK0GbTNfkz2Cn+Bv19hO7cKe35KQhPVbUCB_bQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6VHVuRkxK0GbTNfkz2Cn+Bv19hO7cKe35KQhPVbUCB_bQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1751922AbaBFQJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Feb 2014 11:09:55 -0500
+Message-ID: <52F3B3D1.8050807@openwrt.org> (sfid-20140206_171000_437555_4D94073B)
+Date: Thu, 06 Feb 2014 17:09:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+CC: Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] mac80211: add NAPI support back
+References: <1391637437-5381-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1391637437-5381-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gU2F0LCBGZWIgMjIsIDIwMTQgYXQgMTA6NTUgQU0sIFBlZXIsIElsYW4gPGlsYW4u
-cGVlckBpbnRlbC5jb20+IHdyb3RlOg0KPiA+IEFGQUlLLCBvbmUgb2YgdGhlIG9wdGlvbnMgdGhl
-eSBhcmUgY29uc2lkZXJpbmcgaXMgdG8gYWxsb3cgc3VjaCByZWxheGF0aW9uIGlmDQo+IGJlYWNv
-biBmcm9tIHNldmVyYWwgKD4xKSBkaWZmZXJlbnQgQlNTIHdhcyByZWNlaXZlZC4NCj4gDQo+IFRo
-aXMgY2FuIGp1c3QgZ28gdXBzdHJlYW0sIGllIHRoZSBleGlzdGluZyBpbXBsZW1lbnRhdGlvbiBj
-YW4gYmUgbW9kaWZpZWQgdG8NCj4gYWNjb3VudCBmb3IgdGhpcyBmb3IgRkNDIG9ubHkuDQo+IA0K
-DQpZZXAgLi4uIHRoaXMgaXMgV0lQIHdpdGggdGhlIHJlZ3VsYXRvcnkgcGVvcGxlIC4uLiBuZWVk
-IHRvIGdldCBzb21lIGFuc3dlcnMgLi4uDQoNCklsYW4uIA0K
+On 2014-02-05 22:57, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> NAPI was originally added to mac80211 a long time ago (by John in
+> commit 4e6cbfd09c66 in July 2010), but then removed years later
+> (by Stanislaw in commit 30c97120c6c7 in February 2013). No driver
+> ever used it, so that was fine.
+> 
+> Now I'm adding support for NAPI to our driver, so add some code
+> to mac80211 again  to support NAPI. John was originally wrapping
+> some (but not nearly all NAPI-related functions), but that doesn't
+> scale very well with the number of functions there there are, some
+> of which are even only inlines. Thus, instead of doing that, let
+> the drivers manage the NAPI struct, except for napi_add() which is
+> needed so mac80211 knows how to call napi_gro_receive().
+Why do you call napi_gro_receive at all?
+Without device GRO support it seems to be just a fancy way of doing
+netif_receive_skb with a bit more unnecessary indirection.
+
+- Felix
