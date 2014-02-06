@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753999AbaBUIXX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 03:23:23 -0500
-Message-ID: <1392970995.4346.15.camel@jlt4.sipsolutions.net> (sfid-20140221_092326_978312_3C3B56C8)
-Subject: Re: [PATCH] cfg80211: regulatory, introduce NL80211_RRF_AUTO_BW
- rule flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com
-Date: Fri, 21 Feb 2014 09:23:15 +0100
-In-Reply-To: <1392900736-2808-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140220_135226_626718_D0F21CF1)
-References: <1392900736-2808-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140220_135226_626718_D0F21CF1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:43848 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753143AbaBFOmL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Feb 2014 09:42:11 -0500
+Message-ID: <52F39F41.2010300@openwrt.org> (sfid-20140206_154225_363149_50967E93)
+Date: Thu, 06 Feb 2014 15:42:09 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ATH9K software retry
+References: <773DB8A82AB6A046AE0195C68612A3190173371A@sbs2003.acksys.local>
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190173371A@sbs2003.acksys.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 13:52 +0100, Janusz Dziedzic wrote:
-> Introduce NL80211_RRF_AUTO_BW rule flag. If this flag set
-> maximum available bandwidth should be calculated base on
-> contiguous rules and wider channels will be allowed to cross
-> multiple contiguous/overlapping frequency ranges.
+On 2014-02-06 14:06, Cedric VONCKEN wrote:
+> In xmit.c the function ath_tx_complete_aggr test if the fi->retries <
+> ATH_MAX_SW_RETRIES.
 > 
-> In case of old kernels maximum bandwidth from regulatory
-> rule will be used, while there is no NL80211_RRF_AUTO_BW flag.
+> If this condition is true, ATH9K handle software retry. 
+> 
+> Minstrel set in the frame one or more rates, for each rate minstrel set
+> a retries count. I think is sufficient.
+> 
+> Why ATH9K need to manage the software retries?
+The retries configured for minstrel_ht are used for hardware retries of
+single frames and full A-MPDU transmissions. Software retries are used
+for individual subframes that are sent as part of A-MPDUs.
+This is required, because failed subframes are frequent with higher MCS
+rates and A-MPDU.
 
-Applied, thanks. I made the snrptinf() code use sizeof() instead of
-hardcoding the size twice.
+> With the test we have a minimal of 30 retries (ATH_MAX_SW_RETRIES is set
+> to 30).
+> 
+> I plan to remove the software retry int ATH9K, before I would like to
+> know if theses retries is necessary.
+Removing software retry functionality is a very bad idea.
 
-johannes
+- Felix
 
