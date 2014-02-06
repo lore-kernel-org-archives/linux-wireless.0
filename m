@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51271 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaBKSTW (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48506 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481AbaBFQYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 13:19:22 -0500
-Message-ID: <1392142750.4128.37.camel@jlt4.sipsolutions.net> (sfid-20140211_191941_920080_BEF7AAF1)
-Subject: Re: [PATCH v3] ieee80211: Print human-readable disassoc/deauth
- reason codes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: Calvin Owens <jcalvinowens@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 11 Feb 2014 19:19:10 +0100
-In-Reply-To: <52FA546B.1060008@meshcoding.com>
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
-	 <1391661863.30094.56.camel@joe-AO722>
-	 <1392030546.4128.11.camel@jlt4.sipsolutions.net>
-	 <1392050359.2507.10.camel@joe-AO722> <20140211012523.GA2739@gmail.com>
-	 <1392082740.2507.49.camel@joe-AO722> <20140211163738.GA32043@gmail.com>
-	 <52FA546B.1060008@meshcoding.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Feb 2014 11:24:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21235.46879.960127.346448@gargle.gargle.HOWL> (sfid-20140206_172444_551204_75A79404)
+Date: Thu, 6 Feb 2014 21:53:59 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
+In-Reply-To: <52F3B155.6010308@candelatech.com>
+References: <1391662375-28781-1-git-send-email-sujith@msujith.org>
+	<52F3B155.6010308@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-11 at 17:48 +0100, Antonio Quartulli wrote:
-> On 11/02/14 17:37, Calvin Owens wrote:
-> > Create a function to return a descriptive string for each reason code,
-> > and print that in addition to the numeric value in the kernel log. These
-> > codes are easily found on popular search engines, but one is generally
-> > not able to access the internet when dealing with wireless connectivity
-> > issues.
-> > 
-> > Changes in v2: Refactored array of strings into switch statement.
-> > Changes in v3: Fix style problem, use simplifying macro for switch
-> > statement, eliminate temporary enum variable.
-> > 
-> > Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
-> > ---
-> >  include/net/mac80211.h | 10 +++++++++
-> >  net/mac80211/main.c    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  net/mac80211/mlme.c    | 12 +++++------
-> >  3 files changed, 73 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index f4ab2fb..d18acfe 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -2971,6 +2971,16 @@ struct ieee80211_ops {
-> >   */
-> >  struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
-> >  					const struct ieee80211_ops *ops);
-> > +/**
-> > + * ieee80211_get_reason_code_string - Get human readable reason code
-> > + *
-> > + * This function returns a string describing the @reason_code.
-> > + *
-> > + * @reason_code: Reason code
-> 
-> Kerneldoc is not properly formatted here.
-> The "@argument:" clause should be on the line right after the function
-> name (as explained in Documentation/kernel-doc-nano-HOWTO.txt), e.g.:
+Ben Greear wrote:
+> Can you let us know the details on how your set up that TCP
+> traffic?  For instance, number of streams, write size, socket
+> buffer sizes, etc?  Upload, download, or are both similar
+> throughput in your testing?
 
-I'm pretty sure it gets parsed correctly anyway, see e.g.
-https://www.kernel.org/doc/htmldocs/80211/API-ieee80211-alloc-hw.html
-(which is the function right above with the same style)
+Stock OpenWrt (trunk) running on a 3x3 Scorpion board (AP136/AP135) as AP.
+Windows 7 as client, using a 3x3 AR9300 card.
 
-johannes
+iperf with window size 512k, 4 parallel threads. With both
+TX and RX, 290+ Mbps is seen. UDP traffic: 330 Mbps in both directions.
+Environment: open air and the station is located about 1 meter from the AP.
 
+> I find that those settings influence throughput a great deal,
+> and I have not yet been able to reach 295Mbps of TCP throughput
+> in our testing w/out hacking the tcp-ack logic to increase ack delays.
+
+By adjusting TCP parameters using sysctl or hacking the code ?
+
+Sujith
