@@ -1,33 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:57589 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaBVAHG (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:33466 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756764AbaBFUit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 19:07:06 -0500
-Received: by mail-la0-f53.google.com with SMTP id e16so2949357lan.40
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 16:07:04 -0800 (PST)
+	Thu, 6 Feb 2014 15:38:49 -0500
+Message-ID: <52F3F2D7.4020102@lwfinger.net> (sfid-20140206_213915_895094_0EDD1DFF)
+Date: Thu, 06 Feb 2014 14:38:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1392896671-4288-4-git-send-email-ilan.peer@intel.com>
-References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com> <1392896671-4288-4-git-send-email-ilan.peer@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 21 Feb 2014 16:06:44 -0800
-Message-ID: <CAB=NE6XzMpuxg5sUiKR=42h1u0iHxibPz1o8_DO_zOQjRoY8Ow@mail.gmail.com> (sfid-20140222_010715_295742_5C65A07D)
-Subject: Re: [PATCH v5 3/5] cfg80211: Enable GO operation on additional channels
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Olivier Langlois <olivier@trillion01.com>, linville@tuxdriver.com,
+	chaoming_li@realsil.com.cn
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH 1/2] rtlwifi: rtl8192ce: Fix too long disable of IRQs
+References: <1391235070-23180-1-git-send-email-olivier@trillion01.com>
+In-Reply-To: <1391235070-23180-1-git-send-email-olivier@trillion01.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 3:44 AM, Ilan Peer <ilan.peer@intel.com> wrote:
-> +       list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
+On 02/01/2014 12:11 AM, Olivier Langlois wrote:
+> rtl8192ce is disabling for too long the local interrupts during hw initiatialisation when performing scans
+>
+> The observable symptoms in dmesg can be:
+>
+> - underruns from ALSA playback
+> - clock freezes (tstamps do not change for several dmesg entries until irqs are finaly reenabled):
+>
+> [  250.817669] rtlwifi:rtl_op_config():<0-0-0> 0x100
+> [  250.817685] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-1-0> IPS Set eRf nic enable
+> [  250.817732] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.817796] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.817910] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818024] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818139] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818253] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818367] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
+> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:98053f15:10
+> [  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
+> [  250.818472] rtl8192c_common:rtl92c_download_fw():<0-1-0> Firmware Version(49), Signature(0x88c1),Size(32)
+> [  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
+> [  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> The SECR-value cc
+> [  250.818472] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-1-0> Schedule TxPowerTracking direct call!!
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> rtl92c_dm_txpower_tracking_callback_thermalmeter
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial pathA ele_d reg0xc80 = 0x40000000, ofdm_index=0xc
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial reg0xa24 = 0x90e1317, cck_index=0xc, ch14 0
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf delta 0x1 delta_lck 0x0 delta_iqk 0x0
+> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> <===
+> [  250.818472] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-1-0> pMgntInfo->txpower_tracking = 1
+> [  250.818472] rtl8192ce:rtl92ce_led_control():<0-1-0> ledaction 3
+> [  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
+> [  250.818472] rtlwifi:rtl_ips_nic_on():<0-1-0> before spin_unlock_irqrestore
+> [  251.154656] PCM: Lost interrupts? [Q]-0 (stream=0, delta=15903, new_hw_ptr=293408, old_hw_ptr=277505)
+>
+> The exact code flow that causes that is:
+>
+> 1. wpa_supplicant send a start_scan request to the nl80211 driver
+> 2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
+> 3.   rtl_ips_nic_on is called which disable local irqs
+> 4.     rtl92c_phy_set_rf_power_state() is called
+> 5.       rtl_ps_enable_nic() is called and hw_init()is executed and then the interrupts on the device are enabled
+>
+> A good solution could be to refactor the code to avoid calling rtl92ce_hw_init() with the irqs disabled
+> but a quick and dirty solution that has proven to work is
+> to reenable the irqs during the function rtl92ce_hw_init().
+>
+> I think that it is safe doing so since the device interrupt will only be enabled after the init function succeed.
+>
+> Signed-off-by: Olivier Langlois <olivier@trillion01.com>
+> Cc: Stable <stable@vger.kernel.org>
 
-This is still my only remaining concern. The Kconfig and documentation
-don't point this out and it should if its limited to only trusting
-concurrency based on the interfaces from the same driver. If we stick
-with this that should be prevalent on the documentation. With that
-added you get my:
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Larry
 
-  Luis
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 18 ++++++++++++++++--
+>   1 file changed, 16 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> index a82b30a..2eb0b38 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> @@ -937,14 +937,26 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+>   	bool is92c;
+>   	int err;
+>   	u8 tmp_u1b;
+> +	unsigned long flags;
+>
+>   	rtlpci->being_init_adapter = true;
+> +
+> +	/* Since this function can take a very long time (up to 350 ms)
+> +	 * and can be called with irqs disabled, reenable the irqs
+> +	 * to let the other devices continue being serviced.
+> +	 *
+> +	 * It is safe doing so since our own interrupts will only be enabled
+> +	 * in a subsequent step.
+> +	 */
+> +	local_save_flags(flags);
+> +	local_irq_enable();
+> +
+>   	rtlpriv->intf_ops->disable_aspm(hw);
+>   	rtstatus = _rtl92ce_init_mac(hw);
+>   	if (!rtstatus) {
+>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
+>   		err = 1;
+> -		return err;
+> +		goto exit;
+>   	}
+>
+>   	err = rtl92c_download_fw(hw);
+> @@ -952,7 +964,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+>   			 "Failed to download FW. Init HW without FW now..\n");
+>   		err = 1;
+> -		return err;
+> +		goto exit;
+>   	}
+>
+>   	rtlhal->last_hmeboxnum = 0;
+> @@ -1032,6 +1044,8 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
+>   	}
+>   	rtl92c_dm_init(hw);
+> +exit:
+> +	local_irq_restore(flags);
+>   	rtlpci->being_init_adapter = false;
+>   	return err;
+>   }
+>
+
