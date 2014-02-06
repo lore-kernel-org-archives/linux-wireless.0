@@ -1,99 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49968 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749AbaBWHDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 02:03:17 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stephen Kent <smkent@smkent.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: RE: [Ilw] RX laggy/choppy/stuck without TX on Intel Wireless 7260
- with iwlwifi
-Date: Sun, 23 Feb 2014 07:02:43 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D7004C@HASMSX103.ger.corp.intel.com> (sfid-20140223_080343_354257_B8B70862)
-References: <CAC45b7kjErBZ=bZEnbsmdbXkEowQRtkkoN-obSxpn3cRLrCvwQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D6FFEB@HASMSX103.ger.corp.intel.com>
- <CAC45b7ma=+QY1_woBPC44UkBeiWOG+iUNrScJ0gJ9qVfirNGsw@mail.gmail.com>
-In-Reply-To: <CAC45b7ma=+QY1_woBPC44UkBeiWOG+iUNrScJ0gJ9qVfirNGsw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:42588 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbaBFUjd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Feb 2014 15:39:33 -0500
+Message-ID: <52F3F302.1040703@lwfinger.net> (sfid-20140206_213953_121272_9642C299)
+Date: Thu, 06 Feb 2014 14:39:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Olivier Langlois <olivier@trillion01.com>, linville@tuxdriver.com,
+	chaoming_li@realsil.com.cn
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] rtlwifi: Fix incorrect return from rtl_ps_enable_nic()
+References: <1391235070-23180-1-git-send-email-olivier@trillion01.com> <1391235070-23180-2-git-send-email-olivier@trillion01.com>
+In-Reply-To: <1391235070-23180-2-git-send-email-olivier@trillion01.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gU2F0LCBGZWIgMjIsIDIwMTQgYXQgMTA6MTggUE0sIEdydW1iYWNoLCBFbW1hbnVl
-bA0KPiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPj4NCj4gPj4gKFJl
-c2VuZGluZyBhcyBwbGFpbiB0ZXh0KQ0KPiA+Pg0KPiA+PiBJIGhhdmUgYSBzdHJhbmdlIGlzc3Vl
-IHdpdGggbXkgSW50ZWwgV2lyZWxlc3MgNzI2MCBhZGFwdGVyIG9uIG15IERlbGwgWFBTDQo+IDEz
-DQo+ID4+IChIYXN3ZWxsKS4gSXQgc2VlbXMgdGhhdCBwYWNrZXRzIGFyZSByZWNlaXZlZCBidXQg
-YXJlbid0IHByb2Nlc3NlZCBieSB0aGUNCj4gPj4ga2VybmVsIG9yIHNvbWV0aGluZyB1bnRpbCBt
-b3JlIHBhY2tldHMgYXJlIHRyYW5zbWl0dGVkLiBUaGUgbmV0IGVmZmVjdCBpcw0KPiA+PiB0aGF0
-IHRoZSBsYXB0b3AncyB3aXJlbGVzcyBzZWVtcyBzb21ld2hhdCBjaG9wcHkuIEkgY2FuIGRlbW9u
-c3RyYXRlDQo+IHRoaXMNCj4gPj4gYnkgcnVubmluZyBzb21ldGhpbmcgaW4gYSByZW1vdGUgc3No
-IHNlc3Npb24gdGhhdCBnZW5lcmF0ZXMgcGVyaW9kaWMNCj4gPj4gb3V0cHV0LCBhbmQgdGhhdCBv
-dXRwdXQgZG9lc24ndCBhcHBlYXIgdW50aWwgSSBnZW5lcmF0ZSBtb3JlIG91dGdvaW5nDQo+ID4+
-IHRyYWZmaWMuIEl0J3MgaGFyZCB0byBkZXNjcmliZSBpdCBiZXlvbmQgdGhhdCwgYnV0IEkgdG9v
-ayBhIHNjcmVlbiBjYXB0dXJlDQo+IHdoaWNoDQo+ID4+IGRlbW9uc3RyYXRlcyB0aGlzIHZlcnkg
-d2VsbDoNCj4gPj4gaHR0cDovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PTRSTVVSU01zem1jDQo+
-ID4+DQo+ID4+IGxzcGNpIHNob3dzIHRoZSB3aXJlbGVzcyBjYXJkIGFzOiAwMjowMC4wIE5ldHdv
-cmsgY29udHJvbGxlcjogSW50ZWwNCj4gQ29ycG9yYXRpb24NCj4gPj4gV2lyZWxlc3MgNzI2MCAo
-cmV2IDZiKSB1bmFtZSAtYTogTGludXggZGFsZWsgMy4xMS4wLTEyLWdlbmVyaWMgIzE5LQ0KPiBV
-YnVudHUNCj4gPj4gU01QIFdlZCBPY3QgOSAxNjoyMDo0NlVUQyAyMDEzIHg4Nl82NCB4ODZfNjQg
-eDg2XzY0IEdOVS9MaW51eA0KPiA+Pg0KPiA+PiBJIGdvb2dsZWQgdGhpcyB3aXRob3V0IHN1Y2Nl
-c3MuIEkgY2FuIGdhdGhlciBkaWFnbm9zdGljIGluZm9ybWF0aW9uIGlmIHlvdQ0KPiBzZW5kDQo+
-ID4+IG1lIGluc3RydWN0aW9ucywgSSdtIGp1c3Qgbm90IHN1cmUgd2hlcmUgdG8gc3RhcnQgb3Ig
-d2hhdCB0byBsb29rIGZvci4gSXMgdGhpcw0KPiBhDQo+ID4+IGJ1ZyBpbiB0aGUgZHJpdmVyPyBN
-YXliZSBpbiB0aGUgY2FyZCBtaWNyb2NvZGUgaXRzZWxmPyBIYXMgYW55b25lIGVsc2UNCj4gPj4g
-cmVwb3J0ZWQgdGhpcyBpc3N1ZT8gSXQgc2VlbXMgdmVyeSBzdHJhbmdlLg0KPiA+PiBBbnkgaGVs
-cCBpcyBhcHByZWNpYXRlZC4NCj4gPg0KPiA+IENhbiB5b3UgcGxlYXNlIHNlbmQgdGhlIG91dHB1
-dCBvZiBkbWVzZz8NCj4gPiBUcmFjaW5nIG91dHB1dCBjYW4gaGVscCB0b28gLSBidXQgbGV0J3Mg
-c3RhcnQgd2l0aCBkbWVzZyBvdXRwdXQuDQo+ID4NCj4gDQo+IE15IGZ1bGwgZG1lc2cgb3V0cHV0
-IGlzIGhlcmU6IGh0dHA6Ly9zbWtlbnQubmV0L3N0dWZmL2RtZXNnLWRhbGVrLQ0KPiAyMDE0MDIy
-Mg0KPiANCg0KWW91ciBkbWVzZyBsb29rcyBoZWFsdGh5DQoNCj4gSGVyZSdzIHNvbWUgc2VsZWN0
-ZWQgb3V0cHV0LiBJJ20gbm90IHN1cmUgaWYgaXQncyB1c2VmdWwuDQo+IA0KPiBzbWtlbnRAZGFs
-ZWsgRGVza3RvcCAkIGdyZXAgLWllIGl3bCAtZSA4MDIxMSBkbWVzZy1kYWxlay0yMDE0MDIyMg0K
-PiBbICAgIDMuOTY4MDcwXSBjZmc4MDIxMTogQ2FsbGluZyBDUkRBIHRvIHVwZGF0ZSB3b3JsZCBy
-ZWd1bGF0b3J5IGRvbWFpbg0KPiBbICAgIDMuOTc2NTAwXSBpd2x3aWZpIDAwMDA6MDI6MDAuMDog
-Y2FuJ3QgZGlzYWJsZSBBU1BNOyBPUyBkb2Vzbid0DQo+IGhhdmUgQVNQTSBjb250cm9sDQo+IFsg
-ICAgMy45NzY1ODVdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBpcnEgNTkgZm9yIE1TSS9NU0ktWA0K
-PiBbICAgIDQuMTE1MzQ1XSBpd2x3aWZpIDAwMDA6MDI6MDAuMDogbG9hZGVkIGZpcm13YXJlIHZl
-cnNpb24gMjIuMS43LjANCj4gb3BfbW9kZSBpd2xtdm0NCj4gWyAgICA0LjE1NzQzNV0gaXdsd2lm
-aSAwMDAwOjAyOjAwLjA6IERldGVjdGVkIEludGVsKFIpIER1YWwgQmFuZA0KPiBXaXJlbGVzcyBB
-QyA3MjYwLCBSRVY9MHgxNDQNCj4gWyAgICA0LjE1NzUyM10gaXdsd2lmaSAwMDAwOjAyOjAwLjA6
-IEwxIEVuYWJsZWQ7IERpc2FibGluZyBMMFMNCj4gWyAgICA0LjE1NzY5MV0gaXdsd2lmaSAwMDAw
-OjAyOjAwLjA6IEwxIEVuYWJsZWQ7IERpc2FibGluZyBMMFMNCj4gWyAgICA0LjI2OTM3N10gY2Zn
-ODAyMTE6IFdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluIHVwZGF0ZWQ6DQo+IFsgICAgNC4yNjkzODNd
-IGNmZzgwMjExOiAgIChzdGFydF9mcmVxIC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLA0KPiAobWF4
-X2FudGVubmFfZ2FpbiwgbWF4X2VpcnApDQo+IFsgICAgNC4yNjkzODddIGNmZzgwMjExOiAgICgy
-NDAyMDAwIEtIeiAtIDI0NzIwMDAgS0h6IEAgNDAwMDAgS0h6KSwNCj4gKDMwMCBtQmksIDIwMDAg
-bUJtKQ0KPiBbICAgIDQuMjY5MzkwXSBjZmc4MDIxMTogICAoMjQ1NzAwMCBLSHogLSAyNDgyMDAw
-IEtIeiBAIDQwMDAwIEtIeiksDQo+ICgzMDAgbUJpLCAyMDAwIG1CbSkNCj4gWyAgICA0LjI2OTM5
-M10gY2ZnODAyMTE6ICAgKDI0NzQwMDAgS0h6IC0gMjQ5NDAwMCBLSHogQCAyMDAwMCBLSHopLA0K
-PiAoMzAwIG1CaSwgMjAwMCBtQm0pDQo+IFsgICAgNC4yNjkzOTZdIGNmZzgwMjExOiAgICg1MTcw
-MDAwIEtIeiAtIDUyNTAwMDAgS0h6IEAgNDAwMDAgS0h6KSwNCj4gKDMwMCBtQmksIDIwMDAgbUJt
-KQ0KPiBbICAgIDQuMjY5Mzk5XSBjZmc4MDIxMTogICAoNTczNTAwMCBLSHogLSA1ODM1MDAwIEtI
-eiBAIDQwMDAwIEtIeiksDQo+ICgzMDAgbUJpLCAyMDAwIG1CbSkNCj4gWyAgICA0LjM3OTI4M10g
-aWVlZTgwMjExIHBoeTA6IFNlbGVjdGVkIHJhdGUgY29udHJvbCBhbGdvcml0aG0gJ2l3bC1tdm0t
-cnMnDQo+IFsgICAgNC43MDk0OTddIGl3bHdpZmkgMDAwMDowMjowMC4wOiBMMSBFbmFibGVkOyBE
-aXNhYmxpbmcgTDBTDQo+IFsgICAgNC43MDk2NzFdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBMMSBF
-bmFibGVkOyBEaXNhYmxpbmcgTDBTDQo+IFsgOTY3Ni44MTcxNzVdIGNmZzgwMjExOiBDYWxsaW5n
-IENSREEgdG8gdXBkYXRlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluDQo+IFsgOTY3Ni44MjM4MDld
-IGNmZzgwMjExOiBXb3JsZCByZWd1bGF0b3J5IGRvbWFpbiB1cGRhdGVkOg0KPiBbIDk2NzYuODIz
-ODIwXSBjZmc4MDIxMTogICAoc3RhcnRfZnJlcSAtIGVuZF9mcmVxIEAgYmFuZHdpZHRoKSwNCj4g
-KG1heF9hbnRlbm5hX2dhaW4sIG1heF9laXJwKQ0KPiBbIDk2NzYuODIzODI3XSBjZmc4MDIxMTog
-ICAoMjQwMjAwMCBLSHogLSAyNDcyMDAwIEtIeiBAIDQwMDAwIEtIeiksDQo+ICgzMDAgbUJpLCAy
-MDAwIG1CbSkNCj4gWyA5Njc2LjgyMzgzNF0gY2ZnODAyMTE6ICAgKDI0NTcwMDAgS0h6IC0gMjQ4
-MjAwMCBLSHogQCA0MDAwMCBLSHopLA0KPiAoMzAwIG1CaSwgMjAwMCBtQm0pDQo+IFsgOTY3Ni44
-MjM4NDBdIGNmZzgwMjExOiAgICgyNDc0MDAwIEtIeiAtIDI0OTQwMDAgS0h6IEAgMjAwMDAgS0h6
-KSwNCj4gKDMwMCBtQmksIDIwMDAgbUJtKQ0KPiBbIDk2NzYuODIzODQ2XSBjZmc4MDIxMTogICAo
-NTE3MDAwMCBLSHogLSA1MjUwMDAwIEtIeiBAIDQwMDAwIEtIeiksDQo+ICgzMDAgbUJpLCAyMDAw
-IG1CbSkNCj4gWyA5Njc2LjgyMzg1MV0gY2ZnODAyMTE6ICAgKDU3MzUwMDAgS0h6IC0gNTgzNTAw
-MCBLSHogQCA0MDAwMCBLSHopLA0KPiAoMzAwIG1CaSwgMjAwMCBtQm0pDQo+IFsgOTY4MC4wMTQ3
-MjJdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBMMSBFbmFibGVkOyBEaXNhYmxpbmcgTDBTDQo+IFsg
-OTY4MC4wMTQ4OTBdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBMMSBFbmFibGVkOyBEaXNhYmxpbmcg
-TDBTDQo+IA0KPiBJIGhhdmVuJ3QgdGFrZW4gYSBrZXJuZWwgdHJhY2UgYmVmb3JlIGJ1dCBJJ20g
-aGFwcHkgdG8gZG8gc28gaWYgeW91DQo+IGNhbiBwb2ludCBtZSB0b3dhcmQgc29tZSBpbnN0cnVj
-dGlvbnMuDQo+IA0KDQphcyByb290Og0KdHJhY2UtY21kIHJlY29yZCAtZSBpd2x3aWZpIC1lIGl3
-bHdpZmlfbXNnLg0KDQpSZXByb2R1Y2UgdGhlIGJ1ZyB3aGlsZSBpdCdzIHJ1bm5pbmcuIFN0b3Ag
-d2l0aCBDdHJsK0Mgd2hlbiB0aGUgYnVnIHJlcHJvZHVjZWQuDQpUaGlzIHdpbGwgcHJvZHVjZSBh
-IHRyYWNlLmRhdCBmaWxlIHdoaWNoIHlvdSBjYW4gY29tcHJlc3MgYW5kIHNlbmQgb3ZlciBlbWFp
-bC4NCg0KVGhhbmtzIQ0KDQo+IFRoYW5rcywNCj4gDQo+IFN0ZXBoZW4NCg==
+On 02/01/2014 12:11 AM, Olivier Langlois wrote:
+> rtl_ps_enable_nic() is called from loops that will loop until this function returns true or a
+> maximum number of retries is performed.
+>
+> hw_init() returns non-zero on error. In that situation return false to
+> restore the original design intent to retry hw init when it fails.
+>
+> Signed-off-by: Olivier Langlois <olivier@trillion01.com>
+> Cc: Stable <stable@vger.kernel.org>
+
+Acked-by: Larry Finger <Larry.Finger.net>
+
+Larry
+
+> ---
+>   drivers/net/wireless/rtlwifi/ps.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index 0d81f76..a56e9b3 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -48,7 +48,7 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+>
+>   	/*<2> Enable Adapter */
+>   	if (rtlpriv->cfg->ops->hw_init(hw))
+> -		return 1;
+> +		return false;
+>   	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+>
+>   	/*<3> Enable Interrupt */
+>
+
