@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:60213 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706AbaBYXEu (ORCPT
+Received: from rosetta.club.kyutech.ac.jp ([131.206.108.15]:46283 "EHLO
+	rosetta.club.kyutech.ac.jp" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751668AbaBFFQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 18:04:50 -0500
-Message-ID: <530D218E.9010007@wwwdotorg.org> (sfid-20140226_000545_055438_23D889BA)
-Date: Tue, 25 Feb 2014 16:04:46 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-CC: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
-In-Reply-To: <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Feb 2014 00:16:43 -0500
+From: Masaki TAGAWA <masaki@club.kyutech.ac.jp>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Masaki TAGAWA <masaki@club.kyutech.ac.jp>
+Subject: [PATCH] ath9k_htc: Add device ID for Buffalo WLI-UV-AG300P
+Date: Thu,  6 Feb 2014 14:06:24 +0900
+Message-Id: <1391663184-14810-1-git-send-email-masaki@club.kyutech.ac.jp> (sfid-20140206_061839_252586_519620C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2014 05:22 AM, Heikki Krogerus wrote:
-> There is no use for them in this driver. This will fix a
-> static checker warning..
-> 
-> net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
-> 	warn: variable dereferenced before check 'rfkill->name'
-> 
-> This will also make sure that when DT support is added,
-> "gpios" property can be used as no con_id labels are
-> provided.
+Buffalo WLI-UV-AG300P is almost the same as Sony UWA-BR100.
 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+Signed-off-by: Masaki TAGAWA <masaki@club.kyutech.ac.jp>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> -	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
-> +	gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 6d5d716..8e7153b 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -54,6 +54,8 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	  .driver_info = AR9280_USB },  /* SMC Networks */
+ 	{ USB_DEVICE(0x0411, 0x017f),
+ 	  .driver_info = AR9280_USB },  /* Sony UWA-BR100 */
++	{ USB_DEVICE(0x0411, 0x0197),
++	  .driver_info = AR9280_USB },  /* Buffalo WLI-UV-AG300P */
+ 	{ USB_DEVICE(0x04da, 0x3904),
+ 	  .driver_info = AR9280_USB },
+ 
+-- 
+1.7.11.2
 
-I think the correct fix here is to look up the GPIO by name rather than
-by index, but simply hard-code the name rather than generating it with
-sprintf(). Index lookups are hard to expand compatibly, but named-based
-lookups scale much better.
-
-In other words, I rather specifically disagree with using a plain
-"gpios" property in any future DT binding, but would strongly prefer
-e.g. reset-gpios/shutdown-gpios or gpios/gpio-names.
-
-Still, I guess I don't object too much.
