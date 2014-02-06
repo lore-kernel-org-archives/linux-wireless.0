@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:58765 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751131AbaBELuz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39730 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbaBFP7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 06:50:55 -0500
-Date: Wed, 5 Feb 2014 11:50:35 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Joe Perches <joe@perches.com>
-Cc: Holger Schurig <holgerschurig@gmail.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
-Message-ID: <20140205115035.GO26684@n2100.arm.linux.org.uk> (sfid-20140205_125059_548799_48AE3CB4)
-References: <1391483274-20331-1-git-send-email-sujith@msujith.org> <1391483274-20331-2-git-send-email-sujith@msujith.org> <1391484878.2538.11.camel@joe-AO722> <21232.24855.201543.400943@gargle.gargle.HOWL> <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com> <1391531796.2538.21.camel@joe-AO722>
+	Thu, 6 Feb 2014 10:59:42 -0500
+Message-ID: <52F3B155.6010308@candelatech.com> (sfid-20140206_165945_152500_0C12400A)
+Date: Thu, 06 Feb 2014 07:59:17 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391531796.2538.21.camel@joe-AO722>
+To: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
+References: <1391662375-28781-1-git-send-email-sujith@msujith.org>
+In-Reply-To: <1391662375-28781-1-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 08:36:36AM -0800, Joe Perches wrote:
-> On Tue, 2014-02-04 at 08:03 +0100, Holger Schurig wrote:
-> > Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
-> > cannot handle large values because of lost-of-precision.
-> > 
-> > IMHO udelay on ARM is broken, because it also cannot work with fast
-> > ARM processors (where bogomips >= 3355, which is in sight now). It's
-> > just not broken enought that someone did something against it ...   so
-> > the current kludge is good enought.
-> 
-> Maybe something like this would be better?
+On 02/05/2014 08:52 PM, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> There is no benefit in retaining the legacy rate control module
+> in the driver codebase.
+>
+> It is known to be buggy and has less than optimal performance
+> in real-world environments compared with minstrel. The only
+> reason that it was kept when we made the switch to minstrel
+> as default was that it showed higher throughput numbers in a
+> clean/ideal environment.
+>
+> This is no longer the case and minstrel can push ath9k to
+> the same throughput levels. In TCP, with 3-stream cards, more than
+> 295 Mbps can be obtained in open air, with 2-stream cards,
+> 210 Mbps is easily reached. To test performance issues,
+> instead of using a broken rate control module, it is better
+> to use the fixed-rate interface provided by mac80211 anyway.
 
-No, the point of __bad_udelay() is that people doing stupidly large
-udelay()s result in build errors, rather than having to run the kernel
-and trip over a non-existent debugging message beacuse they haven't
-built the kernel with DEBUG defined.
+Can you let us know the details on how your set up that TCP
+traffic?  For instance, number of streams, write size, socket
+buffer sizes, etc?  Upload, download, or are both similar
+throughput in your testing?
 
-NAK.
+I find that those settings influence throughput a great deal,
+and I have not yet been able to reach 295Mbps of TCP throughput
+in our testing w/out hacking the tcp-ack logic to increase ack delays.
+
+Thanks,
+Ben
+
 
 -- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
