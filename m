@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42331 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752519AbaBMUAP (ORCPT
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:38614 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbaBFSTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 15:00:15 -0500
-Date: Thu, 13 Feb 2014 14:51:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: pull request: iwlwifi 2014-02-13
-Message-ID: <20140213195136.GI22203@tuxdriver.com> (sfid-20140213_210119_522350_E84F35E2)
-References: <52FCC95D.4090609@gmail.com>
+	Thu, 6 Feb 2014 13:19:44 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Felix Fietkau'" <nbd@openwrt.org>,
+	<linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A3190173371A@sbs2003.acksys.local> <52F39F41.2010300@openwrt.org> <009301cf2359$e35f0330$aa1d0990$@acksys.fr> <52F3BEA6.1080502@openwrt.org>
+In-Reply-To: <52F3BEA6.1080502@openwrt.org>
+Subject: RE: ATH9K software retry
+Date: Thu, 6 Feb 2014 18:59:12 +0100
+Message-ID: <00a101cf2365$24a0f0f0$6de2d2d0$@acksys.fr> (sfid-20140206_191947_354104_B4FC8C93)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52FCC95D.4090609@gmail.com>
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 03:32:13PM +0200, Emmanuel Grumbach wrote:
-> Hi John,
+> >>
+> > Is it possible to only applied software retrying for A-MPDU frame with
+> > more one frame?
+> > If I correctly understood the code, the function ath_tx_count_frames
+> > return the number of frame in the A-MPDU. If nframes == 1 we don't use
+> > the software retry.
+> Software retry should be applied to any frame that is part of a BlockAck
+> session, because any failed frame that is not retried requires the sender
+to
+> notify the receiver with a BlockAckRequest, which is expensive. I would
+> suggest keeping the current behavior, unless you have a good reason to
+> change it and understand the implications.
 > 
-> One single patch for this pull request for 3.14.
-> 
-> As explicitly written in the commit message, we prefer to disable Tx
-> AMPDU on NICs supported by iwldvm. This feature gives a big boost in Tx
-> performance, but the firmware is buggy and we can't rely on it.
-> Our hope is that most of the users out there want wifi to surf on the
-> web which means that they care more for Rx traffic than for Tx.
-> People who want to enable it can do so with the help of a module parameter.
-> 
-> Please pull - thanks.
-> 
-> 	emmanuel
-> 
-> 
-> The following changes since commit c512865446e6dd5b6e91e81187e75b734ad7cfc7:
-> 
->   iwlwifi: mvm: don't allow A band if SKU forbids it (2014-02-02
-> 11:08:42 +0200)
-> 
-> are available in the git repository at:
-> 
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
-> master
-> 
-> for you to fetch changes up to 205e2210daa975d92ace485a65a31ccc4077fe1a:
-> 
->   iwlwifi: disable TX AMPDU by default for iwldvm (2014-02-13 15:24:35
-> +0200)
+Thanks for your answers. 
 
-Pulling now...
+I think I am not on the good way. I would like to reduce the software
+retries when we lost the AP (turn off). In this case, no BlockAck are
+received. 
+Is it possible to reduce the software retries in this case? If yes, could
+you give me some pointer?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Is it possible to reduce the ATH_MAX_SW_RETRIES value (for example reduces
+to 10) without damage?
+
+Cedric voncken
+
