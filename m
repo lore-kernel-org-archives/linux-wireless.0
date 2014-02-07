@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:37438 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887AbaB1PMA (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:37783 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbaBGUtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 10:12:00 -0500
-Received: by mail-ea0-f169.google.com with SMTP id d10so2754903eaj.14
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:11:58 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/3] cfg80211/mac80211: multi-vif csa preparation
-Date: Fri, 28 Feb 2014 16:06:44 +0100
-Message-Id: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161204_629248_E833CE5B)
+	Fri, 7 Feb 2014 15:49:46 -0500
+Date: Fri, 7 Feb 2014 14:50:12 -0600
+From: Calvin Owens <jcalvinowens@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
+ codes
+Message-ID: <20140207205012.GA2974@gmail.com> (sfid-20140207_215031_217968_394093C8)
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+ <1391675824.12789.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1391675824.12789.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thursday 02/06 at 09:37 +0100, Johannes Berg wrote:
+> On Wed, 2014-02-05 at 19:44 -0600, Calvin Owens wrote:
+> > Create a function to return a descriptive string for each reason code,
+> > and print that instead of the numeric value in the kernel log. These
+> > codes are easily found on popular search engines, but one is generally
+> > not able to access the internet when dealing with wireless connectivity
+> > issues.
+> 
+> I believe both iw and wpa_supplicant already have the reason code
+> printout, and if you're diagnosing connectivity issues then you're
+> probably using those anyway (e.g. iw event -t), so I don't really see
+> much point in adding this to the kernel?
+> 
+> johannes
 
-These are some of the changes I think are
-necessary for getting multi-vif and multi-chan
-channel switching working.
+Ah, I didn't realize `iw` would interpret the reason code for you.
 
-This is based on Luca's interface combination
-patchset v7.
+There were a couple of other replies expressing interest in this though.
+Should I rewrite the patch per Joe Perches' suggestions and resend it?
+Or should I just drop it since you can obtain the info from `iw`?
 
-This is taken from my local prototype. However
-since Luca's patchsets are still under review
-there's nothing more sane I can provide now ;-)
-
-The patch #3 depends on my cfg80211_leave() fix.
-
-
-Michal Kazior (3):
-  cfg80211: allow drivers to iterate over matching combinations
-  mac80211: add max channel calculation utility function
-  cfg80211: export interface stopping function
-
- include/net/cfg80211.h     | 41 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/util.c        | 43 ++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.c        | 36 +++++++++++++++++++++++++++++++---
- net/wireless/core.h        |  3 +++
- net/wireless/trace.h       | 15 ++++++++++++++
- net/wireless/util.c        | 49 +++++++++++++++++++++++++++++++++++++++-------
- 7 files changed, 178 insertions(+), 10 deletions(-)
-
--- 
-1.8.5.3
-
+Thanks,
+Calvin
