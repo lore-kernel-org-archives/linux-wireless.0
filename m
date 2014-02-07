@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63782 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:42662 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664AbaBMHwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 02:52:08 -0500
-Date: Thu, 13 Feb 2014 08:54:27 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
-Subject: Re: [RFC] iwlwifi: refactor the TX / RX ampdu override
-Message-ID: <20140213075427.GA1774@redhat.com> (sfid-20140213_085212_937908_84B04B3A)
-References: <1392196175-6219-1-git-send-email-egrumbach@gmail.com>
- <1392203989-15645-1-git-send-email-emmanuel.grumbach@intel.com>
- <20140212121314.GE1315@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D66597@HASMSX103.ger.corp.intel.com>
- <20140212140420.GA3379@redhat.com>
- <52FBD950.7080204@gmail.com>
+	id S1753211AbaBGMxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Feb 2014 07:53:36 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Calvin Owens <jcalvinowens@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason codes
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+	<1391675824.12789.3.camel@jlt4.sipsolutions.net>
+Date: Fri, 07 Feb 2014 14:53:32 +0200
+In-Reply-To: <1391675824.12789.3.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Thu, 06 Feb 2014 09:37:04 +0100")
+Message-ID: <87r47fkrsj.fsf@purkki.adurom.net> (sfid-20140207_135342_607730_FA75E975)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52FBD950.7080204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 10:28:00PM +0200, Emmanuel Grumbach wrote:
-> On 02/12/2014 04:04 PM, Stanislaw Gruszka wrote:
-> > On Wed, Feb 12, 2014 at 12:27:05PM +0000, Grumbach, Emmanuel wrote:
-> >>> I think we can keep IWL_DISABLE_HT_ALL option. I should be possible to
-> >>> make some per-device type default settings and if disable_11n == 0 use
-> >>> them. Otherwise use settings from module parameter. Will that work ?
-> >>
-> >> I'd prefer to have the default based on the iwldvm vs. iwlmvm instead of adding yet another per-HW field. But yeah - it is possible.
-> > 
-> > I re-think changing default settings do disable TX AGG and must tell
-> > that this is very odd. I would prefer to stay defaults as they are now.
-> > Users can disable TX aggregation using module option.
-> 
-> I disagree. We have bugs there - it is pretty much obvious. I remember a
-> tracing from 2.6.39 which was before the re-architecture I made in the
-> driver with clear FW bugs. I don't remember what device though.
-> This is why I want to disable this by default.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Sure, it's up to you. But anyway, disabling feature because it buggy,
-after having it run for 5 years or so, it's odd :-) 
+> On Wed, 2014-02-05 at 19:44 -0600, Calvin Owens wrote:
+>> Create a function to return a descriptive string for each reason code,
+>> and print that instead of the numeric value in the kernel log. These
+>> codes are easily found on popular search engines, but one is generally
+>> not able to access the internet when dealing with wireless connectivity
+>> issues.
+>
+> I believe both iw and wpa_supplicant already have the reason code
+> printout, and if you're diagnosing connectivity issues then you're
+> probably using those anyway (e.g. iw event -t), so I don't really see
+> much point in adding this to the kernel?
 
-Stanislaw
+FWIW I find this useful. When I have connection problems I rarely look
+at wpasupplicant, mostly I'm so lazy that I just check from the kernel
+log what's happening. Just my 0.02 EUR.
+
+-- 
+Kalle Valo
