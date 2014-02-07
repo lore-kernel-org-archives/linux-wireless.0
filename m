@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57873 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbaBZJSL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:18:11 -0500
-Message-ID: <1393406278.4133.4.camel@jlt4.sipsolutions.net> (sfid-20140226_101820_284452_C04DAB02)
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the
- network device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Feb 2014 10:17:58 +0100
-In-Reply-To: <530DAECD.8010405@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-		 <1393356639-19169-2-git-send-email-arend@broadcom.com>
-		 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>
-	 <530DAECD.8010405@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:40352 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752305AbaBGOoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Feb 2014 09:44:46 -0500
+Date: Fri, 7 Feb 2014 15:46:40 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] wil6210: Fix switch operator "missing break?" warning
+Message-ID: <20140207144639.GA10939@dhcp-26-207.brq.redhat.com> (sfid-20140207_154530_515522_690B5918)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-26 at 10:07 +0100, Arend van Spriel wrote:
-> On 02/25/2014 08:59 PM, Johannes Berg wrote:
-> > On Tue, 2014-02-25 at 20:30 +0100, Arend van Spriel wrote:
-> >> Upon deleting the interface a cfg80211_disconnected() is called under
-> >> rtnl_lock. Right after the unlocking the rtnl_lock we unregister the
-> >> network device. This patch adds delay before unregister so cfg80211
-> >> can handle disconnect and notify wpa_supplicant.
-> > 
-> >> +				/* make sure cfg80211 can send disconnect event
-> >> +				 * before unregistering the netdevice below.
-> >> +				 */
-> >> +				msleep(100);
-> > 
-> > This has got to be one of the worst hacks I've seen in wireless so
-> > far ... :)
-> 
-> Did you see I removed a sleep as well in this patch :-p
+This update fixes a warning introduced with commit bc977ba1
+("wil6210: Use pci_enable_msi_range() instead of pci_enable_msi_block()")
 
-Yeah, I did :-)
+drivers/net/wireless/ath/wil6210/pcie_bus.c:65 wil_if_pcie_enable()
+warn: missing break? reassigning 'use_msi'
 
-> I just don't see how I can assure cfg80211 has actually done the
-> disconnect work. If we don't do a cfg80211_disconnected() I get a WARN
-> from the cfg80211 netdev notifier (or at least I did in previous kernel).
-> 
-> Should we consider a clean solution, ie. modify cfg80211 for this scenario?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-Yes. Can't we just flush the work at some strategic place?
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 4e1bf54..e1c8cc4 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -51,16 +51,12 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
+ 		use_msi = 1;
+ 	}
+ 
+-	switch (use_msi) {
+-	case 3:
+-		if (pci_enable_msi_range(pdev, 3, 3) > 0)
+-			break;
++	if (use_msi == 3 && pci_enable_msi_range(pdev, 3, 3) < 0) {
+ 		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
+ 		use_msi = 1;
+-		/* fallthrough */
+-	case 1:
+-		if (!pci_enable_msi(pdev))
+-			break;
++	}
++
++	if (use_msi == 1 && pci_enable_msi(pdev)) {
+ 		wil_err(wil, "pci_enable_msi failed, use INTx\n");
+ 		use_msi = 0;
+ 	}
+-- 
+1.7.7.6
 
-Actually you're not talking about the "disconnect_work" (which is
-related to regulatory) but the "event_work" so I was confused here for a
-second.
-
-What was the warning? cfg80211 already calls
-cfg80211_process_wdev_events() from within the REMOVE netdev notifier,
-so that *shouldn't* have happened.
-
-johannes
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
