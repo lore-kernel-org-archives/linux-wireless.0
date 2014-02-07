@@ -1,257 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([5.45.105.125]:33027 "EHLO smtp.ring0.de"
+Received: from cantor2.suse.de ([195.135.220.15]:40675 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752842AbaBNXG6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 18:06:58 -0500
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [PATCHv2 2/5] wl1251: move power GPIO handling into the driver
-Date: Sat, 15 Feb 2014 00:05:53 +0100
-Message-Id: <1392419156-14394-3-git-send-email-sre@debian.org> (sfid-20140215_000913_156471_A8637AEF)
-In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
-References: <20140125000929.GD25488@atomide.com>
- <1392419156-14394-1-git-send-email-sre@debian.org>
+	id S1752126AbaBGPTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Feb 2014 10:19:43 -0500
+Date: Fri, 7 Feb 2014 16:19:42 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	ilw@linux.intel.com, LKML <linux-kernel@vger.kernel.org>
+Subject: wlwifi - Microcode SW error detected.
+Message-ID: <20140207151942.GE5121@dhcp22.suse.cz> (sfid-20140207_161948_213806_DCD2CEE9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the power GPIO handling from the board code into
-the driver. This is a dependency for device tree support.
+Hi,
+I am not sure who to report this issue so please let me know if this is
+not a proper channel.
 
-Signed-off-by: Sebastian Reichel <sre@debian.org>
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
-Acked-by: Tony Lindgren <tony@atomide.com>
----
- arch/arm/mach-omap2/board-omap3pandora.c     |  2 ++
- arch/arm/mach-omap2/board-rx51-peripherals.c | 11 ++--------
- drivers/net/wireless/ti/wl1251/sdio.c        | 21 +++++++++++++-----
- drivers/net/wireless/ti/wl1251/spi.c         | 33 ++++++++++++++++++----------
- drivers/net/wireless/ti/wl1251/wl1251.h      |  2 +-
- include/linux/wl12xx.h                       |  2 +-
- 6 files changed, 43 insertions(+), 28 deletions(-)
+My dmesg claims the following:
+[14921.841475] iwlwifi 0000:02:00.0: RF_KILL bit toggled to enable radio.
+[14922.178602] usb 1-1.4: new full-speed USB device number 5 using ehci-pci
+[14922.275384] usb 1-1.4: New USB device found, idVendor=413c, idProduct=8187
+[14922.275408] usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[14922.275410] usb 1-1.4: Product: DW375 Bluetooth Module
+[14922.275412] usb 1-1.4: Manufacturer: Dell Computer Corp
+[14922.275413] usb 1-1.4: SerialNumber: 446D57C904C4
+[14922.913064] atkbd serio0: Unknown key pressed (translated set 2, code 0x88 on isa0060/serio0).
+[14922.913069] atkbd serio0: Use 'setkeycodes e008 <keycode>' to make it known.
+[14922.913116] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+[14923.002924] usb 1-1.4: USB disconnect, device number 5
+[14923.112880] iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[14923.112887] iwlwifi 0000:02:00.0: CSR values:
+[14923.112888] iwlwifi 0000:02:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[14923.112918] iwlwifi 0000:02:00.0:        CSR_HW_IF_CONFIG_REG: 0X0048d304
+[14923.112944] iwlwifi 0000:02:00.0:          CSR_INT_COALESCING: 0X00000040
+[14923.112969] iwlwifi 0000:02:00.0:                     CSR_INT: 0X00000000
+[14923.112995] iwlwifi 0000:02:00.0:                CSR_INT_MASK: 0X00000000
+[14923.113020] iwlwifi 0000:02:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[14923.113046] iwlwifi 0000:02:00.0:                 CSR_GPIO_IN: 0X0000000f
+[14923.113071] iwlwifi 0000:02:00.0:                   CSR_RESET: 0X00000000
+[14923.113097] iwlwifi 0000:02:00.0:                CSR_GP_CNTRL: 0X000403c5
+[14923.113123] iwlwifi 0000:02:00.0:                  CSR_HW_REV: 0X00000074
+[14923.113149] iwlwifi 0000:02:00.0:              CSR_EEPROM_REG: 0Xf5130ffd
+[14923.113174] iwlwifi 0000:02:00.0:               CSR_EEPROM_GP: 0X90000001
+[14923.113200] iwlwifi 0000:02:00.0:              CSR_OTP_GP_REG: 0X00030001
+[14923.113226] iwlwifi 0000:02:00.0:                 CSR_GIO_REG: 0X00080042
+[14923.113251] iwlwifi 0000:02:00.0:            CSR_GP_UCODE_REG: 0X0000001f
+[14923.113277] iwlwifi 0000:02:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[14923.113303] iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP1: 0X00000005
+[14923.113328] iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[14923.113354] iwlwifi 0000:02:00.0:                 CSR_LED_REG: 0X00000038
+[14923.113379] iwlwifi 0000:02:00.0:        CSR_DRAM_INT_TBL_REG: 0X880c4272
+[14923.113405] iwlwifi 0000:02:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[14923.113431] iwlwifi 0000:02:00.0:             CSR_ANA_PLL_CFG: 0X00000000
+[14923.113457] iwlwifi 0000:02:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[14923.113482] iwlwifi 0000:02:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[14923.113484] iwlwifi 0000:02:00.0: FH register values:
+[14923.113520] iwlwifi 0000:02:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X0a231600
+[14923.113536] iwlwifi 0000:02:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X00a23ed0
+[14923.113551] iwlwifi 0000:02:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000018
+[14923.113566] iwlwifi 0000:02:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80801114
+[14923.113580] iwlwifi 0000:02:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[14923.113595] iwlwifi 0000:02:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[14923.113611] iwlwifi 0000:02:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[14923.113626] iwlwifi 0000:02:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[14923.113641] iwlwifi 0000:02:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[14923.113644] iwlwifi 0000:02:00.0: Loaded firmware version: 9.221.4.1 build 25532
+[14923.113800] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
+[14923.113802] iwlwifi 0000:02:00.0: Status: 0x0000204D, count: 5
+[14923.113804] iwlwifi 0000:02:00.0: 0x00000005 | SYSASSERT                   
+[14923.113805] iwlwifi 0000:02:00.0: 0x0001EFD8 | uPc
+[14923.113807] iwlwifi 0000:02:00.0: 0x0001EEE4 | branchlink1
+[14923.113808] iwlwifi 0000:02:00.0: 0x0001EEE4 | branchlink2
+[14923.113809] iwlwifi 0000:02:00.0: 0x00001532 | interruptlink1
+[14923.113811] iwlwifi 0000:02:00.0: 0x00000000 | interruptlink2
+[14923.113812] iwlwifi 0000:02:00.0: 0x00000000 | data1
+[14923.113813] iwlwifi 0000:02:00.0: 0x00000000 | data2
+[14923.113815] iwlwifi 0000:02:00.0: 0x0000012E | line
+[14923.113816] iwlwifi 0000:02:00.0: 0x00400529 | beacon time
+[14923.113818] iwlwifi 0000:02:00.0: 0x00031AD7 | tsf low
+[14923.113819] iwlwifi 0000:02:00.0: 0x00000000 | tsf hi
+[14923.113820] iwlwifi 0000:02:00.0: 0x00000000 | time gp1
+[14923.113822] iwlwifi 0000:02:00.0: 0x0004B850 | time gp2
+[14923.113823] iwlwifi 0000:02:00.0: 0x00000000 | time gp3
+[14923.113825] iwlwifi 0000:02:00.0: 0x000109DD | uCode version
+[14923.113826] iwlwifi 0000:02:00.0: 0x00000074 | hw version
+[14923.113827] iwlwifi 0000:02:00.0: 0x0048D304 | board version
+[14923.113829] iwlwifi 0000:02:00.0: 0x04120095 | hcmd
+[14923.113830] iwlwifi 0000:02:00.0: 0x2FE23000 | isr0
+[14923.113831] iwlwifi 0000:02:00.0: 0x01004040 | isr1
+[14923.113833] iwlwifi 0000:02:00.0: 0x00000002 | isr2
+[14923.113834] iwlwifi 0000:02:00.0: 0x1141FCC3 | isr3
+[14923.113835] iwlwifi 0000:02:00.0: 0x00000000 | isr4
+[14923.113837] iwlwifi 0000:02:00.0: 0x10800112 | isr_pref
+[14923.113838] iwlwifi 0000:02:00.0: 0x0001B79C | wait_event
+[14923.113840] iwlwifi 0000:02:00.0: 0x00000080 | l2p_control
+[14923.113841] iwlwifi 0000:02:00.0: 0x00000000 | l2p_duration
+[14923.113842] iwlwifi 0000:02:00.0: 0x0000003F | l2p_mhvalid
+[14923.113844] iwlwifi 0000:02:00.0: 0x00200200 | l2p_addr_match
+[14923.113845] iwlwifi 0000:02:00.0: 0x00000045 | lmpm_pmg_sel
+[14923.113846] iwlwifi 0000:02:00.0: 0x02061043 | timestamp
+[14923.113848] iwlwifi 0000:02:00.0: 0x00001828 | flow_handler
+[14923.113964] iwlwifi 0000:02:00.0: Log capacity 1024 is bogus, limit to 512 entries
+[14923.113966] iwlwifi 0000:02:00.0: Log write index 873 is bogus, limit to 512
+[14923.113968] iwlwifi 0000:02:00.0: Start IWL Event Log Dump: display last 20 entries
+[14923.114008] iwlwifi 0000:02:00.0: EVT_LOGT:0000101476:0x00000052:1334
+[14923.114041] iwlwifi 0000:02:00.0: EVT_LOGT:0000101477:0x0150a450:1334
+[14923.114074] iwlwifi 0000:02:00.0: EVT_LOGT:0000101482:0x00280003:1334
+[14923.114106] iwlwifi 0000:02:00.0: EVT_LOGT:0000101486:0x00000054:1334
+[14923.114140] iwlwifi 0000:02:00.0: EVT_LOGT:0000101486:0x0150a450:1334
+[14923.114172] iwlwifi 0000:02:00.0: EVT_LOGT:0000101488:0x00000010:0484
+[14923.114205] iwlwifi 0000:02:00.0: EVT_LOGT:0000101494:0x001e0000:1334
+[14923.114237] iwlwifi 0000:02:00.0: EVT_LOGT:0000101499:0x00000074:1334
+[14923.114270] iwlwifi 0000:02:00.0: EVT_LOGT:0000101500:0x018cda74:1334
+[14923.114302] iwlwifi 0000:02:00.0: EVT_LOGT:0000101501:0x018cda74:1334
+[14923.114334] iwlwifi 0000:02:00.0: EVT_LOGT:0000101503:0x018cda74:1334
+[14923.114368] iwlwifi 0000:02:00.0: EVT_LOGT:0000101504:0x018cda74:1334
+[14923.114400] iwlwifi 0000:02:00.0: EVT_LOGT:0000101506:0x018cda74:1334
+[14923.114433] iwlwifi 0000:02:00.0: EVT_LOGT:0000101512:0x001e0000:1334
+[14923.114465] iwlwifi 0000:02:00.0: EVT_LOGT:0000101517:0x0000006d:1334
+[14923.114498] iwlwifi 0000:02:00.0: EVT_LOGT:0000101518:0x018cda74:1334
+[14923.114530] iwlwifi 0000:02:00.0: EVT_LOGT:0000101520:0x018cda74:1334
+[14923.114563] iwlwifi 0000:02:00.0: EVT_LOGT:0000101521:0x018cda74:1334
+[14923.114595] iwlwifi 0000:02:00.0: EVT_LOGT:0000101523:0x018cda74:1334
+[14923.114628] iwlwifi 0000:02:00.0: EVT_LOGT:0000101524:0x018cda74:1334
+[14923.115279] ieee80211 phy0: Hardware restart was requested
+[14923.115370] iwlwifi 0000:02:00.0: Failed to start RT ucode: -132
+[14923.115450] iwlwifi 0000:02:00.0: Unable to initialize device.
+[15113.918564] atkbd serio0: Unknown key pressed (translated set 2, code 0x88 on isa0060/serio0).
+[15113.918569] atkbd serio0: Use 'setkeycodes e008 <keycode>' to make it known.
+[15113.918630] iwlwifi 0000:02:00.0: RF_KILL bit toggled to enable radio.
+[15114.300823] usb 1-1.4: new full-speed USB device number 6 using ehci-pci
+[15114.398003] usb 1-1.4: New USB device found, idVendor=413c, idProduct=8187
+[15114.398008] usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[15114.398010] usb 1-1.4: Product: DW375 Bluetooth Module
+[15114.398019] usb 1-1.4: Manufacturer: Dell Computer Corp
+[15114.398020] usb 1-1.4: SerialNumber: 446D57C904C4
+[15123.535504] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[15123.535729] iwlwifi 0000:02:00.0: Radio type=0x0-0x3-0x1
+[15123.657396] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
-diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
-index 24f3c1b..cf18340 100644
---- a/arch/arm/mach-omap2/board-omap3pandora.c
-+++ b/arch/arm/mach-omap2/board-omap3pandora.c
-@@ -541,6 +541,8 @@ static void __init pandora_wl1251_init(void)
- 
- 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
- 
-+	pandora_wl1251_pdata.power_gpio = -1;
-+
- 	ret = gpio_request_one(PANDORA_WIFI_IRQ_GPIO, GPIOF_IN, "wl1251 irq");
- 	if (ret < 0)
- 		goto fail;
-diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-index e05e740..ddfc8df 100644
---- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-+++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-@@ -1173,13 +1173,7 @@ static inline void board_smc91x_init(void)
- 
- #endif
- 
--static void rx51_wl1251_set_power(bool enable)
--{
--	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
--}
--
- static struct gpio rx51_wl1251_gpios[] __initdata = {
--	{ RX51_WL1251_POWER_GPIO, GPIOF_OUT_INIT_LOW,	"wl1251 power"	},
- 	{ RX51_WL1251_IRQ_GPIO,	  GPIOF_IN,		"wl1251 irq"	},
- };
- 
-@@ -1196,17 +1190,16 @@ static void __init rx51_init_wl1251(void)
- 	if (irq < 0)
- 		goto err_irq;
- 
--	wl1251_pdata.set_power = rx51_wl1251_set_power;
-+	wl1251_pdata.power_gpio = RX51_WL1251_POWER_GPIO;
- 	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
- 
- 	return;
- 
- err_irq:
- 	gpio_free(RX51_WL1251_IRQ_GPIO);
--	gpio_free(RX51_WL1251_POWER_GPIO);
- error:
- 	printk(KERN_ERR "wl1251 board initialisation failed\n");
--	wl1251_pdata.set_power = NULL;
-+	wl1251_pdata.power_gpio = -1;
- 
- 	/*
- 	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
-diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
-index b75a37a..b661f89 100644
---- a/drivers/net/wireless/ti/wl1251/sdio.c
-+++ b/drivers/net/wireless/ti/wl1251/sdio.c
-@@ -28,6 +28,7 @@
- #include <linux/wl12xx.h>
- #include <linux/irq.h>
- #include <linux/pm_runtime.h>
-+#include <linux/gpio.h>
- 
- #include "wl1251.h"
- 
-@@ -182,8 +183,9 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
- 		 * callback in case it wants to do any additional setup,
- 		 * for example enabling clock buffer for the module.
- 		 */
--		if (wl->set_power)
--			wl->set_power(true);
-+		if (gpio_is_valid(wl->power_gpio))
-+			gpio_set_value(wl->power_gpio, true);
-+
- 
- 		ret = pm_runtime_get_sync(&func->dev);
- 		if (ret < 0) {
-@@ -203,8 +205,8 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
- 		if (ret < 0)
- 			goto out;
- 
--		if (wl->set_power)
--			wl->set_power(false);
-+		if (gpio_is_valid(wl->power_gpio))
-+			gpio_set_value(wl->power_gpio, false);
- 	}
- 
- out:
-@@ -256,11 +258,20 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 
- 	wl1251_board_data = wl1251_get_platform_data();
- 	if (!IS_ERR(wl1251_board_data)) {
--		wl->set_power = wl1251_board_data->set_power;
-+		wl->power_gpio = wl1251_board_data->power_gpio;
- 		wl->irq = wl1251_board_data->irq;
- 		wl->use_eeprom = wl1251_board_data->use_eeprom;
- 	}
- 
-+	if (gpio_is_valid(wl->power_gpio)) {
-+		ret = devm_gpio_request(&func->dev, wl->power_gpio,
-+								"wl1251 power");
-+		if (ret) {
-+			wl1251_error("Failed to request gpio: %d\n", ret);
-+			goto disable;
-+		}
-+	}
-+
- 	if (wl->irq) {
- 		irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
- 		ret = request_irq(wl->irq, wl1251_line_irq, 0, "wl1251", wl);
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index 62403a1..6abcbc3 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -26,6 +26,7 @@
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
-+#include <linux/gpio.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-@@ -221,8 +222,8 @@ static void wl1251_spi_disable_irq(struct wl1251 *wl)
- 
- static int wl1251_spi_set_power(struct wl1251 *wl, bool enable)
- {
--	if (wl->set_power)
--		wl->set_power(enable);
-+	if (gpio_is_valid(wl->power_gpio))
-+		gpio_set_value(wl->power_gpio, enable);
- 
- 	return 0;
- }
-@@ -271,22 +272,33 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 		goto out_free;
- 	}
- 
--	wl->set_power = pdata->set_power;
--	if (!wl->set_power) {
--		wl1251_error("set power function missing in platform data");
--		return -ENODEV;
-+	wl->power_gpio = pdata->power_gpio;
-+
-+	if (gpio_is_valid(wl->power_gpio)) {
-+		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
-+					GPIOF_OUT_INIT_LOW, "wl1251 power");
-+		if (ret) {
-+			wl1251_error("Failed to request gpio: %d\n", ret);
-+			goto out_free;
-+		}
-+	} else {
-+		wl1251_error("set power gpio missing in platform data");
-+		ret = -ENODEV;
-+		goto out_free;
- 	}
- 
- 	wl->irq = spi->irq;
- 	if (wl->irq < 0) {
- 		wl1251_error("irq missing in platform data");
--		return -ENODEV;
-+		ret = -ENODEV;
-+		goto out_free;
- 	}
- 
- 	wl->use_eeprom = pdata->use_eeprom;
- 
- 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
--	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
-+	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
-+							DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1251_error("request_irq() failed: %d", ret);
- 		goto out_free;
-@@ -296,13 +308,10 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 
- 	ret = wl1251_init_ieee80211(wl);
- 	if (ret)
--		goto out_irq;
-+		goto out_free;
- 
- 	return 0;
- 
-- out_irq:
--	free_irq(wl->irq, wl);
--
-  out_free:
- 	ieee80211_free_hw(hw);
- 
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index 235617a..389fe25 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -276,7 +276,7 @@ struct wl1251 {
- 	void *if_priv;
- 	const struct wl1251_if_operations *if_ops;
- 
--	void (*set_power)(bool enable);
-+	int power_gpio;
- 	int irq;
- 	bool use_eeprom;
- 
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index b516b4f..a9c723b 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -49,7 +49,7 @@ enum {
- };
- 
- struct wl1251_platform_data {
--	void (*set_power)(bool enable);
-+	int power_gpio;
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
+The issue started with a flood of
+[  114.439082] iwlwifi 0000:02:00.0: Failed to run INIT ucode: -132
+[  114.439140] iwlwifi 0000:02:00.0: Unable to initialize device.
+[  114.439891] iwlwifi 0000:02:00.0: Failed to run INIT ucode: -132
+[  114.439971] iwlwifi 0000:02:00.0: Unable to initialize device.
+[  114.440201] iwlwifi 0000:02:00.0: Failed to run INIT ucode: -132
+[  114.440259] iwlwifi 0000:02:00.0: Unable to initialize device.
+[  114.440967] iwlwifi 0000:02:00.0: Failed to run INIT ucode: -132
+[  114.441026] iwlwifi 0000:02:00.0: Unable to initialize device.
+
+which is probably wpa_supplicant over eagerly trying to enable wireless
+interface which is disbaled by rfkill button. But I haven't checked
+that. Then I've killed it and switched rfkill button on and off several
+times which results in the above "Microcode SW error detected"
+
+I had to rmmod all the iwlwifi related modules and load them again to
+make the device work again.
+
+Is this a known issue? Is it an issue at all? Do you need an additional
+information?
+
+I am currently using 3.13 vanilla but the "Failed to run INIT ucode"
+happened with 3.14-rc1 as well.
+
+Thanks
 -- 
-1.8.5.3
-
+Michal Hocko
+SUSE Labs
