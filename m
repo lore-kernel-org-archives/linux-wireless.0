@@ -1,175 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:51924 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbaBKQiH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:38190 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbaBGFAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 11:38:07 -0500
-Date: Tue, 11 Feb 2014 10:37:38 -0600
-From: Calvin Owens <jcalvinowens@gmail.com>
-To: Joe Perches <joe@perches.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jcalvinowens@gmail.com
-Subject: [PATCH v3] ieee80211: Print human-readable disassoc/deauth reason
- codes
-Message-ID: <20140211163738.GA32043@gmail.com> (sfid-20140211_173829_593296_D4B2B52C)
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
- <1391661863.30094.56.camel@joe-AO722>
- <1392030546.4128.11.camel@jlt4.sipsolutions.net>
- <1392050359.2507.10.camel@joe-AO722>
- <20140211012523.GA2739@gmail.com>
- <1392082740.2507.49.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1392082740.2507.49.camel@joe-AO722>
+	Fri, 7 Feb 2014 00:00:39 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 1/7] ath9k: Fix IQ cal post processing for SoC
+Date: Fri,  7 Feb 2014 10:29:49 +0530
+Message-Id: <1391749195-24381-2-git-send-email-sujith@msujith.org> (sfid-20140207_060053_176564_E6B2E981)
+In-Reply-To: <1391749195-24381-1-git-send-email-sujith@msujith.org>
+References: <1391749195-24381-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a function to return a descriptive string for each reason code,
-and print that in addition to the numeric value in the kernel log. These
-codes are easily found on popular search engines, but one is generally
-not able to access the internet when dealing with wireless connectivity
-issues.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Changes in v2: Refactored array of strings into switch statement.
-Changes in v3: Fix style problem, use simplifying macro for switch
-statement, eliminate temporary enum variable.
+Calibration data is not reused for SoC chips, so
+call ar9003_hw_tx_iq_cal_post_proc() with the correct
+argument. The 'is_reusable' flag is currently used
+only for PC-OEM chips, but it makes things clearer to
+specify it explicity.
 
-Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/net/mac80211.h | 10 +++++++++
- net/mac80211/main.c    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mlme.c    | 12 +++++------
- 3 files changed, 73 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f4ab2fb..d18acfe 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2971,6 +2971,16 @@ struct ieee80211_ops {
-  */
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops);
-+/**
-+ * ieee80211_get_reason_code_string - Get human readable reason code
-+ *
-+ * This function returns a string describing the @reason_code.
-+ *
-+ * @reason_code: Reason code
-+ *
-+ * Return: Human readable reason string, or "<INVALID>"
-+ */
-+const char *ieee80211_get_reason_code_string(u16 reason_code);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index a352128..225b758 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1461,7 +1461,7 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	bool txiqcal_done = false;
+-	bool is_reusable = true, status = true;
++	bool status = true;
+ 	bool run_agc_cal = false, sep_iq_cal = false;
  
- /**
-  * ieee80211_register_hw - Register hardware device
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d767cfb..307b444 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -743,6 +743,63 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- 	return 0;
- }
+ 	/* Use chip chainmask only for calibration */
+@@ -1531,7 +1531,7 @@ skip_tx_iqcal:
+ 	}
  
-+#define case_WLAN(type) \
-+	case WLAN_REASON_##type: return #type
-+
-+const char *ieee80211_get_reason_code_string(u16 reason_code)
-+{
-+	switch (reason_code) {
-+	case_WLAN(UNSPECIFIED);
-+	case_WLAN(PREV_AUTH_NOT_VALID);
-+	case_WLAN(DEAUTH_LEAVING);
-+	case_WLAN(DISASSOC_DUE_TO_INACTIVITY);
-+	case_WLAN(DISASSOC_AP_BUSY);
-+	case_WLAN(CLASS2_FRAME_FROM_NONAUTH_STA);
-+	case_WLAN(CLASS3_FRAME_FROM_NONASSOC_STA);
-+	case_WLAN(DISASSOC_STA_HAS_LEFT);
-+	case_WLAN(STA_REQ_ASSOC_WITHOUT_AUTH);
-+	case_WLAN(DISASSOC_BAD_POWER);
-+	case_WLAN(DISASSOC_BAD_SUPP_CHAN);
-+	case_WLAN(INVALID_IE);
-+	case_WLAN(MIC_FAILURE);
-+	case_WLAN(4WAY_HANDSHAKE_TIMEOUT);
-+	case_WLAN(GROUP_KEY_HANDSHAKE_TIMEOUT);
-+	case_WLAN(IE_DIFFERENT);
-+	case_WLAN(INVALID_GROUP_CIPHER);
-+	case_WLAN(INVALID_PAIRWISE_CIPHER);
-+	case_WLAN(INVALID_AKMP);
-+	case_WLAN(UNSUPP_RSN_VERSION);
-+	case_WLAN(INVALID_RSN_IE_CAP);
-+	case_WLAN(IEEE8021X_FAILED);
-+	case_WLAN(CIPHER_SUITE_REJECTED);
-+	case_WLAN(DISASSOC_UNSPECIFIED_QOS);
-+	case_WLAN(DISASSOC_QAP_NO_BANDWIDTH);
-+	case_WLAN(DISASSOC_LOW_ACK);
-+	case_WLAN(DISASSOC_QAP_EXCEED_TXOP);
-+	case_WLAN(QSTA_LEAVE_QBSS);
-+	case_WLAN(QSTA_NOT_USE);
-+	case_WLAN(QSTA_REQUIRE_SETUP);
-+	case_WLAN(QSTA_TIMEOUT);
-+	case_WLAN(QSTA_CIPHER_NOT_SUPP);
-+	case_WLAN(MESH_PEER_CANCELED);
-+	case_WLAN(MESH_MAX_PEERS);
-+	case_WLAN(MESH_CONFIG);
-+	case_WLAN(MESH_CLOSE);
-+	case_WLAN(MESH_MAX_RETRIES);
-+	case_WLAN(MESH_CONFIRM_TIMEOUT);
-+	case_WLAN(MESH_INVALID_GTK);
-+	case_WLAN(MESH_INCONSISTENT_PARAM);
-+	case_WLAN(MESH_INVALID_SECURITY);
-+	case_WLAN(MESH_PATH_ERROR);
-+	case_WLAN(MESH_PATH_NOFORWARD);
-+	case_WLAN(MESH_PATH_DEST_UNREACHABLE);
-+	case_WLAN(MAC_EXISTS_IN_MBSS);
-+	case_WLAN(MESH_CHAN_REGULATORY);
-+	case_WLAN(MESH_CHAN);
-+	default: return "<INVALID>";
-+	}
-+}
-+
- int ieee80211_register_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fc1d824..5dec202 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 	if (txiqcal_done)
+-		ar9003_hw_tx_iq_cal_post_proc(ah, is_reusable);
++		ar9003_hw_tx_iq_cal_post_proc(ah, false);
  
- 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
- 
--	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
--		   bssid, reason_code);
-+	sdata_info(sdata, "deauthenticated from %pM (Reason: %u=%s)\n",
-+		   bssid, reason_code, ieee80211_get_reason_code_string(reason_code));
- 
- 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
- 
-@@ -4301,8 +4301,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	bool report_frame = false;
- 
- 	sdata_info(sdata,
--		   "deauthenticating from %pM by local choice (reason=%d)\n",
--		   req->bssid, req->reason_code);
-+		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
-+		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
- 
- 	if (ifmgd->auth_data) {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
-@@ -4348,8 +4348,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 		return -ENOLINK;
- 
- 	sdata_info(sdata,
--		   "disassociating from %pM by local choice (reason=%d)\n",
--		   req->bss->bssid, req->reason_code);
-+		   "disassociating from %pM by local choice (Reason: %u=%s)\n",
-+		   req->bss->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
- 
- 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
+ 	/* Revert chainmask to runtime parameters */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
 -- 
 1.8.5.3
 
