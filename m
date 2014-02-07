@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:60076 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbaBKIdV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 03:33:21 -0500
-Received: by mail-ea0-f176.google.com with SMTP id h14so3487111eaj.7
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Feb 2014 00:33:20 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: pass frames with invalid peer status to upper layer
-Date: Tue, 11 Feb 2014 09:32:59 +0100
-Message-Id: <1392107579-4289-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140211_093325_527106_608B70C3)
+Received: from vsmtp14.tin.it ([212.216.176.118]:45622 "EHLO vsmtp14.tin.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751317AbaBGKw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Feb 2014 05:52:57 -0500
+Message-ID: <1391770326.4180.1.camel@Core2> (sfid-20140207_115301_051738_F7D706AF)
+Subject: Re: Reduce tx power
+From: Giuseppe Siracusano <a_siracusano@tin.it>
+To: Bob Copeland <me@bobcopeland.com>, James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Feb 2014 11:52:06 +0100
+In-Reply-To: <20140206171606.GC20719@localhost>
+References: <1391599819.4118.3.camel@Core2>
+	 <20140205204013.GA29649@us.netrek.org> <20140206171606.GC20719@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass frames with invalid peer status to upper layer.
-Next mac80211 will validate frames and drop if required.
-This is required to detect spurious frames and pass
-this info to user mode (detect CLASS2 CLASS3 frames from
-nonauthenticated/nonassociated stations).
+Thanks to all for the replies!!
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |    1 +
- 1 file changed, 1 insertion(+)
+In the previous mail I'forgot to say that I've already implemented a solution based on mac filtering,
+but in this case the same wireless channel would be shared among different "virtual" visibility scopes 
+and the emulation is less realistic.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index fe8bd1b..c7a5822 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -951,6 +951,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 
- 			if (status != HTT_RX_IND_MPDU_STATUS_OK &&
- 			    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
-+			    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
- 			    !htt->ar->monitor_enabled) {
- 				ath10k_dbg(ATH10K_DBG_HTT,
- 					   "htt rx ignoring frame w/ status %d\n",
--- 
-1.7.9.5
+I'd like to compare this solution to a second one where the nodes do not share the same channel, 
+and then chose the one that fits my experiment's requisites.
+
+bye
+
+Giuseppe Siracusano
+
 
