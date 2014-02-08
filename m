@@ -1,61 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58470 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752681AbaBFRKU (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56492 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750868AbaBHAXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 12:10:20 -0500
-Message-ID: <52F3C1F1.3090509@candelatech.com> (sfid-20140206_181024_055873_00CCB8D3)
-Date: Thu, 06 Feb 2014 09:10:09 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 7 Feb 2014 19:23:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 05/30] mwifiex: change beacon parameter structure
+Date: Fri, 7 Feb 2014 16:23:34 -0800
+Message-ID: <1391819017-20995-1-git-send-email-bzhao@marvell.com> (sfid-20140208_012345_160614_9C1331D1)
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
-References: <1391662375-28781-1-git-send-email-sujith@msujith.org> <52F3B155.6010308@candelatech.com> <21235.46879.960127.346448@gargle.gargle.HOWL>
-In-Reply-To: <21235.46879.960127.346448@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2014 08:23 AM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> Can you let us know the details on how your set up that TCP
->> traffic?  For instance, number of streams, write size, socket
->> buffer sizes, etc?  Upload, download, or are both similar
->> throughput in your testing?
-> 
-> Stock OpenWrt (trunk) running on a 3x3 Scorpion board (AP136/AP135) as AP.
-> Windows 7 as client, using a 3x3 AR9300 card.
-> 
-> iperf with window size 512k, 4 parallel threads. With both
-> TX and RX, 290+ Mbps is seen. UDP traffic: 330 Mbps in both directions.
-> Environment: open air and the station is located about 1 meter from the AP.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-We get similar UDP throughput (and maybe up to 340Mbps using ath9k
-rate control), but not so good on TCP.
+'mwifiex_bcn_param' structure contains five parameters which
+are present in beacon buffer in case of legacy scan.
 
-All our tests so far are on 3.9 kernel, so maybe things are better on
-later kernels.
+'rssi' field won't be there in this buffer for extended scan.
+Hence 'bssid' and 'rssi' are removed from the structure and it is
+renamed as 'mwifiex_fixed_bcn_param' so that we can have common
+parsing logic later for both.
 
-Someday soon-ish we'll be moving to newer kernels and will test it
-again.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   |  4 +---
+ drivers/net/wireless/mwifiex/scan.c | 25 +++++++++++++++----------
+ 2 files changed, 16 insertions(+), 13 deletions(-)
 
->> I find that those settings influence throughput a great deal,
->> and I have not yet been able to reach 295Mbps of TCP throughput
->> in our testing w/out hacking the tcp-ack logic to increase ack delays.
-> 
-> By adjusting TCP parameters using sysctl or hacking the code ?
-
-There is no sysctl for this in upstream code as far as I know
-...I ended up hacking code by modifying some delayed-ack patches
-someone else posted some time back.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index d8014c8..9b26790 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1047,9 +1047,7 @@ struct host_cmd_ds_rf_ant_siso {
+ 	__le16 ant_mode;
+ };
+ 
+-struct mwifiex_bcn_param {
+-	u8 bssid[ETH_ALEN];
+-	u8 rssi;
++struct mwifiex_fixed_bcn_param {
+ 	__le64 timestamp;
+ 	__le16 beacon_period;
+ 	__le16 cap_info_bitmap;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 0a8a26e..b0be830 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1689,7 +1689,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 		u16 cap_info_bitmap;
+ 		u8 *current_ptr;
+ 		u64 timestamp;
+-		struct mwifiex_bcn_param *bcn_param;
++		struct mwifiex_fixed_bcn_param *bcn_param;
+ 		struct mwifiex_bss_priv *bss_priv;
+ 
+ 		if (bytes_left >= sizeof(beacon_size)) {
+@@ -1716,25 +1716,30 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 
+ 		curr_bcn_bytes = beacon_size;
+ 
+-		/*
+-		 * First 5 fields are bssid, RSSI, time stamp, beacon interval,
+-		 *   and capability information
++		/* First 5 fields are bssid, RSSI(for legacy scan only),
++		 * time stamp, beacon interval, and capability information
+ 		 */
+-		if (curr_bcn_bytes < sizeof(struct mwifiex_bcn_param)) {
++		if (curr_bcn_bytes < ETH_ALEN + sizeof(u8) +
++		    sizeof(struct mwifiex_fixed_bcn_param)) {
+ 			dev_err(adapter->dev,
+ 				"InterpretIE: not enough bytes left\n");
+ 			continue;
+ 		}
+-		bcn_param = (struct mwifiex_bcn_param *)current_ptr;
+-		current_ptr += sizeof(*bcn_param);
+-		curr_bcn_bytes -= sizeof(*bcn_param);
+ 
+-		memcpy(bssid, bcn_param->bssid, ETH_ALEN);
++		memcpy(bssid, current_ptr, ETH_ALEN);
++		current_ptr += ETH_ALEN;
++		curr_bcn_bytes -= ETH_ALEN;
+ 
+-		rssi = (s32) bcn_param->rssi;
++		rssi = (s32) *(u8 *)current_ptr;
+ 		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
++		current_ptr += sizeof(u8);
++		curr_bcn_bytes -= sizeof(u8);
+ 		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%d\n", rssi);
+ 
++		bcn_param = (struct mwifiex_fixed_bcn_param *)current_ptr;
++		current_ptr += sizeof(*bcn_param);
++		curr_bcn_bytes -= sizeof(*bcn_param);
++
+ 		timestamp = le64_to_cpu(bcn_param->timestamp);
+ 		beacon_period = le16_to_cpu(bcn_param->beacon_period);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.2.3
 
