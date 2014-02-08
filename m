@@ -1,64 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374AbaBDPzv (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43926 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751294AbaBHAau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 10:55:51 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.14] mac80211: fix virtual monitor interface iteration
-Date: Tue,  4 Feb 2014 16:55:48 +0100
-Message-Id: <1391529348-26807-1-git-send-email-johannes@sipsolutions.net> (sfid-20140204_165555_050785_B19147CB)
+	Fri, 7 Feb 2014 19:30:50 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 24/30] mwifiex: AMPDU support for TDLS link
+Date: Fri, 7 Feb 2014 16:30:37 -0800
+Message-ID: <1391819442-21239-5-git-send-email-bzhao@marvell.com> (sfid-20140208_020007_304035_D3F28C21)
+In-Reply-To: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+References: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Avinash Patil <patila@marvell.com>
 
-During channel context assignment, the interface should
-be found by interface iteration, so we need to assign the
-pointer before the channel context.
+This patch adds AMPDU support for TDLS link. We have set 11n
+capabilities including AMPDU parameters during ENABLE_LINK.
+We set a variable in RA list to indicate this as TDLS link.
+This patch uses these capabilities to know if AMPDU is allowed
+on TDLS link and enables AMPDU aggregation for TX and RX reording
+support for RA list for this peer.
 
-Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Tested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/iface.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/11n.h           | 18 ++++++++++++++++--
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  6 +++++-
+ drivers/net/wireless/mwifiex/main.h          |  1 +
+ drivers/net/wireless/mwifiex/tdls.c          |  1 +
+ drivers/net/wireless/mwifiex/wmm.c           |  9 ++++++++-
+ 5 files changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ae2eb14..d6d1f1d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -418,20 +418,24 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 		return ret;
- 	}
- 
-+	mutex_lock(&local->iflist_mtx);
-+	rcu_assign_pointer(local->monitor_sdata, sdata);
-+	mutex_unlock(&local->iflist_mtx);
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index fde39fe..12bb6ac 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -81,11 +81,15 @@ static inline u8
+ mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
+ 			 struct mwifiex_ra_list_tbl *ptr, int tid)
+ {
+-	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP)
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
+ 		return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
+-	else
++	} else {
++		if (ptr->tdls_link)
++			return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
 +
- 	mutex_lock(&local->mtx);
- 	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
- 					IEEE80211_CHANCTX_EXCLUSIVE);
- 	mutex_unlock(&local->mtx);
- 	if (ret) {
-+		mutex_lock(&local->iflist_mtx);
-+		rcu_assign_pointer(local->monitor_sdata, NULL);
-+		mutex_unlock(&local->iflist_mtx);
-+		synchronize_net();
- 		drv_remove_interface(local, sdata);
- 		kfree(sdata);
- 		return ret;
- 	}
- 
--	mutex_lock(&local->iflist_mtx);
--	rcu_assign_pointer(local->monitor_sdata, sdata);
--	mutex_unlock(&local->iflist_mtx);
--
- 	return 0;
+ 		return (priv->aggr_prio_tbl[tid].ampdu_ap !=
+ 			BA_STREAM_NOT_ALLOWED) ? true : false;
++	}
  }
  
+ /*
+@@ -179,4 +183,14 @@ static inline int mwifiex_is_sta_11n_enabled(struct mwifiex_private *priv,
+ 
+ 	return node->is_11n_enabled;
+ }
++
++static inline u8
++mwifiex_tdls_peer_11n_enabled(struct mwifiex_private *priv, u8 *ra)
++{
++	struct mwifiex_sta_node *node = mwifiex_get_sta_entry(priv, ra);
++	if (node)
++		return node->is_11n_enabled;
++
++	return false;
++}
+ #endif /* !_MWIFIEX_11N_H_ */
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index ada809f..3767399 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -290,7 +290,11 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 				last_seq = node->rx_seq[tid];
+ 		}
+ 	} else {
+-		last_seq = priv->rx_seq[tid];
++		node = mwifiex_get_sta_entry(priv, ta);
++		if (node)
++			last_seq = node->rx_seq[tid];
++		else
++			last_seq = priv->rx_seq[tid];
+ 	}
+ 
+ 	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 19c60b2..9696d57 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -210,6 +210,7 @@ struct mwifiex_ra_list_tbl {
+ 	u16 ba_pkt_count;
+ 	u8 ba_packet_thr;
+ 	u16 total_pkt_count;
++	bool tdls_link;
+ };
+ 
+ struct mwifiex_tid_tbl {
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 7ef3593..243beab 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -49,6 +49,7 @@ mwifiex_restore_tdls_packets(struct mwifiex_private *priv, u8 *mac, u8 status)
+ 
+ 		if (status == TDLS_SETUP_COMPLETE) {
+ 			ra_list = mwifiex_wmm_get_queue_raptr(priv, tid, mac);
++			ra_list->tdls_link = true;
+ 			tx_info->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+ 		} else {
+ 			tid_list = &priv->wmm.tid_tbl_ptr[tid_down].ra_list;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 63496ed..e0ba011 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -160,8 +160,15 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
+ 			break;
+ 
+ 		ra_list->is_11n_enabled = 0;
++		ra_list->tdls_link = false;
+ 		if (!mwifiex_queuing_ra_based(priv)) {
+-			ra_list->is_11n_enabled = IS_11N_ENABLED(priv);
++			if (mwifiex_get_tdls_link_status(priv, ra) ==
++			    TDLS_SETUP_COMPLETE) {
++				ra_list->is_11n_enabled =
++					mwifiex_tdls_peer_11n_enabled(priv, ra);
++			} else {
++				ra_list->is_11n_enabled = IS_11N_ENABLED(priv);
++			}
+ 		} else {
+ 			ra_list->is_11n_enabled =
+ 				      mwifiex_is_sta_11n_enabled(priv, node);
 -- 
-1.8.5.3
+1.8.2.3
 
