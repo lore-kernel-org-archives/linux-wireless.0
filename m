@@ -1,75 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:32976 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462AbaBBWQE (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57233 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750704AbaBHAUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 17:16:04 -0500
-Received: by mail-ea0-f171.google.com with SMTP id f15so3365525eak.16
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Feb 2014 14:16:02 -0800 (PST)
-Message-ID: <52EEC3A1.6090409@gmail.com> (sfid-20140202_231608_626497_6E566182)
-Date: Sun, 02 Feb 2014 23:16:01 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 7 Feb 2014 19:20:18 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 00/30] mwifiex updates for 3.15
+Date: Fri, 7 Feb 2014 16:20:00 -0800
+Message-ID: <1391818800-20851-1-git-send-email-bzhao@marvell.com> (sfid-20140208_012023_637867_315A440C)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-CC: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2500: disable PS by default
-References: <1391014457-13412-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1391014457-13412-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/14 17:54, Stanislaw Gruszka wrote:
-> It is know that PS cause issues on that old devices, disable it by
-> default.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This series includes updates for 11ac cleanups, extended scan,
+PCIe improvements and TDLS support.
 
-We seem to be going back and forth on this, but:
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Aaron Durbin (2):
+  mwifiex: balance dma map/unmap sizes
+  mwifiex: don't leak DMA command skbuffs
 
-> ---
->  drivers/net/wireless/rt2x00/rt2500pci.c | 5 +++++
->  drivers/net/wireless/rt2x00/rt2500usb.c | 5 +++++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-> index 0ac5c58..d42425a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-> @@ -1880,6 +1880,11 @@ static int rt2500pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  						   EEPROM_MAC_ADDR_0));
->  
->  	/*
-> +	 * Disable powersaving as default.
-> +	 */
-> +	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +
-> +	/*
->  	 * Initialize hw_mode information.
->  	 */
->  	spec->supported_bands = SUPPORT_BAND_2GHZ;
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 85acc79..9d486a3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1709,6 +1709,11 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	    IEEE80211_HW_SUPPORTS_PS |
->  	    IEEE80211_HW_PS_NULLFUNC_STACK;
->  
-> +	/*
-> +	 * Disable powersaving as default.
-> +	 */
-> +	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +
->  	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
->  	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
->  				rt2x00_eeprom_addr(rt2x00dev,
-> 
+Amitkumar Karwar (7):
+  mwifiex: change beacon parameter structure
+  mwifiex: separate out response buffer parsing code
+  mwifiex: separate out next scan command queueing logic
+  mwifiex: implement extended scan feature
+  mwifiex: update beamforming capability field for HT
+  mwifiex: advertise correct beamforming information for VHT
+  mwifiex: cleanup in mwifiex_fill_cap_info()
 
+Avinash Patil (17):
+  mwifiex: handle AMPDU supported check for AP interface
+  mwifiex: make tos_to_tid_inv part of mwifiex_private structure
+  mwifiex: move station list functions to common code
+  mwifiex: add tdls_mgmt handler support
+  mwifiex: parse TDLS action frames during RX
+  mwifiex: add cfg80211 tdls_oper handler support
+  mwifiex: add cfg80211 add_station handler support
+  mwifiex: add cfg80211 change_station handler support
+  mwifiex: provision for holding and restoring packets during TDLS setup
+  mwifiex: tdls related handling for data packets addressed to TDLS peer
+  mwifiex: AMPDU support for TDLS link
+  mwifiex: pass ieee80211_vht_cap to mwifiex_fill_vht_cap_tlv
+  mwifiex: add VHT support for TDLS
+  mwifiex: separate BA params for TDLS link if 11ac is supported
+  mwifiex: disable all TDLS link during disconnection
+  mwifiex: parse API version from FW
+  mwifiex: add key material v2 support
+
+Bing Zhao (4):
+  mwifiex: make use of IEEE80211_VHT_MCS_NOT_SUPPORTED
+  mwifiex: make 11ac mcs rate tables global and const
+  mwifiex: improve readability in 11ac mcsmap to maxrate conversion
+  mwifiex: remove unsupported code in 11ac
+
+ drivers/net/wireless/mwifiex/11ac.c          |  192 +++--
+ drivers/net/wireless/mwifiex/11ac.h          |    2 +
+ drivers/net/wireless/mwifiex/11n.c           |   51 +-
+ drivers/net/wireless/mwifiex/11n.h           |   44 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   27 +-
+ drivers/net/wireless/mwifiex/Makefile        |    1 +
+ drivers/net/wireless/mwifiex/cfg80211.c      |  176 ++++-
+ drivers/net/wireless/mwifiex/cfp.c           |  203 +++--
+ drivers/net/wireless/mwifiex/cmdevt.c        |   54 +-
+ drivers/net/wireless/mwifiex/decl.h          |   23 +
+ drivers/net/wireless/mwifiex/fw.h            |  181 ++++-
+ drivers/net/wireless/mwifiex/init.c          |    5 +
+ drivers/net/wireless/mwifiex/ioctl.h         |   22 +-
+ drivers/net/wireless/mwifiex/join.c          |   14 +-
+ drivers/net/wireless/mwifiex/main.h          |   88 ++-
+ drivers/net/wireless/mwifiex/pcie.c          |  138 ++--
+ drivers/net/wireless/mwifiex/scan.c          |  598 ++++++++++-----
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  373 ++++++++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  112 ++-
+ drivers/net/wireless/mwifiex/sta_event.c     |   12 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |   38 +-
+ drivers/net/wireless/mwifiex/sta_rx.c        |   13 +-
+ drivers/net/wireless/mwifiex/sta_tx.c        |    3 +
+ drivers/net/wireless/mwifiex/tdls.c          | 1044 ++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/uap_event.c     |  118 ---
+ drivers/net/wireless/mwifiex/util.c          |  114 +++
+ drivers/net/wireless/mwifiex/util.h          |   20 +-
+ drivers/net/wireless/mwifiex/wmm.c           |   96 ++-
+ drivers/net/wireless/mwifiex/wmm.h           |   18 +
+ 29 files changed, 3111 insertions(+), 669 deletions(-)
+ create mode 100644 drivers/net/wireless/mwifiex/tdls.c
 
 -- 
----
-Gertjan
+1.8.2.3
+
