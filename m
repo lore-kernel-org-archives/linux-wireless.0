@@ -1,72 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:35239 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbaBMWFV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30262 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750745AbaBHAas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 17:05:21 -0500
-Received: by mail-wi0-f171.google.com with SMTP id cc10so9321515wib.10
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 14:05:20 -0800 (PST)
+	Fri, 7 Feb 2014 19:30:48 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 29/30] mwifiex: parse API version from FW
+Date: Fri, 7 Feb 2014 16:30:42 -0800
+Message-ID: <1391819442-21239-10-git-send-email-bzhao@marvell.com> (sfid-20140208_020009_154521_4A95C7CB)
+In-Reply-To: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+References: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEZsi7HnRxojt6=B3fy8uT2KHuVwzhzzvWV7Ykvr+fO_55Upkw@mail.gmail.com>
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-	<522E4315.4040806@lwfinger.net>
-	<1378764913.31180.9.camel@dcbw.foobar.com>
-	<CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
-	<1378916091.1693.21.camel@dcbw.foobar.com>
-	<52309B75.3010408@lwfinger.net>
-	<5230A440.5050709@ilande.co.uk>
-	<5230B573.9030800@lwfinger.net>
-	<CAEZsi7G+FqUh2fBXLLR17qiBb1ggLu2+11aYRt2Wppr1gGK-Wg@mail.gmail.com>
-	<52311E9A.7030902@lwfinger.net>
-	<CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
-	<52315E0C.9010806@lwfinger.net>
-	<CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com>
-	<CAEZsi7Fnw_u87W5cXhojMQg8hr6h5PEmwWU9Vh14zzKL6MY4og@mail.gmail.com>
-	<CAEZsi7HnRxojt6=B3fy8uT2KHuVwzhzzvWV7Ykvr+fO_55Upkw@mail.gmail.com>
-Date: Thu, 13 Feb 2014 23:05:20 +0100
-Message-ID: <CAEZsi7Eg3AvFa=iYazPYVN=Q1RszwSESQVsjbmA7pJAWkmMK2g@mail.gmail.com> (sfid-20140213_230530_953558_60AACF40)
-Subject: Fwd: No connection with TP-Link TL-WN823N (rtl8192cu)
-From: Vincent Thiele <vincentthiele@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----------- Forwarded message ----------
-From: Vincent Thiele <vincentthiele@gmail.com>
-Date: 2014-02-13 15:51 GMT+01:00
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-To: Larry Finger <Larry.Finger@lwfinger.net>
+From: Avinash Patil <patila@marvell.com>
 
+This patch adds support to parse FW API version TLVs.
+Currently only API version for key_material is supported.
 
-Today i tried kernel 3.13.2 native driver which now works as expected.
-But after a while the connection gets interrupted and i need to
-reconnect to my wlan. This behaviour is reproducable.
-Best regards
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 45 ++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/mwifiex/fw.h     | 13 ++++++++++
+ drivers/net/wireless/mwifiex/init.c   |  2 ++
+ drivers/net/wireless/mwifiex/main.h   |  1 +
+ 4 files changed, 60 insertions(+), 1 deletion(-)
 
-2013-09-21 19:47 GMT+02:00 Vincent Thiele <vincentthiele@gmail.com>:
-> Any news?
->
-> 2013/9/12 Vincent Thiele <vincentthiele@gmail.com>:
->> Thank you very much. The vendor driver doesn't work with 3.8 or 3.9.
->> Therefore i use the patched vendor driver but with 3.10 or 3.11 even
->> the patched dkms driver doesn't work.
->>
->> 2013/9/12 Larry Finger <Larry.Finger@lwfinger.net>:
->>> On 09/12/2013 12:57 AM, Vincent Thiele wrote:
->>>>
->>>> No i tried your "ping-solution" with kernel 3.11 but it dosen't work.
->>>
->>>
->>> I just discovered that your device is a 300 Mbps unit, which implies a 2x2
->>> configuration. The only one of them that I have does not work with any Linux
->>> driver; however, some of the postings that I have read suggest that this one
->>> will work with the vendor driver.
->>>
->>> I just bought a TL-WN823N on E-Bay. I think the expected delivery is Sept.
->>> 16. Once I get it, I will try to see what I can learn.
->>>
->>> Larry
->>>
->>>
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 7711b11..2154460 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1455,7 +1455,10 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ {
+ 	struct host_cmd_ds_get_hw_spec *hw_spec = &resp->params.hw_spec;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+-	int i;
++	struct mwifiex_ie_types_header *tlv;
++	struct hw_spec_fw_api_rev *api_rev;
++	u16 resp_size, api_id;
++	int i, left_len, parsed_len = 0;
+ 
+ 	adapter->fw_cap_info = le32_to_cpu(hw_spec->fw_cap_info);
+ 
+@@ -1513,6 +1516,46 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 		adapter->is_hw_11ac_capable = false;
+ 	}
+ 
++	resp_size = le16_to_cpu(resp->size) - S_DS_GEN;
++	if (resp_size > sizeof(struct host_cmd_ds_get_hw_spec)) {
++		/* we have variable HW SPEC information */
++		left_len = resp_size - sizeof(struct host_cmd_ds_get_hw_spec);
++		while (left_len > sizeof(struct mwifiex_ie_types_header)) {
++			tlv = (void *)&hw_spec->tlvs + parsed_len;
++			switch (le16_to_cpu(tlv->type)) {
++			case TLV_TYPE_FW_API_REV:
++				api_rev = (struct hw_spec_fw_api_rev *)tlv;
++				api_id = le16_to_cpu(api_rev->api_id);
++				switch (api_id) {
++				case KEY_API_VER_ID:
++					adapter->fw_key_api_major_ver =
++							api_rev->major_ver;
++					adapter->fw_key_api_minor_ver =
++							api_rev->minor_ver;
++					dev_dbg(adapter->dev,
++						"fw_key_api v%d.%d\n",
++						adapter->fw_key_api_major_ver,
++						adapter->fw_key_api_minor_ver);
++					break;
++				default:
++					dev_warn(adapter->dev,
++						 "Unknown FW api_id: %d\n",
++						 api_id);
++					break;
++				}
++				break;
++			default:
++				dev_warn(adapter->dev,
++					 "Unknown GET_HW_SPEC TLV type: %#x\n",
++					 le16_to_cpu(tlv->type));
++				break;
++			}
++			parsed_len += le16_to_cpu(tlv->len) +
++				      sizeof(struct mwifiex_ie_types_header);
++			left_len -= parsed_len;
++		}
++	}
++
+ 	dev_dbg(adapter->dev, "info: GET_HW_SPEC: fw_release_number- %#x\n",
+ 		adapter->fw_release_number);
+ 	dev_dbg(adapter->dev, "info: GET_HW_SPEC: permanent addr: %pM\n",
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 2344abd..5808f23 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -159,6 +159,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_PWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 145)
+ #define TLV_TYPE_GWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 146)
+ #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
++#define TLV_TYPE_FW_API_REV         (PROPRIETARY_TLV_BASE_ID + 199)
+ 
+ #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
+ 
+@@ -751,6 +752,17 @@ struct host_cmd_ds_802_11_ps_mode_enh {
+ 	} params;
+ } __packed;
+ 
++enum FW_API_VER_ID {
++	KEY_API_VER_ID = 1,
++};
++
++struct hw_spec_fw_api_rev {
++	struct mwifiex_ie_types_header header;
++	__le16 api_id;
++	u8 major_ver;
++	u8 minor_ver;
++} __packed;
++
+ struct host_cmd_ds_get_hw_spec {
+ 	__le16 hw_if_version;
+ 	__le16 version;
+@@ -772,6 +784,7 @@ struct host_cmd_ds_get_hw_spec {
+ 	__le32 reserved_6;
+ 	__le32 dot_11ac_dev_cap;
+ 	__le32 dot_11ac_mcs_support;
++	u8 tlvs[0];
+ } __packed;
+ 
+ struct host_cmd_ds_802_11_rssi_info {
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 9dc8059..a4cd2cb 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -283,6 +283,8 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
+ 	adapter->empty_tx_q_cnt = 0;
+ 	adapter->ext_scan = true;
++	adapter->fw_key_api_major_ver = 0;
++	adapter->fw_key_api_minor_ver = 0;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 9bb66ea..a221fd3 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -801,6 +801,7 @@ struct mwifiex_adapter {
+ 	atomic_t pending_bridged_pkts;
+ 	struct semaphore *card_sem;
+ 	bool ext_scan;
++	u8 fw_key_api_major_ver, fw_key_api_minor_ver;
+ };
+ 
+ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
+-- 
+1.8.2.3
+
