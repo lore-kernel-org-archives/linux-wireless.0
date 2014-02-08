@@ -1,55 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39822 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594AbaBLVkr (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44709 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751333AbaBHA1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 16:40:47 -0500
-Received: by mail-ob0-f174.google.com with SMTP id uy5so11120479obc.5
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 13:40:46 -0800 (PST)
+	Fri, 7 Feb 2014 19:27:54 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 14/30] mwifiex: make tos_to_tid_inv part of mwifiex_private structure
+Date: Fri, 7 Feb 2014 16:27:29 -0800
+Message-ID: <1391819254-21130-4-git-send-email-bzhao@marvell.com> (sfid-20140208_012757_376595_151CE931)
+In-Reply-To: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
+References: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
- <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
- <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
- <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
- <20140212003143.GD21057@google.com> <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
- <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com> <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Feb 2014 14:40:26 -0700
-Message-ID: <CAErSpo47k8WuHded1TnHoRedHHLe-Sk7kKsXcR4XjKmQPb0Ggg@mail.gmail.com> (sfid-20140212_224106_174390_201733D1)
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 2:30 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
->
->>> Well, as this series is small I thought it could quickly go thru your
->>> tree. But since ipr had conflicts, there is no point routing all patches
->>> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
->>> branch though.
->>
->> It's in pci/msi, but that's not in my -next branch yet, so I can
->> easily drop it.  Do drivers/net/wireless patches normally follow a
->> different path than the other drivers/net patches?  The wil6210 and
->> ath10k patches look just like the others in the 34-patch series (bnx2,
->> bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
->> to include them there.
->
-> ath10k patches normally go through my ath.git tree to Linville and then
-> to David Miller. To avoid conflicts I would prefer to take ath10k
-> patches to my tree whenever possible.
+From: Avinash Patil <patila@marvell.com>
 
-OK, I won't do anything with ath10k (I haven't applied it anywhere).
-And if Alexander re-posts the networking series (I think he might, to
-add a pci_enable_msix_exact() interface), maybe he can include wil6210
-with that series.
+tos_to_tid_inv values are needed even during TDLS restore
+operations. Currently tos_to_tid_inv is part of wmm.c and
+is declared static.
+Make it part of private structure so that it can be used in
+other files as well.
 
-Bjorn
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c |  1 +
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ drivers/net/wireless/mwifiex/wmm.c  | 34 +++++++++++-----------------------
+ drivers/net/wireless/mwifiex/wmm.h  | 15 +++++++++++++++
+ 4 files changed, 28 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 308c56f..dead659 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -137,6 +137,7 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
+ 	priv->csa_expire_time = 0;
+ 	priv->del_list_idx = 0;
+ 	priv->hs2_enabled = false;
++	memcpy(priv->tos_to_tid_inv, tos_to_tid_inv, MAX_NUM_TID);
+ 
+ 	return mwifiex_add_bss_prio_tbl(priv);
+ }
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 1076c3f..58855af 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -461,6 +461,7 @@ struct mwifiex_private {
+ 	struct mwifiex_tx_aggr aggr_prio_tbl[MAX_NUM_TID];
+ 	struct mwifiex_add_ba_param add_ba_param;
+ 	u16 rx_seq[MAX_NUM_TID];
++	u8 tos_to_tid_inv[MAX_NUM_TID];
+ 	struct list_head rx_reorder_tbl_ptr;
+ 	/* spin lock for rx_reorder_tbl_ptr queue */
+ 	spinlock_t rx_reorder_tbl_lock;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index ee44789..2999c3b 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -64,21 +64,6 @@ static u8 tos_to_tid[] = {
+ 	0x07			/* 1 1 1 AC_VO */
+ };
+ 
+-/*
+- * This table inverses the tos_to_tid operation to get a priority
+- * which is in sequential order, and can be compared.
+- * Use this to compare the priority of two different TIDs.
+- */
+-static u8 tos_to_tid_inv[] = {
+-	0x02,  /* from tos_to_tid[2] = 0 */
+-	0x00,  /* from tos_to_tid[0] = 1 */
+-	0x01,  /* from tos_to_tid[1] = 2 */
+-	0x03,
+-	0x04,
+-	0x05,
+-	0x06,
+-	0x07};
+-
+ static u8 ac_to_tid[4][2] = { {1, 2}, {0, 3}, {4, 5}, {6, 7} };
+ 
+ /*
+@@ -213,8 +198,9 @@ static void mwifiex_wmm_default_queue_priorities(struct mwifiex_private *priv)
+  * This function map ACs to TIDs.
+  */
+ static void
+-mwifiex_wmm_queue_priorities_tid(struct mwifiex_wmm_desc *wmm)
++mwifiex_wmm_queue_priorities_tid(struct mwifiex_private *priv)
+ {
++	struct mwifiex_wmm_desc *wmm = &priv->wmm;
+ 	u8 *queue_priority = wmm->queue_priority;
+ 	int i;
+ 
+@@ -224,7 +210,7 @@ mwifiex_wmm_queue_priorities_tid(struct mwifiex_wmm_desc *wmm)
+ 	}
+ 
+ 	for (i = 0; i < MAX_NUM_TID; ++i)
+-		tos_to_tid_inv[tos_to_tid[i]] = (u8)i;
++		priv->tos_to_tid_inv[tos_to_tid[i]] = (u8)i;
+ 
+ 	atomic_set(&wmm->highest_queued_prio, HIGH_PRIO_TID);
+ }
+@@ -285,7 +271,7 @@ mwifiex_wmm_setup_queue_priorities(struct mwifiex_private *priv,
+ 		}
+ 	}
+ 
+-	mwifiex_wmm_queue_priorities_tid(&priv->wmm);
++	mwifiex_wmm_queue_priorities_tid(priv);
+ }
+ 
+ /*
+@@ -421,9 +407,11 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 			continue;
+ 
+ 		for (i = 0; i < MAX_NUM_TID; ++i) {
+-			priv->aggr_prio_tbl[i].amsdu = tos_to_tid_inv[i];
+-			priv->aggr_prio_tbl[i].ampdu_ap = tos_to_tid_inv[i];
+-			priv->aggr_prio_tbl[i].ampdu_user = tos_to_tid_inv[i];
++			priv->aggr_prio_tbl[i].amsdu = priv->tos_to_tid_inv[i];
++			priv->aggr_prio_tbl[i].ampdu_ap =
++							priv->tos_to_tid_inv[i];
++			priv->aggr_prio_tbl[i].ampdu_user =
++							priv->tos_to_tid_inv[i];
+ 		}
+ 
+ 		priv->aggr_prio_tbl[6].amsdu
+@@ -683,9 +671,9 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	ra_list->total_pkt_count++;
+ 
+ 	if (atomic_read(&priv->wmm.highest_queued_prio) <
+-						tos_to_tid_inv[tid_down])
++						priv->tos_to_tid_inv[tid_down])
+ 		atomic_set(&priv->wmm.highest_queued_prio,
+-			   tos_to_tid_inv[tid_down]);
++			   priv->tos_to_tid_inv[tid_down]);
+ 
+ 	atomic_inc(&priv->wmm.tx_pkts_queued);
+ 
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index 0f129d4..d4e6073 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -34,6 +34,21 @@ enum ieee_types_wmm_ecw_bitmasks {
+ static const u16 mwifiex_1d_to_wmm_queue[8] = { 1, 0, 0, 1, 2, 2, 3, 3 };
+ 
+ /*
++ * This table inverses the tos_to_tid operation to get a priority
++ * which is in sequential order, and can be compared.
++ * Use this to compare the priority of two different TIDs.
++ */
++static const u8 tos_to_tid_inv[] = {
++	0x02,  /* from tos_to_tid[2] = 0 */
++	0x00,  /* from tos_to_tid[0] = 1 */
++	0x01,  /* from tos_to_tid[1] = 2 */
++	0x03,
++	0x04,
++	0x05,
++	0x06,
++	0x07};
++
++/*
+  * This function retrieves the TID of the given RA list.
+  */
+ static inline int
+-- 
+1.8.2.3
+
