@@ -1,252 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:34741 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbaBQJh4 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5431 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750916AbaBHAVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 04:37:56 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e53so6987777eek.13
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 01:37:52 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC/RFT 1/7] ath10k: remove DMA mapping wrappers
-Date: Mon, 17 Feb 2014 10:32:37 +0100
-Message-Id: <1392629563-31046-2-git-send-email-michal.kazior@tieto.com> (sfid-20140217_103813_350693_CEDE2665)
-In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 7 Feb 2014 19:21:13 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Stewart <pstew@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 04/30] mwifiex: remove unsupported code in 11ac
+Date: Fri, 7 Feb 2014 16:21:01 -0800
+Message-ID: <1391818861-20926-4-git-send-email-bzhao@marvell.com> (sfid-20140208_012116_992867_0411D9B9)
+In-Reply-To: <1391818861-20926-1-git-send-email-bzhao@marvell.com>
+References: <1391818861-20926-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no real benefit from using them. DMA-API
-already provides debugging. Some skbuffs are
-already mapped directly with DMA-API since wrapper
-arguments were insufficient and extending them
-would be pointless.
+bit12 in fw_cap_info is for testing only.
+Remove all related code.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h   | 27 ---------------------------
- drivers/net/wireless/ath/ath10k/htc.c    | 11 ++++++++---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 12 ++++++++----
- drivers/net/wireless/ath/ath10k/mac.c    |  4 +++-
- drivers/net/wireless/ath/ath10k/txrx.c   |  5 +----
- drivers/net/wireless/ath/ath10k/wmi.c    | 17 ++++++++++++++---
- 6 files changed, 34 insertions(+), 42 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c  |  3 ---
+ drivers/net/wireless/mwifiex/cfp.c       |  5 -----
+ drivers/net/wireless/mwifiex/fw.h        | 20 +++++++++++---------
+ drivers/net/wireless/mwifiex/ioctl.h     |  3 +--
+ drivers/net/wireless/mwifiex/join.c      | 12 ++++--------
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  2 +-
+ 6 files changed, 17 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 1fc26fe..082fa77 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -62,7 +62,6 @@ struct ath10k;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 8bfc07c..41e9aac 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1416,9 +1416,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
  
- struct ath10k_skb_cb {
- 	dma_addr_t paddr;
--	bool is_mapped;
- 	bool is_aborted;
- 	u8 vdev_id;
- 
-@@ -87,32 +86,6 @@ static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
- 	return (struct ath10k_skb_cb *)&IEEE80211_SKB_CB(skb)->driver_data;
- }
- 
--static inline int ath10k_skb_map(struct device *dev, struct sk_buff *skb)
--{
--	if (ATH10K_SKB_CB(skb)->is_mapped)
--		return -EINVAL;
+ 		if (params->chandef.width > NL80211_CHAN_WIDTH_20_NOHT)
+ 			config_bands |= BAND_GN;
 -
--	ATH10K_SKB_CB(skb)->paddr = dma_map_single(dev, skb->data, skb->len,
--						   DMA_TO_DEVICE);
--
--	if (unlikely(dma_mapping_error(dev, ATH10K_SKB_CB(skb)->paddr)))
--		return -EIO;
--
--	ATH10K_SKB_CB(skb)->is_mapped = true;
--	return 0;
--}
--
--static inline int ath10k_skb_unmap(struct device *dev, struct sk_buff *skb)
--{
--	if (!ATH10K_SKB_CB(skb)->is_mapped)
--		return -EINVAL;
--
--	dma_unmap_single(dev, ATH10K_SKB_CB(skb)->paddr, skb->len,
--			 DMA_TO_DEVICE);
--	ATH10K_SKB_CB(skb)->is_mapped = false;
--	return 0;
--}
--
- static inline u32 host_interest_item_address(u32 item_offset)
- {
- 	return QCA988X_HOST_INTEREST_ADDRESS + item_offset;
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index edc57ab..69f1f46 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -63,7 +63,9 @@ static struct sk_buff *ath10k_htc_build_tx_ctrl_skb(void *ar)
- static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- 					     struct sk_buff *skb)
- {
--	ath10k_skb_unmap(htc->ar->dev, skb);
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
-+
-+	dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
+-		if (params->chandef.width > NL80211_CHAN_WIDTH_40)
+-			config_bands |= BAND_GAC;
+ 	} else {
+ 		bss_cfg->band_cfg = BAND_CONFIG_A;
+ 		config_bands = BAND_A;
+diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
+index dfb068b..2c3226b 100644
+--- a/drivers/net/wireless/mwifiex/cfp.c
++++ b/drivers/net/wireless/mwifiex/cfp.c
+@@ -438,7 +438,6 @@ u32 mwifiex_get_supported_rates(struct mwifiex_private *priv, u8 *rates)
+ 			break;
+ 		case BAND_G:
+ 		case BAND_G | BAND_GN:
+-		case BAND_G | BAND_GN | BAND_GAC:
+ 			dev_dbg(adapter->dev, "info: infra band=%d "
+ 				"supported_rates_g\n", adapter->config_bands);
+ 			k = mwifiex_copy_rates(rates, k, supported_rates_g,
+@@ -449,10 +448,7 @@ u32 mwifiex_get_supported_rates(struct mwifiex_private *priv, u8 *rates)
+ 		case BAND_A | BAND_B:
+ 		case BAND_A | BAND_B | BAND_G | BAND_GN | BAND_AN:
+ 		case BAND_A | BAND_B | BAND_G | BAND_GN | BAND_AN | BAND_AAC:
+-		case BAND_A | BAND_B | BAND_G | BAND_GN | BAND_AN |
+-		     BAND_AAC | BAND_GAC:
+ 		case BAND_B | BAND_G | BAND_GN:
+-		case BAND_B | BAND_G | BAND_GN | BAND_GAC:
+ 			dev_dbg(adapter->dev, "info: infra band=%d "
+ 				"supported_rates_bg\n", adapter->config_bands);
+ 			k = mwifiex_copy_rates(rates, k, supported_rates_bg,
+@@ -476,7 +472,6 @@ u32 mwifiex_get_supported_rates(struct mwifiex_private *priv, u8 *rates)
+ 					       sizeof(supported_rates_a));
+ 			break;
+ 		case BAND_GN:
+-		case BAND_GN | BAND_GAC:
+ 			dev_dbg(adapter->dev, "info: infra band=%d "
+ 				"supported_rates_n\n", adapter->config_bands);
+ 			k = mwifiex_copy_rates(rates, k, supported_rates_n,
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 059bc16..d8014c8 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -50,21 +50,23 @@ struct tx_packet_hdr {
+ #define HOSTCMD_SUPPORTED_RATES         14
+ #define N_SUPPORTED_RATES               3
+ #define ALL_802_11_BANDS           (BAND_A | BAND_B | BAND_G | BAND_GN | \
+-				    BAND_AN | BAND_GAC | BAND_AAC)
++				    BAND_AN | BAND_AAC)
  
-@@ -122,6 +124,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 		    struct sk_buff *skb)
- {
- 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
-+	struct device *dev = htc->ar->dev;
- 	int credits = 0;
- 	int ret;
+ #define FW_MULTI_BANDS_SUPPORT  (BIT(8) | BIT(9) | BIT(10) | BIT(11) | \
+-				 BIT(12) | BIT(13))
++				 BIT(13))
+ #define IS_SUPPORT_MULTI_BANDS(adapter)        \
+ 	(adapter->fw_cap_info & FW_MULTI_BANDS_SUPPORT)
  
-@@ -157,7 +161,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+-/* shift bit 12 and bit 13 in fw_cap_info from the firmware to bit 13 and 14
+- * for 11ac so that bit 11 is for GN, bit 12 for AN, bit 13 for GAC, and bit
+- * bit 14 for AAC, in order to be compatible with the band capability
+- * defined in the driver after right shift of 8 bits.
++/* bit 13: 11ac BAND_AAC
++ * bit 12: reserved for lab testing, will be reused for BAND_AN
++ * bit 11: 11n  BAND_GN
++ * bit 10: 11a  BAND_A
++ * bit 9: 11g   BAND_G
++ * bit 8: 11b   BAND_B
++ * Map these bits to band capability by right shifting 8 bits.
+  */
+ #define GET_FW_DEFAULT_BANDS(adapter)  \
+-	    (((((adapter->fw_cap_info & 0x3000) << 1) | \
+-	       (adapter->fw_cap_info & ~0xF000)) >> 8) & \
++	    (((adapter->fw_cap_info & 0x2f00) >> 8) & \
+ 	     ALL_802_11_BANDS)
  
- 	ath10k_htc_prepare_tx_skb(ep, skb);
+ #define HostCmd_WEP_KEY_INDEX_MASK              0x3fff
+@@ -226,7 +228,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
  
--	ret = ath10k_skb_map(htc->ar->dev, skb);
-+	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
-+	ret = dma_mapping_error(dev, skb_cb->paddr);
- 	if (ret)
- 		goto err_credits;
+ /* HW_SPEC fw_cap_info */
  
-@@ -169,7 +174,7 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	return 0;
+-#define ISSUPP_11ACENABLED(fw_cap_info) (fw_cap_info & (BIT(12)|BIT(13)))
++#define ISSUPP_11ACENABLED(fw_cap_info) (fw_cap_info & BIT(13))
  
- err_unmap:
--	ath10k_skb_unmap(htc->ar->dev, skb);
-+	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
- err_credits:
- 	if (ep->tx_credit_flow_enabled) {
- 		spin_lock_bh(&htc->tx_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index acaa046..f5960c5 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -334,7 +334,9 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		goto err_free_msdu_id;
- 	}
+ #define GET_VHTCAP_CHWDSET(vht_cap_info)    ((vht_cap_info >> 2) & 0x3)
+ #define GET_VHTNSSMCS(mcs_mapset, nss) ((mcs_mapset >> (2 * (nss - 1))) & 0x3)
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 00a95f4..48f1590 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -60,8 +60,7 @@ enum {
+ 	BAND_A = 4,
+ 	BAND_GN = 8,
+ 	BAND_AN = 16,
+-	BAND_GAC = 32,
+-	BAND_AAC = 64,
++	BAND_AAC = 32,
+ };
  
--	res = ath10k_skb_map(dev, msdu);
-+	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
-+				       DMA_TO_DEVICE);
-+	res = dma_mapping_error(dev, skb_cb->paddr);
- 	if (res)
- 		goto err_free_txdesc;
+ #define MWIFIEX_WPA_PASSHPHRASE_LEN 64
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 4e4686e..d3934c6 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -515,8 +515,7 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
  
-@@ -358,7 +360,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return 0;
+ 	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
+ 	    !bss_desc->disable_11n && !bss_desc->disable_11ac &&
+-	    (priv->adapter->config_bands & BAND_GAC ||
+-	     priv->adapter->config_bands & BAND_AAC))
++	    priv->adapter->config_bands & BAND_AAC)
+ 		mwifiex_cmd_append_11ac_tlv(priv, bss_desc, &pos);
  
- err_unmap_msdu:
--	ath10k_skb_unmap(dev, msdu);
-+	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- err_free_txdesc:
- 	dev_kfree_skb_any(txdesc);
- err_free_msdu_id:
-@@ -437,7 +439,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		skb_cb->htt.pad_len = 0;
- 	}
+ 	/* Append vendor specific IE TLV */
+@@ -1300,8 +1299,7 @@ int mwifiex_associate(struct mwifiex_private *priv,
  
--	res = ath10k_skb_map(dev, msdu);
-+	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
-+				       DMA_TO_DEVICE);
-+	res = dma_mapping_error(dev, skb_cb->paddr);
- 	if (res)
- 		goto err_pull_txfrag;
+ 	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
+ 	    !bss_desc->disable_11n && !bss_desc->disable_11ac &&
+-	    (priv->adapter->config_bands & BAND_GAC ||
+-	     priv->adapter->config_bands & BAND_AAC))
++	    priv->adapter->config_bands & BAND_AAC)
+ 		mwifiex_set_11ac_ba_params(priv);
+ 	else
+ 		mwifiex_set_ba_params(priv);
+@@ -1335,8 +1333,7 @@ mwifiex_adhoc_start(struct mwifiex_private *priv,
+ 		priv->curr_bss_params.band);
  
-@@ -509,7 +513,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return 0;
+ 	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
+-	    (priv->adapter->config_bands & BAND_GAC ||
+-	     priv->adapter->config_bands & BAND_AAC))
++	    priv->adapter->config_bands & BAND_AAC)
+ 		mwifiex_set_11ac_ba_params(priv);
+ 	else
+ 		mwifiex_set_ba_params(priv);
+@@ -1376,8 +1373,7 @@ int mwifiex_adhoc_join(struct mwifiex_private *priv,
  
- err_unmap_msdu:
--	ath10k_skb_unmap(dev, msdu);
-+	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- err_pull_txfrag:
- 	skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
- err_free_txdesc:
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 94a70a9..ed90de2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -855,7 +855,9 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
+ 	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
+ 	    !bss_desc->disable_11n && !bss_desc->disable_11ac &&
+-	    (priv->adapter->config_bands & BAND_GAC ||
+-	     priv->adapter->config_bands & BAND_AAC))
++	    priv->adapter->config_bands & BAND_AAC)
+ 		mwifiex_set_11ac_ba_params(priv);
+ 	else
+ 		mwifiex_set_ba_params(priv);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index c5cb2ed..9e55a48 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -290,7 +290,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
  
- 		spin_lock_bh(&arvif->ar->data_lock);
- 		if (arvif->beacon) {
--			ath10k_skb_unmap(arvif->ar->dev, arvif->beacon);
-+			dma_unmap_single(arvif->ar->dev,
-+					 ATH10K_SKB_CB(arvif->beacon)->paddr,
-+					 arvif->beacon->len, DMA_TO_DEVICE);
- 			dev_kfree_skb_any(arvif->beacon);
+ 		if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
+ 						HostCmd_SCAN_RADIO_TYPE_BG)
+-			config_bands = BAND_B | BAND_G | BAND_GN | BAND_GAC;
++			config_bands = BAND_B | BAND_G | BAND_GN;
+ 		else
+ 			config_bands = BAND_A | BAND_AN | BAND_AAC;
  
- 			arvif->beacon = NULL;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 4713bdb..8fd0680 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -51,7 +51,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	struct ieee80211_tx_info *info;
- 	struct ath10k_skb_cb *skb_cb;
- 	struct sk_buff *msdu;
--	int ret;
- 
- 	ath10k_dbg(ATH10K_DBG_HTT, "htt tx completion msdu_id %u discard %d no_ack %d\n",
- 		   tx_done->msdu_id, !!tx_done->discard, !!tx_done->no_ack);
-@@ -65,9 +64,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	msdu = htt->pending_tx[tx_done->msdu_id];
- 	skb_cb = ATH10K_SKB_CB(msdu);
- 
--	ret = ath10k_skb_unmap(dev, msdu);
--	if (ret)
--		ath10k_warn("data skb unmap failed (%d)\n", ret);
-+	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	if (skb_cb->htt.frag_len)
- 		skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 91e501b..f372957 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1360,7 +1360,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_bcn_info *bcn_info;
- 	struct ath10k_vif *arvif;
- 	struct sk_buff *bcn;
--	int vdev_id = 0;
-+	int err, vdev_id = 0;
- 
- 	ath10k_dbg(ATH10K_DBG_MGMT, "WMI_HOST_SWBA_EVENTID\n");
- 
-@@ -1435,16 +1435,27 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 				ath10k_warn("SWBA overrun on vdev %d\n",
- 					    arvif->vdev_id);
- 
--			ath10k_skb_unmap(ar->dev, arvif->beacon);
-+			dma_unmap_single(arvif->ar->dev,
-+					 ATH10K_SKB_CB(arvif->beacon)->paddr,
-+					 arvif->beacon->len, DMA_TO_DEVICE);
- 			dev_kfree_skb_any(arvif->beacon);
- 		}
- 
--		ath10k_skb_map(ar->dev, bcn);
-+		ATH10K_SKB_CB(bcn)->paddr = dma_map_single(arvif->ar->dev,
-+							   bcn->data, bcn->len,
-+							   DMA_TO_DEVICE);
-+		err = dma_mapping_error(arvif->ar->dev,
-+					ATH10K_SKB_CB(bcn)->paddr);
-+		if (err) {
-+			ath10k_warn("failed to map beacon: %d\n", err);
-+			goto skip;
-+		}
- 
- 		arvif->beacon = bcn;
- 		arvif->beacon_sent = false;
- 
- 		ath10k_wmi_tx_beacon_nowait(arvif);
-+skip:
- 		spin_unlock_bh(&ar->data_lock);
- 	}
- }
 -- 
-1.8.5.3
+1.8.2.3
 
