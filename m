@@ -1,194 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60387 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753586AbaBTKyW (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:53254 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbaBHSKb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 05:54:22 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3.14] mac80211: fix station wakeup powersave race
-Date: Thu, 20 Feb 2014 11:54:17 +0100
-Message-Id: <1392893657-26487-1-git-send-email-johannes@sipsolutions.net> (sfid-20140220_115439_806653_31B9AC50)
+	Sat, 8 Feb 2014 13:10:31 -0500
+Received: by mail-wi0-f173.google.com with SMTP id hn9so1717049wib.12
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Feb 2014 10:10:30 -0800 (PST)
+Message-ID: <52F67313.1030706@gmail.com> (sfid-20140208_191057_616441_17B08A8C)
+Date: Sat, 08 Feb 2014 20:10:27 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Petko Manolov <petkan@nucleusys.com>
+CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi crash with 3.13
+References: <20140123091659.GE9077@localhost> <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com> <20140123123125.GA3424@localhost> <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com> <20140123200045.GA4064@localhost> <52E17698.9070607@gmail.com> <20140123202142.GC4064@localhost> <20140207214054.GB7167@localhost>
+In-Reply-To: <20140207214054.GB7167@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Consider the following (relatively unlikely) scenario:
- 1) station goes to sleep while frames are buffered in driver
- 2) driver blocks wakeup (until no more frames are buffered)
- 3) station wakes up again
- 4) driver unblocks wakeup
 
-In this case, the current mac80211 code will do the following:
- 1) WLAN_STA_PS_STA set
- 2) WLAN_STA_PS_DRIVER set
- 3) - nothing -
- 4) WLAN_STA_PS_DRIVER cleared
+On 02/07/2014 11:40 PM, Petko Manolov wrote:
+> On 14-01-23 22:21:42, Petko Manolov wrote:
+>> On 14-01-23 22:07:52, Emmanuel Grumbach wrote:
+>>>
+>>> Unfortunately, I can't see the loading of iwlwifi.
+>>
+>> It overflowed.  That's what happen when debug != 0 ... :)
+>>
+>>> Doesn't matter any more - I found the issue.
+>>
+>> Ah, good.  Cheers.
+> 
+> Hello Emmanuel, did you manage to fix the problem?  I can see iwlwifi related patch went into 3.13.2, but in case it was supposed to fix the 
+> issue - it didn't do that for me.  As usual, can i help with anything?
+> 
 
-As a result, no frames will be delivered to the client, even
-though it is awake, until it sends another frame to us that
-triggers ieee80211_sta_ps_deliver_wakeup() in sta_ps_end().
+There is no problem to be fixed. When I said that I found the issue, I
+meant that you are using a NIC which is not supposed to work on 5GHz on
+these channels and this leads to the issues.
+The fact that it doesn't work for you with -8.ucode proves that I am
+correct.
+I sent a patch that will disable 5GHz band for you from the driver level
+so that you won't suffer from firmware asserts.
 
-Since we now take the PS spinlock, we can fix this while at
-the same time removing the complexity with the pending skb
-queue function. This was broken since my commit 50a9432daeec
-("mac80211: fix powersaving clients races") due to removing
-the clearing of WLAN_STA_PS_STA in the RX path.
-
-While at it, fix a cleanup path issue when a station is
-removed while the driver is still blocking its wakeup.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h | 10 ++--------
- net/mac80211/rx.c          |  7 +++++++
- net/mac80211/sta_info.c    | 32 ++++++++++++++------------------
- net/mac80211/util.c        |  8 ++------
- 4 files changed, 25 insertions(+), 32 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3701930c6649..5e44e3179e02 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1692,14 +1692,8 @@ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
- void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue);
- void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 			       struct sk_buff *skb);
--void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
--				   struct sk_buff_head *skbs,
--				   void (*fn)(void *data), void *data);
--static inline void ieee80211_add_pending_skbs(struct ieee80211_local *local,
--					      struct sk_buff_head *skbs)
--{
--	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
--}
-+void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-+				struct sk_buff_head *skbs);
- void ieee80211_flush_queues(struct ieee80211_local *local,
- 			    struct ieee80211_sub_if_data *sdata);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c24ca0d0f469..3e57f96c9666 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1128,6 +1128,13 @@ static void sta_ps_end(struct sta_info *sta)
- 	       sta->sta.addr, sta->sta.aid);
- 
- 	if (test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
-+		/*
-+		 * Clear the flag only if the other one is still set
-+		 * so that the TX path won't start TX'ing new frames
-+		 * directly ... In the case that the driver flag isn't
-+		 * set ieee80211_sta_ps_deliver_wakeup() will clear it.
-+		 */
-+		clear_sta_flag(sta, WLAN_STA_PS_STA);
- 		ps_dbg(sta->sdata, "STA %pM aid %d driver-ps-blocked\n",
- 		       sta->sta.addr, sta->sta.aid);
- 		return;
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index ffc1ee6a2ec1..a023b432143b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -99,7 +99,8 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 	struct ieee80211_local *local = sdata->local;
- 	struct ps_data *ps;
- 
--	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
-+	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
-+	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
- 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
- 		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			ps = &sdata->bss->ps;
-@@ -109,6 +110,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 			return;
- 
- 		clear_sta_flag(sta, WLAN_STA_PS_STA);
-+		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
- 
- 		atomic_dec(&ps->num_sta_ps);
- 		sta_info_recalc_tim(sta);
-@@ -1090,10 +1092,14 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
- }
- EXPORT_SYMBOL(ieee80211_find_sta);
- 
--static void clear_sta_ps_flags(void *_sta)
-+/* powersave support code */
-+void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- {
--	struct sta_info *sta = _sta;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff_head pending;
-+	int filtered = 0, buffered = 0, ac;
-+	unsigned long flags;
- 	struct ps_data *ps;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-@@ -1104,20 +1110,6 @@ static void clear_sta_ps_flags(void *_sta)
- 	else
- 		return;
- 
--	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
--	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
--		atomic_dec(&ps->num_sta_ps);
--}
--
--/* powersave support code */
--void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
--{
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_local *local = sdata->local;
--	struct sk_buff_head pending;
--	int filtered = 0, buffered = 0, ac;
--	unsigned long flags;
--
- 	clear_sta_flag(sta, WLAN_STA_SP);
- 
- 	BUILD_BUG_ON(BITS_TO_LONGS(IEEE80211_NUM_TIDS) > 1);
-@@ -1148,9 +1140,13 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 		buffered += tmp - count;
- 	}
- 
--	ieee80211_add_pending_skbs_fn(local, &pending, clear_sta_ps_flags, sta);
-+	ieee80211_add_pending_skbs(local, &pending);
-+	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
-+	clear_sta_flag(sta, WLAN_STA_PS_STA);
- 	spin_unlock(&sta->ps_lock);
- 
-+	atomic_dec(&ps->num_sta_ps);
-+
- 	/* This station just woke up and isn't aware of our SMPS state */
- 	if (!ieee80211_smps_is_restrictive(sta->known_smps_mode,
- 					   sdata->smps_mode) &&
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1d1bb7084c05..b8700d417a9c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -435,9 +435,8 @@ void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- }
- 
--void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
--				   struct sk_buff_head *skbs,
--				   void (*fn)(void *data), void *data)
-+void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-+				struct sk_buff_head *skbs)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct sk_buff *skb;
-@@ -461,9 +460,6 @@ void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
- 		__skb_queue_tail(&local->pending[queue], skb);
- 	}
- 
--	if (fn)
--		fn(data);
--
- 	for (i = 0; i < hw->queues; i++)
- 		__ieee80211_wake_queue(hw, i,
- 			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
--- 
-1.8.5.3
-
+You told me you could work on 5GHz with this NIC - good for you.
+Conclude whatever you want from this, this is none of my business - but
+for sure, the "issues" you are seeing are related to the fact that your
+NIC isn't supposed to be working on 5GHz, and hence, there is no bug to
+be fixed.
