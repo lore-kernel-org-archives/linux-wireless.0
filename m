@@ -1,93 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:47677 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888AbaB0IaW (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17056 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751475AbaBHA15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 03:30:22 -0500
-Received: by mail-we0-f175.google.com with SMTP id q59so2573792wes.20
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 00:30:20 -0800 (PST)
-Message-ID: <530EF796.4030400@gmail.com> (sfid-20140227_093026_317813_860CF2C1)
-Date: Thu, 27 Feb 2014 10:30:14 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 7 Feb 2014 19:27:57 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 15/30] mwifiex: move station list functions to common code
+Date: Fri, 7 Feb 2014 16:27:30 -0800
+Message-ID: <1391819254-21130-5-git-send-email-bzhao@marvell.com> (sfid-20140208_012801_317144_E9F94B2D)
+In-Reply-To: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
+References: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: pull request: iwlwifi 2014-02-27
-References: <530EE0EA.5030105@gmail.com> <530EE2B9.4020708@gmail.com>
-In-Reply-To: <530EE2B9.4020708@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Avinash Patil <patila@marvell.com>
 
+These functions are now needed by TDLS while managing station list.
+Move them from AP related file to utility file.
 
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h      |  10 +++
+ drivers/net/wireless/mwifiex/uap_event.c | 118 -------------------------------
+ drivers/net/wireless/mwifiex/util.c      | 114 +++++++++++++++++++++++++++++
+ 3 files changed, 124 insertions(+), 118 deletions(-)
 
-On 02/27/2014 09:01 AM, Emmanuel Grumbach wrote:
->=20
->=20
-> On 02/27/2014 08:53 AM, Emmanuel Grumbach wrote:
->> Hi John,
->>
->> I have two fixes for 3.14.
->> Johannes fixes a long standing bug in the AMPDU status reporting.
->> Max fixes the listen time which was way too long and causes trouble to=
- several APs.
->>
->> Please pull - thanks
->>
->>   emmanuel
->>
->> The following changes since commit ec6f678c74dbdb06a6a775bbb00f1d26c17=
-c404b:
->>
->>   iwlwifi: dvm: clear IWL_STA_UCODE_INPROGRESS when assoc fails (2014-=
-02-20 19:16:27 +0200)
->>
->> are available in the git repository at:
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.=
-git master
->>
->> for you to fetch changes up to d8105a24fce48b7b016e868923000871f4196e6=
-3:
->>
->=20
-> Made a minor change in the commit message of one of the patches - new H=
-EAD:082e29cb547474aa19c028d75d81bc5d873774f4.
->=20
->=20
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 58855af..ab53fad 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1167,6 +1167,16 @@ void mwifiex_dnld_txpwr_table(struct mwifiex_private *priv);
+ 
+ extern const struct ethtool_ops mwifiex_ethtool_ops;
+ 
++void mwifiex_del_all_sta_list(struct mwifiex_private *priv);
++void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac);
++void
++mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
++		       int ies_len, struct mwifiex_sta_node *node);
++struct mwifiex_sta_node *
++mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac);
++struct mwifiex_sta_node *
++mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac);
++
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 7180665..2d47ba7 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -21,126 +21,8 @@
+ #include "main.h"
+ #include "11n.h"
+ 
+-/*
+- * This function will return the pointer to station entry in station list
+- * table which matches specified mac address.
+- * This function should be called after acquiring RA list spinlock.
+- * NULL is returned if station entry is not found in associated STA list.
+- */
+-struct mwifiex_sta_node *
+-mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac)
+-{
+-	struct mwifiex_sta_node *node;
+-
+-	if (!mac)
+-		return NULL;
+-
+-	list_for_each_entry(node, &priv->sta_list, list) {
+-		if (!memcmp(node->mac_addr, mac, ETH_ALEN))
+-			return node;
+-	}
+ 
+-	return NULL;
+-}
+-
+-/*
+- * This function will add a sta_node entry to associated station list
+- * table with the given mac address.
+- * If entry exist already, existing entry is returned.
+- * If received mac address is NULL, NULL is returned.
+- */
+-static struct mwifiex_sta_node *
+-mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
+-{
+-	struct mwifiex_sta_node *node;
+-	unsigned long flags;
+ 
+-	if (!mac)
+-		return NULL;
+-
+-	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+-	node = mwifiex_get_sta_entry(priv, mac);
+-	if (node)
+-		goto done;
+-
+-	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
+-	if (!node)
+-		goto done;
+-
+-	memcpy(node->mac_addr, mac, ETH_ALEN);
+-	list_add_tail(&node->list, &priv->sta_list);
+-
+-done:
+-	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+-	return node;
+-}
+-
+-/*
+- * This function will search for HT IE in association request IEs
+- * and set station HT parameters accordingly.
+- */
+-static void
+-mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
+-		       int ies_len, struct mwifiex_sta_node *node)
+-{
+-	const struct ieee80211_ht_cap *ht_cap;
+-
+-	if (!ies)
+-		return;
+-
+-	ht_cap = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
+-	if (ht_cap) {
+-		node->is_11n_enabled = 1;
+-		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
+-				  IEEE80211_HT_CAP_MAX_AMSDU ?
+-				  MWIFIEX_TX_DATA_BUF_SIZE_8K :
+-				  MWIFIEX_TX_DATA_BUF_SIZE_4K;
+-	} else {
+-		node->is_11n_enabled = 0;
+-	}
+-
+-	return;
+-}
+-
+-/*
+- * This function will delete a station entry from station list
+- */
+-static void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac)
+-{
+-	struct mwifiex_sta_node *node;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+-
+-	node = mwifiex_get_sta_entry(priv, mac);
+-	if (node) {
+-		list_del(&node->list);
+-		kfree(node);
+-	}
+-
+-	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+-	return;
+-}
+-
+-/*
+- * This function will delete all stations from associated station list.
+- */
+-static void mwifiex_del_all_sta_list(struct mwifiex_private *priv)
+-{
+-	struct mwifiex_sta_node *node, *tmp;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+-
+-	list_for_each_entry_safe(node, tmp, &priv->sta_list, list) {
+-		list_del(&node->list);
+-		kfree(node);
+-	}
+-
+-	INIT_LIST_HEAD(&priv->sta_list);
+-	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+-	return;
+-}
+ 
+ /*
+  * This function handles AP interface specific events generated by firmware.
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 9b82e22..8d37bfc 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -252,3 +252,117 @@ int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
+ 
+ 	return 0;
+ }
++
++/* This function will return the pointer to station entry in station list
++ * table which matches specified mac address.
++ * This function should be called after acquiring RA list spinlock.
++ * NULL is returned if station entry is not found in associated STA list.
++ */
++struct mwifiex_sta_node *
++mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac)
++{
++	struct mwifiex_sta_node *node;
++
++	if (!mac)
++		return NULL;
++
++	list_for_each_entry(node, &priv->sta_list, list) {
++		if (!memcmp(node->mac_addr, mac, ETH_ALEN))
++			return node;
++	}
++
++	return NULL;
++}
++
++/* This function will add a sta_node entry to associated station list
++ * table with the given mac address.
++ * If entry exist already, existing entry is returned.
++ * If received mac address is NULL, NULL is returned.
++ */
++struct mwifiex_sta_node *
++mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
++{
++	struct mwifiex_sta_node *node;
++	unsigned long flags;
++
++	if (!mac)
++		return NULL;
++
++	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
++	node = mwifiex_get_sta_entry(priv, mac);
++	if (node)
++		goto done;
++
++	node = kzalloc(sizeof(*node), GFP_ATOMIC);
++	if (!node)
++		goto done;
++
++	memcpy(node->mac_addr, mac, ETH_ALEN);
++	list_add_tail(&node->list, &priv->sta_list);
++
++done:
++	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
++	return node;
++}
++
++/* This function will search for HT IE in association request IEs
++ * and set station HT parameters accordingly.
++ */
++void
++mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
++		       int ies_len, struct mwifiex_sta_node *node)
++{
++	const struct ieee80211_ht_cap *ht_cap;
++
++	if (!ies)
++		return;
++
++	ht_cap = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
++	if (ht_cap) {
++		node->is_11n_enabled = 1;
++		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
++				  IEEE80211_HT_CAP_MAX_AMSDU ?
++				  MWIFIEX_TX_DATA_BUF_SIZE_8K :
++				  MWIFIEX_TX_DATA_BUF_SIZE_4K;
++	} else {
++		node->is_11n_enabled = 0;
++	}
++
++	return;
++}
++
++/* This function will delete a station entry from station list */
++void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac)
++{
++	struct mwifiex_sta_node *node;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
++
++	node = mwifiex_get_sta_entry(priv, mac);
++	if (node) {
++		list_del(&node->list);
++		kfree(node);
++	}
++
++	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
++	return;
++}
++
++/* This function will delete all stations from associated station list. */
++void mwifiex_del_all_sta_list(struct mwifiex_private *priv)
++{
++	struct mwifiex_sta_node *node, *tmp;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
++
++	list_for_each_entry_safe(node, tmp, &priv->sta_list, list) {
++		list_del(&node->list);
++		kfree(node);
++	}
++
++	INIT_LIST_HEAD(&priv->sta_list);
++	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
++	return;
++}
+-- 
+1.8.2.3
 
-yet another one - new HEAD: 143582c6847cb285b361804c613127c25de60ca4
-
-
---4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTDveZAAoJEC0Llv5uNjIBOkEQAIBQF2nl9ixiq9jeE8B8sE7P
-m9T1CzfbaHYmzir1tT3HafRBqGDrirdf38pT5S9CWFnvFjF0oVLNlE7jR0VHA48Y
-/mNspCw2qyI4apYWnROxEN73QNKgFAD5GZFW1nGW2vURG2x+HQ2PV/m9VEnRLV/B
-TS//1ZgiAwx2WcYowvjEHzv9w22Ktn4apDo+LXqvKmnNYY6eBmu7yI9SI0eA2B9u
-49iKZugDixYCNiyYRVzYdDaRvIMPfGC0S7onT2M3Sfckn+kj7luPAEqqLKb80yVu
-6kxIJWNJk5VqDtk8fekKvSqDlkI8auu1HxseuNvqseD6Azh+IGXW3tJMribMIMpl
-7gW75wbndTu0TPELawdMriS5PAYkjcMxxoi8jPd7lvUODBlvcl7CuoztncsCNn+S
-5kvZtPFAZLxcP6TpprDA3dr6Q6+VGn4IVSeCKDxA9fqT9FgjqzU9EmL6aiDn6SFj
-h0U9NiIjeyU0I+OZljZt2tTdHP64OReGwv6CPU8pNVAFY0azh71b3NenWNV0s/RQ
-12ew5glYO4m0F926IKCMeqg6wk0pgCu9Pj/450OXy+8QXRZgdJ6q/7kxJcuZKzUk
-lVlR8pSWvGiMh74GZ2eivbEAQE7g7NGvr0ZBmBdzaOZxyD+vZj1rKaJKI2NoEHRQ
-X+TAluPBYO5z2ke7gh3V
-=zxoZ
------END PGP SIGNATURE-----
-
---4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG--
