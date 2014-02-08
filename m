@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:33487 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbaBFUfY (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:52795 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751071AbaBHUVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 15:35:24 -0500
-Received: by mail-ob0-f182.google.com with SMTP id wm4so2890600obc.13
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Feb 2014 12:35:23 -0800 (PST)
-Message-ID: <52F3F208.20606@lwfinger.net> (sfid-20140206_213528_269438_FA8641AC)
-Date: Thu, 06 Feb 2014 14:35:20 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: andrea merello <andrea.merello@gmail.com>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/4] Add error check for pci_map_single return value in
- rtl8180 TX path
-References: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com> <1391636287-17712-4-git-send-email-andrea.merello@gmail.com>
-In-Reply-To: <1391636287-17712-4-git-send-email-andrea.merello@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 8 Feb 2014 15:21:07 -0500
+Message-ID: <1391889956.5420.4.camel@x41> (sfid-20140208_212111_689886_376587BD)
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Remove AHB bus support.
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Jonathan Bither <jonbither@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date: Sat, 08 Feb 2014 21:05:56 +0100
+In-Reply-To: <CAB=NE6UR+3uadczBt+2n4g8j2e_A6OBJ-+ZJiO4y2g4Z0cFywg@mail.gmail.com>
+References: <1320756113.14409.385.camel@x61.thuisdomein>
+	 <20111108141647.GA3390@hash.lan>
+	 <1342124352.22584.21.camel@x61.thuisdomein>
+	 <20120712203837.GA3045@localhost> <4FFFBDD8.6020305@neratec.com>
+	 <20120713124134.GA5567@localhost>
+	 <1362999998.3137.60.camel@x61.thuisdomein>
+	 <1368457391.1350.67.camel@x61.thuisdomein>
+	 <CAJ-VmokciVPxzJ0LptdQyL9koa8Bw7ecJdentPH5q9+MQ4=GpA@mail.gmail.com>
+	 <5191173D.3070709@gmail.com>
+	 <CAJ-Vmo=HOFqu8vB1=pvz79YwE8qAMDc4ZJACJHaSuxn4S92sFg@mail.gmail.com>
+	 <CAB=NE6UR+3uadczBt+2n4g8j2e_A6OBJ-+ZJiO4y2g4Z0cFywg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2014 03:38 PM, andrea merello wrote:
-> From: "andrea.merello" <andrea.merello@gmail.com>
->
-> Orignal code will not detect a DMA mapping failure, causing the HW
-> to attempt a DMA from an invalid address.
->
-> This patch add the error check and eventually simply drops the TX
-> packet if we can't map it for DMA.
->
-> Signed-off-by: andrea.merello <andrea.merello@gmail.com>
-> Signed-off-by: andrea merello <andrea.merello@gmail.com>
+Luis R. Rodriguez schreef op ma 13-05-2013 om 10:43 [-0700]:
+> NACK, looking forward to the linux-mips patches, in the future however
+> we want to avoid these type of placeholder patches.
 
-This code is standard for recovery from an error in pci_map_single().
+This thread was (likely) started when I submitted this patch (to remove
+AHB bus support) during the v3.10 development cycle. We're now at
+v3.14-rc1, and the patch still applies (perhaps requiring some trivial
+context changes).
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Should I resubmit?
 
-Larry
 
-> ---
->   drivers/net/wireless/rtl818x/rtl8180/dev.c | 7 +++++++
->   1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> index 1c6ac25..9645ed2 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> @@ -276,6 +276,13 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
->   	mapping = pci_map_single(priv->pdev, skb->data,
->   				 skb->len, PCI_DMA_TODEVICE);
->
-> +	if (pci_dma_mapping_error(priv->pdev, mapping)) {
-> +		kfree_skb(skb);
-> +		dev_err(&priv->pdev->dev, "TX DMA mapping error\n");
-> +		return;
-> +
-> +	}
-> +
->   	tx_flags = RTL818X_TX_DESC_FLAG_OWN | RTL818X_TX_DESC_FLAG_FS |
->   		   RTL818X_TX_DESC_FLAG_LS |
->   		   (ieee80211_get_tx_rate(dev, info)->hw_value << 24) |
->
+Paul Bolle
 
