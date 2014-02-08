@@ -1,104 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44800 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:26739 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751205AbaBSKvh (ORCPT
+	by vger.kernel.org with ESMTP id S1751533AbaBHAZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:51:37 -0500
-Date: Wed, 19 Feb 2014 16:07:35 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/3] mwl8k: Implement sw_scan start/stop cbs
-Message-ID: <20140219103735.GA3299@markyou.marvell.com> (sfid-20140219_115139_798462_70FE53FD)
+	Fri, 7 Feb 2014 19:25:57 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Aaron Durbin <adurbin@chromium.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 10/30] mwifiex: don't leak DMA command skbuffs
+Date: Fri, 7 Feb 2014 16:25:51 -0800
+Message-ID: <1391819151-21073-2-git-send-email-bzhao@marvell.com> (sfid-20140208_012607_975617_A9CCEF62)
+In-Reply-To: <1391819151-21073-1-git-send-email-bzhao@marvell.com>
+References: <1391819151-21073-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement sw_scan start and stop callbacks.
-Reset BBP registers for channel, RX busy and
-average noise stats which clear on read.
+From: Aaron Durbin <adurbin@chromium.org>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+The current mwifiex pcie driver assumed that it would get
+its cmdrsp_complete() callback called before another command
+was sent to unmap the command's skbuff. However, that is not
+true. The mwifiex_check_ps_cond() will send a sleep command
+to the card without having adapter->curr_cmd set. Within the
+workqueue's state machine the adapter's state would be set
+to allow commands (curr_cmd = NULL && cmd_sent = false) after
+having receieved the response from the sleep command. The
+card->cmd_buf would then be overridden with the new command
+but the first command's skbuff was not unmapped. This leaks
+mapped skbuffs when a bounce buffer is employed.
+
+To rectify this unmap the card->cmd_buf when the response is
+received from the card instead of waiting for the
+cmdrsp_complete() callback.
+
+Signed-off-by: Aaron Durbin <adurbin@chromium.org>
+Reviewed-by: Paul Stewart <pstew@chromium.org>
+Reviewed-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/net/wireless/mwifiex/pcie.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 159125e..9dbe03b 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -81,6 +81,9 @@ MODULE_PARM_DESC(ap_mode_default,
-  */
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 4e1c6b2..d11d4ac 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1513,6 +1513,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
  
- #define	MWL8K_HW_TIMER_REGISTER			0x0000a600
-+#define BBU_RXRDY_CNT_REG			0x0000a860
-+#define NOK_CCA_CNT_REG				0x0000a6a0
-+#define BBU_AVG_NOISE_VAL			0x67
+ 	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
  
- #define MWL8K_A2H_EVENTS	(MWL8K_A2H_INT_DUMMY | \
- 				 MWL8K_A2H_INT_CHNL_SWITCHED | \
-@@ -289,6 +292,9 @@ struct mwl8k_priv {
- 
- 	/* bitmap of running BSSes */
- 	u32 running_bsses;
++	/* Unmap the command as a response has been received. */
++	if (card->cmd_buf) {
++		mwifiex_unmap_pci_memory(adapter, card->cmd_buf,
++					 PCI_DMA_TODEVICE);
++		card->cmd_buf = NULL;
++	}
 +
-+	/* ACS related */
-+	bool sw_scan_start;
- };
+ 	pkt_len = *((__le16 *)skb->data);
+ 	rx_len = le16_to_cpu(pkt_len);
+ 	skb_trim(skb, rx_len);
+@@ -1569,7 +1576,6 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
+ 					struct sk_buff *skb)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct sk_buff *skb_tmp;
  
- #define MAX_WEP_KEY_LEN         13
-@@ -5446,6 +5452,38 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return rc;
+ 	if (skb) {
+ 		card->cmdrsp_buf = skb;
+@@ -1579,12 +1585,6 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
+ 			return -1;
+ 	}
+ 
+-	skb_tmp = card->cmd_buf;
+-	if (skb_tmp) {
+-		mwifiex_unmap_pci_memory(adapter, skb_tmp, PCI_DMA_FROMDEVICE);
+-		card->cmd_buf = NULL;
+-	}
+-
+ 	return 0;
  }
  
-+static void mwl8k_sw_scan_start(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+
-+	priv->sw_scan_start = true;
-+}
-+
-+static void mwl8k_sw_scan_complete(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	priv->sw_scan_start = false;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+}
-+
- static const struct ieee80211_ops mwl8k_ops = {
- 	.tx			= mwl8k_tx,
- 	.start			= mwl8k_start,
-@@ -5464,6 +5502,8 @@ static const struct ieee80211_ops mwl8k_ops = {
- 	.get_stats		= mwl8k_get_stats,
- 	.get_survey		= mwl8k_get_survey,
- 	.ampdu_action		= mwl8k_ampdu_action,
-+	.sw_scan_start		= mwl8k_sw_scan_start,
-+	.sw_scan_complete	= mwl8k_sw_scan_complete,
- };
- 
- static void mwl8k_finalize_join_worker(struct work_struct *work)
 -- 
-1.8.3.4
+1.8.2.3
 
