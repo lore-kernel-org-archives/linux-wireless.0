@@ -1,154 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:57180 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752052AbaBNSD5 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64737 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751424AbaBHAbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 13:03:57 -0500
-From: Peter Wu <lekensteyn@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming_Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lekensteyn@gmail.com
-Subject: [PATCH 2/3] rtlwifi: properly apply filter flags
-Date: Fri, 14 Feb 2014 19:03:45 +0100
-Message-Id: <1392401026-18417-3-git-send-email-lekensteyn@gmail.com> (sfid-20140214_190455_363163_8D5138B6)
-In-Reply-To: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
-References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
+	Fri, 7 Feb 2014 19:31:04 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 23/30] mwifiex: tdls related handling for data packets addressed to TDLS peer
+Date: Fri, 7 Feb 2014 16:30:36 -0800
+Message-ID: <1391819442-21239-4-git-send-email-bzhao@marvell.com> (sfid-20140208_020009_342600_0F56434D)
+In-Reply-To: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+References: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 0baa0fd76f3f5a134461d6cf30294f6bb1bb824c
-("rtlwifi: Convert core routines for addition of rtl8192se and
-rtl8192de") removed setting HW_VAR_RCR, HW_VAR_MGT_FILTER and
-HW_VAR_CTRL_FILTER. The last two are probably done because some hardware
-does not support them. The first is probably a mistake. This patch adds
-the missing set_hw_reg call.
+From: Avinash Patil <patila@marvell.com>
 
-For PCI support, rx_conf is not touched directly. Instead, get_hw_reg is
-used to abstract between receive_config (for PCI) and rx_conf (for USB).
+1. If data packet is addressed to TDLS peer for which link is
+established, mark these packets with TDLS flag so that FW can
+send them on direct link instead of sending via AP.
+2. If data packet is addressed to TDLS peer and TDLS setup is
+underway, move these packets to TDLS queue.
+3. If this packet is TDLS setup packet, do not block it.
 
-This was tested on a 10ec:8176 Realtek RTL8188CE (according to the
-label on the mini-PCIe card). Before this patch, `iw wlan0 set monitor
-otherbss` did not capture frames from other BSS's. After this patch, it
-does print packets.
-
-Tested-by: Peter Wu <lekensteyn@gmail.com>
-Signed-off-by: Peter Wu <lekensteyn@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/core.c | 52 +++++++++++++++++++++----------------
- 1 file changed, 30 insertions(+), 22 deletions(-)
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ drivers/net/wireless/mwifiex/tdls.c | 11 ++++++++++
+ drivers/net/wireless/mwifiex/wmm.c  | 42 +++++++++++++++++++++++++++++++------
+ 3 files changed, 48 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 2d337a0..6df4df0 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -475,20 +475,40 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	u32 rx_conf;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 138929e..19c60b2 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1213,6 +1213,7 @@ int mwifiex_send_tdls_action_frame(struct mwifiex_private *priv,
+ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
+ 				       u8 *buf, int len);
+ int mwifiex_tdls_oper(struct mwifiex_private *priv, u8 *peer, u8 action);
++int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac);
  
- 	*new_flags &= RTL_SUPPORTED_FILTERS;
- 	if (!changed_flags)
- 		return;
- 
-+	/* if ssid not set to hw don't check bssid
-+	 * here just used for linked scanning, & linked
-+	 * and nolink check bssid is set in set network_type */
-+	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
-+		(mac->link_state >= MAC80211_LINKED)) {
-+		if (mac->opmode != NL80211_IFTYPE_AP &&
-+		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
-+			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
-+				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
-+			} else {
-+				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
-+			}
-+		}
-+	}
-+
-+	/* must be called after set_chk_bssid since that function modifies the
-+	 * RCR register too. */
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
-+
- 	/*TODO: we disable broadcase now, so enable here */
- 	if (changed_flags & FIF_ALLMULTI) {
- 		if (*new_flags & FIF_ALLMULTI) {
--			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
-+			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
- 			    rtlpriv->cfg->maps[MAC_RCR_AB];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Enable receive multicast frame\n");
- 		} else {
--			mac->rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
-+			rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
- 					  rtlpriv->cfg->maps[MAC_RCR_AB]);
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Disable receive multicast frame\n");
-@@ -497,39 +517,25 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
- 
- 	if (changed_flags & FIF_FCSFAIL) {
- 		if (*new_flags & FIF_FCSFAIL) {
--			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
-+			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Enable receive FCS error frame\n");
- 		} else {
--			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
-+			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Disable receive FCS error frame\n");
- 		}
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 3198739..7ef3593 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -782,3 +782,14 @@ int mwifiex_tdls_oper(struct mwifiex_private *priv, u8 *peer, u8 action)
  	}
- 
--	/* if ssid not set to hw don't check bssid
--	 * here just used for linked scanning, & linked
--	 * and nolink check bssid is set in set network_type */
--	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
--		(mac->link_state >= MAC80211_LINKED)) {
--		if (mac->opmode != NL80211_IFTYPE_AP &&
--		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
--			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
--				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
--			} else {
--				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
--			}
--		}
--	}
- 
- 	if (changed_flags & FIF_CONTROL) {
- 		if (*new_flags & FIF_CONTROL) {
--			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
-+			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
- 
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Enable receive control frame\n");
- 		} else {
--			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
-+			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Disable receive control frame\n");
- 		}
-@@ -537,15 +543,17 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
- 
- 	if (changed_flags & FIF_OTHER_BSS) {
- 		if (*new_flags & FIF_OTHER_BSS) {
--			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
-+			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Enable receive other BSS's frame\n");
- 		} else {
--			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
-+			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 				 "Disable receive other BSS's frame\n");
- 		}
- 	}
-+
-+	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
+ 	return 0;
  }
- static int rtl_op_sta_add(struct ieee80211_hw *hw,
- 			 struct ieee80211_vif *vif,
++
++int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac)
++{
++	struct mwifiex_sta_node *sta_ptr;
++
++	sta_ptr = mwifiex_get_sta_entry(priv, mac);
++	if (sta_ptr)
++		return sta_ptr->tdls_status;
++
++	return TDLS_NOT_SETUP;
++}
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index e9f7628..63496ed 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -631,6 +631,21 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	u8 ra[ETH_ALEN], tid_down;
+ 	unsigned long flags;
++	struct list_head list_head;
++	int tdls_status = TDLS_NOT_SETUP;
++	struct ethhdr *eth_hdr = (struct ethhdr *)skb->data;
++	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
++
++	memcpy(ra, eth_hdr->h_dest, ETH_ALEN);
++
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA &&
++	    ISSUPP_TDLS_ENABLED(adapter->fw_cap_info)) {
++		if (ntohs(eth_hdr->h_proto) == ETH_P_TDLS)
++			dev_dbg(adapter->dev,
++				"TDLS setup packet for %pM. Don't block\n", ra);
++		else
++			tdls_status = mwifiex_get_tdls_link_status(priv, ra);
++	}
+ 
+ 	if (!priv->media_connected && !mwifiex_is_skb_mgmt_frame(skb)) {
+ 		dev_dbg(adapter->dev, "data: drop packet in disconnect\n");
+@@ -649,12 +664,27 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	   have only 1 raptr for a tid in case of infra */
+ 	if (!mwifiex_queuing_ra_based(priv) &&
+ 	    !mwifiex_is_skb_mgmt_frame(skb)) {
+-		if (!list_empty(&priv->wmm.tid_tbl_ptr[tid_down].ra_list))
+-			ra_list = list_first_entry(
+-				&priv->wmm.tid_tbl_ptr[tid_down].ra_list,
+-				struct mwifiex_ra_list_tbl, list);
+-		else
+-			ra_list = NULL;
++		switch (tdls_status) {
++		case TDLS_SETUP_COMPLETE:
++			ra_list = mwifiex_wmm_get_queue_raptr(priv, tid_down,
++							      ra);
++			tx_info->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
++			break;
++		case TDLS_SETUP_INPROGRESS:
++			skb_queue_tail(&priv->tdls_txq, skb);
++			spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
++					       flags);
++			return;
++		default:
++			list_head = priv->wmm.tid_tbl_ptr[tid_down].ra_list;
++			if (!list_empty(&list_head))
++				ra_list = list_first_entry(
++					&list_head, struct mwifiex_ra_list_tbl,
++					list);
++			else
++				ra_list = NULL;
++			break;
++		}
+ 	} else {
+ 		memcpy(ra, skb->data, ETH_ALEN);
+ 		if (ra[0] & 0x01 || mwifiex_is_skb_mgmt_frame(skb))
 -- 
-1.8.5.4
+1.8.2.3
 
