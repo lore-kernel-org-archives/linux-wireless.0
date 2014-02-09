@@ -1,34 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36149 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837AbaBUJDE (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:47493 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751687AbaBIWVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 04:03:04 -0500
-Message-ID: <1392973379.4346.41.camel@jlt4.sipsolutions.net> (sfid-20140221_100319_964711_59B91896)
-Subject: Re: [PATCH v5 4/5] cfg80211: Add an option to hint indoor operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
-Date: Fri, 21 Feb 2014 10:02:59 +0100
-In-Reply-To: <1392898909-15953-1-git-send-email-ilan.peer@intel.com> (sfid-20140220_131946_336789_F6B979EE)
-References: <1392896671-4288-5-git-send-email-ilan.peer@intel.com>
-	 <1392898909-15953-1-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140220_131946_336789_F6B979EE)
-Content-Type: text/plain; charset="UTF-8"
+	Sun, 9 Feb 2014 17:21:53 -0500
+Date: Sun, 09 Feb 2014 14:21:52 -0800 (PST)
+Message-Id: <20140209.142152.1021989320494688911.davem@davemloft.net> (sfid-20140209_232157_441551_08A73BB7)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-02-07
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140207191222.GH3181@tuxdriver.com>
+References: <20140207191222.GH3181@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 14:21 +0200, Ilan Peer wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 7 Feb 2014 14:12:22 -0500
 
-> +bool regulatory_indoor_allowed(void)
-> +{
-> +	return reg_is_indoor;
-> +}
-> +EXPORT_SYMBOL_GPL(regulatory_indoor_allowed);
+> Please pull this batch of fixes intended for the 3.14 stream!
 
-I don't see any user of this (in particular none that would need it
-exported)?
-
-johannes
-
+Pulled, thanks a lot John.
