@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38541 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbaBMOpW (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:40551 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751360AbaBIN0p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 09:45:22 -0500
-Date: Thu, 13 Feb 2014 09:44:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Ilw] Re: pull request: iwlwifi-next 2014-02-03
-Message-ID: <20140213144411.GH22203@tuxdriver.com> (sfid-20140213_154534_522163_3D89ED9C)
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
- <20140212202700.GF22203@tuxdriver.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D66EDF@HASMSX103.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D66EDF@HASMSX103.ger.corp.intel.com>
+	Sun, 9 Feb 2014 08:26:45 -0500
+Message-ID: <1391952396.25202.60.camel@deadeye.wl.decadent.org.uk> (sfid-20140209_142652_654377_243DDC76)
+Subject: Re: [PATCH] rtlwifi: Add firmware for rtl8192ee
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 09 Feb 2014 13:26:36 +0000
+In-Reply-To: <1390944643-7388-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1390944643-7388-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-SfBZPxk058wGrnkrJJ7s"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 07:10:05AM +0000, Grumbach, Emmanuel wrote:
-> > >
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
-> > > for-john
-> > >
-> > > for you to fetch changes up to
-> > 8e305d171ab58dbd79ad8e13d93db2237fde5749:
-> > >
-> > >   iwlwifi: mvm: remove duplicate assignment to ap_ibss_active
-> > > (2014-02-03 22:43:53 +0200)
-> > 
-> > Pulling now...
-> > 
-> 
-> Apparently, you pulled master branch instead of for-john branch. Not a big deal for me, you just saved me a bit of work :)
 
-Yeah, OK.  I have to watch-out for that a lot -- your pull requests
-typically have a line break before the "for-john" (as shown in the
-quoted bits above).  If possible, it would be helpful if you could
-look for that and make sure that that line is contiguous...thanks!
+--=-SfBZPxk058wGrnkrJJ7s
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Since it is still early in the release, maybe I should rebase
-wireless-next to correct for this?
+On Tue, 2014-01-28 at 15:30 -0600, Larry Finger wrote:
+> This firmware is for a driver for the Realtek RTL8192EE PCI WIFI device.
+> It came from a tarball from Realtek named
+> rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013.=
+tar.gz
+> and is allowed to be distributed under the LICENCE.rtlwifi_firmware.txt l=
+icense.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  WHENCE                  |   9 +++++++++
+>  rtlwifi/rtl8192eefw.bin | Bin 0 -> 32754 bytes
+>  2 files changed, 9 insertions(+)
+>  create mode 100644 rtlwifi/rtl8192eefw.bin
+[...]
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Applied, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+If at first you don't succeed, you're doing about average.
+
+--=-SfBZPxk058wGrnkrJJ7s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAUveCDOe/yOyVhhEJAQrudBAAmddgS9nbTNowtkCua9MCas9xJ2yFnsFt
+u/KVxSeZsq6h3Gtc44YNd1PKnK//qvDuWkzOfugDgICrshalwm7P5bk323P6Cl5n
+E6m+7p99KXmwPl3RYFS95o6u5LaQYMiIigXfoUkr2GeWZVVU9vuEXLaTdGrSektg
+rHI/dIZIxCz/pbU+U0vNVoe+36ReKfeXw19vNjAe5N6IhtFw/273diDf59Ar2v47
+bOrRsrxMcsmNBAvmRBA/Njscl6hD6PvIp3/19044He4AbTvb983VW9LS/PTfjYAG
+b6ek4/V0NeQHFFkaapBMhXanNvgpBn9CyYrIUS9riPpCZuJYV/+OHJVpURMKhwDL
+D07oxePRiXF8VTLxvpD7LQtT8dKX/xV3vMDEPhMyApSFpMNlytRLYLZ2/sZilopT
+gufpGY3bjHj8Fl2Ga7TlzsTsQEdLBWGV+v3PLru1UMN0fB5kOCW8w3aZajc+R+VJ
+QRTsEVt18Y3Lt3vpmlHgpvAIng/OiG5Gn0kBHQ8Q8Vy2cIsqASa50Ckm7e3PSdEU
+JEKpbIkMxYdVxc2vKZi8CEXYHS/LC7w36wUsfv1P9dKT1Dc5S7iGeakhPiEDh3VL
+h04D63ViB4YoWvXnYsW5jWL5MrvGAOTjQZR+wT5qhr7URZJB+w2CIG9gV96tph2G
+rg+39hJu72w=
+=Q998
+-----END PGP SIGNATURE-----
+
+--=-SfBZPxk058wGrnkrJJ7s--
