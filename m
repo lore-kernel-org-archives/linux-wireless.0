@@ -1,242 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:50199 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbaBYMjx (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:61640 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751360AbaBINbT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:39:53 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v5 1/4] cfg80211: refactor cfg80211_can_use_iftype_chan()
-Date: Tue, 25 Feb 2014 14:39:41 +0200
-Message-Id: <1393331984-21692-2-git-send-email-luca@coelho.fi> (sfid-20140225_133956_676789_87493775)
-In-Reply-To: <1393331984-21692-1-git-send-email-luca@coelho.fi>
-References: <1393331984-21692-1-git-send-email-luca@coelho.fi>
+	Sun, 9 Feb 2014 08:31:19 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Petko Manolov <petkan@nucleusys.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: RE: iwlwifi crash with 3.13
+Date: Sun, 9 Feb 2014 13:31:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D645E3@HASMSX103.ger.corp.intel.com> (sfid-20140209_143122_674215_12AEEC21)
+References: <20140123091659.GE9077@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
+ <20140123123125.GA3424@localhost>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
+ <20140123200045.GA4064@localhost> <52E17698.9070607@gmail.com>
+ <20140123202142.GC4064@localhost> <20140207214054.GB7167@localhost>
+ <52F67313.1030706@gmail.com> <20140209132653.GA8352@localhost>
+In-Reply-To: <20140209132653.GA8352@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> On 14-02-08 20:10:27, Emmanuel Grumbach wrote:
+> >
+> > There is no problem to be fixed. When I said that I found the issue, I
+> > meant that you are using a NIC which is not supposed to work on 5GHz on
+> these channels and this leads to the issues.
+> 
+> Right, wireless-N 7260 is not advertised as 5GHz card.  I just got over my
+> laziness and searched the net.
+> 
+> > The fact that it doesn't work for you with -8.ucode proves that I am correct.
+> 
+> This is something i'd rather not comment on. :P
+> 
+> > I sent a patch that will disable 5GHz band for you from the driver level so
+> that you won't suffer from firmware asserts.
+> 
+> Sweet.
+> 
+> > You told me you could work on 5GHz with this NIC - good for you.
+> > Conclude whatever you want from this, this is none of my business -
+> > but for sure, the "issues" you are seeing are related to the fact that your
+> NIC isn't supposed to be working on 5GHz, and hence, there is no bug to be
+> fixed.
+> 
+> Now that's funny.  Intel made an effort to put 5GHz radio on this card.  They
+> even released firmware that can actually make use of this band.  I am pretty
+> sure you won't answer these, but i'll ask why is that anyway:
+> 
+> 	a) is the 'A' band implementation so buggy that you/Intel decided to
+> disable it altogether?
 
-Separate the code that counts the interface types and channels from
-the code that check the interface combinations.  The new function that
-checks for combinations is exported so it can be called by the
-drivers.
+Nope - band A works very well - but just like all the vendors, Intel has several SKUs and capabilities differ between the SKUs.
 
-This is done in preparation for moving the interface combinations
-checks out of cfg80211.
+> 	b) it is on sale too cheap to give it's customers the 'A' band;
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In v4:
+As a maintainer / communist / peace lover / whatever I was not chosen to be part of the pricing discussions at Intel...
 
-   * rebased on top of slightly modified applied patches
-   * removed the parenthesis from the comment (not needed for docbook)
-   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
----
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  29 ++++++++++
- net/wireless/util.c              | 121 ++++++++++++++++++++++-----------------
- 3 files changed, 97 insertions(+), 54 deletions(-)
-
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 044b764..d9b9416 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -100,6 +100,7 @@
- !Finclude/net/cfg80211.h wdev_priv
- !Finclude/net/cfg80211.h ieee80211_iface_limit
- !Finclude/net/cfg80211.h ieee80211_iface_combination
-+!Finclude/net/cfg80211.h cfg80211_check_combinations
-       </chapter>
-       <chapter>
-       <title>Actions and configuration</title>
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8c9ba44..5f5a598 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4677,6 +4677,35 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
-  */
- unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
- 
-+/**
-+ * cfg80211_check_combinations - check interface combinations
-+ *
-+ * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @num_interfaces: the number of different interfaces we want to use
-+ *	for verification
-+ * @used_iftypes: a bitmap where each bit corresponds to an interface
-+ *	type, as in the definition of &struct
-+ *	ieee80211_iface_limit.@types.
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
-+ *
-+ * This function can be called by the driver to check whether a
-+ * combination of interfaces and their types are allowed according to
-+ * the interface combinations.
-+ */
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const int num_interfaces,
-+				const u32 used_iftypes,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES]);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 57b3ce7..d562dd6 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1253,6 +1253,69 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const int num_interfaces,
-+				const u32 used_iftypes,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int i, j, iftype;
-+
-+	for (i = 0; i < wiphy->n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		struct ieee80211_iface_limit *limits;
-+		u32 all_iftypes = 0;
-+
-+		c = &wiphy->iface_combinations[i];
-+
-+		if (num_interfaces > c->max_interfaces)
-+			continue;
-+		if (num_different_channels > c->num_different_channels)
-+			continue;
-+
-+		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
-+				 GFP_KERNEL);
-+		if (!limits)
-+			return -ENOMEM;
-+
-+		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+			if (wiphy->software_iftypes & BIT(iftype))
-+				continue;
-+			for (j = 0; j < c->n_limits; j++) {
-+				all_iftypes |= limits[j].types;
-+				if (!(limits[j].types & BIT(iftype)))
-+					continue;
-+				if (limits[j].max < iftype_num[iftype])
-+					goto cont;
-+				limits[j].max -= iftype_num[iftype];
-+			}
-+		}
-+
-+		if (radar_detect && !(c->radar_detect_widths & radar_detect))
-+			goto cont;
-+
-+		/* Finally check that all iftypes that we're currently
-+		 * using are actually part of this combination. If they
-+		 * aren't then we can't use this combination and have
-+		 * to continue to the next.
-+		 */
-+		if ((all_iftypes & used_iftypes) != used_iftypes)
-+			goto cont;
-+
-+		/* This combination covered all interface types and
-+		 * supported the requested numbers, so we're good.
-+		 */
-+		kfree(limits);
-+		return 0;
-+ cont:
-+		kfree(limits);
-+	}
-+
-+	return -EBUSY;
-+}
-+EXPORT_SYMBOL(cfg80211_check_combinations);
-+
- int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 struct wireless_dev *wdev,
- 				 enum nl80211_iftype iftype,
-@@ -1269,7 +1332,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
- 	int total = 1;
--	int i, j;
-+	int i;
- 
- 	ASSERT_RTNL();
- 
-@@ -1360,59 +1423,9 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	if (total == 1 && !radar_detect)
- 		return 0;
- 
--	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
--		const struct ieee80211_iface_combination *c;
--		struct ieee80211_iface_limit *limits;
--		u32 all_iftypes = 0;
--
--		c = &rdev->wiphy.iface_combinations[i];
--
--		if (total > c->max_interfaces)
--			continue;
--		if (num_different_channels > c->num_different_channels)
--			continue;
--
--		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
--				 GFP_KERNEL);
--		if (!limits)
--			return -ENOMEM;
--
--		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
--			if (rdev->wiphy.software_iftypes & BIT(iftype))
--				continue;
--			for (j = 0; j < c->n_limits; j++) {
--				all_iftypes |= limits[j].types;
--				if (!(limits[j].types & BIT(iftype)))
--					continue;
--				if (limits[j].max < num[iftype])
--					goto cont;
--				limits[j].max -= num[iftype];
--			}
--		}
--
--		if (radar_detect && !(c->radar_detect_widths & radar_detect))
--			goto cont;
--
--		/*
--		 * Finally check that all iftypes that we're currently
--		 * using are actually part of this combination. If they
--		 * aren't then we can't use this combination and have
--		 * to continue to the next.
--		 */
--		if ((all_iftypes & used_iftypes) != used_iftypes)
--			goto cont;
--
--		/*
--		 * This combination covered all interface types and
--		 * supported the requested numbers, so we're good.
--		 */
--		kfree(limits);
--		return 0;
-- cont:
--		kfree(limits);
--	}
--
--	return -EBUSY;
-+	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
-+					   total, used_iftypes,
-+					   radar_detect, num);
- }
- 
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
--- 
-1.8.5.3
-
+> 	c) a mix of both (or none) of the above;
+> 
+> I kind of doubt it is a) since my laptop would happily stay connected to the
+> router (on AN band) for days.  Were it not for the ugly 'dmesg' i'd never
+> know there is a problem.  I have no idea of the device internals, but blowing
+> up the workqueue (or whatever) is a bit too much.  With or without the A
+> band functionality. ;)
+> 
+> Thanks for taking the time to look at my 'problem'.
+> 
+> 
+> 		Petko
