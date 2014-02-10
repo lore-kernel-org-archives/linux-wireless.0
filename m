@@ -1,125 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:39541 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085AbaBCU6d (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:32907 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbaBJJaC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:33 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e53so3910771eek.13
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:32 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/62] iwlwifi: mvm: provide helper to fetch the iwl_mvm_sta from sta_id
-Date: Mon,  3 Feb 2014 22:57:17 +0200
-Message-Id: <1391461088-8082-11-git-send-email-egrumbach@gmail.com> (sfid-20140203_215838_943219_5C1981ED)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 10 Feb 2014 04:30:02 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so3907861wgh.31
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 01:30:01 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: Ben Hutchings <ben@decadent.org.uk>,
+	<linux-wireless@vger.kernel.org>
+Cc: Arik Nemtsov <arik@wizery.com>
+Subject: linux-firmware: pull-request TI wireless firmware 2014-02-10
+Date: Mon, 10 Feb 2014 11:29:56 +0200
+Message-Id: <1392024596-22285-1-git-send-email-arik@wizery.com> (sfid-20140210_103011_903401_0F1D36C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hey Ben,
 
-We somtimes need to fetch the iwl_mvm_sta structure from a
-station index - provide a helper to do that.
+Here's an updated FW for the Wilink 8 chip. The name change is due to changes
+in some driver/FW APIs. Sorry for the double send, adding the linux-wireless
+list now as well.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c |   14 ++------------
- drivers/net/wireless/iwlwifi/mvm/debugfs.c |   11 +++++------
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |   18 ++++++++++++++++++
- 3 files changed, 25 insertions(+), 18 deletions(-)
+The following changes since commit 4164c23d2e3b4863ca42d72f40dc7cc5d9fb8c6c:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-index 76cde6c..b1a572e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-@@ -500,23 +500,13 @@ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- 		.dataflags = { IWL_HCMD_DFL_DUP, },
- 		.flags = CMD_ASYNC,
- 	};
--
--	struct ieee80211_sta *sta;
- 	struct iwl_mvm_sta *mvmsta;
- 	int ret;
- 
--	if (sta_id == IWL_MVM_STATION_COUNT)
--		return 0;
--
--	sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
--					lockdep_is_held(&mvm->mutex));
--
--	/* This can happen if the station has been removed right now */
--	if (IS_ERR_OR_NULL(sta))
-+	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, sta_id);
-+	if (!mvmsta)
- 		return 0;
- 
--	mvmsta = iwl_mvm_sta_from_mac80211(sta);
--
- 	/* nothing to do */
- 	if (mvmsta->bt_reduced_txpower == enable)
- 		return 0;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 369d4c9..8d3bf25 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -90,7 +90,7 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
- static ssize_t iwl_dbgfs_sta_drain_write(struct iwl_mvm *mvm, char *buf,
- 					 size_t count, loff_t *ppos)
- {
--	struct ieee80211_sta *sta;
-+	struct iwl_mvm_sta *mvmsta;
- 	int sta_id, drain, ret;
- 
- 	if (!mvm->ucode_loaded || mvm->cur_ucode != IWL_UCODE_REGULAR)
-@@ -105,13 +105,12 @@ static ssize_t iwl_dbgfs_sta_drain_write(struct iwl_mvm *mvm, char *buf,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
--					lockdep_is_held(&mvm->mutex));
--	if (IS_ERR_OR_NULL(sta))
-+	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, sta_id);
-+
-+	if (!mvmsta)
- 		ret = -ENOENT;
- 	else
--		ret = iwl_mvm_drain_sta(mvm, (void *)sta->drv_priv, drain) ? :
--			count;
-+		ret = iwl_mvm_drain_sta(mvm, mvmsta, drain) ? : count;
- 
- 	mutex_unlock(&mvm->mutex);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index bf13c46..02e4bdc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -595,6 +595,24 @@ static inline bool iwl_mvm_is_radio_killed(struct iwl_mvm *mvm)
- 	       test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status);
- }
- 
-+static inline struct iwl_mvm_sta *
-+iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
-+{
-+	struct ieee80211_sta *sta;
-+
-+	if (sta_id >= ARRAY_SIZE(mvm->fw_id_to_mac_id))
-+		return NULL;
-+
-+	sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
-+					lockdep_is_held(&mvm->mutex));
-+
-+	/* This can happen if the station has been removed right now */
-+	if (IS_ERR_OR_NULL(sta))
-+		return NULL;
-+
-+	return iwl_mvm_sta_from_mac80211(sta);
-+}
-+
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
- 
- struct iwl_rate_info {
--- 
-1.7.9.5
+  rtlwifi: Add firmware for rtl8192ee (2014-02-09 13:26:05 +0000)
 
+are available in the git repository at:
+
+  git://github.com/TI-OpenLink/firmwares.git master
+
+for you to fetch changes up to 7f9cf6ebdedb4776d3c977003b9a7e33537014b2:
+
+  wl18xx: add version 3 of the wl18xx firmware (2014-02-10 11:02:23 +0200)
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      wl18xx: add version 3 of the wl18xx firmware
+
+ WHENCE                          |   2 ++
+ ti-connectivity/wl18xx-fw-3.bin | Bin 0 -> 673328 bytes
+ 2 files changed, 2 insertions(+)
+ create mode 100644 ti-connectivity/wl18xx-fw-3.bin
+
+diff --git a/WHENCE b/WHENCE
+index a5c0444..7263c1d 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1835,6 +1835,8 @@ File: ti-connectivity/wl18xx-fw.bin
+ Version: 8.2.0.0.100
+ File: ti-connectivity/wl18xx-fw-2.bin
+ Version: 8.5.0.0.55
++File: ti-connectivity/wl18xx-fw-3.bin
++Version: 8.8.0.0.13
+ File: ti-connectivity/wl18xx-conf.bin
+ Version: 6/5
+ 
+diff --git a/ti-connectivity/wl18xx-fw-3.bin b/ti-connectivity/wl18xx-fw-3.bin
+new file mode 100644
+index 0000000..3c799a3
+Binary files /dev/null and b/ti-connectivity/wl18xx-fw-3.bin differ
