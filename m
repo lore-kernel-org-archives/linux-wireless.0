@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41465 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbaBDL5e (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60330 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752085AbaBJTVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:57:34 -0500
-Message-ID: <1391515050.4134.6.camel@jlt4.sipsolutions.net> (sfid-20140204_125737_521471_793B2AB6)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>
-Date: Tue, 04 Feb 2014 12:57:30 +0100
-In-Reply-To: <1391514164.26522.89.camel@porter.coelho.fi>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
-	 <1391508433.26522.61.camel@porter.coelho.fi>
-	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
-	 <1391512311.26522.75.camel@porter.coelho.fi>
-	 <1391513092.4134.4.camel@jlt4.sipsolutions.net>
-	 <1391514164.26522.89.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Feb 2014 14:21:06 -0500
+Message-ID: <52F92696.3030003@candelatech.com> (sfid-20140210_202110_053978_4B747C2F)
+Date: Mon, 10 Feb 2014 11:20:54 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Zhao Hongjiang <zhaohongjiang@huawei.com>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	zhousiyi@huawei.com
+Subject: Re: Get multiple ip addresses by dhcp for wireless card
+References: <52F84DFD.4030602@huawei.com> <52F87608.808@candelatech.com> <52F88FEA.3000102@huawei.com>
+In-Reply-To: <52F88FEA.3000102@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 13:42 +0200, Luca Coelho wrote:
-> > Nothing! As far as that's permissible. Ilan's patchset might change
-> > that, but that's mostly a regulatory thing, rather than a CSA thing.
+On 02/10/2014 12:38 AM, Zhao Hongjiang wrote:
+> On 2014/2/10 14:47, Ben Greear wrote:
+>> On 02/09/2014 07:56 PM, Zhao Hongjiang wrote:
+>>> Hello,
+>>>
+>>> Is it possible for one station to get multiple ip addresses from AP/Wireless
+>>> router by dhcp? I had tried to add one or more virtual interface for
+>>> phy0 (wlan0, wlan1, wlan2,etc), but only wlan0 can get ip address from AP.
+>>> the following is the steps:
+>>>
+>>> /bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
+>>> /bin/wpa_cli -i wlan0 -p /wlan0
+>>>> add_network
+>>>> set_network 0 ssid "APabc"
+>>>> set_network 0 psk "1111111"
+>>>> enable_network 0
+>>>
+>>> iw wlan0 interface add wlan1 type station 4addr on
+>>> ip link set wlan1 up
+>>> dhcpcd -ABKL wlan0 #works, can get ip
+>>> dhcpcd -ABKL wlan1 #cannot work
+>>
+>> Virtual stations work just fine for me, though I don't use that '4addr' thing.
+>> ...maybe sniff your wlan1 and see if it is sending
+>> out proper DHCP requests (and they are being received by the AP)?
+>>
+>> You have to create a new supplicant config for each virtual station,
+>> or run a unique supplicant instance for each station.
 > 
-> Ah, you have some insider information! :P
+> I try to follow the instruction which you give and do the following command, but wlan1 
+> cannot associate with AP.
 
-Not really, he posted those patches ... :)
+What driver are you using?  I'm not sure anything other than ath9k
+can do this feature.  Ath5k probably works, and definitely worked
+at one time.  Ath10k supports this to some degree, and will have more
+support in the future.
 
-> Sure, but how does the userspace know that the other interface *needs*
-> to be moved, regardless of regulatory problems? It needs to know that
-> there are not enough contexts to keep the interfaces in different
-> channels...
+You typically have to disable hardware crypt to make this work.
 
-It has all that information, it can know the channels, channel contexts,
-etc.
+Thanks,
+Ben
 
-> > > ...and, if the userspace doesn't react, we disconnect the GO.  I think
-> > > it's safer this way for the GO-follows-STA case.
-> > 
-> > That would be a consequence of Ilan's work, yes.
-> 
-> Okay, if that's going to be guaranteed, I'm fine with it.
-
-Not yet, but Ilan probably needs to take care of that.
-
-> > This typically won't happen, since userspace will do something else, but
-> > we need to have some default policy. I don't think anything else makes
-> > much sense?
-> 
-> My point was that a CSA could have been triggered due to regulatory
-> (which the AP/GO is monitoring), so the safest would be to move everyone
-> out of the channel by default.
-
-But the kernel can't do that, it needs userspace to do it. And if the
-CSA was triggered due to regulatory, then the GO that follow the client
-can only be on this channel with Ilan's work, otherwise it's allowed to
-be standalone there.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
