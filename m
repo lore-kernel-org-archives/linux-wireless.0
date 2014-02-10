@@ -1,109 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15143 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753218AbaBDAkT (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:50881 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751628AbaBJIua (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 19:40:19 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 05/30] mwifiex: change beacon parameter structure
-Date: Mon, 3 Feb 2014 16:39:59 -0800
-Message-ID: <1391474402-7986-1-git-send-email-bzhao@marvell.com> (sfid-20140204_014029_136383_1A7953B1)
+	Mon, 10 Feb 2014 03:50:30 -0500
+Date: Mon, 10 Feb 2014 10:50:27 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Calvin Owens <jcalvinowens@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
+ codes
+Message-ID: <20140210085027.GA3549@w1.fi> (sfid-20140210_095034_275108_4DA254C8)
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, Feb 05, 2014 at 07:44:48PM -0600, Calvin Owens wrote:
+> Create a function to return a descriptive string for each reason code,
+> and print that instead of the numeric value in the kernel log. These
+> codes are easily found on popular search engines, but one is generally
+> not able to access the internet when dealing with wireless connectivity
+> issues.
 
-'mwifiex_bcn_param' structure contains five parameters which
-are present in beacon buffer in case of legacy scan.
+I don't personally see need for this, but if others find it helpful, I'm
+not that strongly against either (even though this would really belong
+to user space), as long as it does not do this:
 
-'rssi' field won't be there in this buffer for extended scan.
-Hence 'bssid' and 'rssi' are removed from the structure and it is
-renamed as 'mwifiex_fixed_bcn_param' so that we can have common
-parsing logic later for both.
+> + * ieee80211_get_reason_code_string - Get human readable reason code
+> + *
+> + * This function returns a string describing the @reason_code.
+> + *
+> + * @reason_code: Reason code we want a human readable string for
+> + *
+> + * Return: Human readable reason string, or "(INVALID)"
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   |  4 +---
- drivers/net/wireless/mwifiex/scan.c | 25 +++++++++++++++----------
- 2 files changed, 16 insertions(+), 13 deletions(-)
+That "(INVALID)" is not helpful. It is just hiding the "unknown" value.
+Printing out the actual reason code is much more valuable than making
+this "human readable" in this way.
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index d8014c8..9b26790 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -1047,9 +1047,7 @@ struct host_cmd_ds_rf_ant_siso {
- 	__le16 ant_mode;
- };
- 
--struct mwifiex_bcn_param {
--	u8 bssid[ETH_ALEN];
--	u8 rssi;
-+struct mwifiex_fixed_bcn_param {
- 	__le64 timestamp;
- 	__le16 beacon_period;
- 	__le16 cap_info_bitmap;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 0a8a26e..b0be830 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1689,7 +1689,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		u16 cap_info_bitmap;
- 		u8 *current_ptr;
- 		u64 timestamp;
--		struct mwifiex_bcn_param *bcn_param;
-+		struct mwifiex_fixed_bcn_param *bcn_param;
- 		struct mwifiex_bss_priv *bss_priv;
- 
- 		if (bytes_left >= sizeof(beacon_size)) {
-@@ -1716,25 +1716,30 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 
- 		curr_bcn_bytes = beacon_size;
- 
--		/*
--		 * First 5 fields are bssid, RSSI, time stamp, beacon interval,
--		 *   and capability information
-+		/* First 5 fields are bssid, RSSI(for legacy scan only),
-+		 * time stamp, beacon interval, and capability information
- 		 */
--		if (curr_bcn_bytes < sizeof(struct mwifiex_bcn_param)) {
-+		if (curr_bcn_bytes < ETH_ALEN + sizeof(u8) +
-+		    sizeof(struct mwifiex_fixed_bcn_param)) {
- 			dev_err(adapter->dev,
- 				"InterpretIE: not enough bytes left\n");
- 			continue;
- 		}
--		bcn_param = (struct mwifiex_bcn_param *)current_ptr;
--		current_ptr += sizeof(*bcn_param);
--		curr_bcn_bytes -= sizeof(*bcn_param);
- 
--		memcpy(bssid, bcn_param->bssid, ETH_ALEN);
-+		memcpy(bssid, current_ptr, ETH_ALEN);
-+		current_ptr += ETH_ALEN;
-+		curr_bcn_bytes -= ETH_ALEN;
- 
--		rssi = (s32) bcn_param->rssi;
-+		rssi = (s32) *(u8 *)current_ptr;
- 		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
-+		current_ptr += sizeof(u8);
-+		curr_bcn_bytes -= sizeof(u8);
- 		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%d\n", rssi);
- 
-+		bcn_param = (struct mwifiex_fixed_bcn_param *)current_ptr;
-+		current_ptr += sizeof(*bcn_param);
-+		curr_bcn_bytes -= sizeof(*bcn_param);
-+
- 		timestamp = le64_to_cpu(bcn_param->timestamp);
- 		beacon_period = le16_to_cpu(bcn_param->beacon_period);
- 
+> +const char *ieee80211_get_reason_code_string(u16 reason_code)
+> +{
+> +	if (reason_code <= 24)
+> +		return reason_code_strings[reason_code];
+> +	else if (reason_code >= 32 && reason_code <= 39)
+> +		return reason_code_strings[reason_code - 7];
+> +	else if (reason_code == 45)
+> +		return reason_code_strings[33];
+> +	else if (reason_code >= 52 && reason_code <= 66)
+> +		return reason_code_strings[reason_code - 18];
+> +	else
+> +		return "(INVALID)";
+> +}
+
+This is hiding a large number of recently added reason codes.. For most
+of the "human readable" strings in the reason_code_strings array, I
+would end up having to find the full explanation from the standard
+anyway, so I would like to be able to find this easily (and seeing the
+real value of the reason code field would be the easiest way).
+
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> @@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+> -	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
+> -		   bssid, reason_code);
+> +	sdata_info(sdata, "deauthenticated from %pM (reason: %s)\n",
+> +		   bssid, ieee80211_get_reason_code_string(reason_code));
+
+Please don't do this unless ieee80211_get_reason_code_string() includes
+the actual reason code number for every possible case, i.e., just leave
+%u print of reason_code here even if the string is added.
+
 -- 
-1.8.2.3
-
+Jouni Malinen                                            PGP id EFC895FA
