@@ -1,39 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:45990 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbaBSBK7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 20:10:59 -0500
-Received: by mail-lb0-f177.google.com with SMTP id 10so11142133lbg.22
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 17:10:58 -0800 (PST)
+Received: from mout.gmx.net ([212.227.15.18]:54909 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752691AbaBJMSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Feb 2014 07:18:00 -0500
+Received: from [192.168.1.221] ([93.218.106.218]) by mail.gmx.com (mrgmx102)
+ with ESMTPSA (Nemesis) id 0Lp8h6-1VaDnX0Ike-00eq4Y for
+ <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 13:17:59 +0100
+Message-ID: <52F8C373.9060108@rempel-privat.de> (sfid-20140210_131822_546767_804DE560)
+Date: Mon, 10 Feb 2014 13:17:55 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-In-Reply-To: <1389108901.4645.13.camel@jlt4.sipsolutions.net>
-References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
- <1387486399-4053-3-git-send-email-mcgrof@do-not-panic.com> <1389108901.4645.13.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 18 Feb 2014 17:10:37 -0800
-Message-ID: <CAB=NE6VeOM95u_-86yno0Hiz_DvXGz6b9G4tKdUT=PfYposLKA@mail.gmail.com> (sfid-20140219_021102_609055_11CB933D)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
+	open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+References: <1391971686-9517-1-git-send-email-richard@nod.at> <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+In-Reply-To: <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="JDWAQLMAn1UQWTOqbFvCwbPqUUSJtjr7V"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 7:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
->> This allows processing of the last regulatory request when
->> we determine its still pending. This fixes the issue reported
->> by Sander of when cfg80211 is built-in and no further regulatory
->> domain processing can happen. This occurred because if the
->> filesystem was not mounted upon kicking off the udev rule
->> to run CRDA then the last request will always be left
->> unprocessed.
->
-> It'd be good to comment on what this actually changes and what happens,
-> in addition to discussing the user-visible effect?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--JDWAQLMAn1UQWTOqbFvCwbPqUUSJtjr7V
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Sure.
+Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
+> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
+>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
+>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
+>>>> The symbol is an orphan, get rid of it.
+>>>>
+>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
+>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 -----------------------=
+-----
+>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
+>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
+>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
+>>>>
+>>>
+>>> This code is used in OpenWrt with an out of tree arch code for the
+>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding=
 
-  Luis
+>>> this code to mainline Linux kernel, because of lack of time/interest.=
+
+>>
+>> Sorry, we don't maintain out of tree code.
+>>
+>=20
+> Oleksij, Jonathan do you still working to make ar231x devices work
+> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
+> team would like to add upstream support?
+>=20
+> 1. https://lkml.org/lkml/2013/5/13/321
+> 2. https://lkml.org/lkml/2013/5/13/358
+>=20
+
+Hi,
+my current target was to provide barebox and openocd support.
+- ar2313 is already upstream on barebox.
+- ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
+- openocd (EJTAG) support is ready and i'll push it ASUP.
+
+I hope Jonathan do kernel part. If not, i can provide some work, since i
+have testing boards and expiriance on this hardware.
+
+--=20
+Regards,
+Oleksij
+
+
+--JDWAQLMAn1UQWTOqbFvCwbPqUUSJtjr7V
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iF4EAREIAAYFAlL4w3MACgkQHwImuRkmbWmHEgEAmUpmT5YkDvKgx0v24yzb1wE3
+lJRt74eb739s+Pc2mt8A/jnP8qfXkUwr7vSSBHUH9W266NrdqSTXjlWGgY3J3hgN
+=MGbj
+-----END PGP SIGNATURE-----
+
+--JDWAQLMAn1UQWTOqbFvCwbPqUUSJtjr7V--
