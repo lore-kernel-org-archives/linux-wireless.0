@@ -1,49 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:45384 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbaBENtM (ORCPT
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:52696 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312AbaBJMii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 08:49:12 -0500
-Received: by mail-lb0-f179.google.com with SMTP id l4so331609lbv.10
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 05:49:11 -0800 (PST)
+	Mon, 10 Feb 2014 07:38:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <8738jxllqy.fsf@kamboji.qca.qualcomm.com>
-References: <1391597333-6398-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1391597333-6398-2-git-send-email-emmanuel.grumbach@intel.com>
-	<8738jxllqy.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 5 Feb 2014 15:49:11 +0200
-Message-ID: <CANUX_P2Z+FTZz83D5HR7w9z3F3=nhP8p_4wRb-5XBe0kv1vu2A@mail.gmail.com> (sfid-20140205_144929_885868_40EB0B4A)
-Subject: Re: [PATCH 2/3] mac80211: move VHT related RX_FLAG to another variable
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <52F8C373.9060108@rempel-privat.de>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+ <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
+ <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+ <52F8C373.9060108@rempel-privat.de>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Mon, 10 Feb 2014 16:38:17 +0400
+Message-ID: <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com> (sfid-20140210_133901_685934_0046F224)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
+	open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 5, 2014 at 3:41 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->
->> ieee80211_rx_status.flags is full. Define a new vht_flag
->> variable to be able to set more VHT related flags and make
->> room in flags.
+2014-02-10 16:17 GMT+04:00 Oleksij Rempel <linux@rempel-privat.de>:
+> Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
+>> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
+>>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
+>>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
+>>>>> The symbol is an orphan, get rid of it.
+>>>>>
+>>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
+>>>>> ---
+>>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
+>>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
+>>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
+>>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
+>>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
+>>>>>
+>>>>
+>>>> This code is used in OpenWrt with an out of tree arch code for the
+>>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
+>>>> this code to mainline Linux kernel, because of lack of time/interest.
+>>>
+>>> Sorry, we don't maintain out of tree code.
+>>>
 >>
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> Oleksij, Jonathan do you still working to make ar231x devices work
+>> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
+>> team would like to add upstream support?
+>>
+>> 1. https://lkml.org/lkml/2013/5/13/321
+>> 2. https://lkml.org/lkml/2013/5/13/358
+>>
 >
-> [...]
+> Hi,
+> my current target was to provide barebox and openocd support.
+> - ar2313 is already upstream on barebox.
+> - ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
+> - openocd (EJTAG) support is ready and i'll push it ASUP.
 >
->> @@ -866,9 +863,6 @@ enum mac80211_rx_flags {
->>       RX_FLAG_AMPDU_DELIM_CRC_KNOWN   = BIT(20),
->>       RX_FLAG_MACTIME_END             = BIT(21),
->>       RX_FLAG_VHT                     = BIT(22),
->> -     RX_FLAG_80MHZ                   = BIT(23),
->> -     RX_FLAG_80P80MHZ                = BIT(24),
->> -     RX_FLAG_160MHZ                  = BIT(25),
->
-> Doesn't this break ath10k?
->
+WOW, Impressive.
 
-yep it does... It seems that I need to run with a few more drivers enabled :)
-Thanks!
+> I hope Jonathan do kernel part. If not, i can provide some work, since i
+> have testing boards and expiriance on this hardware.
+>
+If you need, I can test kernel part, or even do some porting work. I
+have some AR231x based boards, e.g. Ubnt LS2 and NS2.
+
+-- 
+BR,
+Sergey
