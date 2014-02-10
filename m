@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:44669 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaB0Wbr (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:50085 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752474AbaBJMyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 17:31:47 -0500
-Message-ID: <1393540305.26794.47.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140227_233158_273862_CB414BE7)
-Subject: Re: How to best consolidate list of skbs (msdu) for receive?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 27 Feb 2014 14:31:45 -0800
-In-Reply-To: <530FB348.2070701@candelatech.com>
-References: <530F85AE.8060002@candelatech.com>
-	  <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>
-	 <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <530FB348.2070701@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Feb 2014 07:54:08 -0500
+Date: Mon, 10 Feb 2014 13:54:04 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: wlwifi - Microcode SW error detected.
+Message-ID: <20140210125404.GD7117@dhcp22.suse.cz> (sfid-20140210_135427_036107_ACF64E46)
+References: <20140207151942.GE5121@dhcp22.suse.cz>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D640E9@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D640E9@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 13:51 -0800, Ben Greear wrote:
+On Sun 09-02-14 06:46:20, Grumbach, Emmanuel wrote:
+[...]
+> Is this a regression?
 
-> That said, the code below appears to work, even if it is
-> not as efficient as it might be?
-> 
-> 			if (msdu_chaining) {
-> 				struct sk_buff *next = msdu_head->next;
-> 				struct sk_buff *to_free = next;
-> 				int space;
-> 				static int do_once = 1;
-> 				msdu_head->next = NULL;
-> 
-> 				if (unlikely(do_once)) {
-> 					ath10k_warn("htt rx msdu_chaining detected %d\n",
-> 						    msdu_chaining);
-> 					do_once = 0;
-> 				}
-> 
-> 				while (next) {
-> 					space = next->len - skb_tailroom(msdu_head);
-> 
-> 					if ((space > 0) &&
-> 					    (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
-> 						/* TODO:  bump some rx-oom error stat */
-> 						goto outside_continue;
-> 					}
-> 					skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
-> 								  next->len);
-> 					next = next->next;
-> 				}
+No idea. I haven't tried to reproduce it.
 
-Yep, this is very inefficient , you might copy data very often in
-pskb_expand_head(), then in skb_copy_from_linear_data()
+> To me, it looks like a pure firmware issue.
 
-Also, if total length is big, you end up doing high order allocations,
-since you generate a linear skb. This might fail under memory pressure.
-
-What is the maximal skb->len of resulting skb ?
-
-
+The message points at FW but I have no idea what it actually tries to
+tell, except that something went really wrong.
+-- 
+Michal Hocko
+SUSE Labs
