@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:34653 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbaBSKAt (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:65000 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752744AbaBJLsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:00:49 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH 1/7] nl80211: make sure we check for DFS with mesh channel switch
-Date: Wed, 19 Feb 2014 12:00:39 +0200
-Message-Id: <1392804045-11258-2-git-send-email-luca@coelho.fi> (sfid-20140219_110055_880121_F4985300)
-In-Reply-To: <1392804045-11258-1-git-send-email-luca@coelho.fi>
-References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+	Mon, 10 Feb 2014 06:48:09 -0500
+Received: by mail-wi0-f172.google.com with SMTP id e4so2705053wiv.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:48:07 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 16/18] wlcore: increase timeout to 5000 msecs
+Date: Mon, 10 Feb 2014 13:47:32 +0200
+Message-Id: <1392032854-28126-17-git-send-email-eliad@wizery.com> (sfid-20140210_124842_679424_8AA72848)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Yaniv Machani <yanivma@ti.com>
 
-Since mesh support for DFS channels was added, we also need to check
-for DFS channels when performing a channel switch with
-NL80211_IFTYPE_MESHPOINT.
+dfs configuration command might take longer than
+the current timeout. increase it to 5 seconds.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/wireless/nl80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/cmd.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1797864..b78d734 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5912,7 +5912,8 @@ skip_beacons:
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index 9cb3f44..b084830 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -207,7 +207,7 @@ enum cmd_templ {
+ #define WL1271_COMMAND_TIMEOUT     2000
+ #define WL1271_CMD_TEMPL_DFLT_SIZE 252
+ #define WL1271_CMD_TEMPL_MAX_SIZE  512
+-#define WL1271_EVENT_TIMEOUT       1500
++#define WL1271_EVENT_TIMEOUT       5000
  
- 	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
- 	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO ||
--	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC) {
-+	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC ||
-+	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MESH_POINT) {
- 		err = cfg80211_chandef_dfs_required(wdev->wiphy,
- 						    &params.chandef);
- 		if (err < 0) {
+ struct wl1271_cmd_header {
+ 	__le16 id;
 -- 
-1.8.5.3
+1.8.5.2.229.g4448466.dirty
 
