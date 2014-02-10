@@ -1,94 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:40370 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbaBPRgy (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:62108 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbaBJOkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Feb 2014 12:36:54 -0500
-Received: by mail-wi0-f181.google.com with SMTP id hi5so1731128wib.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2014 09:36:53 -0800 (PST)
-Message-ID: <5300F733.1040805@gmail.com> (sfid-20140216_183657_877648_9C651C8D)
-Date: Sun, 16 Feb 2014 19:36:51 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: davidjon@xenontk.org
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Subject: Re: iwlwifi: Bluetooth and Wifi
-References: <52FEFA0B.4000807@xenontk.org> <CANUX_P3yjxbOT6+-3GC7x_4GQiifa8OOFTUyK-EBwwmS76-GNw@mail.gmail.com> <5300E683.3090302@xenontk.org>
-In-Reply-To: <5300E683.3090302@xenontk.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Feb 2014 09:40:11 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so2935777eei.21
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 06:40:10 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2] ath10k: implement sta_rc_update()
+Date: Mon, 10 Feb 2014 15:35:15 +0100
+Message-Id: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com> (sfid-20140210_154017_462951_BCBA7875)
+In-Reply-To: <1391676841-11107-1-git-send-email-michal.kazior@tieto.com>
+References: <1391676841-11107-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This allows dynamic changes of bandwidth/nss/smps,
+e.g. via ht/vht operation mode change
+notification.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * fix memset(&arsta, ...) -> memset(arsta, ...)
 
-On 02/16/2014 06:25 PM, David John wrote:
-> On Sunday 16 February 2014 12:07 PM, Emmanuel Grumbach wrote:
->>> Your patch "iwlwifi: mvm: BT Coex - disable BT when TXing probe request
->>> in scan" fixed wifi dropping on my 7260 with scan time outs but now my
->>> Bluetooth mouse freezes and unfreezes as it gets re-detected every few
->>> minutes (3.14-rc2+):
->>
->> All this patches does is to send the probe request of the scan in High
->> Prio so that it will take precedence over BT traffic in case of
->> collision. Since there shouldn't be that many probe request, I am
->> surprised that it kills your BT connection.
->> Also - are you 100% positive that this patch changed the behavior?
->> Have you tried to revert it and see what happens?
->> Also - what was the behavior before? What do you mean when you say
->> that it fixed your "wifi dropping with scan times out".
->> Can I have a log of this?
->>
-> 
-> With BT on, I used to get Wifi drops with messages similar to the following:
-> 
-> iwlwifi 0000    3:00.0: Error sending SCAN_REQUEST_CMD: time out after
-> 2000ms.
-> iwlwifi 0000    3:00.0: Current CMD queue read_ptr 125 write_ptr 127
-> iwlwifi 0000    3:00.0: Scan failed! status 0x1 ret -110
+ drivers/net/wireless/ath/ath10k/core.h |  11 +++
+ drivers/net/wireless/ath/ath10k/mac.c  | 149 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |   6 ++
+ 3 files changed, 166 insertions(+)
 
-Huh... This should *never* happen. We had such an issue but it was very
-rare and should be fixed in 3.14:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c0b00e1..147348a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -228,6 +228,17 @@ struct ath10k_peer {
+ 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+ };
+ 
++struct ath10k_sta {
++	struct ath10k_vif *arvif;
++
++	u32 changed; /* IEEE80211_RC_* */
++	u32 bw;
++	u32 nss;
++	u32 smps;
++
++	struct work_struct update_wk;
++};
++
+ #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
+ 
+ struct ath10k_vif {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 144b4d6..ecc06b08 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3056,6 +3056,69 @@ exit:
+ 	return ret;
+ }
+ 
++static void ath10k_sta_rc_update_wk(struct work_struct *wk)
++{
++	struct ath10k *ar;
++	struct ath10k_vif *arvif;
++	struct ath10k_sta *arsta;
++	struct ieee80211_sta *sta;
++	u32 changed, bw, nss, smps;
++	int err;
++
++	arsta = container_of(wk, struct ath10k_sta, update_wk);
++	sta = container_of((void *)arsta, struct ieee80211_sta, drv_priv);
++	arvif = arsta->arvif;
++	ar = arvif->ar;
++
++	spin_lock_bh(&ar->data_lock);
++
++	changed = arsta->changed;
++	arsta->changed = 0;
++
++	bw = arsta->bw;
++	nss = arsta->nss;
++	smps = arsta->smps;
++
++	spin_unlock_bh(&ar->data_lock);
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (changed & IEEE80211_RC_BW_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
++			   sta->addr, bw);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_CHAN_WIDTH, bw);
++		if (err)
++			ath10k_warn("failed to update STA %pM peer bw %d: %d\n",
++				    sta->addr, bw, err);
++	}
++
++	if (changed & IEEE80211_RC_NSS_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM nss %d\n",
++			   sta->addr, nss);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_NSS, nss);
++		if (err)
++			ath10k_warn("failed to update STA %pM nss %d: %d\n",
++				    sta->addr, nss, err);
++	}
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM smps %d\n",
++			   sta->addr, smps);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_SMPS_STATE, smps);
++		if (err)
++			ath10k_warn("failed to update STA %pM smps %d: %d\n",
++				    sta->addr, smps, err);
++	}
++
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta,
+@@ -3064,9 +3127,15 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+ 	int max_num_peers;
+ 	int ret = 0;
+ 
++	/* cancel must be done outside the mutex to avoid deadlock */
++	if ((old_state == IEEE80211_STA_NONE &&
++	     new_state == IEEE80211_STA_NOTEXIST))
++		cancel_work_sync(&arsta->update_wk);
++
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	if (old_state == IEEE80211_STA_NOTEXIST &&
+@@ -3091,6 +3160,10 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			   "mac vdev %d peer create %pM (new sta) num_peers %d\n",
+ 			   arvif->vdev_id, sta->addr, ar->num_peers);
+ 
++		memset(arsta, 0, sizeof(*arsta));
++		arsta->arvif = arvif;
++		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
++
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
+ 		if (ret)
+ 			ath10k_warn("Failed to add peer %pM for vdev %d when adding a new sta: %i\n",
+@@ -3854,6 +3927,80 @@ static void ath10k_channel_switch_beacon(struct ieee80211_hw *hw,
+ 	return;
+ }
+ 
++static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 struct ieee80211_sta *sta,
++				 u32 changed)
++{
++	struct ath10k *ar = hw->priv;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	u32 bw, smps;
++
++	spin_lock_bh(&ar->data_lock);
++
++	if (changed & IEEE80211_RC_BW_CHANGED) {
++		bw = WMI_PEER_CHWIDTH_20MHZ;
++
++		switch (sta->bandwidth) {
++		case IEEE80211_STA_RX_BW_20:
++			bw = WMI_PEER_CHWIDTH_20MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_40:
++			bw = WMI_PEER_CHWIDTH_40MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_80:
++			bw = WMI_PEER_CHWIDTH_80MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_160:
++			ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
++			bw = WMI_PEER_CHWIDTH_20MHZ;
++			break;
++		}
++
++		arsta->bw = bw;
++	}
++
++	if (changed & IEEE80211_RC_NSS_CHANGED)
++		arsta->nss = sta->rx_nss;
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED) {
++		smps = WMI_PEER_SMPS_PS_NONE;
++
++		switch (sta->smps_mode) {
++		case IEEE80211_SMPS_AUTOMATIC:
++		case IEEE80211_SMPS_OFF:
++			smps = WMI_PEER_SMPS_PS_NONE;
++			break;
++		case IEEE80211_SMPS_STATIC:
++			smps = WMI_PEER_SMPS_STATIC;
++			break;
++		case IEEE80211_SMPS_DYNAMIC:
++			smps = WMI_PEER_SMPS_DYNAMIC;
++			break;
++		case IEEE80211_SMPS_NUM_MODES:
++			ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
++			smps = WMI_PEER_SMPS_PS_NONE;
++			break;
++		}
++
++		arsta->smps = smps;
++	}
++
++	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
++		/* FIXME: Not implemented. Probably the only way to do it would
++		 * be to re-assoc the peer. */
++		changed &= ~IEEE80211_RC_SUPP_RATES_CHANGED;
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac sta rc update - supp rates changed - not implemented\n");
++	}
++
++	arsta->changed |= changed;
++
++	spin_unlock_bh(&ar->data_lock);
++
++	ieee80211_queue_work(hw, &arsta->update_wk);
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -3878,6 +4025,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.get_survey			= ath10k_get_survey,
+ 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
+ 	.channel_switch_beacon		= ath10k_channel_switch_beacon,
++	.sta_rc_update			= ath10k_sta_rc_update,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+@@ -4253,6 +4401,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
+ 
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
++	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
+ 
+ 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 083079f..6df4f95 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3876,6 +3876,12 @@ enum wmi_peer_smps_state {
+ 	WMI_PEER_SMPS_DYNAMIC = 0x2
+ };
+ 
++enum wmi_peer_chwidth {
++	WMI_PEER_CHWIDTH_20MHZ = 0,
++	WMI_PEER_CHWIDTH_40MHZ = 1,
++	WMI_PEER_CHWIDTH_80MHZ = 2,
++};
++
+ enum wmi_peer_param {
+ 	WMI_PEER_SMPS_STATE = 0x1, /* see %wmi_peer_smps_state */
+ 	WMI_PEER_AMPDU      = 0x2,
+-- 
+1.8.5.3
 
-commit b9439491055a18ee075614139abadfd74c1b887f
-
-    iwlwifi: pcie: keep the NIC awake when commands are in flight
-
-> 
-> The only way to recover was to reload the iwlmvm module. I booted up the
-> older stock Fedora 3.12 kernel I was using but couldn't reproduce this
-> issue (with debug) even after a day of use, both Bluetooth and Wifi were
-> fine. I'll try this again later.
-> 
-> I've attached debug dmesg for the current BT kill problem from
-> 3.14-rc2+. Now I'm not sure if the patch I've referenced is the culprit,
-> I'll try and narrow it down to a commit later when I have the time.
-
-Actually, I am pretty sure it isn't - since thanks to the log you enable
-we can clearly see that BT begins to complain when we are *not*
-scanning. I just picked up one example:
-
-[ 3723.246575] iwlwifi 0000:01:00.0: U iwl_mvm_rx_scan_complete Scan
-complete: status=0x1 scanned channels=25
-
-<<== HERE SCAN IS FINISHED ==>>
-
-[ 3768.683762] usb 2-6: USB disconnect, device number 7
-[ 3769.179405] usb 2-6: new full-speed USB device number 9 using xhci_hcd
-[ 3769.344503] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
-[ 3769.344514] usb 2-6: New USB device strings: Mfr=0, Product=0,
-SerialNumber=0
-[ 3769.360980] Bluetooth: hci0: read Intel version: 370710018002030d33
-[ 3769.360988] Bluetooth: hci0: Intel device is already patched. patch
-num: 33
-[ 3794.222419] hid-generic 0005:046D:B010.0004: unknown main item tag 0x0
-[ 3794.257065] input: Bluetooth Mouse M557 as
-/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0004/input/input16
-[ 3794.257485] hid-generic 0005:046D:B010.0004: input,hidraw1: BLUETOOTH
-HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
-
-<<== HERE NEW SCAN STARTS ==>>
-
-[ 3838.185707] iwlwifi 0000:01:00.0: U iwl_mvm_scan_request Handling
-mac80211 scan request
