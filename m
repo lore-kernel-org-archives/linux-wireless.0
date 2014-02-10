@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41554 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751922AbaBFQJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 11:09:55 -0500
-Message-ID: <52F3B3D1.8050807@openwrt.org> (sfid-20140206_171000_437555_4D94073B)
-Date: Thu, 06 Feb 2014 17:09:53 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49275 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbaBJOab (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Feb 2014 09:30:31 -0500
+Message-ID: <52F8E27D.6020601@broadcom.com> (sfid-20140210_153054_186842_20142256)
+Date: Mon, 10 Feb 2014 15:30:21 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-CC: Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC] mac80211: add NAPI support back
-References: <1391637437-5381-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1391637437-5381-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 2/8] iwlwifi: mvm: disable scheduled scan
+References: <52EFFCE8.6070505@gmail.com>	 <1391459962-7381-2-git-send-email-egrumbach@gmail.com>	 <52F5FC02.8050508@broadcom.com> (sfid-20140208_104235_514359_C8CEB8F3) <1392019923.4128.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1392019923.4128.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-02-05 22:57, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 02/10/2014 09:12 AM, Johannes Berg wrote:
+> On Sat, 2014-02-08 at 10:42 +0100, Arend van Spriel wrote:
+>> On 02/03/14 21:39, Emmanuel Grumbach wrote:
+>>> From: Johannes Berg<johannes.berg@intel.com>
+>>>
+>>> The iwlwifi scheduled scan implementation doesn't adhere to the
+>>> userspace API correctly - the API assumes that any new incoming
+>>> 'incompatible' request (like scan or remain-on-channel for this
+>>> driver) will just cancel the scheduled scan. Instead our driver
+>>> relies on userspace cancelling it, thus breaking existing wpa_s
+>>> versions.
+>>
+>> I think iwlwifi is not alone in this. At least I have to put a new task 
+>> on my todo list ;-)
 > 
-> NAPI was originally added to mac80211 a long time ago (by John in
-> commit 4e6cbfd09c66 in July 2010), but then removed years later
-> (by Stanislaw in commit 30c97120c6c7 in February 2013). No driver
-> ever used it, so that was fine.
-> 
-> Now I'm adding support for NAPI to our driver, so add some code
-> to mac80211 again  to support NAPI. John was originally wrapping
-> some (but not nearly all NAPI-related functions), but that doesn't
-> scale very well with the number of functions there there are, some
-> of which are even only inlines. Thus, instead of doing that, let
-> the drivers manage the NAPI struct, except for napi_add() which is
-> needed so mac80211 knows how to call napi_gro_receive().
-Why do you call napi_gro_receive at all?
-Without device GRO support it seems to be just a fancy way of doing
-netif_receive_skb with a bit more unnecessary indirection.
+> :)
+> You may decide to not care - newer supplicant seems to always cancel
+> scheduled scan first (although that should never have been required,
+> Broadcom's proprietary Android driver also behaves to require that.)
 
-- Felix
+When implementing scheduled scan, I found our firmware can handle a
+regular scan regardless whether a scheduled scan is active or not.
+
+> However, you may find that you don't just need to support the latest
+> upstream wpa_supplicant, so ...
+
+Yeah, seems to happen more often than not. Also when people start using
+backports they are advised to upgrade user-space apps as well, but tend
+to stick to what the distro has, so ...
+
+> johannes
+
+Arend
+
