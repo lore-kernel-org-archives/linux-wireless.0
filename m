@@ -1,100 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:50192 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbaBYMju (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:42714 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752757AbaBJLsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:39:50 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v5 0/4] cfg80211/mac80211: move interface combinations check to mac80211
-Date: Tue, 25 Feb 2014 14:39:40 +0200
-Message-Id: <1393331984-21692-1-git-send-email-luca@coelho.fi> (sfid-20140225_133953_402657_71D7B61F)
+	Mon, 10 Feb 2014 06:48:11 -0500
+Received: by mail-we0-f174.google.com with SMTP id x55so4059360wes.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:48:10 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 18/18] wlcore: add support for STA CSA with chan contexts
+Date: Mon, 10 Feb 2014 13:47:34 +0200
+Message-Id: <1392032854-28126-19-git-send-email-eliad@wizery.com> (sfid-20140210_130007_320704_54A93ABE)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-Hi,
+TI wl12xx/wl18xx cards support channel switch via a driver specific
+switch_channel op while operating with channel contexts.
 
-In v5:
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-   * use local and sdata in ibss when calling
-     ieee80211_check_combinations();
-   * use the radar detection widths from all existing contexts,
-     regardless of whether we can share an existing context or if the
-     context is exclusive (thanks Michal!);
-
-In v4:
-
-   * rebased the remaining patches on top of what Johannes applied;
-   * lots of other small changes in response to Johannes's comments.
-     See each individual patch for detailed lists of changed (thanks
-     Johannes!);
-
-In v3:
-
-   * move the "pass the mode argument..." change to the right patch;
-
-In v2:
-
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations().
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-As Johannes suggested earlier, this patchset moves the interface
-combinations check from cfg80211 to mac80211.  This is needed to
-simplify the channel switch code.
-
-There are still some cases where cfg80211 may need to check the
-interface combinations (ie. when adding or changing an interface), so
-I created a helper function that can be called by cfg80211 itself or
-the drivers (such as mac80211).
-
-Also, for now, I only moved the check in the cases where
-ieee80211_vif_use_channel() is called and for IBSS join.  The channel
-switch stuff, which will be trickier, is still missing.  These will be
-handled separately and it doesn't really hurt to leave it as it is,
-except because it's a bit inconsistent.
-
-I had to shuffle some code around to make this whole thing a bit
-cleaner, including the check for whether radar detection is needed.
-
-This is not very thoroughly tested yet, I have just done some checks
-with AP and STA with and without chanctx and with 1 or 2 different
-channels.  This part seems to work, please test the rest. :)
-
-I'll try to add some hwsim tests to test this more thoroughly.
-
-Luca.
-
-Luciano Coelho (4):
-  cfg80211: refactor cfg80211_can_use_iftype_chan()
-  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-  cfg80211/mac80211: move interface counting for combination check to
-    mac80211
-  cfg80211/mac80211: move combination check to mac80211 for ibss
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  41 +++++++++++--
- net/mac80211/cfg.c               |   2 -
- net/mac80211/chan.c              |  17 ++++++
- net/mac80211/ibss.c              |  60 +++++++++++++------
- net/mac80211/ieee80211_i.h       |   5 ++
- net/mac80211/mesh.c              |   9 +--
- net/mac80211/util.c              |  76 +++++++++++++++++++++++
- net/wireless/chan.c              |  77 +++++++++++++++++-------
- net/wireless/core.h              |  13 +---
- net/wireless/ibss.c              |  24 --------
- net/wireless/mesh.c              |  25 --------
- net/wireless/mlme.c              |  14 +----
- net/wireless/nl80211.c           |  53 ++++------------
- net/wireless/util.c              | 126 ++++++++++++++++++++++-----------------
- 15 files changed, 328 insertions(+), 215 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 82d5461..7aae5b3 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5737,7 +5737,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_AP_LINK_PS |
+ 		IEEE80211_HW_AMPDU_AGGREGATION |
+ 		IEEE80211_HW_TX_AMPDU_SETUP_IN_HW |
+-		IEEE80211_HW_QUEUE_CONTROL;
++		IEEE80211_HW_QUEUE_CONTROL |
++		IEEE80211_HW_CHANCTX_STA_CSA;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 -- 
-1.8.5.3
+1.8.5.2.229.g4448466.dirty
 
