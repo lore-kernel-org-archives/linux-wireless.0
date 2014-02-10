@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:55597 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289AbaBSVBr (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:42656 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367AbaBJTQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 16:01:47 -0500
-Received: by mail-ee0-f47.google.com with SMTP id d49so468983eek.34
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 13:01:46 -0800 (PST)
-Message-ID: <53051BB8.3040000@gmail.com> (sfid-20140219_220203_055893_D59AC8E8)
-Date: Wed, 19 Feb 2014 23:01:44 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Thomas Backlund <tmb@mageia.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Intel Wireless 7260 AC firnware SW error
-References: <52FFDC10.5020702@mageia.org> <CANUX_P26bMLiPjjor6q960VC9RxhCagS7Je8S7hpzte1R52swA@mail.gmail.com> <5304CDFB.2090202@mageia.org>
-In-Reply-To: <5304CDFB.2090202@mageia.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 10 Feb 2014 14:16:00 -0500
+Received: by mail-ee0-f45.google.com with SMTP id b15so3154321eek.32
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 11:15:58 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] wireless-regdb: allow max bandwidth to be AUTO calculated
+Date: Mon, 10 Feb 2014 20:15:41 +0100
+Message-Id: <1392059741-2366-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140210_201604_767677_7CE42BE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Allow max bandwidth to be AUTO calculated, base
+on contiguous rules. This AUTO ( bw = 0) parameter will be
+send to the kernel mode (cfg80211/nl80211) and next maximum
+allowed bandwidth will be calculated base on contiguous rules.
 
+Eg.
 
-On 02/19/2014 05:30 PM, Thomas Backlund wrote:
-> 
-> 16.02.2014 08:29, Emmanuel Grumbach skrev:
-> 
->> Can you please record tracing?
->>
->> trace-cmd record -e iwlwifi -e mac80211
->>
->> and try to reproduce?
->>
->> It may be a driver or a firmware issue, I can't really know with the
->> current data.
->> Thanks for reporting!
-> 
-> I can...
-> 
-> I assume this is the one you mean:
-> http://git.kernel.org/cgit/linux/kernel/git/rostedt/trace-cmd.git
-> 
-> 
+country PL: DFS-ETSI
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ AUTO), (N/A, 20)
+	(5250 - 5330 @ AUTO), (N/A, 20), DFS
+	(5490 - 5710 @ 80), (N/A, 27), DFS
 
-Exactly - but typically, distros have a package for that and it is good
-enough. You should have to compile. Of course, you can get the code from
-this git tree and compile it.
+This mean we will calculate maximum bw for rules where
+AUTO were set, 160MHz (5330 - 5170) in example above.
+So we will get:
+	(5170 - 5250 @ 160), (N/A, 20)
+	(5250 - 5330 @ 160), (N/A, 20), DFS
+
+In other case:
+country FR: DFS-ETSI
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ AUTO), (N/A, 20)
+	(5250 - 5330 @ 80), (N/A, 20), DFS
+	(5490 - 5710 @ 80), (N/A, 27), DFS
+
+We will get 80MHz (5250 - 5170):
+	(5170 - 5250 @ 80), (N/A, 20)
+	(5250 - 5330 @ 80), (N/A, 20), DFS
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ dbparse.py |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/dbparse.py b/dbparse.py
+index ac7234b..7c7bc19 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -144,7 +144,10 @@ class DBParser(object):
+     def _parse_band_def(self, bname, banddef, dupwarn=True):
+         try:
+             freqs, bw = banddef.split('@')
+-            bw = float(bw)
++            if bw == "AUTO":
++                bw = 0.0
++            else:
++                bw = float(bw)
+         except ValueError:
+             bw = 20.0
+ 
+-- 
+1.7.9.5
+
