@@ -1,71 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:54667 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbaBVM2V (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:63878 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbaBJLrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 07:28:21 -0500
-Received: by mail-ee0-f41.google.com with SMTP id e49so2163028eek.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 04:28:20 -0800 (PST)
-Received: from pendrak.localnet (093105044227.oswiecim.vectranet.pl. [93.105.44.227])
-        by mx.google.com with ESMTPSA id v6sm38337606eef.2.2014.02.22.04.28.17
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 22 Feb 2014 04:28:18 -0800 (PST)
-From: Mariusz Fik <fisiu82@jabster.pl>
-To: linux-wireless@vger.kernel.org
-Subject: /suse_update_desktop_file and Categories
-Date: Sat, 22 Feb 2014 13:28:16 +0100
-Message-ID: <2171888.3xJjAhnGjq@pendrak> (sfid-20140222_132848_343616_EA78E8A8)
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2575612.tSKi5VCTLy"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+	Mon, 10 Feb 2014 06:47:45 -0500
+Received: by mail-we0-f169.google.com with SMTP id t61so4185799wes.14
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:44 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/18] wlcore: cancel Tx watchdog on suspend and rearm on first Tx after
+Date: Mon, 10 Feb 2014 13:47:18 +0200
+Message-Id: <1392032854-28126-3-git-send-email-eliad@wizery.com> (sfid-20140210_124750_897284_424ED6D5)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Arik Nemtsov <arik@wizery.com>
 
---nextPart2575612.tSKi5VCTLy
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+Sometimes a tx_flush during suspend fails, but the FW manages to flush
+out the packets during the time when the host is supsended. Cancel
+the Tx-watchdog on suspend to not cause a spurious recovery on resume
+for that case. Set a flag to reinit the watchdog on the first Tx after
+resume, so we'll still recover if the FW is not empty and there's
+indeed a problem.
 
-Hi,
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c     | 13 +++++++++++++
+ drivers/net/wireless/ti/wlcore/tx.c       |  9 +++++++--
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |  1 +
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-I'm trying to build kprinter4[1] package.
-According to desktop file category guidelines[2], I included in spec fi=
-le:
-
-%suse_update_desktop_file -r %{name} Utility Printing
-
-But then build failed with:
-WARNING: Category "Printing" is unknown \!
-ERROR: No sufficient Category definition: {path_to_desktop_file}
-Errors in installed desktop file detected. Please refer to=20
-http://en.opensuse.org/SUSE_Package_Conventions/RPM_Macros
-
-Where is a problem and what it's more important, what is a solution? Ou=
-r wiki=20
-page with desktop menu categories are outdated? build/check tool issue?=
-
-
-[1] - https://github.com/credativ/kprinter4
-[2] -=20
-http://en.opensuse.org/openSUSE:Packaging_desktop_menu_categories#Utili=
-ty
-=2D-=20
-Pozdrawiam / Best regards,
-Mariusz Fik
-openSUSE Community Member
-GPG: 5FCE 7241 B3B9 32FD 455B C30E 42D6 6C88 9E83 7C3D
---nextPart2575612.tSKi5VCTLy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEABECAAYFAlMIl+AACgkQQtZsiJ6DfD2sqwCfaevfsl+VnkcwRwXo9jakek+G
-7dsAoJFNi11PKm2yetoUpmIGCo+aU7s+
-=Oo5l
------END PGP SIGNATURE-----
-
---nextPart2575612.tSKi5VCTLy--
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index da268e8..1e19196 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1767,6 +1767,12 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 	flush_work(&wl->tx_work);
+ 	flush_delayed_work(&wl->elp_work);
+ 
++	/*
++	 * Cancel the watchdog even if above tx_flush failed. We will detect
++	 * it on resume anyway.
++	 */
++	cancel_delayed_work(&wl->tx_watchdog_work);
++
+ 	return 0;
+ }
+ 
+@@ -1824,6 +1830,13 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 
+ out:
+ 	wl->wow_enabled = false;
++
++	/*
++	 * Set a flag to re-init the watchdog on the first Tx after resume.
++	 * That way we avoid possible conditions where Tx-complete interrupts
++	 * fail to arrive and we perform a spurious recovery.
++	 */
++	set_bit(WL1271_FLAG_REINIT_TX_WDOG, &wl->flags);
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 87cd707..ca886ef 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -234,8 +234,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		wl->tx_blocks_available -= total_blocks;
+ 		wl->tx_allocated_blocks += total_blocks;
+ 
+-		/* If the FW was empty before, arm the Tx watchdog */
+-		if (wl->tx_allocated_blocks == total_blocks)
++		/*
++		 * If the FW was empty before, arm the Tx watchdog. Also do
++		 * this on the first Tx after resume, as we always cancel the
++		 * watchdog on suspend.
++		 */
++		if (wl->tx_allocated_blocks == total_blocks ||
++		    test_and_clear_bit(WL1271_FLAG_REINIT_TX_WDOG, &wl->flags))
+ 			wl12xx_rearm_tx_watchdog_locked(wl);
+ 
+ 		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index ce7261c..3815332 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -240,6 +240,7 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_VIF_CHANGE_IN_PROGRESS,
+ 	WL1271_FLAG_INTENDED_FW_RECOVERY,
+ 	WL1271_FLAG_IO_FAILED,
++	WL1271_FLAG_REINIT_TX_WDOG,
+ };
+ 
+ enum wl12xx_vif_flags {
+-- 
+1.8.5.2.229.g4448466.dirty
 
