@@ -1,185 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:37341 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbaBCU7I (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:40177 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbaBJLsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:08 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so3931669eek.30
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:07 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/62] iwlwifi: pcie: retrieve and parse ACPI power limitations
-Date: Mon,  3 Feb 2014 22:57:38 +0200
-Message-Id: <1391461088-8082-32-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_116842_D8A6415E)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 10 Feb 2014 06:48:00 -0500
+Received: by mail-we0-f171.google.com with SMTP id u56so4167213wes.16
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:59 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/18] wlcore: don't stop sched_scan on interface removal
+Date: Mon, 10 Feb 2014 13:47:27 +0200
+Message-Id: <1392032854-28126-12-git-send-email-eliad@wizery.com> (sfid-20140210_130006_258853_1B888AD0)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+From: Barak Bercovitz <barak@wizery.com>
 
-Some platforms may have power limitations on PCIe cards connected to
-specific root ports.
+Stopping sched scan on interface removal (during recovery)
+is no longer needed, as sched scanning is automatically
+restarted by mac80211.
 
-This information is encoded as part of the ACPI tables, for instance:
-<snip>
-           Name (SPLX, Package (0x02)
-           {
-               Zero,
-               Package (0x03)
-               {
-                   0x07,
-                   0x00000500,
-                   0x80000000
-               }
-           })
-
-           Method (SPLC, 0, Serialized)
-           {
-               Return (SPLX)
-           }
-</snip>
-
-The structure returned contains the domain type, the default power
-limitation and the default time window (reserved for future use).
-
-Upon PCI probing, call the relevant ACPI method, parse the returned
-structure, and save the power limitation.
-
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Barak Bercovitz <barak@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h |    3 ++
- drivers/net/wireless/iwlwifi/pcie/drv.c  |   78 ++++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+)
+ drivers/net/wireless/ti/wlcore/main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 1f065cf..a350abe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -523,6 +523,7 @@ enum iwl_trans_state {
-  *	starting the firmware, used for tracing
-  * @rx_mpdu_cmd_hdr_size: used for tracing, amount of data before the
-  *	start of the 802.11 header in the @rx_mpdu_cmd
-+ * @dflt_pwr_limit: default power limit fetched from the platform (ACPI)
-  */
- struct iwl_trans {
- 	const struct iwl_trans_ops *ops;
-@@ -551,6 +552,8 @@ struct iwl_trans {
- 	struct lockdep_map sync_cmd_lockdep_map;
- #endif
- 
-+	u64 dflt_pwr_limit;
-+
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
- 	char trans_specific[0] __aligned(sizeof(void *));
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 4b3a49b..8577939 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -66,6 +66,7 @@
- #include <linux/module.h>
- #include <linux/pci.h>
- #include <linux/pci-aspm.h>
-+#include <linux/acpi.h>
- 
- #include "iwl-trans.h"
- #include "iwl-drv.h"
-@@ -395,6 +396,81 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- };
- MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
- 
-+#ifdef CONFIG_ACPI
-+#define SPL_METHOD		"SPLC"
-+#define SPL_DOMAINTYPE_MODULE	BIT(0)
-+#define SPL_DOMAINTYPE_WIFI	BIT(1)
-+#define SPL_DOMAINTYPE_WIGIG	BIT(2)
-+#define SPL_DOMAINTYPE_RFEM	BIT(3)
-+
-+static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
-+{
-+	union acpi_object *limits, *domain_type, *power_limit;
-+
-+	if (splx->type != ACPI_TYPE_PACKAGE ||
-+	    splx->package.count != 2 ||
-+	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+	    splx->package.elements[0].integer.value != 0) {
-+		IWL_ERR(trans, "Unsupported splx structure");
-+		return 0;
-+	}
-+
-+	limits = &splx->package.elements[1];
-+	if (limits->type != ACPI_TYPE_PACKAGE ||
-+	    limits->package.count < 2 ||
-+	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+		IWL_ERR(trans, "Invalid limits element");
-+		return 0;
-+	}
-+
-+	domain_type = &limits->package.elements[0];
-+	power_limit = &limits->package.elements[1];
-+	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
-+		IWL_DEBUG_INFO(trans, "WiFi power is not limited");
-+		return 0;
-+	}
-+
-+	return power_limit->integer.value;
-+}
-+
-+static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
-+{
-+	acpi_handle pxsx_handle;
-+	acpi_handle handle;
-+	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
-+	acpi_status status;
-+
-+	pxsx_handle = ACPI_HANDLE(&pdev->dev);
-+	if (!pxsx_handle) {
-+		IWL_ERR(trans, "Could not retrieve root port ACPI handle");
-+		return;
-+	}
-+
-+	/* Get the method's handle */
-+	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
-+	if (ACPI_FAILURE(status)) {
-+		IWL_DEBUG_INFO(trans, "SPL method not found");
-+		return;
-+	}
-+
-+	/* Call SPLC with no arguments */
-+	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
-+	if (ACPI_FAILURE(status)) {
-+		IWL_ERR(trans, "SPLC invocation failed (0x%x)", status);
-+		return;
-+	}
-+
-+	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
-+	IWL_DEBUG_INFO(trans, "Default power limit set to %lld",
-+		       trans->dflt_pwr_limit);
-+	kfree(splx.pointer);
-+}
-+
-+#else /* CONFIG_ACPI */
-+static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev) {}
-+#endif
-+
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
- 
-@@ -419,6 +495,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_free_trans;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 73bf251..bea2938 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2582,10 +2582,8 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 		ieee80211_scan_completed(wl->hw, true);
  	}
  
-+	set_dflt_pwr_limit(iwl_trans, pdev);
-+
- 	/* register transport layer debugfs here */
- 	ret = iwl_trans_dbgfs_register(iwl_trans, iwl_trans->dbgfs_dir);
- 	if (ret)
+-	if (wl->sched_vif == wlvif) {
+-		ieee80211_sched_scan_stopped(wl->hw);
++	if (wl->sched_vif == wlvif)
+ 		wl->sched_vif = NULL;
+-	}
+ 
+ 	if (wl->roc_vif == vif) {
+ 		wl->roc_vif = NULL;
 -- 
-1.7.9.5
+1.8.5.2.229.g4448466.dirty
 
