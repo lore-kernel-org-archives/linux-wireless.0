@@ -1,116 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:48069 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaBQVYv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752085AbaBJTUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 16:24:51 -0500
-Received: by mail-wi0-f177.google.com with SMTP id e4so2842861wiv.16
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 13:24:49 -0800 (PST)
-Message-ID: <1392672273.11154.13.camel@canaries64-MCP7A> (sfid-20140217_222455_115557_1F6B1AE5)
-Subject: [PATCH 4/5] staging: vt6656: Remove variable fKillEventPollingThread
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 17 Feb 2014 21:24:33 +0000
+	Mon, 10 Feb 2014 14:20:47 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1WCwPN-0001O6-SQ
+	for linux-wireless@vger.kernel.org; Mon, 10 Feb 2014 20:20:46 +0100
+Message-ID: <1392060043.4128.37.camel@jlt4.sipsolutions.net> (sfid-20140210_202050_594107_FC8E5876)
+Subject: moving the wiki
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 10 Feb 2014 20:20:43 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We already kill the urb and since patch
-s_nsInterruptUsbIoCompleteRead add urb status returns.
-have error handling
+Hi everyone,
 
-There is no need for this variable.
+There has been kernel.org infrastructure for wikis for a long time,
+though IIRC it didn't exist back when we set up our current wiki.
+However, it seems like a good idea to convert the wiki to the kernel.org
+infrastructure. This has some obvious advantages (like https support)
+and gets us better support for it, with hopefully less downtime.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+As a consequence, we'll be doing the following:
+ * Mark the current wiki read-only, to guarantee a stable conversion.
+This
+   shouldn't take all that long, but we'll have to see.
+ * I'll keep the read-only wiki at http://wireless.sipsolutions.net/ for
+a while,
+   in case somebody needs history - you can also download page/history
+snapshots.
+ * As we have a LOT of dead accounts, I've decided to NOT migrate them.
+You'll
+   have to sign up again, but I couldn't convert notifications etc.
+anyway, so
+   you'd have to touch those regardless.
+ * We'll also drop page history, converting that is a bit more difficult
+and the
+   history isn't all that interesting for most pages.
+ * For now, I won't be converting the style/skin. If anybody has (or
+knows
+   someone with) experience skinning mediawiki, help would be welcome.
 
-Conflicts:
-	drivers/staging/vt6656/usbpipe.c
----
- drivers/staging/vt6656/device.h   | 1 -
- drivers/staging/vt6656/int.c      | 5 +++--
- drivers/staging/vt6656/main_usb.c | 2 --
- drivers/staging/vt6656/usbpipe.c  | 4 +---
- 4 files changed, 4 insertions(+), 8 deletions(-)
+Obviously, another consequence is that the wiki markup will change
+somewhat. Moin and Mediawiki aren't too far from each other (except for
+table syntax), but there are some things that are different that you'll
+have to get used to when editing.
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index ec20b14..e5f0be3 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -421,7 +421,6 @@ struct vnt_private {
- 
- 	/* Variables to track resources for the Interrupt In Pipe */
- 	INT_BUFFER intBuf;
--	int fKillEventPollingThread;
- 	int bEventAvailable;
- 
- 	/* default config from file by user setting */
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index ec135b4..34c4528 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -70,8 +70,9 @@ void INTvWorkItem(struct vnt_private *pDevice)
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->Interrupt Polling Thread\n");
- 
- 	spin_lock_irq(&pDevice->lock);
--	if (pDevice->fKillEventPollingThread != true)
--		ntStatus = PIPEnsInterruptRead(pDevice);
-+
-+	ntStatus = PIPEnsInterruptRead(pDevice);
-+
- 	spin_unlock_irq(&pDevice->lock);
- }
- 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 4f913d3..bea1ad9 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1000,7 +1000,6 @@ static int  device_open(struct net_device *dev)
-     pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
- 
-     pDevice->bIsRxWorkItemQueued = true;
--    pDevice->fKillEventPollingThread = false;
-     pDevice->bEventAvailable = false;
- 
-    pDevice->bWPADEVUp = false;
-@@ -1084,7 +1083,6 @@ static int device_close(struct net_device *dev)
-     MP_SET_FLAG(pDevice, fMP_DISCONNECTED);
-     MP_CLEAR_FLAG(pDevice, fMP_POST_WRITES);
-     MP_CLEAR_FLAG(pDevice, fMP_POST_READS);
--    pDevice->fKillEventPollingThread = true;
- 
- 	cancel_delayed_work_sync(&pDevice->run_command_work);
- 	cancel_delayed_work_sync(&pDevice->second_callback_work);
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 1ab1bbc..3721937 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -393,7 +393,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 
- //        if (ntStatus == STATUS_NOT_CONNECTED )
- //        {
--            pDevice->fKillEventPollingThread = true;
- //        }
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"IntUSBIoCompleteControl STATUS = %d\n", ntStatus );
-     } else {
-@@ -403,7 +402,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 	    INTnsProcessData(pDevice);
-     }
- 
--    if (pDevice->fKillEventPollingThread != true) {
- 	ntStatus = usb_submit_urb(pDevice->pInterruptURB, GFP_ATOMIC);
- 	if (ntStatus) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-@@ -411,7 +409,7 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 	} else {
- 		pDevice->intBuf.bInUse = true;
- 	}
--    }
-+
-     //
-     // We return STATUS_MORE_PROCESSING_REQUIRED so that the completion
-     // routine (IofCompleteRequest) will stop working on the irp.
--- 
-1.9.rc1
+I think/hope that all this can happen over the next few days. If there
+are any concerns (other than "don't do it") let me know.
+
+Wish me luck ;-)
+
+johannes
 
