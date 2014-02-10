@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23731 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751939AbaBMNQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 08:16:06 -0500
-Date: Thu, 13 Feb 2014 14:18:02 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
- pci_disable_msi()
-Message-ID: <20140213131802.GA21757@dhcp-26-207.brq.redhat.com> (sfid-20140213_141628_878339_C7607647)
-References: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
- <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
- <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
- <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
- <20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
- <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
- <20140212003143.GD21057@google.com>
- <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
- <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com>
- <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:45422 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696AbaBJLJQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Feb 2014 06:09:16 -0500
+Message-ID: <1392030546.4128.11.camel@jlt4.sipsolutions.net> (sfid-20140210_120920_914594_C1DFFA84)
+Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
+ codes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: Calvin Owens <jcalvinowens@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 10 Feb 2014 12:09:06 +0100
+In-Reply-To: <1391661863.30094.56.camel@joe-AO722>
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+	 <1391661863.30094.56.camel@joe-AO722>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 11:30:44PM +0200, Kalle Valo wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
+On Wed, 2014-02-05 at 20:44 -0800, Joe Perches wrote:
+
+> Perhaps use a more common kernel style
 > 
-> >> Well, as this series is small I thought it could quickly go thru your
-> >> tree. But since ipr had conflicts, there is no point routing all patches
-> >> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
-> >> branch though.
-> >
-> > It's in pci/msi, but that's not in my -next branch yet, so I can
-> > easily drop it.  Do drivers/net/wireless patches normally follow a
-> > different path than the other drivers/net patches?  The wil6210 and
-> > ath10k patches look just like the others in the 34-patch series (bnx2,
-> > bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
-> > to include them there.
+> struct ieee80211_reason_descriptions {
+> 	u16		code;
+> 	const char *	desc;
+> }
 > 
-> ath10k patches normally go through my ath.git tree to Linville and then
-> to David Miller. To avoid conflicts I would prefer to take ath10k
-> patches to my tree whenever possible.
+> and enumerate the reason codes with #defines and use a
+> macro to populate the descriptions
+> 
+> #define IEEE80211_REASON_RESERVED		0
+> #define IEEE80211_REASON_UNSPECIFIED		1
+> 
+> etc.
+> 
+> #define POPULATE_IEEE_REASON(code)			\
+> 	{.code = IEEE80211_REASON_##code, .desc = #code}
+> 
+> static const struct ieee80211_reason_descriptions reasons[] = {
+> 	POPULATE_IEEE_REASON(RESERVED),
+> 	POPULATE_IEEE_REASON(UNSPECIFIED),
+> 	[etc...]
+> };
+> 
+> So this function becomes something like:
+> 
+> const char *ieee80211_get_reason_code_string(u16 reason_code)
+> {
+> 	int i;
+> 
+> 	for (i = 0; i < ARRAY_SIZE(reasons); i++) {
+> 		if (reasons[i].code == reason_code)
+> 			return reasons[i].desc;
+> 	}
 
-CC'ing Vladimir, in case he decides to do the same with wil6210.
+Isn't it more efficient to just let the compiler generate it with a big
+switch() statement? AFAICT gcc will typically generate code like
+Calvin's original hand-rolled code and/or big lookup tables anyway, if
+faced with something like
 
-> -- 
-> Kalle Valo
+switch (reason) {
+case 17: return "asdf";
+... // all the others
+default: return "<unknown>";
+};
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+In any case, I agree with you and Jouni about leaving the number -
+that's certainly needed - but I'm willing to merge a clean patch like
+this too.
+
+johannes
+
