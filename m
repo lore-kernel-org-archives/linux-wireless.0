@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47847 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbaBMTKs (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58832 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752428AbaBJKEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 14:10:48 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [RFC] wmi:  Handle failure to start scan.
-Date: Thu, 13 Feb 2014 11:09:54 -0800
-Message-Id: <1392318594-32540-1-git-send-email-greearb@candelatech.com> (sfid-20140213_201051_204377_266452F5)
+	Mon, 10 Feb 2014 05:04:36 -0500
+Message-ID: <1392026670.18534.67.camel@porter.coelho.fi> (sfid-20140210_110920_083009_61AF3087)
+Subject: Re: linux-firmware: pull-request TI wireless firmware 2014-02-10
+From: Luca Coelho <luca@coelho.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Ben Hutchings <ben@decadent.org.uk>, linux-wireless@vger.kernel.org
+Date: Mon, 10 Feb 2014 12:04:30 +0200
+In-Reply-To: <1392024596-22285-1-git-send-email-arik@wizery.com>
+References: <1392024596-22285-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Arik,
 
-Properly clean up driver state in case firmware fails
-to start scan for some reason.
+Good to see activity in the WiLink drivers front. :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+On Mon, 2014-02-10 at 11:29 +0200, Arik Nemtsov wrote:
+> Here's an updated FW for the Wilink 8 chip. The name change is due to changes
+> in some driver/FW APIs. Sorry for the double send, adding the linux-wireless
+> list now as well.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 20f7c79..a5be0d3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -770,7 +770,25 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_PREEMPTED\n");
- 		break;
- 	case WMI_SCAN_EVENT_START_FAILED:
--		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_START_FAILED\n");
-+		ath10k_warn("WMI_SCAN_EVENT_START_FAILED, reason: %i\n", reason);
-+
-+		ar->scan_channel = NULL;
-+		if (!ar->scan.in_progress) {
-+			ath10k_warn("scan-start-failed: no scan requested, ignoring\n");
-+			break;
-+		}
-+
-+		if (ar->scan.is_roc) {
-+			ath10k_offchan_tx_purge(ar);
-+
-+			if (!ar->scan.aborting)
-+				ieee80211_remain_on_channel_expired(ar->hw);
-+		} else {
-+			ieee80211_scan_completed(ar->hw, ar->scan.aborting);
-+		}
-+
-+		del_timer(&ar->scan.timeout);
-+		ar->scan.in_progress = false;
- 		break;
- 	default:
- 		break;
--- 
-1.7.11.7
+I guess you're going to send patches for the driver to support this new
+FW API version too, right?
+
+--
+Luca.
 
