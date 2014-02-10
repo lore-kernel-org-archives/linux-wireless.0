@@ -1,50 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18840 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbaBZKoE (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:59214 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752362AbaBJWuu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 05:44:04 -0500
-Message-ID: <530DC56E.9040202@broadcom.com> (sfid-20140226_114408_494654_78FCE077)
-Date: Wed, 26 Feb 2014 11:43:58 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 10 Feb 2014 17:50:50 -0500
+Received: by mail-oa0-f54.google.com with SMTP id i4so8339791oah.13
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 14:50:50 -0800 (PST)
+Message-ID: <52F957C6.40407@lwfinger.net> (sfid-20140210_235053_828450_6AF19594)
+Date: Mon, 10 Feb 2014 16:50:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
- device
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>			 <1393356639-19169-2-git-send-email-arend@broadcom.com>			 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>		 <530DAECD.8010405@broadcom.com>	 <1393406278.4133.4.camel@jlt4.sipsolutions.net>	 <530DB3BA.20106@broadcom.com> <1393407473.4133.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1393407473.4133.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Stanislaw Gruszka <stf_xl@wp.pl>, linux-wireless@vger.kernel.org
+CC: Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-mips@linux-mips.org
+Subject: Re: [PATCH] rtl8187: fix regression on MIPS without coherent DMA
+References: <20140210213828.GA15903@localhost.localdomain>
+In-Reply-To: <20140210213828.GA15903@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 10:37 AM, Johannes Berg wrote:
-> On Wed, 2014-02-26 at 10:28 +0100, Arend van Spriel wrote:
-> 
->>> Yes. Can't we just flush the work at some strategic place?
->>>
->>> Actually you're not talking about the "disconnect_work" (which is
->>> related to regulatory) but the "event_work" so I was confused here for a
->>> second.
->>>
->>> What was the warning? cfg80211 already calls
->>> cfg80211_process_wdev_events() from within the REMOVE netdev notifier,
->>> so that *shouldn't* have happened.
->>
->> I guess that means some wdev event is missing? It was the
->> WARN_ON(current->bss) that fired.
-> 
-> Hmm, that's odd, the process_wdev_events() call is right before that, so
-> I don't see how that could have happened?
+On 02/10/2014 03:38 PM, Stanislaw Gruszka wrote:
+> This patch fixes regression caused by commit a16dad77634 "MIPS: Fix
+> potencial corruption". That commit fixes one corruption scenario in
+> cost of adding another one, which actually start to cause crashes
+> on Yeeloong laptop when rtl8187 driver is used.
+>
+> For correct DMA read operation on machines without DMA coherence, kernel
+> have to invalidate cache, such it will refill later with new data that
+> device wrote to memory, when that data is needed to process. We can only
+> invalidate full cache line. Hence when cache line includes both dma
+> buffer and some other data (written in cache, but not yet in main
+> memory), the other data can not hit memory due to invalidation. That
+> happen on rtl8187 where struct rtl8187_priv fields are located just
+> before and after small buffers that are passed to USB layer and DMA
+> is performed on them.
+>
+> To fix the problem we align buffers and reserve space after them to make
+> them match cache line.
+>
+> This patch does not resolve all possible MIPS problems entirely, for
+> that we have to assure that we always map cache aligned buffers for DMA,
+> what can be complex or even not possible. But patch fixes visible and
+> reproducible regression and seems other possible corruptions do not
+> happen in practice, since Yeeloong laptop works stable without rtl8187
+> driver.
+>
+> Bug report:
+> https://bugzilla.kernel.org/show_bug.cgi?id=54391
+>
+> Reported-by: Petr Pisar <petr.pisar@atlas.cz>
+> Bisected-by: Tom Li <biergaizi2009@gmail.com>
+> Reported-and-tested-by: Tom Li <biergaizi2009@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> ---
 
-Ok. The warning probably happened in earlier kernel, because our module
-exit was buggy. I fixed that a while ago and I just verified I don't see
-it without this patch. Sorry for bringing that diversion up.
+Congratulations to all for sorting this out. It could not have been too easy.
 
-Actually, this was not the reason for the doing the msleep(). The
-problem was that wpa_supplicant received RTM_DELLINK, before getting the
-NL08211_DISCONNECT. This resulted in RTM_DELLINK, immediately followed
-by RTM_ADDLINK, followed by NL80211_DISCONNECT.
+The only effect I see on architectures with DMA coherence is that the private 
+data area has grown a little. Certainly, my RTL8187B device still works on x86_64.
 
-Gr. AvS
+Acked-by: Larry Finger <Larry.Finger@lwfinger.next>
+
+Larry
+
+>   drivers/net/wireless/rtl818x/rtl8187/rtl8187.h |   10 ++++++++--
+>   1 files changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+> index 56aee06..a6ad79f 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+> +++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+> @@ -15,6 +15,8 @@
+>   #ifndef RTL8187_H
+>   #define RTL8187_H
+>
+> +#include <linux/cache.h>
+> +
+>   #include "rtl818x.h"
+>   #include "leds.h"
+>
+> @@ -139,7 +141,10 @@ struct rtl8187_priv {
+>   	u8 aifsn[4];
+>   	u8 rfkill_mask;
+>   	struct {
+> -		__le64 buf;
+> +		union {
+> +			__le64 buf;
+> +			u8 dummy1[L1_CACHE_BYTES];
+> +		} ____cacheline_aligned;
+>   		struct sk_buff_head queue;
+>   	} b_tx_status; /* This queue is used by both -b and non-b devices */
+>   	struct mutex io_mutex;
+> @@ -147,7 +152,8 @@ struct rtl8187_priv {
+>   		u8 bits8;
+>   		__le16 bits16;
+>   		__le32 bits32;
+> -	} *io_dmabuf;
+> +		u8 dummy2[L1_CACHE_BYTES];
+> +	} *io_dmabuf ____cacheline_aligned;
+>   	bool rfkill_off;
+>   	u16 seqno;
+>   };
+>
+
