@@ -1,482 +1,776 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25008 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753547AbaBDAk2 (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:62255 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbaBJLrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 19:40:28 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Aaron Durbin <adurbin@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 09/30] mwifiex: balance dma map/unmap sizes
-Date: Mon, 3 Feb 2014 16:40:02 -0800
-Message-ID: <1391474403-8024-1-git-send-email-bzhao@marvell.com> (sfid-20140204_014035_558028_4D9DE476)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 10 Feb 2014 06:47:51 -0500
+Received: by mail-we0-f176.google.com with SMTP id q58so4054170wes.7
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:49 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/18] wlcore/wl12xx/wl18xx: simplify fw_status handling
+Date: Mon, 10 Feb 2014 13:47:21 +0200
+Message-Id: <1392032854-28126-6-git-send-email-eliad@wizery.com> (sfid-20140210_124756_478581_F78EB681)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aaron Durbin <adurbin@chromium.org>
+Instead of splitting the fw_status into 2 and using some
+complex calculations, read the fw status and let each low-level
+driver (wl12xx/wl18xx) convert it into a common struct.
 
-Depending on the underlying DMA implementation its
-not possible to partially unmap DMA buffers. Moreover
-its not possible to understand the intent of passing
-0 as the size to dma unmap. The intent of this
-driver is unmap the entire skb buffer. The only way
-to ensure that the size matches on unmap is to store
-both the dma address and the size in the skb ca field.
+This is required for the upcoming fw api changes, which
+break the current logic anyway.
 
-Introduce a mwifiex_dma_mapping structure which tracks
-the dma address and the size. Additionally, provide
-a mwifiex_unmap_pci_memory() that utilizes the new
-structure. This also provide symmetry within the
-internal API.
-
-Signed-off-by: Aaron Durbin <adurbin@chromium.org>
-Reviewed-by: Paul Stewart <pstew@chromium.org>
-Reviewed-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c | 126 ++++++++++++++++--------------------
- drivers/net/wireless/mwifiex/util.h |  20 +++++-
- 2 files changed, 72 insertions(+), 74 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c     | 35 ++++++++++-
+ drivers/net/wireless/ti/wl12xx/wl12xx.h   | 50 ++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/main.c     | 39 ++++++++++++-
+ drivers/net/wireless/ti/wl18xx/tx.c       |  4 +-
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   | 53 +++++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.c      | 11 +++-
+ drivers/net/wireless/ti/wlcore/hw_ops.h   |  9 +++
+ drivers/net/wireless/ti/wlcore/main.c     | 96 +++++++++++++++----------------
+ drivers/net/wireless/ti/wlcore/rx.c       |  2 +-
+ drivers/net/wireless/ti/wlcore/rx.h       |  2 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |  7 ++-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 72 ++++++++++-------------
+ 12 files changed, 277 insertions(+), 103 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 03688aa..4e1c6b2 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -39,20 +39,31 @@ static struct semaphore add_remove_card_sem;
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index be7129b..3ad8767 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1378,7 +1378,7 @@ static u32 wl12xx_get_rx_packet_len(struct wl1271 *wl, void *rx_data,
  
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
--		       int size, int flags)
-+		       size_t size, int flags)
+ static int wl12xx_tx_delayed_compl(struct wl1271 *wl)
  {
- 	struct pcie_service_card *card = adapter->card;
--	dma_addr_t buf_pa;
-+	struct mwifiex_dma_mapping mapping;
- 
--	buf_pa = pci_map_single(card->dev, skb->data, size, flags);
--	if (pci_dma_mapping_error(card->dev, buf_pa)) {
-+	mapping.addr = pci_map_single(card->dev, skb->data, size, flags);
-+	if (pci_dma_mapping_error(card->dev, mapping.addr)) {
- 		dev_err(adapter->dev, "failed to map pci memory!\n");
- 		return -1;
- 	}
--	memcpy(skb->cb, &buf_pa, sizeof(dma_addr_t));
-+	mapping.len = size;
-+	memcpy(skb->cb, &mapping, sizeof(mapping));
- 	return 0;
- }
- 
-+static void mwifiex_unmap_pci_memory(struct mwifiex_adapter *adapter,
-+				     struct sk_buff *skb, int flags)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct mwifiex_dma_mapping mapping;
-+
-+	MWIFIEX_SKB_PACB(skb, &mapping);
-+	pci_unmap_single(card->dev, mapping.addr, mapping.len, flags);
-+}
-+
- /*
-  * This function reads sleep cookie and checks if FW is ready
-  */
-@@ -456,7 +467,7 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
- 
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
-+		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 
- 		dev_dbg(adapter->dev,
- 			"info: RX ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
-@@ -513,7 +524,7 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
- 
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
-+		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 
- 		dev_dbg(adapter->dev,
- 			"info: EVT ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
-@@ -549,8 +560,8 @@ static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
- 			desc2 = card->txbd_ring[i];
- 			if (card->tx_buf_list[i]) {
- 				skb = card->tx_buf_list[i];
--				pci_unmap_single(card->dev, desc2->paddr,
--						 skb->len, PCI_DMA_TODEVICE);
-+				mwifiex_unmap_pci_memory(adapter, skb,
-+							 PCI_DMA_TODEVICE);
- 				dev_kfree_skb_any(skb);
- 			}
- 			memset(desc2, 0, sizeof(*desc2));
-@@ -558,8 +569,8 @@ static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
- 			desc = card->txbd_ring[i];
- 			if (card->tx_buf_list[i]) {
- 				skb = card->tx_buf_list[i];
--				pci_unmap_single(card->dev, desc->paddr,
--						 skb->len, PCI_DMA_TODEVICE);
-+				mwifiex_unmap_pci_memory(adapter, skb,
-+							 PCI_DMA_TODEVICE);
- 				dev_kfree_skb_any(skb);
- 			}
- 			memset(desc, 0, sizeof(*desc));
-@@ -587,8 +598,8 @@ static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
- 			desc2 = card->rxbd_ring[i];
- 			if (card->rx_buf_list[i]) {
- 				skb = card->rx_buf_list[i];
--				pci_unmap_single(card->dev, desc2->paddr,
--						 skb->len, PCI_DMA_FROMDEVICE);
-+				mwifiex_unmap_pci_memory(adapter, skb,
-+							 PCI_DMA_FROMDEVICE);
- 				dev_kfree_skb_any(skb);
- 			}
- 			memset(desc2, 0, sizeof(*desc2));
-@@ -596,8 +607,8 @@ static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
- 			desc = card->rxbd_ring[i];
- 			if (card->rx_buf_list[i]) {
- 				skb = card->rx_buf_list[i];
--				pci_unmap_single(card->dev, desc->paddr,
--						 skb->len, PCI_DMA_FROMDEVICE);
-+				mwifiex_unmap_pci_memory(adapter, skb,
-+							 PCI_DMA_FROMDEVICE);
- 				dev_kfree_skb_any(skb);
- 			}
- 			memset(desc, 0, sizeof(*desc));
-@@ -622,8 +633,8 @@ static void mwifiex_cleanup_evt_ring(struct mwifiex_adapter *adapter)
- 		desc = card->evtbd_ring[i];
- 		if (card->evt_buf_list[i]) {
- 			skb = card->evt_buf_list[i];
--			pci_unmap_single(card->dev, desc->paddr, MAX_EVENT_SIZE,
--					 PCI_DMA_FROMDEVICE);
-+			mwifiex_unmap_pci_memory(adapter, skb,
-+						 PCI_DMA_FROMDEVICE);
- 			dev_kfree_skb_any(skb);
- 		}
- 		card->evt_buf_list[i] = NULL;
-@@ -861,7 +872,6 @@ static int mwifiex_pcie_alloc_cmdrsp_buf(struct mwifiex_adapter *adapter)
- static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card;
--	dma_addr_t buf_pa;
- 
- 	if (!adapter)
+-	if (wl->fw_status_1->tx_results_counter ==
++	if (wl->fw_status->tx_results_counter ==
+ 	    (wl->tx_results_count & 0xff))
  		return 0;
-@@ -869,16 +879,14 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
- 	card = adapter->card;
  
- 	if (card && card->cmdrsp_buf) {
--		MWIFIEX_SKB_PACB(card->cmdrsp_buf, &buf_pa);
--		pci_unmap_single(card->dev, buf_pa, MWIFIEX_UPLD_SIZE,
--				 PCI_DMA_FROMDEVICE);
-+		mwifiex_unmap_pci_memory(adapter, card->cmdrsp_buf,
-+					 PCI_DMA_FROMDEVICE);
- 		dev_kfree_skb_any(card->cmdrsp_buf);
- 	}
- 
- 	if (card && card->cmd_buf) {
--		MWIFIEX_SKB_PACB(card->cmd_buf, &buf_pa);
--		pci_unmap_single(card->dev, buf_pa, card->cmd_buf->len,
--				 PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, card->cmd_buf,
-+					 PCI_DMA_TODEVICE);
- 	}
- 	return 0;
- }
-@@ -956,7 +964,6 @@ static int mwifiex_clean_pcie_ring_buf(struct mwifiex_adapter *adapter)
- static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- {
- 	struct sk_buff *skb;
--	dma_addr_t buf_pa;
- 	u32 wrdoneidx, rdptr, num_tx_buffs, unmap_count = 0;
- 	struct mwifiex_pcie_buf_desc *desc;
- 	struct mwifiex_pfu_buf_desc *desc2;
-@@ -986,13 +993,13 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 			    reg->tx_start_ptr;
- 
- 		skb = card->tx_buf_list[wrdoneidx];
-+
- 		if (skb) {
- 			dev_dbg(adapter->dev,
- 				"SEND COMP: Detach skb %p at txbd_rdidx=%d\n",
- 				skb, wrdoneidx);
--			MWIFIEX_SKB_PACB(skb, &buf_pa);
--			pci_unmap_single(card->dev, buf_pa, skb->len,
--					 PCI_DMA_TODEVICE);
-+			mwifiex_unmap_pci_memory(adapter, skb,
-+						 PCI_DMA_TODEVICE);
- 
- 			unmap_count++;
- 
-@@ -1082,12 +1089,12 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		tmp = (__le16 *)&payload[2];
- 		*tmp = cpu_to_le16(MWIFIEX_TYPE_DATA);
- 
--		if (mwifiex_map_pci_memory(adapter, skb, skb->len ,
-+		if (mwifiex_map_pci_memory(adapter, skb, skb->len,
- 					   PCI_DMA_TODEVICE))
- 			return -1;
- 
- 		wrindx = (card->txbd_wrptr & reg->tx_mask) >> reg->tx_start_ptr;
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
-+		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 		card->tx_buf_list[wrindx] = skb;
- 
- 		if (reg->pfu_enabled) {
-@@ -1162,8 +1169,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 
- 	return -EINPROGRESS;
- done_unmap:
--	MWIFIEX_SKB_PACB(skb, &buf_pa);
--	pci_unmap_single(card->dev, buf_pa, skb->len, PCI_DMA_TODEVICE);
-+	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 	card->tx_buf_list[wrindx] = NULL;
- 	if (reg->pfu_enabled)
- 		memset(desc2, 0, sizeof(*desc2));
-@@ -1211,9 +1217,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 		rd_index = card->rxbd_rdptr & reg->rx_mask;
- 		skb_data = card->rx_buf_list[rd_index];
- 
--		MWIFIEX_SKB_PACB(skb_data, &buf_pa);
--		pci_unmap_single(card->dev, buf_pa, MWIFIEX_RX_DATA_BUF_SIZE,
--				 PCI_DMA_FROMDEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb_data, PCI_DMA_FROMDEVICE);
- 		card->rx_buf_list[rd_index] = NULL;
- 
- 		/* Get data length from interface header -
-@@ -1240,7 +1244,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
- 
--		MWIFIEX_SKB_PACB(skb_tmp, &buf_pa);
-+		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb_tmp);
- 
- 		dev_dbg(adapter->dev,
- 			"RECV DATA: Attach new sk_buff %p at rxbd_rdidx=%d\n",
-@@ -1316,7 +1320,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 	if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
- 		return -1;
- 
--	MWIFIEX_SKB_PACB(skb, &buf_pa);
-+	buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 
- 	/* Write the lower 32bits of the physical address to low command
- 	 * address scratch register
-@@ -1325,8 +1329,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 		dev_err(adapter->dev,
- 			"%s: failed to write download command to boot code.\n",
- 			__func__);
--		pci_unmap_single(card->dev, buf_pa, MWIFIEX_UPLD_SIZE,
--				 PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 		return -1;
- 	}
- 
-@@ -1338,8 +1341,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 		dev_err(adapter->dev,
- 			"%s: failed to write download command to boot code.\n",
- 			__func__);
--		pci_unmap_single(card->dev, buf_pa, MWIFIEX_UPLD_SIZE,
--				 PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 		return -1;
- 	}
- 
-@@ -1348,8 +1350,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 		dev_err(adapter->dev,
- 			"%s: failed to write command len to cmd_size scratch reg\n",
- 			__func__);
--		pci_unmap_single(card->dev, buf_pa, MWIFIEX_UPLD_SIZE,
--				 PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 		return -1;
- 	}
- 
-@@ -1358,8 +1359,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 			      CPU_INTR_DOOR_BELL)) {
- 		dev_err(adapter->dev,
- 			"%s: failed to assert door-bell intr\n", __func__);
--		pci_unmap_single(card->dev, buf_pa,
--				 MWIFIEX_UPLD_SIZE, PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 		return -1;
- 	}
- 
-@@ -1433,7 +1433,7 @@ mwifiex_pcie_send_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 	*/
- 
- 	if (card->cmdrsp_buf) {
--		MWIFIEX_SKB_PACB(card->cmdrsp_buf, &cmdrsp_buf_pa);
-+		cmdrsp_buf_pa = MWIFIEX_SKB_DMA_ADDR(card->cmdrsp_buf);
- 		/* Write the lower 32bits of the cmdrsp buffer physical
- 		   address */
- 		if (mwifiex_write_reg(adapter, reg->cmdrsp_addr_lo,
-@@ -1454,7 +1454,7 @@ mwifiex_pcie_send_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 		}
- 	}
- 
--	MWIFIEX_SKB_PACB(card->cmd_buf, &cmd_buf_pa);
-+	cmd_buf_pa = MWIFIEX_SKB_DMA_ADDR(card->cmd_buf);
- 	/* Write the lower 32bits of the physical address to reg->cmd_addr_lo */
- 	if (mwifiex_write_reg(adapter, reg->cmd_addr_lo,
- 			      (u32)cmd_buf_pa)) {
-@@ -1508,13 +1508,10 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 	int count = 0;
- 	u16 rx_len;
- 	__le16 pkt_len;
--	dma_addr_t buf_pa;
- 
- 	dev_dbg(adapter->dev, "info: Rx CMD Response\n");
- 
--	MWIFIEX_SKB_PACB(skb, &buf_pa);
--	pci_unmap_single(card->dev, buf_pa, MWIFIEX_UPLD_SIZE,
--			 PCI_DMA_FROMDEVICE);
-+	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
- 
- 	pkt_len = *((__le16 *)skb->data);
- 	rx_len = le16_to_cpu(pkt_len);
-@@ -1538,8 +1535,6 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 		if (mwifiex_map_pci_memory(adapter, skb, MWIFIEX_UPLD_SIZE,
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
--
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
- 	} else if (mwifiex_pcie_ok_to_access_hw(adapter)) {
- 		adapter->curr_cmd->resp_skb = skb;
- 		adapter->cmd_resp_received = true;
-@@ -1574,7 +1569,6 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
- 					struct sk_buff *skb)
- {
- 	struct pcie_service_card *card = adapter->card;
--	dma_addr_t buf_pa;
- 	struct sk_buff *skb_tmp;
- 
- 	if (skb) {
-@@ -1587,9 +1581,7 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
- 
- 	skb_tmp = card->cmd_buf;
- 	if (skb_tmp) {
--		MWIFIEX_SKB_PACB(skb_tmp, &buf_pa);
--		pci_unmap_single(card->dev, buf_pa, skb_tmp->len,
--				 PCI_DMA_FROMDEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb_tmp, PCI_DMA_FROMDEVICE);
- 		card->cmd_buf = NULL;
- 	}
- 
-@@ -1605,7 +1597,6 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 	u32 rdptr = card->evtbd_rdptr & MWIFIEX_EVTBD_MASK;
- 	u32 wrptr, event;
--	dma_addr_t buf_pa;
- 	struct mwifiex_evt_buf_desc *desc;
- 
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
-@@ -1641,9 +1632,7 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 
- 		dev_dbg(adapter->dev, "info: Read Index: %d\n", rdptr);
- 		skb_cmd = card->evt_buf_list[rdptr];
--		MWIFIEX_SKB_PACB(skb_cmd, &buf_pa);
--		pci_unmap_single(card->dev, buf_pa, MAX_EVENT_SIZE,
--				 PCI_DMA_FROMDEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb_cmd, PCI_DMA_FROMDEVICE);
- 
- 		/* Take the pointer and set it to event pointer in adapter
- 		   and will return back after event handling callback */
-@@ -1689,7 +1678,6 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	int ret = 0;
- 	u32 rdptr = card->evtbd_rdptr & MWIFIEX_EVTBD_MASK;
- 	u32 wrptr;
--	dma_addr_t buf_pa;
- 	struct mwifiex_evt_buf_desc *desc;
- 
- 	if (!skb)
-@@ -1714,11 +1702,9 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 					   MAX_EVENT_SIZE,
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
- 		card->evt_buf_list[rdptr] = skb;
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
- 		desc = card->evtbd_ring[rdptr];
--		desc->paddr = buf_pa;
-+		desc->paddr = MWIFIEX_SKB_DMA_ADDR(skb);
- 		desc->len = (u16)skb->len;
- 		desc->flags = 0;
- 		skb = NULL;
-@@ -1768,7 +1754,6 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 	struct sk_buff *skb;
- 	u32 txlen, tx_blocks = 0, tries, len;
- 	u32 block_retry_cnt = 0;
--	dma_addr_t buf_pa;
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
- 
-@@ -1866,8 +1851,6 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 			goto done;
- 		}
- 
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
--
- 		/* Wait for the command done interrupt */
- 		do {
- 			if (mwifiex_read_reg(adapter, PCIE_CPU_INT_STATUS,
-@@ -1875,16 +1858,15 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 				dev_err(adapter->dev, "%s: Failed to read "
- 					"interrupt status during fw dnld.\n",
- 					__func__);
--				pci_unmap_single(card->dev, buf_pa, skb->len,
--						 PCI_DMA_TODEVICE);
-+				mwifiex_unmap_pci_memory(adapter, skb,
-+							 PCI_DMA_TODEVICE);
- 				ret = -1;
- 				goto done;
- 			}
- 		} while ((ireg_intr & CPU_INTR_DOOR_BELL) ==
- 			 CPU_INTR_DOOR_BELL);
- 
--		pci_unmap_single(card->dev, buf_pa, skb->len,
--				 PCI_DMA_TODEVICE);
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 
- 		offset += txlen;
- 	} while (true);
-diff --git a/drivers/net/wireless/mwifiex/util.h b/drivers/net/wireless/mwifiex/util.h
-index cb2d058..ddae570 100644
---- a/drivers/net/wireless/mwifiex/util.h
-+++ b/drivers/net/wireless/mwifiex/util.h
-@@ -30,8 +30,24 @@ static inline struct mwifiex_txinfo *MWIFIEX_SKB_TXCB(struct sk_buff *skb)
- 	return (struct mwifiex_txinfo *)(skb->cb + sizeof(dma_addr_t));
+@@ -1438,6 +1438,37 @@ out:
+ 	return ret;
  }
  
--static inline void MWIFIEX_SKB_PACB(struct sk_buff *skb, dma_addr_t *buf_pa)
-+struct mwifiex_dma_mapping {
-+	dma_addr_t addr;
-+	size_t len;
-+};
-+
-+static inline void MWIFIEX_SKB_PACB(struct sk_buff *skb,
-+					struct mwifiex_dma_mapping *mapping)
- {
--	memcpy(buf_pa, skb->cb, sizeof(dma_addr_t));
-+	memcpy(mapping, skb->cb, sizeof(*mapping));
- }
-+
-+static inline dma_addr_t MWIFIEX_SKB_DMA_ADDR(struct sk_buff *skb)
++static void wl12xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
++				     struct wl_fw_status *fw_status)
 +{
-+	struct mwifiex_dma_mapping mapping;
++	struct wl12xx_fw_status *int_fw_status = raw_fw_status;
 +
-+	MWIFIEX_SKB_PACB(skb, &mapping);
++	fw_status->intr = le32_to_cpu(int_fw_status->intr);
++	fw_status->fw_rx_counter = int_fw_status->fw_rx_counter;
++	fw_status->drv_rx_counter = int_fw_status->drv_rx_counter;
++	fw_status->tx_results_counter = int_fw_status->tx_results_counter;
++	fw_status->rx_pkt_descs = int_fw_status->rx_pkt_descs;
 +
-+	return mapping.addr;
++	fw_status->fw_localtime = le32_to_cpu(int_fw_status->fw_localtime);
++	fw_status->link_ps_bitmap = le32_to_cpu(int_fw_status->link_ps_bitmap);
++	fw_status->link_fast_bitmap =
++			le32_to_cpu(int_fw_status->link_fast_bitmap);
++	fw_status->total_released_blks =
++			le32_to_cpu(int_fw_status->total_released_blks);
++	fw_status->tx_total = le32_to_cpu(int_fw_status->tx_total);
++
++	fw_status->counters.tx_released_pkts =
++			int_fw_status->counters.tx_released_pkts;
++	fw_status->counters.tx_lnk_free_pkts =
++			int_fw_status->counters.tx_lnk_free_pkts;
++	fw_status->counters.tx_voice_released_blks =
++			int_fw_status->counters.tx_voice_released_blks;
++	fw_status->counters.tx_last_rate =
++			int_fw_status->counters.tx_last_rate;
++
++	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
 +}
 +
- #endif /* !_MWIFIEX_UTIL_H_ */
+ static u32 wl12xx_sta_get_ap_rate_mask(struct wl1271 *wl,
+ 				       struct wl12xx_vif *wlvif)
+ {
+@@ -1677,6 +1708,7 @@ static struct wlcore_ops wl12xx_ops = {
+ 	.tx_delayed_compl	= wl12xx_tx_delayed_compl,
+ 	.hw_init		= wl12xx_hw_init,
+ 	.init_vif		= NULL,
++	.convert_fw_status	= wl12xx_convert_fw_status,
+ 	.sta_get_ap_rate_mask	= wl12xx_sta_get_ap_rate_mask,
+ 	.get_pg_ver		= wl12xx_get_pg_ver,
+ 	.get_mac		= wl12xx_get_mac,
+@@ -1725,6 +1757,7 @@ static int wl12xx_setup(struct wl1271 *wl)
+ 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
+ 	wl->hw_tx_rate_tbl_size = WL12XX_CONF_HW_RXTX_RATE_MAX;
+ 	wl->hw_min_ht_rate = WL12XX_CONF_HW_RXTX_RATE_MCS0;
++	wl->fw_status_len = sizeof(struct wl12xx_fw_status);
+ 	wl->fw_status_priv_len = 0;
+ 	wl->stats.fw_stats_len = sizeof(struct wl12xx_acx_statistics);
+ 	wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ, &wl12xx_ht_cap);
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 9e5484a..b9950f8 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -79,4 +79,54 @@ struct wl12xx_priv {
+ 	struct wl127x_rx_mem_pool_addr *rx_mem_addr;
+ };
+ 
++struct wl12xx_fw_packet_counters {
++	/* Cumulative counter of released packets per AC */
++	u8 tx_released_pkts[NUM_TX_QUEUES];
++
++	/* Cumulative counter of freed packets per HLID */
++	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
++
++	/* Cumulative counter of released Voice memory blocks */
++	u8 tx_voice_released_blks;
++
++	/* Tx rate of the last transmitted packet */
++	u8 tx_last_rate;
++
++	u8 padding[2];
++} __packed;
++
++/* FW status registers */
++struct wl12xx_fw_status {
++	__le32 intr;
++	u8  fw_rx_counter;
++	u8  drv_rx_counter;
++	u8  reserved;
++	u8  tx_results_counter;
++	__le32 rx_pkt_descs[WL12XX_NUM_RX_DESCRIPTORS];
++
++	__le32 fw_localtime;
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/*
++	 * A bitmap (where each bit represents a single HLID) to indicate
++	 * if the station is in Fast mode
++	 */
++	__le32 link_fast_bitmap;
++
++	/* Cumulative counter of total released mem blocks since FW-reset */
++	__le32 total_released_blks;
++
++	/* Size (in Memory Blocks) of TX pool */
++	__le32 tx_total;
++
++	struct wl12xx_fw_packet_counters counters;
++
++	__le32 log_start_addr;
++} __packed;
++
+ #endif /* __WL12XX_PRIV_H__ */
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index ec37b16..cbf9bf3 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1133,6 +1133,39 @@ static int wl18xx_hw_init(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
++static void wl18xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
++				     struct wl_fw_status *fw_status)
++{
++	struct wl18xx_fw_status *int_fw_status = raw_fw_status;
++
++	fw_status->intr = le32_to_cpu(int_fw_status->intr);
++	fw_status->fw_rx_counter = int_fw_status->fw_rx_counter;
++	fw_status->drv_rx_counter = int_fw_status->drv_rx_counter;
++	fw_status->tx_results_counter = int_fw_status->tx_results_counter;
++	fw_status->rx_pkt_descs = int_fw_status->rx_pkt_descs;
++
++	fw_status->fw_localtime = le32_to_cpu(int_fw_status->fw_localtime);
++	fw_status->link_ps_bitmap = le32_to_cpu(int_fw_status->link_ps_bitmap);
++	fw_status->link_fast_bitmap =
++			le32_to_cpu(int_fw_status->link_fast_bitmap);
++	fw_status->total_released_blks =
++			le32_to_cpu(int_fw_status->total_released_blks);
++	fw_status->tx_total = le32_to_cpu(int_fw_status->tx_total);
++
++	fw_status->counters.tx_released_pkts =
++			int_fw_status->counters.tx_released_pkts;
++	fw_status->counters.tx_lnk_free_pkts =
++			int_fw_status->counters.tx_lnk_free_pkts;
++	fw_status->counters.tx_voice_released_blks =
++			int_fw_status->counters.tx_voice_released_blks;
++	fw_status->counters.tx_last_rate =
++			int_fw_status->counters.tx_last_rate;
++
++	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
++
++	fw_status->priv = &int_fw_status->priv;
++}
++
+ static void wl18xx_set_tx_desc_csum(struct wl1271 *wl,
+ 				    struct wl1271_tx_hw_descr *desc,
+ 				    struct sk_buff *skb)
+@@ -1572,7 +1605,7 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
+ {
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+-		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
++		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+ 	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+ 
+ 	/* suspended links are never high priority */
+@@ -1594,7 +1627,7 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
+ {
+ 	u8 thold;
+ 	struct wl18xx_fw_status_priv *status_priv =
+-		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
++		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+ 	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
+ 
+ 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
+@@ -1632,6 +1665,7 @@ static struct wlcore_ops wl18xx_ops = {
+ 	.tx_immediate_compl = wl18xx_tx_immediate_completion,
+ 	.tx_delayed_compl = NULL,
+ 	.hw_init	= wl18xx_hw_init,
++	.convert_fw_status = wl18xx_convert_fw_status,
+ 	.set_tx_desc_csum = wl18xx_set_tx_desc_csum,
+ 	.get_pg_ver	= wl18xx_get_pg_ver,
+ 	.set_rx_csum = wl18xx_set_rx_csum,
+@@ -1726,6 +1760,7 @@ static int wl18xx_setup(struct wl1271 *wl)
+ 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
+ 	wl->hw_tx_rate_tbl_size = WL18XX_CONF_HW_RXTX_RATE_MAX;
+ 	wl->hw_min_ht_rate = WL18XX_CONF_HW_RXTX_RATE_MCS0;
++	wl->fw_status_len = sizeof(struct wl18xx_fw_status);
+ 	wl->fw_status_priv_len = sizeof(struct wl18xx_fw_status_priv);
+ 	wl->stats.fw_stats_len = sizeof(struct wl18xx_acx_statistics);
+ 	wl->static_data_priv_len = sizeof(struct wl18xx_static_data_priv);
+diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
+index 57c6943..be1ebd5 100644
+--- a/drivers/net/wireless/ti/wl18xx/tx.c
++++ b/drivers/net/wireless/ti/wl18xx/tx.c
+@@ -32,7 +32,7 @@ static
+ void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
+ 			     struct ieee80211_tx_rate *rate)
+ {
+-	u8 fw_rate = wl->fw_status_2->counters.tx_last_rate;
++	u8 fw_rate = wl->fw_status->counters.tx_last_rate;
+ 
+ 	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
+ 		wl1271_error("last Tx rate invalid: %d", fw_rate);
+@@ -139,7 +139,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ void wl18xx_tx_immediate_complete(struct wl1271 *wl)
+ {
+ 	struct wl18xx_fw_status_priv *status_priv =
+-		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
++		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+ 	struct wl18xx_priv *priv = wl->priv;
+ 	u8 i;
+ 
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 9204e07..d32a6af 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -109,6 +109,59 @@ struct wl18xx_fw_status_priv {
+ 	u8 padding[3];
+ };
+ 
++struct wl18xx_fw_packet_counters {
++	/* Cumulative counter of released packets per AC */
++	u8 tx_released_pkts[NUM_TX_QUEUES];
++
++	/* Cumulative counter of freed packets per HLID */
++	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
++
++	/* Cumulative counter of released Voice memory blocks */
++	u8 tx_voice_released_blks;
++
++	/* Tx rate of the last transmitted packet */
++	u8 tx_last_rate;
++
++	u8 padding[2];
++} __packed;
++
++/* FW status registers */
++struct wl18xx_fw_status {
++	__le32 intr;
++	u8  fw_rx_counter;
++	u8  drv_rx_counter;
++	u8  reserved;
++	u8  tx_results_counter;
++	__le32 rx_pkt_descs[WL18XX_NUM_RX_DESCRIPTORS];
++
++	__le32 fw_localtime;
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/*
++	 * A bitmap (where each bit represents a single HLID) to indicate
++	 * if the station is in Fast mode
++	 */
++	__le32 link_fast_bitmap;
++
++	/* Cumulative counter of total released mem blocks since FW-reset */
++	__le32 total_released_blks;
++
++	/* Size (in Memory Blocks) of TX pool */
++	__le32 tx_total;
++
++	struct wl18xx_fw_packet_counters counters;
++
++	__le32 log_start_addr;
++
++	/* Private status to be used by the lower drivers */
++	struct wl18xx_fw_status_priv priv;
++} __packed;
++
+ #define WL18XX_PHY_VERSION_MAX_LEN 20
+ 
+ struct wl18xx_static_data_priv {
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 9b2ecf5..4d19fd2 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -324,9 +324,14 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 	__set_bit(link, wlvif->links_map);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+-	/* take the last "freed packets" value from the current FW status */
+-	wl->links[link].prev_freed_pkts =
+-			wl->fw_status_2->counters.tx_lnk_free_pkts[link];
++	/*
++	 * take the last "freed packets" value from the current FW status.
++	 * on recovery, we might not have fw_status yet, and
++	 * tx_lnk_free_pkts will be NULL. check for it.
++	 */
++	if (wl->fw_status->counters.tx_lnk_free_pkts)
++		wl->links[link].prev_freed_pkts =
++			wl->fw_status->counters.tx_lnk_free_pkts[link];
+ 	wl->links[link].wlvif = wlvif;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
+index 51f8d63..1555ff9 100644
+--- a/drivers/net/wireless/ti/wlcore/hw_ops.h
++++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
+@@ -106,6 +106,15 @@ wlcore_hw_init_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	return 0;
+ }
+ 
++static inline void
++wlcore_hw_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
++			    struct wl_fw_status *fw_status)
++{
++	BUG_ON(!wl->ops->convert_fw_status);
++
++	wl->ops->convert_fw_status(wl, raw_fw_status, fw_status);
++}
++
+ static inline u32
+ wlcore_hw_sta_get_ap_rate_mask(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1e19196..70a3e57 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -357,12 +357,12 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
+ 
+ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
+ 					   struct wl12xx_vif *wlvif,
+-					   struct wl_fw_status_2 *status)
++					   struct wl_fw_status *status)
+ {
+ 	u32 cur_fw_ps_map;
+ 	u8 hlid;
+ 
+-	cur_fw_ps_map = le32_to_cpu(status->link_ps_bitmap);
++	cur_fw_ps_map = status->link_ps_bitmap;
+ 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
+ 		wl1271_debug(DEBUG_PSM,
+ 			     "link ps prev 0x%x cur 0x%x changed 0x%x",
+@@ -377,41 +377,38 @@ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
+ 					    wl->links[hlid].allocated_pkts);
+ }
+ 
+-static int wlcore_fw_status(struct wl1271 *wl,
+-			    struct wl_fw_status_1 *status_1,
+-			    struct wl_fw_status_2 *status_2)
++static int wlcore_fw_status(struct wl1271 *wl, struct wl_fw_status *status)
+ {
+ 	struct wl12xx_vif *wlvif;
+ 	struct timespec ts;
+ 	u32 old_tx_blk_count = wl->tx_blocks_available;
+ 	int avail, freed_blocks;
+ 	int i;
+-	size_t status_len;
+ 	int ret;
+ 	struct wl1271_link *lnk;
+ 
+-	status_len = WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
+-		sizeof(*status_2) + wl->fw_status_priv_len;
+-
+-	ret = wlcore_raw_read_data(wl, REG_RAW_FW_STATUS_ADDR, status_1,
+-				   status_len, false);
++	ret = wlcore_raw_read_data(wl, REG_RAW_FW_STATUS_ADDR,
++				   wl->raw_fw_status,
++				   wl->fw_status_len, false);
+ 	if (ret < 0)
+ 		return ret;
+ 
++	wlcore_hw_convert_fw_status(wl, wl->raw_fw_status, wl->fw_status);
++
+ 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
+ 		     "drv_rx_counter = %d, tx_results_counter = %d)",
+-		     status_1->intr,
+-		     status_1->fw_rx_counter,
+-		     status_1->drv_rx_counter,
+-		     status_1->tx_results_counter);
++		     status->intr,
++		     status->fw_rx_counter,
++		     status->drv_rx_counter,
++		     status->tx_results_counter);
+ 
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		/* prevent wrap-around in freed-packets counter */
+ 		wl->tx_allocated_pkts[i] -=
+-				(status_2->counters.tx_released_pkts[i] -
++				(status->counters.tx_released_pkts[i] -
+ 				wl->tx_pkts_freed[i]) & 0xff;
+ 
+-		wl->tx_pkts_freed[i] = status_2->counters.tx_released_pkts[i];
++		wl->tx_pkts_freed[i] = status->counters.tx_released_pkts[i];
+ 	}
+ 
+ 
+@@ -420,29 +417,28 @@ static int wlcore_fw_status(struct wl1271 *wl,
+ 		lnk = &wl->links[i];
+ 
+ 		/* prevent wrap-around in freed-packets counter */
+-		diff = (status_2->counters.tx_lnk_free_pkts[i] -
++		diff = (status->counters.tx_lnk_free_pkts[i] -
+ 		       lnk->prev_freed_pkts) & 0xff;
+ 
+ 		if (diff == 0)
+ 			continue;
+ 
+ 		lnk->allocated_pkts -= diff;
+-		lnk->prev_freed_pkts = status_2->counters.tx_lnk_free_pkts[i];
++		lnk->prev_freed_pkts = status->counters.tx_lnk_free_pkts[i];
+ 
+ 		/* accumulate the prev_freed_pkts counter */
+ 		lnk->total_freed_pkts += diff;
+ 	}
+ 
+ 	/* prevent wrap-around in total blocks counter */
+-	if (likely(wl->tx_blocks_freed <=
+-		   le32_to_cpu(status_2->total_released_blks)))
+-		freed_blocks = le32_to_cpu(status_2->total_released_blks) -
++	if (likely(wl->tx_blocks_freed <= status->total_released_blks))
++		freed_blocks = status->total_released_blks -
+ 			       wl->tx_blocks_freed;
+ 	else
+ 		freed_blocks = 0x100000000LL - wl->tx_blocks_freed +
+-			       le32_to_cpu(status_2->total_released_blks);
++			       status->total_released_blks;
+ 
+-	wl->tx_blocks_freed = le32_to_cpu(status_2->total_released_blks);
++	wl->tx_blocks_freed = status->total_released_blks;
+ 
+ 	wl->tx_allocated_blocks -= freed_blocks;
+ 
+@@ -458,7 +454,7 @@ static int wlcore_fw_status(struct wl1271 *wl,
+ 			cancel_delayed_work(&wl->tx_watchdog_work);
+ 	}
+ 
+-	avail = le32_to_cpu(status_2->tx_total) - wl->tx_allocated_blocks;
++	avail = status->tx_total - wl->tx_allocated_blocks;
+ 
+ 	/*
+ 	 * The FW might change the total number of TX memblocks before
+@@ -477,15 +473,15 @@ static int wlcore_fw_status(struct wl1271 *wl,
+ 
+ 	/* for AP update num of allocated TX blocks per link and ps status */
+ 	wl12xx_for_each_wlvif_ap(wl, wlvif) {
+-		wl12xx_irq_update_links_status(wl, wlvif, status_2);
++		wl12xx_irq_update_links_status(wl, wlvif, status);
+ 	}
+ 
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+-		(s64)le32_to_cpu(status_2->fw_localtime);
++		(s64)(status->fw_localtime);
+ 
+-	wl->fw_fast_lnk_map = le32_to_cpu(status_2->link_fast_bitmap);
++	wl->fw_fast_lnk_map = status->link_fast_bitmap;
+ 
+ 	return 0;
+ }
+@@ -549,13 +545,13 @@ static int wlcore_irq_locked(struct wl1271 *wl)
+ 		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 		smp_mb__after_clear_bit();
+ 
+-		ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
++		ret = wlcore_fw_status(wl, wl->fw_status);
+ 		if (ret < 0)
+ 			goto out;
+ 
+ 		wlcore_hw_tx_immediate_compl(wl);
+ 
+-		intr = le32_to_cpu(wl->fw_status_1->intr);
++		intr = wl->fw_status->intr;
+ 		intr &= WLCORE_ALL_INTR_MASK;
+ 		if (!intr) {
+ 			done = true;
+@@ -584,7 +580,7 @@ static int wlcore_irq_locked(struct wl1271 *wl)
+ 		if (likely(intr & WL1271_ACX_INTR_DATA)) {
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
+ 
+-			ret = wlcore_rx(wl, wl->fw_status_1);
++			ret = wlcore_rx(wl, wl->fw_status);
+ 			if (ret < 0)
+ 				goto out;
+ 
+@@ -843,11 +839,11 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+ 		wl12xx_cmd_stop_fwlog(wl);
+ 
+ 	/* Read the first memory block address */
+-	ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
++	ret = wlcore_fw_status(wl, wl->fw_status);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	addr = le32_to_cpu(wl->fw_status_2->log_start_addr);
++	addr = wl->fw_status->log_start_addr;
+ 	if (!addr)
+ 		goto out;
+ 
+@@ -990,23 +986,23 @@ static int wlcore_fw_wakeup(struct wl1271 *wl)
+ 
+ static int wl1271_setup(struct wl1271 *wl)
+ {
+-	wl->fw_status_1 = kzalloc(WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
+-				  sizeof(*wl->fw_status_2) +
+-				  wl->fw_status_priv_len, GFP_KERNEL);
+-	if (!wl->fw_status_1)
+-		return -ENOMEM;
++	wl->raw_fw_status = kzalloc(wl->fw_status_len, GFP_KERNEL);
++	if (!wl->raw_fw_status)
++		goto err;
+ 
+-	wl->fw_status_2 = (struct wl_fw_status_2 *)
+-				(((u8 *) wl->fw_status_1) +
+-				WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc));
++	wl->fw_status = kzalloc(sizeof(*wl->fw_status), GFP_KERNEL);
++	if (!wl->fw_status)
++		goto err;
+ 
+ 	wl->tx_res_if = kzalloc(sizeof(*wl->tx_res_if), GFP_KERNEL);
+-	if (!wl->tx_res_if) {
+-		kfree(wl->fw_status_1);
+-		return -ENOMEM;
+-	}
++	if (!wl->tx_res_if)
++		goto err;
+ 
+ 	return 0;
++err:
++	kfree(wl->fw_status);
++	kfree(wl->raw_fw_status);
++	return -ENOMEM;
+ }
+ 
+ static int wl12xx_set_power_on(struct wl1271 *wl)
+@@ -1952,9 +1948,10 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+ 
+ 	wl1271_debugfs_reset(wl);
+ 
+-	kfree(wl->fw_status_1);
+-	wl->fw_status_1 = NULL;
+-	wl->fw_status_2 = NULL;
++	kfree(wl->raw_fw_status);
++	wl->raw_fw_status = NULL;
++	kfree(wl->fw_status);
++	wl->fw_status = NULL;
+ 	kfree(wl->tx_res_if);
+ 	wl->tx_res_if = NULL;
+ 	kfree(wl->target_mem_map);
+@@ -6025,7 +6022,8 @@ int wlcore_free_hw(struct wl1271 *wl)
+ 	kfree(wl->nvs);
+ 	wl->nvs = NULL;
+ 
+-	kfree(wl->fw_status_1);
++	kfree(wl->raw_fw_status);
++	kfree(wl->fw_status);
+ 	kfree(wl->tx_res_if);
+ 	destroy_workqueue(wl->freezable_wq);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 94ab445..a047e87 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -203,7 +203,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 	return is_data;
+ }
+ 
+-int wlcore_rx(struct wl1271 *wl, struct wl_fw_status_1 *status)
++int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ {
+ 	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
+ 	u32 buf_size;
+diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
+index 3363f60..a3b1618 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.h
++++ b/drivers/net/wireless/ti/wlcore/rx.h
+@@ -142,7 +142,7 @@ struct wl1271_rx_descriptor {
+ 	u8  reserved;
+ } __packed;
+ 
+-int wlcore_rx(struct wl1271 *wl, struct wl_fw_status_1 *status);
++int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+ int wl1271_rx_filter_enable(struct wl1271 *wl,
+ 			    int index, bool enable,
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index a3cc117..cec5265 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -73,6 +73,8 @@ struct wlcore_ops {
+ 	void (*tx_immediate_compl)(struct wl1271 *wl);
+ 	int (*hw_init)(struct wl1271 *wl);
+ 	int (*init_vif)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
++	void (*convert_fw_status)(struct wl1271 *wl, void *raw_fw_status,
++				  struct wl_fw_status *fw_status);
+ 	u32 (*sta_get_ap_rate_mask)(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif);
+ 	int (*get_pg_ver)(struct wl1271 *wl, s8 *ver);
+@@ -346,8 +348,8 @@ struct wl1271 {
+ 	u32 buffer_cmd;
+ 	u32 buffer_busyword[WL1271_BUSY_WORD_CNT];
+ 
+-	struct wl_fw_status_1 *fw_status_1;
+-	struct wl_fw_status_2 *fw_status_2;
++	void *raw_fw_status;
++	struct wl_fw_status *fw_status;
+ 	struct wl1271_tx_hw_res_if *tx_res_if;
+ 
+ 	/* Current chipset configuration */
+@@ -448,6 +450,7 @@ struct wl1271 {
+ 	struct ieee80211_sta_ht_cap ht_cap[WLCORE_NUM_BANDS];
+ 
+ 	/* size of the private FW status data */
++	size_t fw_status_len;
+ 	size_t fw_status_priv_len;
+ 
+ 	/* RX Data filter rule state - enabled/disabled */
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 3815332..32e1e8b 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -120,70 +120,58 @@ struct wl1271_chip {
+ 
+ #define AP_MAX_STATIONS            8
+ 
+-struct wl_fw_packet_counters {
+-	/* Cumulative counter of released packets per AC */
+-	u8 tx_released_pkts[NUM_TX_QUEUES];
+-
+-	/* Cumulative counter of freed packets per HLID */
+-	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
+-
+-	/* Cumulative counter of released Voice memory blocks */
+-	u8 tx_voice_released_blks;
+-
+-	/* Tx rate of the last transmitted packet */
+-	u8 tx_last_rate;
+-
+-	u8 padding[2];
+-} __packed;
+-
+-/* FW status registers */
+-struct wl_fw_status_1 {
+-	__le32 intr;
++struct wl_fw_status {
++	u32 intr;
+ 	u8  fw_rx_counter;
+ 	u8  drv_rx_counter;
+-	u8  reserved;
+ 	u8  tx_results_counter;
+-	__le32 rx_pkt_descs[0];
+-} __packed;
+-
+-/*
+- * Each HW arch has a different number of Rx descriptors.
+- * The length of the status depends on it, since it holds an array
+- * of descriptors.
+- */
+-#define WLCORE_FW_STATUS_1_LEN(num_rx_desc) \
+-		(sizeof(struct wl_fw_status_1) + \
+-		(sizeof(((struct wl_fw_status_1 *)0)->rx_pkt_descs[0])) * \
+-		num_rx_desc)
++	__le32 *rx_pkt_descs;
+ 
+-struct wl_fw_status_2 {
+-	__le32 fw_localtime;
++	u32 fw_localtime;
+ 
+ 	/*
+ 	 * A bitmap (where each bit represents a single HLID)
+ 	 * to indicate if the station is in PS mode.
+ 	 */
+-	__le32 link_ps_bitmap;
++	u32 link_ps_bitmap;
+ 
+ 	/*
+ 	 * A bitmap (where each bit represents a single HLID) to indicate
+ 	 * if the station is in Fast mode
+ 	 */
+-	__le32 link_fast_bitmap;
++	u32 link_fast_bitmap;
+ 
+ 	/* Cumulative counter of total released mem blocks since FW-reset */
+-	__le32 total_released_blks;
++	u32 total_released_blks;
+ 
+ 	/* Size (in Memory Blocks) of TX pool */
+-	__le32 tx_total;
++	u32 tx_total;
+ 
+-	struct wl_fw_packet_counters counters;
++	struct {
++		/*
++		 * Cumulative counter of released packets per AC
++		 * (length of the array is NUM_TX_QUEUES)
++		 */
++		u8 *tx_released_pkts;
++
++		/*
++		 * Cumulative counter of freed packets per HLID
++		 * (length of the array is WL12XX_MAX_LINKS)
++		 */
++		u8 *tx_lnk_free_pkts;
++
++		/* Cumulative counter of released Voice memory blocks */
++		u8 tx_voice_released_blks;
++
++		/* Tx rate of the last transmitted packet */
++		u8 tx_last_rate;
++	} counters;
+ 
+-	__le32 log_start_addr;
++	u32 log_start_addr;
+ 
+ 	/* Private status to be used by the lower drivers */
+-	u8 priv[0];
+-} __packed;
++	void *priv;
++};
+ 
+ #define WL1271_MAX_CHANNELS 64
+ struct wl1271_scan {
 -- 
-1.8.2.3
+1.8.5.2.229.g4448466.dirty
 
