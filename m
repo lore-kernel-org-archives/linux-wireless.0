@@ -1,119 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:32881 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbaB0JPD (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:55793 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbaBJLsF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 04:15:03 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v7 0/5] cfg80211/mac80211: move interface combinations check to mac80211
-Date: Thu, 27 Feb 2014 11:14:52 +0200
-Message-Id: <1393492497-29500-1-git-send-email-luca@coelho.fi> (sfid-20140227_101602_671298_248E0CE7)
+	Mon, 10 Feb 2014 06:48:05 -0500
+Received: by mail-wg0-f46.google.com with SMTP id x12so4017221wgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:48:04 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 14/18] wlcore: consider multiple APs when checking active_link_count
+Date: Mon, 10 Feb 2014 13:47:30 +0200
+Message-Id: <1392032854-28126-15-git-send-email-eliad@wizery.com> (sfid-20140210_130007_451873_A9B65270)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Each AP has its own global and broadcast links, so when
+checking for active sta count (according to the active_link_count)
+we must take them all into account.
 
-Hi,
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 +++++-----
+ drivers/net/wireless/ti/wlcore/tx.c   | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-In v7:
-
-   * added a new patch to get rid of some more combination checks in
-     cfg80211 (Johannes);
-   * remove local argument from ieee80211_check_combinations();
-   * remove redundant arguments from cfg80211_check_combinations();
-     (Johannes);
-   * change cfg80211_chandef_dfs_required() back to returning only 0
-     or 1 instead of the channel width bitmap (Johannes);
-   * remove a useless TODO in the cfg80211 doc (Johannes);
-
-In v6:
-
-   * fix typo in the interface counting code
-     s/sdata-vif.chanctx_conf/sdata_iter-vif.chanctx_conf/
-
-In v5:
-
-   * use local and sdata in ibss when calling
-     ieee80211_check_combinations();
-   * use the radar detection widths from all existing contexts,
-     regardless of whether we can share an existing context or if the
-     context is exclusive (thanks Michal!);
-
-In v4:
-
-   * rebased the remaining patches on top of what Johannes applied;
-   * lots of other small changes in response to Johannes's comments.
-     See each individual patch for detailed lists of changed (thanks
-     Johannes!);
-
-In v3:
-
-   * move the "pass the mode argument..." change to the right patch;
-
-In v2:
-
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations().
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-As Johannes suggested earlier, this patchset moves the interface
-combinations check from cfg80211 to mac80211.  This is needed to
-simplify the channel switch code.
-
-There are still some cases where cfg80211 may need to check the
-interface combinations (ie. when adding or changing an interface), so
-I created a helper function that can be called by cfg80211 itself or
-the drivers (such as mac80211).
-
-Also, for now, I only moved the check in the cases where
-ieee80211_vif_use_channel() is called and for IBSS join.  The channel
-switch stuff, which will be trickier, is still missing.  These will be
-handled separately and it doesn't really hurt to leave it as it is,
-except because it's a bit inconsistent.
-
-I had to shuffle some code around to make this whole thing a bit
-cleaner, including the check for whether radar detection is needed.
-
-This is not very thoroughly tested yet, I have just done some checks
-with AP and STA with and without chanctx and with 1 or 2 different
-channels.  This part seems to work, please test the rest. :)
-
-I'll try to add some hwsim tests to test this more thoroughly.
-
-Luca.
-
-Luciano Coelho (5):
-  cfg80211: refactor cfg80211_can_use_iftype_chan()
-  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-  cfg80211/mac80211: move interface counting for combination check to
-    mac80211
-  cfg80211/mac80211: move combination check to mac80211 for ibss
-  cfg80211/mac80211: move more combination checks to mac80211
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  31 +++++++--
- net/mac80211/cfg.c               |  11 +++-
- net/mac80211/chan.c              |  17 +++++
- net/mac80211/ibss.c              |  60 +++++++++++------
- net/mac80211/ieee80211_i.h       |   4 ++
- net/mac80211/iface.c             |   6 +-
- net/mac80211/mesh.c              |   9 +--
- net/mac80211/util.c              |  76 +++++++++++++++++++++
- net/wireless/chan.c              |  75 ++++++++++++++++-----
- net/wireless/core.c              |  11 +---
- net/wireless/core.h              |  29 --------
- net/wireless/ibss.c              |  24 -------
- net/wireless/mesh.c              |  25 -------
- net/wireless/mlme.c              |  14 +---
- net/wireless/nl80211.c           |  59 +++++------------
- net/wireless/util.c              | 138 ++++++++++++++++++++++-----------------
- 17 files changed, 340 insertions(+), 250 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index d80d40c..8106c96 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -345,12 +345,12 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
+ 	 * Start high-level PS if the STA is asleep with enough blocks in FW.
+ 	 * Make an exception if this is the only connected link. In this
+ 	 * case FW-memory congestion is less of a problem.
+-	 * Note that a single connected STA means 3 active links, since we must
+-	 * account for the global and broadcast AP links. The "fw_ps" check
+-	 * assures us the third link is a STA connected to the AP. Otherwise
+-	 * the FW would not set the PSM bit.
++	 * Note that a single connected STA means 2*ap_count + 1 active links,
++	 * since we must account for the global and broadcast AP links
++	 * for each AP. The "fw_ps" check assures us the other link is a STA
++	 * connected to the AP. Otherwise the FW would not set the PSM bit.
+ 	 */
+-	else if (wl->active_link_count > 3 && fw_ps &&
++	else if (wl->active_link_count > (wl->ap_count*2 + 1) && fw_ps &&
+ 		 tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl12xx_ps_link_start(wl, wlvif, hlid, true);
+ }
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 38b31a0..40b4311 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -134,12 +134,12 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl,
+ 	 * into high-level PS and clean out its TX queues.
+ 	 * Make an exception if this is the only connected link. In this
+ 	 * case FW-memory congestion is less of a problem.
+-	 * Note that a single connected STA means 3 active links, since we must
+-	 * account for the global and broadcast AP links. The "fw_ps" check
+-	 * assures us the third link is a STA connected to the AP. Otherwise
+-	 * the FW would not set the PSM bit.
++	 * Note that a single connected STA means 2*ap_count + 1 active links,
++	 * since we must account for the global and broadcast AP links
++	 * for each AP. The "fw_ps" check assures us the other link is a STA
++	 * connected to the AP. Otherwise the FW would not set the PSM bit.
+ 	 */
+-	if (wl->active_link_count > 3 && fw_ps &&
++	if (wl->active_link_count > (wl->ap_count*2 + 1) && fw_ps &&
+ 	    tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl12xx_ps_link_start(wl, wlvif, hlid, true);
+ }
 -- 
-1.8.5.3
+1.8.5.2.229.g4448466.dirty
 
