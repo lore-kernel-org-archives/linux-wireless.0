@@ -1,172 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:47952 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbaB1Ti0 (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:58392 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752961AbaBJQOy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 14:38:26 -0500
-Date: Fri, 28 Feb 2014 16:38:19 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-02-28
-Message-ID: <20140228193819.GA1700@joana> (sfid-20140228_203845_593377_DCF00CAE)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
+	Mon, 10 Feb 2014 11:14:54 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so1315153eak.15
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 08:14:53 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH 2/3] ath10k: refactor suspend/resume functions
+Date: Mon, 10 Feb 2014 17:14:23 +0100
+Message-Id: <1392048864-13352-3-git-send-email-marek.puzyniak@tieto.com> (sfid-20140210_171535_064580_65CCE186)
+In-Reply-To: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Suspend/resume callbacks are not protected by configuration mutex
+so adding such protection. Also in order to simplify implemetation
+of suspend function wait queue is replaced by completion.
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi John,
-
-Another pull request to 3.15. Here we have the second part of the LE private
-feature, the LE auto-connect feature and improvements to the power off
-procedures. The rest are small improvements, clean up, and fixes.
-
-Please pull or let me know of any problem. Thanks.
-
-	Gustavo
-
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/core.c |  6 ++----
+ drivers/net/wireless/ath/ath10k/core.h |  3 +--
+ drivers/net/wireless/ath/ath10k/mac.c  | 39 ++++++++++++++++++++++------------
+ 3 files changed, 28 insertions(+), 20 deletions(-)
 
-The following changes since commit 668b7b19820b0801c425d31cc27fd6f499050e5c:
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 56048b1..0d161cf 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -55,8 +55,7 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
+ {
+ 	ath10k_dbg(ATH10K_DBG_BOOT, "boot suspend complete\n");
+ 
+-	ar->is_target_paused = true;
+-	wake_up(&ar->event_queue);
++	complete(&ar->target_suspend);
+ }
+ 
+ static int ath10k_init_connect_htc(struct ath10k *ar)
+@@ -703,6 +702,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	init_completion(&ar->scan.started);
+ 	init_completion(&ar->scan.completed);
+ 	init_completion(&ar->scan.on_channel);
++	init_completion(&ar->target_suspend);
+ 
+ 	init_completion(&ar->install_key_done);
+ 	init_completion(&ar->vdev_setup_done);
+@@ -726,8 +726,6 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
+ 	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+ 
+-	init_waitqueue_head(&ar->event_queue);
+-
+ 	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+ 
+ 	return ar;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c0b00e1..4f7ff9b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -375,8 +375,7 @@ struct ath10k {
+ 		const struct ath10k_hif_ops *ops;
+ 	} hif;
+ 
+-	wait_queue_head_t event_queue;
+-	bool is_target_paused;
++	struct completion target_suspend;
+ 
+ 	struct ath10k_bmi bmi;
+ 	struct ath10k_wmi wmi;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 144b4d6..751284b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3440,21 +3440,20 @@ static int ath10k_suspend(struct ieee80211_hw *hw,
+ 	struct ath10k *ar = hw->priv;
+ 	int ret;
+ 
+-	ar->is_target_paused = false;
++	mutex_lock(&ar->conf_mutex);
++
++	reinit_completion(&ar->target_suspend);
+ 
+ 	ret = ath10k_wmi_pdev_suspend_target(ar);
+ 	if (ret) {
+ 		ath10k_warn("could not suspend target (%d)\n", ret);
+-		return 1;
++		ret = 1;
++		goto exit;
+ 	}
+ 
+-	ret = wait_event_interruptible_timeout(ar->event_queue,
+-					       ar->is_target_paused == true,
+-					       1 * HZ);
+-	if (ret < 0) {
+-		ath10k_warn("suspend interrupted (%d)\n", ret);
+-		goto resume;
+-	} else if (ret == 0) {
++	ret = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
++
++	if (ret == 0) {
+ 		ath10k_warn("suspend timed out - target pause event never came\n");
+ 		goto resume;
+ 	}
+@@ -3465,12 +3464,17 @@ static int ath10k_suspend(struct ieee80211_hw *hw,
+ 		goto resume;
+ 	}
+ 
+-	return 0;
++	ret = 0;
++	goto exit;
+ resume:
+ 	ret = ath10k_wmi_pdev_resume_target(ar);
+ 	if (ret)
+ 		ath10k_warn("could not resume target (%d)\n", ret);
+-	return 1;
++
++	ret = 1;
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
+ }
+ 
+ static int ath10k_resume(struct ieee80211_hw *hw)
+@@ -3478,19 +3482,26 @@ static int ath10k_resume(struct ieee80211_hw *hw)
+ 	struct ath10k *ar = hw->priv;
+ 	int ret;
+ 
++	mutex_lock(&ar->conf_mutex);
++
+ 	ret = ath10k_hif_resume(ar);
+ 	if (ret) {
+ 		ath10k_warn("could not resume hif (%d)\n", ret);
+-		return 1;
++		ret = 1;
++		goto exit;
+ 	}
+ 
+ 	ret = ath10k_wmi_pdev_resume_target(ar);
+ 	if (ret) {
+ 		ath10k_warn("could not resume target (%d)\n", ret);
+-		return 1;
++		ret = 1;
++		goto exit;
+ 	}
+ 
+-	return 0;
++	ret = 0;
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
+ }
+ #endif
+ 
+-- 
+1.8.1.2
 
-  Bluetooth: Fix iterating wrong list in hci_remove_irk() (2014-02-21 11:07:46 -0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to 81ad6fd9698f659dbabdc6cd3e1667a98eb2be3b:
-
-  Bluetooth: Remove unnecessary stop_scan_complete function (2014-02-28 10:28:17 -0800)
-
-----------------------------------------------------------------
-Andre Guedes (17):
-      Bluetooth: Create hci_req_add_le_scan_disable helper
-      Bluetooth: Declare le_conn_failed in hci_core.h
-      Bluetooth: Stop scanning on LE connection
-      Bluetooth: Remove unused function
-      Bluetooth: Refactor HCI connection code
-      Bluetooth: Move address type conversion to outside hci_connect_le
-      Bluetooth: Introduce hdev->pend_le_conn list
-      Bluetooth: Introduce LE auto connection infrastructure
-      Bluetooth: Introduce LE auto connect options
-      Bluetooth: Connection parameters and auto connection
-      Bluetooth: Temporarily stop background scanning on discovery
-      Bluetooth: Auto connection and power on
-      Bluetooth: Connection parameters and resolvable address
-      Bluetooth: Support resolvable private addresses
-      Bluetooth: Add le_auto_conn file on debugfs
-      Bluetooth: Create hci_req_add_le_passive_scan helper
-      Bluetooth: Update background scan parameters
-
-Andrzej Kaczmarek (1):
-      Bluetooth: Fix NULL pointer dereference when sending data
-
-Johan Hedberg (47):
-      Bluetooth: Add helper variables to smp_distribute_keys()
-      Bluetooth: Add initial code for distributing local IRK
-      Bluetooth: Move enable/disable_advertising higher up in mgmt.c
-      Bluetooth: Add mgmt defines for privacy
-      Bluetooth: Add Privacy flag to mgmt supported/current settings
-      Bluetooth: Ensure hci_conn always contains the local identity address
-      Bluetooth: Set the correct values for Identity Address Information
-      Bluetooth: Add SMP function for generating RPAs
-      Bluetooth: Add timer for regenerating local RPA
-      Bluetooth: Add hci_update_random_address() convenience function
-      Bluetooth: Use hci_update_random_address() when connecting LE
-      Bluetooth: Use hci_update_random_address() for enabling advertising
-      Bluetooth: Use hci_update_random_address() for initiating LE scan
-      Bluetooth: Don't write static address during power on
-      Bluetooth: Add debugfs entry for RPA regeneration timeout
-      Bluetooth: Add support for Set Privacy command
-      Bluetooth: Fix setting correct src_type when connecting LE
-      Bluetooth: Remove unneeded hdev->own_addr_type
-      Bluetooth: Enable RPA resolving if mgmt_set_privacy is called
-      Bluetooth: Fix canceling RPA expiry timer
-      Bluetooth: Add convenience function for getting total connection count
-      Bluetooth: Move HCI_ADVERTISING handling into mgmt.c
-      Bluetooth: Move check for MGMT_CONNECTED flag into mgmt.c
-      Bluetooth: Don't clear HCI_DISCOVERABLE when powering off
-      Bluetooth: Don't clear HCI_CONNECTABLE when powering off
-      Bluetooth: Don't clear HCI_ADVERTISING when powering off
-      Bluetooth: Clean up HCI state when doing power off
-      Bluetooth: Fix advertising address type when toggling connectable
-      Bluetooth: Ignore IRKs with no Identity Address
-      Bluetooth: Track not yet received keys in SMP
-      Bluetooth: Simplify logic for checking for SMP completion
-      Bluetooth: Remove unneeded "force" parameter from smp_distribute_keys()
-      Bluetooth: Add tracking of advertising address type
-      Bluetooth: Add hci_copy_identity_address convenience function
-      Bluetooth: Fix disconnecting connections in non-connected states
-      Bluetooth: Add timer to force power off
-      Bluetooth: Fix clearing SMP keys if pairing fails
-      Bluetooth: Add protections for updating local random address
-      Bluetooth: Fix updating connection state to BT_CONNECT too early
-      Bluetooth: Track LE initiator and responder address information
-      Bluetooth: Use hdev->init/resp_addr values for smp_c1 function
-      Bluetooth: Add defines for LE initiator filter policy
-      Bluetooth: Add timeout for LE connection attempts
-      Bluetooth: Re-encrypt link after receiving an LTK
-      Bluetooth: Delay LTK encryption to let remote receive all keys
-      Bluetooth: Fix trying to disable scanning twice
-      Bluetooth: Remove unnecessary stop_scan_complete function
-
-Lukasz Rymanowski (1):
-      Bluetooth: Fix response on confirm_name
-
-Marcel Holtmann (12):
-      Bluetooth: Fix issue with missing management event opcode
-      Bluetooth: Expose current identity information in debugfs
-      Bluetooth: Use unresolvable private address for active scanning
-      Bluetooth: Use privacy mode for non-connectable advertising
-      Bluetooth: Store current RPA and update it if needed
-      Bluetooth: Export current local RPA with identity information
-      Bluetooth: Make hci_blacklist_clear function static
-      Bluetooth: Add definitions for LE white list HCI commands
-      Bluetooth: Clear all LE white list entries when powering controller
-      Bluetooth: Add support for storing LE white list entries
-      Bluetooth: Track LE white list modification via HCI commands
-      Bluetooth: Use __le64 type for LE random numbers
-
- include/net/bluetooth/hci.h      |  27 +-
- include/net/bluetooth/hci_core.h |  78 ++++-
- include/net/bluetooth/mgmt.h     |  10 +-
- net/bluetooth/hci_conn.c         | 116 ++++----
- net/bluetooth/hci_core.c         | 679 ++++++++++++++++++++++++++++++++++++++++---
- net/bluetooth/hci_event.c        | 274 ++++++++++++++++-
- net/bluetooth/l2cap_core.c       |  37 ++-
- net/bluetooth/mgmt.c             | 425 ++++++++++++++++++++++-----
- net/bluetooth/smp.c              | 180 +++++++++---
- net/bluetooth/smp.h              |  11 +-
- 10 files changed, 1585 insertions(+), 252 deletions(-)
-
-
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTEOWrAAoJEPs3PUX4s20o/ZkP/1GI1GZhhGTKcp+lnwd2Z2t1
-0LzZy5+N7mJx/TPCp2R6svyypSKGLOkwsDOHgDfOePYxbH+YgEH0FaLe22gM3dhX
-H4FsGXhNzJQtpP/rvW/Pzzx428hYC9jC8am2eqKTm4LqpdrxzBtic7/5ymf2g6vB
-K+V6ud+Inp+t/oU7KAZOFb3H0m63/2sb4bH4XrvrjokZYIyoQDR0tZzAAqfQIEuu
-wQkvl0gEDvM7H8152MmbuGv9FIGP+SK/0wO/ZUUiiPtfrZT24GZgLGf1Jzag41dC
-BeQrvNbpXSOSWFXbYqj2Tc4aVRx2HpEaiOkHWq7uutaN3I0Iygo13aH/OjbCllXK
-xzlPXHT6N83MRAxQ9mo3ZbfaNCn1awBB4kif/BJKf4x8/00wuK/HlnyyC5Fq8Xol
-E1Ivu3UFPYiSfXjFkOWgRdSh3by1bZfGcq89xa9kFPIvO1inB3HNfRrhDf7z3usO
-Ke+1eYMRG6BUOKTUspYJob3omLbmJBCWmJLOCH6QOgAhiJQq32RiIvZMNkVXKG5x
-84fdA14UXz5IiSNQUOGOq+WReR6Qw+5BGks+X99wWrBX8yXjrtRzcT9Tggv99FYg
-FhBkLVNMQkL8jDV2PugnVquj5AbnGPZ+7t6yM+jy6buejDBBIVbdDjSjXeqOvSIj
-fA2/ImQWpzVfIDxCulSh
-=2srC
------END PGP SIGNATURE-----
-
---+QahgC5+KEYLbs62--
