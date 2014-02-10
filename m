@@ -1,124 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:46681 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbaBCNpL (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:39292 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768AbaBJUFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 08:45:11 -0500
-Received: by mail-ea0-f172.google.com with SMTP id l9so2285277eaj.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 05:45:10 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH v8] mac80211: Update opmode during adding new station
-Date: Mon,  3 Feb 2014 14:44:44 +0100
-Message-Id: <1391435084-17883-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140203_144516_832957_BDF11516)
+	Mon, 10 Feb 2014 15:05:35 -0500
+MIME-Version: 1.0
+In-Reply-To: <BF9457FD-CEED-4290-9150-57F51F6E42FC@goldelico.com>
+References: <1391802529-29861-1-git-send-email-marek@goldelico.com>
+	<1392020862.4128.1.camel@jlt4.sipsolutions.net>
+	<BF9457FD-CEED-4290-9150-57F51F6E42FC@goldelico.com>
+Date: Mon, 10 Feb 2014 21:05:31 +0100
+Message-ID: <CAAfyv354SPRvqmN-AO0GmwNVcDG-6Pxenn8_gt+ta8HY8kJ9vQ@mail.gmail.com> (sfid-20140210_210610_108559_C2F0906B)
+Subject: Re: [PATCH] net: rfkill-regulator: Add devicetree support.
+From: Belisko Marek <marek.belisko@gmail.com>
+To: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Rob Landley <rob@landley.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	Grant Likely <grant.likely@linaro.org>,
+	NeilBrown Brown <neilb@suse.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating mode is needed when User Space received Assoc
-Request contains Operating mode notification element.
+On Mon, Feb 10, 2014 at 9:54 AM, Dr. H. Nikolaus Schaller
+<hns@goldelico.com> wrote:
+> Am 10.02.2014 um 09:27 schrieb Johannes Berg:
+>
+>> On Fri, 2014-02-07 at 20:48 +0100, Marek Belisko wrote:
+>>
+>>> +#define RFKILL_TYPE_ALL             (0)
+>>> +#define RFKILL_TYPE_WLAN    (1)
+>>> +#define RFKILL_TYPE_BLUETOOTH       (2)
+>>> +#define RFKILL_TYPE_UWB             (3)
+>>> +#define RFKILL_TYPE_WIMAX   (4)
+>>> +#define RFKILL_TYPE_WWAN    (5)
+>>> +#define RFKILL_TYPE_GPS             (6)
+>>> +#define RFKILL_TYPE_FM              (7)
+>>> +#define RFKILL_TYPE_NFC             (8)
+>>
+>> This seems like a bad idea since there's an enum elsewhere in userspace
+>> API already.
+I know this is duplicate but in device tree we cannot use enums
+(AFAIU include/dt-bindings are defines used in device tree files)
+>
+> Yes,
+> you are right. It is defined in include/uapi/linux/rfkill.h
+>
+> Tnx,
+> Nikolaus
+>
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- net/mac80211/cfg.c         |   10 ++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/vht.c         |   27 ++++++++++++++++++++-------
- 3 files changed, 33 insertions(+), 7 deletions(-)
+BR,
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f9ae9b8..767185a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1341,6 +1341,16 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
- 						    params->vht_capa, sta);
- 
-+	if (params->opmode_notif_used) {
-+		enum ieee80211_band band =
-+			ieee80211_get_sdata_band(sdata);
-+
-+		/* ignore returned value is not needed */
-+		__ieee80211_vht_handle_opmode(sdata, sta,
-+					      params->opmode_notif,
-+					      band, false);
-+	}
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		u32 changed = 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3701930..b1f04a8 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1553,6 +1553,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+                                  struct sta_info *sta, u8 opmode,
-+                                  enum ieee80211_band band, bool nss_only);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index d75f35c..04f906c 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -349,9 +349,9 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
- }
- 
--void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				  struct sta_info *sta, u8 opmode,
-+				  enum ieee80211_band band, bool nss_only)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -363,7 +363,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
--		return;
-+		return 0;
- 
- 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
-@@ -375,7 +375,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (nss_only)
--		goto change;
-+		return changed;
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
-@@ -398,7 +398,20 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 	}
- 
-- change:
--	if (changed)
-+	return changed;
-+}
-+
-+void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta, u8 opmode,
-+				 enum ieee80211_band band, bool nss_only)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+
-+	u32 changed = __ieee80211_vht_handle_opmode(sdata, sta, opmode,
-+						    band, nss_only);
-+
-+	if (changed > 0)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
-+
+marek
+
 -- 
-1.7.9.5
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
