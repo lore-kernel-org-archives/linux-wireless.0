@@ -1,142 +1,388 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:60908 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753100AbaBDJ2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:36 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0LqzEB-1VXgiv37ZL-00eZid for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:34 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 06/13] ath9k_htc: use ath9k_cmn_process_rssi
-Date: Tue,  4 Feb 2014 10:27:43 +0100
-Message-Id: <1391506070-8636-7-git-send-email-linux@rempel-privat.de> (sfid-20140204_102839_476297_4590588E)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-we0-f180.google.com ([74.125.82.180]:48105 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbaBJLrw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Feb 2014 06:47:52 -0500
+Received: by mail-we0-f180.google.com with SMTP id u57so4062705wes.25
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:51 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/18] wlcore/wl12xx/wl18xx: configure num_links per-hw
+Date: Mon, 10 Feb 2014 13:47:22 +0200
+Message-Id: <1392032854-28126-7-git-send-email-eliad@wizery.com> (sfid-20140210_124759_320069_81C38CDF)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc.h          |  1 -
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |  1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |  1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 21 ++-------------------
- drivers/net/wireless/ath/ath9k/mac.h          |  9 +++------
- 5 files changed, 7 insertions(+), 26 deletions(-)
+Upcoming fw versions will have different max links support
+(according to the hw). Get ready for it by configuring
+wl->num_links per-hw, instead of using the const WL12XX_MAX_LINKS.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 58da346..c75493f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -275,7 +275,6 @@ struct ath9k_htc_rxbuf {
- };
+However, continue using WLCORE_MAX_LINKS in order to simplify
+structs declarations (we use it in multiple bitmaps, and converting
+them to dynamic arrays is just cumbersome).
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c     |  3 +++
+ drivers/net/wireless/ti/wl12xx/wl12xx.h   |  2 ++
+ drivers/net/wireless/ti/wl18xx/main.c     |  3 +++
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |  4 +++-
+ drivers/net/wireless/ti/wlcore/cmd.c      |  4 ++--
+ drivers/net/wireless/ti/wlcore/event.c    |  4 ++--
+ drivers/net/wireless/ti/wlcore/main.c     | 12 ++++++++----
+ drivers/net/wireless/ti/wlcore/rx.c       |  8 ++++----
+ drivers/net/wireless/ti/wlcore/tx.c       | 20 ++++++++++----------
+ drivers/net/wireless/ti/wlcore/wlcore.h   |  8 +++++---
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++----
+ 11 files changed, 51 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 3ad8767..69df5bc 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1749,9 +1749,12 @@ static int wl12xx_setup(struct wl1271 *wl)
+ 	struct wlcore_platdev_data *pdev_data = dev_get_platdata(&wl->pdev->dev);
+ 	struct wl12xx_platform_data *pdata = pdev_data->pdata;
  
- struct ath9k_htc_rx {
--	int last_rssi; /* FIXME: per-STA */
- 	struct list_head rxbuf;
- 	spinlock_t rxbuflock;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index f4e1de2..9db8aef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -607,6 +607,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
++	BUILD_BUG_ON(WL12XX_MAX_LINKS > WLCORE_MAX_LINKS);
++
+ 	wl->rtable = wl12xx_rtable;
+ 	wl->num_tx_desc = WL12XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL12XX_NUM_RX_DESCRIPTORS;
++	wl->num_links = WL12XX_MAX_LINKS;
+ 	wl->num_channels = 1;
+ 	wl->num_mac_addr = WL12XX_NUM_MAC_ADDRESSES;
+ 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index b9950f8..26b1a3f 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -65,6 +65,8 @@
  
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ #define WL12XX_RX_BA_MAX_SESSIONS 3
  
-+	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
- }
++#define WL12XX_MAX_LINKS 12
++
+ struct wl127x_rx_mem_pool_addr {
+ 	u32 addr;
+ 	u32 addr_extra;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index cbf9bf3..6011b22 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1752,9 +1752,12 @@ static int wl18xx_setup(struct wl1271 *wl)
+ 	struct wl18xx_priv *priv = wl->priv;
+ 	int ret;
  
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 608d739..228549a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1457,6 +1457,7 @@ static void ath9k_htc_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++	BUILD_BUG_ON(WL18XX_MAX_LINKS > WLCORE_MAX_LINKS);
++
+ 	wl->rtable = wl18xx_rtable;
+ 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL18XX_NUM_RX_DESCRIPTORS;
++	wl->num_links = WL18XX_MAX_LINKS;
+ 	wl->num_channels = 2;
+ 	wl->num_mac_addr = WL18XX_NUM_MAC_ADDRESSES;
+ 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index d32a6af..38174e9 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -42,6 +42,8 @@
  
- 	if ((vif->type == NL80211_IFTYPE_STATION) && bss_conf->assoc) {
- 		common->curaid = bss_conf->aid;
-+		common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ #define WL18XX_RX_BA_MAX_SESSIONS 5
+ 
++#define WL18XX_MAX_LINKS 12
++
+ struct wl18xx_priv {
+ 	/* buffer for sending commands to FW */
+ 	u8 cmd_buf[WL18XX_CMD_MAX_SIZE];
+@@ -114,7 +116,7 @@ struct wl18xx_fw_packet_counters {
+ 	u8 tx_released_pkts[NUM_TX_QUEUES];
+ 
+ 	/* Cumulative counter of freed packets per HLID */
+-	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
++	u8 tx_lnk_free_pkts[WL18XX_MAX_LINKS];
+ 
+ 	/* Cumulative counter of released Voice memory blocks */
+ 	u8 tx_voice_released_blks;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 4d19fd2..ab5ca32 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -312,8 +312,8 @@ static int wlcore_get_new_session_id(struct wl1271 *wl, u8 hlid)
+ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ {
+ 	unsigned long flags;
+-	u8 link = find_first_zero_bit(wl->links_map, WL12XX_MAX_LINKS);
+-	if (link >= WL12XX_MAX_LINKS)
++	u8 link = find_first_zero_bit(wl->links_map, wl->num_links);
++	if (link >= wl->num_links)
+ 		return -EBUSY;
+ 
+ 	wl->session_ids[link] = wlcore_get_new_session_id(wl, link);
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 8d3b349..1f9a360 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -67,7 +67,7 @@ static void wl1271_stop_ba_event(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		u8 hlid;
+ 		struct wl1271_link *lnk;
+ 		for_each_set_bit(hlid, wlvif->ap.sta_hlid_map,
+-				 WL12XX_MAX_LINKS) {
++				 wl->num_links) {
+ 			lnk = &wl->links[hlid];
+ 			if (!lnk->ba_bitmap)
+ 				continue;
+@@ -172,7 +172,7 @@ static void wlcore_disconnect_sta(struct wl1271 *wl, unsigned long sta_bitmap)
+ 	const u8 *addr;
+ 	int h;
+ 
+-	for_each_set_bit(h, &sta_bitmap, WL12XX_MAX_LINKS) {
++	for_each_set_bit(h, &sta_bitmap, wl->num_links) {
+ 		bool found = false;
+ 		/* find the ap vif connected to this sta */
+ 		wl12xx_for_each_wlvif_ap(wl, wlvif) {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 70a3e57..c35d1dc 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -372,7 +372,7 @@ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
+ 		wl->ap_fw_ps_map = cur_fw_ps_map;
  	}
+ 
+-	for_each_set_bit(hlid, wlvif->ap.sta_hlid_map, WL12XX_MAX_LINKS)
++	for_each_set_bit(hlid, wlvif->ap.sta_hlid_map, wl->num_links)
+ 		wl12xx_irq_ps_regulate_link(wl, wlvif, hlid,
+ 					    wl->links[hlid].allocated_pkts);
  }
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index a3f2201..fcf7f5a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -927,7 +927,6 @@ void ath9k_host_rx_init(struct ath9k_htc_priv *priv)
- 	ath9k_hw_rxena(priv->ah);
- 	ath9k_htc_opmode_init(priv);
- 	ath9k_hw_startpcureceive(priv->ah, test_bit(OP_SCANNING, &priv->op_flags));
--	priv->rx.last_rssi = ATH_RSSI_DUMMY_MARKER;
- }
+@@ -412,7 +412,7 @@ static int wlcore_fw_status(struct wl1271 *wl, struct wl_fw_status *status)
+ 	}
  
- static void ath9k_process_rate(struct ieee80211_hw *hw,
-@@ -1011,7 +1010,6 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct ath_htc_rx_status *rxstatus;
- 	struct ath_rx_status rx_stats;
- 	int hdrlen, padsize;
--	int last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	__le16 fc;
  
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
-@@ -1104,24 +1102,9 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
- 			   rxbuf->rxstatus.rs_flags);
+-	for_each_set_bit(i, wl->links_map, WL12XX_MAX_LINKS) {
++	for_each_set_bit(i, wl->links_map, wl->num_links) {
+ 		u8 diff;
+ 		lnk = &wl->links[i];
  
--	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
--	    !rxbuf->rxstatus.rs_moreaggr)
--		ATH_RSSI_LPF(priv->rx.last_rssi,
--			     rxbuf->rxstatus.rs_rssi);
+@@ -5855,7 +5855,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
+ 	int i, j, ret;
+ 	unsigned int order;
  
--	last_rssi = priv->rx.last_rssi;
--
--	if (ath_is_mybeacon(common, hdr)) {
--		s8 rssi = rxbuf->rxstatus.rs_rssi;
--
--		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
--
--		if (rssi < 0)
--			rssi = 0;
--
--		priv->ah->stats.avgbrssi = rssi;
--	}
-+	rx_stats.is_mybeacon = ath_is_mybeacon(common, hdr);
-+	ath9k_cmn_process_rssi(common, hw, &rx_stats, rx_status);
+-	BUILD_BUG_ON(AP_MAX_STATIONS > WL12XX_MAX_LINKS);
++	BUILD_BUG_ON(AP_MAX_STATIONS > WLCORE_MAX_LINKS);
  
- 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
- 	rx_status->band = hw->conf.chandef.chan->band;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 1027137..89df634 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -155,12 +155,8 @@ struct ath_htc_rx_status {
- 	u8 rs_status;
- 	u8 rs_phyerr;
- 	int8_t rs_rssi;
--	int8_t rs_rssi_ctl0;
--	int8_t rs_rssi_ctl1;
--	int8_t rs_rssi_ctl2;
--	int8_t rs_rssi_ext0;
--	int8_t rs_rssi_ext1;
--	int8_t rs_rssi_ext2;
-+	int8_t rs_rssi_ctl[3];
-+	int8_t rs_rssi_ext[3];
- 	u8 rs_keyix;
- 	u8 rs_rate;
- 	u8 rs_antenna;
-@@ -170,6 +166,7 @@ struct ath_htc_rx_status {
- 	u8 rs_num_delims;
- 	u8 rs_flags;
- 	u8 rs_dummy;
-+	/* FIXME: evm* never used? */
- 	__be32 evm0;
- 	__be32 evm1;
- 	__be32 evm2;
+ 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1271_ops);
+ 	if (!hw) {
+@@ -5878,8 +5878,12 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
+ 
+ 	wl->hw = hw;
+ 
++	/*
++	 * wl->num_links is not configured yet, so just use WLCORE_MAX_LINKS.
++	 * we don't allocate any additional resource here, so that's fine.
++	 */
+ 	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		for (j = 0; j < WL12XX_MAX_LINKS; j++)
++		for (j = 0; j < WLCORE_MAX_LINKS; j++)
+ 			skb_queue_head_init(&wl->links[j].tx_queue[i]);
+ 
+ 	skb_queue_head_init(&wl->deferred_rx_queue);
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index a047e87..e125974 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -205,7 +205,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 
+ int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ {
+-	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
++	unsigned long active_hlids[BITS_TO_LONGS(WLCORE_MAX_LINKS)] = {0};
+ 	u32 buf_size;
+ 	u32 fw_rx_counter = status->fw_rx_counter % wl->num_rx_desc;
+ 	u32 drv_rx_counter = wl->rx_counter % wl->num_rx_desc;
+@@ -263,12 +263,12 @@ int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ 						  wl->aggr_buf + pkt_offset,
+ 						  pkt_len, rx_align,
+ 						  &hlid) == 1) {
+-				if (hlid < WL12XX_MAX_LINKS)
++				if (hlid < wl->num_links)
+ 					__set_bit(hlid, active_hlids);
+ 				else
+ 					WARN(1,
+-					     "hlid exceeded WL12XX_MAX_LINKS "
+-					     "(%d)\n", hlid);
++					     "hlid (%d) exceeded MAX_LINKS\n",
++					     hlid);
+ 			}
+ 
+ 			wl->rx_counter++;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index ca886ef..06ab5c6 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -565,11 +565,11 @@ static struct sk_buff *wlcore_vif_dequeue_high_prio(struct wl1271 *wl,
+ 	int i, h, start_hlid;
+ 
+ 	/* start from the link after the last one */
+-	start_hlid = (wlvif->last_tx_hlid + 1) % WL12XX_MAX_LINKS;
++	start_hlid = (wlvif->last_tx_hlid + 1) % wl->num_links;
+ 
+ 	/* dequeue according to AC, round robin on each link */
+-	for (i = 0; i < WL12XX_MAX_LINKS; i++) {
+-		h = (start_hlid + i) % WL12XX_MAX_LINKS;
++	for (i = 0; i < wl->num_links; i++) {
++		h = (start_hlid + i) % wl->num_links;
+ 
+ 		/* only consider connected stations */
+ 		if (!test_bit(h, wlvif->links_map))
+@@ -693,8 +693,8 @@ static void wl1271_skb_queue_head(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		skb_queue_head(&wl->links[hlid].tx_queue[q], skb);
+ 
+ 		/* make sure we dequeue the same packet next time */
+-		wlvif->last_tx_hlid = (hlid + WL12XX_MAX_LINKS - 1) %
+-				      WL12XX_MAX_LINKS;
++		wlvif->last_tx_hlid = (hlid + wl->num_links - 1) %
++				      wl->num_links;
+ 	}
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+@@ -727,7 +727,7 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids)
+ 	timeout = wl->conf.rx_streaming.duration;
+ 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
+ 		bool found = false;
+-		for_each_set_bit(hlid, active_hlids, WL12XX_MAX_LINKS) {
++		for_each_set_bit(hlid, active_hlids, wl->num_links) {
+ 			if (test_bit(hlid, wlvif->links_map)) {
+ 				found  = true;
+ 				break;
+@@ -764,7 +764,7 @@ int wlcore_tx_work_locked(struct wl1271 *wl)
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 buf_offset = 0, last_len = 0;
+ 	bool sent_packets = false;
+-	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
++	unsigned long active_hlids[BITS_TO_LONGS(WLCORE_MAX_LINKS)] = {0};
+ 	int ret = 0;
+ 	int bus_ret = 0;
+ 	u8 hlid;
+@@ -1066,7 +1066,7 @@ void wl12xx_tx_reset_wlvif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	int i;
+ 
+ 	/* TX failure */
+-	for_each_set_bit(i, wlvif->links_map, WL12XX_MAX_LINKS) {
++	for_each_set_bit(i, wlvif->links_map, wl->num_links) {
+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS &&
+ 		    i != wlvif->ap.bcast_hlid && i != wlvif->ap.global_hlid) {
+ 			/* this calls wl12xx_free_link */
+@@ -1090,7 +1090,7 @@ void wl12xx_tx_reset(struct wl1271 *wl)
+ 
+ 	/* only reset the queues if something bad happened */
+ 	if (wl1271_tx_total_queue_count(wl) != 0) {
+-		for (i = 0; i < WL12XX_MAX_LINKS; i++)
++		for (i = 0; i < wl->num_links; i++)
+ 			wl1271_tx_reset_link_queues(wl, i);
+ 
+ 		for (i = 0; i < NUM_TX_QUEUES; i++)
+@@ -1183,7 +1183,7 @@ void wl1271_tx_flush(struct wl1271 *wl)
+ 		       WL1271_TX_FLUSH_TIMEOUT / 1000);
+ 
+ 	/* forcibly flush all Tx buffers on our queues */
+-	for (i = 0; i < WL12XX_MAX_LINKS; i++)
++	for (i = 0; i < wl->num_links; i++)
+ 		wl1271_tx_reset_link_queues(wl, i);
+ 
+ out_wake:
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index cec5265..98b1875 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -222,7 +222,7 @@ struct wl1271 {
+ 	int channel;
+ 	u8 system_hlid;
+ 
+-	unsigned long links_map[BITS_TO_LONGS(WL12XX_MAX_LINKS)];
++	unsigned long links_map[BITS_TO_LONGS(WLCORE_MAX_LINKS)];
+ 	unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
+ 	unsigned long roc_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
+ 	unsigned long rate_policies_map[
+@@ -230,7 +230,7 @@ struct wl1271 {
+ 	unsigned long klv_templates_map[
+ 			BITS_TO_LONGS(WLCORE_MAX_KLV_TEMPLATES)];
+ 
+-	u8 session_ids[WL12XX_MAX_LINKS];
++	u8 session_ids[WLCORE_MAX_LINKS];
+ 
+ 	struct list_head wlvif_list;
+ 
+@@ -378,7 +378,7 @@ struct wl1271 {
+ 	 * AP-mode - links indexed by HLID. The global and broadcast links
+ 	 * are always active.
+ 	 */
+-	struct wl1271_link links[WL12XX_MAX_LINKS];
++	struct wl1271_link links[WLCORE_MAX_LINKS];
+ 
+ 	/* number of currently active links */
+ 	int active_link_count;
+@@ -436,6 +436,8 @@ struct wl1271 {
+ 	u32 num_tx_desc;
+ 	/* number of RX descriptors the HW supports. */
+ 	u32 num_rx_desc;
++	/* number of links the HW supports */
++	u8 num_links;
+ 
+ 	/* translate HW Tx rates to standard rate-indices */
+ 	const u8 **band_rate_to_idx;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 32e1e8b..256d09b 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -58,10 +58,15 @@
+ #define WL1271_DEFAULT_DTIM_PERIOD 1
+ 
+ #define WL12XX_MAX_ROLES           4
+-#define WL12XX_MAX_LINKS           12
+ #define WL12XX_INVALID_ROLE_ID     0xff
+ #define WL12XX_INVALID_LINK_ID     0xff
+ 
++/*
++ * max number of links allowed by all HWs.
++ * this is NOT the actual max links supported by the current hw.
++ */
++#define WLCORE_MAX_LINKS 12
++
+ /* the driver supports the 2.4Ghz and 5Ghz bands */
+ #define WLCORE_NUM_BANDS           2
+ 
+@@ -156,7 +161,7 @@ struct wl_fw_status {
+ 
+ 		/*
+ 		 * Cumulative counter of freed packets per HLID
+-		 * (length of the array is WL12XX_MAX_LINKS)
++		 * (length of the array is wl->num_links)
+ 		 */
+ 		u8 *tx_lnk_free_pkts;
+ 
+@@ -357,7 +362,7 @@ struct wl12xx_vif {
+ 
+ 			/* HLIDs bitmap of associated stations */
+ 			unsigned long sta_hlid_map[BITS_TO_LONGS(
+-							WL12XX_MAX_LINKS)];
++							WLCORE_MAX_LINKS)];
+ 
+ 			/* recoreded keys - set here before AP startup */
+ 			struct wl1271_ap_key *recorded_keys[MAX_NUM_KEYS];
+@@ -374,7 +379,7 @@ struct wl12xx_vif {
+ 	/* counters of packets per AC, across all links in the vif */
+ 	int tx_queue_count[NUM_TX_QUEUES];
+ 
+-	unsigned long links_map[BITS_TO_LONGS(WL12XX_MAX_LINKS)];
++	unsigned long links_map[BITS_TO_LONGS(WLCORE_MAX_LINKS)];
+ 
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 ssid_len;
 -- 
-1.9.rc1
+1.8.5.2.229.g4448466.dirty
 
