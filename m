@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbaBXMVT (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:61885 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbaBJLrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 07:21:19 -0500
-Message-ID: <1393244470.4190.6.camel@jlt4.sipsolutions.net> (sfid-20140224_132122_210980_5AFEFF84)
-Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ
- into info->control.flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@nbd.name
-Date: Mon, 24 Feb 2014 13:21:10 +0100
-In-Reply-To: <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Feb 2014 06:47:47 -0500
+Received: by mail-wg0-f54.google.com with SMTP id x13so4168362wgg.9
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:46 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/18] wlcore: block read/writes to FW during ELP
+Date: Mon, 10 Feb 2014 13:47:19 +0200
+Message-Id: <1392032854-28126-4-git-send-email-eliad@wizery.com> (sfid-20140210_124751_576441_DC9C9114)
+In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
+From: Barak Bercovitz <barak@wizery.com>
 
->  enum mac80211_tx_info_flags {
->  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-> -	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(1),
-> -	IEEE80211_TX_CTL_NO_ACK			= BIT(2),
+When the chip is in ELP mode read/write to FW is invalid and may cause
+the lower layers to get stuck. The reads/writes concerning ELP wakeup
+are the exception here and are checked for. In addition to blocking the
+IO, produce a warning.
 
-I'd prefer you didn't renumber all of them in every single patch ...
-maybe in the last one if you need it for some reason, or better
-separately I guess.
+Signed-off-by: Barak Bercovitz <barak@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/io.h | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
+index 07e3d6a..0305729 100644
+--- a/drivers/net/wireless/ti/wlcore/io.h
++++ b/drivers/net/wireless/ti/wlcore/io.h
+@@ -60,7 +60,9 @@ static inline int __must_check wlcore_raw_write(struct wl1271 *wl, int addr,
+ {
+ 	int ret;
+ 
+-	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags))
++	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags) ||
++	    WARN_ON((test_bit(WL1271_FLAG_IN_ELP, &wl->flags) &&
++		     addr != HW_ACCESS_ELP_CTRL_REG)))
+ 		return -EIO;
+ 
+ 	ret = wl->if_ops->write(wl->dev, addr, buf, len, fixed);
+@@ -76,7 +78,9 @@ static inline int __must_check wlcore_raw_read(struct wl1271 *wl, int addr,
+ {
+ 	int ret;
+ 
+-	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags))
++	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags) ||
++	    WARN_ON((test_bit(WL1271_FLAG_IN_ELP, &wl->flags) &&
++		     addr != HW_ACCESS_ELP_CTRL_REG)))
+ 		return -EIO;
+ 
+ 	ret = wl->if_ops->read(wl->dev, addr, buf, len, fixed);
+-- 
+1.8.5.2.229.g4448466.dirty
 
