@@ -1,149 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:46590 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751144AbaBWOIy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 09:08:54 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v1 4/6] mac80211: move flag IEEE80211_TX_CTL_MORE_FRAMES into info->control.flags
-Date: Sun, 23 Feb 2014 15:08:45 +0100
-Message-Id: <1393164527-13800-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140223_150928_258872_A410A27C)
-In-Reply-To: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from nbd.name ([46.4.11.11]:51430 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbaBKKSU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 05:18:20 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 2/2] ath9k: implement p2p client powersave support
+Date: Tue, 11 Feb 2014 11:18:10 +0100
+Message-Id: <1392113890-5097-2-git-send-email-nbd@openwrt.org> (sfid-20140211_111828_144327_DA715C57)
+In-Reply-To: <1392113890-5097-1-git-send-email-nbd@openwrt.org>
+References: <1392113890-5097-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
-ieee80211_tx_info->control is valid. Therefore this patch moves this flag
-from info->flags structure into the info->control.flags and renames it to
-IEEE80211_TX_CTRL_MORE_FRAMES.
+Use generic TSF timers to trigger powersave state changes based
+information from the P2P NoA attribute.
+Opportunistic Powersave is not handled, because the driver does not
+support powersave at the moment.
 
-Signed-off-by: Alexander Couzens <lynxis@fe80.eu>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- include/net/mac80211.h                    |   41 +++++++++++++++--------------
- net/mac80211/tx.c                         |    2 +-
- 3 files changed, 23 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  12 ++++
+ drivers/net/wireless/ath/ath9k/init.c  |   6 ++
+ drivers/net/wireless/ath/ath9k/main.c  | 104 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c  |   3 +
+ 4 files changed, 125 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index bed86cc..076d44a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -473,7 +473,7 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Check if more frames (!= fragments) are pending
- 	 */
--	if (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)
-+	if (tx_info->control.flags & IEEE80211_TX_CTRL_MORE_FRAMES)
- 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b5ac32c..65915e1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -115,6 +115,9 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define ATH_TXFIFO_DEPTH           8
+ #define ATH_TX_ERROR               0x01
  
- 	/*
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 352e2629..696aa5a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -413,10 +413,6 @@ struct ieee80211_bss_conf {
-  *	used to indicate that a frame was already retried due to PS
-  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
-  *	used to indicate frame should not be encrypted
-- * @IEEE80211_TX_CTL_MORE_FRAMES: More frames will be passed to the
-- *	transmit function after the current frame, this can be used
-- *	by drivers to kick the DMA queue only if unset or when the
-- *	queue gets full.
-  * @IEEE80211_TX_INTFL_RETRANSMISSION: This frame is being retransmitted
-  *	after TX status because the destination was asleep, it must not
-  *	be modified again (no seqno assignment, crypto, etc.)
-@@ -472,22 +468,21 @@ enum mac80211_tx_info_flags {
- 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(12),
- 	IEEE80211_TX_INTFL_RETRIED		= BIT(13),
- 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(14),
--	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(15),
--	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(16),
--	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(17),
--	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(18),
--	IEEE80211_TX_CTL_LDPC			= BIT(19),
--	IEEE80211_TX_CTL_STBC			= BIT(20) | BIT(21),
--	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(22),
--	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(23),
--	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(24),
--	IEEE80211_TX_STATUS_EOSP		= BIT(25),
--	IEEE80211_TX_CTL_USE_MINRATE		= BIT(26),
--	IEEE80211_TX_CTL_DONTFRAG		= BIT(27),
--	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(28),
-+	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(15),
-+	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(16),
-+	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(17),
-+	IEEE80211_TX_CTL_LDPC			= BIT(18),
-+	IEEE80211_TX_CTL_STBC			= BIT(19) | BIT(20),
-+	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(21),
-+	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(22),
-+	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(23),
-+	IEEE80211_TX_STATUS_EOSP		= BIT(24),
-+	IEEE80211_TX_CTL_USE_MINRATE		= BIT(25),
-+	IEEE80211_TX_CTL_DONTFRAG		= BIT(26),
-+	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(27),
++/* Stop tx traffic 1ms before the GO goes away */
++#define ATH_P2P_PS_STOP_TIME       1000
++
+ #define IEEE80211_SEQ_SEQ_SHIFT    4
+ #define IEEE80211_SEQ_MAX          4096
+ #define IEEE80211_WEP_IVLEN        3
+@@ -363,11 +366,15 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ /********/
+ 
+ struct ath_vif {
++	struct ieee80211_vif *vif;
+ 	struct ath_node mcast_node;
+ 	int av_bslot;
+ 	bool primary_sta_vif;
+ 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
+ 	struct ath_buf *av_bcbuf;
++
++	/* P2P Client */
++	struct ieee80211_noa_data noa;
  };
  
--#define IEEE80211_TX_CTL_STBC_SHIFT		20
-+#define IEEE80211_TX_CTL_STBC_SHIFT		19
+ struct ath9k_vif_iter_data {
+@@ -472,6 +479,8 @@ int ath_update_survey_stats(struct ath_softc *sc);
+ void ath_update_survey_nf(struct ath_softc *sc, int channel);
+ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
+ void ath_ps_full_sleep(unsigned long data);
++void ath9k_p2p_ps_timer(void *priv);
++void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif);
  
- /**
-  * enum mac80211_tx_control_flags - flags to describe transmit control
-@@ -507,6 +502,11 @@ enum mac80211_tx_info_flags {
-  *	802.11-2007 7.1.3.4.1 paragraph 3. This flag will always be set for
-  *	beacons and always be clear for frames without a sequence number field.
-  *
-+ * @IEEE80211_TX_CTRL_MORE_FRAMES: More frames will be passed to the
-+ *	transmit function after the current frame, this can be used
-+ *	by drivers to kick the DMA queue only if unset or when the
-+ *	queue gets full.
-+ *
-  * These flags are used in tx_info->control.flags.
-  */
- enum mac80211_tx_control_flags {
-@@ -514,6 +514,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_ASSIGN_SEQ		= BIT(1),
- 	IEEE80211_TX_CTRL_FIRST_FRAGMENT        = BIT(3),
- 	IEEE80211_TX_CTRL_NO_PS_BUFFER          = BIT(4),
-+	IEEE80211_TX_CTRL_MORE_FRAMES           = BIT(5),
- };
+ /**********/
+ /* BTCOEX */
+@@ -731,6 +740,9 @@ struct ath_softc {
+ 	struct completion paprd_complete;
+ 	wait_queue_head_t tx_wait;
  
- /*
-@@ -526,7 +527,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
- 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_STBC |	      \
--	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC)
-+	IEEE80211_TX_CTL_LDPC)
++	struct ath_gen_timer *p2p_ps_timer;
++	struct ath_vif *p2p_ps_vif;
++
+ 	unsigned long sc_flags;
+ 	unsigned long driver_data;
  
- /*
-  * This definition is used to clear all temporary flags, which are only used
-@@ -534,7 +535,7 @@ enum mac80211_tx_control_flags {
-  * info->control.flags is used.
-  */
- #define IEEE80211_TX_TEMPORARY_CTRL_FLAGS (IEEE80211_TX_CTRL_FIRST_FRAGMENT |  \
--	IEEE80211_TX_CTRL_NO_PS_BUFFER)
-+	IEEE80211_TX_CTRL_NO_PS_BUFFER | IEEE80211_TX_CTRL_MORE_FRAMES)
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 72ace06..3e3f12d 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -797,6 +797,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		goto err_btcoex;
  
- /**
-  * enum mac80211_rate_control_flags - per-rate flags set by the
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 4d4c48e..6cb6ba3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -861,7 +861,7 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
- 		info->control.flags &= ~(IEEE80211_TX_CTRL_FIRST_FRAGMENT);
++	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
++		NULL, sc, AR_FIRST_NDP_TIMER);
++
+ 	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_init_misc(sc);
+ 	ath_fill_led_pin(sc);
+@@ -1067,6 +1070,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ {
+ 	int i = 0;
  
- 		if (rem)
--			info->flags |= IEEE80211_TX_CTL_MORE_FRAMES;
-+			info->control.flags |= IEEE80211_TX_CTRL_MORE_FRAMES;
++	if (sc->p2p_ps_timer)
++		ath_gen_timer_free(sc->sc_ah, sc->p2p_ps_timer);
++
+ 	ath9k_deinit_btcoex(sc);
  
- 		skb_copy_queue_mapping(tmp, skb);
- 		tmp->priority = skb->priority;
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5924f72..7634615 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -261,6 +261,8 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	sc->gtt_cnt = 0;
+ 	ieee80211_wake_queues(sc->hw);
+ 
++	ath9k_p2p_ps_timer(sc);
++
+ 	return true;
+ }
+ 
+@@ -1117,6 +1119,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
+ 
++	avp->vif = vif;
++
+ 	an->sc = sc;
+ 	an->sta = NULL;
+ 	an->vif = vif;
+@@ -1161,6 +1165,29 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static void
++ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	s32 tsf, target_tsf;
++
++	if (!avp || !avp->noa.has_next_tsf)
++		return;
++
++	ath9k_hw_gen_timer_stop(ah, sc->p2p_ps_timer);
++
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++
++	target_tsf = avp->noa.next_tsf;
++	if (!avp->noa.absent)
++		target_tsf -= ATH_P2P_PS_STOP_TIME;
++
++	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
++		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
++
++	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, (u32) target_tsf, 1000000);
++}
++
+ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+@@ -1172,6 +1199,13 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&sc->mutex);
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++	if (avp == sc->p2p_ps_vif) {
++		sc->p2p_ps_vif = NULL;
++		ath9k_update_p2p_ps_timer(sc, NULL);
++	}
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	sc->nvifs--;
+ 	sc->tx99_vif = NULL;
+ 
+@@ -1636,6 +1670,70 @@ static void ath9k_bss_assoc_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		ath9k_set_assoc_state(sc, vif);
+ }
+ 
++void ath9k_p2p_ps_timer(void *priv)
++{
++	struct ath_softc *sc = priv;
++	struct ath_vif *avp = sc->p2p_ps_vif;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
++	struct ath_node *an;
++	u32 tsf;
++
++	if (!avp)
++		return;
++
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++	if (!avp->noa.absent)
++		tsf += ATH_P2P_PS_STOP_TIME;
++
++	if (!avp->noa.has_next_tsf ||
++	    avp->noa.next_tsf - tsf > BIT(31))
++		ieee80211_update_p2p_noa(&avp->noa, tsf);
++
++	ath9k_update_p2p_ps_timer(sc, avp);
++
++	rcu_read_lock();
++
++	vif = avp->vif;
++	sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
++	if (!sta)
++		goto out;
++
++	an = (void *) sta->drv_priv;
++	if (an->sleeping == !!avp->noa.absent)
++		goto out;
++
++	an->sleeping = avp->noa.absent;
++	if (an->sleeping)
++		ath_tx_aggr_sleep(sta, sc, an);
++	else
++		ath_tx_aggr_wakeup(sc, an);
++
++out:
++	rcu_read_unlock();
++}
++
++void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
++{
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	u32 tsf;
++
++	if (!sc->p2p_ps_timer)
++		return;
++
++	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
++		return;
++
++	sc->p2p_ps_vif = avp;
++
++	if (sc->ps_flags & PS_BEACON_SYNC)
++		return;
++
++	tsf = ath9k_hw_gettsf32(sc->sc_ah);
++	ieee80211_parse_p2p_noa(&vif->bss_conf.p2p_noa_attr, &avp->noa, tsf);
++	ath9k_update_p2p_ps_timer(sc, avp);
++}
++
+ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_bss_conf *bss_conf,
+@@ -1710,6 +1808,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	if (changed & BSS_CHANGED_P2P_PS) {
++		spin_lock_bh(&sc->sc_pcu_lock);
++		ath9k_update_p2p_ps(sc, vif);
++		spin_unlock_bh(&sc->sc_pcu_lock);
++	}
++
+ 	if (changed & CHECK_ANI)
+ 		ath_check_ani(sc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a0ebdd0..ddfb8ff 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -539,6 +539,9 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+ 		ath_dbg(common, PS,
+ 			"Reconfigure beacon timers based on synchronized timestamp\n");
+ 		ath9k_set_beacon(sc);
++
++		if (sc->p2p_ps_vif)
++			ath9k_update_p2p_ps(sc, sc->p2p_ps_vif->vif);
+ 	}
+ 
+ 	if (ath_beacon_dtim_pending_cab(skb)) {
 -- 
-1.7.9.5
+1.8.3.4 (Apple Git-47)
 
