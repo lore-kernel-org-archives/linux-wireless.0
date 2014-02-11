@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:44510 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133AbaBLLCT (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:26183 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbaBKMv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 06:02:19 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next 0/3] 802.21 and MPLS headers and classification
-Date: Wed, 12 Feb 2014 11:53:03 +0100
-Message-Id: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de> (sfid-20140212_120222_680713_6D5392F3)
+	Tue, 11 Feb 2014 07:51:59 -0500
+Message-ID: <52FA1CE7.7040909@broadcom.com> (sfid-20140211_135202_636369_4500FD78)
+Date: Tue, 11 Feb 2014 13:51:51 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>,
+	Zhao Hongjiang <zhaohongjiang@huawei.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	<zhousiyi@huawei.com>
+Subject: Re: Get multiple ip addresses by dhcp for wireless card
+References: <52F84DFD.4030602@huawei.com> <52F87608.808@candelatech.com> <52F88FEA.3000102@huawei.com> <52F92696.3030003@candelatech.com> <52F99ED7.3090304@huawei.com> <52F99FB8.8080001@candelatech.com>
+In-Reply-To: <52F99FB8.8080001@candelatech.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 02/11/2014 04:57 AM, Ben Greear wrote:
+> On 02/10/2014 07:53 PM, Zhao Hongjiang wrote:
+> 
+>>> What driver are you using?  I'm not sure anything other than ath9k
+>>> can do this feature.  Ath5k probably works, and definitely worked
+>>> at one time.  Ath10k supports this to some degree, and will have more
+>>> support in the future.
+>>>
+>>> You typically have to disable hardware crypt to make this work.
+>>>
+>> I use bcm4329 chipset and it don't have "Disable HW encryption" options.
+>> any suggestion for this is appreciated, thanks very much.
+> 
+> I doubt that chipset is going to support multiple stations.
 
-this series contains a header file proposal for MPLS labels. These
-labels do not seem to be properly defined in the kernel so far. We are
-developing a wired/wireless 802.21/MPLS switch and need to check the
-MPLS labels to use the traffic control info for transmissions over
-802.11 networks.
+It definitely does not.
 
-Please let me know if I should send these patches to somewhere else - I
-can certainly resend the 3rd patch to linux-wireless separately but
-figured it would be better like this to keep the context.
+Gr. AvS
 
-Thanks,
-     Simon
-
-Simon Wunderlich (3):
-  if_ether.h: add IEEE 802.21 Ethertype
-  UAPI: add MPLS label stack definition
-  cfg80211: add MPLS and 802.21 classification
-
- include/uapi/linux/if_ether.h |    1 +
- include/uapi/linux/mpls.h     |   34 ++++++++++++++++++++++++++++++++++
- net/wireless/util.c           |   24 ++++++++++++++++++++++++
- 3 files changed, 59 insertions(+)
- create mode 100644 include/uapi/linux/mpls.h
-
--- 
-1.7.10.4
+> Use ath9k and you should have more success.
+> 
+> Thanks,
+> Ben
+> 
+>>
+>>> Thanks,
+>>> Ben
+>>>
+>>
+> 
+> 
 
