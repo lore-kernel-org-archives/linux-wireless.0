@@ -1,159 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:53318 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394AbaBJTQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 14:16:59 -0500
-Message-ID: <52F925A9.1030707@msgid.tls.msk.ru> (sfid-20140210_201714_781873_6EB9489A)
-Date: Mon, 10 Feb 2014 23:16:57 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:58913 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbaBKSgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 13:36:52 -0500
+Date: Tue, 11 Feb 2014 12:36:24 -0600
+From: Calvin Owens <jcalvinowens@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jcalvinowens@gmail.com
+Subject: [PATCH v4] ieee80211: Print human-readable disassoc/deauth reason
+ codes
+Message-ID: <20140211183624.GA2291@gmail.com> (sfid-20140211_193656_610870_B544DDF1)
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+ <1391661863.30094.56.camel@joe-AO722>
+ <1392030546.4128.11.camel@jlt4.sipsolutions.net>
+ <1392050359.2507.10.camel@joe-AO722>
+ <20140211012523.GA2739@gmail.com>
+ <1392082740.2507.49.camel@joe-AO722>
+ <20140211163738.GA32043@gmail.com>
+ <1392138837.2511.2.camel@joe-AO722>
+ <20140211175232.GA782@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru>
-In-Reply-To: <52D4FC8B.6090301@msgid.tls.msk.ru>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140211175232.GA782@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After some more unsuccessful digging with brcmsmac driver, I thought I'd
-give wl driver a try.
+Create a function to return a descriptive string for each reason code,
+and print that in addition to the numeric value in the kernel log. These
+codes are easily found on popular search engines, but one is generally
+not able to access the internet when dealing with wireless connectivity
+issues.
 
-Unfortunately it does not work with kernels > 3.8, so I tried with 3.2.
+Changes in v2: Refactored array of strings into switch statement.
+Changes in v3: Fix style problem, use simplifying macro for switch
+statement, eliminate temporary enum variable.
+Changes in v4: Move new function to net/mac80211/mlme.c and make it
+static, since all of its callers are there.
 
-There, wl.ko built successfully, created eth1 device on load, and wifi
-apparently works fine.  I transferred a few gigs in both direction, and
-the signal is very stable at 65Mbps.  It worked for several hours.
+Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
+---
+ net/mac80211/mlme.c | 68 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 62 insertions(+), 6 deletions(-)
 
-Unfortunately, kernels before 3.9 has another problem on this laptop:
-it is the battery life.  3.8 and older kernels draws battery much faster
-(even without wifi enabled), this laptop lasts about 4 hours on battery
-with 3.2 kernel, compared to more than 7 with 3.10 kernel.  I guess it
-is the new ivy bridge pstates support introduced in 3.9.
-
-I tried compiling wl.ko for 3.10 kernel, but unfortunately it doesn't
-work there (after some minor tweaking of the source - I just commented
-out procfs support) -- it does not find any devices.
-
-So it looks like brcmsmac driver has a prob/bug, while wl driver works,
-but wl doesn't work with more recent kernel.
-
-It is still better than to use a separate usb dongle.  But it'd be
-really nie to see brcmsmac driver just working without the need to
-decide which don you want now: battery life or wifi (I'd vote for
-both :)
-
-Thanks,
-
-/mjt
-
-14.01.2014 12:59, Michael Tokarev wrote:
-> So, I returned from my newyear trip.  There, I tried to use this my laptop
-> with many various wifi networks, in hotels, cafes and other places.  And
-> it never worked.
-> 
-> So I bought an usb wifi adaptor, some cheap old orient model, which worked
-> MUCH better than the built-in broadcom wifi. Except of 2 issues.
-> 
-> First, the antenna in this usb dongle is small, so signal quality isn't as
-> good as for the built-in adaptor with good antenna.
-> 
-> And second, which is much more severe, it is an external adaptor plugged
-> into an usb slot, so it isn't that easy as internal one, but it is very
-> easy to BREAK the usb slot.  Which is what I did while sitting in a cafe
-> and someone else walking by.  So now I've one usb port on my laptop broken
-> now (with very unpleasant large crack on the laptop "body") and the usb
-> wifi adaptor I bought is broken too.
-> 
-> I also tried to replace the internal wifi card with some non-broadcom
-> model, but the laptop refused to _boot_ while the card is inserted
-> (a so-called bios lock).
-> 
-> So the question stands: what is the way to actually use the internal
-> bcm card, without all those hassles I already encountered?
-> 
-> So far, the expirience was that anything with broadcom inside should
-> NOT be considered for a purchase, because the issues they gave you
-> costs much more than a price difference for a different model without
-> broadcom parts.
-> 
-> Thanks,
-> 
-> /mjt
-> 
-> 28.12.2013 16:24, Michael Tokarev wrote:
->> Thank you very much for the reply!
->>
->> 28.12.2013 13:42, Arend van Spriel wrote:
->>> On 12/27/2013 09:58 PM, Michael Tokarev wrote:
->>>> Hello.
->>>>
->>>> Got a Lenovo Thinkpad notebook with the following wifi card:
->>>>
->>>> 03:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
->>>>     Subsystem: Broadcom Corporation Device [14e4:0608]
->>>>     Flags: bus master, fast devsel, latency 0, IRQ 17
->>>>     Memory at f1600000 (64-bit, non-prefetchable) [size=16K]
->>>>     Capabilities: [40] Power Management version 3
->>>>     Capabilities: [58] Vendor Specific Information: Len=78 <?>
->>>>     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
->>>>     Capabilities: [d0] Express Endpoint, MSI 00
->>>>     Capabilities: [100] Advanced Error Reporting
->>>>     Capabilities: [13c] Virtual Channel
->>>>     Capabilities: [160] Device Serial Number 00-00-24-ff-ff-fe-48-d2
->>>>     Capabilities: [16c] Power Budgeting <?>
->>>>     Kernel driver in use: bcma-pci-bridge
->>
->> [wifi tx stalls after short usage, 3.12 kernel]
->>
->>>> P.S. I tried to find archives of brcm80211 list, or a way to
->>>> subscribe to it before posting, but found neither.  Are there
->>>> archives?
->>>
->>> Nope. The brcm80211-dev-list is just a (hopefully) convenient way to get
->>> your message to the brcm80211 driver developer within Broadcom. So it is
->>> always best to Cc: the linux-wireless list as well.
->>
->> Ah.  So the real archives should be for linux-wireless@ not for brcm..@ :)
->> Got it, thank you!
->>
->>> Now about your card. I am not sure where to start, but can you dump
->>> contents for following debugfs file:
->>>
->>> /sys/kernel/debug/brcmsmac/bcma*/hardware
->>
->> # cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
->> board vendor: 14e4
->> board type: 608
->> board revision: 1109
->> board flags: 402201
->> board flags2: 884
->> firmware revision: 262032c
->>
->>> Also a capture file would be great so if you have wireshark or dumpcap you can add monitor interface and capture 802.11 packets from connect up until the stalls. Commands for adding/enabling monitor interface (ass root/sudo):
->>>
->>> # iw dev wlan0 interface add mon0 type monitor
->>> # ifconfig mon0 up
->>
->> Capture file made with tcpdump is attached (gzipped).  I started the
->> capture with wlan0 disabled, next I  used `nmcli con up id "wifi mjt"'
->> to connect to the AP (named, obviously, "mjt"), and next I tried to
->> d/load a file from my website (86.62.121.231).  It d/loaded about 27Kb
->> and stalled.  Next I tried to ping the AP (192.168.88.65), which also
->> didn't work.
->>
->> That's quite a typical behavour of this whole thing.  Sometimes it
->> lasts a bit longer, but that's rather unusual and it ends up stalling
->> anyway.
->>
->> Is it worth the effort to try 3.13-tobe kernel here?  I browsed changes
->> in there made in drivers/net/wireless/brcm80211/ compared with 3.12, but
->> there aren't many changes related to the softmac version, and most
->> looks rather cosmetic.
->>
->> Thank you very much for the help!
->>
->> /mjt
->>
-> 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fc1d824..0586d12 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2210,6 +2210,62 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 	/* ignore frame -- wait for timeout */
+ }
+ 
++#define case_WLAN(type) \
++	case WLAN_REASON_##type: return #type
++
++static const char *ieee80211_get_reason_code_string(u16 reason_code)
++{
++	switch (reason_code) {
++	case_WLAN(UNSPECIFIED);
++	case_WLAN(PREV_AUTH_NOT_VALID);
++	case_WLAN(DEAUTH_LEAVING);
++	case_WLAN(DISASSOC_DUE_TO_INACTIVITY);
++	case_WLAN(DISASSOC_AP_BUSY);
++	case_WLAN(CLASS2_FRAME_FROM_NONAUTH_STA);
++	case_WLAN(CLASS3_FRAME_FROM_NONASSOC_STA);
++	case_WLAN(DISASSOC_STA_HAS_LEFT);
++	case_WLAN(STA_REQ_ASSOC_WITHOUT_AUTH);
++	case_WLAN(DISASSOC_BAD_POWER);
++	case_WLAN(DISASSOC_BAD_SUPP_CHAN);
++	case_WLAN(INVALID_IE);
++	case_WLAN(MIC_FAILURE);
++	case_WLAN(4WAY_HANDSHAKE_TIMEOUT);
++	case_WLAN(GROUP_KEY_HANDSHAKE_TIMEOUT);
++	case_WLAN(IE_DIFFERENT);
++	case_WLAN(INVALID_GROUP_CIPHER);
++	case_WLAN(INVALID_PAIRWISE_CIPHER);
++	case_WLAN(INVALID_AKMP);
++	case_WLAN(UNSUPP_RSN_VERSION);
++	case_WLAN(INVALID_RSN_IE_CAP);
++	case_WLAN(IEEE8021X_FAILED);
++	case_WLAN(CIPHER_SUITE_REJECTED);
++	case_WLAN(DISASSOC_UNSPECIFIED_QOS);
++	case_WLAN(DISASSOC_QAP_NO_BANDWIDTH);
++	case_WLAN(DISASSOC_LOW_ACK);
++	case_WLAN(DISASSOC_QAP_EXCEED_TXOP);
++	case_WLAN(QSTA_LEAVE_QBSS);
++	case_WLAN(QSTA_NOT_USE);
++	case_WLAN(QSTA_REQUIRE_SETUP);
++	case_WLAN(QSTA_TIMEOUT);
++	case_WLAN(QSTA_CIPHER_NOT_SUPP);
++	case_WLAN(MESH_PEER_CANCELED);
++	case_WLAN(MESH_MAX_PEERS);
++	case_WLAN(MESH_CONFIG);
++	case_WLAN(MESH_CLOSE);
++	case_WLAN(MESH_MAX_RETRIES);
++	case_WLAN(MESH_CONFIRM_TIMEOUT);
++	case_WLAN(MESH_INVALID_GTK);
++	case_WLAN(MESH_INCONSISTENT_PARAM);
++	case_WLAN(MESH_INVALID_SECURITY);
++	case_WLAN(MESH_PATH_ERROR);
++	case_WLAN(MESH_PATH_NOFORWARD);
++	case_WLAN(MESH_PATH_DEST_UNREACHABLE);
++	case_WLAN(MAC_EXISTS_IN_MBSS);
++	case_WLAN(MESH_CHAN_REGULATORY);
++	case_WLAN(MESH_CHAN);
++	default: return "<INVALID>";
++	}
++}
+ 
+ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 				     struct ieee80211_mgmt *mgmt, size_t len)
+@@ -2231,8 +2287,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+ 
+-	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
+-		   bssid, reason_code);
++	sdata_info(sdata, "deauthenticated from %pM (Reason: %u=%s)\n",
++		   bssid, reason_code, ieee80211_get_reason_code_string(reason_code));
+ 
+ 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+@@ -4301,8 +4357,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	bool report_frame = false;
+ 
+ 	sdata_info(sdata,
+-		   "deauthenticating from %pM by local choice (reason=%d)\n",
+-		   req->bssid, req->reason_code);
++		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
++		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
+ 
+ 	if (ifmgd->auth_data) {
+ 		drv_mgd_prepare_tx(sdata->local, sdata);
+@@ -4348,8 +4404,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		return -ENOLINK;
+ 
+ 	sdata_info(sdata,
+-		   "disassociating from %pM by local choice (reason=%d)\n",
+-		   req->bss->bssid, req->reason_code);
++		   "disassociating from %pM by local choice (Reason: %u=%s)\n",
++		   req->bss->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
+ 
+ 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
+-- 
+1.8.5.3
 
