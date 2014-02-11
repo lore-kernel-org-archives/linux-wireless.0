@@ -1,97 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:46384 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798AbaB1JPV convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50332 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbaBKNew (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 04:15:21 -0500
-Received: by mail-ea0-f174.google.com with SMTP id h14so2410858eaj.5
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 01:15:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8738j3d2t2.fsf@kamboji.qca.qualcomm.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-5-git-send-email-michal.kazior@tieto.com>
-	<8738j3d2t2.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Feb 2014 10:15:20 +0100
-Message-ID: <CA+BoTQn8GTu3A4LdRGtpJeVr0SnaApTwnNZAoZ8=3Vj5qF+W=g@mail.gmail.com> (sfid-20140228_101529_636778_F0B2FC00)
-Subject: Re: [PATCH v3 4/8] ath10k: bypass htc for htt tx path
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Tue, 11 Feb 2014 08:34:52 -0500
+Message-ID: <1392125688.4128.23.camel@jlt4.sipsolutions.net> (sfid-20140211_143455_775346_F8C7FDAA)
+Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 11 Feb 2014 14:34:48 +0100
+In-Reply-To: <1391602306.16723.57.camel@porter.coelho.fi>
+References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
+	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
+	 <1391434913.4488.24.camel@jlt4.sipsolutions.net>
+	 <1391508433.26522.61.camel@porter.coelho.fi>
+	 <CA+BoTQngW4Ycuv0H=ba5KWs2qDcqPQtKJWp-9XEwdqQv+Xu6CA@mail.gmail.com>
+	 <1391585999.16723.7.camel@porter.coelho.fi>
+	 <CA+BoTQkXjAYR0H4nHxagYz3Kn5atWJ048UUY1=gPrW77Gvqp+Q@mail.gmail.com>
+	 <1391602306.16723.57.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 10:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Going through full htc tx path for htt tx is a
->> waste of resources. By skipping it it's possible
->> to easily submit scatter-gather to the pci hif for
->> reduced host cpu load and improved performance.
->>
->> The new approach uses dma pool to store the
->> following metadata for each tx request:
->>  * msdu fragment list
->>  * htc header
->>  * htt tx command
->>
->> The htt tx command contains a msdu prefetch.
->> Instead of copying it original mapped msdu address
->> is used to submit a second scatter-gather item to
->> hif to make a complete htt tx command.
->>
->> The htt tx command itself hands over dma mapped
->> pointers to msdus and completion of the command
->> itself doesn't mean the frame has been sent and
->> can be unmapped/freed. This is why htc tx
->> completion is skipped for htt tx as all tx related
->> resources are freed upon htt tx completion
->> indication event (which also implicitly means htt
->> tx command itself was completed).
->>
->> Since now each htt tx request effectively consists
->> of 2 copy engine items CE_HTT_H2T_MSG_SRC_NENTRIES
->> is updated to allow maximum of
->> TARGET_10X_NUM_MSDU_DESC msdus being queued. This
->> keeps the tx path resource management simple.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->> v2:
->>  * improve commit log
->>  * improve comment in code
->>  * fix sparse/checkpatch/buildbot warnings
->
-> [...]
->
->> --- a/drivers/net/wireless/ath/ath10k/htc.c
->> +++ b/drivers/net/wireless/ath/ath10k/htc.c
->> @@ -202,10 +202,8 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
->>       struct ath10k_htc *htc = &ar->htc;
->>       struct ath10k_htc_ep *ep = &htc->endpoint[eid];
->>
->> -     if (!skb) {
->> -             ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
->> +     if (WARN_ON(!skb))
->>               return 0;
->> -     }
->
-> WARN_ON() is a bit dangerous here as it might cause excessive spamming.
-> Why did you want to change this? I think either ath10k_warn() or
-> WARN_ON_ONCE() would be safer, but not sure which one to use.
+On Wed, 2014-02-05 at 14:11 +0200, Luca Coelho wrote:
 
-After the scatter-gather patch no NULL skb should be ever passed to tx
-completion handler as those are ignored by hif/pci. Perhaps the hunk
-should be moved from this patch to the scatter-gather one.
+> It's the same if the STA CSA would be "started" in the userspace.  If
+> the remote AP sets a too short count, the userspace won't have the
+> chance to react.  In either case, we would have to send a notification
+> to the userspace and it would have to tell us what to do.  If we wait
+> for the userspace to react on our STA CSA, we will be too late on both
+> interfaces.  If mac80211 does the STA CSA directly, at least the STA CSA
+> will be done on time and the GO can move a bit later (or get
+> disconnected if we were short on chanctx's).
 
-Perhaps WARN_ON() is a bit over the top here, but since this is now
-more of a logic issue rather than runtime issue I decided to change it
-from ath10k_warn to WARN_ON(). It's probably still a good idea to make
-it _ONCE generally, although if you actually get skbuff it's already
-too late or it should be screaming loudly because someone must've
-changed the code in an incorrect/incomplete way.
+I don't think the GO would get disconnected, rather the STA would, no?
 
+> > The purpose of ch_switch_finalize() is to perform the final switch
+> > atomically and make sure non-complying interfaces are disconnected
+> > before channel is actually switched (this could include Ilan's GO case
+> > in a clean way).
+> 
+> I was thinking about eventual drivers that offload the whole channel
+> switch process to the firmware.  The driver just sends the count, the
+> new channel and everything and the firmware takes care of it all.  It
+> will beacon for count TBTTs and perform the actual channel switch at the
+> right time.  In this case, all the decision making about what needs to
+> be disconnected or switched must be made at the beginning.
+> 
+> But I'll let Johannes comment more. ;)
 
-Michał
+Yes, I'm pretty sure that this kind of situation will happen sooner or
+later, so preventing it in the APIs right now seems like a bad idea.
+
+johannes
+
