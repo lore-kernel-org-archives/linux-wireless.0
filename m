@@ -1,95 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:43575 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbaBJWig (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49922 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaBKL64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 17:38:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-From: Florian Fainelli <florian@openwrt.org>
-Date: Mon, 10 Feb 2014 14:37:56 -0800
-Message-ID: <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com> (sfid-20140210_233900_355567_52043301)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-	open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 11 Feb 2014 06:58:56 -0500
+Message-ID: <1392119933.4128.1.camel@jlt4.sipsolutions.net> (sfid-20140211_125858_993336_A7799423)
+Subject: Re: [PATCH] mac80211: add beacon_loss debugfs file
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Date: Tue, 11 Feb 2014 12:58:53 +0100
+In-Reply-To: <1392114978-26697-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1392114978-26697-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-10 4:38 GMT-08:00 Sergey Ryazanov <ryazanov.s.a@gmail.com>:
-> 2014-02-10 16:17 GMT+04:00 Oleksij Rempel <linux@rempel-privat.de>:
->> Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
->>> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
->>>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
->>>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
->>>>>> The symbol is an orphan, get rid of it.
->>>>>>
->>>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>>>>> ---
->>>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
->>>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
->>>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
->>>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
->>>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
->>>>>>
->>>>>
->>>>> This code is used in OpenWrt with an out of tree arch code for the
->>>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
->>>>> this code to mainline Linux kernel, because of lack of time/interest.
->>>>
->>>> Sorry, we don't maintain out of tree code.
->>>>
->>>
->>> Oleksij, Jonathan do you still working to make ar231x devices work
->>> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
->>> team would like to add upstream support?
->>>
->>> 1. https://lkml.org/lkml/2013/5/13/321
->>> 2. https://lkml.org/lkml/2013/5/13/358
->>>
->>
->> Hi,
->> my current target was to provide barebox and openocd support.
->> - ar2313 is already upstream on barebox.
->> - ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
->> - openocd (EJTAG) support is ready and i'll push it ASUP.
->>
-> WOW, Impressive.
+On Tue, 2014-02-11 at 12:36 +0200, Emmanuel Grumbach wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> Add beacon_loss debugfs file that emulates
+> ieee80211_beacon_loss call from the driver.
+> 
+> This can be used for various testing scenarios.
 
-That's a nice toy project, although since there are is an existing
-bootloader with sources, I would have shifted the priority towards
-getting the kernel support merged such that the bootloader can be used
-for something. BTW I sent a few devices to Jonathan, not sure if he
-ever got those...
+Applied.
 
->
->> I hope Jonathan do kernel part. If not, i can provide some work, since i
->> have testing boards and expiriance on this hardware.
->>
-> If you need, I can test kernel part, or even do some porting work. I
-> have some AR231x based boards, e.g. Ubnt LS2 and NS2.
+johannes
 
-I guess you could start splitting the OpenWrt patches into a format
-that makes them suitable for being merged upstream and starting with
-the MIPS parts. There might be a bunch of checkpatch.pl cleanup work
-to do before getting those submitted.
--- 
-Florian
