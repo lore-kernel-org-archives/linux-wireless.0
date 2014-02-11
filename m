@@ -1,142 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:41812 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754787AbaBDP0A convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:60544 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbaBKRxB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 10:26:00 -0500
-Received: by mail-bk0-f53.google.com with SMTP id my13so3387749bkb.12
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 07:25:56 -0800 (PST)
+	Tue, 11 Feb 2014 12:53:01 -0500
+Date: Tue, 11 Feb 2014 11:52:32 -0600
+From: Calvin Owens <jcalvinowens@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] ieee80211: Print human-readable disassoc/deauth
+ reason codes
+Message-ID: <20140211175232.GA782@gmail.com> (sfid-20140211_185334_204349_5EFECDD8)
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+ <1391661863.30094.56.camel@joe-AO722>
+ <1392030546.4128.11.camel@jlt4.sipsolutions.net>
+ <1392050359.2507.10.camel@joe-AO722>
+ <20140211012523.GA2739@gmail.com>
+ <1392082740.2507.49.camel@joe-AO722>
+ <20140211163738.GA32043@gmail.com>
+ <1392138837.2511.2.camel@joe-AO722>
 MIME-Version: 1.0
-In-Reply-To: <1391518767-25847-3-git-send-email-luca@coelho.fi>
-References: <1391518767-25847-1-git-send-email-luca@coelho.fi>
-	<1391518767-25847-3-git-send-email-luca@coelho.fi>
-Date: Tue, 4 Feb 2014 16:25:56 +0100
-Message-ID: <CA+BoTQ=mvDJiLOqOCxLQXqYky0c2XNoVBMyAVn2OeO_oymCd-Q@mail.gmail.com> (sfid-20140204_162637_066252_350869B0)
-Subject: Re: [RCF/WIP 2/3] mac80211: implement channel switch for multiple
- vifs and multiple channels
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>, kvalo@adurom.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1392138837.2511.2.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 February 2014 13:59, Luciano Coelho <luca@coelho.fi> wrote:
-> [...]
-> +       /* try to find another context with the chandef we want */
-> +       new_ctx = ieee80211_find_chanctx(local, chandef,
-> +                                        IEEE80211_CHANCTX_SHARED);
-> +       if (new_ctx) {
-> +               /* reserve the existing compatible context */
-> +               sdata->csa_reserved_chanctx = new_ctx;
-> +               new_ctx->refcount++;
-> +       } else if (curr_ctx->refcount == 1) {
-> +               /* We're the only user of the current context, mark it
-> +                * as exclusive, so nobody tries to use it until we
-> +                * finish the channel switch.  This is an optimization
-> +                * to prevent waste of contexts when the number is
-> +                * limited.
-> +                */
-> +
-> +               sdata->csa_reserved_chanctx = curr_ctx;
-> +               sdata->csa_chandef = *chandef;
-> +
-> +               sdata->csa_chanctx_old_mode = curr_ctx->mode;
-> +
-> +               curr_ctx->mode = IEEE80211_CHANCTX_EXCLUSIVE;
+On Tuesday 02/11 at 09:13 -0800, Joe Perches wrote:
+> On Tue, 2014-02-11 at 10:37 -0600, Calvin Owens wrote:
+> > Create a function to return a descriptive string for each reason code,
+> > and print that in addition to the numeric value in the kernel log. These
+> > codes are easily found on popular search engines, but one is generally
+> > not able to access the internet when dealing with wireless connectivity
+> > issues.
+> []
+> >  include/net/mac80211.h | 10 +++++++++
+> >  net/mac80211/main.c    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  net/mac80211/mlme.c    | 12 +++++------
+> >  3 files changed, 73 insertions(+), 6 deletions(-)
+> 
+> Is there a reason why all of this this shouldn't
+> be a static function local to mlme.c?
+> 
+> Is this ever going to be used somewhere else?
 
-The only reason to do this would seem drv_add_chanctx() can fail if
-you have too many chanctx in driver.
+The enum for the reason code is defined in "include/linux/ieee80211.h",
+which is #include'd in 61 different files, so I thought it was
+conceivable that it might. I also thought the compiler wasn't likely to
+inline it even if it were static, since it wasn't tiny and had several
+callers.
 
-Perhaps we could defer drv_add_chanctx() for reserved chanctx?
+The switch statement approach produces nice, smaller code though:
+(as opposed to the original with the array of strings)
 
+ffffffff81728ac0 <ieee80211_get_reason_code_string>:
+ffffffff81728ac0:       83 ef 01                sub    $0x1,%edi
+ffffffff81728ac3:       55                      push   %rbp
+ffffffff81728ac4:       48 c7 c0 f5 a7 a6 81    mov    $0xffffffff81a6a7f5,%rax
+ffffffff81728acb:       66 83 ff 41             cmp    $0x41,%di
+ffffffff81728acf:       48 89 e5                mov    %rsp,%rbp
+ffffffff81728ad2:       77 0b                   ja     ffffffff81728adf <ieee80211_get_reason_code_string+0x1f>
+ffffffff81728ad4:       0f b7 ff                movzwl %di,%edi
+ffffffff81728ad7:       48 8b 04 fd 40 98 8e    mov -0x7e7167c0(,%rdi,8),%rax
+ffffffff81728ade:       81 
+ffffffff81728adf:       5d                      pop    %rbp
+ffffffff81728ae0:       c3                      retq   
+ffffffff81728ae1:       66 66 66 66 66 66 2e    data32 data32 data32 data32 data32 nopw %cs:0x0(%rax,%rax,1)
+ffffffff81728ae8:       0f 1f 84 00 00 00 00 
+ffffffff81728aef:       00 
 
-> [...]
-> +       if (old_ctx == ctx) {
-> +               /* This is our own context, just change it */
-> +               ret = __ieee80211_vif_change_channel(sdata, old_ctx,
-> +                                                    &local_changed);
-> +               if (ret)
-> +                       goto out;
-> +
-> +               /* TODO: what happens if another vif created a context
-> +                * that is compatible with our future chandef while
-> +                * this one has been marked as exclusive? Merge?
-> +                */
-> +
-> +               ctx->mode = sdata->csa_chanctx_old_mode;
-> +
-> +               *changed = local_changed;
-> +               goto out;
-> +       }
-> +
-> +       ieee80211_stop_queues_by_reason(&local->hw,
-> +                                       IEEE80211_MAX_QUEUE_MAP,
-> +                                       IEEE80211_QUEUE_STOP_REASON_CSA);
-> +
+... so it probably would get inlined. I'll make it static and resend.
 
-Shouldn't queues be stopped depending on block_tx in CSA IE?
-
-
-> +       ieee80211_unassign_vif_chanctx(sdata, old_ctx);
-> +       if (old_ctx->refcount == 0)
-> +               ieee80211_free_chanctx(local, old_ctx);
-> +
-> +       if (sdata->vif.bss_conf.chandef.width != ctx->conf.def.width)
-> +               local_changed |= BSS_CHANGED_BANDWIDTH;
-
-I wonder if this check makes any sense. With multi-interface you can
-have varied bss_conf.width and not match the shared width of a channel
-context, can't you?
-
-
-> +
-> +       sdata->vif.bss_conf.chandef = ctx->conf.def;
-> +
-> +       /* unref our reservation before assigning */
-> +       ctx->refcount--;
-> +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-
-This looks wrong. You don't seem to care about old_ctx->refcount here
-at all. If you perform CSA for 2 interfaces on a single-channel hw
-you'll have 2 interfaces on 2 different channels at one point.
-
-The way I see it should be more like this:
-
-  old_ctx->csa_completions++;
-  if (old_ctx->csa_completions != old_ctx->csa_requests)
-    goto wait_for_more;
-
-  disconnect_non_csa_interfaces(old_ctx); // *
-  // get list of csa vifs from old_ctx
-  for_each_csa_vif_in_ctx(sdata)
-    unassign_vif_chanctx(sdata, old_ctx)
-  free_chanctx(old_ctx) // **
-  drv_add_chanctx(new_ctx)
-  for_each_csa_vif_in_ctx(sdata)
-    assign_vif_chanctx(sdata, new_ctx)
-
-old_ctx->csa_requests would be increased when you reserve a channel.
-
-* "switch or die" policy; ideally this should go through cfg80211
-somehow so that everything is teared down properly and userspace is
-notified (AP stopped)
-
-** this might remove the need for the exclusive reserved chanctx?
-
-
-> +       if (ret) {
-> +               /* if assign fails refcount stays the same */
-> +               if (ctx->refcount == 0)
-> +                       ieee80211_free_chanctx(local, ctx);
-> +               goto out;
-> +       }
-> +
-> +       /* TODO: should we wake the queues here? */
-
-Hmm.. you probably should wake queues if this was the last channel
-switch for the hw.
-
-
-Michał
+Thanks,
+Calvin
