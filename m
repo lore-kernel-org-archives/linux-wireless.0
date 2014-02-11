@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54794 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:50539 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750866AbaBVNxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 08:53:11 -0500
+	id S1751015AbaBKO40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 09:56:26 -0500
 From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 1/2] ath9k: do not set half/quarter channel flags in AR_PHY_MODE
-Date: Sat, 22 Feb 2014 14:52:48 +0100
-Message-Id: <1393077169-65244-1-git-send-email-nbd@openwrt.org> (sfid-20140222_145337_497232_96CB687F)
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3.14] mac80211: send control port protocol frames to the VO queue
+Date: Tue, 11 Feb 2014 15:56:23 +0100
+Message-Id: <1392130583-84601-1-git-send-email-nbd@openwrt.org> (sfid-20140211_155629_826768_3DB83E6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-5/10 MHz channel bandwidth is configured via the PLL clock, instead of
-the AR_PHY_MODE register. Using that register is AR93xx specific, and
-makes the mode incompatible with earlier chipsets.
+Improves reliability of wifi connections with WPA, since authentication
+frames are prioritized over normal traffic and also typically exempt
+from aggregation.
 
-In some early versions, these flags were apparently applied at the wrong
-point in time and thus did not cause connectivity issues, however now
-they are causing problems, as pointed out in this OpenWrt ticket:
-
-https://dev.openwrt.org/ticket/14916
-
+Cc: stable@vger.kernel.org
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 4 ----
- 1 file changed, 4 deletions(-)
+ net/mac80211/wme.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 09facba..8927fc3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -868,10 +868,6 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 21211c6..2656969 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -107,6 +107,7 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 	const u8 *ra = NULL;
+ 	bool qos = false;
+ 	struct mac80211_qos_map *qos_map;
++	struct ethhdr *ehdr = (struct ethhdr *) skb->data;
  
- 	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		rfMode |= (AR_PHY_MODE_DYNAMIC | AR_PHY_MODE_DYN_CCK_DISABLE);
--	if (IS_CHAN_QUARTER_RATE(chan))
--		rfMode |= AR_PHY_MODE_QUARTER;
--	if (IS_CHAN_HALF_RATE(chan))
--		rfMode |= AR_PHY_MODE_HALF;
+ 	if (local->hw.queues < IEEE80211_NUM_ACS || skb->len < 6) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+@@ -154,6 +155,11 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 		return IEEE80211_AC_BE;
+ 	}
  
- 	if (rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF))
- 		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL,
++	if (ehdr->h_proto == sdata->control_port_protocol) {
++		skb->priority = 7;
++		return ieee80211_downgrade_queue(sdata, skb);
++	}
++
+ 	/* use the data classifier to determine what 802.1d tag the
+ 	 * data frame has */
+ 	rcu_read_lock();
 -- 
 1.8.3.4 (Apple Git-47)
 
