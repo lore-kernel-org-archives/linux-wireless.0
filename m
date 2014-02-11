@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17613 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423AbaB0OVd (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:57074 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbaBKHVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:21:33 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 06/16] wil6210: Find free vring for Tx
-Date: Thu, 27 Feb 2014 16:20:45 +0200
-Message-ID: <1393510855-17566-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152148_155912_1C7F1890)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 11 Feb 2014 02:21:49 -0500
+Date: Tue, 11 Feb 2014 18:21:28 +1100
+From: James Cameron <quozl@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH v2 08/30] mwifiex: implement extended scan feature
+Message-ID: <20140211072128.GR5487@us.netrek.org> (sfid-20140211_082152_770345_8AAF7641)
+References: <1391819017-20995-1-git-send-email-bzhao@marvell.com>
+ <1391819017-20995-4-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1391819017-20995-4-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are 24 possible Tx vrings; when doind multiple connections, more then
-one vring has to be used. Search for free one and select it.
+On Fri, Feb 07, 2014 at 04:23:37PM -0800, Bing Zhao wrote:
+> [...]
+> @@ -1925,6 +1943,167 @@ check_next_scan:
+>  }
+>  
+>  /*
+> + * This function prepares an extended scan command to be sent to the firmware
+> + *
+> + * This uses the scan command configiguration sent to the command processing
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+                                      ^
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 38906f1..5079e49 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -107,12 +107,23 @@ static void wil_connect_timer_fn(ulong x)
- 	schedule_work(&wil->disconnect_worker);
- }
- 
-+static int wil_find_free_vring(struct wil6210_priv *wil)
-+{
-+	int i;
-+	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
-+		if (!wil->vring_tx[i].va)
-+			return i;
-+	}
-+	return -EINVAL;
-+}
-+
- static void wil_connect_worker(struct work_struct *work)
- {
- 	int rc;
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						connect_worker);
- 	int cid = wil->pending_connect_cid;
-+	int ringid = wil_find_free_vring(wil);
- 
- 	if (cid < 0) {
- 		wil_err(wil, "No connection pending\n");
-@@ -121,7 +132,7 @@ static void wil_connect_worker(struct work_struct *work)
- 
- 	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
- 
--	rc = wil_vring_init_tx(wil, 0, WIL6210_TX_RING_SIZE, cid, 0);
-+	rc = wil_vring_init_tx(wil, ringid, WIL6210_TX_RING_SIZE, cid, 0);
- 	wil->pending_connect_cid = -1;
- 	if (rc == 0) {
- 		wil->sta[cid].status = wil_sta_connected;
+trivial typo, should be "configuration".
+
 -- 
-1.8.3.2
-
+James Cameron
+http://quozl.linux.org.au/
