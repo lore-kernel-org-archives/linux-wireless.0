@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:42555 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaB1OMN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 09:12:13 -0500
-Message-ID: <1393596728.13669.48.camel@dubbel> (sfid-20140228_151240_854024_6C7DB5AB)
-Subject: Re: [PATCH v4 0/8] wilink: add device tree support
-From: Luca Coelho <luca@coelho.fi>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
-	"Nori, Sekhar" <nsekhar@ti.com>, mturquette@linaro.org,
-	mark.rutland@arm.com, balbi@ti.com, grant.likely@linaro.org,
-	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
-	linux-doc@vger.kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-omap@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	nm@ti.com, martinez.javier@gmail.com
-Date: Fri, 28 Feb 2014 16:12:08 +0200
-In-Reply-To: <1393590591.13669.36.camel@dubbel>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
-	 <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
-	 <1393590591.13669.36.camel@dubbel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:4208 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751218AbaBKLre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 06:47:34 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>
+Subject: [PATCH] mac80211: fix IE buffer len
+Date: Tue, 11 Feb 2014 13:45:41 +0200
+Message-Id: <1392119141-27279-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140211_124737_971041_969091B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-28 at 14:29 +0200, Luca Coelho wrote:
-> On Fri, 2014-02-28 at 08:26 +0100, Yegor Yefremov wrote:
-> > On Tue, Jul 30, 2013 at 3:04 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > > Hi,
-> > >
-> > > This patch series adds device tree support to the wlcore_sdio driver,
-> > > which is used by WiLink6, WiLink7 and WiLink8.
-> > >
-> > > The first patches do some clean-up to make the data needed in the
-> > > wilink device tree node smaller.  The remaining patches implement the
-> > > actual device tree node parsing in wlcore_sdio.
-> > >
-> > > Regarding the XTAL clock issues, for now we don't support XTAL mode
-> > > with DT, but I have sent a proposal for a small change in the clock
-> > > framework to support this, but it's still under discussions [1].
-> > >
-> > > The DTS file changes will be sent separately, since they need to go
-> > > via different trees.
-> > >
-> > > A new version of the bindings documentation has been sent [2] and, if
-> > > no more comments are given to it, I'll apply it via my tree.
-> > >
-> > > [1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
-> > > [2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
-> > >
-> > > Changes in v4:
-> > >
-> > > * Rebased on top of 3.11-rc3 (eg. no more changes on the board files
-> > >   that were removed);
-> > >
-> > > * Use the new irq_get_trigger_type() instead of
-> > >   irqd_get_trigger_type() (thanks Javier);
-> > >
-> > > * Added some missing const's (thanks Felipe);
-> > >
-> > > * Reverted Tony's workaround to get WiLink to work on Panda while DT
-> > >   was not supported yet.
-> > >
-> > >
-> > > Please review.
-> > 
-> > What is the state of the series? Who is now responsible for the
-> > patches? What issues were still not handled?
-> 
-> There were some comments about this series (or more precisely, the one
-> that added the bindings documentation[1]).  Unfortunately, I have left
-> TI since and have no time to handle them.  Feel free to pick it up and
-> continue from there.
-> 
-> [1] https://lkml.org/lkml/2013/7/30/712
+From: David Spinadel <david.spinadel@intel.com>
 
-There's also this thread, which I'm not sure has been resolved:
+Remove size of SSID IE from the IE buffer in scan and
+sched scan, since this IE isn't added to this buffer.
 
-http://thread.gmane.org/gmane.linux.kernel/1520752
+Change-Id: Ic381cd50566529907c3a37f6aaa02d9132fd99da
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/30710
+Tested-by: IWL Jenkins
+Reviewed-by: EliadX Peller <eliad@wizery.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/scan.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
---
-Luca.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 88c8161..b211e41 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -472,9 +472,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (local->ops->hw_scan) {
+ 		u8 *ies;
+ 
+-		local->hw_scan_ies_bufsize = 2 + IEEE80211_MAX_SSID_LEN +
+-					     local->scan_ies_len +
+-					     req->ie_len;
++		local->hw_scan_ies_bufsize = local->scan_ies_len + req->ie_len;
+ 		local->hw_scan_req = kmalloc(
+ 				sizeof(*local->hw_scan_req) +
+ 				req->n_channels * sizeof(req->channels[0]) +
+@@ -979,8 +977,7 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_chan_def chandef;
+ 	int ret, i, iebufsz;
+ 
+-	iebufsz = 2 + IEEE80211_MAX_SSID_LEN +
+-		  local->scan_ies_len + req->ie_len;
++	iebufsz = local->scan_ies_len + req->ie_len;
+ 
+ 	lockdep_assert_held(&local->mtx);
+ 
+-- 
+1.8.3.2
 
