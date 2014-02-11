@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:45606 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582AbaBNBzM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 20:55:12 -0500
-Received: by mail-ve0-f172.google.com with SMTP id c14so9346314vea.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 17:55:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87r4767rmo.fsf@kamboji.qca.qualcomm.com>
-References: <1392197844-1223-1-git-send-email-yeohchunyeow@gmail.com>
-	<87r4767rmo.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 14 Feb 2014 09:55:11 +0800
-Message-ID: <CAEFj986=ABAqRYXcL9_Ov8MkHVfjOnc=y9nx65hFXbBcH61WyQ@mail.gmail.com> (sfid-20140214_025517_306889_2C2CD51F)
-Subject: Re: [PATCH] ath10k: implement drv_get_tsf for ibss merging
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:51952 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750807AbaBKKi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 05:38:26 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Subject: [PATCH] mac80211: add beacon_loss debugfs file
+Date: Tue, 11 Feb 2014 12:36:18 +0200
+Message-Id: <1392114978-26697-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140211_113829_162900_B54A5CD5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yeah, this extremely ugly but don't really know any better way to handle
-> this now.
+From: Eliad Peller <eliad@wizery.com>
 
-I have observed that we have ath10k_wmi_event_tsf_measurement_report,
-but no so sure how to trigger this event.
+Add beacon_loss debugfs file that emulates
+ieee80211_beacon_loss call from the driver.
 
-> But why do you need to take conf_mutex? Isn't this enough:
->
-> +static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-> +{
-> +       /*
-> +        * FIXME: Return 0 for time being. Need to figure out whether FW
-> +        * has the API to fetch 64-bit TSF
-> +        */
-> +
-> +       return 0;
-> +}
+This can be used for various testing scenarios.
 
-Ya, I think this is enough for time being. I will submit v2 on this.
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+---
+ net/mac80211/debugfs_netdev.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
------
-Chun-Yeow
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 68d00a7..3da74ae 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -358,6 +358,18 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
+ }
+ IEEE80211_IF_FILE_W(tkip_mic_test);
+ 
++static ssize_t ieee80211_if_parse_beacon_loss(
++	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
++{
++	if (!ieee80211_sdata_running(sdata) || !sdata->vif.bss_conf.assoc)
++		return -ENOTCONN;
++
++	ieee80211_beacon_loss(&sdata->vif);
++
++	return buflen;
++}
++IEEE80211_IF_FILE_W(beacon_loss);
++
+ static ssize_t ieee80211_if_fmt_uapsd_queues(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+@@ -569,6 +581,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(beacon_timeout);
+ 	DEBUGFS_ADD_MODE(smps, 0600);
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
++	DEBUGFS_ADD_MODE(beacon_loss, 0200);
+ 	DEBUGFS_ADD_MODE(uapsd_queues, 0600);
+ 	DEBUGFS_ADD_MODE(uapsd_max_sp_len, 0600);
+ }
+-- 
+1.8.3.2
+
