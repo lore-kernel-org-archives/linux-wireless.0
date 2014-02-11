@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:48511 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbaB0Gw4 (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:44500 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740AbaBKHhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 01:52:56 -0500
-Received: by mail-lb0-f173.google.com with SMTP id p9so1389899lbv.32
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 22:52:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87a9ddlrqm.fsf@kamboji.qca.qualcomm.com>
-References: <1393311399-8070-1-git-send-email-janusz.dziedzic@tieto.com>
-	<87a9ddlrqm.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 27 Feb 2014 07:52:54 +0100
-Message-ID: <CALhHN=pgPNT4EktfMkQNiS_qa2uXDq9BBovzq6YPEurEEHMqDg@mail.gmail.com> (sfid-20140227_075315_828632_5EE527DF)
-Subject: Re: [PATCH] ath10k: skip management frames in HTT path
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 11 Feb 2014 02:37:53 -0500
+Received: by mail-ea0-f169.google.com with SMTP id h10so3498585eak.14
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 23:37:51 -0800 (PST)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: remove excessive rx msdu len check
+Date: Tue, 11 Feb 2014 08:37:06 +0100
+Message-Id: <1392104226-12096-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20140211_083803_682291_518908ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 February 2014 18:16, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->
->> After we pass frames with INV_PEER to upper layer in patch:
->>
->> ath10k: pass frames with invalid peer status to upper layer
->>
->> we could pass some management frames (in case INVALID_PEER
->> and MGMT_CTRL) twice to upper layer, once via WMI and once
->> via HTT. Next we could handle assoc request twice. This
->> patch remove such regression.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
-> I saw a conflict and also did some commit log cleanup. Please check:
->
-> https://github.com/kvalo/ath/commit/dd0063fba4434d22fb8a6e6d79bf23cc36f6916a
->
-looks good.
+This throw a lot of pointless warnings in case of DFS (radar
+detection) and PHYERR events from firmware, when firmware may
+actually insert more data, than we assume.
 
-BR
-Janusz
+Besides of being noisy this debug does not protect or check
+anything usefull currently. It was introduced long time ago
+while debugging aggregations. So just removing it.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index fe8bd1b..f57f5cf 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -430,12 +430,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 			msdu_chaining = 1;
+ 		}
+ 
+-		if (msdu_len > 0) {
+-			/* This may suggest FW bug? */
+-			ath10k_warn("htt rx msdu len not consumed (%d)\n",
+-				    msdu_len);
+-		}
+-
+ 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
+ 				RX_MSDU_END_INFO0_LAST_MSDU;
+ 
+-- 
+1.7.10
+
