@@ -1,142 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:57271 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754204AbaBDM7d (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:51924 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797AbaBKQiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 07:59:33 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: michal.kazior@tieto.com, johannes@sipsolutions.net,
-	kvalo@adurom.com
-Subject: [RCF/WIP 3/3] mac80211: add usage of CS channel reservation for STA
-Date: Tue,  4 Feb 2014 14:59:27 +0200
-Message-Id: <1391518767-25847-4-git-send-email-luca@coelho.fi> (sfid-20140204_135947_313326_79180096)
-In-Reply-To: <1391518767-25847-1-git-send-email-luca@coelho.fi>
-References: <1391518767-25847-1-git-send-email-luca@coelho.fi>
+	Tue, 11 Feb 2014 11:38:07 -0500
+Date: Tue, 11 Feb 2014 10:37:38 -0600
+From: Calvin Owens <jcalvinowens@gmail.com>
+To: Joe Perches <joe@perches.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jcalvinowens@gmail.com
+Subject: [PATCH v3] ieee80211: Print human-readable disassoc/deauth reason
+ codes
+Message-ID: <20140211163738.GA32043@gmail.com> (sfid-20140211_173829_593296_D4B2B52C)
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+ <1391661863.30094.56.camel@joe-AO722>
+ <1392030546.4128.11.camel@jlt4.sipsolutions.net>
+ <1392050359.2507.10.camel@joe-AO722>
+ <20140211012523.GA2739@gmail.com>
+ <1392082740.2507.49.camel@joe-AO722>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1392082740.2507.49.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Create a function to return a descriptive string for each reason code,
+and print that in addition to the numeric value in the kernel log. These
+codes are easily found on popular search engines, but one is generally
+not able to access the internet when dealing with wireless connectivity
+issues.
 
-For simplicity, and as a proof of concept, only the STA case is
-covered for now.  But the P2P GO and AP cases should also work with
-this new concept.
+Changes in v2: Refactored array of strings into switch statement.
+Changes in v3: Fix style problem, use simplifying macro for switch
+statement, eliminate temporary enum variable.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
 ---
- net/mac80211/mlme.c | 71 ++++++++++++++++++++---------------------------------
- 1 file changed, 27 insertions(+), 44 deletions(-)
+ include/net/mac80211.h | 10 +++++++++
+ net/mac80211/main.c    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/mlme.c    | 12 +++++------
+ 3 files changed, 73 insertions(+), 6 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f4ab2fb..d18acfe 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2971,6 +2971,16 @@ struct ieee80211_ops {
+  */
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops);
++/**
++ * ieee80211_get_reason_code_string - Get human readable reason code
++ *
++ * This function returns a string describing the @reason_code.
++ *
++ * @reason_code: Reason code
++ *
++ * Return: Human readable reason string, or "<INVALID>"
++ */
++const char *ieee80211_get_reason_code_string(u16 reason_code);
+ 
+ /**
+  * ieee80211_register_hw - Register hardware device
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d767cfb..307b444 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -743,6 +743,63 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
++#define case_WLAN(type) \
++	case WLAN_REASON_##type: return #type
++
++const char *ieee80211_get_reason_code_string(u16 reason_code)
++{
++	switch (reason_code) {
++	case_WLAN(UNSPECIFIED);
++	case_WLAN(PREV_AUTH_NOT_VALID);
++	case_WLAN(DEAUTH_LEAVING);
++	case_WLAN(DISASSOC_DUE_TO_INACTIVITY);
++	case_WLAN(DISASSOC_AP_BUSY);
++	case_WLAN(CLASS2_FRAME_FROM_NONAUTH_STA);
++	case_WLAN(CLASS3_FRAME_FROM_NONASSOC_STA);
++	case_WLAN(DISASSOC_STA_HAS_LEFT);
++	case_WLAN(STA_REQ_ASSOC_WITHOUT_AUTH);
++	case_WLAN(DISASSOC_BAD_POWER);
++	case_WLAN(DISASSOC_BAD_SUPP_CHAN);
++	case_WLAN(INVALID_IE);
++	case_WLAN(MIC_FAILURE);
++	case_WLAN(4WAY_HANDSHAKE_TIMEOUT);
++	case_WLAN(GROUP_KEY_HANDSHAKE_TIMEOUT);
++	case_WLAN(IE_DIFFERENT);
++	case_WLAN(INVALID_GROUP_CIPHER);
++	case_WLAN(INVALID_PAIRWISE_CIPHER);
++	case_WLAN(INVALID_AKMP);
++	case_WLAN(UNSUPP_RSN_VERSION);
++	case_WLAN(INVALID_RSN_IE_CAP);
++	case_WLAN(IEEE8021X_FAILED);
++	case_WLAN(CIPHER_SUITE_REJECTED);
++	case_WLAN(DISASSOC_UNSPECIFIED_QOS);
++	case_WLAN(DISASSOC_QAP_NO_BANDWIDTH);
++	case_WLAN(DISASSOC_LOW_ACK);
++	case_WLAN(DISASSOC_QAP_EXCEED_TXOP);
++	case_WLAN(QSTA_LEAVE_QBSS);
++	case_WLAN(QSTA_NOT_USE);
++	case_WLAN(QSTA_REQUIRE_SETUP);
++	case_WLAN(QSTA_TIMEOUT);
++	case_WLAN(QSTA_CIPHER_NOT_SUPP);
++	case_WLAN(MESH_PEER_CANCELED);
++	case_WLAN(MESH_MAX_PEERS);
++	case_WLAN(MESH_CONFIG);
++	case_WLAN(MESH_CLOSE);
++	case_WLAN(MESH_MAX_RETRIES);
++	case_WLAN(MESH_CONFIRM_TIMEOUT);
++	case_WLAN(MESH_INVALID_GTK);
++	case_WLAN(MESH_INCONSISTENT_PARAM);
++	case_WLAN(MESH_INVALID_SECURITY);
++	case_WLAN(MESH_PATH_ERROR);
++	case_WLAN(MESH_PATH_NOFORWARD);
++	case_WLAN(MESH_PATH_DEST_UNREACHABLE);
++	case_WLAN(MAC_EXISTS_IN_MBSS);
++	case_WLAN(MESH_CHAN_REGULATORY);
++	case_WLAN(MESH_CHAN);
++	default: return "<INVALID>";
++	}
++}
++
+ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6160483..899989c 100644
+index fc1d824..5dec202 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -927,18 +927,19 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	if (!ifmgd->associated)
- 		goto out;
+@@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
  
--	mutex_lock(&local->mtx);
--	ret = ieee80211_vif_change_channel(sdata, &changed);
--	mutex_unlock(&local->mtx);
--	if (ret) {
--		sdata_info(sdata,
--			   "vif channel switch failed, disconnecting\n");
--		ieee80211_queue_work(&sdata->local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		goto out;
--	}
--
-+	/* TODO: maybe this if block can be moved to use_reserved()? */
- 	if (!local->use_chanctx) {
-+		mutex_lock(&local->mtx);
-+		ret = ieee80211_vif_change_channel(sdata, &changed);
-+		mutex_unlock(&local->mtx);
-+		if (ret) {
-+			sdata_info(sdata,
-+				   "vif channel switch failed, disconnecting\n");
-+			ieee80211_queue_work(&sdata->local->hw,
-+					     &ifmgd->csa_connection_drop_work);
-+			goto out;
-+		}
-+
- 		local->_oper_chandef = sdata->csa_chandef;
- 		/* Call "hw_config" only if doing sw channel switch.
- 		 * Otherwise update the channel directly
-@@ -947,6 +948,17 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 			ieee80211_hw_config(local, 0);
- 		else
- 			local->hw.conf.chandef = local->_oper_chandef;
-+	} else {
-+		mutex_lock(&local->mtx);
-+		ret = ieee80211_vif_use_reserved_context(sdata, &changed);
-+		mutex_unlock(&local->mtx);
-+		if (ret) {
-+			sdata_info(sdata,
-+				   "using reserved context during channel switch failed, disconnecting\n");
-+			ieee80211_queue_work(&sdata->local->hw,
-+					     &ifmgd->csa_connection_drop_work);
-+			goto out;
-+		}
- 	}
+ 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
  
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
-@@ -998,7 +1010,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct cfg80211_bss *cbss = ifmgd->associated;
--	struct ieee80211_chanctx *chanctx;
- 	enum ieee80211_band current_band;
- 	struct ieee80211_csa_ie csa_ie;
- 	int res;
-@@ -1039,44 +1050,16 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
+-	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
+-		   bssid, reason_code);
++	sdata_info(sdata, "deauthenticated from %pM (Reason: %u=%s)\n",
++		   bssid, reason_code, ieee80211_get_reason_code_string(reason_code));
  
--	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
--
--	mutex_lock(&local->chanctx_mtx);
--	if (local->use_chanctx) {
--		u32 num_chanctx = 0;
--		list_for_each_entry(chanctx, &local->chanctx_list, list)
--		       num_chanctx++;
--
--		if (num_chanctx > 1 ||
--		    !(local->hw.flags & IEEE80211_HW_CHANCTX_STA_CSA)) {
--			sdata_info(sdata,
--				   "not handling chan-switch with channel contexts\n");
--			ieee80211_queue_work(&local->hw,
--					     &ifmgd->csa_connection_drop_work);
--			mutex_unlock(&local->chanctx_mtx);
--			return;
--		}
--	}
--
--	if (WARN_ON(!rcu_access_pointer(sdata->vif.chanctx_conf))) {
--		ieee80211_queue_work(&local->hw,
--				     &ifmgd->csa_connection_drop_work);
--		mutex_unlock(&local->chanctx_mtx);
--		return;
--	}
--	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
--			       struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1) {
-+	res = ieee80211_vif_reserve_chanctx(sdata, &csa_ie.chandef);
-+	if (res) {
- 		sdata_info(sdata,
--			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
-+			   "reserving context for channel switch failed, disconnecting\n");
- 		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
--		mutex_unlock(&local->chanctx_mtx);
- 		return;
- 	}
--	mutex_unlock(&local->chanctx_mtx);
+ 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
  
--	sdata->csa_chandef = csa_ie.chandef;
-+	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
- 	sdata->vif.csa_active = true;
+@@ -4301,8 +4301,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	bool report_frame = false;
  
- 	if (csa_ie.mode)
+ 	sdata_info(sdata,
+-		   "deauthenticating from %pM by local choice (reason=%d)\n",
+-		   req->bssid, req->reason_code);
++		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
++		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
+ 
+ 	if (ifmgd->auth_data) {
+ 		drv_mgd_prepare_tx(sdata->local, sdata);
+@@ -4348,8 +4348,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		return -ENOLINK;
+ 
+ 	sdata_info(sdata,
+-		   "disassociating from %pM by local choice (reason=%d)\n",
+-		   req->bss->bssid, req->reason_code);
++		   "disassociating from %pM by local choice (Reason: %u=%s)\n",
++		   req->bss->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
+ 
+ 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
 -- 
 1.8.5.3
 
