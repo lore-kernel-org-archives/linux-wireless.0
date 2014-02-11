@@ -1,76 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:45654 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbaB0HZI (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbaBKMA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 02:25:08 -0500
-Received: by mail-ea0-f177.google.com with SMTP id h10so1537820eak.8
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 23:25:07 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Tue, 11 Feb 2014 07:00:28 -0500
+Message-ID: <1392120025.4128.4.camel@jlt4.sipsolutions.net> (sfid-20140211_130033_841299_59F6FE17)
+Subject: Re: [PATCH] mac80211: fix IE buffer len
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 8/8] ath10k: minimize coherent dma accesses
-Date: Thu, 27 Feb 2014 08:19:47 +0100
-Message-Id: <1393485587-16879-9-git-send-email-michal.kazior@tieto.com> (sfid-20140227_082530_196790_871707C2)
-In-Reply-To: <1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
- <1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
+	David Spinadel <david.spinadel@intel.com>
+Date: Tue, 11 Feb 2014 13:00:25 +0100
+In-Reply-To: <1392119141-27279-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1392119141-27279-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to calculate the ring
-size fill count because it already is memoized in
-a separate variable.
+On Tue, 2014-02-11 at 13:45 +0200, Emmanuel Grumbach wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+> 
+> Remove size of SSID IE from the IE buffer in scan and
+> sched scan, since this IE isn't added to this buffer.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * fix unbalanced locking
+Applied
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+> Change-Id: Ic381cd50566529907c3a37f6aaa02d9132fd99da
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 1cb88bf..2fe47d8 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -225,12 +225,6 @@ static void ath10k_htt_rx_ring_refill_retry(unsigned long arg)
- 	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
- 
--static unsigned ath10k_htt_rx_ring_elems(struct ath10k_htt *htt)
--{
--	return (__le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr) -
--		htt->rx_ring.sw_rd_idx.msdu_payld) & htt->rx_ring.size_mask;
--}
--
- void ath10k_htt_rx_detach(struct ath10k_htt *htt)
- {
- 	int sw_rd_idx = htt->rx_ring.sw_rd_idx.msdu_payld;
-@@ -276,8 +270,10 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
--	if (ath10k_htt_rx_ring_elems(htt) == 0)
--		ath10k_warn("htt rx ring is empty!\n");
-+	if (htt->rx_ring.fill_cnt == 0) {
-+		ath10k_warn("tried to pop sk_buff from an empty rx ring\n");
-+		return NULL;
-+	}
- 
- 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
- 	msdu = htt->rx_ring.netbufs_ring[idx];
-@@ -312,9 +308,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
--	if (ath10k_htt_rx_ring_elems(htt) == 0)
--		ath10k_warn("htt rx ring is empty!\n");
--
- 	if (htt->rx_confused) {
- 		ath10k_warn("htt is confused. refusing rx\n");
- 		return 0;
--- 
-1.8.5.3
+with all that junk removed :)
+
+johannes
 
