@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:48217 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbaB0XHS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:07:18 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so3452159wgh.6
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:17 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/7] staging: vt6656: Remove unused variables packets*
-Date: Thu, 27 Feb 2014 23:06:13 +0000
-Message-Id: <1393542375-13110-5-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000728_119163_9EC9B282)
-In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
-References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:22011 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750807AbaBKKcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 05:32:13 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Subject: [PATCH] mac80211: reset probe_send_count also in HW_CONNECTION_MONITOR case
+Date: Tue, 11 Feb 2014 12:30:18 +0200
+Message-Id: <1392114618-26573-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140211_113217_088733_E7D1C172)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These variables are unused and don't reach user.
+From: Eliad Peller <eliad@wizery.com>
 
-Remove them all.
+In case of beacon_loss with IEEE80211_HW_CONNECTION_MONITOR
+device, mac80211 probes the ap (and disconnects on timeout)
+but ignores the ack.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+If we already got an ack, there's no reason to continue
+disconnecting. this can help devices that supports
+IEEE80211_HW_CONNECTION_MONITOR only partially (e.g. take
+care of keep alives, but does not probe the ap.
+
+In case the device wants to disconnect without probing,
+it can just call ieee80211_connection_loss.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
 ---
- drivers/staging/vt6656/device.h  | 5 -----
- drivers/staging/vt6656/usbpipe.c | 6 +-----
- 2 files changed, 1 insertion(+), 10 deletions(-)
+ include/net/mac80211.h | 2 --
+ net/mac80211/mlme.c    | 4 ++--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 1124aa4..1aad3d3 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -441,11 +441,6 @@ struct vnt_private {
- 	int bExistSWNetAddr;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 87a3cc6..c851249 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1507,8 +1507,6 @@ struct ieee80211_tx_control {
+  * @IEEE80211_HW_CONNECTION_MONITOR:
+  *	The hardware performs its own connection monitoring, including
+  *	periodic keep-alives to the AP and probing the AP on beacon loss.
+- *	When this flag is set, signaling beacon-loss will cause an immediate
+- *	change to disassociated state.
+  *
+  * @IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC:
+  *	This device needs to get data from beacon before association (i.e.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index da4b09e..a70a59e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -131,13 +131,13 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
+ 	if (unlikely(!sdata->u.mgd.associated))
+ 		return;
  
- 	/* Maintain statistical debug info. */
--	unsigned long packetsReceived;
--	unsigned long packetsReceivedDropped;
--	unsigned long packetsReceivedOverflow;
--	unsigned long packetsSent;
--	unsigned long packetsSentDropped;
- 	unsigned long SendContextsInUse;
- 	unsigned long RcvBuffersInUse;
++	ifmgd->probe_send_count = 0;
++
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+ 		return;
  
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 5ce583e..fb9200e 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -627,14 +627,10 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 
- 		priv->dev->trans_start = jiffies;
- 
--		if (status == STATUS_SUCCESS) {
--			priv->packetsSent++;
--		} else {
-+		if (status != STATUS_SUCCESS) {
- 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 				"Send USB error! [%08xh]\n", status);
--			priv->packetsSentDropped++;
- 		}
+ 	mod_timer(&sdata->u.mgd.conn_mon_timer,
+ 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
 -
- 	}
+-	ifmgd->probe_send_count = 0;
+ }
  
- 	if (priv->bLinkPass == true) {
+ static int ecw2cw(int ecw)
 -- 
-1.9.0
+1.8.3.2
 
