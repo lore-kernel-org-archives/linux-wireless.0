@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbaBXMdy (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:60076 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbaBKIdV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 07:33:54 -0500
-Message-ID: <1393245228.4190.14.camel@jlt4.sipsolutions.net> (sfid-20140224_133401_823886_D5D5473F)
-Subject: Re: [net-next v3 3/3] cfg80211: add MPLS and 802.21 classification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-	linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de
-Date: Mon, 24 Feb 2014 13:33:48 +0100
-In-Reply-To: <1393244920-15903-4-git-send-email-sw@simonwunderlich.de> (sfid-20140224_132903_316161_47795452)
-References: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de>
-	 <1393244920-15903-4-git-send-email-sw@simonwunderlich.de>
-	 (sfid-20140224_132903_316161_47795452)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Feb 2014 03:33:21 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so3487111eaj.7
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Feb 2014 00:33:20 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: pass frames with invalid peer status to upper layer
+Date: Tue, 11 Feb 2014 09:32:59 +0100
+Message-Id: <1392107579-4289-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140211_093325_527106_608B70C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-24 at 13:28 +0100, Simon Wunderlich wrote:
-> MPLS labels may contain traffic control information, which should be
-> evaluated and used by the wireless subsystem if present.
-> 
-> Also check for IEEE 802.21 which is always network control traffic.
+Pass frames with invalid peer status to upper layer.
+Next mac80211 will validate frames and drop if required.
+This is required to detect spurious frames and pass
+this info to user mode (detect CLASS2 CLASS3 frames from
+nonauthenticated/nonassociated stations).
 
-Fine with me. I guess this should go through net-next due to the
-dependencies on patches 1 and 2.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index fe8bd1b..c7a5822 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -951,6 +951,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 
+ 			if (status != HTT_RX_IND_MPDU_STATUS_OK &&
+ 			    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
++			    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
+ 			    !htt->ar->monitor_enabled) {
+ 				ath10k_dbg(ATH10K_DBG_HTT,
+ 					   "htt rx ignoring frame w/ status %d\n",
+-- 
+1.7.9.5
 
