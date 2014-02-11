@@ -1,95 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:39526 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754731AbaBUOdj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 09:33:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/1] rtlwifi: Convert drivers to use new API for ieee80211_is_robust_mgmt_frame()
-Date: Fri, 21 Feb 2014 08:33:31 -0600
-Message-Id: <1392993211-3848-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140221_153344_653013_13CAF149)
+Received: from nm14-vm5.bullet.mail.ir2.yahoo.com ([212.82.96.193]:22713 "EHLO
+	nm14-vm5.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751779AbaBKDJL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Feb 2014 22:09:11 -0500
+Message-ID: <1392088149.60638.YahooMailBasic@web172301.mail.ir2.yahoo.com> (sfid-20140211_040936_843520_307D568E)
+Date: Tue, 11 Feb 2014 03:09:09 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: fix regression on MIPS without coherent DMA
+To: larry.finger@lwfinger.net, stf_xl@wp.pl,
+	linux-wireless@vger.kernel.org
+Cc: herton@canonical.com, linux-mips@linux-mips.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers rtl8188ee, rtl8192ce, rtl8192se, and rtl8723ae all use this routine.
-In addition, all callers of ieee80211_is_robust_mgmt_frame() have access to the
-skb. Thus, it is trivial to use the new API rather than the underscored old version.
+------------------------------
+On Mon, Feb 10, 2014 10:50 PM GMT Larry Finger wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>
----
+>On 02/10/2014 03:38 PM, Stanislaw Gruszka wrote:
+>> This patch fixes regression caused by commit a16dad77634 "MIPS: Fix
+>> potencial corruption". That commit fixes one corruption scenario in
+>> cost of adding another one, which actually start to cause crashes
+>> on Yeeloong laptop when rtl8187 driver is used.
+>>
+>> For correct DMA read operation on machines without DMA coherence, kernel
+>> have to invalidate cache, such it will refill later with new data that
+>> device wrote to memory, when that data is needed to process. We can only
+>> invalidate full cache line. Hence when cache line includes both dma
+>> buffer and some other data (written in cache, but not yet in main
+>> memory), the other data can not hit memory due to invalidation. That
+>> happen on rtl8187 where struct rtl8187_priv fields are located just
+>> before and after small buffers that are passed to USB layer and DMA
+>> is performed on them.
+>>
+>> To fix the problem we align buffers and reserve space after them to make
+>> them match cache line.
+>>
+>> This patch does not resolve all possible MIPS problems entirely, for
+>> that we have to assure that we always map cache aligned buffers for DMA,
+>> what can be complex or even not possible. But patch fixes visible and
+>> reproducible regression and seems other possible corruptions do not
+>> happen in practice, since Yeeloong laptop works stable without rtl8187
+>> driver.
+>>
+>> Bug report:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=54391
+>>
+>> Reported-by: Petr Pisar <petr.pisar@atlas.cz>
+>> Bisected-by: Tom Li <biergaizi2009@gmail.com>
+>> Reported-and-tested-by: Tom Li <biergaizi2009@gmail.com>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> ---
+>
+>Congratulations to all for sorting this out. It could not have been too easy.
+>
+>The only effect I see on architectures with DMA coherence is that the private 
+>data area has grown a little. Certainly, my RTL8187B device still works on x86_64.
+>
+>Acked-by: Larry Finger <Larry.Finger@lwfinger.next>
+>
+>Larry
+>
 
-Johannes,
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-I think this patch removes all callers of the old API.
+Looks fine. L1_CACHE_BYTES is defined in <asm/cache.h> (arch dependent)
+which is included by <linux/cache.h> (where ____cacheline_aligned is).
 
-Larry
----
+Hin-Tak
 
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c | 4 ++--
- 4 files changed, 5 insertions(+), 5 deletions(-)
+P.S. Apologies about the blank message - problem with typing on tablet...
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-index 27ace30..384245f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -452,7 +452,7 @@ bool rtl88ee_rx_query_desc(struct ieee80211_hw *hw,
- 			/* During testing, hdr was NULL */
- 			return false;
- 		}
--		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
-+		if ((ieee80211_is_robust_mgmt_frame(skb)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 114858d..0d05bac 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -393,7 +393,7 @@ bool rtl92ce_rx_query_desc(struct ieee80211_hw *hw,
- 			/* In testing, hdr was NULL here */
- 			return false;
- 		}
--		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
-+		if ((ieee80211_is_robust_mgmt_frame(skb)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index 163a681..af1bb3d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -310,7 +310,7 @@ bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
- 			/* during testing, hdr was NULL here */
- 			return false;
- 		}
--		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
-+		if ((ieee80211_is_robust_mgmt_frame(skb)) &&
- 			(ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index 721162c..8f20226 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -334,8 +334,8 @@ bool rtl8723ae_rx_query_desc(struct ieee80211_hw *hw,
- 			/* during testing, hdr could be NULL here */
- 			return false;
- 		}
--		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
--			(ieee80211_has_protected(hdr->frame_control)))
-+		if ((ieee80211_is_robust_mgmt_frame(skb)) &&
-+		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
--- 
-1.8.4.5
+>>   drivers/net/wireless/rtl818x/rtl8187/rtl8187.h |   10 ++++++++--
+>>   1 files changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+>> index 56aee06..a6ad79f 100644
+>> --- a/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+>> +++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+>> @@ -15,6 +15,8 @@
+>>   #ifndef RTL8187_H
+>>   #define RTL8187_H
+>>
+>> +#include <linux/cache.h>
+>> +
+>>   #include "rtl818x.h"
+>>   #include "leds.h"
+>>
+>> @@ -139,7 +141,10 @@ struct rtl8187_priv {
+>>       u8 aifsn[4];
+>>       u8 rfkill_mask;
+>>       struct {
+>> -        __le64 buf;
+>> +        union {
+>> +            __le64 buf;
+>> +            u8 dummy1[L1_CACHE_BYTES];
+>> +        } ____cacheline_aligned;
+>>           struct sk_buff_head queue;
+>>       } b_tx_status; /* This queue is used by both -b and non-b devices */
+>>       struct mutex io_mutex;
+>> @@ -147,7 +152,8 @@ struct rtl8187_priv {
+>>           u8 bits8;
+>>           __le16 bits16;
+>>           __le32 bits32;
+>> -    } *io_dmabuf;
+>> +        u8 dummy2[L1_CACHE_BYTES];
+>> +    } *io_dmabuf ____cacheline_aligned;
+>>       bool rfkill_off;
+>>       u16 seqno;
+>>   };
+>>
+>
 
