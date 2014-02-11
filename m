@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:57391 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbaBYRph (ORCPT
+Received: from smtprelay0207.hostedemail.com ([216.40.44.207]:56540 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752916AbaBKROI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 12:45:37 -0500
-Message-ID: <530cd6bf.c45a0f0a.7c86.ffffd79d@mx.google.com> (sfid-20140225_184618_798487_1C856417)
-From: Silvan Jegen <s.jegen@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org
-CC: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Tue, 25 Feb 2014 18:07:10 +0100
-Subject: [PATCH] Staging: rtl8192e: Replace min macro with min_t
+	Tue, 11 Feb 2014 12:14:08 -0500
+Message-ID: <1392138837.2511.2.camel@joe-AO722> (sfid-20140211_181437_159895_54CDB74C)
+Subject: Re: [PATCH v3] ieee80211: Print human-readable disassoc/deauth
+ reason codes
+From: Joe Perches <joe@perches.com>
+To: Calvin Owens <jcalvinowens@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 11 Feb 2014 09:13:57 -0800
+In-Reply-To: <20140211163738.GA32043@gmail.com>
+References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+	 <1391661863.30094.56.camel@joe-AO722>
+	 <1392030546.4128.11.camel@jlt4.sipsolutions.net>
+	 <1392050359.2507.10.camel@joe-AO722> <20140211012523.GA2739@gmail.com>
+	 <1392082740.2507.49.camel@joe-AO722> <20140211163738.GA32043@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of an explicit cast the min_t macro should be used.
+On Tue, 2014-02-11 at 10:37 -0600, Calvin Owens wrote:
+> Create a function to return a descriptive string for each reason code,
+> and print that in addition to the numeric value in the kernel log. These
+> codes are easily found on popular search engines, but one is generally
+> not able to access the internet when dealing with wireless connectivity
+> issues.
+[]
+>  include/net/mac80211.h | 10 +++++++++
+>  net/mac80211/main.c    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  net/mac80211/mlme.c    | 12 +++++------
+>  3 files changed, 73 insertions(+), 6 deletions(-)
 
-Signed-off-by: Silvan Jegen <s.jegen@gmail.com>
----
- drivers/staging/rtl8192e/rtl8192e/rtl_wx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Is there a reason why all of this this shouldn't
+be a static function local to mlme.c?
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-index 6202358..498995d 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-@@ -609,7 +609,7 @@ static int r8192_wx_set_nick(struct net_device *dev,
- 	if (wrqu->data.length > IW_ESSID_MAX_SIZE)
- 		return -E2BIG;
- 	down(&priv->wx_sem);
--	wrqu->data.length = min((size_t) wrqu->data.length, sizeof(priv->nick));
-+	wrqu->data.length = min_t(size_t, wrqu->data.length, sizeof(priv->nick));
- 	memset(priv->nick, 0, sizeof(priv->nick));
- 	memcpy(priv->nick, extra, wrqu->data.length);
- 	up(&priv->wx_sem);
--- 
-1.9.0
+Is this ever going to be used somewhere else?
+
 
