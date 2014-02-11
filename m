@@ -1,91 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:59740 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbaBSA7R (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:56836 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbaBKGRr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 19:59:17 -0500
-Received: by mail-pa0-f54.google.com with SMTP id fa1so17494407pad.13
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:59:16 -0800 (PST)
-From: "Zhao\, Gang" <gamerh2o@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 7/7] ieee80211: remove function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
-References: <cover.1392728354.git.gamerh2o@gmail.com>
-	<cover.1392728354.git.gamerh2o@gmail.com>
-	<c9305f68668f20186c1b2a8f8f3f6dac3d23b5db.1392728354.git.gamerh2o@gmail.com>
-Date: Wed, 19 Feb 2014 08:59:05 +0800
-In-Reply-To: <c9305f68668f20186c1b2a8f8f3f6dac3d23b5db.1392728354.git.gamerh2o@gmail.com>
-	(Gang Zhao's message of "Tue, 18 Feb 2014 21:36:03 +0800")
-Message-ID: <878ut75352.fsf@will.lan> (sfid-20140219_015958_025011_F696602C)
+	Tue, 11 Feb 2014 01:17:47 -0500
+Received: by mail-bk0-f41.google.com with SMTP id na10so2092778bkb.14
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 22:17:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1392052405-15337-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1392052405-15337-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Tue, 11 Feb 2014 07:17:45 +0100
+Message-ID: <CA+BoTQ=q-940AsMfneU5SP8Ke1RxEZE12rrm4Z+KBaTBjrW64w@mail.gmail.com> (sfid-20140211_071804_358352_4145CD5F)
+Subject: Re: [PATCH] ath10k: change simulate_fw_crash to work with 10.1 firmware
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-18 at 21:36:03 +0800, Zhao, Gang wrote:
-> Function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan} have been
-> replaced with ieee80211_{channel_to_frequency, frequency_to_channel}.
+On 10 February 2014 18:13, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
+> Wmi command WMI_FORCE_FW_HANG_CMDID is not supported
+> in firmware 10.1. In order to have firmware crash simulation
+> functionality also in firmware 10.1 driver can force firmware
+> crash by performing not allowed operation. Driver can deliberately
+> crash firmware when setting vdev param for vdev id out of range.
 >
-> There should be no users of the two functions now. So remove them.
+> Command to trigger firmware crash:
+> echo "crash" > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
 >
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 > ---
 
-Since staging driver wlan-ng uses function ieee80211_dsss_chan_to_freq,
-This patch "ieee80211: remove function ieee80211_{dsss_chan_to_freq,
-freq_to_dsss_chan}" should be applied later, when that staging-next
-patch "staging: wlan-ng: replace function ieee80211_dsss_chan_to_freq()"
-appear on wireless-next.
+The 'fw hang assert' crash can be recovered with a warm reset but a
+real crash can't. Thus, I think the two crash methods should be
+distinguishable by having either two separate debugfs files or two
+separate trigger keywords.
 
->  include/linux/ieee80211.h | 36 ------------------------------------ 1
->  file changed, 36 deletions(-)
->
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index 5f34935..0629904 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -2308,42 +2308,6 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
->  }
->  
->  /**
-> - * ieee80211_dsss_chan_to_freq - get channel center frequency
-> - * @channel: the DSSS channel
-> - *
-> - * Convert IEEE802.11 DSSS channel to the center frequency (MHz).
-> - * Ref IEEE 802.11-2007 section 15.6
-> - */
-> -static inline int ieee80211_dsss_chan_to_freq(int channel)
-> -{
-> -	if ((channel > 0) && (channel < 14))
-> -		return 2407 + (channel * 5);
-> -	else if (channel == 14)
-> -		return 2484;
-> -	else
-> -		return -1;
-> -}
-> -
-> -/**
-> - * ieee80211_freq_to_dsss_chan - get channel
-> - * @freq: the frequency
-> - *
-> - * Convert frequency (MHz) to IEEE802.11 DSSS channel
-> - * Ref IEEE 802.11-2007 section 15.6
-> - *
-> - * This routine selects the channel with the closest center frequency.
-> - */
-> -static inline int ieee80211_freq_to_dsss_chan(int freq)
-> -{
-> -	if ((freq >= 2410) && (freq < 2475))
-> -		return (freq - 2405) / 5;
-> -	else if ((freq >= 2482) && (freq < 2487))
-> -		return 14;
-> -	else
-> -		return -1;
-> -}
-> -
-> -/**
->   * ieee80211_tu_to_usec - convert time units (TU) to microseconds
->   * @tu: the TUs
->   */
+
+Michał
