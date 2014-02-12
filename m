@@ -1,106 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:24988 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbaBJIid (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:60789 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735AbaBLTFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 03:38:33 -0500
-Message-ID: <52F88FEA.3000102@huawei.com> (sfid-20140210_093836_899113_452FFDB7)
-Date: Mon, 10 Feb 2014 16:38:02 +0800
-From: Zhao Hongjiang <zhaohongjiang@huawei.com>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <zhousiyi@huawei.com>
-Subject: Re: Get multiple ip addresses by dhcp for wireless card
-References: <52F84DFD.4030602@huawei.com> <52F87608.808@candelatech.com>
-In-Reply-To: <52F87608.808@candelatech.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 12 Feb 2014 14:05:09 -0500
+Received: by mail-we0-f179.google.com with SMTP id q58so6279175wes.24
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:08 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 8/9] wcn36xx: Track dpu signature per sta
+Date: Wed, 12 Feb 2014 19:04:47 +0000
+Message-Id: <1392231888-2191-8-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200552_975887_638A07D6)
+In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014/2/10 14:47, Ben Greear wrote:
-> On 02/09/2014 07:56 PM, Zhao Hongjiang wrote:
->> Hello,
->>
->> Is it possible for one station to get multiple ip addresses from AP/Wireless
->> router by dhcp? I had tried to add one or more virtual interface for
->> phy0 (wlan0, wlan1, wlan2,etc), but only wlan0 can get ip address from AP.
->> the following is the steps:
->>
->> /bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
->> /bin/wpa_cli -i wlan0 -p /wlan0
->>> add_network
->>> set_network 0 ssid "APabc"
->>> set_network 0 psk "1111111"
->>> enable_network 0
->>
->> iw wlan0 interface add wlan1 type station 4addr on
->> ip link set wlan1 up
->> dhcpcd -ABKL wlan0 #works, can get ip
->> dhcpcd -ABKL wlan1 #cannot work
-> 
-> Virtual stations work just fine for me, though I don't use that '4addr' thing.
-> ...maybe sniff your wlan1 and see if it is sending
-> out proper DHCP requests (and they are being received by the AP)?
-> 
-> You have to create a new supplicant config for each virtual station,
-> or run a unique supplicant instance for each station.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-I try to follow the instruction which you give and do the following command, but wlan1 
-cannot associate with AP.
+This fixes problems seen with multiple softap clients and reconnecting
+softap clients.
 
-1. root@local# /bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
-2. root@local# iw wlan0 interface add wlan1 type station
-3. root@local# /bin/wpa_supplicant -ddd -iwlan1 -Dnl80211 -c/wifi/wpa_supplicant_wlan1.conf -B
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 5 +++--
+ drivers/net/wireless/ath/wcn36xx/txrx.c    | 4 ++--
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-wpa_supplicant_wlan1.conf file contains folliwng lines:
-
-ctrl_interface=wlan1
-driver_param=use_multi_chan_concurrent=1
-update_config=1
-config_methods=physical_display virtual_push_button keypad
-
-After this step, when using ifconfig, "ifconfig wlan1" gave a unusual hwaddr, is it a issue?
-ifconfig wlan0
-wlan0     Link encap:Ethernet  HWaddr 00:13:0B:D2:2D:B1  
-          inet6 addr: fe80::213:bff:fed2:2db1/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-
-ifconfig wlan1
-wlan1     Link encap:Ethernet  HWaddr 02:00:00:00:00:00  
-          inet6 addr: fe80::ff:fe00:0/64 Scope:Link
-          UP BROADCAST MULTICAST  MTU:1500  Metric:1
-	  
-4. root@local# /system/bin/wpa_cli -i wlan0 -p /wlan0
-   >add_network
-   >set_network 2 ssid "APabc" 
-   >set_network 2 psk "11111111" 
-   >enable_network 2
-
-   wlan0 can associate with ap.
-
-5. root@local# /bin/wpa_cli -i wlan1 -p /wlan1
-   > add_network
-   > set_network 0 ssid "APabc" 
-   > set_network 0 psk "11111111" 
-   > enable_network 0
-
-   it will give the following result:
-   <3>CTRL-EVENT-STATE-CHANGE id=-1 state=3 BSSID=00:00:00:00:00:00 SSID=
-   <3>CTRL-EVENT-SCAN-RESULTS 
-   <3>Trying to associate with 78:f5:fd:77:e5:a4 (SSID='APabc' freq=2462 MHz)
-   <3>CTRL-EVENT-STATE-CHANGE id=-1 state=5 BSSID=00:00:00:00:00:00 SSID=
-   <3>CTRL-EVENT-ASSOC-REJECT status_code=1
-
-   so wlan1 cannot associate with ap.
-
-   further help is appreciated, thanks.
-> 
-> To do any useful traffic, between stations, you will have to be careful
-> about setting up routing rules and use special binding commands for your
-> traffic types.
-> 
-> Thanks,
-> Ben
-> 
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index c7da55c..7bf0ef8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -902,11 +902,12 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
+ 
+ 	sta_priv->sta_index = params->sta_index;
+ 	sta_priv->dpu_desc_index = params->dpu_index;
++	sta_priv->ucast_dpu_sign = params->uc_ucast_sig;
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_HAL,
+-		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d\n",
++		    "hal config sta rsp status %d sta_index %d bssid_index %d uc_ucast_sig %d p2p %d\n",
+ 		    params->status, params->sta_index, params->bssid_index,
+-		    params->p2p);
++		    params->uc_ucast_sig, params->p2p);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 2dbed20..be0dda0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -132,6 +132,7 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 				   struct ieee80211_vif,
+ 				   drv_priv);
+ 
++		bd->dpu_sign = sta_priv->ucast_dpu_sign;
+ 		if (vif->type == NL80211_IFTYPE_STATION) {
+ 			bd->sta_index = sta_priv->bss_sta_index;
+ 			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
+@@ -145,10 +146,9 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 		__vif_priv = get_vif_by_addr(wcn, hdr->addr2);
+ 		bd->sta_index = __vif_priv->self_sta_index;
+ 		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
++		bd->dpu_sign = __vif_priv->self_ucast_dpu_sign;
+ 	}
+ 
+-	bd->dpu_sign = __vif_priv->self_ucast_dpu_sign;
+-
+ 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
+ 	   (sta_priv && !sta_priv->is_data_encrypted))
+ 		bd->dpu_ne = 1;
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 6447105..f0fb81d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -159,6 +159,7 @@ struct wcn36xx_sta {
+ 	u16 tid;
+ 	u8 sta_index;
+ 	u8 dpu_desc_index;
++	u8 ucast_dpu_sign;
+ 	u8 bss_sta_index;
+ 	u8 bss_dpu_desc_index;
+ 	bool is_data_encrypted;
+-- 
+1.8.3.2
 
