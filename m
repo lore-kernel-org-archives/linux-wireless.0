@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:53497 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585AbaBYUyD (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:43521 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084AbaBLTFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 15:54:03 -0500
-Received: by mail-we0-f175.google.com with SMTP id q59so908101wes.34
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 12:54:01 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 12 Feb 2014 14:05:08 -0500
+Received: by mail-we0-f176.google.com with SMTP id q58so6299916wes.21
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:07 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	Joe Perches <joe@perches.com>
-Subject: [PATCH 10/10] staging: vt6656: struct vnt_usb_send_context struct size optimization.
-Date: Tue, 25 Feb 2014 20:51:52 +0000
-Message-Id: <1393361512-13805-10-git-send-email-tvboxspy@gmail.com> (sfid-20140225_215413_156516_D2EE0875)
-In-Reply-To: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
-References: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 7/9] wcn36xx: Rename wcn36xx_vif.ucast_dpu_signature to self_ucast_dpu_sign
+Date: Wed, 12 Feb 2014 19:04:46 +0000
+Message-Id: <1392231888-2191-7-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200520_572839_37CE1CEA)
+In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reorder in size and remove dead member Next.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This is more line with the names of the other members
+
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
 ---
- drivers/staging/vt6656/device.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 2 +-
+ drivers/net/wireless/ath/wcn36xx/txrx.c    | 2 +-
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 54c6383..ce1587a 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -179,10 +179,9 @@ struct vnt_usb_send_context {
- 	void *pDevice;
- 	struct sk_buff *pPacket;
- 	struct urb *pUrb;
-+	struct ethhdr sEthHeader;
- 	unsigned int uBufLen;
- 	u8 type;
--	struct ethhdr sEthHeader;
--	void *Next;
- 	bool bBoolInUse;
- 	unsigned char Data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index ae36409..c7da55c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1121,7 +1121,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ 		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
+ 	}
+ 
+-	priv_vif->ucast_dpu_signature = params->ucast_dpu_signature;
++	priv_vif->self_ucast_dpu_sign = params->ucast_dpu_signature;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index b2b60e3..2dbed20 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -147,7 +147,7 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+ 		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
+ 	}
+ 
+-	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
++	bd->dpu_sign = __vif_priv->self_ucast_dpu_sign;
+ 
+ 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
+ 	   (sta_priv && !sta_priv->is_data_encrypted))
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index b4dc85b..6447105 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -125,10 +125,10 @@ struct wcn36xx_vif {
+ 	enum wcn36xx_power_state pw_state;
+ 
+ 	u8 bss_index;
+-	u8 ucast_dpu_signature;
+ 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
+ 	u8 self_sta_index;
+ 	u8 self_dpu_desc_index;
++	u8 self_ucast_dpu_sign;
  };
+ 
+ /**
 -- 
-1.9.0
+1.8.3.2
 
