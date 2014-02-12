@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:50668 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752682AbaBYNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:49:59 -0500
-Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0LwF9u-1XJTVi1soI-0181SY for
- <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:58 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 7/7] ath9k_htc: use ath9k_cmn_reload_chainmask
-Date: Tue, 25 Feb 2014 14:48:56 +0100
-Message-Id: <1393336136-31069-8-git-send-email-linux@rempel-privat.de> (sfid-20140225_145002_198165_479B7A29)
-In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57634 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753424AbaBLUaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Feb 2014 15:30:11 -0500
+Date: Wed, 12 Feb 2014 15:27:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: pull request: iwlwifi-next 2014-02-03
+Message-ID: <20140212202700.GF22203@tuxdriver.com> (sfid-20140212_213019_977732_6C48296D)
+References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+On Mon, Feb 03, 2014 at 10:56:36PM +0200, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> It seems that the team worked hard based on the size of the pull request:)
+> Let me know if this is too big, so that I can find the right balance.
+> 
+> I have here support for D0i3 which is runtime power saving state. This
+> work is still on going. Along with that I have implementation of
+> broadcast filtering by Eliad. I provide the usual amount of clean ups
+> etc... Note that we begin to warn users that are still using the old
+> firmware but we still support it in 3.15. I will remove support for this
+> old firmware in 3.16.
+> Eran begins to add support for next-gen devices while Johannes
+> implemented uAPSD for AP / GO along with other various things.
+> Ilan is tuning the quota allocation and Ido Yariv contributes a new
+> feature that allows to limit the power we consume based on entries in
+> ACPI tables.
+> 
+> Here again, let me know of issues if any!
+> 
+> The following changes since commit 9b0cd304f26b9fca140de15deeac2bf357d1f388:
+> 
+>   Merge branch 'drm-next' of git://people.freedesktop.org/~airlied/linux
+> (2014-01-29 20:49:12 -0800)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+> for-john
+> 
+> for you to fetch changes up to 8e305d171ab58dbd79ad8e13d93db2237fde5749:
+> 
+>   iwlwifi: mvm: remove duplicate assignment to ap_ibss_active
+> (2014-02-03 22:43:53 +0200)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 5220f46..a8f30dc 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -616,14 +616,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&common->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			ath9k_cmn_setup_ht_cap(ah,
--				     &common->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			ath9k_cmn_setup_ht_cap(ah,
--				     &common->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_cmn_reload_chainmask(ah);
- 
- 	pBase = ath9k_htc_get_eeprom_base(priv);
- 	if (pBase) {
+Pulling now...
+
 -- 
-1.9.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
