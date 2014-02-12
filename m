@@ -1,201 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:52816 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbaB0SZK (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:61760 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbaBLIyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 13:25:10 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 13/14] brcmfmac: use pre-allocated scatter-gather table for txglomming
-Date: Thu, 27 Feb 2014 19:25:00 +0100
-Message-ID: <1393525500-4161-1-git-send-email-arend@broadcom.com> (sfid-20140227_192531_321874_66CD277B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 12 Feb 2014 03:54:44 -0500
+Received: by mail-ee0-f41.google.com with SMTP id e51so3608558eek.28
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 00:54:43 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
+Date: Wed, 12 Feb 2014 10:54:29 +0200
+Message-Id: <1392195269-5514-1-git-send-email-egrumbach@gmail.com> (sfid-20140212_095448_665051_2075E67B)
+In-Reply-To: <52FB360D.2060502@gmail.com>
+References: <52FB360D.2060502@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of allocating a scatter-gather table for every transmit
-reuse a pre-allocated table. The transmit path will be faster by
-taking out this allocation.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+We have had a bug in TX AMPDU in iwldvm for a very long
+time. This bug has been raised in many bugzillas and threads
+on linux-wireless mailing list.
+
+The bug is in firmware and we won't be able to fix it in the
+near future. Hence, we prefer to disable TX AMPDU by default
+in iwldvm. This doesn't affect iwlmvm which supports 7160 /
+3160 and up.
+
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-Hi John,
+ drivers/net/wireless/iwlwifi/Kconfig         |   10 ++++++++
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c  |    8 +++----
+ drivers/net/wireless/iwlwifi/dvm/tx.c        |   32 ++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-modparams.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    2 --
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  |    8 -------
+ 7 files changed, 32 insertions(+), 31 deletions(-)
 
-Found an issue with this patch so here is V2. This replaces patch with
-Message-ID: 1393356639-19169-14-git-send-email-arend@broadcom.com
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   47 ++++++++++++++++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +---
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
- 3 files changed, 41 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 07e7d25..9eea7d4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,6 +53,12 @@
- /* Maximum milliseconds to wait for F2 to come up */
- #define SDIO_WAIT_F2RDY	3000
- 
-+#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
-+#define BRCMF_DEFAULT_RXGLOM_SIZE	32  /* max rx frames in glom chain */
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 3eb2102..ec28564 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -128,3 +128,13 @@ config IWLWIFI_DEVICE_TRACING
+ 	  If unsure, say Y so we can help you better when problems
+ 	  occur.
+ endmenu
 +
-+static int brcmf_sdiod_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
-+module_param_named(txglomsz, brcmf_sdiod_txglomsz, int, 0);
-+MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
++config IWLWIFI_TX_AMPDU
++	bool "Enable TX AMPDU (EXPERIMENTAL)"
++	depends on IWLDVM
++	help
++	  Say Y here to enable TX AMPDU. TX APMDU should give a
++	  significant boost to TX throughput but the firmware has
++	  a bug that prevents it from working properly.
++
++	  If unsure, say N which is the default.
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index c24d1d3..12d3613 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -105,7 +105,6 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
  
- static irqreturn_t brcmf_sdiod_oob_irqhandler(int irq, void *dev_id)
- {
-@@ -487,7 +493,6 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	struct mmc_request mmc_req;
- 	struct mmc_command mmc_cmd;
- 	struct mmc_data mmc_dat;
--	struct sg_table st;
- 	struct scatterlist *sgl;
- 	int ret = 0;
+ 	/* Tell mac80211 our characteristics */
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_AMPDU_AGGREGATION |
+ 		    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
+ 		    IEEE80211_HW_SPECTRUM_MGMT |
+ 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+@@ -126,7 +125,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
  
-@@ -532,16 +537,11 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	pkt_offset = 0;
- 	pkt_next = target_list->next;
+ 	if (priv->nvm_data->sku_cap_11n_enable)
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+-			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
++			     IEEE80211_HW_SUPPORTS_STATIC_SMPS |
++			     IEEE80211_HW_AMPDU_AGGREGATION;
  
--	if (sg_alloc_table(&st, max_seg_cnt, GFP_KERNEL)) {
--		ret = -ENOMEM;
--		goto exit;
+ 	/*
+ 	 * Enable 11w if advertised by firmware and software crypto
+@@ -729,10 +729,10 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_TX_START:
+ 		if (!priv->trans->ops->txq_enable)
+ 			break;
+-		if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_TXAGG)
+-			break;
++#ifdef CPTCFG_IWLWIFI_TX_AMPDU
+ 		IWL_DEBUG_HT(priv, "start Tx\n");
+ 		ret = iwlagn_tx_agg_start(priv, vif, sta, tid, ssn);
++#endif
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index a6839df..f1a0386 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -480,21 +480,6 @@ drop_unlock_priv:
+ 	return -1;
+ }
+ 
+-static int iwlagn_alloc_agg_txq(struct iwl_priv *priv, int mq)
+-{
+-	int q;
+-
+-	for (q = IWLAGN_FIRST_AMPDU_QUEUE;
+-	     q < priv->cfg->base_params->num_of_queues; q++) {
+-		if (!test_and_set_bit(q, priv->agg_q_alloc)) {
+-			priv->queue_to_mac80211[q] = mq;
+-			return q;
+-		}
 -	}
 -
- 	memset(&mmc_req, 0, sizeof(struct mmc_request));
- 	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
- 	memset(&mmc_dat, 0, sizeof(struct mmc_data));
- 
--	mmc_dat.sg = st.sgl;
-+	mmc_dat.sg = sdiodev->sgtable.sgl;
- 	mmc_dat.blksz = func_blk_sz;
- 	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
- 	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
-@@ -557,7 +557,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	while (seg_sz) {
- 		req_sz = 0;
- 		sg_cnt = 0;
--		sgl = st.sgl;
-+		sgl = sdiodev->sgtable.sgl;
- 		/* prep sg table */
- 		while (pkt_next != (struct sk_buff *)target_list) {
- 			pkt_data = pkt_next->data + pkt_offset;
-@@ -639,7 +639,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	}
- 
- exit:
--	sg_free_table(&st);
-+	sg_init_table(sdiodev->sgtable.sgl, sdiodev->sgtable.orig_nents);
- 	while ((pkt_next = __skb_dequeue(&local_list)) != NULL)
- 		brcmu_pkt_buf_free_skb(pkt_next);
- 
-@@ -863,6 +863,29 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+-	return -ENOSPC;
+-}
+-
+ static void iwlagn_dealloc_agg_txq(struct iwl_priv *priv, int q)
+ {
+ 	clear_bit(q, priv->agg_q_alloc);
+@@ -592,6 +577,22 @@ turn_off:
  	return 0;
  }
  
-+static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
++#ifdef CPTCFG_IWLWIFI_TX_AMPDU
++static int iwlagn_alloc_agg_txq(struct iwl_priv *priv, int mq)
 +{
-+	uint nents;
-+	int err;
++	int q;
 +
-+	if (!sdiodev->sg_support)
-+		return;
-+
-+	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
-+	nents += (nents >> 4) + 1;
-+
-+	WARN_ON(nents > sdiodev->max_segment_count);
-+
-+	brcmf_dbg(TRACE, "nents=%d\n", nents);
-+	err = sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
-+	if (err < 0) {
-+		brcmf_err("allocation failed: disable scatter-gather");
-+		sdiodev->sg_support = false;
++	for (q = IWLAGN_FIRST_AMPDU_QUEUE;
++	     q < priv->cfg->base_params->num_of_queues; q++) {
++		if (!test_and_set_bit(q, priv->agg_q_alloc)) {
++			priv->queue_to_mac80211[q] = mq;
++			return q;
++		}
 +	}
 +
-+	sdiodev->txglomsz = brcmf_sdiod_txglomsz;
++	return -ENOSPC;
 +}
 +
- static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
  {
- 	if (sdiodev->bus) {
-@@ -880,6 +903,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- 	sdio_disable_func(sdiodev->func[1]);
- 	sdio_release_host(sdiodev->func[1]);
+@@ -650,6 +651,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
  
-+	sg_free_table(&sdiodev->sgtable);
- 	sdiodev->sbwad = 0;
+ 	return ret;
+ }
++#endif /* CPTCFG_IWLWIFI_TX_AMPDU */
  
- 	return 0;
-@@ -935,6 +959,11 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- 					   SG_MAX_SINGLE_ALLOC);
- 	sdiodev->max_segment_size = host->max_seg_size;
- 
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	brcmf_sdiod_sgtable_alloc(sdiodev);
-+
- 	/* try to attach to the target device */
- 	sdiodev->bus = brcmf_sdio_probe(sdiodev);
- 	if (!sdiodev->bus) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 8871d94..3b8f46e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -113,8 +113,6 @@ struct rte_console {
- #define BRCMF_TXBOUND	20	/* Default for max tx frames in
- 				 one scheduling */
- 
--#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
--
- #define BRCMF_TXMINMAX	1	/* Max tx frames if rx still pending */
- 
- #define MEMBLOCK	2048	/* Block size used for downloading
-@@ -511,10 +509,6 @@ static const uint max_roundup = 512;
- 
- #define ALIGNMENT  4
- 
--static int brcmf_sdio_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
--module_param_named(txglomsz, brcmf_sdio_txglomsz, int, 0);
--MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
--
- enum brcmf_sdio_frmtype {
- 	BRCMF_SDIO_FT_NORMAL,
- 	BRCMF_SDIO_FT_SUPER,
-@@ -2321,7 +2315,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		__skb_queue_head_init(&pktq);
- 		if (bus->txglom)
- 			pkt_num = min_t(u8, bus->tx_max - bus->tx_seq,
--					brcmf_sdio_txglomsz);
-+					bus->sdiodev->txglomsz);
- 		pkt_num = min_t(u32, pkt_num,
- 				brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol));
- 		spin_lock_bh(&bus->txqlock);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 5e53eb1..3deab79 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -180,6 +180,8 @@ struct brcmf_sdio_dev {
- 	uint max_request_size;
- 	ushort max_segment_count;
- 	uint max_segment_size;
-+	uint txglomsz;
-+	struct sg_table sgtable;
+ int iwlagn_tx_agg_flush(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, u16 tid)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index c372816..2a77602 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1286,7 +1286,7 @@ module_param_named(swcrypto, iwlwifi_mod_params.sw_crypto, int, S_IRUGO);
+ MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
+ module_param_named(11n_disable, iwlwifi_mod_params.disable_11n, uint, S_IRUGO);
+ MODULE_PARM_DESC(11n_disable,
+-	"disable 11n functionality, bitmap: 1: full, 2: agg TX, 4: agg RX");
++	"disable 11n functionality, bitmap: 1: full, 4: agg RX");
+ module_param_named(amsdu_size_8K, iwlwifi_mod_params.amsdu_size_8K,
+ 		   int, S_IRUGO);
+ MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size (default 0)");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index 0a84ade..9589c06 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -80,7 +80,6 @@ enum iwl_power_level {
  };
  
- /* sdio core registers */
+ #define IWL_DISABLE_HT_ALL	BIT(0)
+-#define IWL_DISABLE_HT_TXAGG	BIT(1)
+ #define IWL_DISABLE_HT_RXAGG	BIT(2)
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index 725e954..810c76d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -369,8 +369,6 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
+ 	data->sku_cap_band_24GHz_enable = sku & NVM_SKU_CAP_BAND_24GHZ;
+ 	data->sku_cap_band_52GHz_enable = sku & NVM_SKU_CAP_BAND_52GHZ;
+ 	data->sku_cap_11n_enable = sku & NVM_SKU_CAP_11N_ENABLE;
+-	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
+-		data->sku_cap_11n_enable = false;
+ 
+ 	/* check overrides (some devices have wrong NVM) */
+ 	if (cfg->valid_tx_ant)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 6bf9766..b068799 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -347,20 +347,12 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
+ 
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+-		if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_RXAGG) {
+-			ret = -EINVAL;
+-			break;
+-		}
+ 		ret = iwl_mvm_sta_rx_agg(mvm, sta, tid, *ssn, true);
+ 		break;
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		ret = iwl_mvm_sta_rx_agg(mvm, sta, tid, 0, false);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_TXAGG) {
+-			ret = -EINVAL;
+-			break;
+-		}
+ 		ret = iwl_mvm_sta_tx_agg_start(mvm, vif, sta, tid, ssn);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
 -- 
-1.7.10.4
+1.7.9.5
 
