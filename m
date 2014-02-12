@@ -1,281 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:54493 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbaBNVif (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:59387 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbaBLTFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 16:38:35 -0500
-Message-ID: <52FE8CD8.1050409@lwfinger.net> (sfid-20140214_223855_167618_3B41A701)
-Date: Fri, 14 Feb 2014 15:38:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Peter Wu <lekensteyn@gmail.com>,
-	Chaoming_Li <chaoming_li@realsil.com.cn>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/3] rtlwifi: remove unused allow_all_destaddr functions
-References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com> <1392401026-18417-4-git-send-email-lekensteyn@gmail.com>
-In-Reply-To: <1392401026-18417-4-git-send-email-lekensteyn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 12 Feb 2014 14:05:04 -0500
+Received: by mail-we0-f174.google.com with SMTP id w61so722106wes.5
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:03 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 4/9] Cache nv to avoid request_firmware on resume path
+Date: Wed, 12 Feb 2014 19:04:43 +0000
+Message-Id: <1392231888-2191-4-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200511_183833_33A77008)
+In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2014 12:03 PM, Peter Wu wrote:
-> Unused as configure_filter takes care of setting/clearing RCR_AAP.
->
-> Signed-off-by: Peter Wu <lekensteyn@gmail.com>
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-NACK - at least for now. This patch has merge conflicts for the set of patches 
-that add the rtl8723be driver, and would cause build errors if the merge were 
-fixed. I will hang on to it and apply it later when the rtl8723be merge is done.
+If wowlan if off mac80211 will stop / start the driver on suspend /
+resume. This causes problems on resume since request_firmware is called
+from start. Fix this by caching the nv.
 
-@John Linville: You should apply #1 and 2 of this series, but skip this one.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    |  2 ++
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 22 ++++++++++------------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 ++
+ 3 files changed, 14 insertions(+), 12 deletions(-)
 
-Thanks,
-
-Larry
-
-PS: I just noticed the John Linville was not Cc'd on these patches. For 
-wireless, such patches should be sent to him with a Cc to the wireless ML.
-
-> ---
->   drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 20 --------------------
->   drivers/net/wireless/rtlwifi/rtl8188ee/hw.h |  2 --
->   drivers/net/wireless/rtlwifi/rtl8188ee/sw.c |  1 -
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 21 ---------------------
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.h |  2 --
->   drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |  1 -
->   drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 20 --------------------
->   drivers/net/wireless/rtlwifi/rtl8192se/hw.h |  2 --
->   drivers/net/wireless/rtlwifi/rtl8192se/sw.c |  1 -
->   drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 21 ---------------------
->   drivers/net/wireless/rtlwifi/rtl8723ae/hw.h |  2 --
->   drivers/net/wireless/rtlwifi/rtl8723ae/sw.c |  1 -
->   drivers/net/wireless/rtlwifi/wifi.h         |  2 --
->   13 files changed, 96 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> index ce2226c..c0e7f62 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> @@ -2510,23 +2510,3 @@ void rtl88ee_suspend(struct ieee80211_hw *hw)
->   void rtl88ee_resume(struct ieee80211_hw *hw)
->   {
->   }
-> -
-> -/* Turn on AAP (RCR:bit 0) for promicuous mode. */
-> -void rtl88ee_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				bool allow_all_da, bool write_into_reg)
-> -{
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> -
-> -	if (allow_all_da) /* Set BIT0 */
-> -		rtlpci->receive_config |= RCR_AAP;
-> -	 else /* Clear BIT0 */
-> -		rtlpci->receive_config &= ~RCR_AAP;
-> -
-> -	if (write_into_reg)
-> -		rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
-> -
-> -	RT_TRACE(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
-> -		 "receive_config = 0x%08X, write_into_reg =%d\n",
-> -		 rtlpci->receive_config, write_into_reg);
-> -}
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.h b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.h
-> index b4460a4..1850fde 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.h
-> @@ -61,8 +61,6 @@ void rtl8188ee_bt_reg_init(struct ieee80211_hw *hw);
->   void rtl8188ee_bt_hw_init(struct ieee80211_hw *hw);
->   void rtl88ee_suspend(struct ieee80211_hw *hw);
->   void rtl88ee_resume(struct ieee80211_hw *hw);
-> -void rtl88ee_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				bool allow_all_da, bool write_into_reg);
->   void rtl88ee_fw_clk_off_timer_callback(unsigned long data);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-> index 347af1e..41de6f3 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-> @@ -254,7 +254,6 @@ static struct rtl_hal_ops rtl8188ee_hal_ops = {
->   	.enable_hw_sec = rtl88ee_enable_hw_security_config,
->   	.set_key = rtl88ee_set_key,
->   	.init_sw_leds = rtl88ee_init_sw_leds,
-> -	.allow_all_destaddr = rtl88ee_allow_all_destaddr,
->   	.get_bbreg = rtl88e_phy_query_bb_reg,
->   	.set_bbreg = rtl88e_phy_set_bb_reg,
->   	.get_rfreg = rtl88e_phy_query_rf_reg,
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> index 25e178c..8b3134a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -2407,24 +2407,3 @@ void rtl92ce_suspend(struct ieee80211_hw *hw)
->   void rtl92ce_resume(struct ieee80211_hw *hw)
->   {
->   }
-> -
-> -/* Turn on AAP (RCR:bit 0) for promicuous mode. */
-> -void rtl92ce_allow_all_destaddr(struct ieee80211_hw *hw,
-> -	bool allow_all_da, bool write_into_reg)
-> -{
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> -
-> -	if (allow_all_da) {/* Set BIT0 */
-> -		rtlpci->receive_config |= RCR_AAP;
-> -	} else {/* Clear BIT0 */
-> -		rtlpci->receive_config &= ~RCR_AAP;
-> -	}
-> -
-> -	if (write_into_reg)
-> -		rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
-> -
-> -	RT_TRACE(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
-> -		 "receive_config=0x%08X, write_into_reg=%d\n",
-> -		 rtlpci->receive_config, write_into_reg);
-> -}
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-> index 2d063b0..5533070 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-> @@ -76,7 +76,5 @@ void rtl8192ce_bt_reg_init(struct ieee80211_hw *hw);
->   void rtl8192ce_bt_hw_init(struct ieee80211_hw *hw);
->   void rtl92ce_suspend(struct ieee80211_hw *hw);
->   void rtl92ce_resume(struct ieee80211_hw *hw);
-> -void rtl92ce_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				bool allow_all_da, bool write_into_reg);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-> index b790320..12f21f4 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-> @@ -229,7 +229,6 @@ static struct rtl_hal_ops rtl8192ce_hal_ops = {
->   	.enable_hw_sec = rtl92ce_enable_hw_security_config,
->   	.set_key = rtl92ce_set_key,
->   	.init_sw_leds = rtl92ce_init_sw_leds,
-> -	.allow_all_destaddr = rtl92ce_allow_all_destaddr,
->   	.get_bbreg = rtl92c_phy_query_bb_reg,
->   	.set_bbreg = rtl92c_phy_set_bb_reg,
->   	.set_rfreg = rtl92ce_phy_set_rf_reg,
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> index 5aa39ef..8c7aca4 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> @@ -2531,23 +2531,3 @@ void rtl92se_resume(struct ieee80211_hw *hw)
->   		pci_write_config_dword(rtlpci->pdev, 0x40,
->   			val & 0xffff00ff);
->   }
-> -
-> -/* Turn on AAP (RCR:bit 0) for promicuous mode. */
-> -void rtl92se_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				bool allow_all_da, bool write_into_reg)
-> -{
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> -
-> -	if (allow_all_da) /* Set BIT0 */
-> -		rtlpci->receive_config |= RCR_AAP;
-> -	else /* Clear BIT0 */
-> -		rtlpci->receive_config &= ~RCR_AAP;
-> -
-> -	if (write_into_reg)
-> -		rtl_write_dword(rtlpriv, RCR, rtlpci->receive_config);
-> -
-> -	RT_TRACE(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
-> -		 "receive_config=0x%08X, write_into_reg=%d\n",
-> -		 rtlpci->receive_config, write_into_reg);
-> -}
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.h b/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
-> index da48aa8..4cacee1 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
-> @@ -74,7 +74,5 @@ void rtl92se_set_key(struct ieee80211_hw *hw,
->   		     u8 enc_algo, bool is_wepkey, bool clear_all);
->   void rtl92se_suspend(struct ieee80211_hw *hw);
->   void rtl92se_resume(struct ieee80211_hw *hw);
-> -void rtl92se_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				bool allow_all_da, bool write_into_reg);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> index 2e8e6f8..1bff2a0 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> @@ -290,7 +290,6 @@ static struct rtl_hal_ops rtl8192se_hal_ops = {
->   	.enable_hw_sec = rtl92se_enable_hw_security_config,
->   	.set_key = rtl92se_set_key,
->   	.init_sw_leds = rtl92se_init_sw_leds,
-> -	.allow_all_destaddr = rtl92se_allow_all_destaddr,
->   	.get_bbreg = rtl92s_phy_query_bb_reg,
->   	.set_bbreg = rtl92s_phy_set_bb_reg,
->   	.get_rfreg = rtl92s_phy_query_rf_reg,
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> index 4680816..48e8b82 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> @@ -2377,24 +2377,3 @@ void rtl8723ae_suspend(struct ieee80211_hw *hw)
->   void rtl8723ae_resume(struct ieee80211_hw *hw)
->   {
->   }
-> -
-> -/* Turn on AAP (RCR:bit 0) for promicuous mode. */
-> -void rtl8723ae_allow_all_destaddr(struct ieee80211_hw *hw,
-> -	bool allow_all_da, bool write_into_reg)
-> -{
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> -
-> -	if (allow_all_da) /* Set BIT0 */
-> -		rtlpci->receive_config |= RCR_AAP;
-> -	else /* Clear BIT0 */
-> -		rtlpci->receive_config &= ~RCR_AAP;
-> -
-> -	if (write_into_reg)
-> -		rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
-> -
-> -
-> -	RT_TRACE(rtlpriv, COMP_TURBO | COMP_INIT, DBG_LOUD,
-> -		 "receive_config=0x%08X, write_into_reg=%d\n",
-> -		 rtlpci->receive_config, write_into_reg);
-> -}
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.h b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
-> index 6fa24f7..d3bc39f 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
-> @@ -67,7 +67,5 @@ void rtl8723ae_bt_reg_init(struct ieee80211_hw *hw);
->   void rtl8723ae_bt_hw_init(struct ieee80211_hw *hw);
->   void rtl8723ae_suspend(struct ieee80211_hw *hw);
->   void rtl8723ae_resume(struct ieee80211_hw *hw);
-> -void rtl8723ae_allow_all_destaddr(struct ieee80211_hw *hw,
-> -				  bool allow_all_da, bool write_into_reg);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-> index 62b204f..a9cb110 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-> @@ -230,7 +230,6 @@ static struct rtl_hal_ops rtl8723ae_hal_ops = {
->   	.enable_hw_sec = rtl8723ae_enable_hw_security_config,
->   	.set_key = rtl8723ae_set_key,
->   	.init_sw_leds = rtl8723ae_init_sw_leds,
-> -	.allow_all_destaddr = rtl8723ae_allow_all_destaddr,
->   	.get_bbreg = rtl8723ae_phy_query_bb_reg,
->   	.set_bbreg = rtl8723ae_phy_set_bb_reg,
->   	.get_rfreg = rtl8723ae_phy_query_rf_reg,
-> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-> index 8c64739..08fd164 100644
-> --- a/drivers/net/wireless/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -1714,8 +1714,6 @@ struct rtl_hal_ops {
->   			  u32 regaddr, u32 bitmask);
->   	void (*set_rfreg) (struct ieee80211_hw *hw, enum radio_path rfpath,
->   			   u32 regaddr, u32 bitmask, u32 data);
-> -	void (*allow_all_destaddr)(struct ieee80211_hw *hw,
-> -		bool allow_all_da, bool write_into_reg);
->   	void (*linked_set_reg) (struct ieee80211_hw *hw);
->   	void (*chk_switch_dmdp) (struct ieee80211_hw *hw);
->   	void (*dualmac_easy_concurrent) (struct ieee80211_hw *hw);
->
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index e64a678..a801aaa 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -17,6 +17,7 @@
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
+ #include <linux/module.h>
++#include <linux/firmware.h>
+ #include <linux/platform_device.h>
+ #include "wcn36xx.h"
+ 
+@@ -992,6 +993,7 @@ static int wcn36xx_remove(struct platform_device *pdev)
+ 	struct wcn36xx *wcn = hw->priv;
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform remove\n");
+ 
++	release_firmware(wcn->nv);
+ 	mutex_destroy(&wcn->hal_mutex);
+ 
+ 	ieee80211_unregister_hw(hw);
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index ad93cc7..d5e90c4 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -251,21 +251,22 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+ 
+ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
+ {
+-	const struct firmware *nv;
+ 	struct nv_data *nv_d;
+ 	struct wcn36xx_hal_nv_img_download_req_msg msg_body;
+ 	int fw_bytes_left;
+ 	int ret;
+ 	u16 fm_offset = 0;
+ 
+-	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
+-	if (ret) {
+-		wcn36xx_err("Failed to load nv file %s: %d\n",
+-			      WLAN_NV_FILE, ret);
+-		goto out_free_nv;
++	if (!wcn->nv) {
++		ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
++		if (ret) {
++			wcn36xx_err("Failed to load nv file %s: %d\n",
++				      WLAN_NV_FILE, ret);
++			goto out;
++		}
+ 	}
+ 
+-	nv_d = (struct nv_data *)nv->data;
++	nv_d = (struct nv_data *)wcn->nv->data;
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ);
+ 
+ 	msg_body.header.len += WCN36XX_NV_FRAGMENT_SIZE;
+@@ -275,7 +276,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
+ 	mutex_lock(&wcn->hal_mutex);
+ 
+ 	do {
+-		fw_bytes_left = nv->size - fm_offset - 4;
++		fw_bytes_left = wcn->nv->size - fm_offset - 4;
+ 		if (fw_bytes_left > WCN36XX_NV_FRAGMENT_SIZE) {
+ 			msg_body.last_fragment = 0;
+ 			msg_body.nv_img_buffer_size = WCN36XX_NV_FRAGMENT_SIZE;
+@@ -313,10 +314,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
+ 
+ out_unlock:
+ 	mutex_unlock(&wcn->hal_mutex);
+-out_free_nv:
+-	release_firmware(nv);
+-
+-	return ret;
++out:	return ret;
+ }
+ 
+ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index c5bd61c..0c5413f 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -171,6 +171,8 @@ struct wcn36xx {
+ 	struct device		*dev;
+ 	struct list_head	vif_list;
+ 
++	const struct firmware	*nv;
++
+ 	u8			fw_revision;
+ 	u8			fw_version;
+ 	u8			fw_minor;
+-- 
+1.8.3.2
 
