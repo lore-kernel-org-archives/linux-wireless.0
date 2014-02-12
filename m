@@ -1,108 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43064 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751873AbaBTHbG convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:36374 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbaBLSyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 02:31:06 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
- channels
-Date: Thu, 20 Feb 2014 07:31:01 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033383E32@HASMSX106.ger.corp.intel.com> (sfid-20140220_083111_384032_CE1D6E3B)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
- <20140218233852.GC14296@garbanzo.do-not-panic.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A0333823B5@HASMSX106.ger.corp.intel.com>
- <20140219154747.GG14296@garbanzo.do-not-panic.com>
-In-Reply-To: <20140219154747.GG14296@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 12 Feb 2014 13:54:43 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so2867624eak.29
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 10:54:42 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] wireless-regdb: add DFS CAC time parameter
+Date: Wed, 12 Feb 2014 19:54:24 +0100
+Message-Id: <1392231266-28479-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195456_063790_0615105A)
+In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Wed, Feb 19, 2014 at 02:52:13PM +0000, Peer, Ilan wrote:
-> > > Ilan, also extend the above with language similar to the one I
-> > > provided on the cellular base station hints if you ended up adding a
-> device feature capability.
-> > >
-> >
-> > You mean specify that this option is enabled, drivers can still use
-> > the device specific flags to disable this?
-> 
-> Yeap! In particular its important to make it clear that enabling this option isn't
-> enough to get enable this feature, this option will only be usable on device
-> drivers that have support for this feature.
-> 
+Introduce support for setting DFS CAC time
+in milliseconds.
 
-Great :) already added it in the previous patch set. 
+Eg.
+(5250 - 5330 @ AUTO), (20), (60000), DFS
 
-> > > > +
-> > > > +		if (!other_chan)
-> > > > +			continue;
-> > > > +
-> > > > +		if (chan == other_chan)
-> > > > +			return true;
-> > >
-> > > This seems to me to indicate that we have allowed here daisy
-> > > chaining / trust on another GO who also trusted its AP. That is, we
-> > > are leaving it up to the kernel for the above few lines of code to
-> > > check if the STA was associated to an AP that had DFS support. How
-> > > do we know the AP the STA was associated to was not another GO that
-> > > ran through this permissive check? Is the FCC happy with that?
-> > >
-> >
-> > This verification should be done by user space, i.e., if the station
-> > is a legacy client associated to a GO, then wpa_supplicant should not
-> > allow the GO_CONCURRENT relaxation. In addition, a GO instantiated on
-> > channel based on this relaxation should not allow connection from
-> > legacy clients ... again this should be enforced by user space. System
-> > wise this should adhere to the FCC expectations and prevent daisy
-> > chaining.
-> 
-> Wow this is a hugely important piece of information, please toss it into the
-> documentation both kconfig and wiki (once accepted upstream). As for
-> references to userspace you can mention supplicant (wpa_supplicant).
-> 
+will setup CAC 60 seconds CAC time.
 
-Sure.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ db2bin.py  |    6 +++---
+ dbparse.py |   17 +++++++++++++----
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-> > > Also to be clear, you check for IEEE80211_CHAN_GO_CONCURRENT only
-> on
-> > > the caller's channel, not the STA's device, is that OK ? Lets
-> > > consider the case case of two different types of interfaces on the
-> > > same system. I am aware of at least one 802.11 AP company selling
-> > > devices with one 802.11 vendor as the AP and another as the STA. I
-> > > don't consider this rare anymore now, as such please think about
-> > > this case as well.
-> >
-> > The property is of the channel so this should suffice. Overall, I
-> > think that the FCC definition rules are centered on the UNII bands, so
-> > the rules mandated for a given channel in a specific channel should
-> > also hold to other channels in the same UNII band. Ultimately, I would
-> > expect all channels in the same UNII band to share the same settings.
-> 
-> OK.
-> 
-> > The iteration in this case is over all the interfaces of the same
-> > registered device
-> 
-> This feature seems limited then. Can this be extended to relay on the
-> information from any other registered device? I suspect folks may soon
-> enter bug reports for this otherwise. That carefulness here seems to be an
-> implementation preference, but is it a hard requirement? If not then please
-> considering revising all registered devices.
-> 
-
-I think that this might be problematic in cases where the HW/FW has additional enforcement for GO concurrent cases, and thus will not allow to instantiate a GO although there is a station connection on another device. Eventually, it really comes to the question of can one device rely on another device for regulatory compliance?
-
-Need to think about this option and take it with our regulatory people. For now I would prefer to stay with this limitation. 
-
-Thanks,
-
-Ilan.
+diff --git a/db2bin.py b/db2bin.py
+index 41d3741..f6c3bc1 100755
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -7,7 +7,7 @@ from dbparse import DBParser
+ import sys
+ 
+ MAGIC = 0x52474442
+-VERSION = 19
++VERSION = 20
+ 
+ if len(sys.argv) < 3:
+     print 'Usage: %s output-file input-file [key-file]' % sys.argv[0]
+@@ -93,8 +93,8 @@ for reg_rule in rules:
+     freq_range, power_rule = reg_rule.freqband, reg_rule.power
+     reg_rules[reg_rule] = output.tell()
+     # struct regdb_file_reg_rule
+-    output.write(struct.pack('>III', freq_ranges[freq_range], power_rules[power_rule],
+-                             reg_rule.flags))
++    output.write(struct.pack('>IIII', freq_ranges[freq_range], power_rules[power_rule],
++                             reg_rule.flags, reg_rule.cac_time))
+ 
+ 
+ reg_rules_collections = {}
+diff --git a/dbparse.py b/dbparse.py
+index 7c7bc19..f79de2a 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -76,12 +76,13 @@ class FlagError(Exception):
+         self.flag = flag
+ 
+ class Permission(object):
+-    def __init__(self, freqband, power, flags):
++    def __init__(self, freqband, power, flags, cac_time):
+         assert isinstance(freqband, FreqBand)
+         assert isinstance(power, PowerRestriction)
+         self.freqband = freqband
+         self.power = power
+         self.flags = 0
++        self.cac_time = cac_time
+         for flag in flags:
+             if not flag in flag_definitions:
+                 raise FlagError(flag)
+@@ -89,7 +90,7 @@ class Permission(object):
+         self.textflags = flags
+ 
+     def _as_tuple(self):
+-        return (self.freqband, self.power, self.flags)
++        return (self.freqband, self.power, self.flags, self.cac_time)
+ 
+     def __cmp__(self, other):
+         if not isinstance(other, Permission):
+@@ -256,6 +257,7 @@ class DBParser(object):
+         self._comments = []
+ 
+     def _parse_country_item(self, line):
++        cac_time = 0
+         if line[0] == '(':
+             try:
+                 band, line = line[1:].split('),', 1)
+@@ -284,7 +286,14 @@ class DBParser(object):
+                 flags = []
+             else:
+                 pname = items[0]
+-                flags = items[1].split(',')
++                pcac = items[1]
++                if pcac[0] == '(':
++                    cac, flags = pcac.split('),', 1)
++                    flags = flags.split(',')
++                    cac_time = int(cac[1:])
++                else:
++                    flags = items[1].split(',')
++
+             power = pname[1:]
+             pname = 'UNNAMED %d' % self._lineno
+             self._parse_power_def(pname, power, dupwarn=False)
+@@ -305,7 +314,7 @@ class DBParser(object):
+         b = self._bands[bname]
+         p = self._power[pname]
+         try:
+-            perm = Permission(b, p, flags)
++            perm = Permission(b, p, flags, cac_time)
+         except FlagError, e:
+             self._syntax_error("Invalid flag '%s'" % e.flag)
+         for cname, c in self._current_countries.iteritems():
+-- 
+1.7.9.5
 
