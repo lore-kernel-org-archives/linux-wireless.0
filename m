@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33006 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbaBFRQt (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:50844 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750922AbaBLJqD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 12:16:49 -0500
-Received: by mail-ie0-f170.google.com with SMTP id u16so840330iet.15
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Feb 2014 09:16:49 -0800 (PST)
-Date: Thu, 6 Feb 2014 12:16:06 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: James Cameron <quozl@laptop.org>
-Cc: Giuseppe Siracusano <a_siracusano@tin.it>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Reduce tx power
-Message-ID: <20140206171606.GC20719@localhost> (sfid-20140206_181653_264002_939D07A8)
-References: <1391599819.4118.3.camel@Core2>
- <20140205204013.GA29649@us.netrek.org>
+	Wed, 12 Feb 2014 04:46:03 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
+Subject: RE: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
+Date: Wed, 12 Feb 2014 09:45:58 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D66477@HASMSX103.ger.corp.intel.com> (sfid-20140212_104613_522739_42301DB1)
+References: <52FB360D.2060502@gmail.com>
+	<1392195269-5514-1-git-send-email-egrumbach@gmail.com>
+	<20140212091008.GB1315@redhat.com>	<20140212092150.GC1315@redhat.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
+ <21243.16970.514799.362874@gargle.gargle.HOWL>
+In-Reply-To: <21243.16970.514799.362874@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140205204013.GA29649@us.netrek.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 06, 2014 at 07:40:14AM +1100, James Cameron wrote:
-> I don't know about ath5k, but in usb8388 firmware (libertas driver)
-> there is a blinding table, into which MAC addresses were inserted, so
-> that the firmware would simulate test conditions.
+> 
+> Grumbach, Emmanuel wrote:
+> > I have seen reports from many users and many devices - and
+> > unfortunately I have never been able to reproduce - so I can't know if
+> > it affects all the devices. All I can see is that I saw reports on
+> > very old devices (5150) and with more recent devices (2230).
+> 
+> Is 5100 a very old device ? I have one of those cards in a laptop and starting
+> 11n TX traffic usually results in a crash like this:
+> http://pastebin.com/HtUdCLR3
+> 
 
-At least in the mac80211 11s mesh implementation (and thus available
-with ath5k), the equivalent is plink block, which restricts peering
-between neighbors:
+5100 is the first device supported by iwldvm. I think it was shipped in 2008.
 
- $ iw mesh0 station set <MAC address> plink_action block
-
--- 
-Bob Copeland %% www.bobcopeland.com
