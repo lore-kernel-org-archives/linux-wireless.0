@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:46062 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557AbaBCU7q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:46 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so3966033ead.41
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:45 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 52/62] iwlwifi: fix kerneldoc format
-Date: Mon,  3 Feb 2014 22:57:58 +0200
-Message-Id: <1391461088-8082-52-git-send-email-egrumbach@gmail.com> (sfid-20140203_223008_019237_31EBB0D5)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57102 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750711AbaBLJLG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Feb 2014 04:11:06 -0500
+Date: Wed, 12 Feb 2014 10:10:08 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
+Message-ID: <20140212091008.GB1315@redhat.com> (sfid-20140212_101116_114956_BB0407A2)
+References: <52FB360D.2060502@gmail.com>
+ <1392195269-5514-1-git-send-email-egrumbach@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392195269-5514-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, Feb 12, 2014 at 10:54:29AM +0200, Emmanuel Grumbach wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> We have had a bug in TX AMPDU in iwldvm for a very long
+> time. This bug has been raised in many bugzillas and threads
+> on linux-wireless mailing list.
+> 
+> The bug is in firmware and we won't be able to fix it in the
+> near future. Hence, we prefer to disable TX AMPDU by default
+> in iwldvm. This doesn't affect iwlmvm which supports 7160 /
+> 3160 and up.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-op-mode.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index f83b244..5d78207 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -159,7 +159,7 @@ void iwl_opmode_deregister(const char *name);
+>  #define IWL_DISABLE_HT_ALL	BIT(0)
+> -#define IWL_DISABLE_HT_TXAGG	BIT(1)
+
+Whouln't simple change, by setting disable_11=2 by default, make
+the same effect, and allow easly to enable TX aggregation (without
+kernel recompile) ?
+
+Stanislaw
  
- /**
-  * struct iwl_op_mode - operational mode
-- * @ops - pointer to its own ops
-+ * @ops: pointer to its own ops
-  *
-  * This holds an implementation of the mac80211 / fw API.
-  */
--- 
-1.7.9.5
-
