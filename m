@@ -1,97 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17616 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423AbaB0OVi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54276 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbaBLKcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:21:38 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 08/16] wil6210: fix BACK status processing
-Date: Thu, 27 Feb 2014 16:20:47 +0200
-Message-ID: <1393510855-17566-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152143_169963_BCD02509)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 12 Feb 2014 05:32:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: simplify roc check in idle calculation
+Date: Wed, 12 Feb 2014 11:32:10 +0100
+Message-Id: <1392201130-18791-1-git-send-email-johannes@sipsolutions.net> (sfid-20140212_113218_924895_B5BFF951)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When FW notifies about BACK status change, it provides ring ID.
-Process BA status for requested connection only. As for now, FW
-don't report Rx BACK status, it reports Tx one instead.
-As per current algorithm used in the firmware, imply Rx BACK
-state is in sync with Tx one
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+There's no need to start iterating the list only to break on the
+first item, just use !list_empty() and also simplify the whole
+conditional into a single expression.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 47 ++++++++++++++++++++++------------
- 1 file changed, 31 insertions(+), 16 deletions(-)
+ net/mac80211/iface.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dfbc239..635aa32 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -563,27 +563,42 @@ static void wmi_evt_ba_status(struct wil6210_priv *wil, int id, void *d,
- 			      int len)
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8880bc8..9db71cf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -101,9 +101,8 @@ static u32 __ieee80211_idle_on(struct ieee80211_local *local)
+ static u32 __ieee80211_recalc_idle(struct ieee80211_local *local,
+ 				   bool force_active)
  {
- 	struct wmi_vring_ba_status_event *evt = d;
--	uint cid, i;
-+	struct wil_sta_info *sta;
-+	uint i, cid;
-+
-+	/* TODO: use Rx BA status, not Tx one */
+-	bool working = false, scanning, active;
++	bool working, scanning, active;
+ 	unsigned int led_trig_start = 0, led_trig_stop = 0;
+-	struct ieee80211_roc_work *roc;
  
- 	wil_dbg_wmi(wil, "BACK[%d] %s {%d} timeout %d\n",
--		    evt->ringid, evt->status == WMI_BA_AGREED ? "OK" : "N/A",
-+		    evt->ringid,
-+		    evt->status == WMI_BA_AGREED ? "OK" : "N/A",
- 		    evt->agg_wsize, __le16_to_cpu(evt->ba_timeout));
--	for (cid = 0; cid < WIL6210_MAX_CID; cid++) {
--		struct wil_sta_info *sta = &wil->sta[cid];
--
--		if (sta->status == wil_sta_unused)
--			continue;
--		wil_dbg_wmi(wil, "Init BACK for CID %d %pM\n", cid, sta->addr);
--		for (i = 0; i < WIL_STA_TID_NUM; i++) {
--			struct wil_tid_ampdu_rx *r = sta->tid_rx[i];
--			sta->tid_rx[i] = NULL;
--			wil_tid_ampdu_rx_free(wil, r);
--			if ((evt->status == WMI_BA_AGREED) && evt->agg_wsize)
--				sta->tid_rx[i] = wil_tid_ampdu_rx_alloc(wil,
--							evt->agg_wsize, 0);
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -111,12 +110,8 @@ static u32 __ieee80211_recalc_idle(struct ieee80211_local *local,
+ 		 !list_empty(&local->chanctx_list) ||
+ 		 local->monitors;
+ 
+-	if (!local->ops->remain_on_channel) {
+-		list_for_each_entry(roc, &local->roc_list, list) {
+-			working = true;
+-			break;
 -		}
-+
-+	if (evt->ringid >= WIL6210_MAX_TX_RINGS) {
-+		wil_err(wil, "invalid ring id %d\n", evt->ringid);
-+		return;
- 	}
+-	}
++	working = !local->ops->remain_on_channel &&
++		  !list_empty(&local->roc_list);
  
-+	cid = wil->vring2cid_tid[evt->ringid][0];
-+	if (cid >= WIL6210_MAX_CID) {
-+		wil_err(wil, "invalid CID %d for vring %d\n", cid, evt->ringid);
-+		return;
-+	}
-+
-+	sta = &wil->sta[cid];
-+	if (sta->status == wil_sta_unused) {
-+		wil_err(wil, "CID %d unused\n", cid);
-+		return;
-+	}
-+
-+	wil_dbg_wmi(wil, "BACK for CID %d %pM\n", cid, sta->addr);
-+	for (i = 0; i < WIL_STA_TID_NUM; i++) {
-+		struct wil_tid_ampdu_rx *r = sta->tid_rx[i];
-+		sta->tid_rx[i] = NULL;
-+		wil_tid_ampdu_rx_free(wil, r);
-+		if ((evt->status == WMI_BA_AGREED) && evt->agg_wsize)
-+			sta->tid_rx[i] = wil_tid_ampdu_rx_alloc(wil,
-+						evt->agg_wsize, 0);
-+	}
- }
- 
- static const struct {
+ 	scanning = test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+ 		   test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning);
 -- 
-1.8.3.2
+1.8.5.3
 
