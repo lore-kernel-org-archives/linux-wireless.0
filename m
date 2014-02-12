@@ -1,136 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:64208 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095AbaBVRRj (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:34489 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753007AbaBLWi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 12:17:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 16/16 V2] rtlwifi: rtl8723be: Turn on building of new driver
-Date: Sat, 22 Feb 2014 11:17:12 -0600
-Message-Id: <1393089433-28270-17-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140222_181916_329132_187F0247)
-In-Reply-To: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 12 Feb 2014 17:38:28 -0500
+Date: Wed, 12 Feb 2014 22:38:17 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: David Howells <dhowells@redhat.com>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Al Viro <viro@zeniv.linux.org.uk>
+Subject: [PATCH] hostap: fix "hostap: proc: Use remove_proc_subtree()"
+Message-ID: <20140212223817.GS26684@n2100.arm.linux.org.uk> (sfid-20140212_233831_459918_AC5E01F5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All code for the new driver was previously committed and it is now
-possible to build the new driver.
+remove_proc_subtree() doesn't work here as local->ddev has already
+been removed, and NULLed out.  Use proc_remove() instead.
 
-This commit also modifies this new driver for the changed API for
-ieee80211_is_robust_mgmt_frame().
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/rtlwifi/Kconfig            | 19 ++++++++++++++++---
- drivers/net/wireless/rtlwifi/Makefile           |  1 +
- drivers/net/wireless/rtlwifi/rtl8723be/Makefile | 20 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c    |  2 +-
- 4 files changed, 38 insertions(+), 4 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+I would include an oops, however the machine I discovered this on has
+a page 0 populated - so the symptoms are multiple 'wlan0' entries in
+/proc/net/hostap.  This is probably a candidate for stable too.
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index 9251e0d..bf3cf12 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -5,7 +5,7 @@ menuconfig RTL_CARDS
- 	---help---
- 	  This option will enable support for the Realtek mac80211-based
- 	  wireless drivers. Drivers rtl8192ce, rtl8192cu, rtl8192se, rtl8192de,
--	  rtl8723ae, and rtl8188ae share some common code.
-+	  rtl8723ae, rtl8723be, and rtl8188ae share some common code.
+ drivers/net/wireless/hostap/hostap_proc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
+index aa7ad3a7a69b..4e5c0f8c9496 100644
+--- a/drivers/net/wireless/hostap/hostap_proc.c
++++ b/drivers/net/wireless/hostap/hostap_proc.c
+@@ -496,7 +496,7 @@ void hostap_init_proc(local_info_t *local)
  
- if RTL_CARDS
+ void hostap_remove_proc(local_info_t *local)
+ {
+-	remove_proc_subtree(local->ddev->name, hostap_proc);
++	proc_remove(local->proc);
+ }
  
-@@ -56,6 +56,19 @@ config RTL8723AE
  
- 	If you choose to build it as a module, it will be called rtl8723ae
- 
-+config RTL8723BE
-+	tristate "Realtek RTL8723BE PCIe Wireless Network Adapter"
-+	depends on PCI
-+	select RTLWIFI
-+	select RTLWIFI_PCI
-+	select RTL8723_COMMON
-+	select RTLBTCOEXIST
-+	---help---
-+	This is the driver for Realtek RTL8723BE 802.11n PCIe
-+	wireless network adapters.
-+
-+	If you choose to build it as a module, it will be called rtl8723be
-+
- config RTL8188EE
- 	tristate "Realtek RTL8188EE Wireless Network Adapter"
- 	depends on PCI
-@@ -105,12 +118,12 @@ config RTL8192C_COMMON
- 
- config RTL8723_COMMON
- 	tristate
--	depends on RTL8723AE
-+	depends on RTL8723AE || RTL8723BE
- 	default y
- 
- config RTLBTCOEXIST
- 	tristate
--	depends on RTL8723AE
-+	depends on RTL8723AE || RTL8723BE
- 	default y
- 
- endif
-diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
-index d97d1b9..bba36a0 100644
---- a/drivers/net/wireless/rtlwifi/Makefile
-+++ b/drivers/net/wireless/rtlwifi/Makefile
-@@ -24,6 +24,7 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
- obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
- obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
- obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
-+obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
- obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
- obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
- obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/Makefile b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
-new file mode 100644
-index 0000000..4a75aab
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
-@@ -0,0 +1,20 @@
-+obj-m := rtl8723be.o
-+
-+
-+rtl8723be-objs :=		\
-+		dm.o		\
-+		fw.o		\
-+		hw.o		\
-+		led.o		\
-+		phy.o		\
-+		pwrseq.o	\
-+		pwrseqcmd.o	\
-+		rf.o		\
-+		sw.o		\
-+		table.o		\
-+		trx.o		\
-+
-+
-+obj-$(CONFIG_RTL8723BE) += rtl8723be.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-index d84adb3..58f1fa1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-@@ -602,7 +602,7 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
- 			return false;
- 		}
- 
--		if ((ieee80211_is_robust_mgmt_frame(hdr)) &&
-+		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
+
 -- 
-1.8.4.5
-
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
