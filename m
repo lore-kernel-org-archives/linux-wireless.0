@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41521 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbaBDMMX (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:44510 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbaBLLCT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 07:12:23 -0500
-Message-ID: <1391515939.4134.8.camel@jlt4.sipsolutions.net> (sfid-20140204_131226_648563_CFBD43C0)
-Subject: Re: [RFC 1/2] mac80211: merge STA CSA code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 04 Feb 2014 13:12:19 +0100
-In-Reply-To: <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com> (sfid-20140204_122947_345678_74D2DD3F)
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-2-git-send-email-michal.kazior@tieto.com>
-	 <1391504990.26522.34.camel@porter.coelho.fi>
-	 <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
-	 (sfid-20140204_122947_345678_74D2DD3F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Feb 2014 06:02:19 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [net-next 0/3] 802.21 and MPLS headers and classification
+Date: Wed, 12 Feb 2014 11:53:03 +0100
+Message-Id: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de> (sfid-20140212_120222_680713_6D5392F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 12:29 +0100, Michal Kazior wrote:
+Hi,
 
-> >> +void ieee80211_csa_disconnect(struct ieee80211_sub_if_data *sdata)
-> >> +{
-> >> +     struct ieee80211_local *local = sdata->local;
-> >> +     struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> >> +
-> >> +     switch (sdata->vif.type) {
-> >> +     case NL80211_IFTYPE_STATION:
-> >> +     case NL80211_IFTYPE_P2P_CLIENT:
-> >> +             ieee80211_queue_work(&local->hw,
-> >> +                                  &ifmgd->csa_connection_drop_work);
-> >> +             break;
-> >> +     default:
-> >> +             /* XXX: other iftypes should be halted too */
-> >
-> > Good point.  This case would suck, but we need to do something because
-> > the stations will think that we're on the different channel at this
-> > point.  But maybe instead the userspace should be notified instead of
-> > halting here? It could retry with a count 0, for example.
-> 
-> Ideally cfg80211 should be the one stopping interfaces. This way you'd
-> get AP stopped event (recently done by Johannes) and userspace can do
-> something about (e.g. re-start APs from scratch).
+this series contains a header file proposal for MPLS labels. These
+labels do not seem to be properly defined in the kernel so far. We are
+developing a wired/wireless 802.21/MPLS switch and need to check the
+MPLS labels to use the traffic control info for transmissions over
+802.11 networks.
 
-Well, if mac80211 ends up doing that, we just need an API call to send
-the event and reset cfg80211's info. I didn't add one yet because the
-locking might get a bit tricky, but others actually wanted such an API
-for firmware bugs anyway.
+Please let me know if I should send these patches to somewhere else - I
+can certainly resend the 3rd patch to linux-wireless separately but
+figured it would be better like this to keep the context.
 
-johannes
+Thanks,
+     Simon
+
+Simon Wunderlich (3):
+  if_ether.h: add IEEE 802.21 Ethertype
+  UAPI: add MPLS label stack definition
+  cfg80211: add MPLS and 802.21 classification
+
+ include/uapi/linux/if_ether.h |    1 +
+ include/uapi/linux/mpls.h     |   34 ++++++++++++++++++++++++++++++++++
+ net/wireless/util.c           |   24 ++++++++++++++++++++++++
+ 3 files changed, 59 insertions(+)
+ create mode 100644 include/uapi/linux/mpls.h
+
+-- 
+1.7.10.4
 
