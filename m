@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37481 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbaBCNYe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 08:24:34 -0500
-Message-ID: <1391433871.4488.18.camel@jlt4.sipsolutions.net> (sfid-20140203_142437_137242_497D5AB3)
-Subject: Re: [RFC 0/2] cfg80211: add channel switching awareness
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Feb 2014 14:24:31 +0100
-In-Reply-To: <1391431407.4488.9.camel@jlt4.sipsolutions.net> (sfid-20140203_134402_047400_66535498)
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110347_817013_693B94E8) <1391431407.4488.9.camel@jlt4.sipsolutions.net>
-	 (sfid-20140203_134402_047400_66535498)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:24441 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750840AbaBLHeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Feb 2014 02:34:22 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Inbal Hacohen <Inbal.Hacohen@intel.com>
+Subject: [PATCH] cfg80211: bugfix in regulatory user hint process
+Date: Wed, 12 Feb 2014 09:32:27 +0200
+Message-Id: <1392190347-5570-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140212_083426_105700_9728A791)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-03 at 13:43 +0100, Johannes Berg wrote:
+From: Inbal Hacohen <Inbal.Hacohen@intel.com>
 
-> > The channel switch is split into two phases now -
-> > start and finalize. This is required to make
-> > cfg80211 in control of the whole channel
-> > switching process. It also makes it apparent that
-> > mac80211's STA CSA offload doesn't work quite well
-> > here. Can we kill it?
-> 
-> No. Well, you could make cfg80211 be in charge, but not wpa_supplicant,
-> I think.
+After processing hint_user, we would want to schedule the
+timeout work only if we are actually waiting to CRDA. This happens
+when the status is not "IGNORE" nor "ALREADY_SET".
 
-Actually, that might not make sense either, most non-mac80211 devices
-would probably do that in firmware anyway and locking in the API to do
-it "like mac80211" would thus probably be a bad idea.
+Signed-off-by: Inbal Hacohen <Inbal.Hacohen@intel.com>
+---
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fa149ea..1301ada 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1700,7 +1700,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		treatment = reg_process_hint_user(reg_request);
+-		if (treatment == REG_REQ_OK ||
++		if (treatment == REG_REQ_IGNORE ||
+ 		    treatment == REG_REQ_ALREADY_SET)
+ 			return;
+ 		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
+-- 
+1.8.3.2
 
