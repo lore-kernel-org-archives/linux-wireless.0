@@ -1,122 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:63831 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbaBLTYf (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35675 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbaBLJoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:24:35 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hi5so2238998wib.5
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:24:34 -0800 (PST)
-Message-ID: <1392232706.4053.3.camel@canaries32-MCP7A> (sfid-20140212_202439_595657_EA6538DC)
-Subject: [PATCH 1/3 RESEND] staging: vt6656: device_set_multi: covert
- mc_filter to u64
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: joe@perches.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Feb 2014 19:18:26 +0000
-Mime-Version: 1.0
+	Wed, 12 Feb 2014 04:44:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21243.16970.514799.362874@gargle.gargle.HOWL> (sfid-20140212_104422_682844_CD88AB83)
+Date: Wed, 12 Feb 2014 15:13:38 +0530
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Intel Linux Wireless \(ilw\@linux.intel.com\)" <ilw@linux.intel.com>
+Subject: RE: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
+References: <52FB360D.2060502@gmail.com>
+	<1392195269-5514-1-git-send-email-egrumbach@gmail.com>
+	<20140212091008.GB1315@redhat.com>
+	<20140212092150.GC1315@redhat.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert mc_filter to u64, preform netdev_for_each_mc_addr
-mask filtering.
+Grumbach, Emmanuel wrote:
+> I have seen reports from many users and many devices - and unfortunately I
+> have never been able to reproduce - so I can't know if it affects all the
+> devices. All I can see is that I saw reports on very old devices (5150) and
+> with more recent devices (2230).
 
-In MACvWriteMultiAddr endian correct mc_filter and write
-the entire multicast once.
+Is 5100 a very old device ? I have one of those cards in a laptop and starting
+11n TX traffic usually results in a crash like this: http://pastebin.com/HtUdCLR3
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/mac.c      | 16 +++++-----------
- drivers/staging/vt6656/mac.h      |  2 +-
- drivers/staging/vt6656/main_usb.c | 18 ++++++++----------
- 3 files changed, 14 insertions(+), 22 deletions(-)
+Sujith
 
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index 54414ed27..3ce19dd 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -47,25 +47,19 @@ static int          msglevel                =MSG_LEVEL_INFO;
-  *
-  * Parameters:
-  *  In:
-- *      uByteidx    - Index of Mask
-- *      byData      - Mask Value to write
-+ *	mc_filter (mac filter)
-  *  Out:
-  *      none
-  *
-  * Return Value: none
-  *
-  */
--void MACvWriteMultiAddr(struct vnt_private *pDevice, u32 uByteIdx, u8 byData)
-+void MACvWriteMultiAddr(struct vnt_private *pDevice, u64 mc_filter)
- {
--	u8 byData1;
-+	__le64 le_mc = cpu_to_le64(mc_filter);
- 
--    byData1 = byData;
--    CONTROLnsRequestOut(pDevice,
--                        MESSAGE_TYPE_WRITE,
--                        (u16) (MAC_REG_MAR0 + uByteIdx),
--                        MESSAGE_REQUEST_MACREG,
--                        1,
--                        &byData1);
-+	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_WRITE, MAC_REG_MAR0,
-+		MESSAGE_REQUEST_MACREG, sizeof(le_mc), (u8 *)&le_mc);
- }
- 
- /*
-diff --git a/drivers/staging/vt6656/mac.h b/drivers/staging/vt6656/mac.h
-index 0db1be5..4053e43 100644
---- a/drivers/staging/vt6656/mac.h
-+++ b/drivers/staging/vt6656/mac.h
-@@ -403,7 +403,7 @@
- #define MAC_REVISION_A0     0x00
- #define MAC_REVISION_A1     0x01
- 
--void MACvWriteMultiAddr(struct vnt_private *, u32, u8);
-+void MACvWriteMultiAddr(struct vnt_private *, u64);
- void MACbShutdown(struct vnt_private *);
- void MACvSetBBType(struct vnt_private *, u8);
- void MACvDisableKeyEntry(struct vnt_private *, u32);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 58edcae..c5e9dee2 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1353,8 +1353,7 @@ static void device_set_multi(struct net_device *dev)
- 	struct vnt_private *pDevice = netdev_priv(dev);
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	struct netdev_hw_addr *ha;
--	u32 mc_filter[2];
--	int ii;
-+	u64 mc_filter = 0;
- 	u8 pbyData[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 	u8 byTmpMode = 0;
- 	int rc;
-@@ -1388,15 +1387,14 @@ static void device_set_multi(struct net_device *dev)
-         pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
-     }
-     else {
--        memset(mc_filter, 0, sizeof(mc_filter));
- 	netdev_for_each_mc_addr(ha, dev) {
--            int bit_nr = ether_crc(ETH_ALEN, ha->addr) >> 26;
--            mc_filter[bit_nr >> 5] |= cpu_to_le32(1 << (bit_nr & 31));
--        }
--        for (ii = 0; ii < 4; ii++) {
--             MACvWriteMultiAddr(pDevice, ii, *((u8 *)&mc_filter[0] + ii));
--             MACvWriteMultiAddr(pDevice, ii+ 4, *((u8 *)&mc_filter[1] + ii));
--        }
-+		int bit_nr = ether_crc(ETH_ALEN, ha->addr) >> 26;
-+
-+		mc_filter |= 1ULL << (bit_nr & 0x3f);
-+	}
-+
-+	MACvWriteMultiAddr(pDevice, mc_filter);
-+
-         pDevice->byRxMode &= ~(RCR_UNICAST);
-         pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
-     }
--- 
-1.8.5.3
 
