@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:32994 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbaBUFfX (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39822 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbaBLVkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 00:35:23 -0500
-Message-ID: <5306E599.7020605@wwwdotorg.org> (sfid-20140221_063603_044816_1281A5C9)
-Date: Thu, 20 Feb 2014 22:35:21 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Wed, 12 Feb 2014 16:40:47 -0500
+Received: by mail-ob0-f174.google.com with SMTP id uy5so11120479obc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 13:40:46 -0800 (PST)
 MIME-Version: 1.0
-To: Chen-Yu Tsai <wens@csie.org>
-CC: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
+In-Reply-To: <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+References: <cover.1389904166.git.agordeev@redhat.com> <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com> <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com> <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 14:40:26 -0700
+Message-ID: <CAErSpo47k8WuHded1TnHoRedHHLe-Sk7kKsXcR4XjKmQPb0Ggg@mail.gmail.com> (sfid-20140212_224106_174390_201733D1)
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com> <1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com> <53062F97.3050407@wwwdotorg.org> <CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
-In-Reply-To: <CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/20/2014 06:55 PM, Chen-Yu Tsai wrote:
-> Hi,
-> 
-> On Fri, Feb 21, 2014 at 12:38 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->> On 02/20/2014 05:51 AM, Heikki Krogerus wrote:
->>> There is no use for them in this driver. This will fix a
->>> static checker warning..
+On Wed, Feb 12, 2014 at 2:30 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
+>
+>>> Well, as this series is small I thought it could quickly go thru your
+>>> tree. But since ipr had conflicts, there is no point routing all patches
+>>> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+>>> branch though.
 >>
->> Didn't you remove the use:
->>
->> -       gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
->> +       gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
->>
->> doesn't that parameter get put into the sysfs GPIO debug file, so people
->> can see which GPIOs are used for what?
-> 
-> That's correct. However using con_id to pass this results in different
-> behavior across DT and ACPI. A better way is to export the labeling
-> function so consumers can set meaningful labels themselves.
+>> It's in pci/msi, but that's not in my -next branch yet, so I can
+>> easily drop it.  Do drivers/net/wireless patches normally follow a
+>> different path than the other drivers/net patches?  The wil6210 and
+>> ath10k patches look just like the others in the 34-patch series (bnx2,
+>> bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
+>> to include them there.
+>
+> ath10k patches normally go through my ath.git tree to Linville and then
+> to David Miller. To avoid conflicts I would prefer to take ath10k
+> patches to my tree whenever possible.
 
-But this code is the consumer of those GPIOs. IF the parameter to
-devm_gpiod_get_index() isn't intended to be used, why does it exist?
+OK, I won't do anything with ath10k (I haven't applied it anywhere).
+And if Alexander re-posts the networking series (I think he might, to
+add a pci_enable_msix_exact() interface), maybe he can include wil6210
+with that series.
 
+Bjorn
