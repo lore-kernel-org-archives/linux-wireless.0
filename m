@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55286 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751686AbaBCS6u (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:55164 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbaBLSyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 13:58:50 -0500
-Message-ID: <1391453928.5159.10.camel@porter.coelho.fi> (sfid-20140203_195855_230291_C486C0A0)
-Subject: Re: wl12xx interrupt watchdog!!
-From: Luca Coelho <luca@coelho.fi>
-To: coputer engineer <computer.engineer.ds@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Feb 2014 20:58:48 +0200
-In-Reply-To: <52EFABEE.2050004@gmail.com>
-References: <52EFABEE.2050004@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Feb 2014 13:54:39 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so4510479eek.23
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 10:54:38 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/4] cfg80211: parse DFS CAC time for internal regdb option
+Date: Wed, 12 Feb 2014 19:54:21 +0100
+Message-Id: <1392231266-28479-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195447_679013_B8EA20BA)
+In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-03 at 15:47 +0100, coputer engineer wrote:
-> I have the wl12xx interrupt watchdog!!
+Add support for parsing DFS CAC time when internal
+regulatory database is used.
 
-This doesn't mean much.  If it's triggering, it's because something is
-stuck (which is what a watchdog does).
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/genregdb.awk |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-> I am using wl127x-fw-4-sr.bin firmware with Rev (6.3.5.0.98 ) with 
-> driver version R5_00_18
-
-This is an out-of-tree release.  We don't deal with that in the
-community.  If you really want to use such a thing, ask TI.
-
-
-> The kernel is 2.6.37 with this processor DM368.
-
-This kernel is over 3 years old.  Upgrade or you won't get much help
-here either.
-
---
-Luca.
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+index 9a8217d..7683b47 100644
+--- a/net/wireless/genregdb.awk
++++ b/net/wireless/genregdb.awk
+@@ -66,6 +66,7 @@ function parse_reg_rule()
+ 	units = $8
+ 	sub(/\)/, "", units)
+ 	sub(/,/, "", units)
++	dfs_cac = $9
+ 	if (units == "mW") {
+ 		if (power == 100) {
+ 			power = 20
+@@ -78,7 +79,12 @@ function parse_reg_rule()
+ 		} else {
+ 			print "Unknown power value in database!"
+ 		}
++	} else {
++		dfs_cac = $8
+ 	}
++	sub(/,/, "", dfs_cac)
++	sub(/\(/, "", dfs_cac)
++	sub(/\)/, "", dfs_cac)
+ 	flagstr = ""
+ 	for (i=8; i<=NF; i++)
+ 		flagstr = flagstr $i
+@@ -109,7 +115,7 @@ function parse_reg_rule()
+ 
+ 	}
+ 	flags = flags "0"
+-	printf "\t\tREG_RULE(%d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, flags
++	printf "\t\tREG_RULE_EXT(%d, %d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, dfs_cac, flags
+ 	rules++
+ }
+ 
+-- 
+1.7.9.5
 
