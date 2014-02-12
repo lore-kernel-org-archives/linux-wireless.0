@@ -1,93 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:42556 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754403AbaBEVhr (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:44513 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbaBLLCT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 16:37:47 -0500
-Received: by mail-ea0-f176.google.com with SMTP id h14so515619eaj.7
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 13:37:46 -0800 (PST)
-From: andrea merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"andrea.merello" <andrea.merello@gmail.com>
-Subject: [PATCH 2/4]  Add error check for pci_map_single return value in rtl8180 RX path
-Date: Wed,  5 Feb 2014 22:38:05 +0100
-Message-Id: <1391636287-17712-3-git-send-email-andrea.merello@gmail.com> (sfid-20140205_223753_576131_4527CE61)
-In-Reply-To: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com>
-References: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com>
+	Wed, 12 Feb 2014 06:02:19 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [net-next 1/3] if_ether.h: add IEEE 802.21 Ethertype
+Date: Wed, 12 Feb 2014 11:53:04 +0100
+Message-Id: <1392202386-8826-2-git-send-email-sw@simonwunderlich.de> (sfid-20140212_120224_127181_67C70E8E)
+In-Reply-To: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
+References: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "andrea.merello" <andrea.merello@gmail.com>
+Add the Ethertype for IEEE Std 802.21 - Media Independent Handover
+Protocol. This Ethertype is used for network control messages.
 
-In original code the old RX DMA buffer is unmapped and processed and at the end
-of the isr a new buffer is mapped with pci_map_single and attached to the RX
-descriptor.
-
-If pci_map_single fails then the RX descriptor remains with no valid DMA buffer
-attached.
-In this condition the DMA will target where it shouldn't with obvious evil
-consequences.
-
-Simply avoiding re-arming the descriptor will prevent buggy DMA but it will
-result soon in RX stuck.
-
-This patch move the DMA mapping of the new buffer at the beginning of the ISR
-(and it adds error check for pci_map_single success/fail).
-
-If the DMA mapping fails then we do not unmap the old buffer and we re-arm the
-descriptor without processing it, with the old DMA buffer still attached.
-
-In this way we lose the currently RX-ed packet, but whenever next calls to
-pci_map_single will succeed again,then the RX process will go on without stuck.
-
-Signed-off-by: andrea.merello <andrea.merello@gmail.com>
-Signed-off-by: andrea merello <andrea.merello@gmail.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ include/uapi/linux/if_ether.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 79b9398..1c6ac25 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -107,6 +107,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 	struct rtl8180_priv *priv = dev->priv;
- 	unsigned int count = 32;
- 	u8 signal, agc, sq;
-+	dma_addr_t mapping;
- 
- 	while (count--) {
- 		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
-@@ -128,6 +129,17 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 			if (unlikely(!new_skb))
- 				goto done;
- 
-+			mapping = pci_map_single(priv->pdev,
-+					       skb_tail_pointer(new_skb),
-+					       MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+
-+			if (pci_dma_mapping_error(priv->pdev, mapping)) {
-+				kfree_skb(new_skb);
-+				dev_err(&priv->pdev->dev, "RX DMA map error\n");
-+
-+				goto done;
-+			}
-+
- 			pci_unmap_single(priv->pdev,
- 					 *((dma_addr_t *)skb->cb),
- 					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-@@ -158,9 +170,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 
- 			skb = new_skb;
- 			priv->rx_buf[priv->rx_idx] = skb;
--			*((dma_addr_t *) skb->cb) =
--				pci_map_single(priv->pdev, skb_tail_pointer(skb),
--					       MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+			*((dma_addr_t *) skb->cb) = mapping;
- 		}
- 
- 	done:
+diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
+index 2ce0f6a..2e27208 100644
+--- a/include/uapi/linux/if_ether.h
++++ b/include/uapi/linux/if_ether.h
+@@ -89,6 +89,7 @@
+ #define ETH_P_FCOE	0x8906		/* Fibre Channel over Ethernet  */
+ #define ETH_P_TDLS	0x890D          /* TDLS */
+ #define ETH_P_FIP	0x8914		/* FCoE Initialization Protocol */
++#define ETH_P_80221	0x8917		/* IEEE 802.21 Media Independent Handover Protocol */
+ #define ETH_P_QINQ1	0x9100		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+ #define ETH_P_QINQ2	0x9200		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+ #define ETH_P_QINQ3	0x9300		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
 -- 
-1.8.3.2
+1.7.10.4
 
