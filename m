@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43230 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbaBCQPT (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:52335 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbaBLT2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 11:15:19 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1WAMAy-0002gl-13
-	for linux-wireless@vger.kernel.org; Mon, 03 Feb 2014 11:15:12 -0500
-Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
-	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.6) with ESMTP id s13G46XJ018196
-	for <linux-wireless@vger.kernel.org>; Mon, 3 Feb 2014 11:04:06 -0500
-Received: (from linville@localhost)
-	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.7/Submit) id s13G45N8018195
-	for linux-wireless@vger.kernel.org; Mon, 3 Feb 2014 11:04:06 -0500
-Date: Mon, 3 Feb 2014 11:04:05 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-testing rebased on v3.14-rc1
-Message-ID: <20140203160405.GA13887@tuxdriver.com> (sfid-20140203_171525_779921_206B9C39)
+	Wed, 12 Feb 2014 14:28:21 -0500
+Received: by mail-oa0-f47.google.com with SMTP id m1so11370985oag.20
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:28:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com> <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com> <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 12:28:00 -0700
+Message-ID: <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com> (sfid-20140212_202839_381283_D1EA76EA)
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have rebased the wireless-testing tree on v3.14-rc1.  There is
-nothing else there (except localversion-wireless) at the moment.
+On Wed, Feb 12, 2014 at 6:38 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Tue, Feb 11, 2014 at 05:31:43PM -0700, Bjorn Helgaas wrote:
+>> I haven't put these in my branch, so you can take them.
+>>
+>> Alexander has a whole batch of network driver updates that I think David
+>> Miller is going to apply; would it make sense to include these in that
+>> batch?
+>>
+>> There's also the wil6210 patch for
+>> drivers/net/wireless/ath/wil6210/pcie_bus.c, which seems like it maybe
+>> could be in that batch, too.
+>
+> Well, as this series is small I thought it could quickly go thru your
+> tree. But since ipr had conflicts, there is no point routing all patches
+> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+> branch though.
 
-Please be aware of the rebase when pulling from wireless-testing,
-and be sure to do the needful.
+It's in pci/msi, but that's not in my -next branch yet, so I can
+easily drop it.  Do drivers/net/wireless patches normally follow a
+different path than the other drivers/net patches?  The wil6210 and
+ath10k patches look just like the others in the 34-patch series (bnx2,
+bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
+to include them there.
 
-Thanks,
+I think I need to put the ahci regression fix in v3.14, so I'll move
+that to my for-linus branch and just keep the other odds and ends
+(ahci and vfio) for v3.15.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bjorn
