@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:52307 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbaBNHyY (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:47699 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbaBLJxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 02:54:24 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e53so5489921eek.27
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 23:54:20 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/2] cfg80211: regulatory, allow user to set world regdomain
-Date: Fri, 14 Feb 2014 08:54:01 +0100
-Message-Id: <1392364441-4640-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140214_085427_581762_64E92064)
-In-Reply-To: <1392364441-4640-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1392364441-4640-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 12 Feb 2014 04:53:38 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21243.17535.214722.353633@gargle.gargle.HOWL> (sfid-20140212_105343_025782_2143DB8D)
+Date: Wed, 12 Feb 2014 15:23:03 +0530
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Intel Linux Wireless \(ilw\@linux.intel.com\)" <ilw@linux.intel.com>
+Subject: RE: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D66477@HASMSX103.ger.corp.intel.com>
+References: <52FB360D.2060502@gmail.com>
+	<1392195269-5514-1-git-send-email-egrumbach@gmail.com>
+	<20140212091008.GB1315@redhat.com>
+	<20140212092150.GC1315@redhat.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
+	<21243.16970.514799.362874@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D66477@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow to set world regulatory domain in case of user
-request (iw reg set 00).
+Grumbach, Emmanuel wrote:
+> 5100 is the first device supported by iwldvm. I think it was shipped in 2008.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/wireless/reg.c |    3 ---
- 1 file changed, 3 deletions(-)
+Ok, guess I can't test TX performance with this card. :)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c4c3af1..9e2450b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2373,9 +2373,6 @@ static int reg_set_rd_user(const struct ieee80211_regdomain *rd,
- {
- 	const struct ieee80211_regdomain *intersected_rd = NULL;
- 
--	if (is_world_regdom(rd->alpha2))
--		return -EINVAL;
--
- 	if (!regdom_changes(rd->alpha2))
- 		return -EALREADY;
- 
--- 
-1.7.9.5
-
+Sujith
