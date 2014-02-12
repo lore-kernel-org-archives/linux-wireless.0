@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41326 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbaBZRvr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 12:51:47 -0500
-Message-ID: <530E2999.6000901@candelatech.com> (sfid-20140226_185154_830014_15ECC707)
-Date: Wed, 26 Feb 2014 09:51:21 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:20213 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752412AbaBLNgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Feb 2014 08:36:43 -0500
+Date: Wed, 12 Feb 2014 14:38:17 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
+ pci_disable_msi()
+Message-ID: <20140212133816.GB3147@dhcp-26-207.brq.redhat.com> (sfid-20140212_143703_174798_07E50D1E)
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+ <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
+ <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
+ <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k:  make TARGET_NUM_PEERS match WMI_MAX_KEY_INDEX.
-References: <1392742567-6134-1-git-send-email-greearb@candelatech.com> <87r46plt07.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87r46plt07.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212003143.GD21057@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 08:48 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
+On Tue, Feb 11, 2014 at 05:31:43PM -0700, Bjorn Helgaas wrote:
+> I haven't put these in my branch, so you can take them.
 > 
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This appears to fix the problem of running out of keys
->> in the firmware.  Possibly it only hides the problem,
->> however.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Alexander has a whole batch of network driver updates that I think David
+> Miller is going to apply; would it make sense to include these in that
+> batch?
 > 
-> IIRC you asked me to drop this patch in other thread. I have now done
-> that.
+> There's also the wil6210 patch for
+> drivers/net/wireless/ath/wil6210/pcie_bus.c, which seems like it maybe
+> could be in that batch, too.
 
-Yes, it breaks upstream firmware (looks like it asserts, but not sure exactly
-why).
+Well, as this series is small I thought it could quickly go thru your
+tree. But since ipr had conflicts, there is no point routing all patches
+altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+branch though.
 
-I still think it might be a problem, but it would take someone with newer
-firmware source and/or better understanding of how the keys are supposed
-to work to know for sure.
-
-Thanks,
-Ben
+> Bjorn
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
