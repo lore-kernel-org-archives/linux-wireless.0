@@ -1,82 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:54876 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbaB1M3z (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:34533 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbaBLJh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 07:29:55 -0500
-Message-ID: <1393590591.13669.36.camel@dubbel> (sfid-20140228_133025_677846_10B31CB3)
-Subject: Re: [PATCH v4 0/8] wilink: add device tree support
-From: Luca Coelho <luca@coelho.fi>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
-	"Nori, Sekhar" <nsekhar@ti.com>, mturquette@linaro.org,
-	mark.rutland@arm.com, balbi@ti.com, grant.likely@linaro.org,
-	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
-	linux-doc@vger.kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-omap@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	nm@ti.com, martinez.javier@gmail.com
-Date: Fri, 28 Feb 2014 14:29:51 +0200
-In-Reply-To: <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
-	 <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Feb 2014 04:37:59 -0500
+Received: by mail-pb0-f52.google.com with SMTP id jt11so8991663pbb.25
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 01:37:59 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: set the mactime of ieee80211_rx_status
+Date: Wed, 12 Feb 2014 17:37:46 +0800
+Message-Id: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140212_103804_702837_7FADC902)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-28 at 08:26 +0100, Yegor Yefremov wrote:
-> On Tue, Jul 30, 2013 at 3:04 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > Hi,
-> >
-> > This patch series adds device tree support to the wlcore_sdio driver,
-> > which is used by WiLink6, WiLink7 and WiLink8.
-> >
-> > The first patches do some clean-up to make the data needed in the
-> > wilink device tree node smaller.  The remaining patches implement the
-> > actual device tree node parsing in wlcore_sdio.
-> >
-> > Regarding the XTAL clock issues, for now we don't support XTAL mode
-> > with DT, but I have sent a proposal for a small change in the clock
-> > framework to support this, but it's still under discussions [1].
-> >
-> > The DTS file changes will be sent separately, since they need to go
-> > via different trees.
-> >
-> > A new version of the bindings documentation has been sent [2] and, if
-> > no more comments are given to it, I'll apply it via my tree.
-> >
-> > [1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
-> > [2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
-> >
-> > Changes in v4:
-> >
-> > * Rebased on top of 3.11-rc3 (eg. no more changes on the board files
-> >   that were removed);
-> >
-> > * Use the new irq_get_trigger_type() instead of
-> >   irqd_get_trigger_type() (thanks Javier);
-> >
-> > * Added some missing const's (thanks Felipe);
-> >
-> > * Reverted Tony's workaround to get WiLink to work on Panda while DT
-> >   was not supported yet.
-> >
-> >
-> > Please review.
-> 
-> What is the state of the series? Who is now responsible for the
-> patches? What issues were still not handled?
+Retrieve the mactime of ieee80211_rx_status based on received
+data frame. The value is obtained from the htt_rx_indication_ppdu
+structure and only available in 32-bit.
 
-There were some comments about this series (or more precisely, the one
-that added the bindings documentation[1]).  Unfortunately, I have left
-TI since and have no time to handle them.  Feel free to pick it up and
-continue from there.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    1 +
+ drivers/net/wireless/ath/ath10k/txrx.c   |    6 ++++++
+ 3 files changed, 8 insertions(+)
 
-[1] https://lkml.org/lkml/2013/7/30/712
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index b93ae35..bf6b415 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1181,6 +1181,7 @@ struct htt_rx_info {
+ 		u32 info1;
+ 		u32 info2;
+ 	} rate;
++	u32 tsf;
+ 	bool fcs_err;
+ 	bool amsdu_more;
+ 	bool mic_err;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 820c8ba..4ec2b5d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -989,6 +989,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			info.rate.info0 = rx->ppdu.info0;
+ 			info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
+ 			info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
++			info.tsf = __le32_to_cpu(rx->ppdu.tsf);
+ 
+ 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index b11e478..4713bdb 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -258,6 +258,12 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 	status->band = ch->band;
+ 	status->freq = ch->center_freq;
+ 
++	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
++		/* TSF available only in 32-bit */
++		status->mactime = info->tsf & 0xffffffff;
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
++
+ 	ath10k_dbg(ATH10K_DBG_DATA,
+ 		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
+ 		   info->skb,
+-- 
+1.7.9.5
 
