@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:57277 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaB0Ui1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 15:38:27 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:27106 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752392AbaBLCjp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Feb 2014 21:39:45 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 11 Feb 2014 18:39:12 -0800
+Subject: RE: [PATCH v2 08/30] mwifiex: implement extended scan feature
+Message-ID: <477F20668A386D41ADCC57781B1F70430F5393DADC@SC-VEXCH1.marvell.com> (sfid-20140212_033949_094915_1269413C)
+References: <1391819017-20995-1-git-send-email-bzhao@marvell.com>
+ <1391819017-20995-4-git-send-email-bzhao@marvell.com>
+ <20140211072128.GR5487@us.netrek.org>
+In-Reply-To: <20140211072128.GR5487@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <530F85AE.8060002@candelatech.com>
-References: <530F85AE.8060002@candelatech.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Date: Thu, 27 Feb 2014 12:37:46 -0800
-Message-ID: <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com> (sfid-20140227_213835_772256_4F754796)
-Subject: Re: How to best consolidate list of skbs (msdu) for receive?
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-27 10:36 GMT-08:00 Ben Greear <greearb@candelatech.com>:
-> In ath10k, it can receive msdu (in rx raw mode, at least).  These show up
-> as a list of skb.  Currently they are just dropped as un-handled, and I
-> need to fix this.
->
-> I think I need to consolidate this list into a single skb in order to pass
-> it up the stack.
->
-> What is the preferred way to go about doing this?
->
-> It seems I could just expand the head skb (pskb_expand_head) and copy the data from the others
-> onto the end of the head skb, but maybe there is a more efficient way to go about
-> doing this?
+Hi James,
 
-Some Ethernet drivers you would in general get multiple RX fragments
-for large frames, with the first fragment containing the headers, and
-then buffers of a few KiB, it is the driver responsibility to
-reassemble this as a large SKB with multiple fragments (grep for
-skb_fill_page_desc), would that work in your case?
--- 
-Florian
+Thanks for your comment.
+
+> > + * This function prepares an extended scan command to be sent to the firmware
+> > + *
+> > + * This uses the scan command configiguration sent to the command processing
+> 
+>                                       ^
+> 
+> trivial typo, should be "configuration".
+
+I will send a v3 for this patch.
+
+
+Hi John,
+
+If you prefer resending the entire patch series, please let me know.
+
+Thanks,
+Bing
+
