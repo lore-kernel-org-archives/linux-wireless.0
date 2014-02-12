@@ -1,43 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:49487 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbaBDJ2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:08 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0MKZLb-1WCXq52Kmd-001xB1 for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:06 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 01/13] ath: add last_rssi to ath_common
-Date: Tue,  4 Feb 2014 10:27:38 +0100
-Message-Id: <1391506070-8636-2-git-send-email-linux@rempel-privat.de> (sfid-20140204_102813_326170_48ECE17B)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from s3.sipsolutions.net ([144.76.43.152]:54256 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbaBLK04 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Feb 2014 05:26:56 -0500
+Message-ID: <1392200810.4146.2.camel@jlt4.sipsolutions.net> (sfid-20140212_112713_177694_B8931104)
+Subject: Re: [PATCH v2 3.14] mac80211: send control port protocol frames to
+ the VO queue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Feb 2014 11:26:50 +0100
+In-Reply-To: <1392130967-9624-1-git-send-email-nbd@openwrt.org>
+References: <1392130967-9624-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we need access to this variable from common functions.
+On Tue, 2014-02-11 at 16:02 +0100, Felix Fietkau wrote:
+> Improves reliability of wifi connections with WPA, since authentication
+> frames are prioritized over normal traffic and also typically exempt
+> from aggregation.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath.h | 2 ++
- 1 file changed, 2 insertions(+)
+Applied.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index b59cfbe..6260b83 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -161,6 +161,8 @@ struct ath_common {
- 	bool btcoex_enabled;
- 	bool disable_ani;
- 	bool bt_ant_diversity;
-+
-+	int last_rssi;
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
--- 
-1.9.rc1
+johannes
 
