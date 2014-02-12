@@ -1,239 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:40696 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbaBJLr5 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40377 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbaBLPND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 06:47:57 -0500
-Received: by mail-we0-f177.google.com with SMTP id t61so4163977wes.36
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:56 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/18] wl18xx: move to new firmware (wl18xx-fw-3.bin)
-Date: Mon, 10 Feb 2014 13:47:25 +0200
-Message-Id: <1392032854-28126-10-git-send-email-eliad@wizery.com> (sfid-20140210_124804_978605_BA24E9C4)
-In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
-References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+	Wed, 12 Feb 2014 10:13:03 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21243.36697.649170.35540@gargle.gargle.HOWL> (sfid-20140212_161307_860489_CBAE87D3)
+Date: Wed, 12 Feb 2014 20:42:25 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/2] ath9k: implement p2p client powersave support
+In-Reply-To: <1392113890-5097-2-git-send-email-nbd@openwrt.org>
+References: <1392113890-5097-1-git-send-email-nbd@openwrt.org>
+	<1392113890-5097-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bump the min wl18xx fw version to 8.8.0.0.13
+Felix Fietkau wrote:
+> +	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
+> +		NULL, sc, AR_FIRST_NDP_TIMER);
+> +
+>  	ath9k_cmn_init_crypto(sc->sc_ah);
+>  	ath9k_init_misc(sc);
+>  	ath_fill_led_pin(sc);
+> @@ -1067,6 +1070,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+>  {
+>  	int i = 0;
+>  
+> +	if (sc->p2p_ps_timer)
+> +		ath_gen_timer_free(sc->sc_ah, sc->p2p_ps_timer);
+> +
 
-This fw is not backward compatible with older
-firmware (due to api changes), so use bump
-the firmware name as well.
+Why do this in the global init/deinit routines ? Wouldn't the
+add/remove interface callbacks be a better place for this (based on
+vif->p2p), since this timer is needed only for p2p interfaces ?
 
-Some modifications were done to the driver-fw api
-in order to support multiple APs.
+> +	if (sc->ps_flags & PS_BEACON_SYNC)
+> +		return;
 
-Additionally, some of the consts (such as max stations,
-max links and max RX BA sessions) were changed.
+I think sc_pm_lock is required to use sc->ps_flags.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c     |  2 +-
- drivers/net/wireless/ti/wl18xx/wl18xx.h   | 10 +++++-----
- drivers/net/wireless/ti/wlcore/acx.c      |  4 +++-
- drivers/net/wireless/ti/wlcore/acx.h      |  6 ++++--
- drivers/net/wireless/ti/wlcore/cmd.c      |  5 ++++-
- drivers/net/wireless/ti/wlcore/cmd.h      |  7 +++++--
- drivers/net/wireless/ti/wlcore/main.c     |  2 +-
- drivers/net/wireless/ti/wlcore/tx.c       |  2 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  2 +-
- 9 files changed, 25 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 966a866..de5b4fa 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -648,7 +648,7 @@ static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
- };
- 
- /* TODO: maybe move to a new header file? */
--#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-2.bin"
-+#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-3.bin"
- 
- static int wl18xx_identify_chip(struct wl1271 *wl)
- {
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 9785bf8..eb7cfe8 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -26,10 +26,10 @@
- 
- /* minimum FW required for driver */
- #define WL18XX_CHIP_VER		8
--#define WL18XX_IFTYPE_VER	5
-+#define WL18XX_IFTYPE_VER	8
- #define WL18XX_MAJOR_VER	WLCORE_FW_VER_IGNORE
- #define WL18XX_SUBTYPE_VER	WLCORE_FW_VER_IGNORE
--#define WL18XX_MINOR_VER	39
-+#define WL18XX_MINOR_VER	13
- 
- #define WL18XX_CMD_MAX_SIZE          740
- 
-@@ -40,10 +40,10 @@
- 
- #define WL18XX_NUM_MAC_ADDRESSES 3
- 
--#define WL18XX_RX_BA_MAX_SESSIONS 5
-+#define WL18XX_RX_BA_MAX_SESSIONS 13
- 
--#define WL18XX_MAX_AP_STATIONS 8
--#define WL18XX_MAX_LINKS 12
-+#define WL18XX_MAX_AP_STATIONS 10
-+#define WL18XX_MAX_LINKS 16
- 
- struct wl18xx_priv {
- 	/* buffer for sending commands to FW */
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index ec83675..71b244b 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1591,7 +1591,8 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr)
-+int wl1271_acx_set_inconnection_sta(struct wl1271 *wl,
-+				    struct wl12xx_vif *wlvif, u8 *addr)
- {
- 	struct wl1271_acx_inconnection_sta *acx = NULL;
- 	int ret;
-@@ -1603,6 +1604,7 @@ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr)
- 		return -ENOMEM;
- 
- 	memcpy(acx->addr, addr, ETH_ALEN);
-+	acx->role_id = wlvif->role_id;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_UPDATE_INCONNECTION_STA_LIST,
- 				   acx, sizeof(*acx));
-diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-index 6dcfad9..954d57e 100644
---- a/drivers/net/wireless/ti/wlcore/acx.h
-+++ b/drivers/net/wireless/ti/wlcore/acx.h
-@@ -824,7 +824,8 @@ struct wl1271_acx_inconnection_sta {
- 	struct acx_header header;
- 
- 	u8 addr[ETH_ALEN];
--	u8 padding1[2];
-+	u8 role_id;
-+	u8 padding;
- } __packed;
- 
- /*
-@@ -1118,7 +1119,8 @@ int wl1271_acx_ps_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			       bool enable);
- int wl1271_acx_ap_max_tx_retry(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- int wl12xx_acx_config_ps(struct wl1271 *wl, struct wl12xx_vif *wlvif);
--int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
-+int wl1271_acx_set_inconnection_sta(struct wl1271 *wl,
-+				    struct wl12xx_vif *wlvif, u8 *addr);
- int wl1271_acx_fm_coex(struct wl1271 *wl);
- int wl12xx_acx_set_rate_mgmt_params(struct wl1271 *wl);
- int wl12xx_acx_config_hangover(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index ab5ca32..3463a67 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1532,6 +1532,7 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	cmd->sp_len = sta->max_sp;
- 	cmd->wmm = sta->wme ? 1 : 0;
- 	cmd->session_id = wl->session_ids[hlid];
-+	cmd->role_id = wlvif->role_id;
- 
- 	for (i = 0; i < NUM_ACCESS_CATEGORIES_COPY; i++)
- 		if (sta->wme && (sta->uapsd_queues & BIT(i)))
-@@ -1568,7 +1569,8 @@ out:
- 	return ret;
- }
- 
--int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid)
-+int wl12xx_cmd_remove_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			   u8 hlid)
- {
- 	struct wl12xx_cmd_remove_peer *cmd;
- 	int ret;
-@@ -1586,6 +1588,7 @@ int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid)
- 	/* We never send a deauth, mac80211 is in charge of this */
- 	cmd->reason_opcode = 0;
- 	cmd->send_deauth_flag = 0;
-+	cmd->role_id = wlvif->role_id;
- 
- 	ret = wl1271_cmd_send(wl, CMD_REMOVE_PEER, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index 323d4a8..9cb3f44 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -88,7 +88,8 @@ int wl12xx_roc(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 role_id,
- int wl12xx_croc(struct wl1271 *wl, u8 role_id);
- int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			struct ieee80211_sta *sta, u8 hlid);
--int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid);
-+int wl12xx_cmd_remove_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			   u8 hlid);
- void wlcore_set_pending_regdomain_ch(struct wl1271 *wl, u16 channel,
- 				     enum ieee80211_band band);
- int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl);
-@@ -594,6 +595,8 @@ struct wl12xx_cmd_add_peer {
- 	u8 sp_len;
- 	u8 wmm;
- 	u8 session_id;
-+	u8 role_id;
-+	u8 padding[3];
- } __packed;
- 
- struct wl12xx_cmd_remove_peer {
-@@ -602,7 +605,7 @@ struct wl12xx_cmd_remove_peer {
- 	u8 hlid;
- 	u8 reason_opcode;
- 	u8 send_deauth_flag;
--	u8 padding1;
-+	u8 role_id;
- } __packed;
- 
- /*
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index d16fb7e..73bf251 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4765,7 +4765,7 @@ static int wl12xx_sta_remove(struct wl1271 *wl,
- 	if (WARN_ON(!test_bit(id, wlvif->ap.sta_hlid_map)))
- 		return -EINVAL;
- 
--	ret = wl12xx_cmd_remove_peer(wl, wl_sta->hlid);
-+	ret = wl12xx_cmd_remove_peer(wl, wlvif, wl_sta->hlid);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 06ab5c6..9f7921d 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -101,7 +101,7 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
- 	 * authentication response. this way it won't get de-authed by FW
- 	 * when transmitting too soon.
- 	 */
--	wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
-+	wl1271_acx_set_inconnection_sta(wl, wlvif, hdr->addr1);
- 
- 	/*
- 	 * ROC for 1 second on the AP channel for completing the connection.
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index a53a37f..756e890 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -65,7 +65,7 @@
-  * max number of links allowed by all HWs.
-  * this is NOT the actual max links supported by the current hw.
-  */
--#define WLCORE_MAX_LINKS 12
-+#define WLCORE_MAX_LINKS 16
- 
- /* the driver supports the 2.4Ghz and 5Ghz bands */
- #define WLCORE_NUM_BANDS           2
--- 
-1.8.5.2.229.g4448466.dirty
-
+Sujith
