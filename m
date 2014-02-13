@@ -1,124 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:65035 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885AbaBSV4p (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42553 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbaBMUP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 16:56:45 -0500
-Received: by mail-wi0-f181.google.com with SMTP id hi5so1143041wib.14
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 13:56:44 -0800 (PST)
-Message-ID: <1392846993.20211.15.camel@canaries64-MCP7A> (sfid-20140219_225648_127142_BB92E23C)
-Subject: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Feb 2014 21:56:33 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Feb 2014 15:15:26 -0500
+Date: Thu, 13 Feb 2014 15:14:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
+	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@venema.h4ckr.net>,
+	open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	Florian Fainelli <florian@openwrt.org>
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+Message-ID: <20140213201421.GJ22203@tuxdriver.com> (sfid-20140213_211559_653114_327AAECD)
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+ <1391971686-9517-10-git-send-email-richard@nod.at>
+ <52F7D480.1050106@hauke-m.de>
+ <52F7DF21.70207@nod.at>
+ <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+ <52F8C373.9060108@rempel-privat.de>
+ <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+ <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+ <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+ <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with enum
+On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
+> 2014-02-11 3:43 GMT+04:00 Sergey Ryazanov <ryazanov.s.a@gmail.com>:
+> > 2014-02-11 2:37 GMT+04:00 Florian Fainelli <florian@openwrt.org>:
+> >> 2014-02-10 4:38 GMT-08:00 Sergey Ryazanov <ryazanov.s.a@gmail.com>:
+> >>> 2014-02-10 16:17 GMT+04:00 Oleksij Rempel <linux@rempel-privat.de>:
+> >>>> Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
+> >>>>> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
+> >>>>>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
+> >>>>>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
+> >>>>>>>> The symbol is an orphan, get rid of it.
+> >>>>>>>>
+> >>>>>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
+> >>>>>>>> ---
+> >>>>>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
+> >>>>>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
+> >>>>>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
+> >>>>>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
+> >>>>>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
+> >>>>>>>>
+> >>>>>>>
+> >>>>>>> This code is used in OpenWrt with an out of tree arch code for the
+> >>>>>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
+> >>>>>>> this code to mainline Linux kernel, because of lack of time/interest.
+> >>>>>>
+> >>>>>> Sorry, we don't maintain out of tree code.
+> >>>>>>
+> >>>>>
+> >>>>> Oleksij, Jonathan do you still working to make ar231x devices work
+> >>>>> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
+> >>>>> team would like to add upstream support?
+> >>>>>
+> >>>>> 1. https://lkml.org/lkml/2013/5/13/321
+> >>>>> 2. https://lkml.org/lkml/2013/5/13/358
+> >>>>>
+> >>>>
+> >>>> Hi,
+> >>>> my current target was to provide barebox and openocd support.
+> >>>> - ar2313 is already upstream on barebox.
+> >>>> - ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
+> >>>> - openocd (EJTAG) support is ready and i'll push it ASUP.
+> >>>>
+> >>> WOW, Impressive.
+> >>
+> >> That's a nice toy project, although since there are is an existing
+> >> bootloader with sources, I would have shifted the priority towards
+> >> getting the kernel support merged such that the bootloader can be used
+> >> for something. BTW I sent a few devices to Jonathan, not sure if he
+> >> ever got those...
+> >>
+> >>>
+> >>>> I hope Jonathan do kernel part. If not, i can provide some work, since i
+> >>>> have testing boards and expiriance on this hardware.
+> >>>>
+> >>> If you need, I can test kernel part, or even do some porting work. I
+> >>> have some AR231x based boards, e.g. Ubnt LS2 and NS2.
+> >>
+> >> I guess you could start splitting the OpenWrt patches into a format
+> >> that makes them suitable for being merged upstream and starting with
+> >> the MIPS parts. There might be a bunch of checkpatch.pl cleanup work
+> >> to do before getting those submitted.
+> >
+> > I will do that if Jonathan does not have a working solution, which he
+> > would like to push upstream. So, let's wait for his reply.
+> >
+> 
+> John, can you delay the merging of this patch for a few months, I will
+> try to prepare the necessary patches to add AR231x architecture to the
+> kernel and send them to linux-mips.
 
-assign as u8 type.
+OK -- looking forward to your patches.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h  | 10 +++++-----
- drivers/staging/vt6656/rxtx.c    | 10 +++++-----
- drivers/staging/vt6656/usbpipe.c |  2 +-
- 3 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 33e5e34..8d8f31a 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -158,10 +158,10 @@ typedef enum __device_msg_level {
- /*
-  * Enum of context types for SendPacket
-  */
--typedef enum _CONTEXT_TYPE {
--    CONTEXT_DATA_PACKET = 1,
--    CONTEXT_MGMT_PACKET
--} CONTEXT_TYPE;
-+enum {
-+	CONTEXT_DATA_PACKET = 1,
-+	CONTEXT_MGMT_PACKET
-+};
- 
- /* RCB (Receive Control Block) */
- struct vnt_rcb {
-@@ -180,7 +180,7 @@ struct vnt_usb_send_context {
- 	struct sk_buff *pPacket;
- 	struct urb *pUrb;
- 	unsigned int uBufLen;
--	CONTEXT_TYPE Type;
-+	u8 type;
- 	struct ethhdr sEthHeader;
- 	void *Next;
- 	bool bBoolInUse;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 92146e5..ba0184a 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1610,7 +1610,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     pTX_Buffer->byType = 0x00;
- 
-     pContext->pPacket = NULL;
--    pContext->Type = CONTEXT_MGMT_PACKET;
-+    pContext->type = CONTEXT_MGMT_PACKET;
-     pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
-@@ -1702,7 +1702,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
-     pTX_Buffer->byType = 0x01;
- 
-     pContext->pPacket = NULL;
--    pContext->Type = CONTEXT_MGMT_PACKET;
-+    pContext->type = CONTEXT_MGMT_PACKET;
-     pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
- 
-     PIPEnsSendBulkOut(pDevice,pContext);
-@@ -2050,7 +2050,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     pTX_Buffer->byType = 0x00;
- 
-     pContext->pPacket = skb;
--    pContext->Type = CONTEXT_MGMT_PACKET;
-+    pContext->type = CONTEXT_MGMT_PACKET;
-     pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
-@@ -2440,7 +2440,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-     pTX_Buffer->wTxByteCount = (u16)BytesToWrite;
- 
-     pContext->pPacket = skb;
--    pContext->Type = CONTEXT_DATA_PACKET;
-+    pContext->type = CONTEXT_DATA_PACKET;
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-@@ -2594,7 +2594,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     pTX_Buffer->wTxByteCount = (u16)BytesToWrite;
- 
-     pContext->pPacket = NULL;
--    pContext->Type = CONTEXT_DATA_PACKET;
-+    pContext->type = CONTEXT_DATA_PACKET;
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 0ae5d20..1fc382d 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -610,7 +610,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	struct vnt_usb_send_context *context =
- 			(struct vnt_usb_send_context *)urb->context;
- 	struct vnt_private *priv = context->pDevice;
--	CONTEXT_TYPE context_type = context->Type;
-+	u8 context_type = context->type;
- 	unsigned long buf_len = context->uBufLen;
- 	int status;
- 
 -- 
-1.9.rc1
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
