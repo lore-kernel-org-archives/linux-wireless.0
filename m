@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53067 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:23731 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751592AbaBMRYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 12:24:08 -0500
-Message-ID: <1392310868.18472.11.camel@dcbw.local> (sfid-20140213_182412_214271_D79D7F7F)
-Subject: Re: libertas: probe responses with zero length SSID cause scan
- result loss
-From: Dan Williams <dcbw@redhat.com>
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 13 Feb 2014 11:01:08 -0600
-In-Reply-To: <20140211063329.GO5487@us.netrek.org>
-References: <20140211063329.GO5487@us.netrek.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751939AbaBMNQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Feb 2014 08:16:06 -0500
+Date: Thu, 13 Feb 2014 14:18:02 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
+ pci_disable_msi()
+Message-ID: <20140213131802.GA21757@dhcp-26-207.brq.redhat.com> (sfid-20140213_141628_878339_C7607647)
+References: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+ <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
+ <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
+ <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com>
+ <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com>
+ <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-11 at 17:33 +1100, James Cameron wrote:
-> G'day,
+On Wed, Feb 12, 2014 at 11:30:44PM +0200, Kalle Valo wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
 > 
-> I'd appreciate a sanity check, as I'm not sure what I am doing.
+> >> Well, as this series is small I thought it could quickly go thru your
+> >> tree. But since ipr had conflicts, there is no point routing all patches
+> >> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+> >> branch though.
+> >
+> > It's in pci/msi, but that's not in my -next branch yet, so I can
+> > easily drop it.  Do drivers/net/wireless patches normally follow a
+> > different path than the other drivers/net patches?  The wil6210 and
+> > ath10k patches look just like the others in the 34-patch series (bnx2,
+> > bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
+> > to include them there.
 > 
-> We saw for years that scan results for an OLPC XO-1 laptop would be
-> unreliable in large groups.  APs would not be easily found.  We
-> presumed other causes until recently.
-> 
-> Using monitor mode on another computer, and "iwlist eth0 scan" on the
-> XO-1, I found probe responses from an AP, and ACKs from the host to
-> the AP, but the output omitted the AP.
-> 
-> Further, the AP would be missing if there was a probe response from
-> another XO-1 running mesh, and an ACK from the host to that XO-1.
-> 
-> Enabling debugging, lbs_ret_scan was reporting "scan response: invalid
-> IE fmt" because the probe response had a zero length SSID IE.
-> 
-> Is a zero length SSID IE valid?  (We can't change the wireless firmware
-> at this stage.)
+> ath10k patches normally go through my ath.git tree to Linville and then
+> to David Miller. To avoid conflicts I would prefer to take ath10k
+> patches to my tree whenever possible.
 
-I think technically a zero-length IE would be valid, but I'm not sure
-about a zero-length *SSID* IE.  Is that zero length SSID IE coming from
-an AP, or from an XO?
+CC'ing Vladimir, in case he decides to do the same with wil6210.
 
-If the scan was a passive scan, then a zero-length SSID IE *would* be
-valid, since the passive scans usually just listen for beacons, and
-hidden APs wouldn't report a real SSID.  So perhaps what's happening
-here is if there is a hidden AP, the firmware sometimes gets the beacon
-from the AP before the AP responds to the XO's probe request?
+> -- 
+> Kalle Valo
 
-In any case, I think the patch is OK.
-
-Dan
-
-> Background data and dmesg fragments:
-> http://dev.laptop.org/ticket/12757
-> 
-> Patch being tested (lacks signoff and any review):
-> http://dev.laptop.org/git/olpc-kernel/commit/?h=x86-3.3&id=e98f01abce522fb70a3852b23b62205244ef69b8
-> 
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
