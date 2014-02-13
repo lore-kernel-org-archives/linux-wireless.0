@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60102 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbaBTJ3p (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21474 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbaBMO3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:29:45 -0500
-Message-ID: <1392888582.5073.12.camel@jlt4.sipsolutions.net> (sfid-20140220_102954_399462_2B130CD7)
-Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 20 Feb 2014 10:29:42 +0100
-In-Reply-To: <1392888468.5073.11.camel@jlt4.sipsolutions.net> (sfid-20140220_102758_573858_1BB8700E)
-References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
-	 <20140220092154.GD23439@redhat.com>
-	 <1392888468.5073.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20140220_102758_573858_1BB8700E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Feb 2014 09:29:34 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix SMPS support
+References: <1391673591-8907-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 13 Feb 2014 16:29:29 +0200
+In-Reply-To: <1391673591-8907-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 6 Feb 2014 08:59:51 +0100")
+Message-ID: <87eh379jcm.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_152937_600119_F4AF9CE4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 10:27 +0100, Johannes Berg wrote:
-> On Thu, 2014-02-20 at 10:21 +0100, Stanislaw Gruszka wrote:
-> > On Thu, Feb 20, 2014 at 09:52:45AM +0100, Johannes Berg wrote:
-> > > +
-> > > +		/* sync with ieee80211_sta_ps_deliver_wakeup */
-> > > +		spin_lock(&sta->ps_lock);
-> > > +		/*
-> > > +		 * STA woke up the meantime and all the frames on ps_tx_buf have
-> > > +		 * been queued to pending queue. No reordering can happen, go
-> > > +		 * ahead and Tx the packet.
-> > > +		 */
-> > > +		if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
-> > > +			spin_unlock(&sta->ps_lock);
-> > 
-> > Actually I'm not sure if we should check if both WLAN_STA_PS_DRIVER 
-> > and WLAN_STA_PS_STA flags are clear ?
-> 
-> This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
-> clear until after WLAN_STA_PS_DRIVER is?
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-OTOH, it will certainly not hurt to test the flag, and we do it in other
-places, so I'll change this patch to do that as well.
+> Firmware ignores SMPS flags in peer assoc command.
+>
+> For SMPS to work it is necessary to set peer
+> parameter after peer assoc command so that tx
+> chainmask is setup properly.
+>
+> This should fix packet loss and improve throughput
+> with stations that have SMPS enabled upon
+> association.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+[...]
 
+> +static const u32 ath10k_smps_map[] = {
+> +	[WLAN_HT_CAP_SM_PS_STATIC] = WMI_PEER_SMPS_STATIC,
+> +	[WLAN_HT_CAP_SM_PS_DYNAMIC] = WMI_PEER_SMPS_DYNAMIC,
+> +	[WLAN_HT_CAP_SM_PS_INVALID] = WMI_PEER_SMPS_PS_NONE,
+> +	[WLAN_HT_CAP_SM_PS_DISABLED] = WMI_PEER_SMPS_PS_NONE,
+> +};
+> +
+> +static int ath10k_setup_peer_smps(struct ath10k *ar, struct ath10k_vif *arvif,
+> +				  const u8 *addr,
+> +				  const struct ieee80211_sta_ht_cap *ht_cap)
+> +{
+> +	int smps;
+> +
+> +	if (!ht_cap->ht_supported)
+> +		return 0;
+> +
+> +	smps = ht_cap->cap & IEEE80211_HT_CAP_SM_PS;
+> +	smps >>= IEEE80211_HT_CAP_SM_PS_SHIFT;
+> +
+> +	if (smps >= ARRAY_SIZE(ath10k_smps_map))
+> +		return -EINVAL;
+> +
+> +	return ath10k_wmi_peer_set_param(ar, arvif->vdev_id, addr,
+> +					 WMI_PEER_SMPS_STATE,
+> +					 ath10k_smps_map[smps]);
+> +}
+
+ath10k_smps_map looks overkill (and fragile), wouldn't a switch
+statement be simpler?
+
+> @@ -1370,6 +1385,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+>  {
+>  	struct ath10k *ar = hw->priv;
+>  	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+> +	struct ieee80211_sta_ht_cap ht_cap;
+>  	struct wmi_peer_assoc_complete_arg peer_arg;
+>  	struct ieee80211_sta *ap_sta;
+>  	int ret;
+> @@ -1386,6 +1402,8 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+>  		return;
+>  	}
+>  
+> +	ht_cap = ap_sta->ht_cap;
+
+Why do you copy ht_cap? I can't figure out the reason.
+
+-- 
+Kalle Valo
