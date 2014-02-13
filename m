@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([5.45.105.125]:32928 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282AbaBNXGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 18:06:43 -0500
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [RESEND] [PATCHv2 0/5] wl1251 device tree support
-Date: Sat, 15 Feb 2014 00:05:51 +0100
-Message-Id: <1392419156-14394-1-git-send-email-sre@debian.org> (sfid-20140215_000931_233769_4694CB75)
-In-Reply-To: <20140125000929.GD25488@atomide.com>
-References: <20140125000929.GD25488@atomide.com>
+Received: from mail.candelatech.com ([208.74.158.172]:47847 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbaBMTKs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Feb 2014 14:10:48 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [RFC] wmi:  Handle failure to start scan.
+Date: Thu, 13 Feb 2014 11:09:54 -0800
+Message-Id: <1392318594-32540-1-git-send-email-greearb@candelatech.com> (sfid-20140213_201051_204377_266452F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Ben Greear <greearb@candelatech.com>
 
-The following patchset adds device tree support to the spi variant of the
-wl1251 driver, which is used in the Nokia N900. Tony requested, that you
-take the whole series even if that may introduce merge conflicts:
+Properly clean up driver state in case firmware fails
+to start scan for some reason.
 
-> Sebastian, please resend the whole series to John and feel free to add my
-> acks.  It's best that John picks them all up, otherwise we'll have the same
-> issue for v3.15. It seems that we should have just taken the merge conflict
-> rather than going back and forth with this.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
--- Sebastian
-
-Luciano Coelho (1):
-  wl1251: split wl251 platform data to a separate structure
-
-Sebastian Reichel (4):
-  wl1251: move power GPIO handling into the driver
-  wl1251: spi: add vio regulator support
-  wl1251: spi: add device tree support
-  Documentation: dt: wireless: Add wl1251
-
- .../devicetree/bindings/net/wireless/ti,wl1251.txt | 39 ++++++++++++
- arch/arm/mach-omap2/board-omap3pandora.c           |  6 +-
- arch/arm/mach-omap2/board-rx51-peripherals.c       | 13 +---
- drivers/net/wireless/ti/wilink_platform_data.c     | 37 +++++++++--
- drivers/net/wireless/ti/wl1251/sdio.c              | 31 +++++++---
- drivers/net/wireless/ti/wl1251/spi.c               | 71 ++++++++++++++++------
- drivers/net/wireless/ti/wl1251/wl1251.h            |  4 +-
- include/linux/wl12xx.h                             | 24 +++++++-
- 8 files changed, 176 insertions(+), 49 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 20f7c79..a5be0d3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -770,7 +770,25 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_PREEMPTED\n");
+ 		break;
+ 	case WMI_SCAN_EVENT_START_FAILED:
+-		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_START_FAILED\n");
++		ath10k_warn("WMI_SCAN_EVENT_START_FAILED, reason: %i\n", reason);
++
++		ar->scan_channel = NULL;
++		if (!ar->scan.in_progress) {
++			ath10k_warn("scan-start-failed: no scan requested, ignoring\n");
++			break;
++		}
++
++		if (ar->scan.is_roc) {
++			ath10k_offchan_tx_purge(ar);
++
++			if (!ar->scan.aborting)
++				ieee80211_remain_on_channel_expired(ar->hw);
++		} else {
++			ieee80211_scan_completed(ar->hw, ar->scan.aborting);
++		}
++
++		del_timer(&ar->scan.timeout);
++		ar->scan.in_progress = false;
+ 		break;
+ 	default:
+ 		break;
 -- 
-1.8.5.3
+1.7.11.7
 
