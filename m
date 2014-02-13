@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48860 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754491AbaBUKpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 05:45:42 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH] ath9k: list more reset causes in debugfs
-Date: Fri, 21 Feb 2014 11:45:36 +0100
-Message-Id: <1392979536-68161-1-git-send-email-nbd@openwrt.org> (sfid-20140221_114546_415183_A0E1B713)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17214 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751514AbaBMPZQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Feb 2014 10:25:16 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] ath10k: reduce number of host corruptions
+References: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Thu, 13 Feb 2014 17:25:10 +0200
+In-Reply-To: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Mon, 10 Feb 2014 17:14:21 +0100")
+Message-ID: <87d2ir827d.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_162520_888570_ED87E476)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Number of MAC hangs and stuck beacons were missing
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/debug.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> This patchset reduces frequency of a strange HW bug
+> in CUS232 boards.
+>
+> The bug happens in some workloads with different
+> frequency with different hardware spinoffs. It is
+> triggered by a cold reset after HW/FW has been
+> excercised with some work. On x86 this could be a hang,
+> on AP135 it is a data bus error. Frequency of problem
+> is reduced in driver by calling first warm reset
+> instead of cold reset. When warm reset fails then
+> driver will call cold reset. 
+>
+> Marek Puzyniak (2):
+>   ath10k: refactor suspend/resume functions
+>   ath10k: suspend hardware before reset
+>
+> Michal Kazior (1):
+>   ath10k: fix device initialization routine
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index ab7264c..f42ed3b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -866,6 +866,12 @@ static ssize_t read_file_reset(struct file *file, char __user *user_buf,
- 			 "%17s: %2d\n", "PLL RX Hang",
- 			 sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
- 	len += scnprintf(buf + len, sizeof(buf) - len,
-+			 "%17s: %2d\n", "MAC Hang",
-+			 sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
-+	len += scnprintf(buf + len, sizeof(buf) - len,
-+			 "%17s: %2d\n", "Stuck Beacon",
-+			 sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
-+	len += scnprintf(buf + len, sizeof(buf) - len,
- 			 "%17s: %2d\n", "MCI Reset",
- 			 sc->debug.stats.reset[RESET_TYPE_MCI]);
- 
+Thanks, all three patches applied.
+
 -- 
-1.8.3.4 (Apple Git-47)
-
+Kalle Valo
