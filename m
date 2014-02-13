@@ -1,138 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:52873 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbaBBThQ (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:48183 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723AbaBMJ4z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 14:37:16 -0500
-Message-ID: <1391369816.2750.19.camel@canaries32-MCP7A> (sfid-20140202_203810_624346_222BE60C)
-Subject: Re: rtl8821ae.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: Dave Jones <davej@redhat.com>, gregkh@linuxfoundation.org,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux Driver Project <devel@linuxdriverproject.org>
-Date: Sun, 02 Feb 2014 19:36:56 +0000
-In-Reply-To: <201402021807.37772.s.L-H@gmx.de>
-References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
-	 <20140202160512.GA4946@redhat.com> <201402021807.37772.s.L-H@gmx.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Feb 2014 04:56:55 -0500
+Subject: [PATCH 1/3] ath10k: fix alignment in ath10k_dbg()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 13 Feb 2014 11:56:52 +0200
+Message-ID: <20140213095652.13999.63855.stgit@potku.adurom.net> (sfid-20140213_105708_035669_64C24EAF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-02 at 18:07 +0000, Stefan Lippers-Hollmann wrote:
-> Hi
-> 
-> [ CC'ing the relevant parties ]
-> 
-> On Sunday 02 February 2014, Dave Jones wrote:
-> > On Sun, Feb 02, 2014 at 03:41:27AM -0800, scan-admin@coverity.com wrote:
-> >  > 
-> >  > Please find the latest report on new defect(s) introduced to Linux found with Coverity Scan.
-> >  > 
-> >  > Defect(s) Reported-by: Coverity Scan
-> >  > Showing 20 of 83 defect(s)
-> > 
-> > Ugh, this is even worse than the usual realtek drivers. (With the exception of rtl8188eu)
-> > All 83 of those new defects came from this new driver, and while there's
-> > a bunch of "who cares" type things in there, there's a load of stuff that
-> > needs fixing a lot more urgently than CodingStyle issues or anything else in the TODO
-> > for that driver.
-> > 
-> > A bigger problem though, is what is the plan for these realtek drivers ?
-> > They've been in staging forever. rtl8187se has been there for _five_ years with
-> > no indication it's ever getting promoted to first class status.
-> 
-> Actually rtl8187se (aka rtl8185b) seems to have gotten some attention 
-> recently:
-> 
-> http://lkml.kernel.org/r/CAN8YU5PGkx9s9deWpFTO_ZtDr-+wDD5cX2JRv1zd1m1Q0BpkCw@mail.gmail.com
-> 
-> > The git logs are littered mostly with CodingStyle cleanups, sparse cleanups and such,
-> > meanwhile for five years they've had out of bounds reads, overflows, and such 
-> > for this whole time.  Even worse, when one of the drivers gets fixes for actual
-> > problems like this, they never make it back to Realtek, who clone the same
-> > old shitty driver they shipped last time, and reintroduce new variants of the
-> > same damn bugs, and then we import the new turd into staging and start all over again.
-> > 
-> > I get the whole "a shit driver is better than no driver", but there's no discernable
-> > effort to ever improve this pile, just to keep adding to it.
-> > 
-> > 	Dave
-> 
-> I think there are mostly two major problems with these drivers, besides 
-> RealTek still working on a non-mac80211 codebase for USB based devices.
-> 
-> The sheer number of slightly different RealTek drivers for similar
-> chipsets, for which RealTek as forked off a dedicated driver each, 
-> rather than extending the existing ones. With the other, probably even 
-> larger, problem being that it isn't possible to port wireless drivers
-> from non-mac80111 to mac80211 in a gradual fashion, it's always a 
-> parallel re-implementation. Just look at the recent history of staging
-> wireless drivers:
-> 
-> the successful ones:
-> - csr --> /dev/null
-> - otus --> ar9170 --> carl9170
-> - ( rt2870 && rt3070 ) --> rt2800usb
-> - rt2870 --> rt2800pci
-> - [ at76c503a --> ] at76_usb --> at76c50x-usb   [*] not in staging
-> 
-> the pending ones
-> - rtl8187se [ --> rtl8180 ]   [*] hopefully soon
-> - rtl8188eu --> ?
-> - [ rtl8192du --> ? ]   [*] not in staging, [1]
-> - rtl8192e --> ?
-> - rtl8192u --> ?
-> - rtl8192su --> rtl8712 --> ? [ r92su[2] would add cfg80211 support, 
->                                 but it being a fullmac like
->                                 re-implementation doesn't get it 
->                                 anywhere ]
-> - rtl8821ae [ --> mac80211 port planned for 3.15[3]? ]
-> 
-> these devices are, besides rtl8187se (802.11g) and rtl8821ae 
-> (802.11ac), all 802.11n compatible, but were quickly EOLed by the 
-> vendor, probably making it hard to get enough traction for a proper 
-> mac80211 port. Coincidentally these chipsets are also very popular, 
-> rtl8187se being the chipset of the early netbook craze, rtl8188eu 
-> pretty ubiquitous on embedded platforms, the others making the bulk 
-> of aftermarket USB devices.
-> 
-> ancient hardware, probably not going anywhere:
-The below devices are still been sold new
-> - vt6655 --> ?
-> - vt6656 --> ?
-to mac80211
+checkpatch warning:
 
-I have already done the conversion, just some minor things todo
-LED/ host implementation
+drivers/net/wireless/ath/ath10k/debug.h:95: CHECK: Alignment should match open parenthesis
 
-Should be ready to merge next + 3-4.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I will update the TODO file shortly.
-
-> - wlags49_h2 --> ?
-> - wlags49_h25 --> ?
-> - wlan-ng --> ?
-> 
-> This likely leaves staging wireless drivers to small corrections and 
-> bugfixes. In the hope that the devices will get enough traction that 
-> someone takes up the effort of doing a parallel re-implementation of a
-> proper mac80211 based driver, using the staging source only as 
-> reference.
-> 
-For my part, it is an educational exercise.
-
-However, I do wonder why I don't simply submit a new driver. There
-is very little of the staging code left.
-
-Regards
-
-
-Malcolm
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 1773c36..a582499 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -92,7 +92,7 @@ static inline void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 
+ #ifdef CONFIG_ATH10K_DEBUG
+ __printf(2, 3) void ath10k_dbg(enum ath10k_debug_mask mask,
+-				      const char *fmt, ...);
++			       const char *fmt, ...);
+ void ath10k_dbg_dump(enum ath10k_debug_mask mask,
+ 		     const char *msg, const char *prefix,
+ 		     const void *buf, size_t len);
 
