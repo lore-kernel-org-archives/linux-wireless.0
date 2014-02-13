@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:49874 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbaBCU63 (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:61490 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbaBMKI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:29 -0500
-Received: by mail-ee0-f48.google.com with SMTP id t10so3868937eei.35
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:28 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/62] iwlwifi: pcie: make FH debugfs file code easier to understand
-Date: Mon,  3 Feb 2014 22:57:14 +0200
-Message-Id: <1391461088-8082-8-git-send-email-egrumbach@gmail.com> (sfid-20140203_220007_293282_F229CC60)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Thu, 13 Feb 2014 05:08:26 -0500
+Received: by mail-vc0-f177.google.com with SMTP id if11so7867982vcb.22
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 02:08:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1392285810.4150.5.camel@jlt4.sipsolutions.net>
+References: <1392237482-18172-1-git-send-email-johannes@sipsolutions.net>
+ <CA+XVXffxt5A_EOMJqMA6hHzZBaCy46ctdXL6R4k+QY_oVTAC7g@mail.gmail.com>
+ <1392282362.4150.4.camel@jlt4.sipsolutions.net> <CA+XVXfc+chWOPuJ5A61+yrJDbUTqb+8-kWZG6ZG4SOONMJJi8g@mail.gmail.com>
+ <1392285810.4150.5.camel@jlt4.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 13 Feb 2014 12:08:06 +0200
+Message-ID: <CA+XVXffG-X_fdapYZ2n1fJtG61CgSQYkfQ4dr4aPK2vC-VCLeQ@mail.gmail.com> (sfid-20140213_110836_224920_FBE6A529)
+Subject: Re: [PATCH] mac80211: add NAPI support back
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Feb 13, 2014 at 12:03 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-13 at 12:00 +0200, Arik Nemtsov wrote:
+>
+>> It's fine. But I guess it's nicer to add a small ieee80211 wrapper for
+>> it that also clears local->napi? not sure.
+>
+> Well if the whole thing is going down there's little point in that.
 
-The code seems fine, as buf won't be assigned when an error
-is returned, but checking for the error first is easier to
-understand.
+Sure.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c |   17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 7290f42..61ae1af 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1434,16 +1434,15 @@ static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
- {
- 	struct iwl_trans *trans = file->private_data;
- 	char *buf = NULL;
--	int pos = 0;
--	ssize_t ret = -EFAULT;
--
--	ret = pos = iwl_dump_fh(trans, &buf);
--	if (buf) {
--		ret = simple_read_from_buffer(user_buf,
--					      count, ppos, buf, pos);
--		kfree(buf);
--	}
-+	ssize_t ret;
- 
-+	ret = iwl_dump_fh(trans, &buf);
-+	if (ret < 0)
-+		return ret;
-+	if (!buf)
-+		return -EINVAL;
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, ret);
-+	kfree(buf);
- 	return ret;
- }
- 
--- 
-1.7.9.5
-
+Arik
