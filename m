@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33331 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751151AbaBRXmH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaBMM21 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 18:42:07 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"Frank Huang" <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 3.14 2/3] mwifiex: add NULL check for PCIe Rx skb
-Date: Tue, 18 Feb 2014 15:41:55 -0800
-Message-ID: <1392766916-10734-2-git-send-email-bzhao@marvell.com> (sfid-20140219_004213_599454_064C56AE)
-In-Reply-To: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
-References: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 13 Feb 2014 07:28:27 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove erroneous comment about RX radiotap header
+Date: Thu, 13 Feb 2014 13:28:23 +0100
+Message-Id: <1392294503-13726-1-git-send-email-johannes@sipsolutions.net> (sfid-20140213_132830_873583_7AD10706)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-We may get a NULL pointer here if skb allocation for Rx packet
-was failed earlier.
+There's no way the driver can pre-build the radiotap header,
+so remove the comment stating that it can.
 
-Cc: <stable@vger.kernel.org> # 3.9+
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ include/net/mac80211.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index d11d4ac..7936dfa 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1217,6 +1217,12 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 		rd_index = card->rxbd_rdptr & reg->rx_mask;
- 		skb_data = card->rx_buf_list[rd_index];
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2d4d312..a6bcc39 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -66,10 +66,6 @@
+  *
+  * Secondly, when the hardware handles fragmentation, the frame handed to
+  * the driver from mac80211 is the MSDU, not the MPDU.
+- *
+- * Finally, for received frames, the driver is able to indicate that it has
+- * filled a radiotap header and put that in front of the frame; if it does
+- * not do so then mac80211 may add this under certain circumstances.
+  */
  
-+		/* If skb allocation was failed earlier for Rx packet,
-+		 * rx_buf_list[rd_index] would have been left with a NULL.
-+		 */
-+		if (!skb_data)
-+			return -ENOMEM;
-+
- 		mwifiex_unmap_pci_memory(adapter, skb_data, PCI_DMA_FROMDEVICE);
- 		card->rx_buf_list[rd_index] = NULL;
- 
+ /**
 -- 
-1.8.2.3
+1.8.5.3
 
