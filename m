@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61640 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751360AbaBINbT convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:59159 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbaBMAVo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 08:31:19 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Petko Manolov <petkan@nucleusys.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: iwlwifi crash with 3.13
-Date: Sun, 9 Feb 2014 13:31:14 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D645E3@HASMSX103.ger.corp.intel.com> (sfid-20140209_143122_674215_12AEEC21)
-References: <20140123091659.GE9077@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
- <20140123123125.GA3424@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
- <20140123200045.GA4064@localhost> <52E17698.9070607@gmail.com>
- <20140123202142.GC4064@localhost> <20140207214054.GB7167@localhost>
- <52F67313.1030706@gmail.com> <20140209132653.GA8352@localhost>
-In-Reply-To: <20140209132653.GA8352@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 12 Feb 2014 19:21:44 -0500
+Received: by mail-pd0-f175.google.com with SMTP id w10so9711967pde.34
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 16:21:44 -0800 (PST)
 MIME-Version: 1.0
+From: Blaise Gassend <blaise@suitabletech.com>
+Date: Wed, 12 Feb 2014 16:21:24 -0800
+Message-ID: <CAPvVjiuvKSTMxBqDYwskx39TC=TCh+o9zZwGFcZTc_N-Y+YLyA@mail.gmail.com> (sfid-20140213_012148_123983_9EA51140)
+Subject: PATCH: wireless: Allow active scanning while associated with custom
+ world regulatory domain
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Catalin Drula <catalin@suitabletech.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On 14-02-08 20:10:27, Emmanuel Grumbach wrote:
-> >
-> > There is no problem to be fixed. When I said that I found the issue, I
-> > meant that you are using a NIC which is not supposed to work on 5GHz on
-> these channels and this leads to the issues.
-> 
-> Right, wireless-N 7260 is not advertised as 5GHz card.  I just got over my
-> laziness and searched the net.
-> 
-> > The fact that it doesn't work for you with -8.ucode proves that I am correct.
-> 
-> This is something i'd rather not comment on. :P
-> 
-> > I sent a patch that will disable 5GHz band for you from the driver level so
-> that you won't suffer from firmware asserts.
-> 
-> Sweet.
-> 
-> > You told me you could work on 5GHz with this NIC - good for you.
-> > Conclude whatever you want from this, this is none of my business -
-> > but for sure, the "issues" you are seeing are related to the fact that your
-> NIC isn't supposed to be working on 5GHz, and hence, there is no bug to be
-> fixed.
-> 
-> Now that's funny.  Intel made an effort to put 5GHz radio on this card.  They
-> even released firmware that can actually make use of this band.  I am pretty
-> sure you won't answer these, but i'll ask why is that anyway:
-> 
-> 	a) is the 'A' band implementation so buggy that you/Intel decided to
-> disable it altogether?
+Currently ath9k sets a custom world regulatory domain with only
+passive scanning allowed throughout the 5 GHz band. Once you associate
+to an AP, the passive scanning limitation gets added to the country IE
+regulatory domain for the AP. However, once you are associated you are
+no longer in a world regulatory domain so beacon hints stop working.
+As a result active scanning is forbidden, and there is no mechanism to
+enable it. This is despite the fact that active scanning would be
+allowed when not associated (thanks to beacon hints), and is allowed
+by the country IE regulatory domain.
 
-Nope - band A works very well - but just like all the vendors, Intel has several SKUs and capabilities differ between the SKUs.
+The following patch considers that IEEE80211_CHAN_PASSIVE_SCAN from
+the custom world regulatory domain should be ignored once we are
+associated, since we now actually know which regulatory domain we are
+in. If the custom regulatory domain was disabling certain frequencies,
+those frequencies will still be disabled with this patch applied.
 
-> 	b) it is on sale too cheap to give it's customers the 'A' band;
+Signed-off-by: Blaise Gassend <blaise.gassend_linux@m4x.org>
+---
+diff --git a/modules/backports-20131025/net/wireless/reg.c
+b/modules/backports-20131025/net/wireless/reg.c
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -837,8 +837,6 @@ static void handle_channel(struct wiphy
 
-As a maintainer / communist / peace lover / whatever I was not chosen to be part of the pricing discussions at Intel...
+        request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
 
-> 	c) a mix of both (or none) of the above;
-> 
-> I kind of doubt it is a) since my laptop would happily stay connected to the
-> router (on AN band) for days.  Were it not for the ugly 'dmesg' i'd never
-> know there is a problem.  I have no idea of the device internals, but blowing
-> up the workqueue (or whatever) is a bit too much.  With or without the A
-> band functionality. ;)
-> 
-> Thanks for taking the time to look at my 'problem'.
-> 
-> 
-> 		Petko
+-       flags = chan->orig_flags;
+-
+        reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq));
+        if (IS_ERR(reg_rule)) {
+                /*
+@@ -892,7 +890,16 @@ static void handle_channel(struct wiphy
+        chan->dfs_state = NL80211_DFS_USABLE;
+        chan->dfs_state_entered = jiffies;
+
+-       chan->beacon_found = false;
++        /*
++         * Clear IEEE80211_CHAN_PASSIVE_SCAN from the driver's flags to
++         * allow the associated country IE to permit active scanning on
++         * frequencies that only allow passive scanning according to the
++         * driver's world regulatory domain. Prior to association, beacon
++         * hints would enable active scanning on these channels.
++         */
++        flags = chan->orig_flags & ~IEEE80211_CHAN_PASSIVE_SCAN;
++
++        chan->beacon_found = false;
+        chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
+        chan->max_antenna_gain =
+                min_t(int, chan->orig_mag,
