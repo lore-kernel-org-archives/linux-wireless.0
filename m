@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49275 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429AbaBJOab (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:47777 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbaBMOt4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 09:30:31 -0500
-Message-ID: <52F8E27D.6020601@broadcom.com> (sfid-20140210_153054_186842_20142256)
-Date: Mon, 10 Feb 2014 15:30:21 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 13 Feb 2014 09:49:56 -0500
+Received: by mail-bk0-f45.google.com with SMTP id mz11so2690524bkb.32
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 06:49:55 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 2/8] iwlwifi: mvm: disable scheduled scan
-References: <52EFFCE8.6070505@gmail.com>	 <1391459962-7381-2-git-send-email-egrumbach@gmail.com>	 <52F5FC02.8050508@broadcom.com> (sfid-20140208_104235_514359_C8CEB8F3) <1392019923.4128.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1392019923.4128.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <8738jn9ijt.fsf@kamboji.qca.qualcomm.com>
+References: <1391676841-11107-1-git-send-email-michal.kazior@tieto.com>
+	<1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
+	<8738jn9ijt.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 13 Feb 2014 15:49:55 +0100
+Message-ID: <CA+BoTQmGWuQe=zjk0eeftE0R-i=+f0ZHoGcCdebc1W69FWRNWw@mail.gmail.com> (sfid-20140213_154959_324633_58201EC8)
+Subject: Re: [PATCH v2] ath10k: implement sta_rc_update()
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2014 09:12 AM, Johannes Berg wrote:
-> On Sat, 2014-02-08 at 10:42 +0100, Arend van Spriel wrote:
->> On 02/03/14 21:39, Emmanuel Grumbach wrote:
->>> From: Johannes Berg<johannes.berg@intel.com>
->>>
->>> The iwlwifi scheduled scan implementation doesn't adhere to the
->>> userspace API correctly - the API assumes that any new incoming
->>> 'incompatible' request (like scan or remain-on-channel for this
->>> driver) will just cancel the scheduled scan. Instead our driver
->>> relies on userspace cancelling it, thus breaking existing wpa_s
->>> versions.
+On 13 February 2014 15:46, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> This allows dynamic changes of bandwidth/nss/smps,
+>> e.g. via ht/vht operation mode change
+>> notification.
 >>
->> I think iwlwifi is not alone in this. At least I have to put a new task 
->> on my todo list ;-)
-> 
-> :)
-> You may decide to not care - newer supplicant seems to always cancel
-> scheduled scan first (although that should never have been required,
-> Broadcom's proprietary Android driver also behaves to require that.)
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> [...]
+>
+>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>> @@ -228,6 +228,17 @@ struct ath10k_peer {
+>>       struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+>>  };
+>>
+>> +struct ath10k_sta {
+>> +     struct ath10k_vif *arvif;
+>> +
+>> +     u32 changed; /* IEEE80211_RC_* */
+>> +     u32 bw;
+>> +     u32 nss;
+>> +     u32 smps;
+>> +
+>> +     struct work_struct update_wk;
+>> +};
+>
+> Apparently this structure is protected with data_lock, but it would be
+> good to document that in the code to make it clear.
 
-When implementing scheduled scan, I found our firmware can handle a
-regular scan regardless whether a scheduled scan is active or not.
+Good point.
 
-> However, you may find that you don't just need to support the latest
-> upstream wpa_supplicant, so ...
 
-Yeah, seems to happen more often than not. Also when people start using
-backports they are advised to upgrade user-space apps as well, but tend
-to stick to what the distro has, so ...
 
-> johannes
+>> +             case IEEE80211_STA_RX_BW_160:
+>> +                     ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
+>> +                     bw = WMI_PEER_CHWIDTH_20MHZ;
+>> +                     break;
+>
+> I think it would be also useful to print STA's address in the warning.
+>
 
-Arend
+[...]
 
+>> +             case IEEE80211_SMPS_NUM_MODES:
+>> +                     ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
+>> +                     smps = WMI_PEER_SMPS_PS_NONE;
+>> +                     break;
+>
+> Maybe here as well?
+
+Sounds good. I'll send a v3 with all these things fixed.
+
+
+Michał
