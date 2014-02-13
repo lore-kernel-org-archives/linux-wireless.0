@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:52251 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753684AbaBLU2E (ORCPT
+Received: from smtprelay0108.hostedemail.com ([216.40.44.108]:45097 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752144AbaBMLOL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 15:28:04 -0500
-Received: by mail-ee0-f48.google.com with SMTP id t10so4557821eei.7
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 12:28:02 -0800 (PST)
-Message-ID: <52FBD950.7080204@gmail.com> (sfid-20140212_212808_654604_93E4D9CF)
-Date: Wed, 12 Feb 2014 22:28:00 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
-Subject: Re: [RFC] iwlwifi: refactor the TX / RX ampdu override
-References: <1392196175-6219-1-git-send-email-egrumbach@gmail.com> <1392203989-15645-1-git-send-email-emmanuel.grumbach@intel.com> <20140212121314.GE1315@redhat.com> <0BA3FCBA62E2DC44AF3030971E174FB303D66597@HASMSX103.ger.corp.intel.com> <20140212140420.GA3379@redhat.com>
-In-Reply-To: <20140212140420.GA3379@redhat.com>
-Content-Type: text/plain; charset=us-ascii
+	Thu, 13 Feb 2014 06:14:11 -0500
+Message-ID: <1392290048.2214.41.camel@joe-AO722> (sfid-20140213_121419_466243_D91A7AD8)
+Subject: Re: [net-next 3/3] cfg80211: add MPLS and 802.21 classification
+From: Joe Perches <joe@perches.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: netdev@vger.kernel.org, davem@davemloft.net,
+	linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de
+Date: Thu, 13 Feb 2014 03:14:08 -0800
+In-Reply-To: <201402131146.01749.sw@simonwunderlich.de>
+References: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
+	 <1392202386-8826-4-git-send-email-sw@simonwunderlich.de>
+	 <1392205783.1868.5.camel@joe-AO722>
+	 <201402131146.01749.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2014-02-13 at 11:46 +0100, Simon Wunderlich wrote:
+
+Hi Simon
+
+> > On Wed, 2014-02-12 at 11:53 +0100, Simon Wunderlich wrote:
+> > > MPLS labels may contain traffic control information, which should be
+> > > evaluated and used by the wireless subsystem if present.
+[]
+> > > diff --git a/net/wireless/util.c b/net/wireless/util.c
+[]
+> > > +#include <uapi/linux/mpls.h>
+> > 
+> > Please try not to #include uapi files.
+> why not? The packet definition header has been put in UAPI, so I need that 
+> there ... or should we move that to some place else? Other protocol definition 
+> headers like IP, udp, tcp have been defined in uapi to the same way, so I 
+> figured that would be the right position.
+
+It seems the practice is to have another include/<net|linux>/mpls.h
+file that #includes the <uapi/linux/mpls.h>
+
+For instance, look at:
+
+include/linux/udp.h
+
+It does #include <uapi/linux/udp.h>
+
+All the other kernel sources use
+
+#include <linux/udp.h>
 
 
-On 02/12/2014 04:04 PM, Stanislaw Gruszka wrote:
-> On Wed, Feb 12, 2014 at 12:27:05PM +0000, Grumbach, Emmanuel wrote:
->>> I think we can keep IWL_DISABLE_HT_ALL option. I should be possible to
->>> make some per-device type default settings and if disable_11n == 0 use
->>> them. Otherwise use settings from module parameter. Will that work ?
->>
->> I'd prefer to have the default based on the iwldvm vs. iwlmvm instead of adding yet another per-HW field. But yeah - it is possible.
-> 
-> I re-think changing default settings do disable TX AGG and must tell
-> that this is very odd. I would prefer to stay defaults as they are now.
-> Users can disable TX aggregation using module option.
 
-I disagree. We have bugs there - it is pretty much obvious. I remember a
-tracing from 2.6.39 which was before the re-architecture I made in the
-driver with clear FW bugs. I don't remember what device though.
-This is why I want to disable this by default.
-You asked me to do this with a module parameter and not with a Kconfig
-option - I agreed.
-Now - if you want to ship with a different settings, you can... but we
-both know the risk.
-
-> 
-> I also not sure if that is really a firmware bug, it is rather more
-> probable that TX aggregation worked pretty fine on 5100 and other older
-> devices, but some driver changes broke that.
-
-Frankly, I don't really remember that... I have to say that I might not
-have been in the business at that period...
