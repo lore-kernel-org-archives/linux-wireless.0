@@ -1,162 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:46597 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751205AbaBWOI4 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37647 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbaBNK3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 09:08:56 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v1 5/6] mac80211: move flag IEEE80211_TX_CTL_TX_OFFCHAN into info->control.flags
-Date: Sun, 23 Feb 2014 15:08:46 +0100
-Message-Id: <1393164527-13800-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140223_150931_137624_772EB089)
-In-Reply-To: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Fri, 14 Feb 2014 05:29:08 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, sw@simonwunderlich.de
+Subject: [PATCH] cfg80211: remove radar requirements check from cfg80211_can_use_iftype_chan()
+Date: Fri, 14 Feb 2014 12:29:03 +0200
+Message-Id: <1392373743-12757-1-git-send-email-luca@coelho.fi> (sfid-20140214_112912_703704_17F53767)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag IEEE80211_TX_CTL_TX_OFFCHAN is only used within the tx path while
-ieee80211_tx_info->control is valid. Therefore this patch moves this flag
-from info->flags structure into the info->control.flags and renames it to
-IEEE80211_TX_CTRL_TX_OFFCHAN.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Alexander Couzens <lynxis@fe80.eu>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+We don't have to double check whether the parameters passed to
+cfg80211_can_use_iftype_chan() are correct.  We should just make sure
+they *are* when we call this function.
+
+Remove the radar_detect argument check in
+cfg80211_can_use_iftype_chan() to simplify the code.
+
+Added comments in every place where this function is called (directly
+or indirectly) explaining how we make sure that the radar_detect
+argument is correct.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- drivers/net/wireless/ti/wlcore/tx.c   |    2 +-
- include/net/mac80211.h                |   22 +++++++++++-----------
- net/mac80211/cfg.c                    |    5 +++--
- net/mac80211/rx.c                     |    4 ++--
- net/mac80211/tx.c                     |    2 +-
- 6 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 776e364..6ca1202 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2017,7 +2017,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.tid = tid;
+This patch is small in actual content, but I added a lot of comments
+explaining why I believe it's okay to remove the checks.  They were
+mostly written for myself while I analysed the possibility of removing
+the radar_detect check from the function.  But I think they are good,
+at least during review, as an argumentation point in favor of removing
+the check.  I can send a v2 without the comments if people think
+they're just noise. ;)
+
+This is done in order to simplify the combinations check and make it
+easier to move the check out of cfg80211.
+
+ net/wireless/core.h    |  6 ++++++
+ net/wireless/ibss.c    | 15 +++++++++------
+ net/wireless/mesh.c    |  8 ++++++++
+ net/wireless/mlme.c    | 12 ++++++++++++
+ net/wireless/nl80211.c |  9 +++++++++
+ net/wireless/util.c    | 33 +--------------------------------
+ 6 files changed, 45 insertions(+), 38 deletions(-)
+
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9895ab1..db35f7f 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -406,6 +406,7 @@ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev,
+ 			      enum nl80211_iftype iftype)
+ {
++	/* Channel is NULL, no need for radar detection */
+ 	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+ 					    CHAN_MODE_UNDEFINED, 0);
+ }
+@@ -426,6 +427,11 @@ cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
+ 		      struct ieee80211_channel *chan,
+ 		      enum cfg80211_chan_mode chanmode)
+ {
++	/*
++	 * The only place that could call us without checking whether
++	 * radar detection is needed is cfg80211_set_mesh_channel() --
++	 * and for libertas only -- but we added a WARN_ON there.
++	 */
+ 	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					    chan, chanmode, 0);
+ }
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 1470b90..59f2c43 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -127,15 +127,18 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.ibss.chandef = params->chandef;
+ #endif
+ 	check_chan = params->chandef.chan;
+-	if (params->userspace_handles_dfs) {
+-		/* use channel NULL to check for radar even if the current
+-		 * channel is not a radar channel - it might decide to change
+-		 * to DFS channel later.
++	if (params->userspace_handles_dfs)
++		/*
++		 * Check for radar even if the current channel is not
++		 * a radar channel - it might decide to change to DFS
++		 * channel later.
+ 		 */
+ 		radar_detect_width = BIT(params->chandef.width);
+-		check_chan = NULL;
+-	}
  
--	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
-+	if (info->control.flags & IEEE80211_TX_CTRL_TX_OFFCHAN) {
- 		spin_lock_bh(&ar->data_lock);
- 		ATH10K_SKB_CB(skb)->htt.is_offchan = true;
- 		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 40b4311..39ba78e 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -181,7 +181,7 @@ u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		return wl12xx_tx_get_hlid_ap(wl, wlvif, skb, sta);
++	/*
++	 * We're guaranteeing with the code above that radar detection
++	 * will always be enabled if the userspace can handle DFS.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   check_chan,
+ 					   (params->channel_fixed &&
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index d42a3fc..7a98440 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -184,6 +184,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		radar_detect_width = BIT(setup->chandef.width);
  
- 	control = IEEE80211_SKB_CB(skb);
--	if (control->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
-+	if (control->control.flags & IEEE80211_TX_CTRL_TX_OFFCHAN) {
- 		wl1271_debug(DEBUG_TX, "tx offchannel");
- 		return wlvif->dev_hlid;
++	/* We're checking if radar detection is needed above */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   setup->chandef.chan,
+ 					   CHAN_MODE_SHARED,
+@@ -236,6 +237,13 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
+ 
++		/*
++		 * cfg80211_can_use_chan() calls
++		 * cfg80211_can_use_iftype_chan() with no radar
++		 * detection, so if we're trying to use a radar
++		 * channel here, something is wrong.
++		 */
++		WARN_ON_ONCE(chandef->chan->flags & IEEE80211_CHAN_RADAR);
+ 		err = cfg80211_can_use_chan(rdev, wdev, chandef->chan,
+ 					    CHAN_MODE_SHARED);
+ 		if (err)
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index d47c9d1..b09a12c 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -233,6 +233,12 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	if (!req.bss)
+ 		return -ENOENT;
+ 
++	/*
++	 * For managed mode, we don't have to check for radar, so
++	 * there's no problem to call cfg80211+can_use_channel() which
++	 * calls cfg80211_can_use_iftype_chan() with no radar
++	 * detection.
++	 */
+ 	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
+ 				    CHAN_MODE_SHARED);
+ 	if (err)
+@@ -306,6 +312,12 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	if (!req->bss)
+ 		return -ENOENT;
+ 
++	/*
++	 * For managed mode, we don't have to check for radar, so
++	 * there's no problem to call cfg80211+can_use_channel() which
++	 * calls cfg80211_can_use_iftype_chan() with no radar
++	 * detection.
++	 */
+ 	err = cfg80211_can_use_chan(rdev, wdev, chan, CHAN_MODE_SHARED);
+ 	if (err)
+ 		goto out;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b78d734..2f46c2d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3263,6 +3263,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		params.radar_required = true;
  	}
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 696aa5a..fbca4dd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -425,10 +425,6 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_LDPC: tells the driver to use LDPC for this frame
-  * @IEEE80211_TX_CTL_STBC: Enables Space-Time Block Coding (STBC) for this
-  *	frame and selects the maximum number of streams that it can use.
-- * @IEEE80211_TX_CTL_TX_OFFCHAN: Marks this packet to be transmitted on
-- *	the off-channel channel when a remain-on-channel offload is done
-- *	in hardware -- normal packets still flow and are expected to be
-- *	handled properly by the device.
-  * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be used for TKIP
-  *	testing. It will be sent out with incorrect Michael MIC key to allow
-  *	TKIP countermeasures to be tested.
-@@ -473,13 +469,12 @@ enum mac80211_tx_info_flags {
- 	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(17),
- 	IEEE80211_TX_CTL_LDPC			= BIT(18),
- 	IEEE80211_TX_CTL_STBC			= BIT(19) | BIT(20),
--	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(21),
--	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(22),
--	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(23),
--	IEEE80211_TX_STATUS_EOSP		= BIT(24),
--	IEEE80211_TX_CTL_USE_MINRATE		= BIT(25),
--	IEEE80211_TX_CTL_DONTFRAG		= BIT(26),
--	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(27),
-+	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(21),
-+	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(22),
-+	IEEE80211_TX_STATUS_EOSP		= BIT(23),
-+	IEEE80211_TX_CTL_USE_MINRATE		= BIT(24),
-+	IEEE80211_TX_CTL_DONTFRAG		= BIT(25),
-+	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(26),
- };
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		19
-@@ -506,6 +501,10 @@ enum mac80211_tx_info_flags {
-  *	transmit function after the current frame, this can be used
-  *	by drivers to kick the DMA queue only if unset or when the
-  *	queue gets full.
-+ * @IEEE80211_TX_CTRL_TX_OFFCHAN: Marks this packet to be transmitted on
-+ *	the off-channel channel when a remain-on-channel offload is done
-+ *	in hardware -- normal packets still flow and are expected to be
-+ *	handled properly by the device.
-  *
-  * These flags are used in tx_info->control.flags.
-  */
-@@ -515,6 +514,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_FIRST_FRAGMENT        = BIT(3),
- 	IEEE80211_TX_CTRL_NO_PS_BUFFER          = BIT(4),
- 	IEEE80211_TX_CTRL_MORE_FRAMES           = BIT(5),
-+	IEEE80211_TX_CTRL_TX_OFFCHAN            = BIT(6),
- };
++	/* We're checking if radar detection is needed above */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
+ 					   CHAN_MODE_SHARED,
+@@ -5794,6 +5795,10 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (!rdev->ops->start_radar_detection)
+ 		return -EOPNOTSUPP;
  
- /*
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1acb291..afdd1a3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3388,8 +3388,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		goto out_unlock;
++	/*
++	 * This is only called if radar detection is required and we
++	 * pass the radar_detect_width properly below.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   chandef.chan, CHAN_MODE_SHARED,
+ 					   BIT(chandef.width));
+@@ -5924,6 +5929,10 @@ skip_beacons:
+ 		}
  	}
  
--	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN |
--					IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
-+	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
-+	IEEE80211_SKB_CB(skb)->control.flags |= IEEE80211_TX_CTRL_TX_OFFCHAN;
-+
- 	if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
- 		IEEE80211_SKB_CB(skb)->hw_queue =
- 			local->hw.offchannel_tx_hw_queue;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 58e4b70..eb54b51 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2750,9 +2750,9 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
- 		if (rx->sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
- 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(nskb);
++	/*
++	 * We guarantee with the code above that radar_detect_width is
++	 * correctly set for the interface types that need it.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
+ 					   CHAN_MODE_SHARED,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 780b454..6a4023a 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1269,45 +1269,14 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	bool radar_required = false;
+ 	int i, j;
++	int ret;
  
--			info->flags = IEEE80211_TX_CTL_TX_OFFCHAN |
--				      IEEE80211_TX_INTFL_OFFCHAN_TX_OK |
-+			info->flags = IEEE80211_TX_INTFL_OFFCHAN_TX_OK |
- 				      IEEE80211_TX_CTL_NO_CCK_RATE;
-+			info->control.flags |= IEEE80211_TX_CTRL_TX_OFFCHAN;
- 			if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
- 				info->hw_queue =
- 					local->hw.offchannel_tx_hw_queue;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6cb6ba3..62b80ef 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1434,7 +1434,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 	info->band = band;
+ 	ASSERT_RTNL();
  
- 	/* set up hw_queue value early */
--	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
-+	if (!(info->control.flags & IEEE80211_TX_CTRL_TX_OFFCHAN) ||
- 	    !(local->hw.flags & IEEE80211_HW_QUEUE_CONTROL))
- 		info->hw_queue =
- 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
+ 
+-	switch (iftype) {
+-	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_MESH_POINT:
+-	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_WDS:
+-		/* if the interface could potentially choose a DFS channel,
+-		 * then mark DFS as required.
+-		 */
+-		if (!chan) {
+-			if (chanmode != CHAN_MODE_UNDEFINED && radar_detect)
+-				radar_required = true;
+-			break;
+-		}
+-		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
+-		break;
+-	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_STATION:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+-	case NL80211_IFTYPE_MONITOR:
+-		break;
+-	case NUM_NL80211_IFTYPES:
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	if (radar_required && !radar_detect)
+-		return -EINVAL;
+-
+ 	/* Always allow software iftypes */
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype)) {
+ 		if (radar_detect)
 -- 
-1.7.9.5
+1.8.5.3
 
