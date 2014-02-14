@@ -1,128 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:38663 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbaBFHER (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:36864 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbaBNVcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 02:04:17 -0500
-Received: by mail-pa0-f50.google.com with SMTP id kp14so1343683pab.9
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2014 23:04:17 -0800 (PST)
+	Fri, 14 Feb 2014 16:32:39 -0500
+Message-ID: <52FE8B74.8020408@lwfinger.net> (sfid-20140214_223244_096026_03D126CD)
+Date: Fri, 14 Feb 2014 15:32:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAAUTuq-HfQj6KZBjnzosRy7pjEtzo5TBa1ko+fjJOO8JA8UyXw@mail.gmail.com>
-References: <CAAUTuq_bgXcfKquXR+ATumO7xkyTE_WLUvUOMZ7bPYCP0_XnuQ@mail.gmail.com>
-	<CAJwzM1kzbvy7UnjJerJ8EmUxvp5GYPeKS-9988SgxfoQrv-Zjw@mail.gmail.com>
-	<CAAUTuq_LnUCTBaHndBiLDk0ge+055YJJMY4Ni+bV7PrYq_KSHA@mail.gmail.com>
-	<CAJwzM1kQJvfZwPi_suBSgCEquAHvYduwRWcM01==nT_TVd0d0g@mail.gmail.com>
-	<CAAUTuq9oU7+=_sjcix0WuSUp5_5OVRXK1cJdtRDtR1obaJrV1Q@mail.gmail.com>
-	<CAAUTuq9dcKvGk0PWhP16=yyK79mE-T-1gbGPpd5G__imimHvBQ@mail.gmail.com>
-	<CAAUTuq-WBMOLQE7FYFd32TrCN=3KwfFKgALs2pZGuBpKqkSDFg@mail.gmail.com>
-	<CAJwzM1mhN7+ydLvF3tV25theZW8jcqjzrKuXFBoUO9SW43xfUA@mail.gmail.com>
-	<CAAUTuq-HfQj6KZBjnzosRy7pjEtzo5TBa1ko+fjJOO8JA8UyXw@mail.gmail.com>
-Date: Thu, 6 Feb 2014 12:34:17 +0530
-Message-ID: <CAJwzM1=TEogsY6o0DwdSkXt1x6wXamd87wLk_MjN2jWSg52r_A@mail.gmail.com> (sfid-20140206_080422_053921_5BA0FC64)
-Subject: Re: mwifiex and SD8787: TX queue timeout in AP mode
-From: Avinash Patil <avinashapatil@gmail.com>
-To: Andrew Wiley <wiley.andrew.j@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Peter Wu <lekensteyn@gmail.com>,
+	Chaoming_Li <chaoming_li@realsil.com.cn>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] rtlwifi: properly apply filter flags
+References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com> <1392401026-18417-3-git-send-email-lekensteyn@gmail.com>
+In-Reply-To: <1392401026-18417-3-git-send-email-lekensteyn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+On 02/14/2014 12:03 PM, Peter Wu wrote:
+> commit 0baa0fd76f3f5a134461d6cf30294f6bb1bb824c
+> ("rtlwifi: Convert core routines for addition of rtl8192se and
+> rtl8192de") removed setting HW_VAR_RCR, HW_VAR_MGT_FILTER and
+> HW_VAR_CTRL_FILTER. The last two are probably done because some hardware
+> does not support them. The first is probably a mistake. This patch adds
+> the missing set_hw_reg call.
+>
+> For PCI support, rx_conf is not touched directly. Instead, get_hw_reg is
+> used to abstract between receive_config (for PCI) and rx_conf (for USB).
+>
+> This was tested on a 10ec:8176 Realtek RTL8188CE (according to the
+> label on the mini-PCIe card). Before this patch, `iw wlan0 set monitor
+> otherbss` did not capture frames from other BSS's. After this patch, it
+> does print packets.
+>
+> Tested-by: Peter Wu <lekensteyn@gmail.com>
+> Signed-off-by: Peter Wu <lekensteyn@gmail.com>
+> ---
 
-I ran this test on my x86_64 machine using 3.13 & same p96 FW. I could
-not reproduce this issue after 4 hrs of ping.
-This issue may be specific to Dreamplug and I dont have this hardware with me.
-Can you please log a bug at bugzilla.kernel.org. Maintainers would
-take care of it from there onwards.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
 Thanks,
-Avinash.
 
-On Wed, Feb 5, 2014 at 12:22 PM, Andrew Wiley <wiley.andrew.j@gmail.com> wrote:
-> Hello Avinash,
+Larry
+
+>   drivers/net/wireless/rtlwifi/core.c | 52 +++++++++++++++++++++----------------
+>   1 file changed, 30 insertions(+), 22 deletions(-)
 >
-> On Tue, Feb 4, 2014 at 9:57 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
->> Hi Andrew,
->>
->> I think this issue not specific to any interface as such.
->>
->> Do you have following fix in your tree:
->>
->> http://www.spinics.net/lists/linux-wireless/msg112753.html
+> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+> index 2d337a0..6df4df0 100644
+> --- a/drivers/net/wireless/rtlwifi/core.c
+> +++ b/drivers/net/wireless/rtlwifi/core.c
+> @@ -475,20 +475,40 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+> +	u32 rx_conf;
 >
-> Yes.
-> I'm running 3.13.1, which includes that fix.
+>   	*new_flags &= RTL_SUPPORTED_FILTERS;
+>   	if (!changed_flags)
+>   		return;
 >
->>
->> Also can you please try printing adapter->int_status during AP TX data timeout?
+> +	/* if ssid not set to hw don't check bssid
+> +	 * here just used for linked scanning, & linked
+> +	 * and nolink check bssid is set in set network_type */
+> +	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
+> +		(mac->link_state >= MAC80211_LINKED)) {
+> +		if (mac->opmode != NL80211_IFTYPE_AP &&
+> +		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
+> +			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
+> +				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
+> +			} else {
+> +				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
+> +			}
+> +		}
+> +	}
+> +
+> +	/* must be called after set_chk_bssid since that function modifies the
+> +	 * RCR register too. */
+> +	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
+> +
+>   	/*TODO: we disable broadcase now, so enable here */
+>   	if (changed_flags & FIF_ALLMULTI) {
+>   		if (*new_flags & FIF_ALLMULTI) {
+> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
+> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
+>   			    rtlpriv->cfg->maps[MAC_RCR_AB];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Enable receive multicast frame\n");
+>   		} else {
+> -			mac->rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
+> +			rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
+>   					  rtlpriv->cfg->maps[MAC_RCR_AB]);
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Disable receive multicast frame\n");
+> @@ -497,39 +517,25 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
 >
-> I added a printk after the TX timeout warning and got this:
+>   	if (changed_flags & FIF_FCSFAIL) {
+>   		if (*new_flags & FIF_FCSFAIL) {
+> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
+> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Enable receive FCS error frame\n");
+>   		} else {
+> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
+> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Disable receive FCS error frame\n");
+>   		}
+>   	}
 >
-> [  437.677151] ------------[ cut here ]------------
-> [  437.681815] WARNING: CPU: 0 PID: 423 at net/sched/sch_generic.c:264
-> dev_watchdog+0x2d0/0x2f0()
-> [  437.690485] NETDEV WATCHDOG: uap0 (mwifiex_sdio): transmit queue 1 timed out
-> [  437.697580] Modules linked in: iptable_raw ipt_MASQUERADE xt_nat
-> iptable_nat nf_nat_ipv4 nf_nat iptable_mangle xt_policy
-> nf_conntrack_ipv4 xt_tcpudp nf_defrag_ipv4 bridge nf_conntrack_ipv6
-> nf_defrag_ipv6 stp llc xt_conntrack nf_conntrack iptable_filter
-> ip6table_filter ip6_tables ip_tables x_tables hid_generic
-> snd_usb_audio snd_usbmidi_lib mwifiex_sdio mwifiex snd_hwdep
-> snd_rawmidi snd_seq_device snd_pcm snd_page_alloc snd_timer cfg80211
-> snd usbhid soundcore hid rfkill mv_cesa usbip_host(C) usbip_core(C)
-> ipv6 autofs4
-> [  437.743904] CPU: 0 PID: 423 Comm: tmux Tainted: G         C
-> 3.13.1-2-ARCH #1
-> [  437.751189] [<c000f01c>] (unwind_backtrace+0x0/0x128) from
-> [<c000c394>] (show_stack+0x10/0x14)
-> [  437.759892] [<c000c394>] (show_stack+0x10/0x14) from [<c001aa80>]
-> (warn_slowpath_common+0x70/0x90)
-> [  437.768923] [<c001aa80>] (warn_slowpath_common+0x70/0x90) from
-> [<c001aad0>] (warn_slowpath_fmt+0x30/0x40)
-> [  437.778563] [<c001aad0>] (warn_slowpath_fmt+0x30/0x40) from
-> [<c04c6e50>] (dev_watchdog+0x2d0/0x2f0)
-> [  437.787673] [<c04c6e50>] (dev_watchdog+0x2d0/0x2f0) from
-> [<c0025bf8>] (call_timer_fn+0x30/0x170)
-> [  437.796512] [<c0025bf8>] (call_timer_fn+0x30/0x170) from
-> [<c00261b4>] (run_timer_softirq+0x1f8/0x368)
-> [  437.805798] [<c00261b4>] (run_timer_softirq+0x1f8/0x368) from
-> [<c001ef00>] (__do_softirq+0xdc/0x304)
-> [  437.814997] [<c001ef00>] (__do_softirq+0xdc/0x304) from
-> [<c001f4a4>] (irq_exit+0xb0/0xf8)
-> [  437.823228] [<c001f4a4>] (irq_exit+0xb0/0xf8) from [<c0009cc0>]
-> (handle_IRQ+0x34/0x84)
-> [  437.831199] [<c0009cc0>] (handle_IRQ+0x34/0x84) from [<c054cb38>]
-> (__irq_usr+0x38/0xa0)
-> [  437.839248] ---[ end trace 14ce7b4e4b0c47cb ]---
-> [  437.843888] mwifiex_sdio mmc0:0001:1: 12617 : Tx timeout(#1),
-> bss_type-num = 1-0
-> [  437.851335] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  447.676774] mwifiex_sdio mmc0:0001:1: 13601 : Tx timeout(#2),
-> bss_type-num = 1-0
-> [  447.684238] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  457.676409] mwifiex_sdio mmc0:0001:1: 14601 : Tx timeout(#3),
-> bss_type-num = 1-0
-> [  457.683848] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  467.676042] mwifiex_sdio mmc0:0001:1: 15601 : Tx timeout(#4),
-> bss_type-num = 1-0
-> [  467.683501] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  477.675679] mwifiex_sdio mmc0:0001:1: 16601 : Tx timeout(#5),
-> bss_type-num = 1-0
-> [  477.683116] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  487.675308] mwifiex_sdio mmc0:0001:1: 17601 : Tx timeout(#6),
-> bss_type-num = 1-0
-> [  487.682760] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  497.674942] mwifiex_sdio mmc0:0001:1: 18601 : Tx timeout(#7),
-> bss_type-num = 1-0
-> [  497.682383] mwifiex_sdio mmc0:0001:1: adapter->int_status = 0
-> [  497.688188] mwifiex_sdio mmc0:0001:1: tx_timeout_cnt exceeds
-> threshold. Triggering card reset!
-> [  497.698397] mwifiex_sdio: Resetting card...
+> -	/* if ssid not set to hw don't check bssid
+> -	 * here just used for linked scanning, & linked
+> -	 * and nolink check bssid is set in set network_type */
+> -	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
+> -		(mac->link_state >= MAC80211_LINKED)) {
+> -		if (mac->opmode != NL80211_IFTYPE_AP &&
+> -		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
+> -			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
+> -				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
+> -			} else {
+> -				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
+> -			}
+> -		}
+> -	}
 >
-> The full log is at
-> http://www.cs.utexas.edu/users/wiley/mwifiexlog_2.txt if you want to
-> take a look - I didn't trim it down this time. It has debug output for
-> mwifiex and mwifiex_sdio.
+>   	if (changed_flags & FIF_CONTROL) {
+>   		if (*new_flags & FIF_CONTROL) {
+> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
+> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
 >
-> Thanks,
-> Andrew
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Enable receive control frame\n");
+>   		} else {
+> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
+> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Disable receive control frame\n");
+>   		}
+> @@ -537,15 +543,17 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
+>
+>   	if (changed_flags & FIF_OTHER_BSS) {
+>   		if (*new_flags & FIF_OTHER_BSS) {
+> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
+> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Enable receive other BSS's frame\n");
+>   		} else {
+> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
+> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+>   				 "Disable receive other BSS's frame\n");
+>   		}
+>   	}
+> +
+> +	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
+>   }
+>   static int rtl_op_sta_add(struct ieee80211_hw *hw,
+>   			 struct ieee80211_vif *vif,
+>
+
