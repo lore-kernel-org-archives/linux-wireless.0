@@ -1,42 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147AbaBYP2U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 10:28:20 -0500
-Message-ID: <1393342096.4170.17.camel@jlt4.sipsolutions.net> (sfid-20140225_162822_441274_CC646CDB)
-Subject: Re: [PATCH] cfg80211: regulatory, introduce NL80211_RRF_AUTO_BW
- rule flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Date: Tue, 25 Feb 2014 16:28:16 +0100
-In-Reply-To: <CAB=NE6XgdG1==4KUpRYsqethg08Qvm_TPksq_9SG-mkwyKn2HQ@mail.gmail.com> (sfid-20140222_011922_942034_8D2D6CA2)
-References: <1392900736-2808-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <CALhHN=oXr+PpiGv47sVzoi2cW_PYDME63sZ7euwtDaoVwnarTA@mail.gmail.com>
-	 <1392971299.4346.20.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6XgdG1==4KUpRYsqethg08Qvm_TPksq_9SG-mkwyKn2HQ@mail.gmail.com>
-	 (sfid-20140222_011922_942034_8D2D6CA2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31466 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751059AbaBNJ5a convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 04:57:30 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id s1E9vTO9025589
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 01:57:29 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1j16gptah7-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 01:57:29 -0800
+From: Avinash Patil <patila@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bing Zhao <bzhao@marvell.com>
+Date: Fri, 14 Feb 2014 01:57:25 -0800
+Subject: RE: mwifiex: parse TDLS action frames during RX
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC22D1A79260@SC-VEXCH2.marvell.com> (sfid-20140214_105742_456385_8057640B)
+References: <20140214090244.GA13684@elgon.mountain>
+In-Reply-To: <20140214090244.GA13684@elgon.mountain>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-21 at 16:19 -0800, Luis R. Rodriguez wrote:
-> On Fri, Feb 21, 2014 at 12:28 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > However, Luis, please sort out this situation, and if bits 9/10 were
-> > ever used by userspace (they were never used by the kernel!) then please
-> > submit a kernel patch that marks them as reserved in nl80211.h. The
-> > kernel header file should be the master file defining the API, not some
-> > "random" userspace tool.
-> 
-> Pretty sure NO-HT40 was never used (claimed bit 10), and not sure why
-> bit bit 9 says reserved, I'm pretty sure it never got used too.
+Hi Dan,
 
-Ok, thanks.
+Thanks for reporting the issue.
 
-johannes
+I will submit a patch to fix this warning.
 
+Thanks and Regards,
+Avinash Patil
+
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
+Sent: Friday, February 14, 2014 2:33 PM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org; Bing Zhao
+Subject: re: mwifiex: parse TDLS action frames during RX
+
+Hello Avinash Patil,
+
+The patch 5f2caaf32bc6: "mwifiex: parse TDLS action frames during RX"
+from Feb 7, 2014, leads to the following static checker warning:
+
+	drivers/net/wireless/mwifiex/tdls.c:820 mwifiex_process_tdls_action_frame()
+	error: memcpy() '&sta_ptr->tdls_cap.rsn_ie' too small (256 vs 257)
+
+drivers/net/wireless/mwifiex/tdls.c
+   814                  case WLAN_EID_EXT_CAPABILITY:
+   815                          memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+   816                                 sizeof(struct ieee_types_header) +
+   817                                 min_t(u8, pos[1], 8));
+   818                          break;
+   819                  case WLAN_EID_RSN:
+   820                          memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+   821                                 sizeof(struct ieee_types_header) + pos[1]);
+
+Smatch thinks pos[] is untrusted data because it comes from skb->data
+in mwifiex_process_rx_packet().
+
+sta_ptr->tdls_cap.rsn_ie is defined like:
+
+struct ieee_types_generic {
+        struct ieee_types_header ieee_hdr;
+        u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
+} __packed;
+
+So it is IEEE_MAX_IE_SIZE (256) bytes long.  Meanwhile the memcpy()
+limit is 2 + 0xff, so it's 257 and we are corrupting a byte past the end
+of the struct.
+
+   822                          break;
+   823                  case WLAN_EID_QOS_CAPA:
+   824                          sta_ptr->tdls_cap.qos_info = pos[2];
+   825                          break;
+
+regards,
+dan carpenter
