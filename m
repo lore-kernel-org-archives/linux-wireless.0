@@ -1,53 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58794 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbaBXUPb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:15:31 -0500
-Date: Mon, 24 Feb 2014 15:03:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com,
-	ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20140217
-Message-ID: <20140224200305.GF24810@tuxdriver.com> (sfid-20140224_211539_152386_81DE66D1)
-References: <87txbx3etu.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87txbx3etu.fsf@kamboji.qca.qualcomm.com>
+Received: from ring0.de ([5.45.105.125]:33049 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421AbaBNXHB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 18:07:01 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 3/5] wl1251: spi: add vio regulator support
+Date: Sat, 15 Feb 2014 00:05:54 +0100
+Message-Id: <1392419156-14394-4-git-send-email-sre@debian.org> (sfid-20140215_000833_864281_6AC71A51)
+In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
+References: <20140125000929.GD25488@atomide.com>
+ <1392419156-14394-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 17, 2014 at 06:05:01PM +0200, Kalle Valo wrote:
-> Hi John,
-> 
-> here's a new pull request for ath6kl and ath10k. 
-> 
-> For ath10k Alexander did some cleanup to PCI error cases and switched
-> ath10k to use pci_enable_msi_range(). Michal implemented AP CSA support
-> and sta_rc_update() operation. I enabled firmware "STA quick kickout"
-> functionality for faster detection of disappeared clients.
-> 
-> Also there are lots of small fixes to everywhere from various people.
-> 
-> For ath6kl Julien did two small USB related fixes.
-> 
-> Please let me know if there are any problmes
-> 
-> The following changes since commit 38dbfb59d1175ef458d006556061adeaa8751b72:
-> 
->   Linus 3.14-rc1 (2014-02-02 16:42:13 -0800)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath.git for-linville
-> 
-> for you to fetch changes up to 9797febc4cc112869b19a110f70e0dedb1bb63d6:
-> 
->   ath10k: implement sta_rc_update() (2014-02-15 08:49:02 +0200)
+This patch adds support for requesting the regulator powering
+the vio pin.
 
-Pulling now...
+Signed-off-by: Sebastian Reichel <sre@debian.org>
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+---
+ drivers/net/wireless/ti/wl1251/spi.c    | 19 +++++++++++++++++--
+ drivers/net/wireless/ti/wl1251/wl1251.h |  2 ++
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 6abcbc3..0a8aacc 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -27,6 +27,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
+ #include <linux/gpio.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include "wl1251.h"
+ #include "reg.h"
+@@ -306,13 +307,26 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 
+ 	irq_set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+ 
+-	ret = wl1251_init_ieee80211(wl);
++	wl->vio = devm_regulator_get(&spi->dev, "vio");
++	if (IS_ERR(wl->vio)) {
++		ret = PTR_ERR(wl->vio);
++		wl1251_error("vio regulator missing: %d", ret);
++		goto out_free;
++	}
++
++	ret = regulator_enable(wl->vio);
+ 	if (ret)
+ 		goto out_free;
+ 
++	ret = wl1251_init_ieee80211(wl);
++	if (ret)
++		goto disable_regulator;
++
+ 	return 0;
+ 
+- out_free:
++disable_regulator:
++	regulator_disable(wl->vio);
++out_free:
+ 	ieee80211_free_hw(hw);
+ 
+ 	return ret;
+@@ -324,6 +338,7 @@ static int wl1251_spi_remove(struct spi_device *spi)
+ 
+ 	free_irq(wl->irq, wl);
+ 	wl1251_free_hw(wl);
++	regulator_disable(wl->vio);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 389fe25..16dae52 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -280,6 +280,8 @@ struct wl1251 {
+ 	int irq;
+ 	bool use_eeprom;
+ 
++	struct regulator *vio;
++
+ 	spinlock_t wl_lock;
+ 
+ 	enum wl1251_state state;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
