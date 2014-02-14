@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44801 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753558AbaBYTaq (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:57477 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbaBNIGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 14:30:46 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/14] brcmfmac: fix use of skb control buffer in SDIO driver part
-Date: Tue, 25 Feb 2014 20:30:27 +0100
-Message-ID: <1393356639-19169-4-git-send-email-arend@broadcom.com> (sfid-20140225_203058_386881_942E9C06)
-In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 14 Feb 2014 03:06:00 -0500
+Received: by mail-ee0-f45.google.com with SMTP id b15so5488046eek.4
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 00:05:59 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] wireless-regdb: set AUTO bandwidth for world regulatory
+Date: Fri, 14 Feb 2014 09:05:49 +0100
+Message-Id: <1392365149-4829-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140214_090611_305332_AA8D2298)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SDIO driver has a 16-bit field defined in the skbuff control buffer.
-However, it is accessed as a u32 overwriting other control info. Another
-issue is that the field is not initialized for networking packets, but
-the control buffer content is unspecified as other networking layers can
-use it.
+Set AUTO bandwidth calculation for world regulatory
+domain. This will fix CRDA veryfication issue for
+world regulatory domain. This will also allow to set
+world regulatory from user mode (using iw/hostapd).
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Before we fail when check bandwidth for rule:
+2457 - 2482 @ 40 - where (2482 - 2457) < 40
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ db.txt |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 631d5dc..fa4ec69 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2112,7 +2112,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
- 		memcpy(pkt_pad->data,
- 		       pkt->data + pkt->len - tail_chop,
- 		       tail_chop);
--		*(u32 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
-+		*(u16 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
- 		skb_trim(pkt, pkt->len - tail_chop);
- 		__skb_queue_after(pktq, pkt, pkt_pad);
- 	} else {
-@@ -2159,7 +2159,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 		 * already properly aligned and does not
- 		 * need an sdpcm header.
- 		 */
--		if (*(u32 *)(pkt_next->cb) & ALIGN_SKB_FLAG)
-+		if (*(u16 *)(pkt_next->cb) & ALIGN_SKB_FLAG)
- 			continue;
- 
- 		/* align packet data pointer */
-@@ -2223,11 +2223,11 @@ brcmf_sdio_txpkt_postp(struct brcmf_sdio *bus, struct sk_buff_head *pktq)
- 	u8 *hdr;
- 	u32 dat_offset;
- 	u16 tail_pad;
--	u32 dummy_flags, chop_len;
-+	u16 dummy_flags, chop_len;
- 	struct sk_buff *pkt_next, *tmp, *pkt_prev;
- 
- 	skb_queue_walk_safe(pktq, pkt_next, tmp) {
--		dummy_flags = *(u32 *)(pkt_next->cb);
-+		dummy_flags = *(u16 *)(pkt_next->cb);
- 		if (dummy_flags & ALIGN_SKB_FLAG) {
- 			chop_len = dummy_flags & ALIGN_SKB_CHOP_LEN_MASK;
- 			if (chop_len) {
-@@ -2709,6 +2709,8 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 
- 	/* Priority based enq */
- 	spin_lock_irqsave(&bus->txqlock, flags);
-+	/* reset bus_flags in packet cb */
-+	*(u16 *)(pkt->cb) = 0;
- 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
- 		skb_pull(pkt, bus->tx_hdrlen);
- 		brcmf_err("out of bus->txq !!!\n");
+diff --git a/db.txt b/db.txt
+index fcab208..1fa16fe 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1,8 +1,8 @@
+ # This is the world regulatory domain
+ country 00:
+-	(2402 - 2472 @ 40), (20)
++	(2402 - 2472 @ AUTO), (20)
+ 	# Channel 12 - 13.
+-	(2457 - 2482 @ 40), (20), NO-IR
++	(2457 - 2482 @ AUTO), (20), NO-IR
+ 	# Channel 14. Only JP enables this and for 802.11b only
+ 	(2474 - 2494 @ 20), (20), NO-IR
+ 	# Channel 36 - 48
 -- 
-1.7.10.4
+1.7.9.5
 
