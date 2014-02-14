@@ -1,172 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:48060 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884AbaBFBpQ (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:33214 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbaBNNyy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 20:45:16 -0500
-From: Calvin Owens <jcalvinowens@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Calvin Owens" <jcalvinowens@gmail.com>
-Subject: [PATCH] ieee80211: Print human-readable disassoc/deauth reason codes
-Date: Wed,  5 Feb 2014 19:44:48 -0600
-Message-Id: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com> (sfid-20140206_024538_346523_8F3C7B77)
+	Fri, 14 Feb 2014 08:54:54 -0500
+Received: by mail-ea0-f174.google.com with SMTP id z10so2432719ead.5
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 05:54:53 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3] ath10k: implement sta_rc_update()
+Date: Fri, 14 Feb 2014 14:49:48 +0100
+Message-Id: <1392385788-3983-1-git-send-email-michal.kazior@tieto.com> (sfid-20140214_145458_379891_4EC00DFA)
+In-Reply-To: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
+References: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a function to return a descriptive string for each reason code,
-and print that instead of the numeric value in the kernel log. These
-codes are easily found on popular search engines, but one is generally
-not able to access the internet when dealing with wireless connectivity
-issues.
+This allows dynamic changes of bandwidth/nss/smps,
+e.g. via ht/vht operation mode change
+notification.
 
-On x86_64, this patch only enlarges the kernel binary by 489 bytes.
-
-Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/mac80211.h | 11 +++++++++
- net/mac80211/main.c    | 66 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mlme.c    | 12 ++++-----
- 3 files changed, 83 insertions(+), 6 deletions(-)
+v2:
+ * fix memset(&arsta, ...) -> memset(arsta, ...)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f4ab2fb..5983b25 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2973,6 +2973,17 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops);
+v3:
+ * document ath10k_sta locking
+ * include peer address in warnings
+ * add a debug message for sta_rc_update() itself
+
+ drivers/net/wireless/ath/ath10k/core.h |  12 +++
+ drivers/net/wireless/ath/ath10k/mac.c  | 157 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |   6 ++
+ 3 files changed, 175 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c0b00e1..5ff6428 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -228,6 +228,18 @@ struct ath10k_peer {
+ 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+ };
  
- /**
-+ * ieee80211_get_reason_code_string - Get human readable reason code
-+ *
-+ * This function returns a string describing the @reason_code.
-+ *
-+ * @reason_code: Reason code we want a human readable string for
-+ *
-+ * Return: Human readable reason string, or "(INVALID)"
-+ */
-+const char *ieee80211_get_reason_code_string(u16 reason_code);
++struct ath10k_sta {
++	struct ath10k_vif *arvif;
 +
-+/**
-  * ieee80211_register_hw - Register hardware device
-  *
-  * You must call this function before any other functions in
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d767cfb..a1eb3ab 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -743,6 +743,72 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- 	return 0;
- }
- 
-+static const char *reason_code_strings[49] = {
-+	"(RESERVED)",
-+	"UNSPECIFIED",
-+	"PREV_AUTH_NOT_VALID",
-+	"DEAUTH_LEAVING",
-+	"DISASSOC_DUE_TO_INACTIVITY",
-+	"DISASSOC_AP_BUSY",
-+	"CLASS2_FRAME_FROM_NONAUTH_STA",
-+	"CLASS3_FRAME_FROM_NONASSOC_STA",
-+	"DISASSOC_STA_HAS_LEFT",
-+	"STA_REQ_ASSOC_WITHOUT_AUTH",
-+	"DISASSOC_BAD_POWER",
-+	"DISASSOC_BAD_SUPP_CHAN",
-+	"(RESERVED)",
-+	"INVALID_IE",
-+	"MIC_FAILURE",
-+	"4WAY_HANDSHAKE_TIMEOUT",
-+	"GROUP_KEY_HANDSHAKE_TIMEOUT",
-+	"IE_DIFFERENT",
-+	"INVALID_GROUP_CIPHER",
-+	"INVALID_PAIRWISE_CIPHER",
-+	"INVALID_AKMP",
-+	"UNSUPP_RSN_VERSION",
-+	"INVALID_RSN_IE_CAP",
-+	"IEEE8021X_FAILED",
-+	"CIPHER_SUITE_REJECTED", /* 24 */
-+	"DISASSOC_UNSPECIFIED_QOS", /* 32 (25) */
-+	"DISASSOC_QAP_NO_BANDWIDTH",
-+	"DISASSOC_LOW_ACK",
-+	"DISASSOC_QAP_EXCEED_TXOP",
-+	"QSTA_LEAVE_QBSS",
-+	"QSTA_NOT_USE",
-+	"QSTA_REQUIRE_SETUP",
-+	"QSTA_TIMEOUT",
-+	"QSTA_CIPHER_NOT_SUPP", /* 45 (33) */
-+	"MESH_PEER_CANCELED", /* 52 (34) */
-+	"MESH_MAX_PEERS",
-+	"MESH_CONFIG",
-+	"MESH_CLOSE",
-+	"MESH_MAX_RETRIES",
-+	"MESH_CONFIRM_TIMEOUT",
-+	"MESH_INVALID_GTK",
-+	"MESH_INCONSISTENT_PARAM",
-+	"MESH_INVALID_SECURITY",
-+	"MESH_PATH_ERROR",
-+	"MESH_PATH_NOFORWARD",
-+	"MESH_PATH_DEST_UNREACHABLE",
-+	"MAC_EXISTS_IN_MBSS",
-+	"MESH_CHAN_REGULATORY",
-+	"MESH_CHAN" /* 66 (48) */
++	/* the following are protected by ar->data_lock */
++	u32 changed; /* IEEE80211_RC_* */
++	u32 bw;
++	u32 nss;
++	u32 smps;
++
++	struct work_struct update_wk;
 +};
 +
-+const char *ieee80211_get_reason_code_string(u16 reason_code)
+ #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
+ 
+ struct ath10k_vif {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 144b4d6..88751f5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3056,6 +3056,69 @@ exit:
+ 	return ret;
+ }
+ 
++static void ath10k_sta_rc_update_wk(struct work_struct *wk)
 +{
-+	if (reason_code <= 24)
-+		return reason_code_strings[reason_code];
-+	else if (reason_code >= 32 && reason_code <= 39)
-+		return reason_code_strings[reason_code - 7];
-+	else if (reason_code == 45)
-+		return reason_code_strings[33];
-+	else if (reason_code >= 52 && reason_code <= 66)
-+		return reason_code_strings[reason_code - 18];
-+	else
-+		return "(INVALID)";
++	struct ath10k *ar;
++	struct ath10k_vif *arvif;
++	struct ath10k_sta *arsta;
++	struct ieee80211_sta *sta;
++	u32 changed, bw, nss, smps;
++	int err;
++
++	arsta = container_of(wk, struct ath10k_sta, update_wk);
++	sta = container_of((void *)arsta, struct ieee80211_sta, drv_priv);
++	arvif = arsta->arvif;
++	ar = arvif->ar;
++
++	spin_lock_bh(&ar->data_lock);
++
++	changed = arsta->changed;
++	arsta->changed = 0;
++
++	bw = arsta->bw;
++	nss = arsta->nss;
++	smps = arsta->smps;
++
++	spin_unlock_bh(&ar->data_lock);
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (changed & IEEE80211_RC_BW_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
++			   sta->addr, bw);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_CHAN_WIDTH, bw);
++		if (err)
++			ath10k_warn("failed to update STA %pM peer bw %d: %d\n",
++				    sta->addr, bw, err);
++	}
++
++	if (changed & IEEE80211_RC_NSS_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM nss %d\n",
++			   sta->addr, nss);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_NSS, nss);
++		if (err)
++			ath10k_warn("failed to update STA %pM nss %d: %d\n",
++				    sta->addr, nss, err);
++	}
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM smps %d\n",
++			   sta->addr, smps);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_SMPS_STATE, smps);
++		if (err)
++			ath10k_warn("failed to update STA %pM smps %d: %d\n",
++				    sta->addr, smps, err);
++	}
++
++	mutex_unlock(&ar->conf_mutex);
 +}
 +
- int ieee80211_register_hw(struct ieee80211_hw *hw)
+ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta,
+@@ -3064,9 +3127,15 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
  {
- 	struct ieee80211_local *local = hw_to_local(hw);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fc1d824..74e4585 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+ 	int max_num_peers;
+ 	int ret = 0;
  
- 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
++	/* cancel must be done outside the mutex to avoid deadlock */
++	if ((old_state == IEEE80211_STA_NONE &&
++	     new_state == IEEE80211_STA_NOTEXIST))
++		cancel_work_sync(&arsta->update_wk);
++
+ 	mutex_lock(&ar->conf_mutex);
  
--	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
--		   bssid, reason_code);
-+	sdata_info(sdata, "deauthenticated from %pM (reason: %s)\n",
-+		   bssid, ieee80211_get_reason_code_string(reason_code));
+ 	if (old_state == IEEE80211_STA_NOTEXIST &&
+@@ -3091,6 +3160,10 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			   "mac vdev %d peer create %pM (new sta) num_peers %d\n",
+ 			   arvif->vdev_id, sta->addr, ar->num_peers);
  
- 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
++		memset(arsta, 0, sizeof(*arsta));
++		arsta->arvif = arvif;
++		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
++
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
+ 		if (ret)
+ 			ath10k_warn("Failed to add peer %pM for vdev %d when adding a new sta: %i\n",
+@@ -3854,6 +3927,88 @@ static void ath10k_channel_switch_beacon(struct ieee80211_hw *hw,
+ 	return;
+ }
  
-@@ -4301,8 +4301,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	bool report_frame = false;
++static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 struct ieee80211_sta *sta,
++				 u32 changed)
++{
++	struct ath10k *ar = hw->priv;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	u32 bw, smps;
++
++	spin_lock_bh(&ar->data_lock);
++
++	ath10k_dbg(ATH10K_DBG_MAC,
++		   "mac sta rc update for %pM changed %08x bw %d nss %d smps %d\n",
++		   sta->addr, changed, sta->bandwidth, sta->rx_nss,
++		   sta->smps_mode);
++
++	if (changed & IEEE80211_RC_BW_CHANGED) {
++		bw = WMI_PEER_CHWIDTH_20MHZ;
++
++		switch (sta->bandwidth) {
++		case IEEE80211_STA_RX_BW_20:
++			bw = WMI_PEER_CHWIDTH_20MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_40:
++			bw = WMI_PEER_CHWIDTH_40MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_80:
++			bw = WMI_PEER_CHWIDTH_80MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_160:
++			ath10k_warn("mac sta rc update for %pM: invalid bw %d\n",
++				    sta->addr, sta->bandwidth);
++			bw = WMI_PEER_CHWIDTH_20MHZ;
++			break;
++		}
++
++		arsta->bw = bw;
++	}
++
++	if (changed & IEEE80211_RC_NSS_CHANGED)
++		arsta->nss = sta->rx_nss;
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED) {
++		smps = WMI_PEER_SMPS_PS_NONE;
++
++		switch (sta->smps_mode) {
++		case IEEE80211_SMPS_AUTOMATIC:
++		case IEEE80211_SMPS_OFF:
++			smps = WMI_PEER_SMPS_PS_NONE;
++			break;
++		case IEEE80211_SMPS_STATIC:
++			smps = WMI_PEER_SMPS_STATIC;
++			break;
++		case IEEE80211_SMPS_DYNAMIC:
++			smps = WMI_PEER_SMPS_DYNAMIC;
++			break;
++		case IEEE80211_SMPS_NUM_MODES:
++			ath10k_warn("mac sta rc update for %pM: invalid smps: %d\n",
++				    sta->addr, sta->smps_mode);
++			smps = WMI_PEER_SMPS_PS_NONE;
++			break;
++		}
++
++		arsta->smps = smps;
++	}
++
++	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
++		/* FIXME: Not implemented. Probably the only way to do it would
++		 * be to re-assoc the peer. */
++		changed &= ~IEEE80211_RC_SUPP_RATES_CHANGED;
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac sta rc update for %pM: changing supported rates not implemented\n",
++			   sta->addr);
++	}
++
++	arsta->changed |= changed;
++
++	spin_unlock_bh(&ar->data_lock);
++
++	ieee80211_queue_work(hw, &arsta->update_wk);
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -3878,6 +4033,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.get_survey			= ath10k_get_survey,
+ 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
+ 	.channel_switch_beacon		= ath10k_channel_switch_beacon,
++	.sta_rc_update			= ath10k_sta_rc_update,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+@@ -4253,6 +4409,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
  
- 	sdata_info(sdata,
--		   "deauthenticating from %pM by local choice (reason=%d)\n",
--		   req->bssid, req->reason_code);
-+		   "deauthenticating from %pM by local choice (reason: %s)\n",
-+		   req->bssid, ieee80211_get_reason_code_string(req->reason_code));
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
++	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
  
- 	if (ifmgd->auth_data) {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
-@@ -4348,8 +4348,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 		return -ENOLINK;
+ 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
  
- 	sdata_info(sdata,
--		   "disassociating from %pM by local choice (reason=%d)\n",
--		   req->bss->bssid, req->reason_code);
-+		   "disassociating from %pM by local choice (reason: %s)\n",
-+		   req->bss->bssid, ieee80211_get_reason_code_string(req->reason_code));
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 083079f..6df4f95 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3876,6 +3876,12 @@ enum wmi_peer_smps_state {
+ 	WMI_PEER_SMPS_DYNAMIC = 0x2
+ };
  
- 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
++enum wmi_peer_chwidth {
++	WMI_PEER_CHWIDTH_20MHZ = 0,
++	WMI_PEER_CHWIDTH_40MHZ = 1,
++	WMI_PEER_CHWIDTH_80MHZ = 2,
++};
++
+ enum wmi_peer_param {
+ 	WMI_PEER_SMPS_STATE = 0x1, /* see %wmi_peer_smps_state */
+ 	WMI_PEER_AMPDU      = 0x2,
 -- 
 1.8.5.3
 
