@@ -1,129 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:60920 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753994AbaBSPr4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 10:47:56 -0500
-Received: by mail-pd0-f169.google.com with SMTP id v10so534150pde.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 07:47:56 -0800 (PST)
-Date: Wed, 19 Feb 2014 07:47:51 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: Re: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
- channels
-Message-ID: <20140219154747.GG14296@garbanzo.do-not-panic.com> (sfid-20140219_164800_667348_091CE29B)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
- <20140218233852.GC14296@garbanzo.do-not-panic.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A0333823B5@HASMSX106.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="llIrKcgUOe3dCx0c"
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A0333823B5@HASMSX106.ger.corp.intel.com>
+Received: from ring0.de ([5.45.105.125]:33027 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752842AbaBNXG6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 18:06:58 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 2/5] wl1251: move power GPIO handling into the driver
+Date: Sat, 15 Feb 2014 00:05:53 +0100
+Message-Id: <1392419156-14394-3-git-send-email-sre@debian.org> (sfid-20140215_000913_156471_A8637AEF)
+In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
+References: <20140125000929.GD25488@atomide.com>
+ <1392419156-14394-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Move the power GPIO handling from the board code into
+the driver. This is a dependency for device tree support.
 
---llIrKcgUOe3dCx0c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sebastian Reichel <sre@debian.org>
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+Acked-by: Tony Lindgren <tony@atomide.com>
+---
+ arch/arm/mach-omap2/board-omap3pandora.c     |  2 ++
+ arch/arm/mach-omap2/board-rx51-peripherals.c | 11 ++--------
+ drivers/net/wireless/ti/wl1251/sdio.c        | 21 +++++++++++++-----
+ drivers/net/wireless/ti/wl1251/spi.c         | 33 ++++++++++++++++++----------
+ drivers/net/wireless/ti/wl1251/wl1251.h      |  2 +-
+ include/linux/wl12xx.h                       |  2 +-
+ 6 files changed, 43 insertions(+), 28 deletions(-)
 
-On Wed, Feb 19, 2014 at 02:52:13PM +0000, Peer, Ilan wrote:
-> > Ilan, also extend the above with language similar to the one I provided=
- on the
-> > cellular base station hints if you ended up adding a device feature cap=
-ability.
-> >=20
->=20
-> You mean specify that this option is enabled, drivers can still use
-> the device specific flags to disable this?
+diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
+index 24f3c1b..cf18340 100644
+--- a/arch/arm/mach-omap2/board-omap3pandora.c
++++ b/arch/arm/mach-omap2/board-omap3pandora.c
+@@ -541,6 +541,8 @@ static void __init pandora_wl1251_init(void)
+ 
+ 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
+ 
++	pandora_wl1251_pdata.power_gpio = -1;
++
+ 	ret = gpio_request_one(PANDORA_WIFI_IRQ_GPIO, GPIOF_IN, "wl1251 irq");
+ 	if (ret < 0)
+ 		goto fail;
+diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+index e05e740..ddfc8df 100644
+--- a/arch/arm/mach-omap2/board-rx51-peripherals.c
++++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+@@ -1173,13 +1173,7 @@ static inline void board_smc91x_init(void)
+ 
+ #endif
+ 
+-static void rx51_wl1251_set_power(bool enable)
+-{
+-	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
+-}
+-
+ static struct gpio rx51_wl1251_gpios[] __initdata = {
+-	{ RX51_WL1251_POWER_GPIO, GPIOF_OUT_INIT_LOW,	"wl1251 power"	},
+ 	{ RX51_WL1251_IRQ_GPIO,	  GPIOF_IN,		"wl1251 irq"	},
+ };
+ 
+@@ -1196,17 +1190,16 @@ static void __init rx51_init_wl1251(void)
+ 	if (irq < 0)
+ 		goto err_irq;
+ 
+-	wl1251_pdata.set_power = rx51_wl1251_set_power;
++	wl1251_pdata.power_gpio = RX51_WL1251_POWER_GPIO;
+ 	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
+ 
+ 	return;
+ 
+ err_irq:
+ 	gpio_free(RX51_WL1251_IRQ_GPIO);
+-	gpio_free(RX51_WL1251_POWER_GPIO);
+ error:
+ 	printk(KERN_ERR "wl1251 board initialisation failed\n");
+-	wl1251_pdata.set_power = NULL;
++	wl1251_pdata.power_gpio = -1;
+ 
+ 	/*
+ 	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
+diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
+index b75a37a..b661f89 100644
+--- a/drivers/net/wireless/ti/wl1251/sdio.c
++++ b/drivers/net/wireless/ti/wl1251/sdio.c
+@@ -28,6 +28,7 @@
+ #include <linux/wl12xx.h>
+ #include <linux/irq.h>
+ #include <linux/pm_runtime.h>
++#include <linux/gpio.h>
+ 
+ #include "wl1251.h"
+ 
+@@ -182,8 +183,9 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+ 		 * callback in case it wants to do any additional setup,
+ 		 * for example enabling clock buffer for the module.
+ 		 */
+-		if (wl->set_power)
+-			wl->set_power(true);
++		if (gpio_is_valid(wl->power_gpio))
++			gpio_set_value(wl->power_gpio, true);
++
+ 
+ 		ret = pm_runtime_get_sync(&func->dev);
+ 		if (ret < 0) {
+@@ -203,8 +205,8 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		if (wl->set_power)
+-			wl->set_power(false);
++		if (gpio_is_valid(wl->power_gpio))
++			gpio_set_value(wl->power_gpio, false);
+ 	}
+ 
+ out:
+@@ -256,11 +258,20 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 
+ 	wl1251_board_data = wl1251_get_platform_data();
+ 	if (!IS_ERR(wl1251_board_data)) {
+-		wl->set_power = wl1251_board_data->set_power;
++		wl->power_gpio = wl1251_board_data->power_gpio;
+ 		wl->irq = wl1251_board_data->irq;
+ 		wl->use_eeprom = wl1251_board_data->use_eeprom;
+ 	}
+ 
++	if (gpio_is_valid(wl->power_gpio)) {
++		ret = devm_gpio_request(&func->dev, wl->power_gpio,
++								"wl1251 power");
++		if (ret) {
++			wl1251_error("Failed to request gpio: %d\n", ret);
++			goto disable;
++		}
++	}
++
+ 	if (wl->irq) {
+ 		irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+ 		ret = request_irq(wl->irq, wl1251_line_irq, 0, "wl1251", wl);
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 62403a1..6abcbc3 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -26,6 +26,7 @@
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
++#include <linux/gpio.h>
+ 
+ #include "wl1251.h"
+ #include "reg.h"
+@@ -221,8 +222,8 @@ static void wl1251_spi_disable_irq(struct wl1251 *wl)
+ 
+ static int wl1251_spi_set_power(struct wl1251 *wl, bool enable)
+ {
+-	if (wl->set_power)
+-		wl->set_power(enable);
++	if (gpio_is_valid(wl->power_gpio))
++		gpio_set_value(wl->power_gpio, enable);
+ 
+ 	return 0;
+ }
+@@ -271,22 +272,33 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->set_power = pdata->set_power;
+-	if (!wl->set_power) {
+-		wl1251_error("set power function missing in platform data");
+-		return -ENODEV;
++	wl->power_gpio = pdata->power_gpio;
++
++	if (gpio_is_valid(wl->power_gpio)) {
++		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
++					GPIOF_OUT_INIT_LOW, "wl1251 power");
++		if (ret) {
++			wl1251_error("Failed to request gpio: %d\n", ret);
++			goto out_free;
++		}
++	} else {
++		wl1251_error("set power gpio missing in platform data");
++		ret = -ENODEV;
++		goto out_free;
+ 	}
+ 
+ 	wl->irq = spi->irq;
+ 	if (wl->irq < 0) {
+ 		wl1251_error("irq missing in platform data");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto out_free;
+ 	}
+ 
+ 	wl->use_eeprom = pdata->use_eeprom;
+ 
+ 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+-	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
++	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
++							DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1251_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+@@ -296,13 +308,10 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 
+ 	ret = wl1251_init_ieee80211(wl);
+ 	if (ret)
+-		goto out_irq;
++		goto out_free;
+ 
+ 	return 0;
+ 
+- out_irq:
+-	free_irq(wl->irq, wl);
+-
+  out_free:
+ 	ieee80211_free_hw(hw);
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 235617a..389fe25 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -276,7 +276,7 @@ struct wl1251 {
+ 	void *if_priv;
+ 	const struct wl1251_if_operations *if_ops;
+ 
+-	void (*set_power)(bool enable);
++	int power_gpio;
+ 	int irq;
+ 	bool use_eeprom;
+ 
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index b516b4f..a9c723b 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -49,7 +49,7 @@ enum {
+ };
+ 
+ struct wl1251_platform_data {
+-	void (*set_power)(bool enable);
++	int power_gpio;
+ 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+ 	int irq;
+ 	bool use_eeprom;
+-- 
+1.8.5.3
 
-Yeap! In particular its important to make it clear that
-enabling this option isn't enough to get enable this feature,
-this option will only be usable on device drivers that have
-support for this feature.
-
-> > > +
-> > > +		if (!other_chan)
-> > > +			continue;
-> > > +
-> > > +		if (chan =3D=3D other_chan)
-> > > +			return true;
-> >=20
-> > This seems to me to indicate that we have allowed here daisy chaining /=
- trust
-> > on another GO who also trusted its AP. That is, we are leaving it up to=
- the
-> > kernel for the above few lines of code to check if the STA was associat=
-ed to
-> > an AP that had DFS support. How do we know the AP the STA was associated
-> > to was not another GO that ran through this permissive check? Is the FCC
-> > happy with that?
-> >=20
->=20
-> This verification should be done by user space, i.e., if the station
-> is a legacy client associated to a GO, then wpa_supplicant should not
-> allow the GO_CONCURRENT relaxation. In addition, a GO instantiated on
-> channel based on this relaxation should not allow connection from
-> legacy clients ... again this should be enforced by user space. System
-> wise this should adhere to the FCC expectations and prevent daisy
-> chaining.
-
-Wow this is a hugely important piece of information, please toss it into
-the documentation both kconfig and wiki (once accepted upstream). As for
-references to userspace you can mention supplicant (wpa_supplicant).
-
-> > Also to be clear, you check for IEEE80211_CHAN_GO_CONCURRENT only on
-> > the caller's channel, not the STA's device, is that OK ? Lets
-> > consider the case case of two different types of interfaces on the
-> > same system. I am aware of at least one 802.11 AP company selling
-> > devices with one 802.11 vendor as the AP and another as the STA. I
-> > don't consider this rare anymore now, as such please think about
-> > this case as well.
->=20
-> The property is of the channel so this should suffice. Overall, I
-> think that the FCC definition rules are centered on the UNII bands, so
-> the rules mandated for a given channel in a specific channel should
-> also hold to other channels in the same UNII band. Ultimately, I would
-> expect all channels in the same UNII band to share the same settings.
-
-OK.
-
-> The iteration in this case is over all the interfaces of the same
-> registered device
-
-This feature seems limited then. Can this be extended to relay on the
-information from any other registered device? I suspect folks may soon
-enter bug reports for this otherwise. That carefulness here seems to
-be an implementation preference, but is it a hard requirement? If not
-then please considering revising all registered devices.
-
-  Luis
-
---llIrKcgUOe3dCx0c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTBNIjAAoJEKwtdpJg+MHGIi8P/1uAMXehEGIoD+BxJZCnX88o
-xvB9MOm5fjViHyoLqDDoGd2XeGuj2/1Mp1RTagjGRNdKR63+fzPRsjxc2H/r7Ium
-QwcZO2Es1yHRGKmaLDUD9QzW3syrGPbCoG+El2ASbRy4nwaxClwZfk4AShMCmZir
-We9xD6DBIefXKsP6Dk3HsNarTUYk3eBSSl9clm4fe/9PwE0Ya/XF85cdFpJV9Q3N
-B/JOEhWkIxlozvE+vjVxZIJu7aVoIz9Y0biCqNaQ+EjsDbYoGpcr60pUcVEUoTji
-kOEjVTq6TLvz6lHY2QvF1efvriHFbRo0ooCBxwZCv4SIU5GoP0GE8Hbe9b6gYaNZ
-vWjCHpq2afwaTGeCRV2ok6D9Uq/V2QjciEcAT5e8A/nPeZlWbzVYQ6plDki3cSh2
-xCoTLh/GUnU7SfSa+40mmq5QkeZhwGe9mFdAOe91lKryrHsXQEG2vU4FVPhSSOB1
-ESO5xwj3gpbsc/h4dVyUxZXwnrRlyXxclhL6L7DeS1xa0sMjgeuxgOW8sVwRck7X
-7LP0DBh9rUEvMjXcCWn9r13FJiWzB0uNW6r76I129y4aDeBDtJAeKqIXMlQsOLZ6
-Y9YC6pYAaSvcwwNR+aV6e80NdfObXmFdpEdgob5YMOELE8mH2tVl/m3c8E5ZELCq
-o+jcxVZ+3/iUICs/90+d
-=FE3R
------END PGP SIGNATURE-----
-
---llIrKcgUOe3dCx0c--
