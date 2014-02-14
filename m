@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:62827 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753003AbaBYNtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:49:47 -0500
-Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0Lu3J4-1XHIiu428E-011RsU for
- <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:45 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 5/7] ath9k-common: set maxstream=1 for ar9271
-Date: Tue, 25 Feb 2014 14:48:54 +0100
-Message-Id: <1393336136-31069-6-git-send-email-linux@rempel-privat.de> (sfid-20140225_144949_667963_2A231E3C)
-In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:64763 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbaBNK40 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 05:56:26 -0500
+Received: by mail-ve0-f172.google.com with SMTP id c14so9520053vea.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 02:56:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1392373327-12063-1-git-send-email-luca@coelho.fi>
+References: <1392373327-12063-1-git-send-email-luca@coelho.fi>
+Date: Fri, 14 Feb 2014 18:56:25 +0800
+Message-ID: <CAEFj985KeAFQkeZ3oWFSR5mgpr9X9fU2n6XTofixnb2yapvg_Q@mail.gmail.com> (sfid-20140214_115630_777243_B567A9E7)
+Subject: Re: [PATCH] nl80211: make sure we check for DFS with mesh channel switch
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/common-init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Luciano Coelho <luciano.coelho@intel.com>
+>
+> Since mesh support for DFS channels was added, we also need to check
+> for DFS channels when performing a channel switch with
+> NL80211_IFTYPE_MESHPOINT.
+>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>  net/wireless/nl80211.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 1797864..b78d734 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -5912,7 +5912,8 @@ skip_beacons:
+>
+>         if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
+>             dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO ||
+> -           dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC) {
+> +           dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC ||
+> +           dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MESH_POINT) {
+>                 err = cfg80211_chandef_dfs_required(wdev->wiphy,
+>                                                     &params.chandef);
+>                 if (err < 0) {
+> --
+> 1.8.5.3
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-index 8e2fa03..8775ab2 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.c
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -191,7 +191,7 @@ void ath9k_cmn_setup_ht_cap(struct ath_hw *ah,
- 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
- 
--	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
-+	if (AR_SREV_9271(ah) || AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
- 		max_streams = 1;
- 	else if (AR_SREV_9462(ah))
- 		max_streams = 2;
--- 
-1.9.0
-
+Acked-by: Chun-Yeow Yeoh <yeohchunyeow@xxxxxxxxxxxxxxxxxx>
