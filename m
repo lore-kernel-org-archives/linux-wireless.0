@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbaBTKI3 (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:61113 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804AbaBNMBC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 05:08:29 -0500
-Message-ID: <1392890906.5073.25.camel@jlt4.sipsolutions.net> (sfid-20140220_110835_307646_F80EF423)
-Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 20 Feb 2014 11:08:26 +0100
-In-Reply-To: <20140220100924.GF23439@redhat.com>
-References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
-	 <20140220092154.GD23439@redhat.com>
-	 <1392888468.5073.11.camel@jlt4.sipsolutions.net>
-	 <20140220094057.GE23439@redhat.com>
-	 <1392889368.5073.17.camel@jlt4.sipsolutions.net>
-	 <20140220100924.GF23439@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 14 Feb 2014 07:01:02 -0500
+Received: by mail-oa0-f54.google.com with SMTP id i4so14546842oah.27
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 04:01:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52FD569F.1070408@hauke-m.de>
+References: <1392311186-7805-1-git-send-email-zajec5@gmail.com>
+	<52FD569F.1070408@hauke-m.de>
+Date: Fri, 14 Feb 2014 13:01:00 +0100
+Message-ID: <CACna6rzAC1Z91TGRffuTcqV-tLpGwE52hzAXOgMstn4mZnLTbg@mail.gmail.com> (sfid-20140214_130106_839924_17AD224F)
+Subject: Re: [3.14 FIX][PATCH] bcma: gpio: register all 32 GPIOs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 11:09 +0100, Stanislaw Gruszka wrote:
-> On Thu, Feb 20, 2014 at 10:42:48AM +0100, Johannes Berg wrote:
-> > On Thu, 2014-02-20 at 10:40 +0100, Stanislaw Gruszka wrote:
-> > 
-> > > > This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
-> > > > clear until after WLAN_STA_PS_DRIVER is?
-> > > 
-> > > Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
-> > > flag currently cleared.
-> > > 
-> > > tatic void sta_unblock(struct work_struct *wk)
-> > > {
-> > >         if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
-> > >                 local_bh_disable();
-> > >                 ieee80211_sta_ps_deliver_wakeup(sta);
-> > >                 local_bh_enable();
-> > > 
-> > > so on TX we should rather check WLAN_STA_PS_DRIVER flag .
-> > 
-> > But that flag may never be set if the driver doesn't support/use it
-> > (which means it's racy, but anyway), so we need to check both.
-> > 
-> > Now I'm confused though. It seems the intent here was to clear the
-> > WLAN_STA_PS_STA flag in something like sta_ps_end() in the RX path, but
-> > we don't do that. I'm not sure how it works now, but I know from testing
-> > that it does ;-)
-> 
-> LOL. There is another call to ieee80211_sta_ps_deliver_wakeup() from
-> sta_ps_end(), I missed this somehow. Anyway, we need to check both
-> flags.
+2014-02-14 0:34 GMT+01:00 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 02/13/2014 06:06 PM, Rafał Miłecki wrote:
+>> Broadcom boards have 32 GPIOs (not 16) and these higher ones are
+>> actually used on some devices (for buttons, reset of WiFi devices).
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> Similar patch may be needed for ssb, however I didn't meet any ssb SoC
+>> with GPIOs 16-31 connected to anything.
+>> This is so trivial I hope it can go as a fix for 3.14. It allows support
+>> for some devices that use these higher GPIOs.
+>> ---
+>>  drivers/bcma/driver_gpio.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+> Are you sure all the bcma SoC have 32 GPIO lines or is there no problem
+> when they do not? For at least some ssb based SoCs I know that they only
+> have 16 GPIO lines.
 
-Yeah but in the case that the driver actually blocked, it's still
-broken ... see my other email.
+Damn, I'm afraid you may be right. I didn't think about that.
 
-johannes
+I was able to find references to GPIOs 16-31 on BCM5357 based boards only.
 
+-- 
+Rafał
