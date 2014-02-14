@@ -1,86 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbaBDI5L (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:51538 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946AbaBNSDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 03:57:11 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: order IEs in probe request correctly
-Date: Tue,  4 Feb 2014 09:57:02 +0100
-Message-Id: <1391504223-12060-2-git-send-email-johannes@sipsolutions.net> (sfid-20140204_095717_280762_E9A64B46)
-In-Reply-To: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
-References: <1391504223-12060-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 14 Feb 2014 13:03:55 -0500
+From: Peter Wu <lekensteyn@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming_Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lekensteyn@gmail.com
+Subject: [PATCH 1/3] rtlwifi: avoid accessing RCR directly
+Date: Fri, 14 Feb 2014 19:03:44 +0100
+Message-Id: <1392401026-18417-2-git-send-email-lekensteyn@gmail.com> (sfid-20140214_190440_635501_8EB7EEF4)
+In-Reply-To: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
+References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The rtl*_set_check_bssid functions are mostly the same, but access the
+RCR register in different ways. Use the get_hw_reg abstraction layer
+(which reads rtlpci->receive_config for PCI devices and mac->rx_conf for
+USB).
 
-In probe request frames, the VHT IEs should come before any
-vendor IEs, but after interworking and similar, so add code
-to order them correctly wrt. the IEs passed from userspace.
+There is no functional change for cases where receive_config was
+accessed directly. For rtl8192ce, there is still no change because
+nothing modifies REG_RCR or receive_config. For rtl8192cu, it now also
+applies changes to rx_conf from configure_filter, but that can be
+considered a bug which is fixed later.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Peter Wu <lekensteyn@gmail.com>
 ---
- net/mac80211/util.c | 32 ++++++++++++++++++++++++++++++--
- 1 file changed, 30 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 5 +++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 4 +++-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 4 +++-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 6 ++++--
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 5 +++--
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 5 +++--
+ 6 files changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 503bbce..caa0cd4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1281,13 +1281,32 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 	 * that calculates local->scan_ies_len.
- 	 */
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index e06971b..ce2226c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -1235,12 +1235,13 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+ void rtl88ee_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	u32 reg_rcr = rtlpci->receive_config;
++	u32 reg_rcr;
  
--	/* add any remaining custom IEs */
-+	/* insert custom IEs that go before VHT */
- 	if (ie && ie_len) {
--		noffset = ie_len;
-+		static const u8 before_vht[] = {
-+			WLAN_EID_SSID,
-+			WLAN_EID_SUPP_RATES,
-+			WLAN_EID_REQUEST,
-+			WLAN_EID_EXT_SUPP_RATES,
-+			WLAN_EID_DS_PARAMS,
-+			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
-+			WLAN_EID_HT_CAPABILITY,
-+			WLAN_EID_BSS_COEX_2040,
-+			WLAN_EID_EXT_CAPABILITY,
-+			WLAN_EID_SSID_LIST,
-+			WLAN_EID_CHANNEL_USAGE,
-+			WLAN_EID_INTERWORKING,
-+			/* mesh ID can't happen here */
-+			/* 60 GHz can't happen here right now */
-+		};
-+		noffset = ieee80211_ie_split(ie, ie_len,
-+					     before_vht, ARRAY_SIZE(before_vht),
-+					     offset);
- 		if (end - pos < noffset - offset)
- 			goto out_err;
- 		memcpy(pos, ie + offset, noffset - offset);
- 		pos += noffset - offset;
-+		offset = noffset;
- 	}
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
  
- 	if (sband->vht_cap.vht_supported) {
-@@ -1297,6 +1316,15 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 						 sband->vht_cap.cap);
- 	}
- 
-+	/* add any remaining custom IEs */
-+	if (ie && ie_len) {
-+		noffset = ie_len;
-+		if (end - pos < noffset - offset)
-+			goto out_err;
-+		memcpy(pos, ie + offset, noffset - offset);
-+		pos += noffset - offset;
-+	}
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
 +
- 	return pos - buffer;
-  out_err:
- 	WARN_ONCE(1, "not enough space for preq IEs\n");
+ 	if (check_bssid == true) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index a82b30a..25e178c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1200,11 +1200,13 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
+ void rtl92ce_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 468bf73..49ad106 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1379,11 +1379,13 @@ void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+-	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid) {
+ 		u8 tmp;
+ 		if (IS_NORMAL_CHIP(rtlhal->version)) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index c4a7db9..c16aa6b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1138,11 +1138,13 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ void rtl92de_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	u32 reg_rcr = rtlpci->receive_config;
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
++
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+index 4f46178..5aa39ef 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -1135,12 +1135,13 @@ void rtl92se_set_mac_addr(struct rtl_io *io, const u8 *addr)
+ void rtl92se_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	u32 reg_rcr = rtlpci->receive_config;
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid) {
+ 		reg_rcr |= (RCR_CBSSID);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+index c333dfd..4680816 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+@@ -1112,12 +1112,13 @@ static int _rtl8723ae_set_media_status(struct ieee80211_hw *hw,
+ void rtl8723ae_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	u32 reg_rcr = rtlpci->receive_config;
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid == true) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
 -- 
-1.8.5.3
+1.8.5.4
 
