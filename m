@@ -1,78 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:39292 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768AbaBJUFf (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:55896 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050AbaBNEZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 15:05:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <BF9457FD-CEED-4290-9150-57F51F6E42FC@goldelico.com>
-References: <1391802529-29861-1-git-send-email-marek@goldelico.com>
-	<1392020862.4128.1.camel@jlt4.sipsolutions.net>
-	<BF9457FD-CEED-4290-9150-57F51F6E42FC@goldelico.com>
-Date: Mon, 10 Feb 2014 21:05:31 +0100
-Message-ID: <CAAfyv354SPRvqmN-AO0GmwNVcDG-6Pxenn8_gt+ta8HY8kJ9vQ@mail.gmail.com> (sfid-20140210_210610_108559_C2F0906B)
-Subject: Re: [PATCH] net: rfkill-regulator: Add devicetree support.
-From: Belisko Marek <marek.belisko@gmail.com>
-To: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Rob Landley <rob@landley.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	Grant Likely <grant.likely@linaro.org>,
-	NeilBrown Brown <neilb@suse.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 13 Feb 2014 23:25:10 -0500
+Received: by mail-pa0-f43.google.com with SMTP id rd3so11703872pab.16
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 20:25:09 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v2] ath10k: implement drv_get_tsf for ibss merging
+Date: Fri, 14 Feb 2014 12:24:55 +0800
+Message-Id: <1392351895-20495-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140214_052520_321800_C593C270)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 10, 2014 at 9:54 AM, Dr. H. Nikolaus Schaller
-<hns@goldelico.com> wrote:
-> Am 10.02.2014 um 09:27 schrieb Johannes Berg:
->
->> On Fri, 2014-02-07 at 20:48 +0100, Marek Belisko wrote:
->>
->>> +#define RFKILL_TYPE_ALL             (0)
->>> +#define RFKILL_TYPE_WLAN    (1)
->>> +#define RFKILL_TYPE_BLUETOOTH       (2)
->>> +#define RFKILL_TYPE_UWB             (3)
->>> +#define RFKILL_TYPE_WIMAX   (4)
->>> +#define RFKILL_TYPE_WWAN    (5)
->>> +#define RFKILL_TYPE_GPS             (6)
->>> +#define RFKILL_TYPE_FM              (7)
->>> +#define RFKILL_TYPE_NFC             (8)
->>
->> This seems like a bad idea since there's an enum elsewhere in userspace
->> API already.
-I know this is duplicate but in device tree we cannot use enums
-(AFAIU include/dt-bindings are defines used in device tree files)
->
-> Yes,
-> you are right. It is defined in include/uapi/linux/rfkill.h
->
-> Tnx,
-> Nikolaus
->
+Implement the get TSF by simply returning 0 so that IBSS
+merging is happening. Otherwise, IBSS nodes that have similar
+SSID naming won't merge. This is simply fooling the mac80211
+that the TSF in the received beacon is higher than the local TSF.
 
-BR,
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+v2: simplify without mutex (Kalle Valo)
 
-marek
+ drivers/net/wireless/ath/ath10k/mac.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index afa1226..f39d1b0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4049,6 +4049,15 @@ static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
+ 	ieee80211_queue_work(hw, &arsta->update_wk);
+ }
+ 
++static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	/* FIXME: Return 0 for time being. Need to figure out whether FW has
++	 * the API to fetch 64-bit local TSF
++	 */
++
++	return 0;
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -4074,6 +4083,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
+ 	.channel_switch_beacon		= ath10k_channel_switch_beacon,
+ 	.sta_rc_update			= ath10k_sta_rc_update,
++	.get_tsf			= ath10k_get_tsf,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
 -- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+1.7.9.5
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
