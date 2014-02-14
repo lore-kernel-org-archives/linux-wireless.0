@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60205 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbaBTJ4j (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:64869 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752481AbaBNVqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:56:39 -0500
-Message-ID: <1392890196.5073.20.camel@jlt4.sipsolutions.net> (sfid-20140220_105644_736051_2F90A199)
-Subject: Re: [PATCH] cfg80211: Pass TDLS peer capability information in
- tdls_mgmt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	c_ppotte@qti.qualcomm.com, djindal@qti.qualcomm.com
-Date: Thu, 20 Feb 2014 10:56:36 +0100
-In-Reply-To: <1392889161.5073.15.camel@jlt4.sipsolutions.net> (sfid-20140220_103930_794452_A9A27F0F)
-References: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com>
-	 (sfid-20140219_161608_023983_BEACD75F) <1392889161.5073.15.camel@jlt4.sipsolutions.net>
-	 (sfid-20140220_103930_794452_A9A27F0F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 14 Feb 2014 16:46:32 -0500
+From: Peter Wu <lekensteyn@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Chaoming_Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] rtlwifi: avoid accessing RCR directly
+Date: Fri, 14 Feb 2014 22:46:28 +0100
+Message-ID: <3888493.2VXzEtRsP2@al> (sfid-20140214_224648_349822_B80C4047)
+In-Reply-To: <52FE8A8C.6040407@lwfinger.net>
+References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com> <1392401026-18417-2-git-send-email-lekensteyn@gmail.com> <52FE8A8C.6040407@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 10:39 +0100, Johannes Berg wrote:
-> Generally, the patch looks fine, but I think you need to modify mac80211
-> as well, and the mwifiex patch doesn't apply to my mac80211-next tree.
+On Friday 14 February 2014 15:28:44 Larry Finger wrote:
+> On 02/14/2014 12:03 PM, Peter Wu wrote:
+> > The rtl*_set_check_bssid functions are mostly the same, but access the
+> > RCR register in different ways. Use the get_hw_reg abstraction layer
+> > (which reads rtlpci->receive_config for PCI devices and mac->rx_conf for
+> > USB).
+> > 
+> > There is no functional change for cases where receive_config was
+> > accessed directly. For rtl8192ce, there is still no change because
+> > nothing modifies REG_RCR or receive_config. For rtl8192cu, it now also
+> > applies changes to rx_conf from configure_filter, but that can be
+> > considered a bug which is fixed later.
+> > 
+> > Signed-off-by: Peter Wu <lekensteyn@gmail.com>
+> 
+> Acked-by: Larry Finger <Larry.Finger@lwfinger>
 
-Also
+TLD is missing ;)
 
-$ git am -s /tmp/\[PATCH\]_cfg80211
-\:_Pass_TDLS_peer_capability_information_in_tdls_mgmt.mbox
-Applying: cfg80211: Pass TDLS peer capability information in tdls_mgmt
-/home/johannes/sys/wireless/.git/rebase-apply/patch:70: trailing
-whitespace.
- * to be added to TDLS Setup frames. 
-warning: 1 line adds whitespace errors.
+> With this change it will not take much work to move all the
+> *_set_check_bssid  functions into a common version in rtlwifi. But that
+> will have to wait as I have one new driver submitted, but not merged, and
+> two others that are not quite ready for submission.
 
+There are three variants of the set_check_bssid functions:
+- four that modify the beacon filter (through _rtl*_set_bcn_ctrl_reg)
+- one (rtl8192se) that does not modify the beacon filter and writes
+  less bits (just RCR_BSSID instead of RCR_BSSID_{DATA,BCN})
+- one (rtl8192cu) that modifies the beacon filter, and depending on
+  the chip version, sets the same bits as rtl8192se, or the other four.
 
+I was not sure where to move the set_bcn_ctrl_reg functions, these
+depend on a value from rtl*/reg.h. Perhaps the [gs]et_hw_reg functions
+can be extended with these registers?
+
+Thanks,
+Peter
 
