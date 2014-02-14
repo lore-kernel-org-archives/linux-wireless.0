@@ -1,139 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:57797 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbaB0HD2 (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33808 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbaBNLOf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 02:03:28 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 14 Feb 2014 06:14:35 -0500
+From: Luciano Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: mvm: fix TX status for aggregated packets
-Date: Thu, 27 Feb 2014 09:03:19 +0200
-Message-Id: <1393484599-8240-2-git-send-email-egrumbach@gmail.com> (sfid-20140227_080334_739294_5CF3BC61)
-In-Reply-To: <530EE0EA.5030105@gmail.com>
-References: <530EE0EA.5030105@gmail.com>
+Cc: johannes@sipsolutions.net, sw@simonwunderlich.de
+Subject: [PATCH v2] cfg80211: remove radar requirements check from cfg80211_can_use_iftype_chan()
+Date: Fri, 14 Feb 2014 13:14:31 +0200
+Message-Id: <1392376471-9354-1-git-send-email-luca@coelho.fi> (sfid-20140214_121439_557085_B421F751)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Only the first packet is currently handled correctly, but then
-all others are assumed to have failed which is problematic. Fix
-this, marking them all successful instead (since if they're not
-then the firmware will have transmitted them as single frames.)
+We don't have to double check whether the parameters passed to
+cfg80211_can_use_iftype_chan() are correct.  We should just make sure
+they *are* when we call this function.
 
-This fixes the lost packet reporting.
+Remove the radar_detect argument check in
+cfg80211_can_use_iftype_chan() to simplify the code.
 
-Also do a tiny variable scoping cleanup.
+Added comments in every place where this function is called (directly
+or indirectly) explaining how we make sure that the radar_detect
+argument is correct.
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[Add the dvm part]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/tx.c | 14 +++++++++-----
- drivers/net/wireless/iwlwifi/mvm/tx.c | 18 +++++++++---------
- 2 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
-index a6839df..398dd096 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -1291,8 +1291,6 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	struct iwl_compressed_ba_resp *ba_resp = (void *)pkt->data;
- 	struct iwl_ht_agg *agg;
- 	struct sk_buff_head reclaimed_skbs;
--	struct ieee80211_tx_info *info;
--	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb;
- 	int sta_id;
- 	int tid;
-@@ -1379,22 +1377,28 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 	freed = 0;
+In v2: removed silly unused variable warning that somehow creeped in
+during my squashes.
+
+This patch is small in actual content, but I added a lot of comments
+explaining why I believe it's okay to remove the checks.  They were
+mostly written for myself while I analysed the possibility of removing
+the radar_detect check from the function.  But I think they are good,
+at least during review, as an argumentation point in favor of removing
+the check.  I can send a v3 without the comments if people think
+they're just noise. ;)
+
+This is done in order to simplify the combinations check and make it
+easier to move the check out of cfg80211.
+
+ net/wireless/core.h    |  6 ++++++
+ net/wireless/ibss.c    | 15 +++++++++------
+ net/wireless/mesh.c    |  8 ++++++++
+ net/wireless/mlme.c    | 12 ++++++++++++
+ net/wireless/nl80211.c |  9 +++++++++
+ net/wireless/util.c    | 32 --------------------------------
+ 6 files changed, 44 insertions(+), 38 deletions(-)
+
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9895ab1..db35f7f 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -406,6 +406,7 @@ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev,
+ 			      enum nl80211_iftype iftype)
+ {
++	/* Channel is NULL, no need for radar detection */
+ 	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+ 					    CHAN_MODE_UNDEFINED, 0);
+ }
+@@ -426,6 +427,11 @@ cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
+ 		      struct ieee80211_channel *chan,
+ 		      enum cfg80211_chan_mode chanmode)
+ {
++	/*
++	 * The only place that could call us without checking whether
++	 * radar detection is needed is cfg80211_set_mesh_channel() --
++	 * and for libertas only -- but we added a WARN_ON there.
++	 */
+ 	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					    chan, chanmode, 0);
+ }
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 1470b90..59f2c43 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -127,15 +127,18 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.ibss.chandef = params->chandef;
+ #endif
+ 	check_chan = params->chandef.chan;
+-	if (params->userspace_handles_dfs) {
+-		/* use channel NULL to check for radar even if the current
+-		 * channel is not a radar channel - it might decide to change
+-		 * to DFS channel later.
++	if (params->userspace_handles_dfs)
++		/*
++		 * Check for radar even if the current channel is not
++		 * a radar channel - it might decide to change to DFS
++		 * channel later.
+ 		 */
+ 		radar_detect_width = BIT(params->chandef.width);
+-		check_chan = NULL;
+-	}
  
- 	skb_queue_walk(&reclaimed_skbs, skb) {
--		hdr = (struct ieee80211_hdr *)skb->data;
-+		struct ieee80211_hdr *hdr = (void *)skb->data;
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	/*
++	 * We're guaranteeing with the code above that radar detection
++	 * will always be enabled if the userspace can handle DFS.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   check_chan,
+ 					   (params->channel_fixed &&
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index d42a3fc..7a98440 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -184,6 +184,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		radar_detect_width = BIT(setup->chandef.width);
  
- 		if (ieee80211_is_data_qos(hdr->frame_control))
- 			freed++;
- 		else
- 			WARN_ON_ONCE(1);
++	/* We're checking if radar detection is needed above */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   setup->chandef.chan,
+ 					   CHAN_MODE_SHARED,
+@@ -236,6 +237,13 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
  
--		info = IEEE80211_SKB_CB(skb);
- 		iwl_trans_free_tx_cmd(priv->trans, info->driver_data[1]);
- 
-+		memset(&info->status, 0, sizeof(info->status));
-+		/* Packet was transmitted successfully, failures come as single
-+		 * frames because before failing a frame the firmware transmits
-+		 * it without aggregation at least once.
++		/*
++		 * cfg80211_can_use_chan() calls
++		 * cfg80211_can_use_iftype_chan() with no radar
++		 * detection, so if we're trying to use a radar
++		 * channel here, something is wrong.
 +		 */
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+
- 		if (freed == 1) {
- 			/* this is the first skb we deliver in this batch */
- 			/* put the rate scaling data there */
- 			info = IEEE80211_SKB_CB(skb);
- 			memset(&info->status, 0, sizeof(info->status));
--			info->flags |= IEEE80211_TX_STAT_ACK;
- 			info->flags |= IEEE80211_TX_STAT_AMPDU;
- 			info->status.ampdu_ack_len = ba_resp->txed_2_done;
- 			info->status.ampdu_len = ba_resp->txed;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 4df12fa..76ee486 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -822,16 +822,12 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	struct iwl_mvm_ba_notif *ba_notif = (void *)pkt->data;
- 	struct sk_buff_head reclaimed_skbs;
- 	struct iwl_mvm_tid_data *tid_data;
--	struct ieee80211_tx_info *info;
- 	struct ieee80211_sta *sta;
- 	struct iwl_mvm_sta *mvmsta;
--	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb;
- 	int sta_id, tid, freed;
++		WARN_ON_ONCE(chandef->chan->flags & IEEE80211_CHAN_RADAR);
+ 		err = cfg80211_can_use_chan(rdev, wdev, chandef->chan,
+ 					    CHAN_MODE_SHARED);
+ 		if (err)
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index d47c9d1..b09a12c 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -233,6 +233,12 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	if (!req.bss)
+ 		return -ENOENT;
+ 
++	/*
++	 * For managed mode, we don't have to check for radar, so
++	 * there's no problem to call cfg80211+can_use_channel() which
++	 * calls cfg80211_can_use_iftype_chan() with no radar
++	 * detection.
++	 */
+ 	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
+ 				    CHAN_MODE_SHARED);
+ 	if (err)
+@@ -306,6 +312,12 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	if (!req->bss)
+ 		return -ENOENT;
+ 
++	/*
++	 * For managed mode, we don't have to check for radar, so
++	 * there's no problem to call cfg80211+can_use_channel() which
++	 * calls cfg80211_can_use_iftype_chan() with no radar
++	 * detection.
++	 */
+ 	err = cfg80211_can_use_chan(rdev, wdev, chan, CHAN_MODE_SHARED);
+ 	if (err)
+ 		goto out;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b78d734..2f46c2d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3263,6 +3263,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		params.radar_required = true;
+ 	}
+ 
++	/* We're checking if radar detection is needed above */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
+ 					   CHAN_MODE_SHARED,
+@@ -5794,6 +5795,10 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (!rdev->ops->start_radar_detection)
+ 		return -EOPNOTSUPP;
+ 
++	/*
++	 * This is only called if radar detection is required and we
++	 * pass the radar_detect_width properly below.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   chandef.chan, CHAN_MODE_SHARED,
+ 					   BIT(chandef.width));
+@@ -5924,6 +5929,10 @@ skip_beacons:
+ 		}
+ 	}
+ 
++	/*
++	 * We guarantee with the code above that radar_detect_width is
++	 * correctly set for the interface types that need it.
++	 */
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
+ 					   CHAN_MODE_SHARED,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 780b454..09ee2d8 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1269,7 +1269,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	bool radar_required = false;
+ 	int i, j;
+ 
+ 	ASSERT_RTNL();
+@@ -1277,37 +1276,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
+ 
+-	switch (iftype) {
+-	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_MESH_POINT:
+-	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_WDS:
+-		/* if the interface could potentially choose a DFS channel,
+-		 * then mark DFS as required.
+-		 */
+-		if (!chan) {
+-			if (chanmode != CHAN_MODE_UNDEFINED && radar_detect)
+-				radar_required = true;
+-			break;
+-		}
+-		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
+-		break;
+-	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_STATION:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+-	case NL80211_IFTYPE_MONITOR:
+-		break;
+-	case NUM_NL80211_IFTYPES:
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-	default:
+-		return -EINVAL;
+-	}
 -
- 	/* "flow" corresponds to Tx queue */
- 	u16 scd_flow = le16_to_cpu(ba_notif->scd_flow);
+-	if (radar_required && !radar_detect)
+-		return -EINVAL;
 -
- 	/* "ssn" is start of block-ack Tx window, corresponds to index
- 	 * (in Tx queue's circular buffer) of first TFD/frame in window */
- 	u16 ba_resp_scd_ssn = le16_to_cpu(ba_notif->scd_ssn);
-@@ -888,22 +884,26 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	freed = 0;
- 
- 	skb_queue_walk(&reclaimed_skbs, skb) {
--		hdr = (struct ieee80211_hdr *)skb->data;
-+		struct ieee80211_hdr *hdr = (void *)skb->data;
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 		if (ieee80211_is_data_qos(hdr->frame_control))
- 			freed++;
- 		else
- 			WARN_ON_ONCE(1);
- 
--		info = IEEE80211_SKB_CB(skb);
- 		iwl_trans_free_tx_cmd(mvm->trans, info->driver_data[1]);
- 
-+		memset(&info->status, 0, sizeof(info->status));
-+		/* Packet was transmitted successfully, failures come as single
-+		 * frames because before failing a frame the firmware transmits
-+		 * it without aggregation at least once.
-+		 */
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+
- 		if (freed == 1) {
- 			/* this is the first skb we deliver in this batch */
- 			/* put the rate scaling data there */
--			info = IEEE80211_SKB_CB(skb);
--			memset(&info->status, 0, sizeof(info->status));
--			info->flags |= IEEE80211_TX_STAT_ACK;
- 			info->flags |= IEEE80211_TX_STAT_AMPDU;
- 			info->status.ampdu_ack_len = ba_notif->txed_2_done;
- 			info->status.ampdu_len = ba_notif->txed;
+ 	/* Always allow software iftypes */
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype)) {
+ 		if (radar_detect)
 -- 
-1.8.3.2
+1.8.5.3
 
