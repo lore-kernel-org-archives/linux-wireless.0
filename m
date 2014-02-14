@@ -1,156 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46525 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbaBZLuW (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:57324 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbaBNPkw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 06:50:22 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v6 4/4] cfg80211/mac80211: move combination check to mac80211 for ibss
-Date: Wed, 26 Feb 2014 13:50:09 +0200
-Message-Id: <1393415409-14751-5-git-send-email-luca@coelho.fi> (sfid-20140226_125028_793687_F2D25D42)
-In-Reply-To: <1393415409-14751-1-git-send-email-luca@coelho.fi>
-References: <1393415409-14751-1-git-send-email-luca@coelho.fi>
+	Fri, 14 Feb 2014 10:40:52 -0500
+Received: by mail-ob0-f173.google.com with SMTP id vb8so14241955obc.32
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 07:40:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140214142726.GL22203@tuxdriver.com>
+References: <1392311186-7805-1-git-send-email-zajec5@gmail.com>
+	<52FD569F.1070408@hauke-m.de>
+	<CACna6rzAC1Z91TGRffuTcqV-tLpGwE52hzAXOgMstn4mZnLTbg@mail.gmail.com>
+	<20140214142726.GL22203@tuxdriver.com>
+Date: Fri, 14 Feb 2014 16:40:51 +0100
+Message-ID: <CACna6rw4uHpvnC0Bx5VffQbN=Lq2WGPao7pKj0Ff3tGrPSk25A@mail.gmail.com> (sfid-20140214_164056_177234_B7FC3D3C)
+Subject: Re: [3.14 FIX][PATCH] bcma: gpio: register all 32 GPIOs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+2014-02-14 15:27 GMT+01:00 John W. Linville <linville@tuxdriver.com>:
+> On Fri, Feb 14, 2014 at 01:01:00PM +0100, Rafał Miłecki wrote:
+>> 2014-02-14 0:34 GMT+01:00 Hauke Mehrtens <hauke@hauke-m.de>:
+>> > On 02/13/2014 06:06 PM, Rafał Miłecki wrote:
+>> >> Broadcom boards have 32 GPIOs (not 16) and these higher ones are
+>> >> actually used on some devices (for buttons, reset of WiFi devices).
+>> >>
+>> >> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> >> ---
+>> >> Similar patch may be needed for ssb, however I didn't meet any ssb SoC
+>> >> with GPIOs 16-31 connected to anything.
+>> >> This is so trivial I hope it can go as a fix for 3.14. It allows support
+>> >> for some devices that use these higher GPIOs.
+>> >> ---
+>> >>  drivers/bcma/driver_gpio.c | 2 +-
+>> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >>
+>> > Are you sure all the bcma SoC have 32 GPIO lines or is there no problem
+>> > when they do not? For at least some ssb based SoCs I know that they only
+>> > have 16 GPIO lines.
+>>
+>> Damn, I'm afraid you may be right. I didn't think about that.
+>>
+>> I was able to find references to GPIOs 16-31 on BCM5357 based boards only.
+>
+> Sounds like I need to revert that patch.
+>
+> Please never, _ever_, post a patch (no matter how trivial) for the
+> stable tree unless you are absolutely sure about it in the first place.
 
-Now that mac80211 can check the interface combinations itself, move
-the combinations check from cfg80211 to mac80211 when joining an IBSS.
+I'm sorry. I got blinded by the triviality :(
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In v2:
-
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations(). (Thanks Michal);
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-In v3:
-
-   * moved the second change from v2 (pass the mode argument...) to
-     the previous patch, where it should be;
-
-In v4:
-
-   * rebased on top of slightly modified applied patches
-
-In v5:
-
-   * use local and sdata in ibss when calling
-     ieee80211_check_combinations()
----
- net/mac80211/ibss.c | 29 ++++++++++++++++++++++++++---
- net/wireless/ibss.c | 28 ----------------------------
- 2 files changed, 26 insertions(+), 31 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index bca7d09..f1377e5 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1643,7 +1643,30 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	u32 changed = 0;
- 	u32 rate_flags;
- 	struct ieee80211_supported_band *sband;
-+	enum ieee80211_chanctx_mode chanmode;
-+	struct ieee80211_local *local = sdata->local;
-+	int radar_detect_width;
- 	int i;
-+	int ret;
-+
-+	radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
-+							   &params->chandef,
-+							   sdata->vif.type);
-+	if (radar_detect_width < 0)
-+		return radar_detect_width;
-+
-+	if (radar_detect_width > 0 && !params->userspace_handles_dfs)
-+		return -EINVAL;
-+
-+	chanmode = (params->channel_fixed && !radar_detect_width) ?
-+		IEEE80211_CHANCTX_SHARED : IEEE80211_CHANCTX_EXCLUSIVE;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	ret = ieee80211_check_combinations(local, sdata, &params->chandef,
-+					   chanmode, radar_detect_width);
-+	mutex_unlock(&local->chanctx_mtx);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (params->bssid) {
- 		memcpy(sdata->u.ibss.bssid, params->bssid, ETH_ALEN);
-@@ -1658,7 +1681,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 
- 	/* fix basic_rates if channel does not support these rates */
- 	rate_flags = ieee80211_chandef_rate_flags(&params->chandef);
--	sband = sdata->local->hw.wiphy->bands[params->chandef.chan->band];
-+	sband = local->hw.wiphy->bands[params->chandef.chan->band];
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
- 			sdata->u.ibss.basic_rates &= ~BIT(i);
-@@ -1707,9 +1730,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	sdata->smps_mode = IEEE80211_SMPS_OFF;
--	sdata->needed_rx_chains = sdata->local->rx_chains;
-+	sdata->needed_rx_chains = local->rx_chains;
- 
--	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- 
- 	return 0;
- }
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index d81cb68..8282de8 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -88,8 +88,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 			 struct cfg80211_cached_keys *connkeys)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	struct ieee80211_channel *check_chan;
--	u8 radar_detect_width = 0;
- 	int err;
- 
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -126,32 +124,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- #ifdef CONFIG_CFG80211_WEXT
- 	wdev->wext.ibss.chandef = params->chandef;
- #endif
--	check_chan = params->chandef.chan;
--	if (params->userspace_handles_dfs) {
--		/* Check for radar even if the current channel is not
--		 * a radar channel - it might decide to change to DFS
--		 * channel later.
--		 */
--		radar_detect_width = BIT(params->chandef.width);
--	}
--
--	/* TODO: We need to check the combinations at this point, we
--	 * probably must move this call down to join_ibss() in
--	 * mac80211.
--	 */
--	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
--					   check_chan,
--					   (params->channel_fixed &&
--					    !radar_detect_width)
--					   ? CHAN_MODE_SHARED
--					   : CHAN_MODE_EXCLUSIVE,
--					   radar_detect_width);
--
--	if (err) {
--		wdev->connect_keys = NULL;
--		return err;
--	}
--
- 	err = rdev_join_ibss(rdev, dev, params);
- 	if (err) {
- 		wdev->connect_keys = NULL;
 -- 
-1.8.5.3
-
+Rafał
