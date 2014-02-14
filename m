@@ -1,103 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:62909 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732AbaBZLkG (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:43486 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbaBNKWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 06:40:06 -0500
-Received: by mail-ea0-f173.google.com with SMTP id n15so834615ead.4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 03:40:05 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/8] ath10k: remove is_aborted from skb_cb
-Date: Wed, 26 Feb 2014 12:34:19 +0100
-Message-Id: <1393414465-3666-3-git-send-email-michal.kazior@tieto.com> (sfid-20140226_124010_695758_36F522F0)
-In-Reply-To: <1393414465-3666-1-git-send-email-michal.kazior@tieto.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
- <1393414465-3666-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 14 Feb 2014 05:22:13 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, yeohchunyeow@gmail.com,
+	sw@simonwunderlich.de
+Subject: [PATCH] nl80211: make sure we check for DFS with mesh channel switch
+Date: Fri, 14 Feb 2014 12:22:07 +0200
+Message-Id: <1392373327-12063-1-git-send-email-luca@coelho.fi> (sfid-20140214_112216_421945_D6BDFE3C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag wasn't used anymore. No need to keep it.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Since mesh support for DFS channels was added, we also need to check
+for DFS channels when performing a channel switch with
+NL80211_IFTYPE_MESHPOINT.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 -
- drivers/net/wireless/ath/ath10k/pci.c  | 20 --------------------
- 2 files changed, 21 deletions(-)
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 082fa77..7cf022d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -62,7 +62,6 @@ struct ath10k;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1797864..b78d734 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5912,7 +5912,8 @@ skip_beacons:
  
- struct ath10k_skb_cb {
- 	dma_addr_t paddr;
--	bool is_aborted;
- 	u8 vdev_id;
- 
- 	struct {
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 34f0910..d973975 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -63,7 +63,6 @@ static int ath10k_pci_post_rx(struct ath10k *ar);
- static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
- 					     int num);
- static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
--static void ath10k_pci_stop_ce(struct ath10k *ar);
- static int ath10k_pci_cold_reset(struct ath10k *ar);
- static int ath10k_pci_warm_reset(struct ath10k *ar);
- static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
-@@ -993,22 +992,6 @@ static void ath10k_pci_kill_tasklet(struct ath10k *ar)
- 		tasklet_kill(&ar_pci->pipe_info[i].intr);
- }
- 
--static void ath10k_pci_stop_ce(struct ath10k *ar)
--{
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ath10k_pci_compl *compl;
--	struct sk_buff *skb;
--
--	/* Mark pending completions as aborted, so that upper layers free up
--	 * their associated resources */
--	spin_lock_bh(&ar_pci->compl_lock);
--	list_for_each_entry(compl, &ar_pci->compl_process, list) {
--		skb = compl->skb;
--		ATH10K_SKB_CB(skb)->is_aborted = true;
--	}
--	spin_unlock_bh(&ar_pci->compl_lock);
--}
--
- static void ath10k_pci_cleanup_ce(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -1339,7 +1322,6 @@ err_stop:
- 	ath10k_ce_disable_interrupts(ar);
- 	ath10k_pci_free_irq(ar);
- 	ath10k_pci_kill_tasklet(ar);
--	ath10k_pci_stop_ce(ar);
- 	ath10k_pci_process_ce(ar);
- err_free_compl:
- 	ath10k_pci_cleanup_ce(ar);
-@@ -1424,7 +1406,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
- 			continue;
- 		}
- 
--		ATH10K_SKB_CB(netbuf)->is_aborted = true;
- 		ar_pci->msg_callbacks_current.tx_completion(ar,
- 							    netbuf,
- 							    id);
-@@ -1482,7 +1463,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 
- 	ath10k_pci_free_irq(ar);
- 	ath10k_pci_kill_tasklet(ar);
--	ath10k_pci_stop_ce(ar);
- 
- 	ret = ath10k_pci_request_early_irq(ar);
- 	if (ret)
+ 	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
+ 	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO ||
+-	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC) {
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC ||
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MESH_POINT) {
+ 		err = cfg80211_chandef_dfs_required(wdev->wiphy,
+ 						    &params.chandef);
+ 		if (err < 0) {
 -- 
 1.8.5.3
 
