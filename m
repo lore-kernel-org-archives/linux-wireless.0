@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:30317 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbaBKDzW (ORCPT
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:45606 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582AbaBNBzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 22:55:22 -0500
-Message-ID: <52F99ED7.3090304@huawei.com> (sfid-20140211_045541_321219_95568E2D)
-Date: Tue, 11 Feb 2014 11:53:59 +0800
-From: Zhao Hongjiang <zhaohongjiang@huawei.com>
+	Thu, 13 Feb 2014 20:55:12 -0500
+Received: by mail-ve0-f172.google.com with SMTP id c14so9346314vea.3
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 17:55:11 -0800 (PST)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<zhousiyi@huawei.com>
-Subject: Re: Get multiple ip addresses by dhcp for wireless card
-References: <52F84DFD.4030602@huawei.com> <52F87608.808@candelatech.com> <52F88FEA.3000102@huawei.com> <52F92696.3030003@candelatech.com>
-In-Reply-To: <52F92696.3030003@candelatech.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <87r4767rmo.fsf@kamboji.qca.qualcomm.com>
+References: <1392197844-1223-1-git-send-email-yeohchunyeow@gmail.com>
+	<87r4767rmo.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 14 Feb 2014 09:55:11 +0800
+Message-ID: <CAEFj986=ABAqRYXcL9_Ov8MkHVfjOnc=y9nx65hFXbBcH61WyQ@mail.gmail.com> (sfid-20140214_025517_306889_2C2CD51F)
+Subject: Re: [PATCH] ath10k: implement drv_get_tsf for ibss merging
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014/2/11 3:20, Ben Greear wrote:
-> On 02/10/2014 12:38 AM, Zhao Hongjiang wrote:
->> On 2014/2/10 14:47, Ben Greear wrote:
->>> On 02/09/2014 07:56 PM, Zhao Hongjiang wrote:
->>>> Hello,
->>>>
->>>> Is it possible for one station to get multiple ip addresses from AP/Wireless
->>>> router by dhcp? I had tried to add one or more virtual interface for
->>>> phy0 (wlan0, wlan1, wlan2,etc), but only wlan0 can get ip address from AP.
->>>> the following is the steps:
->>>>
->>>> /bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
->>>> /bin/wpa_cli -i wlan0 -p /wlan0
->>>>> add_network
->>>>> set_network 0 ssid "APabc"
->>>>> set_network 0 psk "1111111"
->>>>> enable_network 0
->>>>
->>>> iw wlan0 interface add wlan1 type station 4addr on
->>>> ip link set wlan1 up
->>>> dhcpcd -ABKL wlan0 #works, can get ip
->>>> dhcpcd -ABKL wlan1 #cannot work
->>>
->>> Virtual stations work just fine for me, though I don't use that '4addr' thing.
->>> ...maybe sniff your wlan1 and see if it is sending
->>> out proper DHCP requests (and they are being received by the AP)?
->>>
->>> You have to create a new supplicant config for each virtual station,
->>> or run a unique supplicant instance for each station.
->>
->> I try to follow the instruction which you give and do the following command, but wlan1 
->> cannot associate with AP.
-> 
-> What driver are you using?  I'm not sure anything other than ath9k
-> can do this feature.  Ath5k probably works, and definitely worked
-> at one time.  Ath10k supports this to some degree, and will have more
-> support in the future.
-> 
-> You typically have to disable hardware crypt to make this work.
-> 
-I use bcm4329 chipset and it don't have "Disable HW encryption" options.
-any suggestion for this is appreciated, thanks very much.
+> Yeah, this extremely ugly but don't really know any better way to handle
+> this now.
 
-> Thanks,
-> Ben
-> 
+I have observed that we have ath10k_wmi_event_tsf_measurement_report,
+but no so sure how to trigger this event.
 
+> But why do you need to take conf_mutex? Isn't this enough:
+>
+> +static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+> +{
+> +       /*
+> +        * FIXME: Return 0 for time being. Need to figure out whether FW
+> +        * has the API to fetch 64-bit TSF
+> +        */
+> +
+> +       return 0;
+> +}
 
+Ya, I think this is enough for time being. I will submit v2 on this.
+
+-----
+Chun-Yeow
