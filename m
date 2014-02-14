@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45422 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696AbaBJLJQ (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:36422 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbaBNJC4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 06:09:16 -0500
-Message-ID: <1392030546.4128.11.camel@jlt4.sipsolutions.net> (sfid-20140210_120920_914594_C1DFFA84)
-Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
- codes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: Calvin Owens <jcalvinowens@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 10 Feb 2014 12:09:06 +0100
-In-Reply-To: <1391661863.30094.56.camel@joe-AO722>
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
-	 <1391661863.30094.56.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 14 Feb 2014 04:02:56 -0500
+Date: Fri, 14 Feb 2014 12:02:44 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: patila@marvell.com
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+Subject: re: mwifiex: parse TDLS action frames during RX
+Message-ID: <20140214090244.GA13684@elgon.mountain> (sfid-20140214_100331_655666_8B148305)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-05 at 20:44 -0800, Joe Perches wrote:
+Hello Avinash Patil,
 
-> Perhaps use a more common kernel style
-> 
-> struct ieee80211_reason_descriptions {
-> 	u16		code;
-> 	const char *	desc;
-> }
-> 
-> and enumerate the reason codes with #defines and use a
-> macro to populate the descriptions
-> 
-> #define IEEE80211_REASON_RESERVED		0
-> #define IEEE80211_REASON_UNSPECIFIED		1
-> 
-> etc.
-> 
-> #define POPULATE_IEEE_REASON(code)			\
-> 	{.code = IEEE80211_REASON_##code, .desc = #code}
-> 
-> static const struct ieee80211_reason_descriptions reasons[] = {
-> 	POPULATE_IEEE_REASON(RESERVED),
-> 	POPULATE_IEEE_REASON(UNSPECIFIED),
-> 	[etc...]
-> };
-> 
-> So this function becomes something like:
-> 
-> const char *ieee80211_get_reason_code_string(u16 reason_code)
-> {
-> 	int i;
-> 
-> 	for (i = 0; i < ARRAY_SIZE(reasons); i++) {
-> 		if (reasons[i].code == reason_code)
-> 			return reasons[i].desc;
-> 	}
+The patch 5f2caaf32bc6: "mwifiex: parse TDLS action frames during RX"
+from Feb 7, 2014, leads to the following static checker warning:
 
-Isn't it more efficient to just let the compiler generate it with a big
-switch() statement? AFAICT gcc will typically generate code like
-Calvin's original hand-rolled code and/or big lookup tables anyway, if
-faced with something like
+	drivers/net/wireless/mwifiex/tdls.c:820 mwifiex_process_tdls_action_frame()
+	error: memcpy() '&sta_ptr->tdls_cap.rsn_ie' too small (256 vs 257)
 
-switch (reason) {
-case 17: return "asdf";
-... // all the others
-default: return "<unknown>";
-};
+drivers/net/wireless/mwifiex/tdls.c
+   814                  case WLAN_EID_EXT_CAPABILITY:
+   815                          memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+   816                                 sizeof(struct ieee_types_header) +
+   817                                 min_t(u8, pos[1], 8));
+   818                          break;
+   819                  case WLAN_EID_RSN:
+   820                          memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+   821                                 sizeof(struct ieee_types_header) + pos[1]);
 
-In any case, I agree with you and Jouni about leaving the number -
-that's certainly needed - but I'm willing to merge a clean patch like
-this too.
+Smatch thinks pos[] is untrusted data because it comes from skb->data
+in mwifiex_process_rx_packet().
 
-johannes
+sta_ptr->tdls_cap.rsn_ie is defined like:
 
+struct ieee_types_generic {
+        struct ieee_types_header ieee_hdr;
+        u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
+} __packed;
+
+So it is IEEE_MAX_IE_SIZE (256) bytes long.  Meanwhile the memcpy()
+limit is 2 + 0xff, so it's 257 and we are corrupting a byte past the end
+of the struct.
+
+   822                          break;
+   823                  case WLAN_EID_QOS_CAPA:
+   824                          sta_ptr->tdls_cap.qos_info = pos[2];
+   825                          break;
+
+regards,
+dan carpenter
