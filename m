@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:59194 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751388AbaBEMlm (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27835 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471AbaBNJF5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 07:41:42 -0500
-Date: Wed, 5 Feb 2014 12:41:28 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Joe Perches <joe@perches.com>
-Cc: Holger Schurig <holgerschurig@gmail.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Fri, 14 Feb 2014 04:05:57 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	<mcgrof@do-not-panic.com>
+CC: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
-Message-ID: <20140205124127.GP26684@n2100.arm.linux.org.uk> (sfid-20140205_134146_396590_5829910E)
-References: <1391483274-20331-1-git-send-email-sujith@msujith.org> <1391483274-20331-2-git-send-email-sujith@msujith.org> <1391484878.2538.11.camel@joe-AO722> <21232.24855.201543.400943@gargle.gargle.HOWL> <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com> <1391531796.2538.21.camel@joe-AO722> <20140205115035.GO26684@n2100.arm.linux.org.uk> <1391603566.2538.63.camel@joe-AO722>
+	<wireless-regdb@lists.infradead.org>
+Subject: Re: [RFC] crda: Fix the linking order to avoid compilation error
+References: <CABPxzY+CnnssaZpqgWuJ=QH-k=zJbHpLaGkJXAQSWSxq7kKa6Q@mail.gmail.com>
+Date: Fri, 14 Feb 2014 11:05:50 +0200
+In-Reply-To: <CABPxzY+CnnssaZpqgWuJ=QH-k=zJbHpLaGkJXAQSWSxq7kKa6Q@mail.gmail.com>
+	(Krishna Chaitanya's message of "Mon, 16 Dec 2013 21:57:39 +0530")
+Message-ID: <87wqgy5aj5.fsf@kamboji.qca.qualcomm.com> (sfid-20140214_100605_912974_2F53A852)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391603566.2538.63.camel@joe-AO722>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 04:32:46AM -0800, Joe Perches wrote:
-> On Wed, 2014-02-05 at 11:50 +0000, Russell King - ARM Linux wrote:
-> > On Tue, Feb 04, 2014 at 08:36:36AM -0800, Joe Perches wrote:
-> > > On Tue, 2014-02-04 at 08:03 +0100, Holger Schurig wrote:
-> > > > Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
-> > > > cannot handle large values because of lost-of-precision.
-> > > > 
-> > > > IMHO udelay on ARM is broken, because it also cannot work with fast
-> > > > ARM processors (where bogomips >= 3355, which is in sight now). It's
-> > > > just not broken enought that someone did something against it ...   so
-> > > > the current kludge is good enought.
-> > > 
-> > > Maybe something like this would be better?
-> > 
-> > No, the point of __bad_udelay() is that people doing stupidly large
-> > udelay()s result in build errors,
-> 
-> Apparently, people just convert stupidly large udelay()s
-> to mdelay and not be bothered.
+Krishna Chaitanya <chaitanya.mgit@gmail.com> writes:
 
-And that's the correct answer.  Having udelay(10000) rather than mdelay(10)
-is a sign that they weren't paying that much attention when writing the
-code.
+> While linking the crda.o and libreg.so, first put crda.o
+> and then -lreg. This fixed the below error:
+>
+> # make
+>   GEN  keys-gcrypt.c
+>   Trusted pubkeys: pubkeys/linville.key.pub.pem
+>   CC   libreg.so
+>   CC   crda.o
+>   LD   crda
+> crda.o: In function `main':
+> crda/crda.c:196: undefined reference to `reglib_get_rd_alpha2'
+> collect2: ld returned 1 exit status
+> make: *** [crda] Error 1
 
-> Perhaps there should be some runtime udelay > maximum supported check.
+[...]
 
-Having both a runtime check _and_ a compile time check would actually
-be a good thing, but any runtime check needs to be suitably rate-
-limited.
+> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> ---
+>  Makefile |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/Makefile b/Makefile
+> index 4a351c6..0b2f0d7 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -28,10 +28,11 @@ RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
+>  CFLAGS += -O2 -fpic
+>  CFLAGS += -std=gnu99 -Wall -Werror -pedantic
+>  CFLAGS += -Wall -g
+> -LDLIBS += -lm
+>  LDLIBREG += -lreg
+> +LDLIBS += $(LDLIBREG)
+> +LDLIBS += -lm
+>  LIBREG += libreg.so
+> -LDFLAGS += -L ./ $(LDLIBREG)
+> +LDFLAGS += -L ./
+>
+>  all: all_noverify verify
 
-The compile time check is very important because it catches a lot of
-cases which wouldn't otherwise be found (eg, in drivers which hardly
-anyone uses on ARM.)
-
-Maybe the compile time check should be something which is implemented
-in a cross-architecture way in linux/delay.h with the maximum set to
-the lowest that any architecture can do?
+Without this patch crda didn't compile on my Ubuntu 12.04 box. IMHO this
+should be applied.
 
 -- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+Kalle Valo
