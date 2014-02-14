@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51952 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750807AbaBKKi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 05:38:26 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>
-Subject: [PATCH] mac80211: add beacon_loss debugfs file
-Date: Tue, 11 Feb 2014 12:36:18 +0200
-Message-Id: <1392114978-26697-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140211_113829_162900_B54A5CD5)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18303 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbaBNGNc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 01:13:32 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] wmi:  Handle failure to start scan.
+References: <1392318594-32540-1-git-send-email-greearb@candelatech.com>
+Date: Fri, 14 Feb 2014 08:13:25 +0200
+In-Reply-To: <1392318594-32540-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Thu, 13 Feb 2014 11:09:54
+	-0800")
+Message-ID: <877g8y6x2y.fsf@kamboji.qca.qualcomm.com> (sfid-20140214_071339_131826_3BF2C9B6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+greearb@candelatech.com writes:
 
-Add beacon_loss debugfs file that emulates
-ieee80211_beacon_loss call from the driver.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Properly clean up driver state in case firmware fails
+> to start scan for some reason.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-This can be used for various testing scenarios.
+Why just RFC?
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
----
- net/mac80211/debugfs_netdev.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+And "ath10k:" prefix missing.
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 68d00a7..3da74ae 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -358,6 +358,18 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
- }
- IEEE80211_IF_FILE_W(tkip_mic_test);
- 
-+static ssize_t ieee80211_if_parse_beacon_loss(
-+	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
-+{
-+	if (!ieee80211_sdata_running(sdata) || !sdata->vif.bss_conf.assoc)
-+		return -ENOTCONN;
-+
-+	ieee80211_beacon_loss(&sdata->vif);
-+
-+	return buflen;
-+}
-+IEEE80211_IF_FILE_W(beacon_loss);
-+
- static ssize_t ieee80211_if_fmt_uapsd_queues(
- 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
- {
-@@ -569,6 +581,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD(beacon_timeout);
- 	DEBUGFS_ADD_MODE(smps, 0600);
- 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
-+	DEBUGFS_ADD_MODE(beacon_loss, 0200);
- 	DEBUGFS_ADD_MODE(uapsd_queues, 0600);
- 	DEBUGFS_ADD_MODE(uapsd_max_sp_len, 0600);
- }
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -770,7 +770,25 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+>  		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_PREEMPTED\n");
+>  		break;
+>  	case WMI_SCAN_EVENT_START_FAILED:
+> -		ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_START_FAILED\n");
+> +		ath10k_warn("WMI_SCAN_EVENT_START_FAILED, reason: %i\n", reason);
+
+"scan failed to start: %i\n"
+
+> +		ar->scan_channel = NULL;
+> +		if (!ar->scan.in_progress) {
+> +			ath10k_warn("scan-start-failed: no scan requested, ignoring\n");
+
+"scan failed to start but no scan requested, ignoring\n"
+
 -- 
-1.8.3.2
-
+Kalle Valo
