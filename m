@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:35814 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753125AbaBRBKo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 20:10:44 -0500
-Received: by mail-ee0-f53.google.com with SMTP id t10so7325434eei.26
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 17:10:43 -0800 (PST)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	liuhq11@mails.tsinghua.edu.cn,
-	andrea merello <andrea.merello@gmail.com>
-Subject: [PATCH 6/7] rtl818x: Make sure the TX descriptor "valid" flag is written by last
-Date: Tue, 18 Feb 2014 02:10:45 +0100
-Message-Id: <1392685846-10116-7-git-send-email-andrea.merello@gmail.com> (sfid-20140218_021051_183717_6B4ABF0B)
-In-Reply-To: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+Received: from ring0.de ([5.45.105.125]:33067 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753126AbaBNXHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Feb 2014 18:07:04 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 4/5] wl1251: spi: add device tree support
+Date: Sat, 15 Feb 2014 00:05:55 +0100
+Message-Id: <1392419156-14394-5-git-send-email-sre@debian.org> (sfid-20140215_000814_104211_F548E4D6)
+In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
+References: <20140125000929.GD25488@atomide.com>
+ <1392419156-14394-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: andrea merello <andrea.merello@gmail.com>
+Add device tree support for the spi variant of wl1251.
 
-The TX descriptors are consumed by the HW using DMA.
-Even if in the driver code the memory write that sets the "valid"
-flag appears after all other writes, the CPU may reorder writes,
-causing the HW to consider as valid a not-fully-written yet
-descriptor.
-
-This may cause HW incorrect behaviour.
-
-This can happen because (AFAIK) the HW may attempt DMA
-asynchronously without waiting to be kicked by the following
-register write.
-
-This patch adds a write memory barrier to enforce writes ordering.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Sebastian Reichel <sre@debian.org>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ti/wl1251/spi.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index be9a8a1..7027cb7 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -335,7 +335,11 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
- 	entry->flags2 = info->control.rates[1].idx >= 0 ?
- 		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
- 	entry->retry_limit = info->control.rates[0].count;
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 0a8aacc..b06d36d 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -27,6 +27,8 @@
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
+ #include <linux/gpio.h>
++#include <linux/of.h>
++#include <linux/of_gpio.h>
+ #include <linux/regulator/consumer.h>
+ 
+ #include "wl1251.h"
+@@ -240,13 +242,13 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
+ 
+ static int wl1251_spi_probe(struct spi_device *spi)
+ {
+-	struct wl1251_platform_data *pdata;
++	struct wl1251_platform_data *pdata = dev_get_platdata(&spi->dev);
++	struct device_node *np = spi->dev.of_node;
+ 	struct ieee80211_hw *hw;
+ 	struct wl1251 *wl;
+ 	int ret;
+ 
+-	pdata = dev_get_platdata(&spi->dev);
+-	if (!pdata) {
++	if (!np && !pdata) {
+ 		wl1251_error("no platform data");
+ 		return -ENODEV;
+ 	}
+@@ -273,7 +275,18 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->power_gpio = pdata->power_gpio;
++	if (np) {
++		wl->use_eeprom = of_property_read_bool(np, "ti,wl1251-has-eeprom");
++		wl->power_gpio = of_get_named_gpio(np, "ti,power-gpio", 0);
++	} else if (pdata) {
++		wl->power_gpio = pdata->power_gpio;
++		wl->use_eeprom = pdata->use_eeprom;
++	}
 +
-+	/* We must be sure that tx_flags is written last because the HW
-+	 * looks at it to check if the rest of data is valid or not
-+	 */
-+	wmb();
- 	entry->flags = cpu_to_le32(tx_flags);
- 	__skb_queue_tail(&ring->queue, skb);
- 	if (ring->entries - skb_queue_len(&ring->queue) < 2)
++	if (wl->power_gpio == -EPROBE_DEFER) {
++		ret = -EPROBE_DEFER;
++		goto out_free;
++	}
+ 
+ 	if (gpio_is_valid(wl->power_gpio)) {
+ 		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
+@@ -295,8 +308,6 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->use_eeprom = pdata->use_eeprom;
+-
+ 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+ 	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
+ 							DRIVER_NAME, wl);
 -- 
-1.8.3.2
+1.8.5.3
 
