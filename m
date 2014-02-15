@@ -1,104 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:64724 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbaBSLBx convert rfc822-to-8bit (ORCPT
+Received: from smtpauth.net4india.com ([118.67.248.47]:43777 "EHLO
+	smtpauth.net4india.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbaBOF4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 06:01:53 -0500
-Received: by mail-bk0-f42.google.com with SMTP id 6so152964bkj.29
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 03:01:51 -0800 (PST)
+	Sat, 15 Feb 2014 00:56:45 -0500
+Message-ID: <52FEFA0B.4000807@xenontk.org> (sfid-20140215_065712_172040_D95A4389)
+Date: Sat, 15 Feb 2014 10:54:27 +0530
+From: David John <davidjon@xenontk.org>
+Reply-To: davidjon@xenontk.org
 MIME-Version: 1.0
-In-Reply-To: <1392804045-11258-8-git-send-email-luca@coelho.fi>
-References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
-	<1392804045-11258-8-git-send-email-luca@coelho.fi>
-Date: Wed, 19 Feb 2014 12:01:51 +0100
-Message-ID: <CA+BoTQmFRoS-uEWx-guObucK5dwM8gm=yGt-58hzADQBPxOAtg@mail.gmail.com> (sfid-20140219_120156_665851_456C8DF8)
-Subject: Re: [PATCH 7/7] cfg80211/mac80211: move combination check to mac80211
- for ibss
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+To: emmanuel.grumbach@intel.com
+CC: linux-wireless@vger.kernel.org
+Subject: iwlwifi: Bluetooth and Wifi
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 February 2014 11:00, Luciano Coelho <luca@coelho.fi> wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
->
-> Now that mac80211 can check the interface combinations itself, move
-> the combinations check from cfg80211 to mac80211 when joining an IBSS.
->
-> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> ---
->  net/mac80211/ibss.c | 28 +++++++++++++++++++++++++---
->  net/wireless/ibss.c | 27 ---------------------------
->  2 files changed, 25 insertions(+), 30 deletions(-)
->
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index 56b0dce..49a25aa 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -1646,7 +1646,29 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->         u32 changed = 0;
->         u32 rate_flags;
->         struct ieee80211_supported_band *sband;
-> +       enum ieee80211_chanctx_mode chanmode;
-> +       struct ieee80211_local *local = sdata->local;
-> +       int radar_detect_width;
->         int i;
-> +       int ret;
-> +
-> +       radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
-> +                                                          &params->chandef,
-> +                                                          sdata->vif.type);
-> +       if (radar_detect_width < 0)
-> +               return radar_detect_width;
-> +
-> +       if (radar_detect_width > 0 && !params->userspace_handles_dfs)
-> +               return -EINVAL;
-> +
-> +       chanmode = (params->channel_fixed && !radar_detect_width) ?
-> +               IEEE80211_CHANCTX_SHARED : IEEE80211_CHANCTX_EXCLUSIVE;
-> +
-> +       ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
-> +                                          &params->chandef, chanmode,
-> +                                          radar_detect_width);
-> +       if (ret < 0)
-> +               return ret;
+Hi Emmanuel,
 
-Aren't you supposed to be holding chanctx_mtx while calling
-ieee80211_check_combinations()?
+Your patch "iwlwifi: mvm: BT Coex - disable BT when TXing probe request
+in scan" fixed wifi dropping on my 7260 with scan time outs but now my
+Bluetooth mouse freezes and unfreezes as it gets re-detected every few
+minutes (3.14-rc2+):
 
-I hope you're aware this can end up with not being able to connect?
-chanctx isn't claimed until __ieee80211_sta_join_ibss() so you could
-possibly start other interface and break combinations. Or am I missing
-something?
+sb 2-6: USB disconnect, device number 9
+[ 2204.013399] usb 2-6: new full-speed USB device number 11 using xhci_hcd
+[ 2204.178555] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+[ 2204.178565] usb 2-6: New USB device strings: Mfr=0, Product=0,
+SerialNumber=0
+[ 2204.194476] Bluetooth: hci0: read Intel version: 370710018002030d33
+[ 2204.194484] Bluetooth: hci0: Intel device is already patched. patch
+num: 33
+[ 2226.561140] hid-generic 0005:046D:B010.0006: unknown main item tag 0x0
+[ 2226.569469] input: Bluetooth Mouse M557 as
+/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0006/input/input18
+[ 2226.569853] hid-generic 0005:046D:B010.0006: input,hidraw1: BLUETOOTH
+HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
+[ 2755.209616] usb 2-6: USB disconnect, device number 11
+[ 2755.705285] usb 2-6: new full-speed USB device number 13 using xhci_hcd
+[ 2755.870458] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+[ 2755.870468] usb 2-6: New USB device strings: Mfr=0, Product=0,
+SerialNumber=0
+[ 2755.886722] Bluetooth: hci0: read Intel version: 370710018002030d33
+[ 2755.886729] Bluetooth: hci0: Intel device is already patched. patch
+num: 33
+[ 2780.725691] hid-generic 0005:046D:B010.0007: unknown main item tag 0x0
+[ 2780.759131] input: Bluetooth Mouse M557 as
+/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0007/input/input19
+[ 2780.759532] hid-generic 0005:046D:B010.0007: input,hidraw1: BLUETOOTH
+HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
+[ 9151.434602] usb 2-6: USB disconnect, device number 13
+[ 9151.930271] usb 2-6: new full-speed USB device number 15 using xhci_hcd
+[ 9152.095371] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+[ 9152.095381] usb 2-6: New USB device strings: Mfr=0, Product=0,
+SerialNumber=0
+[ 9152.111270] Bluetooth: hci0: read Intel version: 370710018002030d33
+[ 9152.111278] Bluetooth: hci0: Intel device is already patched. patch
+num: 33
+[ 9178.208386] hid-generic 0005:046D:B010.0008: unknown main item tag 0x0
+[ 9178.239390] input: Bluetooth Mouse M557 as
+/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0008/input/input20
+[ 9178.239751] hid-generic 0005:046D:B010.0008: input,hidraw1: BLUETOOTH
+HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
 
+Iwlwifi:
 
-> @@ -1661,7 +1683,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->
->         /* fix basic_rates if channel does not support these rates */
->         rate_flags = ieee80211_chandef_rate_flags(&params->chandef);
-> -       sband = sdata->local->hw.wiphy->bands[params->chandef.chan->band];
-> +       sband = local->hw.wiphy->bands[params->chandef.chan->band];
->         for (i = 0; i < sband->n_bitrates; i++) {
->                 if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
->                         sdata->u.ibss.basic_rates &= ~BIT(i);
-> @@ -1710,9 +1732,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->         ieee80211_bss_info_change_notify(sdata, changed);
->
->         sdata->smps_mode = IEEE80211_SMPS_OFF;
-> -       sdata->needed_rx_chains = sdata->local->rx_chains;
-> +       sdata->needed_rx_chains = local->rx_chains;
->
-> -       ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-> +       ieee80211_queue_work(&local->hw, &sdata->work);
->
->         return 0;
->  }
+[   19.627252] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
+[   19.627409] iwlwifi 0000:01:00.0: irq 62 for MSI/MSI-X
+[   19.629897] iwlwifi 0000:01:00.0: loaded firmware version 22.15.8.0
+op_mode iwlmvm
+[   19.843619] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band
+Wireless N 7260, REV=0x144
+[   19.843666] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[   19.843883] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[   21.332796] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[   21.333012] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+[   28.734048] iwlwifi 0000:01:00.0 wlp1s0: disabling HT as WMM/QoS is
+not supported by the AP
+[   28.734055] iwlwifi 0000:01:00.0 wlp1s0: disabling VHT as WMM/QoS is
+not supported by the AP
 
-Hmm, I don't think this belongs to this patch?
+Is there a better fix in the works? Any workaround? 802.11g performance
+also looks to be subjectively poorer with Bluetooth on than without.
 
-
-Michał
+Regards,
+David.
