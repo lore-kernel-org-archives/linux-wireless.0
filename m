@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:63014 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaBSVxq (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:44781 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729AbaBOWAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 16:53:46 -0500
-Received: by mail-wg0-f52.google.com with SMTP id b13so846888wgh.7
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 13:53:45 -0800 (PST)
-Message-ID: <1392846815.20211.12.camel@canaries64-MCP7A> (sfid-20140219_225349_596544_9A8E9CF7)
-Subject: [PATCH 2/4] staging: vt6656: s_nsBulkOutIoCompleteWrite add error
- handling,
+	Sat, 15 Feb 2014 17:00:54 -0500
+Received: by mail-we0-f176.google.com with SMTP id q58so9427968wes.7
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 14:00:53 -0800 (PST)
+Message-ID: <1392501641.4022.7.camel@canaries32-MCP7A> (sfid-20140215_230057_289472_8BD2D646)
+Subject: [PATCH 3/3 RESEND] staging: vt6656: Remove typedef  _VIA_BB_TYPE
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Feb 2014 21:53:35 +0000
-Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 15 Feb 2014 22:00:41 +0000
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-change pContext->bBoolInUse to false on connection errors.
+BB_TYPE_11* are already defined in baseband.h as macros.
+
+assign variable as u8 type.
+
+iwctl.c needs the baseband.h header for the macros.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/staging/vt6656/device.h | 10 +---------
+ drivers/staging/vt6656/iwctl.c  |  1 +
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 16acc9a..61d8220 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -616,6 +616,19 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index c195a9c..ec20b14 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -213,14 +213,6 @@ typedef struct {
+     bool            bInUse;
+ } INT_BUFFER, *PINT_BUFFER;
  
-     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
+-/* 0:11A 1:11B 2:11G */
+-typedef enum _VIA_BB_TYPE
+-{
+-    BB_TYPE_11A = 0,
+-    BB_TYPE_11B,
+-    BB_TYPE_11G
+-} VIA_BB_TYPE, *PVIA_BB_TYPE;
+-
+ /*++ NDIS related */
  
-+	switch (urb->status) {
-+	case 0:
-+	case -ETIMEDOUT:
-+		break;
-+	case -ECONNRESET:
-+	case -ENOENT:
-+	case -ESHUTDOWN:
-+		pContext->bBoolInUse = false;
-+		return;
-+	default:
-+		break;
-+	}
-+
-     if (!netif_device_present(pDevice->dev))
- 	    return;
+ typedef enum __DEVICE_NDIS_STATUS {
+@@ -540,7 +532,7 @@ struct vnt_private {
+ 	u8  byCWMaxMin;
  
+ 	/* Rate */
+-	VIA_BB_TYPE byBBType; /* 0: 11A, 1:11B, 2:11G */
++	u8 byBBType; /* 0: 11A, 1:11B, 2:11G */
+ 	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
+ 	u16 wBasicRate;
+ 	u8 byACKRate;
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 23320cc..60264a6 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -41,6 +41,7 @@
+ #include "wpactl.h"
+ #include "control.h"
+ #include "rndis.h"
++#include "baseband.h"
+ 
+ static const long frequency_list[] = {
+ 	2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484,
 -- 
 1.9.rc1
-
 
 
