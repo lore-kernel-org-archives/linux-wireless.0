@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61073 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750898AbaBHAVU (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:51124 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753502AbaBOSdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:21:20 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 01/30] mwifiex: make use of IEEE80211_VHT_MCS_NOT_SUPPORTED
-Date: Fri, 7 Feb 2014 16:20:58 -0800
-Message-ID: <1391818861-20926-1-git-send-email-bzhao@marvell.com> (sfid-20140208_012122_943828_A6EED066)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 15 Feb 2014 13:33:32 -0500
+Received: by mail-wi0-f175.google.com with SMTP id hm4so1329390wib.8
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 10:33:30 -0800 (PST)
+Message-ID: <1392489200.2518.20.camel@canaries64-MCP7A> (sfid-20140215_193335_563486_447C2F7E)
+Subject: [PATCH 3/3] staging: vt6656: Remove typedef  _VIA_BB_TYPE
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 15 Feb 2014 18:33:20 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove driver's macro and use ieee80211's definition instead
+BB_TYPE_11* are already defined in baseband.h as macros.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+assign variable as u8 type.
+
+iwctl.c needs the baseband.h header for the macros.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mwifiex/11ac.c | 14 ++++++++------
- drivers/net/wireless/mwifiex/fw.h   |  2 --
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/staging/vt6656/device.h | 10 +---------
+ drivers/staging/vt6656/iwctl.c  |  1 +
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11ac.c b/drivers/net/wireless/mwifiex/11ac.c
-index 5e0eec4..cc0458c 100644
---- a/drivers/net/wireless/mwifiex/11ac.c
-+++ b/drivers/net/wireless/mwifiex/11ac.c
-@@ -126,9 +126,10 @@ mwifiex_fill_vht_cap_tlv(struct mwifiex_private *priv,
- 		mcs_user = GET_VHTNSSMCS(mcs_map_user, nss);
- 		mcs_resp = GET_VHTNSSMCS(mcs_map_resp, nss);
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index c195a9c..ec20b14 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -213,14 +213,6 @@ typedef struct {
+     bool            bInUse;
+ } INT_BUFFER, *PINT_BUFFER;
  
--		if ((mcs_user == NO_NSS_SUPPORT) ||
--		    (mcs_resp == NO_NSS_SUPPORT))
--			SET_VHTNSSMCS(mcs_map_result, nss, NO_NSS_SUPPORT);
-+		if ((mcs_user == IEEE80211_VHT_MCS_NOT_SUPPORTED) ||
-+		    (mcs_resp == IEEE80211_VHT_MCS_NOT_SUPPORTED))
-+			SET_VHTNSSMCS(mcs_map_result, nss,
-+				      IEEE80211_VHT_MCS_NOT_SUPPORTED);
- 		else
- 			SET_VHTNSSMCS(mcs_map_result, nss,
- 				      min(mcs_user, mcs_resp));
-@@ -147,9 +148,10 @@ mwifiex_fill_vht_cap_tlv(struct mwifiex_private *priv,
- 	for (nss = 1; nss <= 8; nss++) {
- 		mcs_user = GET_VHTNSSMCS(mcs_map_user, nss);
- 		mcs_resp = GET_VHTNSSMCS(mcs_map_resp, nss);
--		if ((mcs_user == NO_NSS_SUPPORT) ||
--		    (mcs_resp == NO_NSS_SUPPORT))
--			SET_VHTNSSMCS(mcs_map_result, nss, NO_NSS_SUPPORT);
-+		if ((mcs_user == IEEE80211_VHT_MCS_NOT_SUPPORTED) ||
-+		    (mcs_resp == IEEE80211_VHT_MCS_NOT_SUPPORTED))
-+			SET_VHTNSSMCS(mcs_map_result, nss,
-+				      IEEE80211_VHT_MCS_NOT_SUPPORTED);
- 		else
- 			SET_VHTNSSMCS(mcs_map_result, nss,
- 				      min(mcs_user, mcs_resp));
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 5fa932d..059bc16 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -232,8 +232,6 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define GET_VHTNSSMCS(mcs_mapset, nss) ((mcs_mapset >> (2 * (nss - 1))) & 0x3)
- #define SET_VHTNSSMCS(mcs_mapset, nss, value) (mcs_mapset |= (value & 0x3) << \
- 					      (2 * (nss - 1)))
--#define NO_NSS_SUPPORT		0x3
+-/* 0:11A 1:11B 2:11G */
+-typedef enum _VIA_BB_TYPE
+-{
+-    BB_TYPE_11A = 0,
+-    BB_TYPE_11B,
+-    BB_TYPE_11G
+-} VIA_BB_TYPE, *PVIA_BB_TYPE;
 -
- #define GET_DEVTXMCSMAP(dev_mcs_map)      (dev_mcs_map >> 16)
- #define GET_DEVRXMCSMAP(dev_mcs_map)      (dev_mcs_map & 0xFFFF)
+ /*++ NDIS related */
  
+ typedef enum __DEVICE_NDIS_STATUS {
+@@ -540,7 +532,7 @@ struct vnt_private {
+ 	u8  byCWMaxMin;
+ 
+ 	/* Rate */
+-	VIA_BB_TYPE byBBType; /* 0: 11A, 1:11B, 2:11G */
++	u8 byBBType; /* 0: 11A, 1:11B, 2:11G */
+ 	u8 byPacketType; /* 0:11a 1:11b 2:11gb 3:11ga */
+ 	u16 wBasicRate;
+ 	u8 byACKRate;
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 23320cc..60264a6 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -41,6 +41,7 @@
+ #include "wpactl.h"
+ #include "control.h"
+ #include "rndis.h"
++#include "baseband.h"
+ 
+ static const long frequency_list[] = {
+ 	2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484,
 -- 
-1.8.2.3
+1.9.rc1
 
