@@ -1,92 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:63734 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbaBDR5k (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:52340 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280AbaBPOcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 12:57:40 -0500
-Message-ID: <52F12A10.3020600@lwfinger.net> (sfid-20140204_185802_574351_79F70E6F)
-Date: Tue, 04 Feb 2014 11:57:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: andrea.merello@gmail.com, Dan Carpenter <dan.carpenter@oracle.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Dave Jones <davej@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux Driver Project <devel@linuxdriverproject.org>
-Subject: Re: rtl8821ae.
-References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail> <20140202160512.GA4946@redhat.com> <201402021807.37772.s.L-H@gmx.de> <52EFCC66.9020304@lwfinger.net> <20140203201228.GE26722@mwanda> <CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com> <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com> <20140204092836.GG26776@mwanda> <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
-In-Reply-To: <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sun, 16 Feb 2014 09:32:22 -0500
+Received: by mail-pd0-f173.google.com with SMTP id y10so13845422pdj.32
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2014 06:32:21 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>
+Subject: [PATCH 2/2] b43: return true / false instead of numbers in functions which return bool value
+Date: Sun, 16 Feb 2014 22:31:38 +0800
+Message-Id: <b71acbe0697d6aad7a894efd84e4f931702d7b33.1392560760.git.gamerh2o@gmail.com> (sfid-20140216_153239_075912_2CE4DB39)
+In-Reply-To: <fe0bba2d6b5b1d3b5021755aa8dc169d8e8f4655.1392560760.git.gamerh2o@gmail.com>
+References: <fe0bba2d6b5b1d3b5021755aa8dc169d8e8f4655.1392560760.git.gamerh2o@gmail.com>
+In-Reply-To: <fe0bba2d6b5b1d3b5021755aa8dc169d8e8f4655.1392560760.git.gamerh2o@gmail.com>
+References: <fe0bba2d6b5b1d3b5021755aa8dc169d8e8f4655.1392560760.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrea,
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ drivers/net/wireless/b43/debugfs.h    |  2 +-
+ drivers/net/wireless/b43/phy_common.c |  4 ++--
+ drivers/net/wireless/b43/pio.c        | 10 +++++-----
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-After applying the latest patch, I get the following warning and errors when 
-building the USB driver rtl8187:
-
-   CC      drivers/video/fbmon.o
-drivers/net/wireless/rtl818x/rtl8187/dev.c: In function ‘rtl8187_set_anaparam’:
-drivers/net/wireless/rtl818x/rtl8187/dev.c:595:3: warning: passing argument 2 of 
-‘rtl818x_iowrite8’ from incompatible pointer type [enabled by default]
-    rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, anaparam3);
-    ^
-In file included from drivers/net/wireless/rtl818x/rtl8187/dev.c:31:0:
-drivers/net/wireless/rtl818x/rtl8187/rtl8187.h:237:20: note: expected ‘u8 *’ but 
-argument is of type ‘__le16 *’
-  static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
-                     ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c: In function ‘rtl8187b_init_hw’:
-drivers/net/wireless/rtl818x/rtl8187/dev.c:788:9: error: 
-‘RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT’ undeclared (first use in this function)
-   reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-          ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c:788:9: note: each undeclared 
-identifier is reported only once for each function it appears in
-drivers/net/wireless/rtl818x/rtl8187/dev.c: In function ‘rtl8187_start’: 
-
-drivers/net/wireless/rtl818x/rtl8187/dev.c:946:11: error: 
-‘RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT’ undeclared (first use in this 
-function)
-    reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT; 
-
-            ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c:947:11: error: 
-‘RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT’ undeclared (first use in this function)
-    reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-            ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c:952:7: error: 
-‘RTL818X_TX_CONF_HW_SEQNUM’ undeclared (first use in this function)
-        RTL818X_TX_CONF_HW_SEQNUM |
-        ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c:989:10: error: 
-‘RTL818X_CW_CONF_PERPACKET_CW_SHIFT’ undeclared (first use in this function)
-   reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
-           ^
-drivers/net/wireless/rtl818x/rtl8187/dev.c:990:9: error: 
-‘RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT’ undeclared (first use in this function)
-   reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-
-The warning is fixed by
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -593,7 +593,7 @@ static void rtl8187_set_anaparam(struct
-         rtl818x_iowrite32(priv, &priv->map->ANAPARAM, anaparam);
-         rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, anaparam2);
-         if (priv->is_rtl8187b)
--               rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, anaparam3);
-+               rtl818x_iowrite16(priv, &priv->map->ANAPARAM3, anaparam3);
-         reg &= ~RTL818X_CONFIG3_ANAPARAM_WRITE;
-         rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
-         rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
-
-For testing purposes, I have turned on the build for rtl8187.
-
-Larry
+diff --git a/drivers/net/wireless/b43/debugfs.h b/drivers/net/wireless/b43/debugfs.h
+index 822aad88..50517b8 100644
+--- a/drivers/net/wireless/b43/debugfs.h
++++ b/drivers/net/wireless/b43/debugfs.h
+@@ -86,7 +86,7 @@ void b43_debugfs_log_txstat(struct b43_wldev *dev,
+ 
+ static inline bool b43_debug(struct b43_wldev *dev, enum b43_dyndbg feature)
+ {
+-	return 0;
++	return false;
+ }
+ 
+ static inline void b43_debugfs_init(void)
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index f01676a..dbaa518 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -133,9 +133,9 @@ void b43_phy_exit(struct b43_wldev *dev)
+ bool b43_has_hardware_pctl(struct b43_wldev *dev)
+ {
+ 	if (!dev->phy.hardware_power_control)
+-		return 0;
++		return false;
+ 	if (!dev->phy.ops->supports_hwpctl)
+-		return 0;
++		return false;
+ 	return dev->phy.ops->supports_hwpctl(dev);
+ }
+ 
+diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+index a73ff8c..a4ff5e2 100644
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -637,7 +637,7 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+ 
+ 		ctl = b43_piorx_read32(q, B43_PIO8_RXCTL);
+ 		if (!(ctl & B43_PIO8_RXCTL_FRAMERDY))
+-			return 0;
++			return false;
+ 		b43_piorx_write32(q, B43_PIO8_RXCTL,
+ 				  B43_PIO8_RXCTL_FRAMERDY);
+ 		for (i = 0; i < 10; i++) {
+@@ -651,7 +651,7 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+ 
+ 		ctl = b43_piorx_read16(q, B43_PIO_RXCTL);
+ 		if (!(ctl & B43_PIO_RXCTL_FRAMERDY))
+-			return 0;
++			return false;
+ 		b43_piorx_write16(q, B43_PIO_RXCTL,
+ 				  B43_PIO_RXCTL_FRAMERDY);
+ 		for (i = 0; i < 10; i++) {
+@@ -662,7 +662,7 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+ 		}
+ 	}
+ 	b43dbg(q->dev->wl, "PIO RX timed out\n");
+-	return 1;
++	return true;
+ data_ready:
+ 
+ 	/* Get the preamble (RX header) */
+@@ -759,7 +759,7 @@ data_ready:
+ 
+ 	b43_rx(q->dev, skb, rxhdr);
+ 
+-	return 1;
++	return true;
+ 
+ rx_error:
+ 	if (err_msg)
+@@ -769,7 +769,7 @@ rx_error:
+ 	else
+ 		b43_piorx_write16(q, B43_PIO_RXCTL, B43_PIO_RXCTL_DATARDY);
+ 
+-	return 1;
++	return true;
+ }
+ 
+ void b43_pio_rx(struct b43_pio_rxqueue *q)
+-- 
+1.8.5.3
 
