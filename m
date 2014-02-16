@@ -1,140 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:54685 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753536AbaBCU7t (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:54812 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbaBPTKt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:49 -0500
-Received: by mail-ee0-f49.google.com with SMTP id d17so3881338eek.8
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:48 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 58/62] iwlwifi: mvm: don't send the beacon filtering command from iterator
-Date: Mon,  3 Feb 2014 22:58:04 +0200
-Message-Id: <1391461088-8082-58-git-send-email-egrumbach@gmail.com> (sfid-20140203_220008_996376_E5921E6D)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Sun, 16 Feb 2014 14:10:49 -0500
+Received: by mail-we0-f181.google.com with SMTP id w61so10144399wes.12
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2014 11:10:48 -0800 (PST)
+Message-ID: <1392577818.3430.10.camel@canaries64-MCP7A> (sfid-20140216_201053_056790_ED458582)
+Subject: [PATCH  3/3] staging: vt6656: Clean up and remove camel case
+ INTnsProcessData.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 16 Feb 2014 19:10:18 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Camel Case changes
+pDevice -> priv
+pINTData -> int_data
+pStats -> stats
 
-The firmware doesn't allow per-vif beacon filtering: we can
-use beacon filtering for one vif only. So remember which
-vif has beacon filtering enabled in the iterator, and send
-the command outside the iterator.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/power.c |   58 +++++++++++++++++++++++++-----
- 1 file changed, 49 insertions(+), 9 deletions(-)
+ drivers/staging/vt6656/int.c | 141 +++++++++++++++++++++----------------------
+ 1 file changed, 70 insertions(+), 71 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 20bc376..15c9c78 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -417,13 +417,10 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
+diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
+index 0094887..ec135b4 100644
+--- a/drivers/staging/vt6656/int.c
++++ b/drivers/staging/vt6656/int.c
+@@ -75,112 +75,111 @@ void INTvWorkItem(struct vnt_private *pDevice)
+ 	spin_unlock_irq(&pDevice->lock);
  }
  
--static int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
-+static int _iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
- 					 struct ieee80211_vif *vif)
+-void INTnsProcessData(struct vnt_private *pDevice)
++void INTnsProcessData(struct vnt_private *priv)
  {
--	int ret;
--	bool ba_enable;
- 	struct iwl_mac_power_cmd cmd = {};
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	struct vnt_interrupt_data *pINTData;
+-	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+-	struct net_device_stats *pStats = &pDevice->stats;
++	struct vnt_interrupt_data *int_data;
++	struct vnt_manager *mgmt = &priv->vnt_mgmt;
++	struct net_device_stats *stats = &priv->stats;
  
- 	if (vif->type != NL80211_IFTYPE_STATION)
- 		return 0;
-@@ -435,8 +432,19 @@ static int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
- 	iwl_mvm_power_build_cmd(mvm, vif, &cmd);
- 	iwl_mvm_power_log(mvm, &cmd);
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsInterruptProcessData\n");
  
--	ret = iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, CMD_SYNC,
--				   sizeof(cmd), &cmd);
-+	return iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, CMD_SYNC,
-+				    sizeof(cmd), &cmd);
-+}
+-	pINTData = (struct vnt_interrupt_data *)pDevice->intBuf.pDataBuf;
+-	if (pINTData->tsr0 & TSR_VALID) {
+-		if (pINTData->tsr0 & (TSR_TMO | TSR_RETRYTMO))
+-			pDevice->wstats.discard.retries++;
++	int_data = (struct vnt_interrupt_data *)priv->intBuf.pDataBuf;
 +
-+static int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
-+					 struct ieee80211_vif *vif)
-+
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	bool ba_enable;
-+	int ret;
-+
-+	ret = _iwl_mvm_power_mac_update_mode(mvm, vif);
- 	if (ret)
- 		return ret;
++	if (int_data->tsr0 & TSR_VALID) {
++		if (int_data->tsr0 & (TSR_TMO | TSR_RETRYTMO))
++			priv->wstats.discard.retries++;
+ 		else
+-			pStats->tx_packets++;
++			stats->tx_packets++;
  
-@@ -544,13 +552,24 @@ int iwl_mvm_power_uapsd_misbehaving_ap_notif(struct iwl_mvm *mvm,
- 	return 0;
+-		BSSvUpdateNodeTxCounter(pDevice,
+-					pINTData->tsr0,
+-					pINTData->pkt0);
++		BSSvUpdateNodeTxCounter(priv,
++					int_data->tsr0,
++					int_data->pkt0);
+ 	}
+-	if (pINTData->tsr1 & TSR_VALID) {
+-		if (pINTData->tsr1 & (TSR_TMO | TSR_RETRYTMO))
+-			pDevice->wstats.discard.retries++;
++
++	if (int_data->tsr1 & TSR_VALID) {
++		if (int_data->tsr1 & (TSR_TMO | TSR_RETRYTMO))
++			priv->wstats.discard.retries++;
+ 		else
+-			pStats->tx_packets++;
++			stats->tx_packets++;
+ 
+ 
+-		BSSvUpdateNodeTxCounter(pDevice,
+-					pINTData->tsr1,
+-					pINTData->pkt1);
++		BSSvUpdateNodeTxCounter(priv,
++					int_data->tsr1,
++					int_data->pkt1);
+ 	}
+-	if (pINTData->tsr2 & TSR_VALID) {
+-		if (pINTData->tsr2 & (TSR_TMO | TSR_RETRYTMO))
+-			pDevice->wstats.discard.retries++;
++
++	if (int_data->tsr2 & TSR_VALID) {
++		if (int_data->tsr2 & (TSR_TMO | TSR_RETRYTMO))
++			priv->wstats.discard.retries++;
+ 		else
+-			pStats->tx_packets++;
++			stats->tx_packets++;
+ 
+-		BSSvUpdateNodeTxCounter(pDevice,
+-					pINTData->tsr2,
+-					pINTData->pkt2);
+-		/*DBG_PRN_GRP01(("TSR2 %02x\n", pINTData->byTSR2));*/
++		BSSvUpdateNodeTxCounter(priv,
++					int_data->tsr2,
++					int_data->pkt2);
+ 	}
+-	if (pINTData->tsr3 & TSR_VALID) {
+-		if (pINTData->tsr3 & (TSR_TMO | TSR_RETRYTMO))
+-			pDevice->wstats.discard.retries++;
++
++	if (int_data->tsr3 & TSR_VALID) {
++		if (int_data->tsr3 & (TSR_TMO | TSR_RETRYTMO))
++			priv->wstats.discard.retries++;
+ 		else
+-			pStats->tx_packets++;
++			stats->tx_packets++;
+ 
+-		BSSvUpdateNodeTxCounter(pDevice,
+-					pINTData->tsr3,
+-					pINTData->pkt3);
+-		/*DBG_PRN_GRP01(("TSR3 %02x\n", pINTData->byTSR3));*/
++		BSSvUpdateNodeTxCounter(priv,
++					int_data->tsr3,
++					int_data->pkt3);
+ 	}
+-	if (pINTData->isr0 != 0) {
+-		if (pINTData->isr0 & ISR_BNTX) {
+-			if (pDevice->op_mode == NL80211_IFTYPE_AP) {
+-				if (pMgmt->byDTIMCount > 0) {
+-					pMgmt->byDTIMCount--;
+-					pMgmt->sNodeDBTable[0].bRxPSPoll =
++
++	if (int_data->isr0 != 0) {
++		if (int_data->isr0 & ISR_BNTX) {
++			if (priv->op_mode == NL80211_IFTYPE_AP) {
++				if (mgmt->byDTIMCount > 0) {
++					mgmt->byDTIMCount--;
++					mgmt->sNodeDBTable[0].bRxPSPoll =
+ 						false;
+-				} else if (pMgmt->byDTIMCount == 0) {
++				} else if (mgmt->byDTIMCount == 0) {
+ 					/* check if multicast tx buffering */
+-					pMgmt->byDTIMCount =
+-						pMgmt->byDTIMPeriod-1;
+-					pMgmt->sNodeDBTable[0].bRxPSPoll = true;
+-					if (pMgmt->sNodeDBTable[0].bPSEnable)
+-						bScheduleCommand((void *) pDevice,
++					mgmt->byDTIMCount =
++						mgmt->byDTIMPeriod-1;
++					mgmt->sNodeDBTable[0].bRxPSPoll = true;
++					if (mgmt->sNodeDBTable[0].bPSEnable)
++						bScheduleCommand((void *) priv,
+ 								 WLAN_CMD_RX_PSPOLL,
+ 								 NULL);
+ 				}
+-				bScheduleCommand((void *) pDevice,
++				bScheduleCommand((void *) priv,
+ 						WLAN_CMD_BECON_SEND,
+ 						NULL);
+ 			}
+-		pDevice->bBeaconSent = true;
++			priv->bBeaconSent = true;
+ 		} else {
+-			pDevice->bBeaconSent = false;
++			priv->bBeaconSent = false;
+ 		}
+-		if (pINTData->isr0 & ISR_TBTT) {
+-			if (pDevice->bEnablePSMode)
+-				bScheduleCommand((void *) pDevice,
++
++		if (int_data->isr0 & ISR_TBTT) {
++			if (priv->bEnablePSMode)
++				bScheduleCommand((void *) priv,
+ 						WLAN_CMD_TBTT_WAKEUP,
+ 						NULL);
+-			if (pDevice->bChannelSwitch) {
+-				pDevice->byChannelSwitchCount--;
+-				if (pDevice->byChannelSwitchCount == 0)
+-					bScheduleCommand((void *) pDevice,
++			if (priv->bChannelSwitch) {
++				priv->byChannelSwitchCount--;
++				if (priv->byChannelSwitchCount == 0)
++					bScheduleCommand((void *) priv,
+ 							WLAN_CMD_11H_CHSW,
+ 							NULL);
+ 			}
+ 		}
+-		pDevice->qwCurrTSF = le64_to_cpu(pINTData->tsf);
+-		/*DBG_PRN_GRP01(("ISR0 = %02x ,
+-		  LoTsf =  %08x,
+-		  HiTsf =  %08x\n",
+-		  pINTData->byISR0,
+-		  pINTData->dwLoTSF,
+-		  pINTData->dwHiTSF)); */
++		priv->qwCurrTSF = le64_to_cpu(int_data->tsf);
+ 	}
+-	if (pINTData->isr1 != 0)
+-		if (pINTData->isr1 & ISR_GPIO3)
+-			bScheduleCommand((void *) pDevice,
++
++	if (int_data->isr1 != 0)
++		if (int_data->isr1 & ISR_GPIO3)
++			bScheduleCommand((void *) priv,
+ 					WLAN_CMD_RADIO,
+ 					NULL);
+-	pDevice->intBuf.uDataLen = 0;
+-	pDevice->intBuf.bInUse = false;
++	priv->intBuf.uDataLen = 0;
++	priv->intBuf.bInUse = false;
+ 
+-	pStats->tx_errors = pDevice->wstats.discard.retries;
+-	pStats->tx_dropped = pDevice->wstats.discard.retries;
++	stats->tx_errors = priv->wstats.discard.retries;
++	stats->tx_dropped = priv->wstats.discard.retries;
  }
- 
-+struct iwl_mvm_power_iterator {
-+	struct iwl_mvm *mvm;
-+	struct ieee80211_vif *bf_vif;
-+};
-+
- static void iwl_mvm_power_binding_iterator(void *_data, u8 *mac,
- 					   struct ieee80211_vif *vif)
- {
--	struct iwl_mvm *mvm = _data;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_power_iterator *power_iterator = _data;
-+	struct iwl_mvm *mvm = power_iterator->mvm;
- 	int ret;
- 
--	ret = iwl_mvm_power_mac_update_mode(mvm, vif);
-+	ret = _iwl_mvm_power_mac_update_mode(mvm, vif);
-+
-+	if (mvmvif->bf_data.bf_enabled && !WARN_ON(power_iterator->bf_vif))
-+		power_iterator->bf_vif = vif;
-+
- 	WARN_ONCE(ret, "Failed to update power parameters on a specific vif\n");
- }
- 
-@@ -558,6 +577,14 @@ static void _iwl_mvm_power_update_binding(struct iwl_mvm *mvm,
- 					  struct ieee80211_vif *vif,
- 					  bool assign)
- {
-+	bool ba_enable;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_power_iterator power_it = {
-+		.mvm = mvm,
-+	};
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
- 	if (vif->type == NL80211_IFTYPE_MONITOR) {
- 		int ret = _iwl_mvm_power_update_device(mvm, assign);
- 		mvm->ps_prevented = assign;
-@@ -567,7 +594,20 @@ static void _iwl_mvm_power_update_binding(struct iwl_mvm *mvm,
- 	ieee80211_iterate_active_interfaces(mvm->hw,
- 					    IEEE80211_IFACE_ITER_NORMAL,
- 					    iwl_mvm_power_binding_iterator,
--					    mvm);
-+					    &power_it);
-+
-+	if (!power_it.bf_vif)
-+		return;
-+
-+	vif = power_it.bf_vif;
-+	mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+	ba_enable = !(iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM ||
-+		      mvm->ps_prevented || mvm->bound_vif_cnt > 1 ||
-+		      !vif->bss_conf.ps || iwl_mvm_vif_low_latency(mvmvif));
-+
-+	WARN_ON_ONCE(iwl_mvm_update_beacon_abort(mvm, power_it.bf_vif,
-+						 ba_enable));
- }
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
 -- 
-1.7.9.5
+1.9.rc1
 
