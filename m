@@ -1,48 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:27106 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752392AbaBLCjp convert rfc822-to-8bit
+Received: from dub0-omc2-s9.dub0.hotmail.com ([157.55.1.148]:10712 "EHLO
+	dub0-omc2-s9.dub0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752039AbaBPArb convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 21:39:45 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 11 Feb 2014 18:39:12 -0800
-Subject: RE: [PATCH v2 08/30] mwifiex: implement extended scan feature
-Message-ID: <477F20668A386D41ADCC57781B1F70430F5393DADC@SC-VEXCH1.marvell.com> (sfid-20140212_033949_094915_1269413C)
-References: <1391819017-20995-1-git-send-email-bzhao@marvell.com>
- <1391819017-20995-4-git-send-email-bzhao@marvell.com>
- <20140211072128.GR5487@us.netrek.org>
-In-Reply-To: <20140211072128.GR5487@us.netrek.org>
+	Sat, 15 Feb 2014 19:47:31 -0500
+Message-ID: <DUB407-EAS234BDBA262417A0C8EAA5369B9E0@phx.gbl> (sfid-20140216_014757_687748_56334540)
 Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Subject: Driver
+From: MHD HA <muhamad_cte@hotmail.com>
+Date: Sun, 16 Feb 2014 02:42:22 +0200
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0 (1.0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+Dear/Mr
 
-Thanks for your comment.
+Can you please send me the download source of the intel PRO/Wireless 2200GB Driver for Linux, the link that attached on the sourceforge.net is not working.
 
-> > + * This function prepares an extended scan command to be sent to the firmware
-> > + *
-> > + * This uses the scan command configiguration sent to the command processing
-> 
->                                       ^
-> 
-> trivial typo, should be "configuration".
-
-I will send a v3 for this patch.
-
-
-Hi John,
-
-If you prefer resending the entire patch series, please let me know.
-
-Thanks,
-Bing
+Best Regards
 
