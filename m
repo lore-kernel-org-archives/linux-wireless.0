@@ -1,162 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:36864 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbaBNVcj (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:44852 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751935AbaBPBg0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 16:32:39 -0500
-Message-ID: <52FE8B74.8020408@lwfinger.net> (sfid-20140214_223244_096026_03D126CD)
-Date: Fri, 14 Feb 2014 15:32:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 15 Feb 2014 20:36:26 -0500
+Received: by mail-oa0-f42.google.com with SMTP id i7so16393354oag.29
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 17:36:25 -0800 (PST)
 MIME-Version: 1.0
-To: Peter Wu <lekensteyn@gmail.com>,
-	Chaoming_Li <chaoming_li@realsil.com.cn>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] rtlwifi: properly apply filter flags
-References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com> <1392401026-18417-3-git-send-email-lekensteyn@gmail.com>
-In-Reply-To: <1392401026-18417-3-git-send-email-lekensteyn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <DUB407-EAS234BDBA262417A0C8EAA5369B9E0@phx.gbl>
+References: <DUB407-EAS234BDBA262417A0C8EAA5369B9E0@phx.gbl>
+Date: Sun, 16 Feb 2014 02:36:25 +0100
+Message-ID: <CACna6ryazDCqFcbagd12Gfh=Gi8wczd8tdZOzSyKTntRJebWwA@mail.gmail.com> (sfid-20140216_023651_511708_F502A148)
+Subject: Re: Driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: MHD HA <muhamad_cte@hotmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2014 12:03 PM, Peter Wu wrote:
-> commit 0baa0fd76f3f5a134461d6cf30294f6bb1bb824c
-> ("rtlwifi: Convert core routines for addition of rtl8192se and
-> rtl8192de") removed setting HW_VAR_RCR, HW_VAR_MGT_FILTER and
-> HW_VAR_CTRL_FILTER. The last two are probably done because some hardware
-> does not support them. The first is probably a mistake. This patch adds
-> the missing set_hw_reg call.
->
-> For PCI support, rx_conf is not touched directly. Instead, get_hw_reg is
-> used to abstract between receive_config (for PCI) and rx_conf (for USB).
->
-> This was tested on a 10ec:8176 Realtek RTL8188CE (according to the
-> label on the mini-PCIe card). Before this patch, `iw wlan0 set monitor
-> otherbss` did not capture frames from other BSS's. After this patch, it
-> does print packets.
->
-> Tested-by: Peter Wu <lekensteyn@gmail.com>
-> Signed-off-by: Peter Wu <lekensteyn@gmail.com>
-> ---
+2014-02-16 1:42 GMT+01:00 MHD HA <muhamad_cte@hotmail.com>:
+> Can you please send me the download source of the intel PRO/Wireless 2200GB Driver for Linux, the link that attached on the sourceforge.net is not working.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+When reporting problem with a page, URL is really helpful.
 
-Thanks,
+I guess you meant the firmware, not a driver?
+I guess you meant:
+http://ipw2200.sourceforge.net/firmware.php
+http://ipw2200.sourceforge.net/firmware.php?fid=8
+URLs?
 
-Larry
+The second URL has a link "I Agree" but it doesn't seem to work currently.
 
->   drivers/net/wireless/rtlwifi/core.c | 52 +++++++++++++++++++++----------------
->   1 file changed, 30 insertions(+), 22 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-> index 2d337a0..6df4df0 100644
-> --- a/drivers/net/wireless/rtlwifi/core.c
-> +++ b/drivers/net/wireless/rtlwifi/core.c
-> @@ -475,20 +475,40 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
->   {
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-> +	u32 rx_conf;
->
->   	*new_flags &= RTL_SUPPORTED_FILTERS;
->   	if (!changed_flags)
->   		return;
->
-> +	/* if ssid not set to hw don't check bssid
-> +	 * here just used for linked scanning, & linked
-> +	 * and nolink check bssid is set in set network_type */
-> +	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
-> +		(mac->link_state >= MAC80211_LINKED)) {
-> +		if (mac->opmode != NL80211_IFTYPE_AP &&
-> +		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
-> +			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
-> +				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
-> +			} else {
-> +				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
-> +			}
-> +		}
-> +	}
-> +
-> +	/* must be called after set_chk_bssid since that function modifies the
-> +	 * RCR register too. */
-> +	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
-> +
->   	/*TODO: we disable broadcase now, so enable here */
->   	if (changed_flags & FIF_ALLMULTI) {
->   		if (*new_flags & FIF_ALLMULTI) {
-> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
-> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
->   			    rtlpriv->cfg->maps[MAC_RCR_AB];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Enable receive multicast frame\n");
->   		} else {
-> -			mac->rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
-> +			rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
->   					  rtlpriv->cfg->maps[MAC_RCR_AB]);
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Disable receive multicast frame\n");
-> @@ -497,39 +517,25 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
->
->   	if (changed_flags & FIF_FCSFAIL) {
->   		if (*new_flags & FIF_FCSFAIL) {
-> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
-> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Enable receive FCS error frame\n");
->   		} else {
-> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
-> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Disable receive FCS error frame\n");
->   		}
->   	}
->
-> -	/* if ssid not set to hw don't check bssid
-> -	 * here just used for linked scanning, & linked
-> -	 * and nolink check bssid is set in set network_type */
-> -	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
-> -		(mac->link_state >= MAC80211_LINKED)) {
-> -		if (mac->opmode != NL80211_IFTYPE_AP &&
-> -		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
-> -			if (*new_flags & FIF_BCN_PRBRESP_PROMISC) {
-> -				rtlpriv->cfg->ops->set_chk_bssid(hw, false);
-> -			} else {
-> -				rtlpriv->cfg->ops->set_chk_bssid(hw, true);
-> -			}
-> -		}
-> -	}
->
->   	if (changed_flags & FIF_CONTROL) {
->   		if (*new_flags & FIF_CONTROL) {
-> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
-> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
->
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Enable receive control frame\n");
->   		} else {
-> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
-> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Disable receive control frame\n");
->   		}
-> @@ -537,15 +543,17 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
->
->   	if (changed_flags & FIF_OTHER_BSS) {
->   		if (*new_flags & FIF_OTHER_BSS) {
-> -			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
-> +			rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Enable receive other BSS's frame\n");
->   		} else {
-> -			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
-> +			rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
->   				 "Disable receive other BSS's frame\n");
->   		}
->   	}
-> +
-> +	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&rx_conf));
->   }
->   static int rtl_op_sta_add(struct ieee80211_hw *hw,
->   			 struct ieee80211_vif *vif,
->
-
+-- 
+Rafał
