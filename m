@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:49119 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794AbaBCWJe (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:51479 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951AbaBPGhN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 17:09:34 -0500
-Received: by mail-we0-f174.google.com with SMTP id x55so3234578wes.5
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 14:09:33 -0800 (PST)
+	Sun, 16 Feb 2014 01:37:13 -0500
+Received: by mail-lb0-f172.google.com with SMTP id c11so10540270lbj.3
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 22:37:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140202215141.GL30112@us.netrek.org>
-References: <CAAUTuq83oJJ02tMpT6sK4krkwNFEVZYuzfvsTtRoUX=fVYT9-w@mail.gmail.com>
- <CAJwzM1=0xBkQ0cw-T+zMcAHSZVJsJ7vJmK6O9eisqttn_qGyMA@mail.gmail.com>
- <CAAUTuq--5EUYgKb1Bg9UWZnDAZRqcPZFd=GRVEo-YKictJJWwg@mail.gmail.com>
- <CAAUTuq-O1BFBmJfYe2xuRfLmNDNKY=V9CkMCM-QCq1iujE3n2w@mail.gmail.com> <20140202215141.GL30112@us.netrek.org>
-From: Andrew Wiley <wiley.andrew.j@gmail.com>
-Date: Mon, 3 Feb 2014 16:09:13 -0600
-Message-ID: <CAAUTuq-xXy2nfU55e=x5NDEGOB4dr=UbkJmHKgMHfrufXXP70g@mail.gmail.com> (sfid-20140203_230938_095795_526B4612)
-Subject: Re: Fwd: mwifiex and SD8787: How to create AP interface?
-To: James Cameron <quozl@laptop.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <52FEFA0B.4000807@xenontk.org>
+References: <52FEFA0B.4000807@xenontk.org>
+Date: Sun, 16 Feb 2014 08:37:09 +0200
+Message-ID: <CANUX_P3yjxbOT6+-3GC7x_4GQiifa8OOFTUyK-EBwwmS76-GNw@mail.gmail.com> (sfid-20140216_073745_974000_30CB89C4)
+Subject: Re: iwlwifi: Bluetooth and Wifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: davidjon@xenontk.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tedd <tedd.an@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Interesting.
+> Your patch "iwlwifi: mvm: BT Coex - disable BT when TXing probe request
+> in scan" fixed wifi dropping on my 7260 with scan time outs but now my
+> Bluetooth mouse freezes and unfreezes as it gets re-detected every few
+> minutes (3.14-rc2+):
 
-I haven't seen any allocation failures in my kernel log, so I probably
-have a different issue, but I'll keep an eye out.
-My platform only has 512MB of RAM, so I suspect the only reason I'm
-not seeing this is that I'm running an AP with no servers, so packets
-are just forwarded through a layer-2 bridge rather than sent to
-userspace applications.
+All this patches does is to send the probe request of the scan in High
+Prio so that it will take precedence over BT traffic in case of
+collision. Since there shouldn't be that many probe request, I am
+surprised that it kills your BT connection.
+Also - are you 100% positive that this patch changed the behavior?
+Have you tried to revert it and see what happens?
+Also - what was the behavior before? What do you mean when you say
+that it fixed your "wifi dropping with scan times out".
+Can I have a log of this?
 
-On Sun, Feb 2, 2014 at 3:51 PM, James Cameron <quozl@laptop.org> wrote:
-> On Sat, Feb 01, 2014 at 11:01:02PM -0600, Andrew Wiley wrote:
->> Hello Avinash,
->>
->> Thanks! That works for me. Would it be possible to add this to the
->> mwifiex page on wireless.kernel.org? As far as I know, this command is
->> completely undocumented within iw, and I know I'm not the only
->> Dreamplug owner experiencing this problem.
->>
->> As for other issues, I'm seeing a hang in the TX queue on the device
->> after running an AP for a while, but I'm still gathering information
->> on that. I'll follow up with another thread.
 >
-> I've also seen hangs, in both RX and TX, but mostly RX.
+> sb 2-6: USB disconnect, device number 9
+> [ 2204.013399] usb 2-6: new full-speed USB device number 11 using xhci_hcd
+> [ 2204.178555] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+> [ 2204.178565] usb 2-6: New USB device strings: Mfr=0, Product=0,
+> SerialNumber=0
+> [ 2204.194476] Bluetooth: hci0: read Intel version: 370710018002030d33
+> [ 2204.194484] Bluetooth: hci0: Intel device is already patched. patch
+> num: 33
+> [ 2226.561140] hid-generic 0005:046D:B010.0006: unknown main item tag 0x0
+> [ 2226.569469] input: Bluetooth Mouse M557 as
+> /devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0006/input/input18
+> [ 2226.569853] hid-generic 0005:046D:B010.0006: input,hidraw1: BLUETOOTH
+> HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
+> [ 2755.209616] usb 2-6: USB disconnect, device number 11
+> [ 2755.705285] usb 2-6: new full-speed USB device number 13 using xhci_hcd
+> [ 2755.870458] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+> [ 2755.870468] usb 2-6: New USB device strings: Mfr=0, Product=0,
+> SerialNumber=0
+> [ 2755.886722] Bluetooth: hci0: read Intel version: 370710018002030d33
+> [ 2755.886729] Bluetooth: hci0: Intel device is already patched. patch
+> num: 33
+> [ 2780.725691] hid-generic 0005:046D:B010.0007: unknown main item tag 0x0
+> [ 2780.759131] input: Bluetooth Mouse M557 as
+> /devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0007/input/input19
+> [ 2780.759532] hid-generic 0005:046D:B010.0007: input,hidraw1: BLUETOOTH
+> HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
+> [ 9151.434602] usb 2-6: USB disconnect, device number 13
+> [ 9151.930271] usb 2-6: new full-speed USB device number 15 using xhci_hcd
+> [ 9152.095371] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
+> [ 9152.095381] usb 2-6: New USB device strings: Mfr=0, Product=0,
+> SerialNumber=0
+> [ 9152.111270] Bluetooth: hci0: read Intel version: 370710018002030d33
+> [ 9152.111278] Bluetooth: hci0: Intel device is already patched. patch
+> num: 33
+> [ 9178.208386] hid-generic 0005:046D:B010.0008: unknown main item tag 0x0
+> [ 9178.239390] input: Bluetooth Mouse M557 as
+> /devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0008/input/input20
+> [ 9178.239751] hid-generic 0005:046D:B010.0008: input,hidraw1: BLUETOOTH
+> HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
 >
-> The response to failing to alloc an skb is a bit weak in mwifiex, we
-> noted this on OLPC XO-4 with the 8787.  You can see more about the
-> problem and some local fixes in our private branch:
+> Iwlwifi:
 >
-> http://dev.laptop.org/git/olpc-kernel/log/?h=arm-3.5
+> [   19.627252] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
+> [   19.627409] iwlwifi 0000:01:00.0: irq 62 for MSI/MSI-X
+> [   19.629897] iwlwifi 0000:01:00.0: loaded firmware version 22.15.8.0
+> op_mode iwlmvm
+> [   19.843619] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band
+> Wireless N 7260, REV=0x144
+> [   19.843666] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+> [   19.843883] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+> [   21.332796] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+> [   21.333012] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
+> [   28.734048] iwlwifi 0000:01:00.0 wlp1s0: disabling HT as WMM/QoS is
+> not supported by the AP
+> [   28.734055] iwlwifi 0000:01:00.0 wlp1s0: disabling VHT as WMM/QoS is
+> not supported by the AP
+
+Can you please run with iwlwifi module parameter debug=0x800. This
+will give us information about the timing of the scan.
+I'd like to see if the BT issues you face happen when we scan.
+
 >
-> http://dev.laptop.org/ticket/12694 (kernel 3.5)
+> Is there a better fix in the works? Any workaround? 802.11g performance
+> also looks to be subjectively poorer with Bluetooth on than without.
 >
-> I did backport the latest mwifiex at the time, but it did not fix the
-> issue, so I dug into it more.
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
+
+Is this also a regression?
