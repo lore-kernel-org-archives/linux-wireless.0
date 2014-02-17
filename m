@@ -1,189 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:52974 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbaBYNtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:49:33 -0500
-Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0MXUmw-1Wmcfg0gmk-00WUmU for
- <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:31 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 3/7] ath9k: move setup_ht_cap to common-init
-Date: Tue, 25 Feb 2014 14:48:52 +0100
-Message-Id: <1393336136-31069-4-git-send-email-linux@rempel-privat.de> (sfid-20140225_144936_106747_841B0E78)
-In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10851 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbaBQRin (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Feb 2014 12:38:43 -0500
+Message-ID: <53024920.8010104@broadcom.com> (sfid-20140217_183846_323522_E17D0DAD)
+Date: Mon, 17 Feb 2014 18:38:40 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
+CC: Samuel Ortiz <sameo@linux.intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	<frankyl@broadcom.com>
+Subject: Re: brcmfmac NVRAM files
+References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE> <530248DD.1050408@broadcom.com>
+In-Reply-To: <530248DD.1050408@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and rename it to ath9k_cmn_setup_ht_cap
+On 02/17/14 18:37, Arend van Spriel wrote:
+> On 02/17/14 17:52, Bernd Wagener wrote:
+>> Am 17.02.2014 17:33, schrieb Samuel Ortiz:
+>>> On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
+>>>> Hi Arend,
+>>>>
+>>>> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
+>>>> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
+>>>> file, but I could not find either a template on linux-firmware or any
+>>>> kind of documentation about it.
+>>>>
+>>>> How do distro handle that ? Are they expected to build their own, or is
+>>>> it completely OEM pecific ?
+>>> Adding Franky to the Cc list.
+>>>
+>>> Cheers,
+>>> Samuel.
+>>>
+>> Hi Samuel,
+>> I had the same proble with a wandboard here and I guess it's a bug. In
+>> /lib/firmware/brcm are all reqired *.bin files, but no *.txt file. On
+>> www.wandboard.or I found a SDK-Kit with brcmfmac4329-sdio.txt, copied
+>> the file and then the wlan was running.
+>> The *.txt are simply forgotten to copy to the firmware directory.
+>> No idea how to fix this.
+>
+> Hi Bernd,
+>
+> The hint to solve this is found on wireless.kernel.org [1] and the
+> answer is as Samuel suspects. This file is very board specific so OEMs
+> manufacturing/selling the board should provide it either upon request or
+> through some distribution like a SDK. Because of the nature of the file
+> we do not put it on linux-firmware although people like yourself can get
+> lucky trying ;-)
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/common-init.c | 58 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-init.h |  2 +
- drivers/net/wireless/ath/ath9k/init.c        | 62 +---------------------------
- 3 files changed, 62 insertions(+), 60 deletions(-)
+forgot:
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-index 1fa30c3..8e2fa03 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.c
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -168,3 +168,61 @@ int ath9k_cmn_init_channels_rates(struct ath_common *common)
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_cmn_init_channels_rates);
-+
-+void ath9k_cmn_setup_ht_cap(struct ath_hw *ah,
-+			    struct ieee80211_sta_ht_cap *ht_info)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u8 tx_streams, rx_streams;
-+	int i, max_streams;
-+
-+	ht_info->ht_supported = true;
-+	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		       IEEE80211_HT_CAP_SM_PS |
-+		       IEEE80211_HT_CAP_SGI_40 |
-+		       IEEE80211_HT_CAP_DSSSCCK40;
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_LDPC)
-+		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
-+		ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
-+
-+	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
-+
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
-+		max_streams = 1;
-+	else if (AR_SREV_9462(ah))
-+		max_streams = 2;
-+	else if (AR_SREV_9300_20_OR_LATER(ah))
-+		max_streams = 3;
-+	else
-+		max_streams = 2;
-+
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		if (max_streams >= 2)
-+			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-+		ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
-+	}
-+
-+	/* set up supported mcs set */
-+	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
-+	tx_streams = ath9k_cmn_count_streams(ah->txchainmask, max_streams);
-+	rx_streams = ath9k_cmn_count_streams(ah->rxchainmask, max_streams);
-+
-+	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
-+		tx_streams, rx_streams);
-+
-+	if (tx_streams != rx_streams) {
-+		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
-+		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-+				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
-+	}
-+
-+	for (i = 0; i < rx_streams; i++)
-+		ht_info->mcs.rx_mask[i] = 0xff;
-+
-+	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_setup_ht_cap);
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.h b/drivers/net/wireless/ath/ath9k/common-init.h
-index 8fc9049..6e678ca 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.h
-+++ b/drivers/net/wireless/ath/ath9k/common-init.h
-@@ -15,3 +15,5 @@
-  */
- 
- int ath9k_cmn_init_channels_rates(struct ath_common *common);
-+void ath9k_cmn_setup_ht_cap(struct ath_hw *ah,
-+			    struct ieee80211_sta_ht_cap *ht_info);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 172b2f9..6b37145 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -153,64 +153,6 @@ static unsigned int ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 cl
- /*     Initialization     */
- /**************************/
- 
--static void setup_ht_cap(struct ath_softc *sc,
--			 struct ieee80211_sta_ht_cap *ht_info)
--{
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	u8 tx_streams, rx_streams;
--	int i, max_streams;
--
--	ht_info->ht_supported = true;
--	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
--		       IEEE80211_HT_CAP_SM_PS |
--		       IEEE80211_HT_CAP_SGI_40 |
--		       IEEE80211_HT_CAP_DSSSCCK40;
--
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_LDPC)
--		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
--
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
--		ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
--
--	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
--	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
--
--	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
--		max_streams = 1;
--	else if (AR_SREV_9462(ah))
--		max_streams = 2;
--	else if (AR_SREV_9300_20_OR_LATER(ah))
--		max_streams = 3;
--	else
--		max_streams = 2;
--
--	if (AR_SREV_9280_20_OR_LATER(ah)) {
--		if (max_streams >= 2)
--			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
--		ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
--	}
--
--	/* set up supported mcs set */
--	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
--	tx_streams = ath9k_cmn_count_streams(ah->txchainmask, max_streams);
--	rx_streams = ath9k_cmn_count_streams(ah->rxchainmask, max_streams);
--
--	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
--		tx_streams, rx_streams);
--
--	if (tx_streams != rx_streams) {
--		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
--		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
--				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
--	}
--
--	for (i = 0; i < rx_streams; i++)
--		ht_info->mcs.rx_mask[i] = 0xff;
--
--	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
--}
--
- static void ath9k_reg_notifier(struct wiphy *wiphy,
- 			       struct regulatory_request *request)
- {
-@@ -709,9 +651,9 @@ void ath9k_reload_chainmask_settings(struct ath_softc *sc)
- 		return;
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--		setup_ht_cap(sc, &common->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+		ath9k_cmn_setup_ht_cap(ah, &common->sbands[IEEE80211_BAND_2GHZ].ht_cap);
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--		setup_ht_cap(sc, &common->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+		ath9k_cmn_setup_ht_cap(ah, &common->sbands[IEEE80211_BAND_5GHZ].ht_cap);
- }
- 
- static const struct ieee80211_iface_limit if_limits[] = {
--- 
-1.9.0
+[1] http://wireless.kernel.org/en/users/Drivers/brcm80211
+
+> Regards,
+> Arend
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
