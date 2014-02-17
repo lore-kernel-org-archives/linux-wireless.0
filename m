@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:59913 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755295AbaBRNhP (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753128AbaBQQip (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 08:37:15 -0500
-Received: by mail-pd0-f182.google.com with SMTP id v10so16163020pde.41
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 05:37:14 -0800 (PST)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/7] ieee80211: remove function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
-Date: Tue, 18 Feb 2014 21:36:03 +0800
-Message-Id: <c9305f68668f20186c1b2a8f8f3f6dac3d23b5db.1392728354.git.gamerh2o@gmail.com> (sfid-20140218_143720_850358_0BE8A4AF)
-In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
-References: <cover.1392728354.git.gamerh2o@gmail.com>
-In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
-References: <cover.1392728354.git.gamerh2o@gmail.com>
+	Mon, 17 Feb 2014 11:38:45 -0500
+Message-ID: <1392655111.5202.11.camel@jlt4.sipsolutions.net> (sfid-20140217_173848_729533_EE58621A)
+Subject: Re: [RFC 1/4] mac80211: Allow 5/10 MHz channel setting (for OCB)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de
+Date: Mon, 17 Feb 2014 17:38:31 +0100
+In-Reply-To: <1392652166.878.19.camel@umadbro> (sfid-20140217_164933_948526_5C145D5F)
+References: <1392643374-3545-1-git-send-email-lisovy@gmail.com>
+	 <1392643374-3545-2-git-send-email-lisovy@gmail.com>
+	 (sfid-20140217_142311_364138_9794E9CF) <1392644957.5202.7.camel@jlt4.sipsolutions.net>
+	 <1392652166.878.19.camel@umadbro> (sfid-20140217_164933_948526_5C145D5F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan} have been
-replaced with ieee80211_{channel_to_frequency, frequency_to_channel}.
+On Mon, 2014-02-17 at 16:49 +0100, Rostislav Lisovy wrote:
 
-There should be no users of the two functions now. So remove them.
+> As you have already noticed, this is work in progress. I agree it is
+> necessary to keep the code clean if I want others to read it -- I try to
+> do so but it does not always go very well.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- include/linux/ieee80211.h | 36 ------------------------------------
- 1 file changed, 36 deletions(-)
+:-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 5f34935..0629904 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2308,42 +2308,6 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
- }
- 
- /**
-- * ieee80211_dsss_chan_to_freq - get channel center frequency
-- * @channel: the DSSS channel
-- *
-- * Convert IEEE802.11 DSSS channel to the center frequency (MHz).
-- * Ref IEEE 802.11-2007 section 15.6
-- */
--static inline int ieee80211_dsss_chan_to_freq(int channel)
--{
--	if ((channel > 0) && (channel < 14))
--		return 2407 + (channel * 5);
--	else if (channel == 14)
--		return 2484;
--	else
--		return -1;
--}
--
--/**
-- * ieee80211_freq_to_dsss_chan - get channel
-- * @freq: the frequency
-- *
-- * Convert frequency (MHz) to IEEE802.11 DSSS channel
-- * Ref IEEE 802.11-2007 section 15.6
-- *
-- * This routine selects the channel with the closest center frequency.
-- */
--static inline int ieee80211_freq_to_dsss_chan(int freq)
--{
--	if ((freq >= 2410) && (freq < 2475))
--		return (freq - 2405) / 5;
--	else if ((freq >= 2482) && (freq < 2487))
--		return 14;
--	else
--		return -1;
--}
--
--/**
-  * ieee80211_tu_to_usec - convert time units (TU) to microseconds
-  * @tu: the TUs
-  */
--- 
-1.8.5.3
+> One thing I am not sure about (mentioned in 0/4) and need some
+> suggestions is frequency setting in the OCB mode.
+> Since there are no beacons containing the information about the
+> frequency to set, the frequency is set manually. Since the
+> 'set_channel()' function is not present anymore (and we do not have
+> 'ocb_join()' function, thus we cannot use 'preset_chandef'), I was not
+> able to figure out how to set a fixed channel.
+
+I don't really see why you didn't add an obc_join() method. I know that
+it's not strictly a BSS concept, but still there should be *some*
+indication that you want to participate in the OBC now, so you should
+still have something like obc_join() that starts everything.
+
+> If I would want to set the frequency with the
+> ieee80211_vif_use_channel() function, I would need to somehow obtain the
+> *sdata. If I check ieee80211_set_monitor_channel() I see how *sdata is
+> obtained there, but I am not sure if it is a good idea to add *ocb_sdata
+> to struct ieee80211_local?
+
+That doesn't seem right, no; it seems in theory multiple OBC interfaces
+could be present.
+
+johannes
 
