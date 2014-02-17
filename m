@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:55164 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbaBLSyj (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57650 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222AbaBQTcd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 13:54:39 -0500
-Received: by mail-ee0-f50.google.com with SMTP id d17so4510479eek.23
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 10:54:38 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/4] cfg80211: parse DFS CAC time for internal regdb option
-Date: Wed, 12 Feb 2014 19:54:21 +0100
-Message-Id: <1392231266-28479-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195447_679013_B8EA20BA)
-In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	Mon, 17 Feb 2014 14:32:33 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4] ath10k:  add more details to some debug messages
+Date: Mon, 17 Feb 2014 11:31:35 -0800
+Message-Id: <1392665495-17011-1-git-send-email-greearb@candelatech.com> (sfid-20140217_203236_977593_2D0FA19A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for parsing DFS CAC time when internal
-regulatory database is used.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Makes it easier to determine why some failures
+happened.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/wireless/genregdb.awk |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 9a8217d..7683b47 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -66,6 +66,7 @@ function parse_reg_rule()
- 	units = $8
- 	sub(/\)/, "", units)
- 	sub(/,/, "", units)
-+	dfs_cac = $9
- 	if (units == "mW") {
- 		if (power == 100) {
- 			power = 20
-@@ -78,7 +79,12 @@ function parse_reg_rule()
- 		} else {
- 			print "Unknown power value in database!"
- 		}
-+	} else {
-+		dfs_cac = $8
- 	}
-+	sub(/,/, "", dfs_cac)
-+	sub(/\(/, "", dfs_cac)
-+	sub(/\)/, "", dfs_cac)
- 	flagstr = ""
- 	for (i=8; i<=NF; i++)
- 		flagstr = flagstr $i
-@@ -109,7 +115,7 @@ function parse_reg_rule()
+v4: Add commit description.
+
+ drivers/net/wireless/ath/ath10k/mac.c  | 3 ++-
+ drivers/net/wireless/ath/ath10k/txrx.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e17f5d73..7ca52ea 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3539,7 +3539,8 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 		}), ATH10K_FLUSH_TIMEOUT_HZ);
  
+ 	if (ret <= 0 || skip)
+-		ath10k_warn("tx not flushed\n");
++		ath10k_warn("tx not flushed (skip %i ar-state %i): %i\n",
++			    skip, ar->state, ret);
+ 
+ skip:
+ 	mutex_unlock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index ec6f825..8271df2 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -378,7 +378,8 @@ void ath10k_peer_unmap_event(struct ath10k_htt *htt,
+ 	spin_lock_bh(&ar->data_lock);
+ 	peer = ath10k_peer_find_by_id(ar, ev->peer_id);
+ 	if (!peer) {
+-		ath10k_warn("unknown peer id %d\n", ev->peer_id);
++		ath10k_warn("peer-unmap-event: unknown peer id %d\n",
++			    ev->peer_id);
+ 		goto exit;
  	}
- 	flags = flags "0"
--	printf "\t\tREG_RULE(%d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, flags
-+	printf "\t\tREG_RULE_EXT(%d, %d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, dfs_cac, flags
- 	rules++
- }
  
 -- 
-1.7.9.5
+1.7.11.7
 
