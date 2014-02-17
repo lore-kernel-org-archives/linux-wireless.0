@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47060 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbaBJTUr (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37877 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbaBQX57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 14:20:47 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.82)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1WCwPN-0001O6-SQ
-	for linux-wireless@vger.kernel.org; Mon, 10 Feb 2014 20:20:46 +0100
-Message-ID: <1392060043.4128.37.camel@jlt4.sipsolutions.net> (sfid-20140210_202050_594107_FC8E5876)
-Subject: moving the wiki
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 10 Feb 2014 20:20:43 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 17 Feb 2014 18:57:59 -0500
+Message-ID: <5302A1EF.6060600@candelatech.com> (sfid-20140218_005802_845870_A23F491B)
+Date: Mon, 17 Feb 2014 15:57:35 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: lockdep warning (needs annotation)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+I started seeing this today after synch-ing with upstream
+ath10k tree.
 
-There has been kernel.org infrastructure for wikis for a long time,
-though IIRC it didn't exist back when we set up our current wiki.
-However, it seems like a good idea to convert the wiki to the kernel.org
-infrastructure. This has some obvious advantages (like https support)
-and gets us better support for it, with hopefully less downtime.
+Firmware is modified, and there are some patches to ath10k in my
+tree, but probably nothing that affects this.
 
-As a consequence, we'll be doing the following:
- * Mark the current wiki read-only, to guarantee a stable conversion.
-This
-   shouldn't take all that long, but we'll have to see.
- * I'll keep the read-only wiki at http://wireless.sipsolutions.net/ for
-a while,
-   in case somebody needs history - you can also download page/history
-snapshots.
- * As we have a LOT of dead accounts, I've decided to NOT migrate them.
-You'll
-   have to sign up again, but I couldn't convert notifications etc.
-anyway, so
-   you'd have to touch those regardless.
- * We'll also drop page history, converting that is a bit more difficult
-and the
-   history isn't all that interesting for most pages.
- * For now, I won't be converting the style/skin. If anybody has (or
-knows
-   someone with) experience skinning mediawiki, help would be welcome.
 
-Obviously, another consequence is that the wiki markup will change
-somewhat. Moin and Mediawiki aren't too far from each other (except for
-table syntax), but there are some things that are different that you'll
-have to get used to when editing.
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 1 PID: 213 Comm: kworker/u8:2 Tainted: G         C   3.14.0-rc2-wl-ath+ #11
+Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
+Workqueue: phy0 ieee80211_iface_work [mac80211]
+ 0000000000000000 ffff88020fd777e8 ffffffff815d0007 0000000000000006
+ 0000000000000000 ffff88020fd77868 ffffffff810fb81e ffff88020fd77818
+ ffffffff00000000 ffff880200000001 0000000000000002 0000000000000000
+Call Trace:
+ [<ffffffff815d0007>] dump_stack+0x4e/0x71
+ [<ffffffff810fb81e>] register_lock_class+0x11a/0x2f0
+ [<ffffffff810fcc2b>] __lock_acquire+0xe0/0xe48
+ [<ffffffff815d7592>] ? _raw_spin_unlock_irq+0x28/0x42
+ [<ffffffff810fc966>] ? mark_lock+0x2d/0x212
+ [<ffffffff810fc966>] ? mark_lock+0x2d/0x212
+ [<ffffffff810fdd9f>] lock_acquire+0x82/0x9d
+ [<ffffffff810d6abe>] ? queue_delayed_work_on+0x85/0x85
+ [<ffffffff810d6b07>] flush_work+0x49/0x289
+ [<ffffffff810d6abe>] ? queue_delayed_work_on+0x85/0x85
+ [<ffffffff810fc966>] ? mark_lock+0x2d/0x212
+ [<ffffffff810fe0a8>] ? mark_held_locks+0x71/0x99
+ [<ffffffff810d8758>] ? __cancel_work_timer+0x89/0xbf
+ [<ffffffff810d8769>] __cancel_work_timer+0x9a/0xbf
+ [<ffffffff810d87a9>] cancel_work_sync+0xb/0xd
+ [<ffffffffa0515b4b>] ath10k_sta_state+0x4b/0x48e [ath10k_core]
+ [<ffffffffa030dbaa>] drv_sta_state+0x87/0x17b [mac80211]
+ [<ffffffffa030f632>] __sta_info_destroy_part2+0xca/0x2a0 [mac80211]
+ [<ffffffffa030f9b5>] __sta_info_destroy+0x25/0x2f [mac80211]
+ [<ffffffffa030fb19>] sta_info_destroy_addr+0x39/0x59 [mac80211]
+ [<ffffffffa0331eb0>] ieee80211_destroy_auth_data+0x31/0xbc [mac80211]
+ [<ffffffffa0335382>] ieee80211_sta_work+0x16b/0xbe6 [mac80211]
+ [<ffffffff810fe0a8>] ? mark_held_locks+0x71/0x99
+ [<ffffffff815d75ec>] ? _raw_spin_unlock_irqrestore+0x40/0x5e
+ [<ffffffff810fe215>] ? trace_hardirqs_on_caller+0x145/0x1a1
+ [<ffffffff815d75f4>] ? _raw_spin_unlock_irqrestore+0x48/0x5e
+ [<ffffffffa0319c4a>] ieee80211_iface_work+0x2a3/0x2c6 [mac80211]
+ [<ffffffff810d7eb9>] process_one_work+0x1d7/0x2fc
+ [<ffffffff810d7e4f>] ? process_one_work+0x16d/0x2fc
+ [<ffffffff810d518c>] ? spin_lock_irq+0x9/0xb
+ [<ffffffff810d83b1>] worker_thread+0x12e/0x1fb
+ [<ffffffff810d8283>] ? rescuer_thread+0x27b/0x27b
+ [<ffffffff810dd70d>] kthread+0xc4/0xcc
+ [<ffffffff810dd649>] ? __kthread_parkme+0x5c/0x5c
+ [<ffffffff815dc40c>] ret_from_fork+0x7c/0xb0
+ [<ffffffff810dd649>] ? __kthread_parkme+0x5c/0x5c
 
-I think/hope that all this can happen over the next few days. If there
-are any concerns (other than "don't do it") let me know.
+Thanks,
+Ben
 
-Wish me luck ;-)
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
