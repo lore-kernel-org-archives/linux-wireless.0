@@ -1,371 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24626 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164AbaBZPyy (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:64185 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbaBQJh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 10:54:54 -0500
-Message-ID: <530E0E4B.5020409@broadcom.com> (sfid-20140226_165500_301333_B3D0DAE4)
-Date: Wed, 26 Feb 2014 16:54:51 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: merge issue with wireless-testing
-References: <530E03FF.2080608@broadcom.com> <530E04B5.4010905@broadcom.com>
-In-Reply-To: <530E04B5.4010905@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 17 Feb 2014 04:37:59 -0500
+Received: by mail-ea0-f177.google.com with SMTP id m10so4412205eaj.8
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 01:37:58 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT 4/7] ath10k: bypass htc for htt tx path
+Date: Mon, 17 Feb 2014 10:32:40 +0100
+Message-Id: <1392629563-31046-5-git-send-email-michal.kazior@tieto.com> (sfid-20140217_103819_915101_466D96B9)
+In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 04:13 PM, Arend van Spriel wrote:
-> On 02/26/2014 04:10 PM, Arend van Spriel wrote:
->> Hi John,
->>
->> Our internal kernel repository was still dangling on 3.14-rc1 (last
->> merge from wireless-testing/master) so I thought it was time to tag
->> along and do a new merge of wireless-testing/master, but I get a ship
->> load of merge conflicts that I can not explain (see below). Did you
->> rebase between rc1 and rc4? Hope you can end my confusion.
-> 
-> I tried to merge:
-> 
-> commit b8f6bdb12edb9b24114c746117087fdc9f75741e
-> Merge: e078763 b7b146c
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Tue Feb 25 15:36:46 2014 -0500
-> 
->     Merge branch 'master' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/linvi
-> 
->     Conflicts:
->         drivers/net/wireless/ath/ath9k/recv.c
+Going through full HTC tx path for HTT tx is a
+waste of resources. By skipping it it's possible
+to easily submit scatter-gather to the PCI HIF for
+reduced host CPU load and improved performance.
 
-git diff between v3.14-rc4 tag and wireless-testing looks pretty normal
-except for these:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c     |   4 +-
+ drivers/net/wireless/ath/ath10k/ce.h     |   2 +-
+ drivers/net/wireless/ath/ath10k/core.h   |   5 +-
+ drivers/net/wireless/ath/ath10k/htc.c    |   4 +-
+ drivers/net/wireless/ath/ath10k/htt.h    |   8 ++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 190 ++++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/pci.c    |  12 +-
+ drivers/net/wireless/ath/ath10k/txrx.c   |   6 +-
+ 8 files changed, 122 insertions(+), 109 deletions(-)
 
- arch/s390/kernel/compat_wrapper.S                  |    2 +-
- arch/s390/pci/pci_dma.c                            |    8 +-
- drivers/s390/cio/chsc.c                            |    1 +
- drivers/s390/crypto/zcrypt_msgtype6.c              |   24 +-
- security/selinux/ss/policydb.c                     |    8 +-
-
-I think I will go and rebase instead of the merge.
-
-Thanks,
-Arend
-
->> Regards,
->> Arend
->>
->> --8<-----------------------------------------------------------------
->> # Unmerged paths:
->> #   (use "git add/rm <file>..." as appropriate to mark resolution)
->> #
->> #	both modified:      Documentation/PCI/MSI-HOWTO.txt
->> #	both modified:      MAINTAINERS
->> #	both modified:      Makefile
->> #	both modified:      arch/arm/boot/dts/dove.dtsi
->> #	both added:         arch/arm/boot/dts/imx6dl-hummingboard.dts
->> #	both added:         arch/arm/boot/dts/imx6qdl-cubox-i.dtsi
->> #	both modified:      arch/arm/boot/dts/sama5d3.dtsi
->> #	both modified:      arch/arm/boot/dts/ste-href.dtsi
->> #	both modified:      arch/arm/boot/dts/tegra114.dtsi
->> #	both modified:      arch/arm/boot/dts/tegra20.dtsi
->> #	both modified:      arch/arm/boot/dts/tegra30-cardhu.dtsi
->> #	both modified:      arch/arm/boot/dts/tegra30.dtsi
->> #	both modified:      arch/arm/kernel/setup.c
->> #	both added:         arch/arm/mach-hisi/Kconfig
->> #	both modified:      arch/arm/mach-imx/clk-imx6sl.c
->> #	both added:         arch/arm/mach-moxart/Kconfig
->> #	both modified:      arch/arm/mach-omap2/Kconfig
->> #	both modified:      arch/arm/mach-zynq/common.c
->> #	both modified:      arch/arm64/include/uapi/asm/kvm.h
->> #	both modified:      arch/arm64/mm/dma-mapping.c
->> #	both modified:      arch/microblaze/kernel/head.S
->> #	both modified:      arch/mips/include/asm/fpu.h
->> #	both modified:      arch/powerpc/include/asm/pgtable.h
->> #	both modified:      arch/powerpc/platforms/powernv/pci-ioda.c
->> #	both modified:      arch/powerpc/platforms/powernv/pci.c
->> #	both modified:      arch/powerpc/platforms/powernv/setup.c
->> #	both modified:      arch/powerpc/platforms/pseries/pci.c
->> #	both modified:      arch/s390/kernel/compat_wrapper.S
->> #	both modified:      arch/x86/Kconfig
->> #	both modified:      arch/x86/include/asm/efi.h
->> #	both modified:      arch/x86/include/asm/tsc.h
->> #	both modified:      arch/x86/kernel/cpu/microcode/amd_early.c
->> #	both modified:      arch/x86/kernel/irq.c
->> #	both modified:      arch/x86/kernel/tsc.c
->> #	both added:         arch/x86/kernel/tsc_msr.c
->> #	both modified:      arch/x86/mm/numa.c
->> #	both modified:      arch/x86/platform/efi/efi.c
->> #	both modified:      arch/x86/platform/efi/efi_64.c
->> #	both modified:      arch/x86/xen/enlighten.c
->> #	both modified:      block/blk-merge.c
->> #	both modified:      block/blk-mq.c
->> #	both modified:      block/blk-mq.h
->> #	both modified:      drivers/acpi/container.c
->> #	both modified:      drivers/acpi/scan.c
->> #	both modified:      drivers/ata/ahci.c
->> #	both modified:      drivers/ata/sata_mv.c
->> #	both added:         drivers/base/component.c
->> #	both modified:      drivers/block/null_blk.c
->> #	both modified:      drivers/clocksource/bcm_kona_timer.c
->> #	both modified:      drivers/cpufreq/intel_pstate.c
->> #	both modified:      drivers/dma/Kconfig
->> #	both added:         drivers/gpio/gpio-xtensa.c
->> #	both modified:      drivers/gpu/drm/ast/ast_fb.c
->> #	both modified:      drivers/gpu/drm/cirrus/cirrus_fbdev.c
->> #	both modified:      drivers/gpu/drm/exynos/exynos_drm_drv.c
->> #	both modified:      drivers/gpu/drm/i915/intel_display.c
->> #	both modified:      drivers/gpu/drm/i915/intel_dp.c
->> #	both modified:      drivers/gpu/drm/i915/intel_ringbuffer.c
->> #	both modified:      drivers/gpu/drm/mgag200/mgag200_fb.c
->> #	both modified:      drivers/gpu/drm/msm/mdp/mdp4/mdp4_crtc.c
->> #	both added:         drivers/gpu/drm/msm/mdp/mdp5/mdp5_crtc.c
->> #	both modified:      drivers/gpu/drm/nouveau/core/engine/device/nv40.c
->> #	both modified:      drivers/gpu/drm/nouveau/core/engine/fifo/nve0.c
->> #	both modified:      drivers/gpu/drm/nouveau/core/engine/graph/nv50.c
->> #	both modified:      drivers/gpu/drm/nouveau/nouveau_acpi.c
->> #	both modified:      drivers/gpu/drm/nouveau/nouveau_bo.c
->> #	both modified:      drivers/gpu/drm/radeon/atombios_crtc.c
->> #	both modified:      drivers/gpu/drm/radeon/kv_dpm.c
->> #	both modified:      drivers/gpu/drm/radeon/radeon_drv.c
->> #	both modified:      drivers/gpu/drm/radeon/si_dpm.c
->> #	both modified:      drivers/gpu/drm/ttm/ttm_object.c
->> #	both modified:      drivers/gpu/drm/ttm/ttm_tt.c
->> #	both modified:      drivers/gpu/drm/vmwgfx/svga3d_reg.h
->> #	both modified:      drivers/gpu/drm/vmwgfx/svga_reg.h
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_context.c
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_drv.c
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_drv.h
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_execbuf.c
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_ioctl.c
->> #	both added:         drivers/gpu/drm/vmwgfx/vmwgfx_mob.c
->> #	both added:         drivers/gpu/drm/vmwgfx/vmwgfx_shader.c
->> #	both modified:      drivers/gpu/drm/vmwgfx/vmwgfx_surface.c
->> #	both modified:      drivers/hid/hid-ids.h
->> #	both modified:      drivers/hid/hid-sensor-hub.c
->> #	both modified:      drivers/iio/accel/bma180.c
->> #	both modified:      drivers/infiniband/hw/mlx4/main.c
->> #	both modified:      drivers/infiniband/hw/ocrdma/ocrdma_main.c
->> #	both added:         drivers/infiniband/hw/usnic/usnic_ib_qp_grp.c
->> #	both modified:      drivers/infiniband/ulp/isert/ib_isert.c
->> #	both modified:      drivers/md/bcache/bcache.h
->> #	both modified:      drivers/md/bcache/bset.c
->> #	both modified:      drivers/md/bcache/btree.c
->> #	both added:         drivers/md/bcache/extents.c
->> #	both modified:      drivers/md/bcache/request.c
->> #	both modified:      drivers/md/bcache/sysfs.c
->> #	both modified:      drivers/media/i2c/adv7842.c
->> #	both added:         drivers/media/i2c/s5k5baf.c
->> #	both modified:      drivers/media/platform/exynos4-is/fimc-core.c
->> #	both modified:      drivers/media/platform/exynos4-is/fimc-lite.c
->> #	both modified:      drivers/media/platform/s5p-jpeg/jpeg-core.c
->> #	both modified:      drivers/media/v4l2-core/videobuf2-core.c
->> #	both added:         drivers/mfd/max14577.c
->> #	both modified:      drivers/mfd/max8997.c
->> #	both modified:      drivers/mfd/max8998.c
->> #	both modified:      drivers/mfd/sec-core.c
->> #	both modified:      drivers/mfd/tps65217.c
->> #	both added:         drivers/misc/genwqe/card_dev.c
->> #	both modified:      drivers/net/bonding/bond_main.c
->> #	both modified:      drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
->> #	both modified:      drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.h
->> #	both modified:      drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
->> #	both modified:      drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->> #	both modified:      drivers/net/ethernet/lantiq_etop.c
->> #	both modified:      drivers/net/ethernet/mellanox/mlx4/en_tx.c
->> #	both modified:      drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
->> #	both modified:      drivers/net/ethernet/stmicro/stmmac/Kconfig
->> #	both modified:      drivers/net/ethernet/stmicro/stmmac/Makefile
->> #	both modified:      drivers/net/ethernet/stmicro/stmmac/stmmac.h
->> #	both modified:      drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
->> #	both modified:      drivers/net/ethernet/ti/cpsw.c
->> #	both modified:      drivers/net/ethernet/tile/tilegx.c
->> #	both modified:      drivers/net/hyperv/netvsc_drv.c
->> #	both modified:      drivers/net/macvlan.c
->> #	both modified:      drivers/net/phy/phy_device.c
->> #	both modified:      drivers/net/team/team.c
->> #	both modified:      drivers/net/tun.c
->> #	both modified:      drivers/net/usb/r8152.c
->> #	both modified:      drivers/net/vxlan.c
->> #	both modified:      drivers/net/wireless/ath/ath10k/htt_rx.c
->> #	both modified:      drivers/net/wireless/ath/ath10k/mac.c
->> #	both modified:      drivers/net/wireless/ath/ath9k/ar9003_calib.c
->> #	both modified:      drivers/net/wireless/ath/ath9k/ath9k.h
->> #	both modified:      drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
->> #	both modified:      drivers/net/wireless/ath/ath9k/hw.c
->> #	both modified:      drivers/net/wireless/ath/ath9k/main.c
->> #	both modified:      drivers/net/wireless/ath/ath9k/recv.c
->> #	both modified:      drivers/net/wireless/b43/xmit.c
->> #	both modified:      drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> #	both added:         drivers/net/wireless/brcm80211/brcmfmac/chip.c
->> #	both modified:      drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
->> #	both modified:      drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> #	both modified:      drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
->> #	both modified:      drivers/net/wireless/iwlwifi/iwl-prph.h
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/mac80211.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/nvm.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/ops.c
->> #	deleted by them:    drivers/net/wireless/iwlwifi/mvm/power_legacy.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/rs.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/scan.c
->> #	both modified:      drivers/net/wireless/iwlwifi/mvm/tx.c
->> #	both modified:      drivers/net/wireless/iwlwifi/pcie/drv.c
->> #	both modified:      drivers/net/wireless/iwlwifi/pcie/rx.c
->> #	both modified:      drivers/net/wireless/iwlwifi/pcie/tx.c
->> #	both modified:      drivers/net/wireless/mac80211_hwsim.c
->> #	both modified:      drivers/net/wireless/mac80211_hwsim.h
->> #	both modified:      drivers/net/wireless/mwifiex/fw.h
->> #	both modified:      drivers/net/wireless/mwifiex/main.c
->> #	both modified:      drivers/net/wireless/mwifiex/scan.c
->> #	both modified:      drivers/net/wireless/mwifiex/usb.c
->> #	both modified:      drivers/net/xen-netback/common.h
->> #	both modified:      drivers/net/xen-netback/interface.c
->> #	both modified:      drivers/net/xen-netback/netback.c
->> #	both modified:      drivers/of/base.c
->> #	both modified:      drivers/of/of_mdio.c
->> #	both modified:      drivers/pci/hotplug/acpiphp_glue.c
->> #	both modified:      drivers/pci/msi.c
->> #	both modified:      drivers/phy/Kconfig
->> #	both modified:      drivers/phy/phy-core.c
->> #	both added:         drivers/phy/phy-mvebu-sata.c
->> #	both modified:      drivers/power/isp1704_charger.c
->> #	both modified:      drivers/regulator/core.c
->> #	both added:         drivers/regulator/max14577.c
->> #	both modified:      drivers/spi/Kconfig
->> #	both added:         drivers/staging/android/ion/compat_ion.c
->> #	both added:         drivers/staging/android/ion/ion_dummy_driver.c
->> #	both added:         drivers/staging/android/ion/ion_heap.c
->> #	both added:         drivers/staging/android/ion/ion_priv.h
->> #	both added:         drivers/staging/android/ion/ion_system_heap.c
->> #	both modified:      drivers/staging/bcm/Bcmnet.c
->> #	both modified:      drivers/staging/iio/adc/mxs-lradc.c
->> #	both modified:      drivers/staging/imx-drm/imx-drm-core.c
->> #	both added:         drivers/staging/imx-drm/imx-hdmi.c
->> #	both modified:      drivers/staging/lustre/lnet/klnds/o2iblnd/o2iblnd_cb.c
->> #	both modified:      drivers/staging/netlogic/xlr_net.c
->> #	both modified:      drivers/staging/rtl8188eu/os_dep/os_intfs.c
->> #	both added:         drivers/staging/rtl8821ae/Kconfig
->> #	both added:         drivers/staging/rtl8821ae/wifi.h
->> #	both modified:      drivers/target/target_core_alua.c
->> #	both modified:      drivers/target/target_core_sbc.c
->> #	both modified:      drivers/target/target_core_spc.c
->> #	both modified:      drivers/tty/n_tty.c
->> #	both modified:      drivers/usb/core/driver.c
->> #	both modified:      drivers/usb/dwc2/core.c
->> #	both modified:      drivers/usb/dwc2/platform.c
->> #	both modified:      drivers/usb/gadget/f_fs.c
->> #	both modified:      drivers/usb/gadget/s3c2410_udc.c
->> #	both modified:      drivers/usb/host/xhci-ring.c
->> #	both modified:      drivers/usb/host/xhci.c
->> #	both modified:      drivers/usb/host/xhci.h
->> #	both modified:      drivers/usb/musb/musb_core.c
->> #	both modified:      drivers/usb/musb/musb_virthub.c
->> #	both modified:      drivers/video/omap2/dss/dispc.c
->> #	both modified:      drivers/video/omap2/dss/dpi.c
->> #	both modified:      drivers/video/omap2/dss/sdi.c
->> #	both modified:      drivers/watchdog/Kconfig
->> #	both modified:      drivers/xen/events/events_base.c
->> #	both modified:      fs/bio.c
->> #	both modified:      fs/btrfs/disk-io.c
->> #	both modified:      fs/btrfs/extent-tree.c
->> #	both modified:      fs/btrfs/inode.c
->> #	both modified:      fs/btrfs/ioctl.c
->> #	both modified:      fs/btrfs/send.c
->> #	both modified:      fs/btrfs/sysfs.c
->> #	both added:         fs/ceph/acl.c
->> #	both modified:      fs/ceph/dir.c
->> #	both modified:      fs/ceph/super.h
->> #	both modified:      fs/ceph/xattr.c
->> #	both modified:      fs/cifs/cifsglob.h
->> #	both modified:      fs/jfs/acl.c
->> #	both modified:      fs/jfs/xattr.c
->> #	both added:         fs/kernfs/dir.c
->> #	both modified:      fs/namei.c
->> #	both modified:      fs/nfs/nfs3acl.c
->> #	both modified:      fs/nfsd/nfs4acl.c
->> #	both modified:      fs/posix_acl.c
->> #	both modified:      fs/xfs/xfs_iops.c
->> #	both modified:      fs/xfs/xfs_log_cil.c
->> #	both modified:      include/linux/bio.h
->> #	both modified:      include/linux/mmc/sdio_ids.h
->> #	both modified:      include/linux/netdevice.h
->> #	both modified:      include/linux/of.h
->> #	both modified:      include/linux/pci.h
->> #	both modified:      include/linux/spi/spi.h
->> #	both modified:      include/linux/syscalls.h
->> #	both modified:      include/net/cfg80211.h
->> #	both modified:      include/trace/events/power.h
->> #	both modified:      include/uapi/drm/vmwgfx_drm.h
->> #	both modified:      include/uapi/linux/nl80211.h
->> #	both modified:      kernel/cgroup.c
->> #	both modified:      kernel/sched/core.c
->> #	both added:         kernel/sched/cpudeadline.c
->> #	both added:         kernel/sched/deadline.c
->> #	both modified:      kernel/sched/sched.h
->> #	both modified:      mm/huge_memory.c
->> #	both modified:      mm/memory-failure.c
->> #	both modified:      mm/mprotect.c
->> #	both modified:      mm/slub.c
->> #	both modified:      net/batman-adv/bat_iv_ogm.c
->> #	both modified:      net/batman-adv/originator.c
->> #	both modified:      net/bluetooth/hci_core.c
->> #	both modified:      net/bluetooth/l2cap_core.c
->> #	both modified:      net/bluetooth/rfcomm/tty.c
->> #	both modified:      net/ceph/messenger.c
->> #	both modified:      net/ceph/osd_client.c
->> #	both modified:      net/core/dev.c
->> #	both modified:      net/core/flow_dissector.c
->> #	both modified:      net/core/rtnetlink.c
->> #	both modified:      net/ieee802154/6lowpan.c
->> #	both modified:      net/ipv4/devinet.c
->> #	both modified:      net/ipv4/ip_forward.c
->> #	both modified:      net/ipv4/ip_tunnel.c
->> #	both modified:      net/ipv4/netfilter/Kconfig
->> #	both modified:      net/ipv4/tcp_output.c
->> #	both modified:      net/ipv4/udp_offload.c
->> #	both modified:      net/ipv6/icmp.c
->> #	both modified:      net/ipv6/ip6_output.c
->> #	both modified:      net/ipv6/netfilter/Kconfig
->> #	both modified:      net/mac80211/cfg.c
->> #	both modified:      net/mac80211/debugfs_netdev.c
->> #	both modified:      net/mac80211/ibss.c
->> #	both modified:      net/mac80211/iface.c
->> #	both modified:      net/mac80211/tx.c
->> #	both modified:      net/netfilter/Kconfig
->> #	both modified:      net/netfilter/Makefile
->> #	both modified:      net/netfilter/nf_tables_api.c
->> #	both modified:      net/netfilter/nft_log.c
->> #	both added:         net/netfilter/nft_queue.c
->> #	both modified:      net/netfilter/nft_reject.c
->> #	both modified:      net/nfc/nci/core.c
->> #	both modified:      net/openvswitch/datapath.c
->> #	both modified:      net/openvswitch/flow_table.c
->> #	both modified:      net/packet/af_packet.c
->> #	both added:         net/sched/sch_pie.c
->> #	both modified:      net/sctp/associola.c
->> #	both modified:      net/sctp/socket.c
->> #	both modified:      net/wireless/ap.c
->> #	both modified:      net/wireless/mesh.c
->> #	both modified:      net/wireless/nl80211.c
->> #	both modified:      sound/pci/hda/hda_codec.c
->> #	both modified:      sound/pci/hda/patch_analog.c
->> #	both modified:      sound/pci/hda/patch_realtek.c
->> #	both added:         sound/pci/hda/thinkpad_helper.c
->> #	both modified:      sound/soc/davinci/davinci-mcasp.c
->> #	both added:         sound/soc/fsl/fsl_esai.c
->> #	both added:         sound/soc/fsl/fsl_esai.h
->> #	both modified:      sound/usb/mixer_maps.c
->> #	both modified:      tools/perf/util/machine.c
->> #	both modified:      tools/perf/util/probe-event.c
->> #
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index a0b1a8c..a79499c 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1067,9 +1067,9 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
+ 	 *
+ 	 * For the lack of a better place do the check here.
+ 	 */
+-	BUILD_BUG_ON(TARGET_NUM_MSDU_DESC >
++	BUILD_BUG_ON(2*TARGET_NUM_MSDU_DESC >
+ 		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+-	BUILD_BUG_ON(TARGET_10X_NUM_MSDU_DESC >
++	BUILD_BUG_ON(2*TARGET_10X_NUM_MSDU_DESC >
+ 		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+ 
+ 	ret = ath10k_pci_wake(ar);
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 322e929..8eb7f99 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -23,7 +23,7 @@
+ 
+ /* Maximum number of Copy Engine's supported */
+ #define CE_COUNT_MAX 8
+-#define CE_HTT_H2T_MSG_SRC_NENTRIES 2048
++#define CE_HTT_H2T_MSG_SRC_NENTRIES 4096
+ 
+ /* Descriptor rings must be aligned to this boundary */
+ #define CE_DESC_RING_ALIGN	8
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7cf022d..f34019f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -67,9 +67,8 @@ struct ath10k_skb_cb {
+ 	struct {
+ 		u8 tid;
+ 		bool is_offchan;
+-
+-		u8 frag_len;
+-		u8 pad_len;
++		struct ath10k_htt_txbuf *txbuf;
++		u32 txbuf_paddr;
+ 	} __packed htt;
+ 
+ 	struct {
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 64ab8d6..1491ce7 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -202,10 +202,8 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
+ 	struct ath10k_htc *htc = &ar->htc;
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+ 
+-	if (!skb) {
+-		ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
++	if (WARN_ON(!skb))
+ 		return 0;
+-	}
+ 
+ 	ath10k_htc_notify_tx_completion(ep, skb);
+ 	/* the skb now belongs to the completion handler */
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 02c009d..782a449 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1188,6 +1188,13 @@ struct htt_rx_info {
+ 	bool mic_err;
+ };
+ 
++struct ath10k_htt_txbuf {
++	struct htt_data_tx_desc_frag frags[2];
++	struct ath10k_htc_hdr htc_hdr;
++	struct htt_cmd_hdr cmd_hdr;
++	struct htt_data_tx_desc cmd_tx;
++} __packed;
++
+ struct ath10k_htt {
+ 	struct ath10k *ar;
+ 	enum ath10k_htc_ep_id eid;
+@@ -1269,6 +1276,7 @@ struct ath10k_htt {
+ 	struct sk_buff **pending_tx;
+ 	unsigned long *used_msdu_ids; /* bitmap */
+ 	wait_queue_head_t empty_tx_wq;
++	struct dma_pool *tx_pool;
+ 
+ 	/* set if host-fw communication goes haywire
+ 	 * used to avoid further failures */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index f5960c5..0e24f51 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -109,6 +109,14 @@ int ath10k_htt_tx_attach(struct ath10k_htt *htt)
+ 		return -ENOMEM;
+ 	}
+ 
++	htt->tx_pool = dma_pool_create("ath10k htt tx pool", htt->ar->dev,
++				       sizeof(struct ath10k_htt_txbuf), 4, 0);
++	if (!htt->tx_pool) {
++		kfree(htt->used_msdu_ids);
++		kfree(htt->pending_tx);
++		return -ENOMEM;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -139,6 +147,7 @@ void ath10k_htt_tx_detach(struct ath10k_htt *htt)
+ 	ath10k_htt_tx_cleanup_pending(htt);
+ 	kfree(htt->pending_tx);
+ 	kfree(htt->used_msdu_ids);
++	dma_pool_destroy(htt->tx_pool);
+ 	return;
+ }
+ 
+@@ -350,8 +359,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	memcpy(cmd->mgmt_tx.hdr, msdu->data,
+ 	       min_t(int, msdu->len, HTT_MGMT_FRM_HDR_DOWNLOAD_LEN));
+ 
+-	skb_cb->htt.frag_len = 0;
+-	skb_cb->htt.pad_len = 0;
++	skb_cb->htt.txbuf = NULL;
+ 
+ 	res = ath10k_htc_send(&htt->ar->htc, htt->eid, txdesc);
+ 	if (res)
+@@ -377,19 +385,18 @@ err:
+ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ {
+ 	struct device *dev = htt->ar->dev;
+-	struct htt_cmd *cmd;
+-	struct htt_data_tx_desc_frag *tx_frags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+-	struct sk_buff *txdesc = NULL;
+-	bool use_frags;
+-	u8 vdev_id = ATH10K_SKB_CB(msdu)->vdev_id;
+-	u8 tid;
+-	int prefetch_len, desc_len;
+-	int msdu_id = -1;
++	struct ath10k_hif_sg_item sg_items[2];
++	u8 vdev_id = skb_cb->vdev_id;
++	u8 tid = skb_cb->htt.tid;
++	int prefetch_len;
+ 	int res;
+-	u8 flags0;
+-	u16 flags1;
++	u8 flags0 = 0;
++	u16 msdu_id, flags1 = 0;
++	dma_addr_t paddr;
++	u32 frags_paddr;
++	bool use_frags;
+ 
+ 	res = ath10k_htt_tx_inc_pending(htt);
+ 	if (res)
+@@ -408,105 +415,110 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
+ 
+-	desc_len = sizeof(cmd->hdr) + sizeof(cmd->data_tx) + prefetch_len;
+-
+-	txdesc = ath10k_htc_alloc_skb(desc_len);
+-	if (!txdesc) {
+-		res = -ENOMEM;
+-		goto err_free_msdu_id;
+-	}
+-
+ 	/* Since HTT 3.0 there is no separate mgmt tx command. However in case
+ 	 * of mgmt tx using TX_FRM there is not tx fragment list. Instead of tx
+ 	 * fragment list host driver specifies directly frame pointer. */
+ 	use_frags = htt->target_version_major < 3 ||
+ 		    !ieee80211_is_mgmt(hdr->frame_control);
+ 
+-	if (!IS_ALIGNED((unsigned long)txdesc->data, 4)) {
+-		ath10k_warn("htt alignment check failed. dropping packet.\n");
+-		res = -EIO;
+-		goto err_free_txdesc;
+-	}
+-
+-	if (use_frags) {
+-		skb_cb->htt.frag_len = sizeof(*tx_frags) * 2;
+-		skb_cb->htt.pad_len = (unsigned long)msdu->data -
+-				      round_down((unsigned long)msdu->data, 4);
+-
+-		skb_push(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
+-	} else {
+-		skb_cb->htt.frag_len = 0;
+-		skb_cb->htt.pad_len = 0;
+-	}
++	skb_cb->htt.txbuf = dma_pool_alloc(htt->tx_pool, GFP_ATOMIC,
++					   &paddr);
++	if (!skb_cb->htt.txbuf)
++		goto err_free_msdu_id;
++	skb_cb->htt.txbuf_paddr = paddr;
+ 
+ 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
+ 				       DMA_TO_DEVICE);
+ 	res = dma_mapping_error(dev, skb_cb->paddr);
+ 	if (res)
+-		goto err_pull_txfrag;
+-
+-	if (use_frags) {
+-		dma_sync_single_for_cpu(dev, skb_cb->paddr, msdu->len,
+-					DMA_TO_DEVICE);
+-
+-		/* tx fragment list must be terminated with zero-entry */
+-		tx_frags = (struct htt_data_tx_desc_frag *)msdu->data;
+-		tx_frags[0].paddr = __cpu_to_le32(skb_cb->paddr +
+-						  skb_cb->htt.frag_len +
+-						  skb_cb->htt.pad_len);
+-		tx_frags[0].len   = __cpu_to_le32(msdu->len -
+-						  skb_cb->htt.frag_len -
+-						  skb_cb->htt.pad_len);
+-		tx_frags[1].paddr = __cpu_to_le32(0);
+-		tx_frags[1].len   = __cpu_to_le32(0);
+-
+-		dma_sync_single_for_device(dev, skb_cb->paddr, msdu->len,
+-					   DMA_TO_DEVICE);
+-	}
++		goto err_free_txbuf;
+ 
+-	ath10k_dbg(ATH10K_DBG_HTT, "tx-msdu 0x%llx\n",
+-		   (unsigned long long) ATH10K_SKB_CB(msdu)->paddr);
+-	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "tx-msdu: ",
+-			msdu->data, msdu->len);
++	if (likely(use_frags)) {
++		skb_cb->htt.txbuf->frags[0].paddr = __cpu_to_le32(skb_cb->paddr);
++		skb_cb->htt.txbuf->frags[0].len = __cpu_to_le32(msdu->len);
++		skb_cb->htt.txbuf->frags[1].paddr = 0;
++		skb_cb->htt.txbuf->frags[1].len = 0;
+ 
+-	skb_put(txdesc, desc_len);
+-	cmd = (struct htt_cmd *)txdesc->data;
++		flags0 |= SM(ATH10K_HW_TXRX_NATIVE_WIFI,
++			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ 
+-	tid = ATH10K_SKB_CB(msdu)->htt.tid;
++		frags_paddr = skb_cb->htt.txbuf_paddr;
++	} else {
++		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
++			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ 
+-	ath10k_dbg(ATH10K_DBG_HTT, "htt data tx using tid %hhu\n", tid);
++		frags_paddr = skb_cb->paddr;
++	}
++
++	/* Normally all commands go through HTC which manages tx credits for
++	 * each endpoint and notifies when tx is completed.
++	 *
++	 * HTT endpoint is creditless so there's no need to care about HTC
++	 * flags. In that case it is trivial to fill the HTC header here.
++	 *
++	 * MSDU transmission is considered completed upon HTT event. Receiving
++	 * HTT tx completion event implicitly means TX_FRM command itself has
++	 * been HTC tx-completed thus it is pointless to care about the HTC tx
++	 * completion for TX_FRM at all. That's why transfer_context for all
++	 * partials are NULL to avoid HTC tx completion handler from being
++	 * unnecessarily called.
++	 *
++	 * There is simply no point in pushing HTT TX_FRM through HTC tx path
++	 * as it's a waste of resources. By bypassing HTC it is possible to
++	 * avoid extra memory allocations, compress data structures and thus
++	 * improve performance. */
++
++	skb_cb->htt.txbuf->htc_hdr.eid = htt->eid;
++	skb_cb->htt.txbuf->htc_hdr.len = __cpu_to_le16(
++			sizeof(skb_cb->htt.txbuf->cmd_hdr) +
++			sizeof(skb_cb->htt.txbuf->cmd_tx) +
++			prefetch_len);
++	skb_cb->htt.txbuf->htc_hdr.flags = 0;
+ 
+-	flags0  = 0;
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+-	flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+ 
+-	if (use_frags)
+-		flags0 |= SM(ATH10K_HW_TXRX_NATIVE_WIFI,
+-			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+-	else
+-		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
+-			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++	flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+ 
+-	flags1  = 0;
+ 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+ 	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
+ 	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
+ 	flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
+ 
+-	cmd->hdr.msg_type        = HTT_H2T_MSG_TYPE_TX_FRM;
+-	cmd->data_tx.flags0      = flags0;
+-	cmd->data_tx.flags1      = __cpu_to_le16(flags1);
+-	cmd->data_tx.len         = __cpu_to_le16(msdu->len -
+-						 skb_cb->htt.frag_len -
+-						 skb_cb->htt.pad_len);
+-	cmd->data_tx.id          = __cpu_to_le16(msdu_id);
+-	cmd->data_tx.frags_paddr = __cpu_to_le32(skb_cb->paddr);
+-	cmd->data_tx.peerid      = __cpu_to_le32(HTT_INVALID_PEERID);
+-
+-	memcpy(cmd->data_tx.prefetch, hdr, prefetch_len);
++	skb_cb->htt.txbuf->cmd_hdr.msg_type   = HTT_H2T_MSG_TYPE_TX_FRM;
++	skb_cb->htt.txbuf->cmd_tx.flags0      = flags0;
++	skb_cb->htt.txbuf->cmd_tx.flags1      = __cpu_to_le16(flags1);
++	skb_cb->htt.txbuf->cmd_tx.len         = __cpu_to_le16(msdu->len);
++	skb_cb->htt.txbuf->cmd_tx.id          = __cpu_to_le16(msdu_id);
++	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
++	skb_cb->htt.txbuf->cmd_tx.peerid      = __cpu_to_le32(HTT_INVALID_PEERID);
++
++	ath10k_dbg(ATH10K_DBG_HTT,
++		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %08x, msdu_paddr %08x vdev %hhu tid %hhu\n",
++		   flags0, flags1, msdu->len, msdu_id, frags_paddr,
++		   (u32)skb_cb->paddr, vdev_id, tid);
++	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
++			msdu->data, msdu->len);
+ 
+-	res = ath10k_htc_send(&htt->ar->htc, htt->eid, txdesc);
++	sg_items[0].transfer_id = 0;
++	sg_items[0].transfer_context = NULL;
++	sg_items[0].vaddr = skb_cb->htt.txbuf +
++			    sizeof(skb_cb->htt.txbuf->frags);
++	sg_items[0].paddr = skb_cb->htt.txbuf_paddr +
++			    sizeof(skb_cb->htt.txbuf->frags);
++	sg_items[0].len = sizeof(skb_cb->htt.txbuf->htc_hdr) +
++			  sizeof(skb_cb->htt.txbuf->cmd_hdr) +
++			  sizeof(skb_cb->htt.txbuf->cmd_tx);
++
++	sg_items[1].transfer_id = 0;
++	sg_items[1].transfer_context = NULL;
++	sg_items[1].vaddr = msdu->data;
++	sg_items[1].paddr = skb_cb->paddr;
++	sg_items[1].len = prefetch_len;
++
++	res = ath10k_hif_tx_sg(htt->ar,
++			       htt->ar->htc.endpoint[htt->eid].ul_pipe_id,
++			       sg_items, ARRAY_SIZE(sg_items));
+ 	if (res)
+ 		goto err_unmap_msdu;
+ 
+@@ -514,10 +526,10 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ err_unmap_msdu:
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+-err_pull_txfrag:
+-	skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
+-err_free_txdesc:
+-	dev_kfree_skb_any(txdesc);
++err_free_txbuf:
++	dma_pool_free(htt->tx_pool,
++		      skb_cb->htt.txbuf,
++		      skb_cb->htt.txbuf_paddr);
+ err_free_msdu_id:
+ 	spin_lock_bh(&htt->tx_lock);
+ 	htt->pending_tx[msdu_id] = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 713c18e..2305d58 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -714,6 +714,7 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
+ 	while (ath10k_ce_completed_send_next(ce_state, &transfer_context,
+ 					     &ce_data, &nbytes,
+ 					     &transfer_id) == 0) {
++		/* no need to call tx completion for NULL pointers */
+ 		if (transfer_context == NULL)
+ 			continue;
+ 
+@@ -1423,16 +1424,9 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 
+ 	while (ath10k_ce_cancel_send_next(ce_hdl, (void **)&netbuf,
+ 					  &ce_data, &nbytes, &id) == 0) {
+-		/*
+-		 * Indicate the completion to higer layer to free
+-		 * the buffer
+-		 */
+-
+-		if (!netbuf) {
+-			ath10k_warn("invalid sk_buff on CE %d - NULL pointer. firmware crashed?\n",
+-				    ce_hdl->id);
++		/* no need to call tx completion for NULL pointers */
++		if (!netbuf)
+ 			continue;
+-		}
+ 
+ 		ar_pci->msg_callbacks_current.tx_completion(ar,
+ 							    netbuf,
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 8fd0680..0158ce0 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -66,8 +66,10 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+-	if (skb_cb->htt.frag_len)
+-		skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
++	if (skb_cb->htt.txbuf)
++		dma_pool_free(htt->tx_pool,
++			      skb_cb->htt.txbuf,
++			      skb_cb->htt.txbuf_paddr);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+ 
+-- 
+1.8.5.3
 
