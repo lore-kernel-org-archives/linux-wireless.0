@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:48506 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751481AbaBFQYl (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:37808 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861AbaBQPtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 11:24:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21235.46879.960127.346448@gargle.gargle.HOWL> (sfid-20140206_172444_551204_75A79404)
-Date: Thu, 6 Feb 2014 21:53:59 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
-In-Reply-To: <52F3B155.6010308@candelatech.com>
-References: <1391662375-28781-1-git-send-email-sujith@msujith.org>
-	<52F3B155.6010308@candelatech.com>
+	Mon, 17 Feb 2014 10:49:35 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so7044891eei.21
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 07:49:33 -0800 (PST)
+Message-ID: <1392652166.878.19.camel@umadbro> (sfid-20140217_164939_308086_764FF45A)
+Subject: Re: [RFC 1/4] mac80211: Allow 5/10 MHz channel setting (for OCB)
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de
+Date: Mon, 17 Feb 2014 16:49:26 +0100
+In-Reply-To: <1392644957.5202.7.camel@jlt4.sipsolutions.net>
+References: <1392643374-3545-1-git-send-email-lisovy@gmail.com>
+	 <1392643374-3545-2-git-send-email-lisovy@gmail.com>
+	 (sfid-20140217_142311_364138_9794E9CF) <1392644957.5202.7.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> Can you let us know the details on how your set up that TCP
-> traffic?  For instance, number of streams, write size, socket
-> buffer sizes, etc?  Upload, download, or are both similar
-> throughput in your testing?
+Dear Johannes;
+Thank you for your feedback.
 
-Stock OpenWrt (trunk) running on a 3x3 Scorpion board (AP136/AP135) as AP.
-Windows 7 as client, using a 3x3 AR9300 card.
+On Mon, 2014-02-17 at 14:49 +0100, Johannes Berg wrote:
+> On Mon, 2014-02-17 at 14:22 +0100, Rostislav Lisovy wrote:
+> > Signed-off-by: Rostislav Lisovy <lisovy@gmail.com>
+> 
+> Err, some text is definitely needed.
+> 
+> > ---
+> >  include/net/cfg80211.h       |  19 ++++++-
+> >  include/net/mac80211.h       |   4 +-
+> >  include/uapi/linux/nl80211.h |  17 ++++++-
+> >  net/wireless/chan.c          |   8 +++
+> >  net/wireless/core.c          |   3 --
+> >  net/wireless/nl80211.c       |  14 ++++++
+> >  net/wireless/reg.c           | 115 ++++++++++++++++++++++++++++++++++++++-----
+> >  7 files changed, 161 insertions(+), 19 deletions(-)
 
-iperf with window size 512k, 4 parallel threads. With both
-TX and RX, 290+ Mbps is seen. UDP traffic: 330 Mbps in both directions.
-Environment: open air and the station is located about 1 meter from the AP.
+> 
+> Umm.
+> 
+> Might have mentioned that in your 0/4 that you want help on specific
+> things :)
+> 
+> [I haven't even really reviewed the regulatory code]
 
-> I find that those settings influence throughput a great deal,
-> and I have not yet been able to reach 295Mbps of TCP throughput
-> in our testing w/out hacking the tcp-ack logic to increase ack delays.
 
-By adjusting TCP parameters using sysctl or hacking the code ?
+As you have already noticed, this is work in progress. I agree it is
+necessary to keep the code clean if I want others to read it -- I try to
+do so but it does not always go very well.
 
-Sujith
+One thing I am not sure about (mentioned in 0/4) and need some
+suggestions is frequency setting in the OCB mode.
+Since there are no beacons containing the information about the
+frequency to set, the frequency is set manually. Since the
+'set_channel()' function is not present anymore (and we do not have
+'ocb_join()' function, thus we cannot use 'preset_chandef'), I was not
+able to figure out how to set a fixed channel.
+If I would want to set the frequency with the
+ieee80211_vif_use_channel() function, I would need to somehow obtain the
+*sdata. If I check ieee80211_set_monitor_channel() I see how *sdata is
+obtained there, but I am not sure if it is a good idea to add *ocb_sdata
+to struct ieee80211_local?
+
+Best regards;
+Rostislav Lisovy
+
