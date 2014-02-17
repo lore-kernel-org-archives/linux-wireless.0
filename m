@@ -1,173 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56086 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754165AbaBLUiP (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:65053 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752791AbaBQNXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 15:38:15 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add NAPI support back
-Date: Wed, 12 Feb 2014 21:38:02 +0100
-Message-Id: <1392237482-18172-1-git-send-email-johannes@sipsolutions.net> (sfid-20140212_213822_682456_55FE2899)
+	Mon, 17 Feb 2014 08:23:11 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so5434916eak.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 05:23:08 -0800 (PST)
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, Rostislav Lisovy <lisovy@gmail.com>
+Subject: [RFC 0/4] mac80211 & ath9k: ITS-G5 (IEEE 802.11p) basic support
+Date: Mon, 17 Feb 2014 14:22:50 +0100
+Message-Id: <1392643374-3545-1-git-send-email-lisovy@gmail.com> (sfid-20140217_142316_412792_8EA6E9C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch-set is a RFC of the ongoing work of adding main features of
+the Intelligent Transport Systems (ITS) G5 standard into the Linux
+kernel. ITS-G5 is the European version of the car2car DSRC wireless
+communication protocol stack. It uses the OCB mode defined in IEEE
+802.11p. To access the medium the so called DCC (Decentralized
+Congestion Control Mechanism) is used -- that is slightly modified
+combination of the 802.11e EDCA, Transmit Rate Control (TRC), Transmit
+Datarate Control (TDC) and per packet Transmit Power Control (TPC).
+The higher layer protocols are specific (different from the IEEE 1609
+WAVE).
 
-NAPI was originally added to mac80211 a long time ago (by John in
-commit 4e6cbfd09c66 in July 2010), but then removed years later
-(by Stanislaw in commit 30c97120c6c7 in February 2013). No driver
-ever used it, so that was fine.
+The ITS-G5 standards are freely available on-line. The ones describing
+ITS-G5 PHY and MAC are ETSI EN 302 663 [1] and ETSI TS 102 687 [2].
+[1] http://www.etsi.org/deliver/etsi_en/302600_302699/302663/01.02.01_60/en_302663v010201p.pdf
+[2] http://www.etsi.org/deliver/etsi_ts/102600_102699/102687/01.01.01_60/ts_102687v010101p.pdf
 
-Now I'm adding support for NAPI to our driver, so add some code
-to mac80211 again  to support NAPI. John was originally wrapping
-some (but not nearly all NAPI-related functions), but that doesn't
-scale very well with the number of functions that are there, some
-of which are even only inlines. Thus, instead of doing that, let
-the drivers manage the NAPI struct, except for napi_add() which is
-needed so mac80211 knows how to call napi_gro_receive().
 
-Also remove some no longer needed definitions that were left when
-NAPI support was removed.
+This patch-set modifies mac80211 subsystem and ath9k driver to enable
+setting of the OCB mode, setting channel type to 5 or 10 MHz and
+setting frequency between 5850 and 5925 MHz. To make this fully
+functional changes in CRDA (+wireless-regdb) and 'iw' tool are
+necessary (these are not included in this patch-set).
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     | 34 +++++++++++++---------------------
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/main.c        | 12 ++++++++++++
- net/mac80211/rx.c          |  5 ++++-
- 4 files changed, 31 insertions(+), 22 deletions(-)
+The OCB (i.e. 'Out of Context of the BSS') is a special mode enabling
+STAs communication without being associated to an AP or to each other.
+The BSSID is set to all FF's. Every STA receives all frames from every
+STA in range and transmits to every STA tuned to the same channel
+(the motivation behind that is that there will be no time for
+authentication/association when there are two cars going against each
+other in high speed).
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4005c5b..2d4d312 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1642,10 +1642,6 @@ enum ieee80211_hw_flags {
-  *	the hw can report back.
-  * @max_rate_tries: maximum number of tries for each stage
-  *
-- * @napi_weight: weight used for NAPI polling.  You must specify an
-- *	appropriate value here if a napi_poll operation is provided
-- *	by your driver.
-- *
-  * @max_rx_aggregation_subframes: maximum buffer size (number of
-  *	sub-frames) to be used for A-MPDU block ack receiver
-  *	aggregation.
-@@ -1699,7 +1695,6 @@ struct ieee80211_hw {
- 	int vif_data_size;
- 	int sta_data_size;
- 	int chanctx_data_size;
--	int napi_weight;
- 	u16 queues;
- 	u16 max_listen_interval;
- 	s8 max_signal;
-@@ -2622,8 +2617,6 @@ enum ieee80211_roc_type {
-  *	callback. They must then call ieee80211_chswitch_done() to indicate
-  *	completion of the channel switch.
-  *
-- * @napi_poll: Poll Rx queue for incoming data frames.
-- *
-  * @set_antenna: Set antenna configuration (tx_ant, rx_ant) on the device.
-  *	Parameters are bitmaps of allowed antennas to use for TX/RX. Drivers may
-  *	reject TX/RX mask combinations they cannot support by returning -EINVAL
-@@ -2882,7 +2875,6 @@ struct ieee80211_ops {
- 	void (*flush)(struct ieee80211_hw *hw, u32 queues, bool drop);
- 	void (*channel_switch)(struct ieee80211_hw *hw,
- 			       struct ieee80211_channel_switch *ch_switch);
--	int (*napi_poll)(struct ieee80211_hw *hw, int budget);
- 	int (*set_antenna)(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
- 	int (*get_antenna)(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
- 
-@@ -3164,21 +3156,21 @@ void ieee80211_free_hw(struct ieee80211_hw *hw);
-  */
- void ieee80211_restart_hw(struct ieee80211_hw *hw);
- 
--/** ieee80211_napi_schedule - schedule NAPI poll
-- *
-- * Use this function to schedule NAPI polling on a device.
-- *
-- * @hw: the hardware to start polling
-- */
--void ieee80211_napi_schedule(struct ieee80211_hw *hw);
--
--/** ieee80211_napi_complete - complete NAPI polling
-- *
-- * Use this function to finish NAPI polling on a device.
-+/**
-+ * ieee80211_napi_add - initialize mac80211 NAPI context
-+ * @hw: the hardware to initialize the NAPI context on
-+ * @napi: the NAPI context to initialize
-+ * @napi_dev: dummy NAPI netdevice, here to not waste the space if the
-+ *	driver doesn't use NAPI
-+ * @poll: poll function
-+ * @weight: default weight
-  *
-- * @hw: the hardware to stop polling
-+ * See also netif_napi_add().
-  */
--void ieee80211_napi_complete(struct ieee80211_hw *hw);
-+void ieee80211_napi_add(struct ieee80211_hw *hw, struct napi_struct *napi,
-+			struct net_device *napi_dev,
-+			int (*poll)(struct napi_struct *, int),
-+			int weight);
- 
- /**
-  * ieee80211_rx - receive frame
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0014b53..8603dfb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1242,6 +1242,8 @@ struct ieee80211_local {
- 
- 	struct ieee80211_sub_if_data __rcu *p2p_sdata;
- 
-+	struct napi_struct *napi;
-+
- 	/* virtual monitor interface */
- 	struct ieee80211_sub_if_data __rcu *monitor_sdata;
- 	struct cfg80211_chan_def monitor_chandef;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 1f7d842..b055f6a5 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1076,6 +1076,18 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_register_hw);
- 
-+void ieee80211_napi_add(struct ieee80211_hw *hw, struct napi_struct *napi,
-+			struct net_device *napi_dev,
-+			int (*poll)(struct napi_struct *, int),
-+			int weight)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	netif_napi_add(napi_dev, napi, poll, weight);
-+	local->napi = napi;
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_napi_add);
-+
- void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5930621..58e4b70 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1954,7 +1954,10 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 		/* deliver to local stack */
- 		skb->protocol = eth_type_trans(skb, dev);
- 		memset(skb->cb, 0, sizeof(skb->cb));
--		netif_receive_skb(skb);
-+		if (rx->local->napi)
-+			napi_gro_receive(rx->local->napi, skb);
-+		else
-+			netif_receive_skb(skb);
- 	}
- 
- 	if (xmit_skb) {
+The main frequency used (for the Control Channel -- CCH) is set once
+and stays fixed. No beacons are sent or received.
+
+
+Summary of the first two patches (5/10 MHz channel setting):
+* New channel TYPE flags are added -- i.e. NL80211_CHAN_WIDTH_5 and
+  NL80211_CHAN_WIDTH_10. The reason is to make it possible to
+  configure the ITS-G5 from user-space with commands like
+    sudo iw dev wlan0 set freq 5890 10MHZ
+
+* New channel restricting flags are added -- the most important is the
+  one restricting the channel for OCB mode only (necessary for
+  frequency range 5850--5925)
+
+* The commit fe7ef5e9ba0c60bab01390493a4c6790f7b093af has been
+  reverted to make the regd probing possible for 5/10 MHz channels
+
+* Add frequencies ranging from 5850 to 5925 as supported in the ath9k
+  driver
+
+The second two patches (adding the OCB mode) do the following:
+* Add new 'interface mode' -- NL80211_IFTYPE_OCB
+
+* Add new 'struct ieee80211_if_ocb' containing data specific for the
+  interface in the OCB mode
+
+* Instead of modifying the ieee80211_set_wmm_default() add new
+  ieee80211_set_wmm_itsg5() with configuration specific for ITS-G5 --
+  This will be merged in single function in the future.
+
+* Add the ieee80211_set_ocb_channel() function.
+  Since the 'set_channel()' function is not present anymore (the only
+  remnant is now in the 'set_monitor_channel()'), I was not able to
+  figure out how to set a fixed channel by user on interface
+  configuration (there is no 'ocb_join()' function), thus I am using the
+  deprecated '_oper_chandef' field in 'struct ieee80211_local *local'.
+  Any suggestions how to make it properly are very welcome.
+
+* Modify __ieee80211_recalc_idle() to disable idle if the interface is
+  in the OCB mode (this will be probably unnecessary when the chanctx
+  will be used properly)
+
+* The most important part is the initialization of the OCB mode in the
+  ieee80211_do_open() function
+
+* Add ocb.c file containing the OCB specific functions -- i.e. add STA,
+  process management frame, do the housekeeping, setup sdata
+
+* Modify the RX/TX path to be able to process frames when in the OCB
+  mode
+
+Rostislav Lisovy (4):
+  mac80211: Allow 5/10 MHz channel setting (for OCB)
+  ath9k: Allow 5/10 MHz channel setting (for OCB)
+  mac80211: Add OCB (IEEE 802.11p) mode
+  ath9k: Add OCB (IEEE 802.11p) mode
+
+ drivers/net/wireless/ath/ath9k/ani.c          |   1 +
+ drivers/net/wireless/ath/ath9k/ath9k.h        |   1 +
+ drivers/net/wireless/ath/ath9k/debug.c        |   4 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   5 +
+ drivers/net/wireless/ath/ath9k/hw.c           |   1 +
+ drivers/net/wireless/ath/ath9k/hw.h           |   3 +-
+ drivers/net/wireless/ath/ath9k/init.c         |  23 ++-
+ drivers/net/wireless/ath/ath9k/main.c         |   5 +-
+ drivers/net/wireless/ath/ath9k/recv.c         |   8 +-
+ drivers/net/wireless/ath/ath9k/xmit.c         |   6 +
+ drivers/net/wireless/ath/regd.c               |  11 +-
+ drivers/net/wireless/rtlwifi/regd.c           |   9 +-
+ include/net/cfg80211.h                        |  21 ++-
+ include/net/mac80211.h                        |   4 +-
+ include/uapi/linux/nl80211.h                  |  24 ++-
+ net/mac80211/Kconfig                          |  11 ++
+ net/mac80211/Makefile                         |   3 +-
+ net/mac80211/cfg.c                            |  43 ++++-
+ net/mac80211/debug.h                          |  10 ++
+ net/mac80211/driver-ops.h                     |   3 +-
+ net/mac80211/ieee80211_i.h                    |  46 ++++++
+ net/mac80211/iface.c                          |  63 +++++++-
+ net/mac80211/main.c                           |  12 +-
+ net/mac80211/ocb.c                            | 219 ++++++++++++++++++++++++++
+ net/mac80211/rx.c                             |  30 ++++
+ net/mac80211/tx.c                             |  21 ++-
+ net/mac80211/util.c                           |  72 +++++++++
+ net/mac80211/wme.c                            |   4 +
+ net/wireless/chan.c                           |  27 +++-
+ net/wireless/core.c                           |   3 -
+ net/wireless/core.h                           |   4 +
+ net/wireless/nl80211.c                        |  18 +++
+ net/wireless/rdev-ops.h                       |  11 ++
+ net/wireless/reg.c                            | 117 ++++++++++++--
+ net/wireless/util.c                           |   7 +-
+ 36 files changed, 805 insertions(+), 48 deletions(-)
+ create mode 100644 net/mac80211/ocb.c
+
 -- 
-1.8.5.3
+1.8.5.1
 
