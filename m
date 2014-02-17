@@ -1,92 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:41613 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbaBXM2s (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:52196 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbaBQJiE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 07:28:48 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v3 2/3] UAPI: add MPLS label stack definition
-Date: Mon, 24 Feb 2014 13:28:39 +0100
-Message-Id: <1393244920-15903-3-git-send-email-sw@simonwunderlich.de> (sfid-20140224_132913_367107_233C5BA2)
-In-Reply-To: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de>
-References: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de>
+	Mon, 17 Feb 2014 04:38:04 -0500
+Received: by mail-ea0-f180.google.com with SMTP id o10so7099720eaj.39
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 01:38:02 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT 7/7] ath10k: minimize coherent dma accesses
+Date: Mon, 17 Feb 2014 10:32:43 +0100
+Message-Id: <1392629563-31046-8-git-send-email-michal.kazior@tieto.com> (sfid-20140217_103820_611095_E4B067F9)
+In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Labels for the Multiprotocol Label Switching are defined in RFC 3032
-which was superseded by RFC 5462. Add the definition to UAPI and a stub
-header for include/linux.
+It doesn't make much sense to calculate the ring
+size fill count because it already is memoized in
+a separate variable.
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-Changes to first version:
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
- * add stub mpls header in include/linux/mpls.h for users inside the
-   kernel
----
- include/linux/mpls.h      |    6 ++++++
- include/uapi/linux/mpls.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
- create mode 100644 include/linux/mpls.h
- create mode 100644 include/uapi/linux/mpls.h
-
-diff --git a/include/linux/mpls.h b/include/linux/mpls.h
-new file mode 100644
-index 0000000..9999145
---- /dev/null
-+++ b/include/linux/mpls.h
-@@ -0,0 +1,6 @@
-+#ifndef _LINUX_MPLS_H
-+#define _LINUX_MPLS_H
-+
-+#include <uapi/linux/mpls.h>
-+
-+#endif  /* _LINUX_MPLS_H */
-diff --git a/include/uapi/linux/mpls.h b/include/uapi/linux/mpls.h
-new file mode 100644
-index 0000000..15c8260
---- /dev/null
-+++ b/include/uapi/linux/mpls.h
-@@ -0,0 +1,34 @@
-+#ifndef _UAPI_MPLS_H
-+#define _UAPI_MPLS_H
-+
-+#include <linux/types.h>
-+#include <asm/byteorder.h>
-+
-+/* Reference: RFC 5462, RFC 3032
-+ *
-+ *  0                   1                   2                   3
-+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ * |                Label                  | TC  |S|       TTL     |
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ *
-+ *	Label:  Label Value, 20 bits
-+ *	TC:     Traffic Class field, 3 bits
-+ *	S:      Bottom of Stack, 1 bit
-+ *	TTL:    Time to Live, 8 bits
-+ */
-+
-+struct mpls_label_stack {
-+	__be32 entry;
-+};
-+
-+#define MPLS_LS_LABEL_MASK      0xFFFFF000
-+#define MPLS_LS_LABEL_SHIFT     12
-+#define MPLS_LS_TC_MASK         0x00000E00
-+#define MPLS_LS_TC_SHIFT        9
-+#define MPLS_LS_S_MASK          0x00000100
-+#define MPLS_LS_S_SHIFT         8
-+#define MPLS_LS_TTL_MASK        0x000000FF
-+#define MPLS_LS_TTL_SHIFT       0
-+
-+#endif /* _UAPI_MPLS_H */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d3051e3..6fe5ecc 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -225,12 +225,6 @@ static void ath10k_htt_rx_ring_refill_retry(unsigned long arg)
+ 	ath10k_htt_rx_msdu_buff_replenish(htt);
+ }
+ 
+-static unsigned ath10k_htt_rx_ring_elems(struct ath10k_htt *htt)
+-{
+-	return (__le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr) -
+-		htt->rx_ring.sw_rd_idx.msdu_payld) & htt->rx_ring.size_mask;
+-}
+-
+ void ath10k_htt_rx_detach(struct ath10k_htt *htt)
+ {
+ 	int sw_rd_idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+@@ -276,8 +270,11 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+-	if (ath10k_htt_rx_ring_elems(htt) == 0)
+-		ath10k_warn("htt rx ring is empty!\n");
++	if (htt->rx_ring.fill_cnt == 0) {
++		ath10k_warn("tried to pop sk_buff from an empty rx ring\n");
++		spin_unlock_bh(&htt->rx_ring.lock);
++		return NULL;
++	}
+ 
+ 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+ 	msdu = htt->rx_ring.netbufs_ring[idx];
+@@ -312,9 +309,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+-	if (ath10k_htt_rx_ring_elems(htt) == 0)
+-		ath10k_warn("htt rx ring is empty!\n");
+-
+ 	if (htt->rx_confused) {
+ 		ath10k_warn("htt is confused. refusing rx\n");
+ 		return 0;
 -- 
-1.7.10.4
+1.8.5.3
 
