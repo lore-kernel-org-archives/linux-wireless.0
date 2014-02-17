@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:42817 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbaBRWKy (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57284 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbaBQRhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 17:10:54 -0500
-Received: by mail-pb0-f52.google.com with SMTP id jt11so17400312pbb.11
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 14:10:54 -0800 (PST)
+	Mon, 17 Feb 2014 12:37:36 -0500
+Message-ID: <530248DD.1050408@broadcom.com> (sfid-20140217_183741_439718_DAB9345D)
+Date: Mon, 17 Feb 2014 18:37:33 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <20140218203646.GQ26776@mwanda>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
- <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
- <20140218093135.GJ26776@mwanda> <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
- <20140218182714.GO26776@mwanda> <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com>
- <20140218192239.GP26776@mwanda> <CAN8YU5PQSNZHmEG6o2-uRQMo1G14M7ot-_KiHT2u=-4LCaremA@mail.gmail.com>
- <20140218203646.GQ26776@mwanda>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Tue, 18 Feb 2014 23:10:33 +0100
-Message-ID: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com> (sfid-20140218_231057_956438_9E030BCA)
-Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
- initializing RX ring
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
+CC: Samuel Ortiz <sameo@linux.intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	<frankyl@broadcom.com>
+Subject: Re: brcmfmac NVRAM files
+References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE>
+In-Reply-To: <53023E51.90202@Uni-Oldenburg.DE>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, I didn't know about that.. I will give a look to git documentation..
-Thank you for telling me about it :)
-
-Andrea
-
-
-On Tue, Feb 18, 2014 at 9:36 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> On Tue, Feb 18, 2014 at 09:17:22PM +0100, Andrea Merello wrote:
->> Ok, I will fix my patch in this way.
->> I will resend it.
->> Should I also rebase following patches in the patch serie and resent them also?
+On 02/17/14 17:52, Bernd Wagener wrote:
+> Am 17.02.2014 17:33, schrieb Samuel Ortiz:
+>> On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
+>>> Hi Arend,
+>>>
+>>> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
+>>> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
+>>> file, but I could not find either a template on linux-firmware or any
+>>> kind of documentation about it.
+>>>
+>>> How do distro handle that ? Are they expected to build their own, or is
+>>> it completely OEM pecific ?
+>> Adding Franky to the Cc list.
 >>
->
-> Don't rebase if you don't have to.
->
-> Do you know how to use the In-Reply-To header so that the v2 patch will
-> show up in the thread?  There is an --in-reply-to option in git
-> send-email.
->
-> regards,
-> dan carpenter
->
+>> Cheers,
+>> Samuel.
+>>
+> Hi Samuel,
+> I had the same proble with a wandboard here and I guess it's a bug. In
+> /lib/firmware/brcm are all reqired *.bin files, but no *.txt file. On
+> www.wandboard.or I found a SDK-Kit with brcmfmac4329-sdio.txt, copied
+> the file and then the wlan was running.
+> The *.txt are simply forgotten to copy to the firmware directory.
+> No idea how to fix this.
+
+Hi Bernd,
+
+The hint to solve this is found on wireless.kernel.org [1] and the 
+answer is as Samuel suspects. This file is very board specific so OEMs 
+manufacturing/selling the board should provide it either upon request or 
+through some distribution like a SDK. Because of the nature of the file 
+we do not put it on linux-firmware although people like yourself can get 
+lucky trying ;-)
+
+Regards,
+Arend
