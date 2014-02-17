@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64038 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753743AbaBTILZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 03:11:25 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>
-Subject: RE: [PATCH v4 1/5] cfg80211: Add indoor only and GO concurrent
- channel attributes
-Date: Thu, 20 Feb 2014 08:11:21 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033383F88@HASMSX106.ger.corp.intel.com> (sfid-20140220_091129_363394_18DD4207)
-References: <1392824377-18254-1-git-send-email-ilan.peer@intel.com>
- <1392824377-18254-2-git-send-email-ilan.peer@intel.com>
- <20140219161101.GJ14296@garbanzo.do-not-panic.com>
- <5304EBB1.904@broadcom.com>
- <CAB=NE6WSag35Y+CrAHu1QTj27f3W1JavsPeiEXwEcLUL8Zj4XQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6WSag35Y+CrAHu1QTj27f3W1JavsPeiEXwEcLUL8Zj4XQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from packetmixer.de ([79.140.42.25]:55795 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997AbaBQR53 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Feb 2014 12:57:29 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Arend van Spriel <arend@broadcom.com>
+Subject: Re: [net-next v2 3/3] cfg80211: add MPLS and 802.21 classification
+Date: Mon, 17 Feb 2014 18:57:25 +0100
+Cc: netdev@vger.kernel.org, davem@davemloft.net,
+	linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de
+References: <1392656174-14791-1-git-send-email-sw@simonwunderlich.de> <1392656174-14791-4-git-send-email-sw@simonwunderlich.de> <5302474B.6090609@broadcom.com>
+In-Reply-To: <5302474B.6090609@broadcom.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201402171857.25635.sw@simonwunderlich.de> (sfid-20140217_185744_803460_689CD0EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
-ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQo+IFNlbnQ6IFdl
-ZG5lc2RheSwgRmVicnVhcnkgMTksIDIwMTQgMTk6NTYNCj4gVG86IEFyZW5kIHZhbiBTcHJpZWwN
-Cj4gQ2M6IFBlZXIsIElsYW47IGxpbnV4LXdpcmVsZXNzOyBTcGluYWRlbCwgRGF2aWQNCj4gU3Vi
-amVjdDogUmU6IFtQQVRDSCB2NCAxLzVdIGNmZzgwMjExOiBBZGQgaW5kb29yIG9ubHkgYW5kIEdP
-IGNvbmN1cnJlbnQNCj4gY2hhbm5lbCBhdHRyaWJ1dGVzDQo+IA0KDQo+ID4gU28gYXBwYXJlbnRs
-eSBGQ0MgaGFzIGFub3RoZXIgdW5kZXJzdGFuZGluZyB0aGFuIHRoZSBXaUZpIEFsbGlhbmNlDQo+
-ID4gKGZyb20gc2VjdGlvbiAyLjMgaW4gV0ZBIFAyUC1UUyk6DQoNCkkgZG8gbm90IHRoaW5rIHRo
-YXQgdGhlcmUgaXMgYSBjb250cmFkaWN0aW9uIGhlcmUsIGFzIHRoZSBXRkEgdXNlcyB0aGUgJ21h
-eScgbm90YXRpb24gYW5kIHRoZXkgYXJlIG5vdCByZWFsbHkgYWRkcmVzc2luZyByZWd1bGF0b3J5
-IGxpbWl0YXRpb25zLg0KDQo+ID4NCj4gPiAiIiINCj4gPiBBIFAyUCBEZXZpY2UgY2FuIG9wZXJh
-dGUgY29uY3VycmVudGx5IHdpdGggYSBXTEFOIChpbmZyYXN0cnVjdHVyZQ0KPiA+IG5ldHdvcmsp
-LiBTdWNoIGEgZGV2aWNlIGlzIGNvbnNpZGVyZWQgYSBQMlAgQ29uY3VycmVudCBEZXZpY2UuIFRo
-ZQ0KPiA+IGNvbmN1cnJlbnQgb3BlcmF0aW9uIHJlcXVpcmVzIGEgZGV2aWNlIHRvIHN1cHBvcnQg
-bXVsdGlwbGUgTUFDIGVudGl0aWVzLg0KPiA+ICAgICAgICAgOg0KPiA+ICAgICAgICAgOg0KPiA+
-IEEgUDJQIEdyb3VwIG1heSBvcGVyYXRlIGluIHRoZSBzYW1lIG9yIGRpZmZlcmVudCBvcGVyYXRp
-bmcgY2xhc3MgYW5kDQo+ID4gY2hhbm5lbCBhcyBhIGNvbmN1cnJlbnRseSBvcGVyYXRpbmcgV0xB
-TiBCU1MuIEZvciBleGFtcGxlLCBhIFdMQU4gQlNTDQo+ID4gbWF5IG9wZXJhdGUgaW4gY2hhbm5l
-bCAzNiBpbiB0aGUgNS4yIEdIeiBiYW5kLCB3aGlsZSB0aGUgUDJQIEdyb3VwIG1heQ0KPiA+IG9w
-ZXJhdGUgaW4gY2hhbm5lbCA2IGluIHRoZSAyLjQgR0h6IGJhbmQuDQo+ID4gIiIiDQoNCj4gDQo+
-IEJ1dCBjYW4gYSBXTEFOIEJTUyBvcGVyYXRlIG9uIGNoYW5uZWwgNiBpbiB0aGUgMi40IEdIeiBi
-YW5kIGFuZCBpbmZlciBpdCBjYW4NCj4gc3RhcnQgR08gb24gY2hhbm5lbCAzNj8gVGhpcyBxdWVz
-dGlvbiBzZWVtcyBub3QgcmVsYXRlZCB0byBjb25jdXJyZW50IHN0dWZmDQo+IGJ1dCByYXRoZXIg
-cHVyZSByZWd1bGF0b3J5IGJ1dCBJIHN1cHBvc2UgdGhhdCB3aWxsIGRlcGVuZCBvbiB0aGUgZGVm
-aW5pdGlvbg0KPiB0aGF0IHRoZSBGQ0MgaW50ZW5kZWQgYmVoaW5kIEdPIGNvbmN1cnJlbmN5Lg0K
-DQpOby4gQXMgbWVudGlvbmVkIGluIHByZXZpb3VzbHksIHRoZSBVTklJIGJhbmRzIGFyZSBidW5k
-bGVzIG9mIGNoYW5uZWxzIHdoaWNoIHNoYXJlIHRoZSBzYW1lIHJ1bGVzLCBzbyBzaW5jZSBjaGFu
-bmVscyA2IGlzIG5vdCBpbiB0aGUgc2FtZSBVTklJIGJhbmQgYXMgY2hhbm5lbCAzNiBpdCBpcyBu
-b3QgYWxsb3dlZCB0byBpbnN0YW50aWF0ZSBhIEdPIG9uIGNoYW5uZWwgMzYgYmFzZWQgb24gdGhl
-IEdPIGNvbmN1cnJlbnQgcmVsYXhhdGlvbi4NCg0KPiBJcyB0aGUgZGVmaW5pdGlvbiBvZiBjb25j
-dXJyZW5jeSBHTyB0aGluZyBzdXBwb3NlZCB0byAqcmVzdHJpY3QqIHRoZSBudW1iZXINCj4gb2Yg
-aW50ZXJmYWNlcyBhIGRldmljZSBjYW4gY3JlYXRlIChTVEEsIEdPKSwgb3Igc2ltcGx5IGRlZmlu
-ZSBwZXJtaXNzaXZlIHJ1bGVzDQo+IHdoaWNoIHdvdWxkIGhhdmUgb3RoZXJ3aXNlIGJlZW4gYmxv
-Y2tlZD8NCj4gDQoNClRoZSBkZWZpbml0aW9ucyB0byBub3QgbGltaXQvcmVzdHJpY3QgdGhlIG51
-bWJlciBvZiBjb25jdXJyZW50IGludGVyZmFjZSBidXQgYWxsb3cgcGVybWlzc2l2ZSBydWxlcyB0
-byBhbGxvdyBjZXJ0YWluIG9wZXJhdGlvbnMgd2hpY2ggaW4gb3RoZXIgY2lyY3Vtc3RhbmNlcyB3
-b3VsZCBiZSBibG9ja2VkLiANCg0KUmVnYXJkcywNCg0KSWxhbi4NCg0K
+> On 02/17/14 17:56, Simon Wunderlich wrote:
+> > MPLS labels may contain traffic control information, which should be
+> > evaluated and used by the wireless subsystem if present.
+> > 
+> > Also check for IEEE 802.21 which is always network control traffic.
+> > 
+> > Signed-off-by: Simon Wunderlich<sw@simonwunderlich.de>
+> > Signed-off-by: Mathias Kretschmer<mathias.kretschmer@fokus.fraunhofer.de>
+> > ---
+> > 
+> > Changes to first version:
+> >   * include linux/mpls.h, not the UAPI one
+> >   * change __constant_htons to htons
+> > 
+> > ---
+> > 
+> >   net/wireless/util.c |   24 ++++++++++++++++++++++++
+> >   1 file changed, 24 insertions(+)
+> > 
+> > diff --git a/net/wireless/util.c b/net/wireless/util.c
+> > index d39c371..54956eb 100644
+> > --- a/net/wireless/util.c
+> > +++ b/net/wireless/util.c
+> > @@ -11,6 +11,7 @@
+> > 
+> >   #include<net/ip.h>
+> >   #include<net/dsfield.h>
+> >   #include<linux/if_vlan.h>
+> > 
+> > +#include<linux/mpls.h>
+> > 
+> >   #include "core.h"
+> >   #include "rdev-ops.h"
+> > 
+> > @@ -710,6 +711,29 @@ unsigned int cfg80211_classify8021d(struct sk_buff
+> > *skb,
+> 
+> So does the name still covers what it is doing now or should we just
+> callit cfg80211_classify_skb()?
+
+I'm not completely sure why this function is called 8021d anyway (isn't 802.1D 
+the Spanning Tree definition?). The actual QoS definitions are appearently in 
+802.1p. But I don't know both standards, so I'm just speculating. :) We can 
+rename the function, but that would require more changes in drivers and 
+mac80211.
+
+Anyway, I can resend the patch along with a rename, but would prefer to get 
+the first two proposed patches merged first if there are no further objections.
+
+Cheers,
+    Simon
