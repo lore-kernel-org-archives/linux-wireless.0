@@ -1,161 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:62576 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467AbaB1HvL convert rfc822-to-8bit (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56626 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416AbaBQRay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 02:51:11 -0500
-Received: by mail-ee0-f50.google.com with SMTP id c13so47823eek.9
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 23:51:10 -0800 (PST)
+	Mon, 17 Feb 2014 12:30:54 -0500
+Message-ID: <5302474B.6090609@broadcom.com> (sfid-20140217_183058_077391_67FB91A3)
+Date: Mon, 17 Feb 2014 18:30:51 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1393550452-1302-1-git-send-email-greearb@candelatech.com>
-References: <1393550452-1302-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 28 Feb 2014 08:51:10 +0100
-Message-ID: <CA+BoTQnCjkgr3V4bzXW8GHJDmGRHqg6x8An__vFW5bxdub=uyw@mail.gmail.com> (sfid-20140228_085134_158356_4A93F542)
-Subject: Re: [PATCH v2] ath10k: support msdu chaining.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: <netdev@vger.kernel.org>, <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>,
+	<mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [net-next v2 3/3] cfg80211: add MPLS and 802.21 classification
+References: <1392656174-14791-1-git-send-email-sw@simonwunderlich.de> <1392656174-14791-4-git-send-email-sw@simonwunderlich.de>
+In-Reply-To: <1392656174-14791-4-git-send-email-sw@simonwunderlich.de>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 02:20,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 02/17/14 17:56, Simon Wunderlich wrote:
+> MPLS labels may contain traffic control information, which should be
+> evaluated and used by the wireless subsystem if present.
 >
-> Consolidate the list of msdu skbs into the msdu-head skb, delete the
-> rest of the skbs, pass the msdu-head skb on up the stack as normal.
+> Also check for IEEE 802.21 which is always network control traffic.
 >
-> Tested with high-speed TCP and UDP traffic on modified firmware that
-> supports raw-rx.
-
-As for an umodified firmware I expect ath10k will just re-assemble
-corrupted frames just to have them dropped by mac80211. It might be
-worth checking:
-
- if (chaining && fcs_error)
-    drop();
-
-..to avoid processing junk and flushing d-cache (this matters for less
-powerful host systems).
-
-
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Simon Wunderlich<sw@simonwunderlich.de>
+> Signed-off-by: Mathias Kretschmer<mathias.kretschmer@fokus.fraunhofer.de>
 > ---
+> Changes to first version:
 >
-> v2:  Add note about skb_try_coalesce, though I am not sure it will
->      work or not.
->      Only grow skb once, which should save on some memory (re)allocation
->      and copying when we have more than one chained skb.
+>   * include linux/mpls.h, not the UAPI one
+>   * change __constant_htons to htons
+> ---
+>   net/wireless/util.c |   24 ++++++++++++++++++++++++
+>   1 file changed, 24 insertions(+)
 >
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 60 +++++++++++++++++++++++++++++---
->  1 file changed, 56 insertions(+), 4 deletions(-)
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index d39c371..54956eb 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -11,6 +11,7 @@
+>   #include<net/ip.h>
+>   #include<net/dsfield.h>
+>   #include<linux/if_vlan.h>
+> +#include<linux/mpls.h>
+>   #include "core.h"
+>   #include "rdev-ops.h"
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 9f3def7..a5070a9 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -401,6 +401,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
->                 msdu_len = MS(__le32_to_cpu(rx_desc->msdu_start.info0),
->                               RX_MSDU_START_INFO0_MSDU_LENGTH);
->                 msdu_chained = rx_desc->frag_info.ring2_more_count;
-> +               msdu_chaining = msdu_chained;
+> @@ -710,6 +711,29 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
+
+So does the name still covers what it is doing now or should we just 
+callit cfg80211_classify_skb()?
+
+>   			return vlan_priority;
+>   	}
 >
->                 if (msdu_len_invalid)
->                         msdu_len = 0;
-> @@ -428,7 +429,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
->
->                         msdu->next = next;
->                         msdu = next;
-> -                       msdu_chaining = 1;
->                 }
->
->                 last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
-> @@ -1008,14 +1008,66 @@ continue_on:
->                                 continue;
->                         }
->
-> -                       /* FIXME: we do not support chaining yet.
-> -                        * this needs investigation */
->                         if (msdu_chaining) {
-> -                               ath10k_warn("htt rx msdu_chaining is true\n");
-> +                               struct sk_buff *next = msdu_head->next;
-> +                               struct sk_buff *to_free = next;
-> +                               static int do_once = 1;
-> +                               int space;
-> +                               int total_len = 0;
+> +	if (skb_headlen(skb)>= sizeof(struct ethhdr)) {
+> +		struct ethhdr *eh = (struct ethhdr *)skb->data;
+> +		struct mpls_label_stack mpls_tmp, *mpls;
 > +
-> +                               /* TODO:  Might could optimize this by using
-> +                                * skb_try_coalesce or similar method to]
-> +                                * decrease copying.
-> +                                */
+> +		switch (eh->h_proto) {
 
-It'd be great if we could use kernel-provided function to merge skbs
-instead of rolling out our own ;-)
+It seem eh->h_proto should be the same as skb->protocol, right? So why 
+not add these case statements to the switch below?
 
+Regards,
+Arend
 
+> +		case htons(ETH_P_MPLS_UC):
+> +		case htons(ETH_P_MPLS_MC):
+> +			/* MPLS */
+> +			mpls = skb_header_pointer(skb, sizeof(*eh),
+> +						  sizeof(*mpls),&mpls_tmp);
+> +			if (!mpls)
+> +				break;
 > +
-> +                               msdu_head->next = NULL;
+> +			return (ntohl(mpls->entry)&  MPLS_LS_TC_MASK)
+> +				>>  MPLS_LS_TC_SHIFT;
+> +		case htons(ETH_P_80221):
+> +			/* 802.21 is always network control traffic */
+> +			return 7;
+> +		default:
+> +			break;
+> +		}
+> +	}
 > +
-> +                               if (unlikely(do_once)) {
-> +                                       ath10k_warn("htt rx msdu_chaining detected %d\n",
-> +                                                   msdu_chaining);
-> +                                       do_once = 0;
-> +                               }
+>   	switch (skb->protocol) {
+>   	case htons(ETH_P_IP):
+>   		dscp = ipv4_get_dsfield(ip_hdr(skb))&  0xfc;
 
-I don't really like this do_once thing. I wouldn't even bother with a
-warning, since, well, chaining parsing is implemented. This should be
-a simple debug print if anything.
-
-
-> +
-> +                               /* Allocate total length all at once. */
-> +                               while (next) {
-> +                                       total_len += next->len;
-> +                                       next = next->next;
-> +                               }
-> +
-> +                               space = total_len - skb_tailroom(msdu_head);
-> +                               if ((space > 0) &&
-> +                                   (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
-> +                                       /* TODO:  bump some rx-oom error stat */
-> +                                       goto outside_continue;
-> +                               }
-> +
-> +                               /* Walk list again, copying contents into
-> +                                * msdu_head
-> +                                */
-> +                               next = to_free;
-> +                               while (next) {
-> +                                       skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
-> +                                                                 next->len);
-> +                                       next = next->next;
-> +                               }
-> +
-> +                               /* If here, we have consolidated skb.  Free the
-> +                                * fragments and pass the main skb on up the
-> +                                * stack.
-> +                                */
-> +                               ath10k_htt_rx_free_msdu_chain(to_free);
-> +                               goto have_good_msdu;
-> +
-> +                       outside_continue:
-> +                               /* put it back together so we can free the
-> +                                * whole list at once.
-> +                                */
-> +                               msdu_head->next = to_free;
->                                 ath10k_htt_rx_free_msdu_chain(msdu_head);
->                                 continue;
->                         }
->
-> +               have_good_msdu:
->                         info.skb     = msdu_head;
->                         info.fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
->                         info.mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
-
-If anything, please, make it into a separate function. The rx handler
-is already huge and it needs shrinking down, not expanding it more.
-
-
-Michał
