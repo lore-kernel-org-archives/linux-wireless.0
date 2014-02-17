@@ -1,58 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52593 "EHLO mout.gmx.net"
+Received: from mga02.intel.com ([134.134.136.20]:45150 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751424AbaBBJCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 04:02:24 -0500
-Received: from [192.168.1.221] ([93.196.93.204]) by mail.gmx.com (mrgmx002)
- with ESMTPSA (Nemesis) id 0MKZLb-1W8W1z1Zxv-001x9J for
- <linux-wireless@vger.kernel.org>; Sun, 02 Feb 2014 10:02:20 +0100
-Message-ID: <52EE0997.1060402@rempel-privat.de> (sfid-20140202_100230_883030_E4C41C80)
-Date: Sun, 02 Feb 2014 10:02:15 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+	id S1750939AbaBQQdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Feb 2014 11:33:17 -0500
+Date: Mon, 17 Feb 2014 17:33:15 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	frankyl@broadcom.com
+Subject: Re: brcmfmac NVRAM files
+Message-ID: <20140217163315.GA22010@zurbaran> (sfid-20140217_173320_956599_DCB98A05)
+References: <20140217150640.GJ18868@zurbaran>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] ath9k_htc: avoid scheduling while atomic on sta_rc_update
-References: <20140131133707.GA7648@redhat.com> <52EBEA45.5090606@rempel-privat.de> <20140131193850.GC7648@redhat.com>
-In-Reply-To: <20140131193850.GC7648@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="KDi5Aa9Gkfko4rDD1StsUwImIK1MKmhg1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140217150640.GJ18868@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---KDi5Aa9Gkfko4rDD1StsUwImIK1MKmhg1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
+> Hi Arend,
+> 
+> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
+> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
+> file, but I could not find either a template on linux-firmware or any
+> kind of documentation about it.
+> 
+> How do distro handle that ? Are they expected to build their own, or is
+> it completely OEM pecific ?
+Adding Franky to the Cc list.
 
-Am 31.01.2014 20:38, schrieb Stanislaw Gruszka:
-> On Fri, Jan 31, 2014 at 07:24:05PM +0100, Oleksij Rempel wrote:
->> I have different HW. How can trigger sta_rc_update?
->=20
-> Below patch should trigger it when any management frame is received
-> from know sta and print information about it.=20
+Cheers,
+Samuel.
 
-It seems to work,
-a least it didn't crashed. I was able to trigger it only in IBSS mode.
-
---=20
-Regards,
-Oleksij
-
-
---KDi5Aa9Gkfko4rDD1StsUwImIK1MKmhg1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlLuCZsACgkQHwImuRkmbWlYWQEAhB/wsRIy4nO+zcI4lHPeA5oH
-Ih3fiwliOU9Jj0nS4D0A/jgk8thGmPofqijqHmqM6xvegMnEol5Q1hApVMazCG3R
-=R7MS
------END PGP SIGNATURE-----
-
---KDi5Aa9Gkfko4rDD1StsUwImIK1MKmhg1--
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
