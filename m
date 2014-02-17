@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:45552 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197AbaBLRn1 (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:48158 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231AbaBQHmX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 12:43:27 -0500
-Received: by mail-ee0-f44.google.com with SMTP id c13so4495746eek.17
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 09:43:26 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] crda: handle AUTO bw setting in db2rd
-Date: Wed, 12 Feb 2014 18:43:08 +0100
-Message-Id: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_184331_450529_5F4DFDFF)
+	Mon, 17 Feb 2014 02:42:23 -0500
+Received: by mail-bk0-f42.google.com with SMTP id 6so4124403bkj.29
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2014 23:42:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52FE3F35.4080308@candelatech.com>
+References: <1392318594-32540-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQmDCrmkB3FErCN-XDX6M_Vzk3BuAK3AXcNK00qePje7XA@mail.gmail.com>
+	<52FE3F35.4080308@candelatech.com>
+Date: Mon, 17 Feb 2014 08:42:21 +0100
+Message-ID: <CA+BoTQ=cojyffQrTGmq7zgpfUNSBB9nrZEPpy5hsngnBW2j3pA@mail.gmail.com> (sfid-20140217_084226_917567_73DA7EA2)
+Subject: Re: [RFC] wmi: Handle failure to start scan.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle AUTO bandwidth setting in db2rd.
-Don't add NL80211_ATTR_FREQ_RANGE_MAX_BW attribute
-in case of AUTO bw calculation.
+On 14 February 2014 17:07, Ben Greear <greearb@candelatech.com> wrote:
+> On 02/13/2014 10:47 PM, Michal Kazior wrote:
+>>
+>> On 13 February 2014 20:09,  <greearb@candelatech.com> wrote:
+>>>
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> Properly clean up driver state in case firmware fails
+>>> to start scan for some reason.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>> ---
+>>>   drivers/net/wireless/ath/ath10k/wmi.c | 20 +++++++++++++++++++-
+>>>   1 file changed, 19 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
+>>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> index 20f7c79..a5be0d3 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> @@ -770,7 +770,25 @@ static int ath10k_wmi_event_scan(struct ath10k *ar,
+>>> struct sk_buff *skb)
+>>>                  ath10k_dbg(ATH10K_DBG_WMI,
+>>> "WMI_SCAN_EVENT_PREEMPTED\n");
+>>>                  break;
+>>>          case WMI_SCAN_EVENT_START_FAILED:
+>>> -               ath10k_dbg(ATH10K_DBG_WMI,
+>>> "WMI_SCAN_EVENT_START_FAILED\n");
+>>> +               ath10k_warn("WMI_SCAN_EVENT_START_FAILED, reason: %i\n",
+>>> reason);
+>>> +
+>>> +               ar->scan_channel = NULL;
+>>> +               if (!ar->scan.in_progress) {
+>>> +                       ath10k_warn("scan-start-failed: no scan
+>>> requested, ignoring\n");
+>>> +                       break;
+>>> +               }
+>>> +
+>>> +               if (ar->scan.is_roc) {
+>>> +                       ath10k_offchan_tx_purge(ar);
+>>> +
+>>> +                       if (!ar->scan.aborting)
+>>> +
+>>> ieee80211_remain_on_channel_expired(ar->hw);
+>>> +               } else {
+>>> +                       ieee80211_scan_completed(ar->hw,
+>>> ar->scan.aborting);
+>>> +               }
+>>> +
+>>> +               del_timer(&ar->scan.timeout);
+>>> +               ar->scan.in_progress = false;
+>>>                  break;
+>>>          default:
+>>>                  break;
+>>
+>>
+>> We already wait for EVENT_STARTED in mac.c (see ath10k_start_scan) and
+>> clean up stuff (ath10k_abort_scan). Why not add the missing bits in
+>> there? Or is it possible to get EVENT_START_FAILED *after*
+>> EVENT_STARTED? Or am I missing something else here?
+>
+>
+> I think a lot of this would be firmware dependent, and might change between
+> various versions of the firmware.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- crda.c   |    3 ++-
- reglib.c |    9 ++++++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+It doesn't make any sense. That would suggest a really ugly firmware
+bug. Did you see this (i.e. START_FAILED after STARTED) on 636 or
+10.1.467?
 
-diff --git a/crda.c b/crda.c
-index 0bf83a1..2fc5bce 100644
---- a/crda.c
-+++ b/crda.c
-@@ -127,7 +127,8 @@ static int put_reg_rule(const struct ieee80211_reg_rule *rule, struct nl_msg *ms
- 	NLA_PUT_U32(msg, NL80211_ATTR_REG_RULE_FLAGS,		rule->flags);
- 	NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_START,		freq_range->start_freq_khz);
- 	NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_END,		freq_range->end_freq_khz);
--	NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_MAX_BW,	freq_range->max_bandwidth_khz);
-+	if (freq_range->max_bandwidth_khz)
-+		NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_MAX_BW, freq_range->max_bandwidth_khz);
- 	NLA_PUT_U32(msg, NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN,	power_rule->max_antenna_gain);
- 	NLA_PUT_U32(msg, NL80211_ATTR_POWER_RULE_MAX_EIRP,	power_rule->max_eirp);
- 
-diff --git a/reglib.c b/reglib.c
-index af38fe7..bb8ce96 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -1116,7 +1116,7 @@ reglib_parse_rule_args_cac(char *line, struct ieee80211_reg_rule *reg_rule)
- static int reglib_parse_rule(FILE *fp, struct ieee80211_reg_rule *reg_rule)
- {
- 	char line[1024];
--	char *line_p;
-+	char *line_p, *auto_p;
- 	unsigned int i;
- 	int r = 0;
- 	struct reglib_rule_parse_list *reglib_rule_parsers;
-@@ -1150,6 +1150,13 @@ static int reglib_parse_rule(FILE *fp, struct ieee80211_reg_rule *reg_rule)
- 		return -EINVAL;
- 	}
- 
-+	auto_p = strstr(line_p, "@ AUTO");
-+	if (auto_p) {
-+		/* This will be much easier instead of adding new parser! */
-+		memcpy(&auto_p[0], "@ 0", 3);
-+		memcpy(&auto_p[3], &auto_p[6], strlen(line_p) + 1 - (auto_p + 3 - line_p));
-+	}
-+
- 	for (i = 0; i < reglib_rule_parsers->n_parsers; i++) {
- 		r = reglib_rule_parsers->rule_parsers[i](line, reg_rule);
- 		if (r == 0)
--- 
-1.7.9.5
 
+> It seems to me we should handle this case and do cleanup just to be safe,
+> but maybe cleanup is needed in failure case of ath10k_start_scan as well?
+
+If you really get START_FAILED then you shouldn't have received
+STARTED before that. ath10k_start_scan() already waits for the STARTED
+event with a timeout and if it fails it triggers a cleanup. If it
+doesn't work for you then what perhaps needs to be fixed is the
+current cleanup code?
+
+
+Michał
