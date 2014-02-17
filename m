@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49153 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbaBSIMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:12:55 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/3] iwl3945: fix wakeup interrupt
-Date: Wed, 19 Feb 2014 09:15:09 +0100
-Message-Id: <1392797711-2564-1-git-send-email-sgruszka@redhat.com> (sfid-20140219_091259_315019_93CBCB91)
+Received: from mx-relay04-dus.antispameurope.com ([94.100.134.204]:39057 "EHLO
+	mx-relay04-dus.antispameurope.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754138AbaBQTMA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Feb 2014 14:12:00 -0500
+From: "Kretschmer, Mathias" <mathias.kretschmer@fokus.fraunhofer.de>
+To: David Miller <davem@davemloft.net>
+CC: "arend@broadcom.com" <arend@broadcom.com>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [net-next v2 3/3] cfg80211: add MPLS and 802.21 classification
+Date: Mon, 17 Feb 2014 19:11:05 +0000
+Message-ID: <D53252F45158EF44B1DF124FDC9AF2A35AD9E1FB@FEYNMAN.fokus.fraunhofer.de> (sfid-20140217_201210_828161_47465D94)
+References: <1392656174-14791-4-git-send-email-sw@simonwunderlich.de>
+	<5302474B.6090609@broadcom.com>
+	<D53252F45158EF44B1DF124FDC9AF2A35AD9E12C@FEYNMAN.fokus.fraunhofer.de>
+ <20140217.140653.1309552047403078220.davem@davemloft.net>
+In-Reply-To: <20140217.140653.1309552047403078220.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have only 5 tx queues on 3945, updating il->txq[5] results in
-writing random value to HBUS_TARG_WRPTR register.
+> > Thought so, as well. But it seems that skb->protocol is not properly
+> > set when the packet originates from a packet socket.  And in our case
+> > we cannot set it to a fixed etherType in the bind() call since we use
+> > three different etherTypes on the same socket.
+> 
+> So many things break if the skb->protocol isn't set correctly that I would
+> consider such SKBs mal-formed.
 
-Additionally use spin lock to protect txq->write_ptr and
-txq->need_update fields also modified in TX path.
+Agreed.
 
-Tested-by: Pedro Francisco <pedrogfrancisco@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> You can specify the protocol number in the msghdr passed into the send.
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 0487461..46b32d4 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -1495,12 +1495,14 @@ il3945_irq_tasklet(struct il_priv *il)
- 	if (inta & CSR_INT_BIT_WAKEUP) {
- 		D_ISR("Wakeup interrupt\n");
- 		il_rx_queue_update_write_ptr(il, &il->rxq);
-+
-+		spin_lock_irqsave(&il->lock, flags);
- 		il_txq_update_write_ptr(il, &il->txq[0]);
- 		il_txq_update_write_ptr(il, &il->txq[1]);
- 		il_txq_update_write_ptr(il, &il->txq[2]);
- 		il_txq_update_write_ptr(il, &il->txq[3]);
- 		il_txq_update_write_ptr(il, &il->txq[4]);
--		il_txq_update_write_ptr(il, &il->txq[5]);
-+		spin_unlock_irqrestore(&il->lock, flags);
- 
- 		il->isr_stats.wakeup++;
- 		handled |= CSR_INT_BIT_WAKEUP;
--- 
-1.7.11.7
+Will take a look. Thx. Need to check if there is also a way to set the protocol number when using TX_RINGs, where  we use one send() call to signal the kernel that a bunch of frames (with potentially different protocol numbers) is ready for consumption.
+
 
