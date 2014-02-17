@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:49988 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750701AbaB1JWL (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:55879 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322AbaBQC22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 04:22:11 -0500
-Date: Fri, 28 Feb 2014 10:22:03 +0100
-From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: Luciano Coelho <coelho@ti.com>, mark.rutland@arm.com, nm@ti.com,
-	mturquette@linaro.org, linux-doc@vger.kernel.org,
-	Tony Lindgren <tony@atomide.com>,
-	linux-wireless@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	"Nori, Sekhar" <nsekhar@ti.com>,
-	kernel list <linux-kernel@vger.kernel.org>, balbi@ti.com,
-	martinez.javier@gmail.com, rob.herring@calxeda.com,
-	grant.likely@linaro.org, linux-omap@vger.kernel.org,
-	luca@coelho.fi,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 0/8] wilink: add device tree support
-Message-ID: <20140228092203.GA2974@piout.net> (sfid-20140228_102247_278704_15023B37)
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
- <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
+	Sun, 16 Feb 2014 21:28:28 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
+Message-ID: <21249.29605.11000.880663@gargle.gargle.HOWL> (sfid-20140217_032853_109569_681A207F)
+Date: Mon, 17 Feb 2014 07:57:49 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] ath9k: Fix ETSI compliance for AR9462 2.0
+In-Reply-To: <52FE3791.8020104@openwrt.org>
+References: <1392345920-28891-1-git-send-email-sujith@msujith.org>
+	<52FE3791.8020104@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28/02/2014 at 08:26:46 +0100, Yegor Yefremov wrote :
-> 
-> What is the state of the series? Who is now responsible for the
-> patches? What issues were still not handled?
-> 
+Felix Fietkau wrote:
+> Wouldn't it be better to do this for all AR93xx chipsets in
+> ar9003_hw_apply_minccapwr_thresh instead of initvals?
+> I'm pretty sure this patch will leave most other devices non-compliant.
 
-We probably want to end that discussion before taking those bindings in:
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232185.html
+The threshold values are adjusted for each chip and are not the same
+for all chips in the AR9003 family, so this is done in the initvals.
 
-I've hit the issue, precisely using those bindings.
+ar9003_hw_apply_minccapwr_thresh() will be used only for chips which
+contain the new 'MinCCApwr' field in struct ar9300_BaseExtension_1.
+This is not present in almost all the AR9003-family chips. I believe it has
+been introduced in AR955x.
 
--- 
-Alexandre Belloni, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Sujith
