@@ -1,288 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:33214 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159AbaBNNyy (ORCPT
+Received: from smtp100.uni-oldenburg.de ([134.106.141.100]:63685 "EHLO
+	smtp100.uni-oldenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbaBQS1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 08:54:54 -0500
-Received: by mail-ea0-f174.google.com with SMTP id z10so2432719ead.5
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 05:54:53 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3] ath10k: implement sta_rc_update()
-Date: Fri, 14 Feb 2014 14:49:48 +0100
-Message-Id: <1392385788-3983-1-git-send-email-michal.kazior@tieto.com> (sfid-20140214_145458_379891_4EC00DFA)
-In-Reply-To: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
-References: <1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 17 Feb 2014 13:27:17 -0500
+Message-ID: <53025486.4040906@Uni-Oldenburg.DE> (sfid-20140217_192721_216231_8124A298)
+Date: Mon, 17 Feb 2014 19:27:18 +0100
+From: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
+MIME-Version: 1.0
+To: Samuel Ortiz <sameo@linux.intel.com>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+	frankyl@broadcom.com
+Subject: Re: brcmfmac NVRAM files
+References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE> <530248DD.1050408@broadcom.com> <20140217180033.GM18868@zurbaran>
+In-Reply-To: <20140217180033.GM18868@zurbaran>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020003010009000306050906"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows dynamic changes of bandwidth/nss/smps,
-e.g. via ht/vht operation mode change
-notification.
+This is a cryptographically signed message in MIME format.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * fix memset(&arsta, ...) -> memset(arsta, ...)
+--------------ms020003010009000306050906
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-v3:
- * document ath10k_sta locking
- * include peer address in warnings
- * add a debug message for sta_rc_update() itself
+Am 17.02.2014 19:00, schrieb Samuel Ortiz:
+> Hi Arend,
+>
+> On Mon, Feb 17, 2014 at 06:37:33PM +0100, Arend van Spriel wrote:
+>> Hi Bernd,
+>>
+>> The hint to solve this is found on wireless.kernel.org [1] and the
+>> answer is as Samuel suspects. This file is very board specific so
+>> OEMs manufacturing/selling the board should provide it either upon
+>> request or through some distribution like a SDK.
+> There are several Win8 2-in-1 devices that do run the SDIO Full MAC
+> chipsets and obviously there is no SDK for those. Which means no distro=
 
- drivers/net/wireless/ath/ath10k/core.h |  12 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 157 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  |   6 ++
- 3 files changed, 175 insertions(+)
+> will ever be able to run out of the box on those.
+> I may be completely off the mark here, but isn't there a sensible
+> template for those guys ? Nothing optimised, but just something that
+> would at least make things work...
+>
+> Also, the hint for pre 3.13 kernel is to copy the .bin into a .txt. Is
+> that still the case for post 3.13 ?
+>
+> Cheers,
+> Samuel.
+>
+No, thats wrong. You need a special board-specific *.txt file and rename =
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c0b00e1..5ff6428 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -228,6 +228,18 @@ struct ath10k_peer {
- 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
- };
- 
-+struct ath10k_sta {
-+	struct ath10k_vif *arvif;
-+
-+	/* the following are protected by ar->data_lock */
-+	u32 changed; /* IEEE80211_RC_* */
-+	u32 bw;
-+	u32 nss;
-+	u32 smps;
-+
-+	struct work_struct update_wk;
-+};
-+
- #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
- 
- struct ath10k_vif {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 144b4d6..88751f5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3056,6 +3056,69 @@ exit:
- 	return ret;
- }
- 
-+static void ath10k_sta_rc_update_wk(struct work_struct *wk)
-+{
-+	struct ath10k *ar;
-+	struct ath10k_vif *arvif;
-+	struct ath10k_sta *arsta;
-+	struct ieee80211_sta *sta;
-+	u32 changed, bw, nss, smps;
-+	int err;
-+
-+	arsta = container_of(wk, struct ath10k_sta, update_wk);
-+	sta = container_of((void *)arsta, struct ieee80211_sta, drv_priv);
-+	arvif = arsta->arvif;
-+	ar = arvif->ar;
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	changed = arsta->changed;
-+	arsta->changed = 0;
-+
-+	bw = arsta->bw;
-+	nss = arsta->nss;
-+	smps = arsta->smps;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (changed & IEEE80211_RC_BW_CHANGED) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
-+			   sta->addr, bw);
-+
-+		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+						WMI_PEER_CHAN_WIDTH, bw);
-+		if (err)
-+			ath10k_warn("failed to update STA %pM peer bw %d: %d\n",
-+				    sta->addr, bw, err);
-+	}
-+
-+	if (changed & IEEE80211_RC_NSS_CHANGED) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM nss %d\n",
-+			   sta->addr, nss);
-+
-+		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+						WMI_PEER_NSS, nss);
-+		if (err)
-+			ath10k_warn("failed to update STA %pM nss %d: %d\n",
-+				    sta->addr, nss, err);
-+	}
-+
-+	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM smps %d\n",
-+			   sta->addr, smps);
-+
-+		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+						WMI_PEER_SMPS_STATE, smps);
-+		if (err)
-+			ath10k_warn("failed to update STA %pM smps %d: %d\n",
-+				    sta->addr, smps, err);
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
- static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta,
-@@ -3064,9 +3127,15 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- {
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
- 	int max_num_peers;
- 	int ret = 0;
- 
-+	/* cancel must be done outside the mutex to avoid deadlock */
-+	if ((old_state == IEEE80211_STA_NONE &&
-+	     new_state == IEEE80211_STA_NOTEXIST))
-+		cancel_work_sync(&arsta->update_wk);
-+
- 	mutex_lock(&ar->conf_mutex);
- 
- 	if (old_state == IEEE80211_STA_NOTEXIST &&
-@@ -3091,6 +3160,10 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   "mac vdev %d peer create %pM (new sta) num_peers %d\n",
- 			   arvif->vdev_id, sta->addr, ar->num_peers);
- 
-+		memset(arsta, 0, sizeof(*arsta));
-+		arsta->arvif = arvif;
-+		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
-+
- 		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
- 		if (ret)
- 			ath10k_warn("Failed to add peer %pM for vdev %d when adding a new sta: %i\n",
-@@ -3854,6 +3927,88 @@ static void ath10k_channel_switch_beacon(struct ieee80211_hw *hw,
- 	return;
- }
- 
-+static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta,
-+				 u32 changed)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	u32 bw, smps;
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	ath10k_dbg(ATH10K_DBG_MAC,
-+		   "mac sta rc update for %pM changed %08x bw %d nss %d smps %d\n",
-+		   sta->addr, changed, sta->bandwidth, sta->rx_nss,
-+		   sta->smps_mode);
-+
-+	if (changed & IEEE80211_RC_BW_CHANGED) {
-+		bw = WMI_PEER_CHWIDTH_20MHZ;
-+
-+		switch (sta->bandwidth) {
-+		case IEEE80211_STA_RX_BW_20:
-+			bw = WMI_PEER_CHWIDTH_20MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_40:
-+			bw = WMI_PEER_CHWIDTH_40MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_80:
-+			bw = WMI_PEER_CHWIDTH_80MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_160:
-+			ath10k_warn("mac sta rc update for %pM: invalid bw %d\n",
-+				    sta->addr, sta->bandwidth);
-+			bw = WMI_PEER_CHWIDTH_20MHZ;
-+			break;
-+		}
-+
-+		arsta->bw = bw;
-+	}
-+
-+	if (changed & IEEE80211_RC_NSS_CHANGED)
-+		arsta->nss = sta->rx_nss;
-+
-+	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-+		smps = WMI_PEER_SMPS_PS_NONE;
-+
-+		switch (sta->smps_mode) {
-+		case IEEE80211_SMPS_AUTOMATIC:
-+		case IEEE80211_SMPS_OFF:
-+			smps = WMI_PEER_SMPS_PS_NONE;
-+			break;
-+		case IEEE80211_SMPS_STATIC:
-+			smps = WMI_PEER_SMPS_STATIC;
-+			break;
-+		case IEEE80211_SMPS_DYNAMIC:
-+			smps = WMI_PEER_SMPS_DYNAMIC;
-+			break;
-+		case IEEE80211_SMPS_NUM_MODES:
-+			ath10k_warn("mac sta rc update for %pM: invalid smps: %d\n",
-+				    sta->addr, sta->smps_mode);
-+			smps = WMI_PEER_SMPS_PS_NONE;
-+			break;
-+		}
-+
-+		arsta->smps = smps;
-+	}
-+
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
-+		/* FIXME: Not implemented. Probably the only way to do it would
-+		 * be to re-assoc the peer. */
-+		changed &= ~IEEE80211_RC_SUPP_RATES_CHANGED;
-+		ath10k_dbg(ATH10K_DBG_MAC,
-+			   "mac sta rc update for %pM: changing supported rates not implemented\n",
-+			   sta->addr);
-+	}
-+
-+	arsta->changed |= changed;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ieee80211_queue_work(hw, &arsta->update_wk);
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_tx,
- 	.start				= ath10k_start,
-@@ -3878,6 +4033,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.get_survey			= ath10k_get_survey,
- 	.set_bitrate_mask		= ath10k_set_bitrate_mask,
- 	.channel_switch_beacon		= ath10k_channel_switch_beacon,
-+	.sta_rc_update			= ath10k_sta_rc_update,
- #ifdef CONFIG_PM
- 	.suspend			= ath10k_suspend,
- 	.resume				= ath10k_resume,
-@@ -4253,6 +4409,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
- 
- 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
-+	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
- 
- 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 083079f..6df4f95 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3876,6 +3876,12 @@ enum wmi_peer_smps_state {
- 	WMI_PEER_SMPS_DYNAMIC = 0x2
- };
- 
-+enum wmi_peer_chwidth {
-+	WMI_PEER_CHWIDTH_20MHZ = 0,
-+	WMI_PEER_CHWIDTH_40MHZ = 1,
-+	WMI_PEER_CHWIDTH_80MHZ = 2,
-+};
-+
- enum wmi_peer_param {
- 	WMI_PEER_SMPS_STATE = 0x1, /* see %wmi_peer_smps_state */
- 	WMI_PEER_AMPDU      = 0x2,
--- 
-1.8.5.3
+it for kernels > 3.12 to brcmfmacxxxx-sdio.txt.
 
+Bernd
+
+
+--------------ms020003010009000306050906
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+BDBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzL2dzcGVy
+c29uYWxzaWduMWcyLmNybDBVBggrBgEFBQcBAQRJMEcwRQYIKwYBBQUHMAKGOWh0dHA6Ly9z
+ZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMWcyLmNydDAdBgNV
+HQ4EFgQUo6v6aPpk9tm4GPs+owgUjzzuzuEwHwYDVR0jBBgwFoAU7KyYzCdyk89WMs0jx52N
+RYX0IgMwDQYJKoZIhvcNAQEFBQADggEBAFRYw1pQE69c8Q+siLv/z5rkwEYmtvDFEHPKzZXF
+mNU7ZHD4PvA8QPXeMvyDJnwOztUce3YkwpszDehNhZX6pu9WsnOwjPBdvvTvm9oVJHFIwZmU
+fjvC6I1D/Z0s4QU/2WorrElbQl/AR7hnK3PhLQxcHjSyskRaB7CGoBnPqhjWzZ4s3sedMlpG
+NWbDQrlKhz1BSaW0K9tSQgv76hXTgNJn5W4CgtDy7uQz93NetWOusWP+w1PQ2VetDeES9xuF
+UgD/r+y0ct8Tzs6tJIWpY8+IQiaFRLrrvUqCF+oqQS1JQOY8H/MX9YX9CZKm01ZW9RJAFZK9
+4h0ODdPV4XOJn60xggNSMIIDTgIBATBoMFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
+YWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAxIENBIC0g
+RzICEGZgT+TGYtW+XJFIVmQFPNswCQYFKw4DAhoFAKCCAb8wGAYJKoZIhvcNAQkDMQsGCSqG
+SIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTQwMjE3MTgyNzE4WjAjBgkqhkiG9w0BCQQxFgQU
+qY8FZIOjGtf8NszM40WQE8BCweAwbAYJKoZIhvcNAQkPMV8wXTALBglghkgBZQMEASowCwYJ
+YIZIAWUDBAECMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAH
+BgUrDgMCBzANBggqhkiG9w0DAgIBKDB3BgkrBgEEAYI3EAQxajBoMFQxCzAJBgNVBAYTAkJF
+MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIFBlcnNv
+bmFsU2lnbiAxIENBIC0gRzICEGZgT+TGYtW+XJFIVmQFPNsweQYLKoZIhvcNAQkQAgsxaqBo
+MFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFH
+bG9iYWxTaWduIFBlcnNvbmFsU2lnbiAxIENBIC0gRzICEGZgT+TGYtW+XJFIVmQFPNswDQYJ
+KoZIhvcNAQEBBQAEggEAnbhbrvgKVdBgld1Tf8uPvnpIIKtrn1ZAJ6DtEmnaIb+hIlhKCT/y
+eeHxtu5bWDOU7/SZOyURlb6x00VhSPY+PYQQ9/4AfzEEZyNPy0APvkEwCny+u7r238VUtUp/
+0rTX2+bNSil4ya7SCcMLiw6ScNG310dX+ZcgZ90NBhEhigo2H90X8QQpQ+ImpFW5r4iPWiKb
+j31tn5IQn0xylMrvv3DqRlKqI1m5QaHKrVEc8PwWfq7r7HEx0yJbTSPAT32F9tq8KdXcBMTl
+8LBBxsHvr1aQIylxuLlbmv4QUDVadAB3bi32lpK3+9Bj5Tx6YpwaSnLbBhRztPohWGElJ6XE
+yQAAAAAAAA==
+--------------ms020003010009000306050906--
