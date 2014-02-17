@@ -1,100 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45948 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbaB1SCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 13:02:38 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, c_manoha@qca.qualcomm.com
-Subject: [PATCH 2/2] ath9k_hw: tweak noise immunity thresholds for older chipsets
-Date: Fri, 28 Feb 2014 19:02:25 +0100
-Message-Id: <1393610545-68025-2-git-send-email-nbd@openwrt.org> (sfid-20140228_190241_971423_01B24C9F)
-In-Reply-To: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
-References: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:34741 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461AbaBQJh4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Feb 2014 04:37:56 -0500
+Received: by mail-ee0-f54.google.com with SMTP id e53so6987777eek.13
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 01:37:52 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT 1/7] ath10k: remove DMA mapping wrappers
+Date: Mon, 17 Feb 2014 10:32:37 +0100
+Message-Id: <1392629563-31046-2-git-send-email-michal.kazior@tieto.com> (sfid-20140217_103813_350693_CEDE2665)
+In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Older chipsets are more sensitive to high PHY error counts, and the
-current noise immunity thresholds were based on tests run at QCA with
-newer chipsets.
+There's no real benefit from using them. DMA-API
+already provides debugging. Some skbuffs are
+already mapped directly with DMA-API since wrapper
+arguments were insufficient and extending them
+would be pointless.
 
-This patch brings back the values from the old ANI implementation for
-old chipsets, and it also disables weak signal detection on an earlier
-noise immunity level, to improve overall radio stability on affected
-devices.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 23 +++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ani.h |  4 ++++
- 2 files changed, 23 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   | 27 ---------------------------
+ drivers/net/wireless/ath/ath10k/htc.c    | 11 ++++++++---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 12 ++++++++----
+ drivers/net/wireless/ath/ath10k/mac.c    |  4 +++-
+ drivers/net/wireless/ath/ath10k/txrx.c   |  5 +----
+ drivers/net/wireless/ath/ath10k/wmi.c    | 17 ++++++++++++++---
+ 6 files changed, 34 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 3227ee0..2ce5079 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -185,10 +185,18 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 		 ah->opmode != NL80211_IFTYPE_STATION)
- 		weak_sig = true;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1fc26fe..082fa77 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -62,7 +62,6 @@ struct ath10k;
  
-+	/* Older chipsets are more sensitive to high PHY error counts */
-+	else if (!AR_SREV_9300_20_OR_LATER(ah) &&
-+		 aniState->ofdmNoiseImmunityLevel >= 8)
-+		weak_sig = false;
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+-	bool is_mapped;
+ 	bool is_aborted;
+ 	u8 vdev_id;
+ 
+@@ -87,32 +86,6 @@ static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
+ 	return (struct ath10k_skb_cb *)&IEEE80211_SKB_CB(skb)->driver_data;
+ }
+ 
+-static inline int ath10k_skb_map(struct device *dev, struct sk_buff *skb)
+-{
+-	if (ATH10K_SKB_CB(skb)->is_mapped)
+-		return -EINVAL;
+-
+-	ATH10K_SKB_CB(skb)->paddr = dma_map_single(dev, skb->data, skb->len,
+-						   DMA_TO_DEVICE);
+-
+-	if (unlikely(dma_mapping_error(dev, ATH10K_SKB_CB(skb)->paddr)))
+-		return -EIO;
+-
+-	ATH10K_SKB_CB(skb)->is_mapped = true;
+-	return 0;
+-}
+-
+-static inline int ath10k_skb_unmap(struct device *dev, struct sk_buff *skb)
+-{
+-	if (!ATH10K_SKB_CB(skb)->is_mapped)
+-		return -EINVAL;
+-
+-	dma_unmap_single(dev, ATH10K_SKB_CB(skb)->paddr, skb->len,
+-			 DMA_TO_DEVICE);
+-	ATH10K_SKB_CB(skb)->is_mapped = false;
+-	return 0;
+-}
+-
+ static inline u32 host_interest_item_address(u32 item_offset)
+ {
+ 	return QCA988X_HOST_INTEREST_ADDRESS + item_offset;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index edc57ab..69f1f46 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -63,7 +63,9 @@ static struct sk_buff *ath10k_htc_build_tx_ctrl_skb(void *ar)
+ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
+ 					     struct sk_buff *skb)
+ {
+-	ath10k_skb_unmap(htc->ar->dev, skb);
++	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
 +
- 	if (aniState->ofdmWeakSigDetect != weak_sig)
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				     weak_sig);
++	dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+ }
  
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		return;
-+
- 	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
- 		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
- 		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
-@@ -485,10 +493,17 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+@@ -122,6 +124,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 		    struct sk_buff *skb)
+ {
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
++	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
++	struct device *dev = htc->ar->dev;
+ 	int credits = 0;
+ 	int ret;
  
- 	ath_dbg(common, ANI, "Initialize ANI\n");
+@@ -157,7 +161,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
  
--	ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
--	ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
--	ah->config.cck_trig_high = ATH9K_ANI_CCK_TRIG_HIGH;
--	ah->config.cck_trig_low = ATH9K_ANI_CCK_TRIG_LOW;
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
-+		ah->config.cck_trig_high = ATH9K_ANI_CCK_TRIG_HIGH;
-+		ah->config.cck_trig_low = ATH9K_ANI_CCK_TRIG_LOW;
-+	} else {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_OLD;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_OLD;
-+		ah->config.cck_trig_high = ATH9K_ANI_CCK_TRIG_HIGH_OLD;
-+		ah->config.cck_trig_low = ATH9K_ANI_CCK_TRIG_LOW_OLD;
-+	}
+ 	ath10k_htc_prepare_tx_skb(ep, skb);
  
- 	ani->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
- 	ani->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 21e7b83..c40965b 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -22,12 +22,16 @@
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_HIGH           3500
- #define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
-+#define ATH9K_ANI_OFDM_TRIG_HIGH_OLD       500
+-	ret = ath10k_skb_map(htc->ar->dev, skb);
++	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
++	ret = dma_mapping_error(dev, skb_cb->paddr);
+ 	if (ret)
+ 		goto err_credits;
  
- #define ATH9K_ANI_OFDM_TRIG_LOW           400
- #define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
-+#define ATH9K_ANI_OFDM_TRIG_LOW_OLD       200
+@@ -169,7 +174,7 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	return 0;
  
- #define ATH9K_ANI_CCK_TRIG_HIGH           600
-+#define ATH9K_ANI_CCK_TRIG_HIGH_OLD       200
- #define ATH9K_ANI_CCK_TRIG_LOW            300
-+#define ATH9K_ANI_CCK_TRIG_LOW_OLD        100
+ err_unmap:
+-	ath10k_skb_unmap(htc->ar->dev, skb);
++	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
+ err_credits:
+ 	if (ep->tx_credit_flow_enabled) {
+ 		spin_lock_bh(&htc->tx_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index acaa046..f5960c5 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -334,7 +334,9 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		goto err_free_msdu_id;
+ 	}
  
- #define ATH9K_ANI_SPUR_IMMUNE_LVL         3
- #define ATH9K_ANI_FIRSTEP_LVL             2
+-	res = ath10k_skb_map(dev, msdu);
++	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
++				       DMA_TO_DEVICE);
++	res = dma_mapping_error(dev, skb_cb->paddr);
+ 	if (res)
+ 		goto err_free_txdesc;
+ 
+@@ -358,7 +360,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	return 0;
+ 
+ err_unmap_msdu:
+-	ath10k_skb_unmap(dev, msdu);
++	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ err_free_txdesc:
+ 	dev_kfree_skb_any(txdesc);
+ err_free_msdu_id:
+@@ -437,7 +439,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		skb_cb->htt.pad_len = 0;
+ 	}
+ 
+-	res = ath10k_skb_map(dev, msdu);
++	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
++				       DMA_TO_DEVICE);
++	res = dma_mapping_error(dev, skb_cb->paddr);
+ 	if (res)
+ 		goto err_pull_txfrag;
+ 
+@@ -509,7 +513,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	return 0;
+ 
+ err_unmap_msdu:
+-	ath10k_skb_unmap(dev, msdu);
++	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ err_pull_txfrag:
+ 	skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
+ err_free_txdesc:
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 94a70a9..ed90de2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -855,7 +855,9 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
+ 
+ 		spin_lock_bh(&arvif->ar->data_lock);
+ 		if (arvif->beacon) {
+-			ath10k_skb_unmap(arvif->ar->dev, arvif->beacon);
++			dma_unmap_single(arvif->ar->dev,
++					 ATH10K_SKB_CB(arvif->beacon)->paddr,
++					 arvif->beacon->len, DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(arvif->beacon);
+ 
+ 			arvif->beacon = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 4713bdb..8fd0680 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -51,7 +51,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ieee80211_tx_info *info;
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct sk_buff *msdu;
+-	int ret;
+ 
+ 	ath10k_dbg(ATH10K_DBG_HTT, "htt tx completion msdu_id %u discard %d no_ack %d\n",
+ 		   tx_done->msdu_id, !!tx_done->discard, !!tx_done->no_ack);
+@@ -65,9 +64,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	msdu = htt->pending_tx[tx_done->msdu_id];
+ 	skb_cb = ATH10K_SKB_CB(msdu);
+ 
+-	ret = ath10k_skb_unmap(dev, msdu);
+-	if (ret)
+-		ath10k_warn("data skb unmap failed (%d)\n", ret);
++	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	if (skb_cb->htt.frag_len)
+ 		skb_pull(msdu, skb_cb->htt.frag_len + skb_cb->htt.pad_len);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 91e501b..f372957 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1360,7 +1360,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 	struct wmi_bcn_info *bcn_info;
+ 	struct ath10k_vif *arvif;
+ 	struct sk_buff *bcn;
+-	int vdev_id = 0;
++	int err, vdev_id = 0;
+ 
+ 	ath10k_dbg(ATH10K_DBG_MGMT, "WMI_HOST_SWBA_EVENTID\n");
+ 
+@@ -1435,16 +1435,27 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 				ath10k_warn("SWBA overrun on vdev %d\n",
+ 					    arvif->vdev_id);
+ 
+-			ath10k_skb_unmap(ar->dev, arvif->beacon);
++			dma_unmap_single(arvif->ar->dev,
++					 ATH10K_SKB_CB(arvif->beacon)->paddr,
++					 arvif->beacon->len, DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(arvif->beacon);
+ 		}
+ 
+-		ath10k_skb_map(ar->dev, bcn);
++		ATH10K_SKB_CB(bcn)->paddr = dma_map_single(arvif->ar->dev,
++							   bcn->data, bcn->len,
++							   DMA_TO_DEVICE);
++		err = dma_mapping_error(arvif->ar->dev,
++					ATH10K_SKB_CB(bcn)->paddr);
++		if (err) {
++			ath10k_warn("failed to map beacon: %d\n", err);
++			goto skip;
++		}
+ 
+ 		arvif->beacon = bcn;
+ 		arvif->beacon_sent = false;
+ 
+ 		ath10k_wmi_tx_beacon_nowait(arvif);
++skip:
+ 		spin_unlock_bh(&ar->data_lock);
+ 	}
+ }
 -- 
-1.8.3.4 (Apple Git-47)
+1.8.5.3
 
