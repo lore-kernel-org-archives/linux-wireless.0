@@ -1,28 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55308 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755232AbaBFIeB (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47883 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914AbaBRS7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 03:34:01 -0500
-Message-ID: <1391675634.12789.0.camel@jlt4.sipsolutions.net> (sfid-20140206_093405_418095_F1CA4CD0)
-Subject: Re: [PATCH v2] mac80211: remove unused radiotap vendor fields in
- ieee80211_rx_status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: k.eugene.e@gmail.com, linux-wireless@vger.kernel.org
-Date: Thu, 06 Feb 2014 09:33:54 +0100
-In-Reply-To: <1391610961-29019-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1391610961-29019-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Feb 2014 13:59:21 -0500
+Date: Tue, 18 Feb 2014 11:00:46 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/5] staging: vt6656: Remove variable
+ fKillEventPollingThread
+Message-ID: <20140218190046.GA20757@kroah.com> (sfid-20140218_195935_082764_0E938BDE)
+References: <1392672273.11154.13.camel@canaries64-MCP7A>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392672273.11154.13.camel@canaries64-MCP7A>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-05 at 16:36 +0200, Emmanuel Grumbach wrote:
-> The purpose of this housekeeping is to make some room for
-> VHT flags. The radiotap vendor fields weren't in use.
+On Mon, Feb 17, 2014 at 09:24:33PM +0000, Malcolm Priestley wrote:
+> We already kill the urb and since patch
+> s_nsInterruptUsbIoCompleteRead add urb status returns.
+> have error handling
+> 
+> There is no need for this variable.
+> 
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> 
+> Conflicts:
+> 	drivers/staging/vt6656/usbpipe.c
 
-Applied.
-
-johannes
+Why is this in your Changelog entry?
 
