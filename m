@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13216 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757182AbaBUBAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 20:00:50 -0500
-Date: Fri, 21 Feb 2014 02:00:44 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "Mark A. Greer" <mgreer@animalcreek.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 2/3] NFC: trf7970a: Add ISO/IEC 15693 Support
-Message-ID: <20140221010044.GT18868@zurbaran> (sfid-20140221_020101_015253_7A323164)
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-3-git-send-email-mgreer@animalcreek.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38345 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbaBRRbD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 12:31:03 -0500
+Message-ID: <530398B6.2060806@broadcom.com> (sfid-20140218_183114_255963_3B608786)
+Date: Tue, 18 Feb 2014 18:30:30 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391206631-9862-3-git-send-email-mgreer@animalcreek.com>
+To: David Miller <davem@davemloft.net>,
+	<mathias.kretschmer@fokus.fraunhofer.de>
+CC: <sw@simonwunderlich.de>, <netdev@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [net-next v2 3/3] cfg80211: add MPLS and 802.21 classification
+References: <1392656174-14791-4-git-send-email-sw@simonwunderlich.de>	<5302474B.6090609@broadcom.com>	<D53252F45158EF44B1DF124FDC9AF2A35AD9E12C@FEYNMAN.fokus.fraunhofer.de> <20140217.140653.1309552047403078220.davem@davemloft.net>
+In-Reply-To: <20140217.140653.1309552047403078220.davem@davemloft.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mark,
+On 02/17/2014 08:06 PM, David Miller wrote:
+> From: "Kretschmer, Mathias" <mathias.kretschmer@fokus.fraunhofer.de>
+> Date: Mon, 17 Feb 2014 17:34:34 +0000
+> 
+>> Thought so, as well. But it seems that skb->protocol is not properly
+>> set when the packet originates from a packet socket.  And in our
+>> case we cannot set it to a fixed etherType in the bind() call since
+>> we use three different etherTypes on the same socket.
+> 
+> So many things break if the skb->protocol isn't set correctly that I
+> would consider such SKBs mal-formed.
 
-Just one nitpick here:
+That was my take as well, but how does the kernel code consider this?
 
-> +static int trf7970a_is_iso15693_write_or_lock(u8 cmd)
-> +{
-> +	int ret;
-> +
-> +	switch (cmd) {
-> +	case ISO15693_CMD_WRITE_SINGLE_BLOCK:
-> +	case ISO15693_CMD_LOCK_BLOCK:
-> +	case ISO15693_CMD_WRITE_MULTIPLE_BLOCK:
-> +	case ISO15693_CMD_WRITE_AFI:
-> +	case ISO15693_CMD_LOCK_AFI:
-> +	case ISO15693_CMD_WRITE_DSFID:
-> +	case ISO15693_CMD_LOCK_DSFID:
-> +		ret = 1;
-return 1;
+> You can specify the protocol number in the msghdr passed into the
+> send.
+> 
 
-and return 0 on the default case.
-Simpler code and you don't need the ret variable.
+Regards,
+Arend
 
-Cheers,
-Samuel.
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
