@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:59347 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbaBBFBY (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:56898 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170AbaBRNgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 00:01:24 -0500
-Received: by mail-wg0-f52.google.com with SMTP id b13so10486776wgh.31
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Feb 2014 21:01:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAAUTuq--5EUYgKb1Bg9UWZnDAZRqcPZFd=GRVEo-YKictJJWwg@mail.gmail.com>
-References: <CAAUTuq83oJJ02tMpT6sK4krkwNFEVZYuzfvsTtRoUX=fVYT9-w@mail.gmail.com>
- <CAJwzM1=0xBkQ0cw-T+zMcAHSZVJsJ7vJmK6O9eisqttn_qGyMA@mail.gmail.com> <CAAUTuq--5EUYgKb1Bg9UWZnDAZRqcPZFd=GRVEo-YKictJJWwg@mail.gmail.com>
-From: Andrew Wiley <wiley.andrew.j@gmail.com>
-Date: Sat, 1 Feb 2014 23:01:02 -0600
-Message-ID: <CAAUTuq-O1BFBmJfYe2xuRfLmNDNKY=V9CkMCM-QCq1iujE3n2w@mail.gmail.com> (sfid-20140202_060149_668983_B2BB32F8)
-Subject: Fwd: mwifiex and SD8787: How to create AP interface?
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 18 Feb 2014 08:36:50 -0500
+Received: by mail-pa0-f49.google.com with SMTP id hz1so16550975pad.8
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 05:36:49 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Simon Kelley <simon@thekelleys.org.uk>
+Subject: [PATCH 2/7] atmel: replace function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
+Date: Tue, 18 Feb 2014 21:35:58 +0800
+Message-Id: <932b911b4d6dd9f111bd50806e5ec84a7e5fae1a.1392728354.git.gamerh2o@gmail.com> (sfid-20140218_143654_333002_8F9A124D)
+In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
+References: <cover.1392728354.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
+References: <cover.1392728354.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Avinash,
+Replace ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan} with more
+generic ieee80211_{channel_to_frequency, frequency_to_channel}.
 
-Thanks! That works for me. Would it be possible to add this to the
-mwifiex page on wireless.kernel.org? As far as I know, this command is
-completely undocumented within iw, and I know I'm not the only
-Dreamplug owner experiencing this problem.
+Include <net/cfg80211.h> for the defination of IEEE80211_BAND_2GHZ.
+Because <net/cfg80211.h> includes <linux/ieee80211.h>, so we can
+replace <linux/ieee80211.h> with <net/cfg80211.h>.
 
-As for other issues, I'm seeing a hang in the TX queue on the device
-after running an AP for a while, but I'm still gathering information
-on that. I'll follow up with another thread.
+This change is a preparation for the removal of function
+ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}.
 
-Thanks,
-Andrew
+Cc: Simon Kelley <simon@thekelleys.org.uk>
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ drivers/net/wireless/atmel.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-On Sat, Feb 1, 2014 at 9:48 PM, Avinash Patil <avinashapatil@gmail.com> wrote:
-> Hi Andrew,
->
-> AP interface can be created using iw utility. Command is as follows:
->
-> iw dev mlan0 interface add uap0 type __ap
->
-> There onwards hostapd can be used to start mwifiex AP operations. Please let
-> me know if you face any issues.
->
-> Thanks,
-> Avinashw
->
-> On Feb 2, 2014 8:28 AM, "Andrew Wiley" <wiley.andrew.j@gmail.com> wrote:
->>
->> Hello linux-wireless,
->>
->> I'm trying to get AP mode to work on a Marvell Kirkwood-based
->> Dreamplug with an SD8787 SDIO wireless chipset.
->>
->> Originally, the mwifiex driver would create three interfaces when it
->> loaded - mlan0, uap0, and ptp0, for station mode, AP mode, and PTP
->> mode, respectively. That behavior was removed in commit 1211c (
->>
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mwifiex?id=1211c961170cedb21c30d5bb7e2033c8720b38db
->> ) because NetworkManager was trying to use all of the interfaces
->> rather than just mlan0.
->>
->> As I understand it, the normal workflow for this is that hostapd
->> changes an interface from station mode to AP mode when it starts up,
->> but when it tries to do this on the mlan0 interface, nl80211 returns
->> Operation Not Supported. Depending on the version of hostapd, it
->> either bails out there or tries to continue and bails out later in
->> setup.
->>
->> If I revert the patch I linked above, the driver creates the uap0
->> interface and I can run an AP with hostapd (although it has some other
->> issues - more on that in a later post).
->>
->> What is the "correct" way to access AP mode with this driver? As far
->> as I'm aware, there are no userspace utilities to directly create an
->> AP-mode interface, and mwifiex doesn't seem to support the normal
->> workflow that hostapd is trying to do.
->>
->> Thanks,
->> Andrew
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index bf93ea8..1fe41af 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -67,7 +67,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+ #include <linux/jiffies.h>
+-#include <linux/ieee80211.h>
++#include <net/cfg80211.h>
+ #include "atmel.h"
+ 
+ #define DRIVER_MAJOR 0
+@@ -2273,7 +2273,7 @@ static int atmel_set_freq(struct net_device *dev,
+ 
+ 		/* Hack to fall through... */
+ 		fwrq->e = 0;
+-		fwrq->m = ieee80211_freq_to_dsss_chan(f);
++		fwrq->m = ieee80211_frequency_to_channel(f);
+ 	}
+ 	/* Setting by channel number */
+ 	if ((fwrq->m > 1000) || (fwrq->e > 0))
+@@ -2434,8 +2434,8 @@ static int atmel_get_range(struct net_device *dev,
+ 			range->freq[k].i = i; /* List index */
+ 
+ 			/* Values in MHz -> * 10^5 * 10 */
+-			range->freq[k].m = (ieee80211_dsss_chan_to_freq(i) *
+-					    100000);
++			range->freq[k].m = 100000 *
++			 ieee80211_channel_to_frequency(i, IEEE80211_BAND_2GHZ);
+ 			range->freq[k++].e = 1;
+ 		}
+ 		range->num_frequency = k;
+-- 
+1.8.5.3
+
