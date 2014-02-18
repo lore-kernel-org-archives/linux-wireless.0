@@ -1,104 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34899 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753258AbaBYM0J (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:59846 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbaBRBKg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:26:09 -0500
-Date: Tue, 25 Feb 2014 17:42:09 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/3 v3] mwl8k: Implement sw_scan start/stop cbs
-Message-ID: <20140225121209.GA5643@markyou.marvell.com> (sfid-20140225_132616_108869_B2612068)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 17 Feb 2014 20:10:36 -0500
+Received: by mail-ee0-f49.google.com with SMTP id d17so7466516eek.36
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 17:10:35 -0800 (PST)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	liuhq11@mails.tsinghua.edu.cn,
+	andrea merello <andrea.merello@gmail.com>
+Subject: [PATCH 2/7] rtl818x: pci_iomap() should pair with pci_iounmap()
+Date: Tue, 18 Feb 2014 02:10:41 +0100
+Message-Id: <1392685846-10116-3-git-send-email-andrea.merello@gmail.com> (sfid-20140218_021040_728519_A1F97E37)
+In-Reply-To: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement sw_scan start and stop callbacks.
-Reset BBP registers for channel, RX busy and
-average noise stats which clear on read.
+From: andrea merello <andrea.merello@gmail.com>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Currently the driver uses pci_iomap() but iounmap() is called in
+the error path
+
+Change to use pci_iounmap() instead.
+
+Reported-by: Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 6c002f3..61d5bea 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -81,6 +81,9 @@ MODULE_PARM_DESC(ap_mode_default,
-  */
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 470a1e3..bf59ff9 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -1137,7 +1137,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 	return 0;
  
- #define	MWL8K_HW_TIMER_REGISTER			0x0000a600
-+#define BBU_RXRDY_CNT_REG			0x0000a860
-+#define NOK_CCA_CNT_REG				0x0000a6a0
-+#define BBU_AVG_NOISE_VAL			0x67
+  err_iounmap:
+-	iounmap(priv->map);
++	pci_iounmap(pdev, priv->map);
  
- #define MWL8K_A2H_EVENTS	(MWL8K_A2H_INT_DUMMY | \
- 				 MWL8K_A2H_INT_CHNL_SWITCHED | \
-@@ -289,6 +292,9 @@ struct mwl8k_priv {
- 
- 	/* bitmap of running BSSes */
- 	u32 running_bsses;
-+
-+	/* ACS related */
-+	bool sw_scan_start;
- };
- 
- #define MAX_WEP_KEY_LEN         13
-@@ -5448,6 +5454,38 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return rc;
- }
- 
-+static void mwl8k_sw_scan_start(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+
-+	priv->sw_scan_start = true;
-+}
-+
-+static void mwl8k_sw_scan_complete(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	u8 tmp;
-+
-+	if (!priv->ap_fw)
-+		return;
-+
-+	priv->sw_scan_start = false;
-+
-+	/* clear all stats */
-+	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
-+	ioread32(priv->regs + NOK_CCA_CNT_REG);
-+	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
-+}
-+
- static const struct ieee80211_ops mwl8k_ops = {
- 	.tx			= mwl8k_tx,
- 	.start			= mwl8k_start,
-@@ -5466,6 +5504,8 @@ static const struct ieee80211_ops mwl8k_ops = {
- 	.get_stats		= mwl8k_get_stats,
- 	.get_survey		= mwl8k_get_survey,
- 	.ampdu_action		= mwl8k_ampdu_action,
-+	.sw_scan_start		= mwl8k_sw_scan_start,
-+	.sw_scan_complete	= mwl8k_sw_scan_complete,
- };
- 
- static void mwl8k_finalize_join_worker(struct work_struct *work)
+  err_free_dev:
+ 	ieee80211_free_hw(dev);
 -- 
-1.8.3.4
+1.8.3.2
 
