@@ -1,47 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:39523 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753124AbaBTMJE (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:42794 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbaBRURn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 07:09:04 -0500
-Received: by mail-wi0-f174.google.com with SMTP id f8so5790857wiw.7
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 04:09:02 -0800 (PST)
+	Tue, 18 Feb 2014 15:17:43 -0500
+Received: by mail-pa0-f48.google.com with SMTP id kx10so17158566pab.7
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 12:17:42 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140218105755.GD1741@redhat.com>
-References: <20120418203543.GA16000@x61.home> <20120425122554.GD2466@redhat.com>
- <20120503182853.GA12461@mac.home> <20121226185425.GA12627@x61.home>
- <20130107110759.GC6931@redhat.com> <20130603085239.GA26920@mac.home>
- <20130603141804.GA2146@redhat.com> <20130611185120.GA8751@x61.home> <20140218105755.GD1741@redhat.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Thu, 20 Feb 2014 12:08:42 +0000
-Message-ID: <CAJZjf_yu99H2dNLph8ynWhXwSso-4HStrO9HA66MD5kE5DhRjw@mail.gmail.com> (sfid-20140220_130909_696850_5CC80B51)
-Subject: Re: Power saving features for iwl4965
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	pedrogfrancisco.public@gmail.com
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <20140218192239.GP26776@mwanda>
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+ <20140218093135.GJ26776@mwanda> <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
+ <20140218182714.GO26776@mwanda> <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com>
+ <20140218192239.GP26776@mwanda>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Tue, 18 Feb 2014 21:17:22 +0100
+Message-ID: <CAN8YU5PQSNZHmEG6o2-uRQMo1G14M7ot-_KiHT2u=-4LCaremA@mail.gmail.com> (sfid-20140218_211746_510945_181B535F)
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 10:57 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Jun 11, 2013 at 08:51:20PM +0200, Tino Keitel wrote:
->> On Mon, Jun 03, 2013 at 16:18:05 +0200, Stanislaw Gruszka wrote:
->>
->> > Could you try this experimental patch?
->>
->> Hi,
->>
->> on top of kernel 3.9.4 (with TuxOnIce patch), iwconfig wlan0 power on
->> now saves more than 1 W on my ThinkPad X61s with iwl4965. I can finally
->> switch to a recent kernel. Thanks a lot.
->
-> This patch stuck on mailing list far too long, I'll post it. Even if it
-> crash firmware on 3945, power save is disabled by default.
+Ok, I will fix my patch in this way.
+I will resend it.
+Should I also rebase following patches in the patch serie and resent them also?
 
-Ok!
-The patch was not forgotten, just indefinitely delayed :/
-Now that I can compile a kernel in 10 minutes instead of >1h, I'll try
-to test it :)
--- 
-Pedro
+Thanks
+Andrea
+
+On Tue, Feb 18, 2014 at 8:22 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> On Tue, Feb 18, 2014 at 08:06:51PM +0100, Andrea Merello wrote:
+>> Thank for pointing out this. Yes, I probably exaggerated trying hard
+>> to allocate memory.
+>>
+>> If your point is about if pci_map_single may or not ever fail in real
+>> life (that is was I thought you meant in your first mail), then I
+>> think that it's worth to keep the  check anyway (I think it could
+>> happen).
+>
+> Please keep the check.
+>
+>>
+>> If your point is that it can be not so much useful to try and retry
+>> hard the allocation (I must admit I'm not even sure that after freeing
+>> the skb the kernel will not likely re-allocate the same one at the
+>> next try), then I will keep the error check, but I can remove code
+>> that retries allocation (failing at the first error as you suggested).
+>
+> Yes.  Please remove the retry code unless there is some real life
+> justification for it where you have seen partial allocations before.
+>
+>>
+>> BTW consider that the allocation is done in ieee80211 start callback,
+>> that is called every time the interface is brought down/up, and not
+>> once at the begining.
+>>
+>
+> You are right.  I didn't realize that.
+>
+>> On one hand I cared avoiding wasting memory when the interface is not up.
+>> On the other hand I had thought also to move memory allocation in
+>> initialization, exactly to increase success probability as you pointed
+>> out..
+>>
+>> I chosen the first option because after the interface is brought up,
+>> the RX ant TX processes will start to perform a lot of other skb
+>> allocations and dma maps.
+>> If we assume, as you pointed out, they will likely ALL fail or
+>> succeeds, not just few of them, then probably even if we allocated
+>> some memory at init time, we have gained not advantage.
+>>
+>> Do you agree ?
+>
+> Yes.
+>
+> regards,
+> dan carpenter
+>
+>
