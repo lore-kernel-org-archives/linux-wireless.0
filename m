@@ -1,89 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56529 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbaBDMHE (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:42817 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbaBRWKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 07:07:04 -0500
-Message-ID: <1391515621.26522.99.camel@porter.coelho.fi> (sfid-20140204_130707_589008_B9365122)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>
-Date: Tue, 04 Feb 2014 14:07:01 +0200
-In-Reply-To: <1391515050.4134.6.camel@jlt4.sipsolutions.net>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
-	 <1391508433.26522.61.camel@porter.coelho.fi>
-	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
-	 <1391512311.26522.75.camel@porter.coelho.fi>
-	 <1391513092.4134.4.camel@jlt4.sipsolutions.net>
-	 <1391514164.26522.89.camel@porter.coelho.fi>
-	 <1391515050.4134.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Feb 2014 17:10:54 -0500
+Received: by mail-pb0-f52.google.com with SMTP id jt11so17400312pbb.11
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 14:10:54 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <20140218203646.GQ26776@mwanda>
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+ <20140218093135.GJ26776@mwanda> <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
+ <20140218182714.GO26776@mwanda> <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com>
+ <20140218192239.GP26776@mwanda> <CAN8YU5PQSNZHmEG6o2-uRQMo1G14M7ot-_KiHT2u=-4LCaremA@mail.gmail.com>
+ <20140218203646.GQ26776@mwanda>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Tue, 18 Feb 2014 23:10:33 +0100
+Message-ID: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com> (sfid-20140218_231057_956438_9E030BCA)
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 12:57 +0100, Johannes Berg wrote:
-> On Tue, 2014-02-04 at 13:42 +0200, Luca Coelho wrote:
-> > > Nothing! As far as that's permissible. Ilan's patchset might change
-> > > that, but that's mostly a regulatory thing, rather than a CSA thing.
-> > 
-> > Ah, you have some insider information! :P
-> 
-> Not really, he posted those patches ... :)
+No, I didn't know about that.. I will give a look to git documentation..
+Thank you for telling me about it :)
 
-Heh, I should read the mailing list more carefully instead of marking
-everything as read without reading. ;)
+Andrea
 
 
-> > Sure, but how does the userspace know that the other interface *needs*
-> > to be moved, regardless of regulatory problems? It needs to know that
-> > there are not enough contexts to keep the interfaces in different
-> > channels...
-> 
-> It has all that information, it can know the channels, channel contexts,
-> etc.
-
-Okay, so I assume it also knows how many vifs can be in the same context
-and all the possible vif type combinations.  And do the same checks that
-cfg80211 already does...
-
-
-> > > > ...and, if the userspace doesn't react, we disconnect the GO.  I think
-> > > > it's safer this way for the GO-follows-STA case.
-> > > 
-> > > That would be a consequence of Ilan's work, yes.
-> > 
-> > Okay, if that's going to be guaranteed, I'm fine with it.
-> 
-> Not yet, but Ilan probably needs to take care of that.
-> 
-> > > This typically won't happen, since userspace will do something else, but
-> > > we need to have some default policy. I don't think anything else makes
-> > > much sense?
-> > 
-> > My point was that a CSA could have been triggered due to regulatory
-> > (which the AP/GO is monitoring), so the safest would be to move everyone
-> > out of the channel by default.
-> 
-> But the kernel can't do that, it needs userspace to do it.
-
-Right, but by "moving out of the channel by default" I meant
-disconnecting those who don't so we are sure there's no one left.
-
-
->  And if the
-> CSA was triggered due to regulatory, then the GO that follow the client
-> can only be on this channel with Ilan's work, otherwise it's allowed to
-> be standalone there.
-
-Okay, I'll check Ilan's patches.
-
---
-Luca.
-
-
-
+On Tue, Feb 18, 2014 at 9:36 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> On Tue, Feb 18, 2014 at 09:17:22PM +0100, Andrea Merello wrote:
+>> Ok, I will fix my patch in this way.
+>> I will resend it.
+>> Should I also rebase following patches in the patch serie and resent them also?
+>>
+>
+> Don't rebase if you don't have to.
+>
+> Do you know how to use the In-Reply-To header so that the v2 patch will
+> show up in the thread?  There is an --in-reply-to option in git
+> send-email.
+>
+> regards,
+> dan carpenter
+>
