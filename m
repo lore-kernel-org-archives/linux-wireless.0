@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35813 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752581AbaBSGMD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:12:03 -0500
-Received: by mail-ie0-f176.google.com with SMTP id rd18so2508372iec.21
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 22:12:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com>
-References: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com>
-Date: Wed, 19 Feb 2014 07:12:01 +0100
-Message-ID: <CAFED-jn0AfGVqJVFfeu6Pke2UBh-+nnRrhdVM-4acYHn9WdSjQ@mail.gmail.com> (sfid-20140219_071211_453714_5945AD88)
-Subject: Re: [PATCH] crda: handle AUTO bw setting in db2rd
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:56667 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755713AbaBROFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 09:05:39 -0500
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: [PATCH] drivers/net/wireless/brcm80211/brcmsmac/dma.c: deinline dma64_dd_upd, save 157 bytes
+Date: Tue, 18 Feb 2014 15:05:36 +0100
+Message-Id: <1392732336-23586-1-git-send-email-dvlasenk@redhat.com> (sfid-20140218_150613_333558_6BD2F9C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-19 1:33 GMT+01:00 Luis R. Rodriguez <mcgrof@do-not-panic.com>:
-> On Wed, Feb 12, 2014 at 9:43 AM, Janusz Dziedzic
-> <janusz.dziedzic@tieto.com> wrote:
->> Handle AUTO bandwidth setting in db2rd.
->> Don't add NL80211_ATTR_FREQ_RANGE_MAX_BW attribute
->> in case of AUTO bw calculation.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
-> Please elaborate more on this. Who deals with the automatic math on
-> the bandwidth?
->
-cfg80211,
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please check patch:
-cfg80211: regulatory introduce maximum bandwidth calculation
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 4fb9635..5acf73e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -711,7 +711,7 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 	return NULL;
+ }
+ 
+-static inline void
++static void
+ dma64_dd_upd(struct dma_info *di, struct dma64desc *ddring,
+ 	     dma_addr_t pa, uint outidx, u32 *flags, u32 bufcount)
+ {
+-- 
+1.8.1.4
 
-BR
-Janusz
