@@ -1,69 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:57661 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbaBJLsH (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:41219 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbaBRTXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 06:48:07 -0500
-Received: by mail-wg0-f41.google.com with SMTP id n12so2466313wgh.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:48:06 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 15/18] wlcore: decrease warning verbosity during recovery
-Date: Mon, 10 Feb 2014 13:47:31 +0200
-Message-Id: <1392032854-28126-16-git-send-email-eliad@wizery.com> (sfid-20140210_130006_987049_BB872BC7)
-In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
-References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+	Tue, 18 Feb 2014 14:23:06 -0500
+Date: Tue, 18 Feb 2014 22:22:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+Message-ID: <20140218192239.GP26776@mwanda> (sfid-20140218_202310_574246_1A750995)
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+ <20140218093135.GJ26776@mwanda>
+ <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
+ <20140218182714.GO26776@mwanda>
+ <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Tue, Feb 18, 2014 at 08:06:51PM +0100, Andrea Merello wrote:
+> Thank for pointing out this. Yes, I probably exaggerated trying hard
+> to allocate memory.
+> 
+> If your point is about if pci_map_single may or not ever fail in real
+> life (that is was I thought you meant in your first mail), then I
+> think that it's worth to keep the  check anyway (I think it could
+> happen).
 
-Silently ignore repetitive scheduling of recovery work and commands
-being passed to the bus when the HW is not available. This can happen
-many times during recovery and slow it down. It also spams the kernel
-logs.
+Please keep the check.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c  | 4 ++--
- drivers/net/wireless/ti/wlcore/main.c | 5 +++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> If your point is that it can be not so much useful to try and retry
+> hard the allocation (I must admit I'm not even sure that after freeing
+> the skb the kernel will not likely re-allocate the same one at the
+> next try), then I will keep the error check, but I can remove code
+> that retries allocation (failing at the first error as you suggested).
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 3463a67..40dc30f 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -60,8 +60,8 @@ static int __wlcore_cmd_send(struct wl1271 *wl, u16 id, void *buf,
- 	u16 status;
- 	u16 poll_count = 0;
- 
--	if (WARN_ON(wl->state == WLCORE_STATE_RESTARTING &&
--		    id != CMD_STOP_FWLOGGER))
-+	if (unlikely(wl->state == WLCORE_STATE_RESTARTING &&
-+		     id != CMD_STOP_FWLOGGER))
- 		return -EIO;
- 
- 	cmd = buf;
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 8106c96..a2348b9 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -782,10 +782,11 @@ out:
- 
- void wl12xx_queue_recovery_work(struct wl1271 *wl)
- {
--	WARN_ON(!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags));
--
- 	/* Avoid a recursive recovery */
- 	if (wl->state == WLCORE_STATE_ON) {
-+		WARN_ON(!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY,
-+				  &wl->flags));
-+
- 		wl->state = WLCORE_STATE_RESTARTING;
- 		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
- 		wl1271_ps_elp_wakeup(wl);
--- 
-1.8.5.2.229.g4448466.dirty
+Yes.  Please remove the retry code unless there is some real life
+justification for it where you have seen partial allocations before.
+
+> 
+> BTW consider that the allocation is done in ieee80211 start callback,
+> that is called every time the interface is brought down/up, and not
+> once at the begining.
+> 
+
+You are right.  I didn't realize that.
+
+> On one hand I cared avoiding wasting memory when the interface is not up.
+> On the other hand I had thought also to move memory allocation in
+> initialization, exactly to increase success probability as you pointed
+> out..
+> 
+> I chosen the first option because after the interface is brought up,
+> the RX ant TX processes will start to perform a lot of other skb
+> allocations and dma maps.
+> If we assume, as you pointed out, they will likely ALL fail or
+> succeeds, not just few of them, then probably even if we allocated
+> some memory at init time, we have gained not advantage.
+> 
+> Do you agree ?
+
+Yes.
+
+regards,
+dan carpenter
+
 
