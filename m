@@ -1,100 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:46405 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752091AbaBFUdQ (ORCPT
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:50017 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754917AbaBRNgP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 15:33:16 -0500
-Received: by mail-ob0-f170.google.com with SMTP id va2so2889642obc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Feb 2014 12:33:16 -0800 (PST)
-Message-ID: <52F3F18A.1020301@lwfinger.net> (sfid-20140206_213320_181079_7DB727D0)
-Date: Thu, 06 Feb 2014 14:33:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: andrea merello <andrea.merello@gmail.com>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4]  Add error check for pci_map_single return value
- in rtl8180 RX path
-References: <1391636287-17712-1-git-send-email-andrea.merello@gmail.com> <1391636287-17712-3-git-send-email-andrea.merello@gmail.com>
-In-Reply-To: <1391636287-17712-3-git-send-email-andrea.merello@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 18 Feb 2014 08:36:15 -0500
+Received: by mail-pd0-f180.google.com with SMTP id x10so16310210pdj.11
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 05:36:15 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/7] api clean: ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
+Date: Tue, 18 Feb 2014 21:35:56 +0800
+Message-Id: <cover.1392728354.git.gamerh2o@gmail.com> (sfid-20140218_143626_007835_64DA570F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2014 03:38 PM, andrea merello wrote:
-> From: "andrea.merello" <andrea.merello@gmail.com>
->
-> In original code the old RX DMA buffer is unmapped and processed and at the end
-> of the isr a new buffer is mapped with pci_map_single and attached to the RX
-> descriptor.
->
-> If pci_map_single fails then the RX descriptor remains with no valid DMA buffer
-> attached.
-> In this condition the DMA will target where it shouldn't with obvious evil
-> consequences.
->
-> Simply avoiding re-arming the descriptor will prevent buggy DMA but it will
-> result soon in RX stuck.
->
-> This patch move the DMA mapping of the new buffer at the beginning of the ISR
-> (and it adds error check for pci_map_single success/fail).
->
-> If the DMA mapping fails then we do not unmap the old buffer and we re-arm the
-> descriptor without processing it, with the old DMA buffer still attached.
->
-> In this way we lose the currently RX-ed packet, but whenever next calls to
-> pci_map_single will succeed again,then the RX process will go on without stuck.
->
-> Signed-off-by: andrea.merello <andrea.merello@gmail.com>
-> Signed-off-by: andrea merello <andrea.merello@gmail.com>
+This patch set's purpose is to remove function
+ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}, by replacing them
+with more generic function ieee80211_{channel_to_frequency,
+frequency_to_channel}.
 
-I have no way to test this patch, but it looks OK.
+The error number they return is different. the 'dsss' one return -1,
+the other return zero. Fortunately most of the code have correct error
+check to handle both situation. Good luck to those code which never
+check the return value.
 
-Larry
+By the way, this patch set only compile tested.
 
-> ---
->   drivers/net/wireless/rtl818x/rtl8180/dev.c | 16 +++++++++++++---
->   1 file changed, 13 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> index 79b9398..1c6ac25 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-> @@ -107,6 +107,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
->   	struct rtl8180_priv *priv = dev->priv;
->   	unsigned int count = 32;
->   	u8 signal, agc, sq;
-> +	dma_addr_t mapping;
->
->   	while (count--) {
->   		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
-> @@ -128,6 +129,17 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
->   			if (unlikely(!new_skb))
->   				goto done;
->
-> +			mapping = pci_map_single(priv->pdev,
-> +					       skb_tail_pointer(new_skb),
-> +					       MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-> +
-> +			if (pci_dma_mapping_error(priv->pdev, mapping)) {
-> +				kfree_skb(new_skb);
-> +				dev_err(&priv->pdev->dev, "RX DMA map error\n");
-> +
-> +				goto done;
-> +			}
-> +
->   			pci_unmap_single(priv->pdev,
->   					 *((dma_addr_t *)skb->cb),
->   					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-> @@ -158,9 +170,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
->
->   			skb = new_skb;
->   			priv->rx_buf[priv->rx_idx] = skb;
-> -			*((dma_addr_t *) skb->cb) =
-> -				pci_map_single(priv->pdev, skb_tail_pointer(skb),
-> -					       MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-> +			*((dma_addr_t *) skb->cb) = mapping;
->   		}
->
->   	done:
->
+Zhao, Gang (7):
+  airo: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  atmel: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  wl3501_cs: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  rndis_wlan: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  zd1201: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  orinoco: replace function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+  ieee80211: remove function ieee80211_{dsss_chan_to_freq,
+    freq_to_dsss_chan}
+
+ drivers/net/wireless/airo.c         | 13 ++++++++-----
+ drivers/net/wireless/atmel.c        |  8 ++++----
+ drivers/net/wireless/orinoco/cfg.c  |  4 ++--
+ drivers/net/wireless/orinoco/hw.c   |  2 +-
+ drivers/net/wireless/orinoco/scan.c |  5 +++--
+ drivers/net/wireless/orinoco/wext.c |  2 +-
+ drivers/net/wireless/rndis_wlan.c   |  3 ++-
+ drivers/net/wireless/wl3501_cs.c    |  5 +++--
+ drivers/net/wireless/zd1201.c       |  9 +++------
+ include/linux/ieee80211.h           | 36 ------------------------------------
+ 10 files changed, 27 insertions(+), 60 deletions(-)
+
+-- 
+1.8.5.3
 
