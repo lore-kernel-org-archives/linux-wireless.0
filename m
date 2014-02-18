@@ -1,120 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:3630 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753915AbaBSPhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 10:37:23 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v4 0/5] Enable additional channels for use
-Date: Wed, 19 Feb 2014 17:39:32 +0200
-Message-Id: <1392824377-18254-1-git-send-email-ilan.peer@intel.com> (sfid-20140219_163734_804254_A9550D74)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:59819 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755299AbaBRQIU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 11:08:20 -0500
+Received: by mail-ob0-f174.google.com with SMTP id uy5so18681392obc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 08:08:19 -0800 (PST)
+Message-ID: <53038571.7040503@lwfinger.net> (sfid-20140218_170823_465590_01487C7E)
+Date: Tue, 18 Feb 2014 10:08:17 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: shankar swaminathan <shankswa@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 support for RTL chipset
+References: <CADNhdGEVUK5rJBisaAYQXfWBUBz+KkSHb5JSRtK4JuALOad+WA@mail.gmail.com>
+In-Reply-To: <CADNhdGEVUK5rJBisaAYQXfWBUBz+KkSHb5JSRtK4JuALOad+WA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set addresses additional comments from Luis:
+On 02/18/2014 06:14 AM, shankar swaminathan wrote:
+> Hi,
+>
+> I am trying to install and get an USB WiFi dongle in AP ("Master")
+> mode on linux kernel 3.3.4.
+>
+> I am not able to get the device to work with mac80211 / cfg80211
+> driver --> iw does not work but iwconfig works.
+>
+> Do you know if the RTL 8188CUS and RTL 8188EUS chipsets support mac80211?
 
-------
+Driver rtl8192cu for the RTL8188CUS does use mac80211. Driver r8188eu for the 
+RTL8188EU does not.
 
-As before, this series addresses the option of enabling additional channels for
-use based on the following relaxations:
+Larry
 
-1. Indoor operation, where a device can use channels requiring indoor
-   operation, subject to that it can guarantee indoor operation.
-2. Concurrent GO operation, where devices may instantiate a P2P GO
-   while they are under the guidance of an authorized master.
-
-The series includes:
-
-* Some clarification (mainly in documentation) about the intended usage of
-  channels marked as INDOOR_ONLY and CONCURRENT GO.
-* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
-* Support for a user hint that the platform is operating in an indoor
-  environment, i.e., channel marked as INDOOR_ONLY can be used.
-* Allow initiating radiation on channel marked with INDOOR_ONLY also
-  for scanning an frame injection in monitor mode.
-* Some additional fixes for comments I got.
-
-Following is an example of a possible channel map that can be used to allow
-the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
-
-* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
-  information about the current regulatory domain, these channels can be used
-  for GO instantiation based on the concurrent GO relaxation.
-* The above is also true for channels 149-165 (a.k.a U-NII 3).
-* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
-  indoor only. While the Concurrent GO can be used as described above, the
-  indoor only setting allows to use these channels given the platform is
-  identified as an indoor one, i.e., media server.
-
- 2412 MHz [1] (16.0 dBm)
- 2417 MHz [2] (16.0 dBm)
- 2422 MHz [3] (16.0 dBm)
- 2427 MHz [4] (16.0 dBm)
- 2432 MHz [5] (16.0 dBm)
- 2437 MHz [6] (16.0 dBm)
- 2442 MHz [7] (16.0 dBm)
- 2447 MHz [8] (16.0 dBm)
- 2452 MHz [9] (16.0 dBm)
- 2457 MHz [10] (16.0 dBm)
- 2462 MHz [11] (16.0 dBm)
- 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
- 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
- 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
- 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
- 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
- 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
- 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
- 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
- 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
- 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
- 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
- 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
- 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
- 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
- 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
- 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
- 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
- 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
- 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
- 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
- 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
- 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
- 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
- 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
-
-Thanks in advance,
-
-Ilan.
-
-David Spinadel (1):
-  cfg80211: Add indoor only and GO concurrent channel attributes
-
-Ilan Peer (5):
-  cfg80211: Add Kconfig option for cellular BS hints
-  cfg80211: Enable GO operation on additional channels
-  cfg80211: Add an option to hint indoor operation
-  cfg80211: Enable GO operation on indoor channels
-  mac80211: Enable initiating radiation on indoor channels
-
- include/net/cfg80211.h       |   41 ++++++++++++++++++++-
- include/net/regulatory.h     |    4 ++
- include/uapi/linux/nl80211.h |   10 +++++
- net/mac80211/ibss.c          |    9 +++--
- net/mac80211/scan.c          |   15 +++++---
- net/mac80211/tx.c            |    3 +-
- net/wireless/Kconfig         |   21 +++++++++++
- net/wireless/chan.c          |   74 +++++++++++++++++++++++++++++++++++--
- net/wireless/mesh.c          |    3 +-
- net/wireless/nl80211.c       |   35 +++++++++++-------
- net/wireless/reg.c           |   84 ++++++++++++++++++++++++++++++++++++++++--
- net/wireless/reg.h           |   13 +++++++
- net/wireless/trace.h         |   11 ++++--
- 13 files changed, 286 insertions(+), 37 deletions(-)
-
--- 
-1.7.10.4
 
