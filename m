@@ -1,77 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49719 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbaB0WiQ (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10483 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750851AbaBRXmG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 17:38:16 -0500
-Message-ID: <530FBE51.8040905@candelatech.com> (sfid-20140227_233825_806156_26696091)
-Date: Thu, 27 Feb 2014 14:38:09 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 18 Feb 2014 18:42:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, <stable@vger.kernel.org>
+Subject: [PATCH 3.14 3/3] mwifiex: fix cmd and Tx data timeout issue for PCIe cards
+Date: Tue, 18 Feb 2014 15:41:56 -0800
+Message-ID: <1392766916-10734-3-git-send-email-bzhao@marvell.com> (sfid-20140219_004215_800104_30E8238F)
+In-Reply-To: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
+References: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: How to best consolidate list of skbs (msdu) for receive?
-References: <530F85AE.8060002@candelatech.com>   <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>  <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>  <530FB348.2070701@candelatech.com> <1393540305.26794.47.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1393540305.26794.47.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2014 02:31 PM, Eric Dumazet wrote:
-> On Thu, 2014-02-27 at 13:51 -0800, Ben Greear wrote:
-> 
->> That said, the code below appears to work, even if it is
->> not as efficient as it might be?
->>
->> 			if (msdu_chaining) {
->> 				struct sk_buff *next = msdu_head->next;
->> 				struct sk_buff *to_free = next;
->> 				int space;
->> 				static int do_once = 1;
->> 				msdu_head->next = NULL;
->>
->> 				if (unlikely(do_once)) {
->> 					ath10k_warn("htt rx msdu_chaining detected %d\n",
->> 						    msdu_chaining);
->> 					do_once = 0;
->> 				}
->>
->> 				while (next) {
->> 					space = next->len - skb_tailroom(msdu_head);
->>
->> 					if ((space > 0) &&
->> 					    (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
->> 						/* TODO:  bump some rx-oom error stat */
->> 						goto outside_continue;
->> 					}
->> 					skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
->> 								  next->len);
->> 					next = next->next;
->> 				}
-> 
-> Yep, this is very inefficient , you might copy data very often in
-> pskb_expand_head(), then in skb_copy_from_linear_data()
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Based on the code above, do you think skb_try_coalesce() is
-the best option for this logic?
+We are sending sleep confirm done interrupt in the middle of
+sleep handshake. There is a corner case when Tx done interrupt
+is received from firmware during sleep handshake due to which
+host and firmware power states go out of sync causing cmd and
+Tx data timeout problem.
 
-> Also, if total length is big, you end up doing high order allocations,
-> since you generate a linear skb. This might fail under memory pressure.
-> 
-> What is the maximal skb->len of resulting skb ?
+Hence sleep confirm done interrupt is sent at the end of sleep
+handshake to fix the problem.
 
-According to the page below, msdu are limited to 7935 total.  In my testing, I have seen a maximum
-of 2 chained skbs (3 total).  I do not know the average total combined skb size...but since it
-has upper bound of 8k, perhaps that doesn't matter so much?
+Cc: <stable@vger.kernel.org> # 3.10+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c | 28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
 
-http://ergodicthoughts.blogspot.com/2012/02/difference-between-mpdu-msdu-ampdu-and.html
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 7936dfa..31d8a9d 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1535,6 +1535,14 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 		if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
+ 			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
+ 							   skb->len);
++			mwifiex_pcie_enable_host_int(adapter);
++			if (mwifiex_write_reg(adapter,
++					      PCIE_CPU_INT_EVENT,
++					      CPU_INTR_SLEEP_CFM_DONE)) {
++				dev_warn(adapter->dev,
++					 "Write register failed\n");
++				return -1;
++			}
+ 			while (reg->sleep_cookie && (count++ < 10) &&
+ 			       mwifiex_pcie_ok_to_access_hw(adapter))
+ 				usleep_range(50, 60);
+@@ -1981,23 +1989,9 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ 		adapter->int_status |= pcie_ireg;
+ 		spin_unlock_irqrestore(&adapter->int_lock, flags);
+ 
+-		if (pcie_ireg & HOST_INTR_CMD_DONE) {
+-			if ((adapter->ps_state == PS_STATE_SLEEP_CFM) ||
+-			    (adapter->ps_state == PS_STATE_SLEEP)) {
+-				mwifiex_pcie_enable_host_int(adapter);
+-				if (mwifiex_write_reg(adapter,
+-						      PCIE_CPU_INT_EVENT,
+-						      CPU_INTR_SLEEP_CFM_DONE)
+-						      ) {
+-					dev_warn(adapter->dev,
+-						 "Write register failed\n");
+-					return;
+-
+-				}
+-			}
+-		} else if (!adapter->pps_uapsd_mode &&
+-			   adapter->ps_state == PS_STATE_SLEEP &&
+-			   mwifiex_pcie_ok_to_access_hw(adapter)) {
++		if (!adapter->pps_uapsd_mode &&
++		    adapter->ps_state == PS_STATE_SLEEP &&
++		    mwifiex_pcie_ok_to_access_hw(adapter)) {
+ 				/* Potentially for PCIe we could get other
+ 				 * interrupts like shared. Don't change power
+ 				 * state until cookie is set */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.2.3
 
