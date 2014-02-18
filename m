@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:47890 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaBYHVi (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33331 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751151AbaBRXmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 02:21:38 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d17so140115eek.4
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Feb 2014 23:21:36 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	mcgrof@do-not-panic.com, linville@tuxdriver.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] wireless-regdb: add AUTO-BW rule flag
-Date: Tue, 25 Feb 2014 08:21:18 +0100
-Message-Id: <1393312878-9471-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140225_082141_134948_FA9060CC)
+	Tue, 18 Feb 2014 18:42:07 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"Frank Huang" <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 3.14 2/3] mwifiex: add NULL check for PCIe Rx skb
+Date: Tue, 18 Feb 2014 15:41:55 -0800
+Message-ID: <1392766916-10734-2-git-send-email-bzhao@marvell.com> (sfid-20140219_004213_599454_064C56AE)
+In-Reply-To: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
+References: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sync with latest nl80211.h and add AUTO-BW flag.
-If this flag set, maximum available bandwidth should
-be calculated base on contiguous rules and wider channels
-will be allowed to cross multiple contiguous/overlapping
-frequency ranges.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+We may get a NULL pointer here if skb allocation for Rx packet
+was failed earlier.
+
+Cc: <stable@vger.kernel.org> # 3.9+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- dbparse.py |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mwifiex/pcie.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/dbparse.py b/dbparse.py
-index ac7234b..b735b6a 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -16,6 +16,7 @@ flag_definitions = {
-     # hole at bit 8
-     # hole at bit 9. FIXME: Where is NO-HT40 defined?
-     'NO-HT40':		1<<10,
-+    'AUTO-BW':		1<<11,
- }
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index d11d4ac..7936dfa 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1217,6 +1217,12 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 		rd_index = card->rxbd_rdptr & reg->rx_mask;
+ 		skb_data = card->rx_buf_list[rd_index];
  
- dfs_regions = {
++		/* If skb allocation was failed earlier for Rx packet,
++		 * rx_buf_list[rd_index] would have been left with a NULL.
++		 */
++		if (!skb_data)
++			return -ENOMEM;
++
+ 		mwifiex_unmap_pci_memory(adapter, skb_data, PCI_DMA_FROMDEVICE);
+ 		card->rx_buf_list[rd_index] = NULL;
+ 
 -- 
-1.7.9.5
+1.8.2.3
 
