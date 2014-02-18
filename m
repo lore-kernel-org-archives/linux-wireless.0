@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29650 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752097AbaB0LWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 06:22:35 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv3 4/5] net: rfkill: gpio: add ACPI ID for GPS module on Lenovo Miix2
-Date: Thu, 27 Feb 2014 13:22:29 +0200
-Message-Id: <1393500149-13526-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140227_122558_285038_62A92298)
-In-Reply-To: <20140227105520.GB17298@xps8300>
-References: <20140227105520.GB17298@xps8300>
+Received: from userp1040.oracle.com ([156.151.31.81]:44975 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754695AbaBRJcf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 04:32:35 -0500
+Date: Tue, 18 Feb 2014 12:31:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	liuhq11@mails.tsinghua.edu.cn
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+Message-ID: <20140218093135.GJ26776@mwanda> (sfid-20140218_103241_482363_811E90A5)
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
+On Tue, Feb 18, 2014 at 02:10:42AM +0100, Andrea Merello wrote:
+> From: andrea merello <andrea.merello@gmail.com>
+> 
+> During initialization a number of RX skbs are allocated and mapped
+> for DMA.
+> Currently if pci_map_single() fails, it will result in passing to the
+> HW a wrong DMA address (to write to!).
+> 
+> This patch detects this condition, eventually it tries to get a more
+> luky skb, and if it finally fails to get things right, it makes the
+> driver not to initialize, avoiding at least dangerous DMAs.
+> 
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/rfkill-gpio.c | 1 +
- 1 file changed, 1 insertion(+)
+In normal life then why would pci_map_single() fail even once?  (I am
+a newbie with this code so it is an honest question and not a rhetorical
+one).
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index ad5e354..ec38884 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -158,6 +158,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
- 
- static const struct acpi_device_id rfkill_acpi_match[] = {
- 	{ "BCM4752", RFKILL_TYPE_GPS },
-+	{ "LNV4752", RFKILL_TYPE_GPS },
- 	{ },
- };
- 
--- 
-1.9.0
+regards,
+dan carpenter
 
