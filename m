@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60217 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891AbaBTKAG (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:53671 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbaBRWTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 05:00:06 -0500
-Message-ID: <1392890403.5073.21.camel@jlt4.sipsolutions.net> (sfid-20140220_110013_283773_C5344DA5)
-Subject: Re: [PATCH] cfg80211: Pass TDLS peer capability information in
- tdls_mgmt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, c_ppotte@qti.qualcomm.com,
-	djindal@qti.qualcomm.com
-Date: Thu, 20 Feb 2014 11:00:03 +0100
-In-Reply-To: <20140220095814.GA7141@jouni.qca.qualcomm.com>
-References: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com>
-	 <1392889161.5073.15.camel@jlt4.sipsolutions.net>
-	 <20140220094952.GA6290@jouni.qca.qualcomm.com>
-	 <1392890037.5073.18.camel@jlt4.sipsolutions.net>
-	 <20140220095814.GA7141@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Feb 2014 17:19:20 -0500
+Received: by mail-la0-f52.google.com with SMTP id c6so12579182lan.39
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 14:19:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UjVQzHjutTy=0URcTvbxYKbC-3drhiouhYMzrhPT16Tg@mail.gmail.com>
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A033377C1A@HASMSX106.ger.corp.intel.com> <CAB=NE6UjVQzHjutTy=0URcTvbxYKbC-3drhiouhYMzrhPT16Tg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 18 Feb 2014 14:18:58 -0800
+Message-ID: <CAB=NE6WBD_sWLOZa0woZG9Xd5B9WV3qLBTXkp2EMS0CR7nqhCQ@mail.gmail.com> (sfid-20140218_231926_734526_47C6057E)
+Subject: Re: [PATCH v3 0/6] Enable additional channels for use
+To: "Peer, Ilan" <ilan.peer@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 11:58 +0200, Jouni Malinen wrote:
-> On Thu, Feb 20, 2014 at 10:53:57AM +0100, Johannes Berg wrote:
-> > On Thu, 2014-02-20 at 11:49 +0200, Jouni Malinen wrote:
-> > > On Thu, Feb 20, 2014 at 10:39:21AM +0100, Johannes Berg wrote:
-> > > > Generally, the patch looks fine, but I think you need to modify mac80211
-> > > > as well, and the mwifiex patch doesn't apply to my mac80211-next tree.
-> > > 
-> > > How do you want to handle mwifiex then? That function is in
-> > > wireless-testing.git and if the cfg80211 API change goes through
-> > > mac80211-next that does not have mwifiex change, I'd assume the build
-> > > will break once that gets merged into wireless-testing (or whatever is
-> > > the first tree getting changes from both)?
-> > 
-> > Hmm, dunno. I could merge wireless-next into mac80211-next, if that
-> > helps?
-> 
-> It looks like the patch would apply cleanly to the current snapshot of
-> wireless-next, so this would likely allow cleaner path for getting this
-> in without leaving hidden issues for future merges.
+On Tue, Feb 18, 2014 at 2:17 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Sun, Feb 9, 2014 at 8:06 AM, Peer, Ilan <ilan.peer@intel.com> wrote:
+>> Did you get a chance to look at this patch set?
+>
+> Looking at them now.
 
-Yeah I just tried that. Once Sunil resubmits the patch with the other
-stuff fixed I'll merge wireless-next/master before the patch.
+Please CC me on future patches you'd like me to review as well, it'll
+help digging them up.
 
-johannes
-
+  Luis
