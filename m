@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35991 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbaBUI2X (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:58130 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbaBRBKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 03:28:23 -0500
-Message-ID: <1392971299.4346.20.camel@jlt4.sipsolutions.net> (sfid-20140221_092826_361424_4C2CDF1D)
-Subject: Re: [PATCH] cfg80211: regulatory, introduce NL80211_RRF_AUTO_BW
- rule flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	John Linville <linville@tuxdriver.com>
-Date: Fri, 21 Feb 2014 09:28:19 +0100
-In-Reply-To: <CALhHN=oXr+PpiGv47sVzoi2cW_PYDME63sZ7euwtDaoVwnarTA@mail.gmail.com> (sfid-20140221_092320_949861_A75C5CB5)
-References: <1392900736-2808-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <CALhHN=oXr+PpiGv47sVzoi2cW_PYDME63sZ7euwtDaoVwnarTA@mail.gmail.com>
-	 (sfid-20140221_092320_949861_A75C5CB5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 17 Feb 2014 20:10:38 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so5779627eak.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 17:10:37 -0800 (PST)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	liuhq11@mails.tsinghua.edu.cn,
+	andrea merello <andrea.merello@gmail.com>
+Subject: [PATCH 3/7] rtl818x: check for pci_map_single() success when initializing RX ring
+Date: Tue, 18 Feb 2014 02:10:42 +0100
+Message-Id: <1392685846-10116-4-git-send-email-andrea.merello@gmail.com> (sfid-20140218_021043_051927_A2BBACFF)
+In-Reply-To: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-21 at 09:23 +0100, Janusz Dziedzic wrote:
+From: andrea merello <andrea.merello@gmail.com>
 
-> # must match <linux/nl80211.h> enum nl80211_reg_rule_flags
+During initialization a number of RX skbs are allocated and mapped
+for DMA.
+Currently if pci_map_single() fails, it will result in passing to the
+HW a wrong DMA address (to write to!).
 
-Well, it already doesn't:
+This patch detects this condition, eventually it tries to get a more
+luky skb, and if it finally fails to get things right, it makes the
+driver not to initialize, avoiding at least dangerous DMAs.
 
-> flag_definitions = {
->     'NO-OFDM': 1<<0,
->     'NO-CCK': 1<<1,
->     'NO-INDOOR': 1<<2,
->     'NO-OUTDOOR': 1<<3,
->     'DFS': 1<<4,
->     'PTP-ONLY': 1<<5,
->     'PTMP-ONLY': 1<<6,
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Those are fine, and have been like this forever.
-
->     'NO-IR':        1<<7,
->     # hole at bit 8
-
-These used to be PASSIVE-SCAN and NO-IBSS, but bit 8 is still reserved
-in the kernel.
-
->     # hole at bit 9. FIXME: Where is NO-HT40 defined?
->     'NO-HT40': 1<<10,
-
-Neither bit 9 nor bit 10 were ever used by the kernel.
-
-Did old userspace create them?
-
-> Which definition is correct now? Should I remove bit9 and bit10 from
-> wireless-regdb or skip them in nl80211.h?
-
-Since it's safer to not even have to worry about it, I'll change your
-patch to use bit 11.
-
-However, Luis, please sort out this situation, and if bits 9/10 were
-ever used by userspace (they were never used by the kernel!) then please
-submit a kernel patch that marks them as reserved in nl80211.h. The
-kernel header file should be the master file defining the API, not some
-"random" userspace tool.
-
-johannes
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index bf59ff9..848ea59 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -458,6 +458,7 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+ 	struct rtl8180_rx_desc *entry;
++	int dma_map_fail_count = 0;
+ 	int i;
+ 
+ 	priv->rx_ring = pci_alloc_consistent(priv->pdev,
+@@ -483,6 +484,19 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ 		mapping = (dma_addr_t *)skb->cb;
+ 		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
+ 					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++
++		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
++			kfree_skb(skb);
++			if (dma_map_fail_count++ > 32) {
++				wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
++				return -ENOMEM;
++			}
++
++			i--;
++			continue;
++		}
++
++
+ 		entry->rx_buf = cpu_to_le32(*mapping);
+ 		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
+ 					   MAX_RX_SIZE);
+-- 
+1.8.3.2
 
