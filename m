@@ -1,120 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:58463 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751297AbaB1MRY (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:61580 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170AbaBRNg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 07:17:24 -0500
-Message-ID: <1393589841.13669.32.camel@dubbel> (sfid-20140228_131733_504191_127F557F)
-Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Fri, 28 Feb 2014 14:17:21 +0200
-In-Reply-To: <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
-References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
-	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
-	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Feb 2014 08:36:57 -0500
+Received: by mail-pb0-f54.google.com with SMTP id uo5so16786611pbc.13
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 05:36:56 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+Subject: [PATCH 3/7] wl3501_cs: replace function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
+Date: Tue, 18 Feb 2014 21:35:59 +0800
+Message-Id: <cb7033ca6638a9c3e4e87025e9e6a5f8edde25f5.1392728354.git.gamerh2o@gmail.com> (sfid-20140218_143701_058994_DB8BF968)
+In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
+References: <cover.1392728354.git.gamerh2o@gmail.com>
+In-Reply-To: <cover.1392728354.git.gamerh2o@gmail.com>
+References: <cover.1392728354.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 16:29 +0100, Michal Kazior wrote:
-> On 27 February 2014 15:41, Luca Coelho <luca@coelho.fi> wrote:
-> > From: Luciano Coelho <luciano.coelho@intel.com>
-> >
-> > With single-channel drivers, we need to be able to change a running
-> > chanctx if we want to use chanctx reservation.  Not all drivers may be
-> > able to do this, so add a flag that indicates support for it.
-> >
-> > Changing a running chanctx can also be used as an optimization in
-> > multi-channel drivers when the context needs to be reserved for future
-> > usage.
-> 
-> I think this can be generalized (not necessarily in this very patch).
-> Since you've moved combination checks into mac80211 you can easily
-> check how many channels you can have with current iftype setup. This
-> means you can know beforehand if you can create a new chanctx or have
-> to attempt a chanctx channel switch.
+Replace ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan} with more
+generic ieee80211_{channel_to_frequency, frequency_to_channel}.
 
-That's the idea.  I'm keeping both series separate, but when they get
-applied, I will use the combinations check for chanctx reservation.
+Include <net/cfg80211.h> for the defination of IEEE80211_BAND_2GHZ.
+Because <net/cfg80211.h> includes <linux/ieee80211.h>, so we can
+replace <linux/ieee80211.h> with <net/cfg80211.h>.
 
+This change is a preparation for the removal of function
+ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}.
 
-> > Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
-> > reserved so nobody else can use it (since we know it's going to
-> > change).  In the future, we may allow several vifs to use the same
-> > reservation as long as they plan to use the chanctx on the same
-> > future channel.
-> 
-> I don't really think you need a separate mode for that.
-> 
-> Since reserved_chanctx is protected by chanctx_mtx you can safely
-> iterate over interfaces and check if any vif is reserving the same
-> chanctx it is assigned to.
+Cc: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ drivers/net/wireless/wl3501_cs.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I think it's much simpler to keep this new mode.  Reserved channel
-contexts are almost like exclusive contexts (as I was doing in my first
-RFC), but not exactly the same, since they can be used for other
-reservations.
-
-
-> > @@ -622,7 +629,9 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
-> >         if (WARN_ON(!sdata->reserved_chanctx))
-> >                 return -EINVAL;
-> >
-> > -       if (--sdata->reserved_chanctx->refcount == 0)
-> > +       if (sdata->reserved_chanctx->mode == IEEE80211_CHANCTX_RESERVED)
-> > +               sdata->reserved_chanctx->mode = sdata->reserved_mode;
-> > +       else if (--sdata->reserved_chanctx->refcount == 0)
-> >                 ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
-> >
-> >         sdata->reserved_chanctx = NULL;
-> > @@ -652,19 +661,42 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-> >         /* try to find another context with the chandef we want */
-> >         new_ctx = ieee80211_find_chanctx(local, chandef,
-> >                                          IEEE80211_CHANCTX_SHARED);
-> > -       if (!new_ctx) {
-> > -               /* create a new context */
-> > +       if (new_ctx) {
-> > +               /* reserve the existing compatible context */
-> > +               sdata->reserved_chanctx = new_ctx;
-> > +               new_ctx->refcount++;
-> > +       } else if (curr_ctx->refcount == 1 &&
-> > +                  (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
-> > +               /* TODO: when implementing support for multiple
-> > +                * interfaces switching at the same time, we may want
-> > +                * other vifs to reserve it as well, as long as
-> > +                * they're planning to switch to the same channel.  In
-> > +                * that case, we probably have to save the future
-> > +                * chandef and the reserved_mode in the context
-> > +                * itself.
-> > +                */
-> 
-> We already save the future chandef (csa_chandef). reserved_mode is not
-> necessary as per my comment above. Again, if you guarantee csa_chandef
-> to be set under chanctx_mtx you can safely iterate over interfaces and
-> calculate compat chandef.
-
-But the calculated "compat chandef" is not exactly what was required in
-the first place.  In sdata->u.bss_conf.chandef we need to have the
-chandef we want for *this* vif.  We need this to recalculate the
-combined chandef if, for instance, another vif leaves our chanctx.
-
-I think we should keep saving the reserved_chandef in sdata (the one
-that was requested when making the reservation) and also save the future
-chandef as a compat combination of all the reservations for that
-chanctx.
-
-You're right that we already have the future chandef.  I just added it
-as "reserved_chandef" in the previous patch. ;) I'll reword this.
-
-Thanks a lot for your reviews and comments!
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index d24d4a9..5c33744 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -42,7 +42,7 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/wireless.h>
+-#include <linux/ieee80211.h>
++#include <net/cfg80211.h>
+ #include <linux/etherdevice.h>
+ 
+ #include <net/iw_handler.h>
+@@ -1454,7 +1454,8 @@ static int wl3501_get_freq(struct net_device *dev, struct iw_request_info *info,
+ {
+ 	struct wl3501_card *this = netdev_priv(dev);
+ 
+-	wrqu->freq.m = ieee80211_dsss_chan_to_freq(this->chan) * 100000;
++	wrqu->freq.m = 100000 *
++		ieee80211_channel_to_frequency(this->chan, IEEE80211_BAND_2GHZ);
+ 	wrqu->freq.e = 1;
+ 	return 0;
+ }
+-- 
+1.8.5.3
 
