@@ -1,123 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24430 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753792AbaBDAkj (ORCPT
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:40169 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbaBRTHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 19:40:39 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 27/30] mwifiex: separate BA params for TDLS link if 11ac is supported
-Date: Mon, 3 Feb 2014 16:40:02 -0800
-Message-ID: <1391474404-8103-8-git-send-email-bzhao@marvell.com> (sfid-20140204_020006_156329_323B48DC)
-In-Reply-To: <1391474404-8103-1-git-send-email-bzhao@marvell.com>
-References: <1391474404-8103-1-git-send-email-bzhao@marvell.com>
+	Tue, 18 Feb 2014 14:07:12 -0500
+Received: by mail-ve0-f174.google.com with SMTP id pa12so14039898veb.33
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 11:07:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <20140218182714.GO26776@mwanda>
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+ <20140218093135.GJ26776@mwanda> <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
+ <20140218182714.GO26776@mwanda>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Tue, 18 Feb 2014 20:06:51 +0100
+Message-ID: <CAN8YU5P1-7TxvDFifEWPhGh3MbLP_DMJWS9Sbzte+TDcuELKLg@mail.gmail.com> (sfid-20140218_200736_792601_04A382BB)
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Thank for pointing out this. Yes, I probably exaggerated trying hard
+to allocate memory.
 
-If TDLS link is 11ac enabled i.e. we as well as peer station
-supports VHT, configure seprate TX & RX window sizes during
-BA setup. So even if BSS does not support 11ac, we can use VHT
-capabilities and higher window sizes on direct link.
+If your point is about if pci_map_single may or not ever fail in real
+life (that is was I thought you meant in your first mail), then I
+think that it's worth to keep the  check anyway (I think it could
+happen).
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c           | 22 +++++++++++++++++++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c | 21 +++++++++++++++++++--
- 2 files changed, 38 insertions(+), 5 deletions(-)
+If your point is that it can be not so much useful to try and retry
+hard the allocation (I must admit I'm not even sure that after freeing
+the skb the kernel will not likely re-allocate the same one at the
+next try), then I will keep the error check, but I can remove code
+that retries allocation (failing at the first error as you suggested).
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 4812829..2f2b991 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -537,16 +537,32 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
- {
- 	struct host_cmd_ds_11n_addba_req add_ba_req;
-+	struct mwifiex_sta_node *sta_ptr;
-+	u32 tx_win_size = priv->add_ba_param.tx_win_size;
- 	static u8 dialog_tok;
- 	int ret;
- 
- 	dev_dbg(priv->adapter->dev, "cmd: %s: tid %d\n", __func__, tid);
- 
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
-+	    priv->adapter->is_hw_11ac_capable &&
-+	    memcmp(priv->cfg_bssid, peer_mac, ETH_ALEN)) {
-+		sta_ptr = mwifiex_get_sta_entry(priv, peer_mac);
-+		if (!sta_ptr) {
-+			dev_warn(priv->adapter->dev,
-+				 "BA setup with unknown TDLS peer %pM!\n",
-+				peer_mac);
-+			return -1;
-+		}
-+		if (sta_ptr->is_11ac_enabled)
-+			tx_win_size = MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE;
-+	}
-+
- 	add_ba_req.block_ack_param_set = cpu_to_le16(
- 		(u16) ((tid << BLOCKACKPARAM_TID_POS) |
--			 (priv->add_ba_param.
--			  tx_win_size << BLOCKACKPARAM_WINSIZE_POS) |
--			 IMMEDIATE_BLOCK_ACK));
-+		       tx_win_size << BLOCKACKPARAM_WINSIZE_POS |
-+		       IMMEDIATE_BLOCK_ACK));
- 	add_ba_req.block_ack_tmo = cpu_to_le16((u16)priv->add_ba_param.timeout);
- 
- 	++dialog_tok;
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 3767399..b361257 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -362,10 +362,28 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
- 				  *cmd_addba_req)
- {
- 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &cmd->params.add_ba_rsp;
-+	struct mwifiex_sta_node *sta_ptr;
-+	u32 rx_win_size = priv->add_ba_param.rx_win_size;
- 	u8 tid;
- 	int win_size;
- 	uint16_t block_ack_param_set;
- 
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
-+	    priv->adapter->is_hw_11ac_capable &&
-+	    memcmp(priv->cfg_bssid, cmd_addba_req->peer_mac_addr, ETH_ALEN)) {
-+		sta_ptr = mwifiex_get_sta_entry(priv,
-+						cmd_addba_req->peer_mac_addr);
-+		if (!sta_ptr) {
-+			dev_warn(priv->adapter->dev,
-+				 "BA setup with unknown TDLS peer %pM!\n",
-+				 cmd_addba_req->peer_mac_addr);
-+			return -1;
-+		}
-+		if (sta_ptr->is_11ac_enabled)
-+			rx_win_size = MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE;
-+	}
-+
- 	cmd->command = cpu_to_le16(HostCmd_CMD_11N_ADDBA_RSP);
- 	cmd->size = cpu_to_le16(sizeof(*add_ba_rsp) + S_DS_GEN);
- 
-@@ -382,8 +400,7 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
- 	block_ack_param_set &= ~IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK;
- 	/* We donot support AMSDU inside AMPDU, hence reset the bit */
- 	block_ack_param_set &= ~BLOCKACKPARAM_AMSDU_SUPP_MASK;
--	block_ack_param_set |= (priv->add_ba_param.rx_win_size <<
--					     BLOCKACKPARAM_WINSIZE_POS);
-+	block_ack_param_set |= rx_win_size << BLOCKACKPARAM_WINSIZE_POS;
- 	add_ba_rsp->block_ack_param_set = cpu_to_le16(block_ack_param_set);
- 	win_size = (le16_to_cpu(add_ba_rsp->block_ack_param_set)
- 					& IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
--- 
-1.8.2.3
+BTW consider that the allocation is done in ieee80211 start callback,
+that is called every time the interface is brought down/up, and not
+once at the begining.
 
+On one hand I cared avoiding wasting memory when the interface is not up.
+On the other hand I had thought also to move memory allocation in
+initialization, exactly to increase success probability as you pointed
+out..
+
+I chosen the first option because after the interface is brought up,
+the RX ant TX processes will start to perform a lot of other skb
+allocations and dma maps.
+If we assume, as you pointed out, they will likely ALL fail or
+succeeds, not just few of them, then probably even if we allocated
+some memory at init time, we have gained not advantage.
+
+Do you agree ?
+
+Thank you
+Andrea
+
+On Tue, Feb 18, 2014 at 7:27 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> I guess what I was going to suggest is that you are overthinking the
+> error handling.  Your code tries very hard to allocate 32 buffers.  But
+> I bet it's just a matter of allocating the buffers and if it doesn't
+> work then clean up and return an error.  Probably it alocates 32 buffers
+> successfully or it doesn't allocate any, it's less likely that we will
+> allocate a partial number of buffers.
+>
+> If this were in the receive path or something like that then maybe we
+> would worry about situations like that.  Although even in that case
+> probably the right approach would be to drop everything and let the
+> protocol handle the error...  Offtopic.  What I mean is that this is in
+> the init path so everything will likely work except in manufactured
+> situations.
+>
+> regards,
+> dan carpenter
+>
