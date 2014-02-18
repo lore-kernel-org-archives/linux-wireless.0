@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:36374 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbaBLSyn (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2122 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754744AbaBRJ6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 13:54:43 -0500
-Received: by mail-ea0-f170.google.com with SMTP id g15so2867624eak.29
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 10:54:42 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] wireless-regdb: add DFS CAC time parameter
-Date: Wed, 12 Feb 2014 19:54:24 +0100
-Message-Id: <1392231266-28479-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195456_063790_0615105A)
-In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	Tue, 18 Feb 2014 04:58:08 -0500
+Message-ID: <53032EAB.5070905@broadcom.com> (sfid-20140218_105815_092977_BD23A63A)
+Date: Tue, 18 Feb 2014 10:58:03 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Samuel Ortiz <sameo@linux.intel.com>
+CC: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	<frankyl@broadcom.com>
+Subject: Re: brcmfmac NVRAM files
+References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE> <530248DD.1050408@broadcom.com> <20140217180033.GM18868@zurbaran>
+In-Reply-To: <20140217180033.GM18868@zurbaran>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce support for setting DFS CAC time
-in milliseconds.
+On 02/17/2014 07:00 PM, Samuel Ortiz wrote:
+> Hi Arend,
+> 
+> On Mon, Feb 17, 2014 at 06:37:33PM +0100, Arend van Spriel wrote:
+>> Hi Bernd,
+>>
+>> The hint to solve this is found on wireless.kernel.org [1] and the
+>> answer is as Samuel suspects. This file is very board specific so
+>> OEMs manufacturing/selling the board should provide it either upon
+>> request or through some distribution like a SDK.
+> There are several Win8 2-in-1 devices that do run the SDIO Full MAC
+> chipsets and obviously there is no SDK for those. Which means no distro
+> will ever be able to run out of the box on those.
+> I may be completely off the mark here, but isn't there a sensible
+> template for those guys ? Nothing optimised, but just something that
+> would at least make things work...
 
-Eg.
-(5250 - 5330 @ AUTO), (20), (60000), DFS
+Last time I got the question I extracted the nvram from the windows
+driver installer archive. However, it may end up in (U)EFI variable
+space. Guess that could be accessed from Linux as well. Anyway, it may
+be an area where we can and maybe should improve. I will discuss this
+with Franky and the rest of the team over here.
 
-will setup CAC 60 seconds CAC time.
+> Also, the hint for pre 3.13 kernel is to copy the .bin into a .txt. Is
+> that still the case for post 3.13 ?
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- db2bin.py  |    6 +++---
- dbparse.py |   17 +++++++++++++----
- 2 files changed, 16 insertions(+), 7 deletions(-)
+I certainly hope you misread that. Before 3.13 the driver always look
+for brcmfmac-sdio.bin and brcmfmac-sdio.txt regardless the device being
+used. That has changed so the firmware file now includes the chip id and
+for some even the revision, eg. brcmfmac43241b4-sdio.bin and
+brcmfmac43241b4-sdio.txt. The nvram file has a totally different format
+as the bin file so copying will fail for sure.
 
-diff --git a/db2bin.py b/db2bin.py
-index 41d3741..f6c3bc1 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -7,7 +7,7 @@ from dbparse import DBParser
- import sys
- 
- MAGIC = 0x52474442
--VERSION = 19
-+VERSION = 20
- 
- if len(sys.argv) < 3:
-     print 'Usage: %s output-file input-file [key-file]' % sys.argv[0]
-@@ -93,8 +93,8 @@ for reg_rule in rules:
-     freq_range, power_rule = reg_rule.freqband, reg_rule.power
-     reg_rules[reg_rule] = output.tell()
-     # struct regdb_file_reg_rule
--    output.write(struct.pack('>III', freq_ranges[freq_range], power_rules[power_rule],
--                             reg_rule.flags))
-+    output.write(struct.pack('>IIII', freq_ranges[freq_range], power_rules[power_rule],
-+                             reg_rule.flags, reg_rule.cac_time))
- 
- 
- reg_rules_collections = {}
-diff --git a/dbparse.py b/dbparse.py
-index 7c7bc19..f79de2a 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -76,12 +76,13 @@ class FlagError(Exception):
-         self.flag = flag
- 
- class Permission(object):
--    def __init__(self, freqband, power, flags):
-+    def __init__(self, freqband, power, flags, cac_time):
-         assert isinstance(freqband, FreqBand)
-         assert isinstance(power, PowerRestriction)
-         self.freqband = freqband
-         self.power = power
-         self.flags = 0
-+        self.cac_time = cac_time
-         for flag in flags:
-             if not flag in flag_definitions:
-                 raise FlagError(flag)
-@@ -89,7 +90,7 @@ class Permission(object):
-         self.textflags = flags
- 
-     def _as_tuple(self):
--        return (self.freqband, self.power, self.flags)
-+        return (self.freqband, self.power, self.flags, self.cac_time)
- 
-     def __cmp__(self, other):
-         if not isinstance(other, Permission):
-@@ -256,6 +257,7 @@ class DBParser(object):
-         self._comments = []
- 
-     def _parse_country_item(self, line):
-+        cac_time = 0
-         if line[0] == '(':
-             try:
-                 band, line = line[1:].split('),', 1)
-@@ -284,7 +286,14 @@ class DBParser(object):
-                 flags = []
-             else:
-                 pname = items[0]
--                flags = items[1].split(',')
-+                pcac = items[1]
-+                if pcac[0] == '(':
-+                    cac, flags = pcac.split('),', 1)
-+                    flags = flags.split(',')
-+                    cac_time = int(cac[1:])
-+                else:
-+                    flags = items[1].split(',')
-+
-             power = pname[1:]
-             pname = 'UNNAMED %d' % self._lineno
-             self._parse_power_def(pname, power, dupwarn=False)
-@@ -305,7 +314,7 @@ class DBParser(object):
-         b = self._bands[bname]
-         p = self._power[pname]
-         try:
--            perm = Permission(b, p, flags)
-+            perm = Permission(b, p, flags, cac_time)
-         except FlagError, e:
-             self._syntax_error("Invalid flag '%s'" % e.flag)
-         for cname, c in self._current_countries.iteritems():
--- 
-1.7.9.5
-
+Regards,
+Arend
