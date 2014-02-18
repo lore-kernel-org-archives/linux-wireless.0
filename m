@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1716 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754184AbaBTMvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 07:51:52 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
-Date: Thu, 20 Feb 2014 14:51:36 +0200
-Message-Id: <1392900697-27577-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140220_135402_012711_6D24530F)
-In-Reply-To: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41584 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750851AbaBRXmI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 18:42:08 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, <stable@vger.kernel.org>
+Subject: [PATCH 3.14 1/3] mwifiex: clean pcie ring only when device is present
+Date: Tue, 18 Feb 2014 15:41:54 -0800
+Message-ID: <1392766916-10734-1-git-send-email-bzhao@marvell.com> (sfid-20140219_004218_334238_08163F6A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Write io memory to clean PCIe buffer only when PCIe device is
+present else this results into crash because of invalid memory
+access.
+
+Cc: <stable@vger.kernel.org> # 3.9+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/rfkill/rfkill-gpio.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mwifiex/wmm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index ad5e354..ec38884 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -158,6 +158,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index e0ba011..1c5f2b6 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -554,7 +554,8 @@ mwifiex_clean_txrx(struct mwifiex_private *priv)
+ 	mwifiex_wmm_delete_all_ralist(priv);
+ 	memcpy(tos_to_tid, ac_to_tid, sizeof(tos_to_tid));
  
- static const struct acpi_device_id rfkill_acpi_match[] = {
- 	{ "BCM4752", RFKILL_TYPE_GPS },
-+	{ "LNV4752", RFKILL_TYPE_GPS },
- 	{ },
- };
+-	if (priv->adapter->if_ops.clean_pcie_ring)
++	if (priv->adapter->if_ops.clean_pcie_ring &&
++	    !priv->adapter->surprise_removed)
+ 		priv->adapter->if_ops.clean_pcie_ring(priv->adapter);
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
  
 -- 
-1.9.0.rc3
+1.8.2.3
 
