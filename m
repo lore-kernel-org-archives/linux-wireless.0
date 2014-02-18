@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from b.ns.miles-group.at ([95.130.255.144]:1662 "EHLO radon.swed.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752047AbaBIUDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 15:03:48 -0500
-Message-ID: <52F7DF21.70207@nod.at> (sfid-20140209_210430_636335_229EFC03)
-Date: Sun, 09 Feb 2014 21:03:45 +0100
-From: Richard Weinberger <richard@nod.at>
+Received: from aserp1040.oracle.com ([141.146.126.69]:44831 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbaBRS1l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 13:27:41 -0500
+Date: Tue, 18 Feb 2014 21:27:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
+Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
+ initializing RX ring
+Message-ID: <20140218182714.GO26776@mwanda> (sfid-20140218_192746_168941_09E05CCA)
+References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+ <1392685846-10116-4-git-send-email-andrea.merello@gmail.com>
+ <20140218093135.GJ26776@mwanda>
+ <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-	open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-References: <1391971686-9517-1-git-send-email-richard@nod.at> <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
-In-Reply-To: <52F7D480.1050106@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
-> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
->> The symbol is an orphan, get rid of it.
->>
->> Signed-off-by: Richard Weinberger <richard@nod.at>
->> ---
->>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
->>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
->>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
->>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
->>  4 files changed, 5 insertions(+), 54 deletions(-)
->>
-> 
-> This code is used in OpenWrt with an out of tree arch code for the
-> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
-> this code to mainline Linux kernel, because of lack of time/interest.
+I guess what I was going to suggest is that you are overthinking the
+error handling.  Your code tries very hard to allocate 32 buffers.  But
+I bet it's just a matter of allocating the buffers and if it doesn't
+work then clean up and return an error.  Probably it alocates 32 buffers
+successfully or it doesn't allocate any, it's less likely that we will
+allocate a partial number of buffers.
 
-Sorry, we don't maintain out of tree code.
+If this were in the receive path or something like that then maybe we
+would worry about situations like that.  Although even in that case
+probably the right approach would be to drop everything and let the
+protocol handle the error...  Offtopic.  What I mean is that this is in
+the init path so everything will likely work except in manufactured
+situations.
 
-Thanks,
-//richard
+regards,
+dan carpenter
+
