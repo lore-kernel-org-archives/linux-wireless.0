@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45466 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbaBZQiX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 11:38:23 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix 4addr rx
-References: <1392796345-14272-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Feb 2014 18:38:18 +0200
-In-Reply-To: <1392796345-14272-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 19 Feb 2014 08:52:25 +0100")
-Message-ID: <87zjldlthh.fsf@kamboji.qca.qualcomm.com> (sfid-20140226_173826_624596_EC0E30DC)
+Received: from nbd.name ([46.4.11.11]:50201 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752749AbaBRWSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 17:18:53 -0500
+Message-ID: <5303DC33.5050105@openwrt.org> (sfid-20140218_231856_611577_7DE2DE8C)
+Date: Tue, 18 Feb 2014 23:18:27 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Enable U-APSD AP mode support
+References: <20140218184108.GA24197@jouni.qca.qualcomm.com>	 (sfid-20140218_194116_149252_F9CC32B2) <1392750354.5438.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1392750354.5438.8.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 2014-02-18 20:05, Johannes Berg wrote:
+> On Tue, 2014-02-18 at 20:41 +0200, Jouni Malinen wrote:
+>> mac80211 handles the actual operations, so ath9k can just indicate
+>> support for this. Based on initial tests, this combination seems to
+>> work fine.
+> 
+> I believe this is not true with aggregation sessions.
+Why not? Block Ack Window handling is handled by
+.release_buffered_frames just fine (and tested with PS-Poll).
 
-> The nwifi header is padded to 4 bytes. This wasn't
-> a problem until one tried to (at least) rx 4addr
-> frames.
->
-> This finally allows managed iface to be used in a
-> bridge.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+- Felix
 
-Thanks, applied.
-
--- 
-Kalle Valo
