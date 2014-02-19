@@ -1,122 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:37864 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753544AbaBCU7k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:40 -0500
-Received: by mail-ee0-f49.google.com with SMTP id d17so3881261eek.8
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:38 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:3630 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753915AbaBSPhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 10:37:23 -0500
+From: Ilan Peer <ilan.peer@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 51/62] iwlwifi: mvm: abort scheduled scan on scan request
-Date: Mon,  3 Feb 2014 22:57:57 +0200
-Message-Id: <1391461088-8082-51-git-send-email-egrumbach@gmail.com> (sfid-20140203_220009_932365_A64ED1C9)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v4 0/5] Enable additional channels for use
+Date: Wed, 19 Feb 2014 17:39:32 +0200
+Message-Id: <1392824377-18254-1-git-send-email-ilan.peer@intel.com> (sfid-20140219_163734_804254_A9550D74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This set addresses additional comments from Luis:
 
-Some older versions of wpa_supplicant don't necessarily stop
-scheduled scan before starting a regular scan, and there's
-nothing in the API that requires it either. As a consequence
-our driver's behaviour of not allowing scan while scheduled
-scan was in progress broke userspace.
+------
 
-However, it is valid to unilaterally stop scheduled scan at
-any point in time, so when a regular scan request comes just
-abort the scheduled scan and run the regular scan.
+As before, this series addresses the option of enabling additional channels for
+use based on the following relaxations:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   25 ++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/mvm/ops.c      |    2 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c     |    7 ++++++-
- 3 files changed, 31 insertions(+), 3 deletions(-)
+1. Indoor operation, where a device can use channels requiring indoor
+   operation, subject to that it can guarantee indoor operation.
+2. Concurrent GO operation, where devices may instantiate a P2P GO
+   while they are under the guidance of an authorized master.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 59b5b7a..9d9a2d0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1449,6 +1449,8 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 			       struct cfg80211_scan_request *req)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct iwl_notification_wait wait_scan_done;
-+	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
- 	int ret;
- 
- 	if (req->n_channels == 0 || req->n_channels > MAX_NUM_SCAN_CHANNELS)
-@@ -1456,7 +1458,28 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
-+	switch (mvm->scan_status) {
-+	case IWL_MVM_SCAN_SCHED:
-+		iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
-+					   scan_done_notif,
-+					   ARRAY_SIZE(scan_done_notif),
-+					   NULL, NULL);
-+		iwl_mvm_sched_scan_stop(mvm);
-+		ret = iwl_wait_notification(&mvm->notif_wait,
-+					    &wait_scan_done, HZ);
-+		if (ret) {
-+			ret = -EBUSY;
-+			goto out;
-+		}
-+		/* iwl_mvm_rx_scan_offload_complete_notif() will be called
-+		 * soon but will not reset the scan status as it won't be
-+		 * IWL_MVM_SCAN_SCHED any more since we queue the next scan
-+		 * immediately (below)
-+		 */
-+		break;
-+	case IWL_MVM_SCAN_NONE:
-+		break;
-+	default:
- 		ret = -EBUSY;
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 4b7fa7a..e268c15 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -228,7 +228,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 	RX_HANDLER(SCAN_REQUEST_CMD, iwl_mvm_rx_scan_response, false),
- 	RX_HANDLER(SCAN_COMPLETE_NOTIFICATION, iwl_mvm_rx_scan_complete, false),
- 	RX_HANDLER(SCAN_OFFLOAD_COMPLETE,
--		   iwl_mvm_rx_scan_offload_complete_notif, false),
-+		   iwl_mvm_rx_scan_offload_complete_notif, true),
- 	RX_HANDLER(MATCH_FOUND_NOTIFICATION, iwl_mvm_rx_sched_scan_results,
- 		   false),
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 8477902..a827a13 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -511,11 +511,16 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_scan_offload_complete *scan_notif = (void *)pkt->data;
- 
-+	/* scan status must be locked for proper checking */
-+	lockdep_assert_held(&mvm->mutex);
-+
- 	IWL_DEBUG_SCAN(mvm, "Scheduled scan completed, status %s\n",
- 		       scan_notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
- 		       "completed" : "aborted");
- 
--	mvm->scan_status = IWL_MVM_SCAN_NONE;
-+	/* might already be something else again, don't reset if so */
-+	if (mvm->scan_status == IWL_MVM_SCAN_SCHED)
-+		mvm->scan_status = IWL_MVM_SCAN_NONE;
- 	ieee80211_sched_scan_stopped(mvm->hw);
- 
- 	return 0;
+The series includes:
+
+* Some clarification (mainly in documentation) about the intended usage of
+  channels marked as INDOOR_ONLY and CONCURRENT GO.
+* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
+* Support for a user hint that the platform is operating in an indoor
+  environment, i.e., channel marked as INDOOR_ONLY can be used.
+* Allow initiating radiation on channel marked with INDOOR_ONLY also
+  for scanning an frame injection in monitor mode.
+* Some additional fixes for comments I got.
+
+Following is an example of a possible channel map that can be used to allow
+the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
+
+* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
+  information about the current regulatory domain, these channels can be used
+  for GO instantiation based on the concurrent GO relaxation.
+* The above is also true for channels 149-165 (a.k.a U-NII 3).
+* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
+  indoor only. While the Concurrent GO can be used as described above, the
+  indoor only setting allows to use these channels given the platform is
+  identified as an indoor one, i.e., media server.
+
+ 2412 MHz [1] (16.0 dBm)
+ 2417 MHz [2] (16.0 dBm)
+ 2422 MHz [3] (16.0 dBm)
+ 2427 MHz [4] (16.0 dBm)
+ 2432 MHz [5] (16.0 dBm)
+ 2437 MHz [6] (16.0 dBm)
+ 2442 MHz [7] (16.0 dBm)
+ 2447 MHz [8] (16.0 dBm)
+ 2452 MHz [9] (16.0 dBm)
+ 2457 MHz [10] (16.0 dBm)
+ 2462 MHz [11] (16.0 dBm)
+ 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
+ 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
+ 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
+ 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
+ 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
+ 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
+ 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
+ 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
+ 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
+ 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
+ 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
+ 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
+ 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
+ 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
+ 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
+ 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
+ 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
+ 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
+ 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
+ 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
+ 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
+ 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
+ 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
+
+Thanks in advance,
+
+Ilan.
+
+David Spinadel (1):
+  cfg80211: Add indoor only and GO concurrent channel attributes
+
+Ilan Peer (5):
+  cfg80211: Add Kconfig option for cellular BS hints
+  cfg80211: Enable GO operation on additional channels
+  cfg80211: Add an option to hint indoor operation
+  cfg80211: Enable GO operation on indoor channels
+  mac80211: Enable initiating radiation on indoor channels
+
+ include/net/cfg80211.h       |   41 ++++++++++++++++++++-
+ include/net/regulatory.h     |    4 ++
+ include/uapi/linux/nl80211.h |   10 +++++
+ net/mac80211/ibss.c          |    9 +++--
+ net/mac80211/scan.c          |   15 +++++---
+ net/mac80211/tx.c            |    3 +-
+ net/wireless/Kconfig         |   21 +++++++++++
+ net/wireless/chan.c          |   74 +++++++++++++++++++++++++++++++++++--
+ net/wireless/mesh.c          |    3 +-
+ net/wireless/nl80211.c       |   35 +++++++++++-------
+ net/wireless/reg.c           |   84 ++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/reg.h           |   13 +++++++
+ net/wireless/trace.h         |   11 ++++--
+ 13 files changed, 286 insertions(+), 37 deletions(-)
+
 -- 
-1.7.9.5
+1.7.10.4
 
