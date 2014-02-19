@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15994 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750750AbaBEJSn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 04:18:43 -0500
-Date: Wed, 5 Feb 2014 10:17:42 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zoran Markovic <zoran.markovic@linaro.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to power
- efficient workqueue
-Message-ID: <20140205091742.GA1978@redhat.com> (sfid-20140205_101910_385492_1F5F048F)
-References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
- <1391160084.4141.1.camel@jlt4.sipsolutions.net>
- <20140131093531.GA25559@mtj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140131093531.GA25559@mtj.dyndns.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:56220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637AbaBSNOM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 08:14:12 -0500
+Message-ID: <1392815649.4733.23.camel@jlt4.sipsolutions.net> (sfid-20140219_141416_207148_3661D418)
+Subject: Re: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 14:14:09 +0100
+In-Reply-To: <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
+References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+	 <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Wed, 2014-02-19 at 13:28 +0100, Stanislaw Gruszka wrote:
+> Similar change as on current patch "mac80211: fix calling
+> ieee80211_free_txskb with NULL skb", but for multicast queue. Patch does
+> not prevent crash, as dev_kfree_skb() checks against NULL skb, but it
+> help to prevent not necessary frame drop, when bc_buf queue was
+> partially flushed and no longer exceeds AP_MAX_BC_BUFFER .
 
-On Fri, Jan 31, 2014 at 04:35:31AM -0500, Tejun Heo wrote:
-> On Fri, Jan 31, 2014 at 10:21:24AM +0100, Johannes Berg wrote:
-> > I'm not sure if this is part of a larger patchset actually adding that
-> > "system_power_efficient_wq", but maybe it'd be better to expose a
-> > function as an API rather than the wq struct?
-> > 
-> > Something like
-> > 
-> > scheduled_delayed_work_pwr_efficient(...)?
-> 
-> While there are some benefits to using dedicated functions for
-> specific workqueues, I don't think it brings enough benefits to
-> justify adding dedicated API and am unlikely to add new ones.
+I don't think this makes sense. It doesn't really change anything,
+holding a spinlock isn't something magic that makes other things go
+away, so instead of
 
-What are selection criteria when choosing between system_wq or
-system_power_efficient_wq on drivers ? IOW if I would be writing
-a new driver which workqueue should I use and when ?
+ * check queue length, is >= limit
+ * free frame from queue, even if somebody else is dequeuing as well
 
-I think that should be driver independent, at least for most of drivers.
-If system have to run in low power mode, system_power_efficient_wq
-should be chosen automatically by schedule_work(), otherwise when high
-performance is more important schedule_work() should use system_wq.
+as before, you'd just have
+ * check queue length, is >= limit
+ * take lock
+ * check queue length, is >= limit
+ * drop frame
+ * unlock
+ * somebody else who was dequeuing now wakes up from waiting on the lock
+and
+   finds no frame there
 
-Stanislaw
+It ultimately makes no difference at all, it just makes this code more
+difficult to read and understand.
+
+johannes
+
