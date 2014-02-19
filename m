@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10065 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440AbaBMK3M (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19511 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbaBSPZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 05:29:12 -0500
+	Wed, 19 Feb 2014 10:25:34 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-References: <cover.1389904166.git.agordeev@redhat.com>
-	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
-	<87y51qohjn.fsf@kamboji.qca.qualcomm.com>
-	<20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
-	<8761oum0l3.fsf@kamboji.qca.qualcomm.com>
-	<20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
-	<871tzilz1u.fsf@kamboji.qca.qualcomm.com>
-	<20140212003143.GD21057@google.com>
-	<20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
-	<CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com>
-	<87ppmsauij.fsf@kamboji.qca.qualcomm.com>
-	<CAErSpo47k8WuHded1TnHoRedHHLe-Sk7kKsXcR4XjKmQPb0Ggg@mail.gmail.com>
-Date: Thu, 13 Feb 2014 12:29:04 +0200
-In-Reply-To: <CAErSpo47k8WuHded1TnHoRedHHLe-Sk7kKsXcR4XjKmQPb0Ggg@mail.gmail.com>
-	(Bjorn Helgaas's message of "Wed, 12 Feb 2014 14:40:26 -0700")
-Message-ID: <87mwhv9uha.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_112928_033465_AEF308A3)
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: set the mactime of ieee80211_rx_status
+References: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
+Date: Wed, 19 Feb 2014 17:25:28 +0200
+In-Reply-To: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
+	(Chun-Yeow Yeoh's message of "Wed, 12 Feb 2014 17:37:46 +0800")
+Message-ID: <877g8rxgyf.fsf@kamboji.qca.qualcomm.com> (sfid-20140219_162537_685007_D5CD41E3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
 
-> On Wed, Feb 12, 2014 at 2:30 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Bjorn Helgaas <bhelgaas@google.com> writes:
->>
->>>> Well, as this series is small I thought it could quickly go thru your
->>>> tree. But since ipr had conflicts, there is no point routing all patches
->>>> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
->>>> branch though.
->>>
->>> It's in pci/msi, but that's not in my -next branch yet, so I can
->>> easily drop it.  Do drivers/net/wireless patches normally follow a
->>> different path than the other drivers/net patches?  The wil6210 and
->>> ath10k patches look just like the others in the 34-patch series (bnx2,
->>> bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
->>> to include them there.
->>
->> ath10k patches normally go through my ath.git tree to Linville and then
->> to David Miller. To avoid conflicts I would prefer to take ath10k
->> patches to my tree whenever possible.
+> Retrieve the mactime of ieee80211_rx_status based on received
+> data frame. The value is obtained from the htt_rx_indication_ppdu
+> structure and only available in 32-bit.
 >
-> OK, I won't do anything with ath10k (I haven't applied it anywhere).
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-I have now taken the ath10k patches to my pending branch, will apply
-them soon.
+Why? Where do you need tsf exactly? And what bug are you actually fixing
+here?
+
+> --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> @@ -258,6 +258,12 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+>  	status->band = ch->band;
+>  	status->freq = ch->center_freq;
+>  
+> +	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+> +		/* TSF available only in 32-bit */
+> +		status->mactime = info->tsf & 0xffffffff;
+> +		status->flag |= RX_FLAG_MACTIME_END;
+> +	}
+
+Do we get some regressions because of proving only a 32 bit TSF? Which
+one is better, provide a 32-bit TSF or not at all?
 
 -- 
 Kalle Valo
