@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56268 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635AbaBYR7S (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22305 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751321AbaBSKuw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 12:59:18 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: [PATCHv2 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1393341068.4170.7.camel@jlt4.sipsolutions.net>
-Date: Tue, 25 Feb 2014 09:59:07 -0800
-Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	"linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org
-Message-Id: <D8A6682F-CC21-4428-AFA3-C50FBA8ED1F7@holtmann.org> (sfid-20140225_190001_790204_F172072A)
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> <1393341068.4170.7.camel@jlt4.sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 19 Feb 2014 05:50:52 -0500
+Date: Wed, 19 Feb 2014 16:07:01 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/3] mwl8k: Enable ACS Support
+Message-ID: <20140219103701.GA3267@markyou.marvell.com> (sfid-20140219_115056_186251_289A52AB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+With these patches, Mwl8k will able to use
+automatic channel selection feature from Hostapd.
 
->> I was waiting for the DT support from Chen-Yu before sending these,
->> but decided it makes no difference when I send them. I'm dropping the
->> con ID in the second patch because Dan noticed the warning, but of
->> course it will mean the "gpios" property can be used with DT.
->> 
->> The two last patches just add ACPI IDs for some new Baytrail based
->> boards.
-> 
-> Do these patches have any dependencies, or should I just add them to the
-> mac80211-next tree (since I don't keep a separate rfkill tree)?
-> 
-> Or does anyone else want to take them? In that case, it's all fine with
-> me, I'm really just nominally the rfkill maintainer and have no idea
-> about these patches... :)
+Yogesh Ashok Powar (3):
+  mwl8k: Adding support to access BBP registers
+  mwl8k: Implement sw_scan start/stop cbs
+  mwl8k: Adding support to gather survey per channel
 
-someone has to take them. So I say go for it.
+ drivers/net/wireless/mwl8k.c | 195 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 189 insertions(+), 6 deletions(-)
 
-Regards
-
-Marcel
+-- 
+1.8.3.4
 
