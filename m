@@ -1,93 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1716 "EHLO mga09.intel.com"
+Received: from mail.bob.fi ([81.209.35.21]:38020 "EHLO mail.bob.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754184AbaBTMvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 07:51:48 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-Date: Thu, 20 Feb 2014 14:51:35 +0200
-Message-Id: <1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140220_135428_284278_F139372C)
-In-Reply-To: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1753851AbaBSPaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 10:30:12 -0500
+Message-ID: <5304CDFB.2090202@mageia.org> (sfid-20140219_163017_767611_FBBA423F)
+Date: Wed, 19 Feb 2014 17:30:03 +0200
+From: Thomas Backlund <tmb@mageia.org>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Intel Wireless 7260 AC firnware SW error
+References: <52FFDC10.5020702@mageia.org> <CANUX_P26bMLiPjjor6q960VC9RxhCagS7Je8S7hpzte1R52swA@mail.gmail.com>
+In-Reply-To: <CANUX_P26bMLiPjjor6q960VC9RxhCagS7Je8S7hpzte1R52swA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no use for them in this driver. This will fix a
-static checker warning..
 
-net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
-	warn: variable dereferenced before check 'rfkill->name'
+16.02.2014 08:29, Emmanuel Grumbach skrev:
 
-This will also make sure that when DT support is added,
-"gpios" property can be used as no con_id labels are
-provided.
+> Can you please record tracing?
+>
+> trace-cmd record -e iwlwifi -e mac80211
+>
+> and try to reproduce?
+>
+> It may be a driver or a firmware issue, I can't really know with the
+> current data.
+> Thanks for reporting!
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/rfkill-gpio.c | 19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+I can...
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 0adda44..ad5e354 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -36,8 +36,6 @@ struct rfkill_gpio_data {
- 	struct gpio_desc	*shutdown_gpio;
- 
- 	struct rfkill		*rfkill_dev;
--	char			*reset_name;
--	char			*shutdown_name;
- 	struct clk		*clk;
- 
- 	bool			clk_enabled;
-@@ -89,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	struct rfkill_gpio_data *rfkill;
- 	struct gpio_desc *gpio;
- 	int ret;
--	int len;
- 
- 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
- 	if (!rfkill)
-@@ -106,21 +103,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
--	len = strlen(rfkill->name);
--	rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
--	if (!rfkill->reset_name)
--		return -ENOMEM;
--
--	rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
--	if (!rfkill->shutdown_name)
--		return -ENOMEM;
--
--	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
--	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
--
- 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
- 
--	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
-+	gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
- 	if (!IS_ERR(gpio)) {
- 		ret = gpiod_direction_output(gpio, 0);
- 		if (ret)
-@@ -128,7 +113,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		rfkill->reset_gpio = gpio;
- 	}
- 
--	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
-+	gpio = devm_gpiod_get_index(&pdev->dev, NULL, 1);
- 	if (!IS_ERR(gpio)) {
- 		ret = gpiod_direction_output(gpio, 0);
- 		if (ret)
--- 
-1.9.0.rc3
+I assume this is the one you mean:
+http://git.kernel.org/cgit/linux/kernel/git/rostedt/trace-cmd.git
+
 
