@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbaB0Qko (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13770 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752823AbaBSNCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:40:44 -0500
-Message-ID: <1393519239.4648.8.camel@jlt4.sipsolutions.net> (sfid-20140227_174049_081469_7CEA4DDD)
-Subject: Re: mac80211: double processing of probe response frames ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Feb 2014 17:40:39 +0100
-In-Reply-To: <000c01cf3312$b8131540$28393fc0$@acksys.fr> (sfid-20140226_194231_040116_EB122CE8)
-References: <000c01cf3312$b8131540$28393fc0$@acksys.fr>
-	 (sfid-20140226_194231_040116_EB122CE8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Feb 2014 08:02:03 -0500
+Date: Wed, 19 Feb 2014 18:18:09 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 1/3 v2] mwl8k: Adding support to access BBP registers
+Message-ID: <20140219124809.GA5357@markyou.marvell.com> (sfid-20140219_140207_812300_5CFC944C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-26 at 17:49 +0100, Jean-Pierre Tosoni wrote:
-> Hi all,
-> 
-> I am using mac80211 and ath9k.
-> I put a debug trace in the net/wireless/scan.c, in
-> cfg80211_inform_bss_frame().
-> I exercise scanning with wpa_supplicant and I monitor the air with
-> wireshark/airpcapN.
-> Each time a probe response frame is received, I can see that
-> cfg80211_inform_bss_frame() is called *twice.*
-> 
-> I wonder if this is really needed ? Is it possible to remove one of the
-> calls ?
-> 
-> AFAICT, mac80211/scan.c/ieee80211_bss_info_update() is called along two
-> paths,
-> 1) in mac80211/rx.c, from __ieee80211_rx_handle_packet() and
-> ieee80211_scan_rx() 
-> 2) in mac80211/mlme.c, from the work queue calling
-> ieee80211_sta_rx_queued_mgmt()
->     => ieee80211_rx_mgmt_probe_resp() => ieee80211_rx_bss_info()
-> 
-> Maybe part of the call to ieee80211_scan_rx() could be delayed and merged
-> later when ieee80211_rx_mgmt_probe_resp() is called ? Any comments ?
+Adding AP firmware command to access BBP
+regs. This will be used for retrieving
+different counters CCA/RX needed for ACS
 
-Not easily - the latter call is very much filtered. However, the
-scan_rx() one should only do something during scan, I believe, and the
-other *not* during scan?
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
 
-johannes
+v2: Freeing allocated buffer before returning.
+	Reported-by: Jonas Gorski <jogo@openwrt.org>
+
+ drivers/net/wireless/mwl8k.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4987c3f..ea52ce1 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -396,6 +396,7 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
+ #define MWL8K_CMD_SET_HW_SPEC		0x0004
+ #define MWL8K_CMD_MAC_MULTICAST_ADR	0x0010
+ #define MWL8K_CMD_GET_STAT		0x0014
++#define MWL8K_CMD_BBP_REG_ACCESS	0x001a
+ #define MWL8K_CMD_RADIO_CONTROL		0x001c
+ #define MWL8K_CMD_RF_TX_POWER		0x001e
+ #define MWL8K_CMD_TX_POWER		0x001f
+@@ -2987,6 +2988,47 @@ static int mwl8k_cmd_set_pre_scan(struct ieee80211_hw *hw)
+ }
+ 
+ /*
++ * CMD_BBP_REG_ACCESS.
++ */
++struct mwl8k_cmd_bbp_reg_access {
++	struct mwl8k_cmd_pkt header;
++	__le16 action;
++	__le16 offset;
++	u8 value;
++	u8 rsrv[3];
++} __packed;
++
++static int
++mwl8k_cmd_bbp_reg_access(struct ieee80211_hw *hw,
++			 u16 action,
++			 u16 offset,
++			 u8 *value)
++{
++	struct mwl8k_cmd_bbp_reg_access *cmd;
++	int rc;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (cmd == NULL)
++		return -ENOMEM;
++
++	cmd->header.code = cpu_to_le16(MWL8K_CMD_BBP_REG_ACCESS);
++	cmd->header.length = cpu_to_le16(sizeof(*cmd));
++	cmd->action = cpu_to_le16(action);
++	cmd->offset = cpu_to_le16(offset);
++
++	rc = mwl8k_post_cmd(hw, &cmd->header);
++
++	if (!rc)
++		*value = cmd->value;
++	else
++		*value = 0;
++
++	free(cmd);
++
++	return rc;
++}
++
++/*
+  * CMD_SET_POST_SCAN.
+  */
+ struct mwl8k_cmd_set_post_scan {
+-- 
+1.8.3.4
 
