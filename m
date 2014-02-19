@@ -1,87 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpauth.net4india.com ([118.67.248.47]:43777 "EHLO
-	smtpauth.net4india.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbaBOF4p (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30163 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752823AbaBSNCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Feb 2014 00:56:45 -0500
-Message-ID: <52FEFA0B.4000807@xenontk.org> (sfid-20140215_065712_172040_D95A4389)
-Date: Sat, 15 Feb 2014 10:54:27 +0530
-From: David John <davidjon@xenontk.org>
-Reply-To: davidjon@xenontk.org
+	Wed, 19 Feb 2014 08:02:22 -0500
+Date: Wed, 19 Feb 2014 18:18:30 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 2/3 v2] mwl8k: Implement sw_scan start/stop cbs
+Message-ID: <20140219124830.GA5369@markyou.marvell.com> (sfid-20140219_140224_712822_EA883261)
 MIME-Version: 1.0
-To: emmanuel.grumbach@intel.com
-CC: linux-wireless@vger.kernel.org
-Subject: iwlwifi: Bluetooth and Wifi
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+Implement sw_scan start and stop callbacks.
+Reset BBP registers for channel, RX busy and
+average noise stats which clear on read.
 
-Your patch "iwlwifi: mvm: BT Coex - disable BT when TXing probe request
-in scan" fixed wifi dropping on my 7260 with scan time outs but now my
-Bluetooth mouse freezes and unfreezes as it gets re-detected every few
-minutes (3.14-rc2+):
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-sb 2-6: USB disconnect, device number 9
-[ 2204.013399] usb 2-6: new full-speed USB device number 11 using xhci_hcd
-[ 2204.178555] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
-[ 2204.178565] usb 2-6: New USB device strings: Mfr=0, Product=0,
-SerialNumber=0
-[ 2204.194476] Bluetooth: hci0: read Intel version: 370710018002030d33
-[ 2204.194484] Bluetooth: hci0: Intel device is already patched. patch
-num: 33
-[ 2226.561140] hid-generic 0005:046D:B010.0006: unknown main item tag 0x0
-[ 2226.569469] input: Bluetooth Mouse M557 as
-/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0006/input/input18
-[ 2226.569853] hid-generic 0005:046D:B010.0006: input,hidraw1: BLUETOOTH
-HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
-[ 2755.209616] usb 2-6: USB disconnect, device number 11
-[ 2755.705285] usb 2-6: new full-speed USB device number 13 using xhci_hcd
-[ 2755.870458] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
-[ 2755.870468] usb 2-6: New USB device strings: Mfr=0, Product=0,
-SerialNumber=0
-[ 2755.886722] Bluetooth: hci0: read Intel version: 370710018002030d33
-[ 2755.886729] Bluetooth: hci0: Intel device is already patched. patch
-num: 33
-[ 2780.725691] hid-generic 0005:046D:B010.0007: unknown main item tag 0x0
-[ 2780.759131] input: Bluetooth Mouse M557 as
-/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0007/input/input19
-[ 2780.759532] hid-generic 0005:046D:B010.0007: input,hidraw1: BLUETOOTH
-HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
-[ 9151.434602] usb 2-6: USB disconnect, device number 13
-[ 9151.930271] usb 2-6: new full-speed USB device number 15 using xhci_hcd
-[ 9152.095371] usb 2-6: New USB device found, idVendor=8087, idProduct=07dc
-[ 9152.095381] usb 2-6: New USB device strings: Mfr=0, Product=0,
-SerialNumber=0
-[ 9152.111270] Bluetooth: hci0: read Intel version: 370710018002030d33
-[ 9152.111278] Bluetooth: hci0: Intel device is already patched. patch
-num: 33
-[ 9178.208386] hid-generic 0005:046D:B010.0008: unknown main item tag 0x0
-[ 9178.239390] input: Bluetooth Mouse M557 as
-/devices/pci0000:00/0000:00:14.0/usb2/2-6/2-6:1.0/bluetooth/hci0/hci0:256/0005:046D:B010.0008/input/input20
-[ 9178.239751] hid-generic 0005:046D:B010.0008: input,hidraw1: BLUETOOTH
-HID v10.00 Mouse [Bluetooth Mouse M557] on 5c:51:4f:44:52:22
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ea52ce1..afca172 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -81,6 +81,9 @@ MODULE_PARM_DESC(ap_mode_default,
+  */
+ 
+ #define	MWL8K_HW_TIMER_REGISTER			0x0000a600
++#define BBU_RXRDY_CNT_REG			0x0000a860
++#define NOK_CCA_CNT_REG				0x0000a6a0
++#define BBU_AVG_NOISE_VAL			0x67
+ 
+ #define MWL8K_A2H_EVENTS	(MWL8K_A2H_INT_DUMMY | \
+ 				 MWL8K_A2H_INT_CHNL_SWITCHED | \
+@@ -289,6 +292,9 @@ struct mwl8k_priv {
+ 
+ 	/* bitmap of running BSSes */
+ 	u32 running_bsses;
++
++	/* ACS related */
++	bool sw_scan_start;
+ };
+ 
+ #define MAX_WEP_KEY_LEN         13
+@@ -5448,6 +5454,38 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	return rc;
+ }
+ 
++static void mwl8k_sw_scan_start(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++	u8 tmp;
++
++	if (!priv->ap_fw)
++		return;
++
++	/* clear all stats */
++	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
++	ioread32(priv->regs + NOK_CCA_CNT_REG);
++	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
++
++	priv->sw_scan_start = true;
++}
++
++static void mwl8k_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++	u8 tmp;
++
++	if (!priv->ap_fw)
++		return;
++
++	priv->sw_scan_start = false;
++
++	/* clear all stats */
++	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
++	ioread32(priv->regs + NOK_CCA_CNT_REG);
++	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
++}
++
+ static const struct ieee80211_ops mwl8k_ops = {
+ 	.tx			= mwl8k_tx,
+ 	.start			= mwl8k_start,
+@@ -5466,6 +5504,8 @@ static const struct ieee80211_ops mwl8k_ops = {
+ 	.get_stats		= mwl8k_get_stats,
+ 	.get_survey		= mwl8k_get_survey,
+ 	.ampdu_action		= mwl8k_ampdu_action,
++	.sw_scan_start		= mwl8k_sw_scan_start,
++	.sw_scan_complete	= mwl8k_sw_scan_complete,
+ };
+ 
+ static void mwl8k_finalize_join_worker(struct work_struct *work)
+-- 
+1.8.3.4
 
-Iwlwifi:
-
-[   19.627252] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
-[   19.627409] iwlwifi 0000:01:00.0: irq 62 for MSI/MSI-X
-[   19.629897] iwlwifi 0000:01:00.0: loaded firmware version 22.15.8.0
-op_mode iwlmvm
-[   19.843619] iwlwifi 0000:01:00.0: Detected Intel(R) Dual Band
-Wireless N 7260, REV=0x144
-[   19.843666] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[   19.843883] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[   21.332796] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[   21.333012] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[   28.734048] iwlwifi 0000:01:00.0 wlp1s0: disabling HT as WMM/QoS is
-not supported by the AP
-[   28.734055] iwlwifi 0000:01:00.0 wlp1s0: disabling VHT as WMM/QoS is
-not supported by the AP
-
-Is there a better fix in the works? Any workaround? 802.11g performance
-also looks to be subjectively poorer with Bluetooth on than without.
-
-Regards,
-David.
