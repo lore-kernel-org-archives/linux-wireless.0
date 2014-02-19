@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbaBCKJ6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41077 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbaBSO2A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 05:09:58 -0500
-Message-ID: <1391422193.4488.2.camel@jlt4.sipsolutions.net> (sfid-20140203_111001_725883_589EDFEF)
-Subject: Re: [PATCH] nl80211: fix scheduled scan RSSI matchset attribute
- confusion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Date: Mon, 03 Feb 2014 11:09:53 +0100
-In-Reply-To: <CAB3XZEdmQzyYXYNh7=myKxDrqKCpZ+399a5QdvZcw8CrNd+Lwg@mail.gmail.com> (sfid-20140202_090417_527910_B21AB250)
-References: <1390566001-9698-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEc94pTAMXWPYeWhu7o_YLEnD1_9O035-+YXYiR0Uij28w@mail.gmail.com>
-	 <1390810765.4251.0.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEczgVTALA3_4hSBikJs=TXOhHHTHSLzmuU3MGot-hG+1g@mail.gmail.com>
-	 <1390997834.4143.7.camel@jlt4.sipsolutions.net>
-	 <1390998668.4143.8.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEdmQzyYXYNh7=myKxDrqKCpZ+399a5QdvZcw8CrNd+Lwg@mail.gmail.com>
-	 (sfid-20140202_090417_527910_B21AB250)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Feb 2014 09:28:00 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT 3/7] ath10k: replace send_head() with tx_sg()
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	<1392629563-31046-4-git-send-email-michal.kazior@tieto.com>
+	<87y517xo7j.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQm3werwtNrWVLBFxN5QOvLxucu0crDXdAJJj4X0gSnXrw@mail.gmail.com>
+Date: Wed, 19 Feb 2014 16:18:38 +0200
+In-Reply-To: <CA+BoTQm3werwtNrWVLBFxN5QOvLxucu0crDXdAJJj4X0gSnXrw@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 19 Feb 2014 14:25:59 +0100")
+Message-ID: <87txbvxk1t.fsf@kamboji.qca.qualcomm.com> (sfid-20140219_152804_616698_FD510D10)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-02 at 10:04 +0200, Eliad Peller wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> i referred to this:
-> 
->  * @match_sets: sets of parameters to be matched for a scan result
->  * entry to be considered valid and to be passed to the host
->  * (others are filtered out).
->  * If ommited, all results are passed.
-> 
-> it should probably mention the empty-ssid case as well.
+> On 19 February 2014 13:48, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> +struct ath10k_hif_sg_item {
+>>> +     u16 transfer_id;
+>>> +     void *transfer_context;
+>>> +     void *vaddr; /* for debugging mostly */
+>>> +     u32 paddr;
+>>> +     u16 len;
+>>> +};
+>>
+>> This is the part I don't like. Instead of adding our own structs we
+>> instead should have everything in skb->cb and pass the skbs around. The
+>> sad part was that last fall I was working on cleaning up that but never
+>> found the time to finish it :(
+>
+> There's simply not enough room to keep it all in ath10k_skb_cb
+> directly.
 
-Well, hmm, that part seems fine, maybe the documentation for struct
-cfg80211_match_set should say that the SSID can be blank/zero length.
+After my cleanups transfer_context was not used and when using sk_buffs
+properly vaddr and len would be useless. So we would have only transfer
+id and paddr left. And when I was working on this they did fit to cb.
 
+> It doesn't really make any sense to keep it there anyway because
+> sg_item is used as means to pass a complex function argument to
+> sg_tx(). 
 
-johannes
+If we used skbs we would just give a list/queue of them and no need to
+have any extra structs.
 
+> The sg_item list is never used again.
+
+Ok, that's better. At least then it's later easier to convert to proper
+skbs.
+
+-- 
+Kalle Valo
