@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42137 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbaBTVAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 16:00:14 -0500
-Date: Thu, 20 Feb 2014 15:45:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50499 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752480AbaBSNdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 08:33:24 -0500
+Date: Wed, 19 Feb 2014 14:35:46 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-02-20
-Message-ID: <20140220204544.GG3657@tuxdriver.com> (sfid-20140220_220018_799443_E1BA2D65)
-References: <1392887140.5073.10.camel@jlt4.sipsolutions.net>
- <1392906648.5073.31.camel@jlt4.sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
+Message-ID: <20140219133546.GE1851@redhat.com> (sfid-20140219_143328_063534_FD8A185B)
+References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+ <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
+ <1392815649.4733.23.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392906648.5073.31.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1392815649.4733.23.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 03:30:48PM +0100, Johannes Berg wrote:
-> John,
+On Wed, Feb 19, 2014 at 02:14:09PM +0100, Johannes Berg wrote:
+> On Wed, 2014-02-19 at 13:28 +0100, Stanislaw Gruszka wrote:
+> > Similar change as on current patch "mac80211: fix calling
+> > ieee80211_free_txskb with NULL skb", but for multicast queue. Patch does
+> > not prevent crash, as dev_kfree_skb() checks against NULL skb, but it
+> > help to prevent not necessary frame drop, when bc_buf queue was
+> > partially flushed and no longer exceeds AP_MAX_BC_BUFFER .
 > 
-> I've got a few more fixes for some issues here now.
+> I don't think this makes sense. It doesn't really change anything,
+> holding a spinlock isn't something magic that makes other things go
+> away, so instead of
+>
+>  * check queue length, is >= limit
+>  * free frame from queue, even if somebody else is dequeuing as well
 > 
-> This time, I have a fix from Arik for scheduled scan recovery (something
-> that only recently went into the tree), a memory leak fix from Eytan and
-> a small regulatory bugfix from Inbal. The EAPOL change from Felix makes
-> rekeying more stable while lots of traffic is flowing, and there's
-> Emmanuel's and my fixes for a race in the code handling powersaving
-> clients.
+> as before, you'd just have
+>  * check queue length, is >= limit
+>  * take lock
+>  * check queue length, is >= limit
+>  * drop frame
+>  * unlock
+>  * somebody else who was dequeuing now wakes up from waiting on the lock
+> and
+>    finds no frame there
 > 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> 
-> The following changes since commit fab57a6cc227468ca9e6a4c7ff8d3b10727785ee:
-> 
->   mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to e3685e03b40f5ec7926d9a75bf63467fc4071df9:
-> 
->   mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
+> It ultimately makes no difference at all, it just makes this code more
+> difficult to read and understand.
 
-Pulling now...
+It make difference when queue length value is modified on different CPU
+and read on different CPU. Without lock you can 'see' old length value
+on CPU that run ieee80211_tx_h_multicast_ps_buf() for undefined
+period of time (ok maybe not undefined on x86), and current oldest
+frame can be not necessarily dropped.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I can remove first call skb_queue_len(&ps->bc_buf) and take spinlock
+unconditionally, will that help with code readability ? 
+
+Stanislaw
+
