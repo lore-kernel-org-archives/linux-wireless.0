@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0166.hostedemail.com ([216.40.44.166]:54344 "EHLO
+Received: from smtprelay0012.hostedemail.com ([216.40.44.12]:44745 "EHLO
 	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755341AbaBROP1 (ORCPT
+	by vger.kernel.org with ESMTP id S1754305AbaBSV4N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 09:15:27 -0500
-Message-ID: <1392732925.22752.26.camel@joe-AO722> (sfid-20140218_151558_391324_4C34AE9E)
-Subject: Re: [PATCH] drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c:
- deinline brcmf_sdio_chip_cr4_enterdl, save 440 bytes
+	Wed, 19 Feb 2014 16:56:13 -0500
+Message-ID: <1392846970.24844.14.camel@joe-AO722> (sfid-20140219_225620_318974_AB96C490)
+Subject: Re: [PATCH 1/4] staging: vt6656: s_nsBulkOutIoCompleteWrite
+ reorganise variable order.
 From: Joe Perches <joe@perches.com>
-To: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Tue, 18 Feb 2014 06:15:25 -0800
-In-Reply-To: <1392732320-18973-1-git-send-email-dvlasenk@redhat.com>
-References: <1392732320-18973-1-git-send-email-dvlasenk@redhat.com>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 13:56:10 -0800
+In-Reply-To: <1392846614.20211.10.camel@canaries64-MCP7A>
+References: <1392846614.20211.10.camel@canaries64-MCP7A>
 Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-18 at 15:05 +0100, Denys Vlasenko wrote:
-> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+On Wed, 2014-02-19 at 21:50 +0000, Malcolm Priestley wrote:
+> Declare in order of pointer use.
+[]
+> diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+[]
+> @@ -607,21 +607,14 @@ int PIPEnsSendBulkOut(struct vnt_private *pDevice,
+>  
+>  static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+>  {
+> -	struct vnt_private *pDevice;
+> +	struct vnt_usb_send_context *pContext =
+> +			(struct vnt_usb_send_context *)urb->context;
 
-Hi Denys
+urb->context is a void * so this could be:
 
-Perhaps these patch subjects would be better without
-the file path, but shortened to something like:
-
-brcmfmac: sdio_chip: deinline function to reduce object size
+	struct vnt_usb_send_context *pContext = urb_context;
 
 
