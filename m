@@ -1,113 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:33169 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbaBCU7f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:35 -0500
-Received: by mail-ea0-f180.google.com with SMTP id o10so4001281eaj.11
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:35 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 47/62] iwlwifi: mvm: add debugfs hook to take an mvm ref
-Date: Mon,  3 Feb 2014 22:57:53 +0200
-Message-Id: <1391461088-8082-47-git-send-email-egrumbach@gmail.com> (sfid-20140203_223007_137379_92EA2852)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:7158 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753636AbaBSMq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 07:46:28 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 1/2] mac80211: fix calling ieee80211_free_txskb with
+ NULL skb
+Date: Wed, 19 Feb 2014 12:46:25 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D6BD8B@HASMSX103.ger.corp.intel.com> (sfid-20140219_134635_077405_A32106FC)
+References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+	 (sfid-20140219_132640_718975_460F3097)
+ <1392813218.4733.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
-
-Support taking an mvm ref (and preventing D0i3) by
-writing '1' into the d0i3_refs debugfs file.
-
-The reference can be unref by writing 0 to the same
-file.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c |   33 ++++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |    1 +
- 2 files changed, 32 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 2253d5b..c116765 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -862,10 +862,39 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
- 	PRINT_MVM_REF(IWL_MVM_REF_ROC);
- 	PRINT_MVM_REF(IWL_MVM_REF_P2P_CLIENT);
- 	PRINT_MVM_REF(IWL_MVM_REF_AP_IBSS);
-+	PRINT_MVM_REF(IWL_MVM_REF_USER);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
- 
-+static ssize_t iwl_dbgfs_d0i3_refs_write(struct iwl_mvm *mvm, char *buf,
-+					 size_t count, loff_t *ppos)
-+{
-+	unsigned long value;
-+	int ret;
-+	bool taken;
-+
-+	ret = kstrtoul(buf, 10, &value);
-+	if (ret < 0)
-+		return ret;
-+
-+	mutex_lock(&mvm->mutex);
-+
-+	taken = test_bit(IWL_MVM_REF_USER, mvm->ref_bitmap);
-+	if (value == 1 && !taken)
-+		iwl_mvm_ref(mvm, IWL_MVM_REF_USER);
-+	else if (value == 0 && taken)
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_USER);
-+	else
-+		ret = -EINVAL;
-+
-+	mutex_unlock(&mvm->mutex);
-+
-+	if (ret < 0)
-+		return ret;
-+	return count;
-+}
-+
- #define MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz) \
- 	_MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct iwl_mvm)
- #define MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz) \
-@@ -890,7 +919,7 @@ MVM_DEBUGFS_READ_FILE_OPS(fw_rx_stats);
- MVM_DEBUGFS_WRITE_FILE_OPS(fw_restart, 10);
- MVM_DEBUGFS_WRITE_FILE_OPS(fw_nmi, 10);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
--MVM_DEBUGFS_READ_FILE_OPS(d0i3_refs);
-+MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
-@@ -922,7 +951,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	MVM_DEBUGFS_ADD_FILE(fw_nmi, mvm->debugfs_dir, S_IWUSR);
- 	MVM_DEBUGFS_ADD_FILE(scan_ant_rxchain, mvm->debugfs_dir,
- 			     S_IWUSR | S_IRUSR);
--	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR);
-+	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BCAST_FILTERING) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index f396607..1f53ade 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -245,6 +245,7 @@ enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_ROC,
- 	IWL_MVM_REF_P2P_CLIENT,
- 	IWL_MVM_REF_AP_IBSS,
-+	IWL_MVM_REF_USER,
- 
- 	IWL_MVM_REF_COUNT,
- };
--- 
-1.7.9.5
-
+PiA+DQo+ID4gK0VtbWFudWVsDQo+ID4NCj4gPiBJbnRlcmVzdGluZy4gV2UganVzdCByYW4gaW50
+byB0aGUgc2FtZSBpc3N1ZSBhcyB3ZWxsLg0KPiA+DQo+ID4gPiArCQlzdHJ1Y3Qgc2tfYnVmZiAq
+b2xkX3NrYiA9IE5VTEw7DQo+ID4gPiArCQl1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+ID4NCj4g
+PiA+ICAJCXBzX2RiZyhzdGEtPnNkYXRhLCAiU1RBICVwTSBhaWQgJWQ6IFBTIGJ1ZmZlciBmb3Ig
+QUMNCj4gPiAlZFxuIiwNCj4gPiA+ICAJCSAgICAgICBzdGEtPnN0YS5hZGRyLCBzdGEtPnN0YS5h
+aWQsIGFjKTsNCj4gPiA+ICAJCWlmICh0eC0+bG9jYWwtPnRvdGFsX3BzX2J1ZmZlcmVkID49DQo+
+ID4gVE9UQUxfTUFYX1RYX0JVRkZFUikNCj4gPiA+ICAJCQlwdXJnZV9vbGRfcHNfYnVmZmVycyh0
+eC0+bG9jYWwpOw0KPiA+ID4gIAkJaWYgKHNrYl9xdWV1ZV9sZW4oJnN0YS0+cHNfdHhfYnVmW2Fj
+XSkgPj0NCj4gPiBTVEFfTUFYX1RYX0JVRkZFUikgew0KPiA+ID4gLQkJCXN0cnVjdCBza19idWZm
+ICpvbGQgPSBza2JfZGVxdWV1ZSgmc3RhLQ0KPiA+ID5wc190eF9idWZbYWNdKTsNCj4gPiA+ICsJ
+CQlzcGluX2xvY2tfaXJxc2F2ZSgmc3RhLT5wc190eF9idWZbYWNdLmxvY2ssIGZsYWdzKTsNCj4g
+PiA+ICsJCQkvKiBxdWV1ZSBjb3VsZCBiZSBtb2RpZmllZCwgcmVjaGVjayBsZW5ndGggd2l0aCBs
+b2NrDQo+ID4gdGFrZW4gKi8NCj4gPiA+ICsJCQlpZiAoc2tiX3F1ZXVlX2xlbigmc3RhLT5wc190
+eF9idWZbYWNdKSA+PQ0KPiA+IFNUQV9NQVhfVFhfQlVGRkVSKQ0KPiA+ID4gKwkJCQlvbGRfc2ti
+ID0gX19za2JfZGVxdWV1ZSgmc3RhLQ0KPiA+ID5wc190eF9idWZbYWNdKTsNCj4gPiA+ICsJCQlz
+cGluX3VubG9ja19pcnFyZXN0b3JlKCZzdGEtPnBzX3R4X2J1ZlthY10ubG9jaywNCj4gPiBmbGFn
+cyk7DQo+ID4gPiArCQl9DQo+ID4gPiArCQlpZiAob2xkX3NrYikgew0KPiA+DQo+ID4gSSB0aGlu
+ayB0aGF0J3MgcG9pbnRsZXNzLCB5b3UgY2FuIGp1c3Qgc2F5ICJpZiAob2xkKSIgaW5zdGVhZCBh
+cyB0aGUNCj4gPiBkZXF1ZXVlIHdvdWxkIHJldHVybiBOVUxMLg0KPiANCj4gWWVhaCAtIEkgaGFk
+IHRoZSBpZiAob2xkKSBwYXRjaCBpbnRlcm5hbGx5IC0ganVzdCAxIGhvdXIgYmVmb3JlIHlvdSBz
+ZW50IHlvdXJzIDopDQo+IA0KPiBUaGluZyBpcyB0aGF0IEkgZG9uJ3QgdW5kZXJzdGFuZCBob3cg
+aXQgZXZlbiBoZWxwcyBzaW5jZSB5b3UgbG9jayBvbmx5IG9uIHNpZGUNCj4gb2YgdGhlIHBhdGg/
+IEF0IGxlYXN0IGZvciB1LWFwc2QgLyBwcy1wb2xsIGRlbGl2ZXIgSSBkb24ndCBzZWUgaG93IHRo
+YXQnZCBoZWxwPw0KPiBJIG1lYW4gdGhhdCB1YXBzZCAvIHBzLXBvbGwgY29kZSBkZXF1ZXVlcyBw
+YWNrZXRzIHdpdGhvdXQgdGFraW5nIHRoZSBsb2NrLg0KPiANCg0KT2ggd2VsbCAtIHNvcnJ5LiBJ
+IG92ZXJsb29rZWQgeW91ciBwYXRjaCBhbmQgZGlkbid0IG5vdGljZSB0aGF0IHlvdSB0b29rIHRo
+ZSBza2JfaGVhZF9saXN0ICppbnRlcm5hbCogbG9jay4NCg0KPiANCj4gPg0KPiA+IEluIGFueSBj
+YXNlLCB3aGlsZSB0aGlzIHNvbHZlcyB0aGUgY3Jhc2ggd2hpY2ggaXMgYSBnb29kIHRoaW5nLCBp
+dA0KPiA+IHN0aWxsIGxlYXZlcyB0aGUgY29kZSBidWdneS4gVGhpcyBjcmFzaCBzZWVtcyB0byBv
+Y2N1ciBpbiB0aGUNCj4gPiBmb2xsb3dpbmcgcmFjeQ0KPiA+IHNjZW5hcmlvOg0KPiA+DQo+ID4g
+ICogc3RhdGlvbiBpcyBzbGVlcGluZw0KPiA+ICAqIGZyYW1lIFRYIHRvIHN0YXRpb24gYmVnaW5z
+DQo+ID4gICogc3RhdGlvbiB3YWtlcyB1cA0KPiA+ICAqIGZyYW1lIFRYIGdvZXMgaW50byB0aGUg
+cXVldWUgbGVuZ3RoIGNoZWNrLCBmaW5kcyBsb25nIHF1ZXVlDQo+ID4gICogcGVuZGluZyBmcmFt
+ZXMgYXJlIHRyYW5zbWl0dGVkDQo+ID4gICogcXVldWUgaXMgbm93IGVtcHR5DQo+ID4gICogb2xk
+ID0gc2tiX2RlcXVldWUoKSByZXR1cm5zIE5VTEwNCj4gPiAgKiAqa2Fib29tKg0KPiA+DQo+ID4g
+VGhlIHByb2JsZW0gaXMgdGhhdCB5b3UncmUganVzdCBmaXhpbmcgdGhlICIqa2Fib29tKiIgcGFy
+dCwgc28gdGhlDQo+ID4gY29kZSB3aWxsIGNvbnRpbnVlIGxpa2UgdGhpczoNCj4gPg0KPiA+ICAq
+IG9sZCBpcyBOVUxMDQo+ID4gICogbm8ga2Fib29tDQo+ID4gICogbmV3IGZyYW1lIGlzIHF1ZXVl
+ZCBvbiBwc190eF9idWYgcXVldWUNCj4gPiAgKiBmcmFtZSBuZXZlciBnZXRzIHRyYW5zbWl0dGVk
+DQo+ID4NCj4gPiBqb2hhbm5lcw0KDQo=
