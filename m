@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49214 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677AbaBVTyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 14:54:38 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v5 5/5] cfg80211: Enable GO operation on indoor channels
-Date: Sat, 22 Feb 2014 19:54:34 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033385CFB@HASMSX106.ger.corp.intel.com> (sfid-20140222_205441_732319_07F255E0)
-References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
- <1392896671-4288-6-git-send-email-ilan.peer@intel.com>
- <CAB=NE6Vo2WsVc7zwpB3xnRre1MWL2FeQLvqMsheRFXG5hOxwTw@mail.gmail.com>
-In-Reply-To: <CAB=NE6Vo2WsVc7zwpB3xnRre1MWL2FeQLvqMsheRFXG5hOxwTw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8145 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537AbaBSMsx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 07:48:53 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT 3/7] ath10k: replace send_head() with tx_sg()
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	<1392629563-31046-4-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 19 Feb 2014 14:48:48 +0200
+In-Reply-To: <1392629563-31046-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 17 Feb 2014 10:32:39 +0100")
+Message-ID: <87y517xo7j.fsf@kamboji.qca.qualcomm.com> (sfid-20140219_134856_618541_175AFFEB)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+ICBzdGF0aWMgYm9vbCBjZmc4MDIxMV9nb19wZXJtaXNzaXZlX2NoYW4oc3RydWN0DQo+IGNm
-ZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2LA0KPiA+ICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwNCj4gPiAqY2hhbikg
-QEAgLTYyMSw4ICs2MjMsMTQgQEAgc3RhdGljIGJvb2wNCj4gY2ZnODAyMTFfZ29fcGVybWlzc2l2
-ZV9jaGFuKHN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAqcmRldiwNCj4gPiAgICAg
-ICAgIEFTU0VSVF9SVE5MKCk7DQo+ID4NCj4gPiAgICAgICAgIGlmICghY29uZmlnX2VuYWJsZWQo
-Q09ORklHX0NGRzgwMjExX1JFR19SRUxBWF9OT19JUikgfHwNCj4gPiAtICAgICAgICAgICAhKHdp
-cGh5LT5yZWd1bGF0b3J5X2ZsYWdzICYgUkVHVUxBVE9SWV9FTkFCTEVfUkVMQVhfTk9fSVIpDQo+
-IHx8DQo+ID4gLSAgICAgICAgICAgIShjaGFuLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0dPX0NP
-TkNVUlJFTlQpKQ0KPiA+ICsgICAgICAgICAgICEod2lwaHktPnJlZ3VsYXRvcnlfZmxhZ3MgJiBS
-RUdVTEFUT1JZX0VOQUJMRV9SRUxBWF9OT19JUikpDQo+ID4gKyAgICAgICAgICAgICAgIHJldHVy
-biBmYWxzZTsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAocmVndWxhdG9yeV9pbmRvb3JfYWxsb3dl
-ZCgpICYmDQo+ID4gKyAgICAgICAgICAgKGNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fSU5E
-T09SX09OTFkpKQ0KPiA+ICsgICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTsNCj4gPiArDQo+ID4g
-KyAgICAgICBpZiAoIShjaGFuLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0dPX0NPTkNVUlJFTlQp
-KQ0KPiA+ICAgICAgICAgICAgICAgICByZXR1cm4gZmFsc2U7DQo+IA0KPiBTaG91bGRuJ3QgdGhp
-cyBjaGVjayBnbyBiZWZvcmUgdGhlIGluZG9vciBvbmU/DQo+IA0KDQpJIGRvIG5vdCB0aGluayBz
-bywgYXMgdGhpcyByZWxheGF0aW9ucyBpcyBvcnRob2dvbmFsIHRvIHRoZSBHTyBjb25jdXJyZW50
-IG9uZS4gSXQgbWVhbnMgdGhhdCBJZiBhIGNoYW5uZWwgaXMgZW5hYmxlZCBidXQgb25seSB1bmRl
-ciBpbmRvb3IgYW5kIGluZG9vciBvcGVyYXRpb24gaXMgaGludGVkIHRoZSByZWxheGF0aW9uIHJl
-bW92ZXMgdGhlIE5PX0lSIHJlc3RyaWN0aW9uIGlmIHN1Y2ggZXhpc3RzICh3aXRob3V0IHRoZSBy
-ZWxheGF0aW9uIGluZG9vciBvcGVyYXRpb24gd291bGQgYmUgIGFsbG93ZWQgYnV0IG5vdCAgZm9y
-IEdPKS4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> PCI is capable of handling scatter-gather lists.
+> This can be used to avoid copying memory.
+>
+> Change the name of the callback while at to
+> reflect its purpose.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+[...]
+
+> +struct ath10k_hif_sg_item {
+> +	u16 transfer_id;
+> +	void *transfer_context;
+> +	void *vaddr; /* for debugging mostly */
+> +	u32 paddr;
+> +	u16 len;
+> +};
+
+This is the part I don't like. Instead of adding our own structs we
+instead should have everything in skb->cb and pass the skbs around. The
+sad part was that last fall I was working on cleaning up that but never
+found the time to finish it :(
+
+-- 
+Kalle Valo
