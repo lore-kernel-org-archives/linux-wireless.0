@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54655 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbaBYP0N (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:4752 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753804AbaBSP2p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 10:26:13 -0500
-Message-ID: <1393341960.4170.15.camel@jlt4.sipsolutions.net> (sfid-20140225_162617_223551_5E6A0420)
-Subject: Re: [PATCH v3 6/7] cfg80211/mac80211: move interface counting for
- combination check to mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Date: Tue, 25 Feb 2014 16:26:00 +0100
-In-Reply-To: <1393273874.18879.46.camel@porter.coelho.fi>
-References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
-	 <1392906986-12275-7-git-send-email-luca@coelho.fi>
-	 <1392972409.4346.34.camel@jlt4.sipsolutions.net>
-	 <1393273874.18879.46.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Feb 2014 10:28:45 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: RE: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
+ channels
+Date: Wed, 19 Feb 2014 15:28:29 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03338353E@HASMSX106.ger.corp.intel.com> (sfid-20140219_162858_003556_35111C6B)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
+ <20140219001458.GF14296@garbanzo.do-not-panic.com>
+In-Reply-To: <20140219001458.GF14296@garbanzo.do-not-panic.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-24 at 22:31 +0200, Luca Coelho wrote:
+I'll abandon this change ... 
 
-> > > +	/* TODO: in cfg80211_mlme_auth() we used to check if the
-> > > +	 * channel can be used *before* this function was called.  Do
-> > > +	 * we still need to do it or can we rely on the combinations
-> > > +	 * check that will happen later, in
-> > > +	 * ieee80211_vif_use_channel()?
-> > > +	 */
-> > 
-> > We'll do it a few lines down in ieee80211_prep_connection(), so I don't
-> > see why we'd need to do it earlier?
+Thanks,
+
+Ilan.
+
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
+> Rodriguez
+> Sent: Wednesday, February 19, 2014 02:15
+> To: Peer, Ilan
+> Cc: linux-wireless@vger.kernel.org; wireless-regdb@lists.infradead.org
+> Subject: Re: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
+> channels
 > 
-> Yes, you're right.  I just wondered whether we should avoid doing a
-> deauth before we checked the combinations when we are associated (just
-> before we call ieee80211_prep_connection()).
+> On Mon, Jan 27, 2014 at 12:21:58PM +0200, Ilan Peer wrote:
+> > Allow active scanning and frame injection on channels marked with
+> > IEEE80211_CHAN_NO_IR iff the channel is also marked with
+> > IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
+> > operates in an indoor environment.
+> >
+> > Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 > 
-> I will remove the TODO if you think we shouldn't worry about this.
-
-I wouldn't really be worried about this. If it turns out to be a problem
-we can always fix it later, but I doubt it.
-
-> > > @@ -406,6 +406,9 @@ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-> > >  			      struct wireless_dev *wdev,
-> > >  			      enum nl80211_iftype iftype)
-> > >  {
-> > > +	/* TODO: For this function, we'll probably need to keep some
-> > > +	 * kind of interface combination check in cfg80211...
-> > > +	 */
-> > >  	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
-> > >  					    CHAN_MODE_UNDEFINED, 0);
-> > >  }
-> > 
-> > We could always jsut request the change from the driver/mac80211.
+> I don't see why being indoor should allow to override the NO-IR flag. I do see
+> however why being indoor should enable to IR if you are IR if you have the
+> indoor flag. Enabling to IR if you are indoor for all NO-IR channels is... pretty
+> permissive I do not see the correlation.
 > 
-> 
-> This is also called by cfg80211_can_add_interface() which is called in
-> PRE_UP and start_p2p_device.
-> 
-> And in the cfg80211_change_interface() function, we do stuff like
-> stopping an AP or disconnecting a client.  I definitely think we should
-> check if the change is possible before taking these actions.
 
-Ok.
-
-> Do you mean to add an rdev_op to handle this?
-
-No I was thinking of just (re)moving it.
-
-johannes
-
+Make sense. I did not have such relaxations defined, just thought that similar relaxations could also be used in cases of scanning etc. but I guess this is not always true. 
