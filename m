@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9711 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751021AbaB0InL (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:58227 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904AbaBSW3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 03:43:11 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k:  add vdev-id, return code to error codes
-References: <1392318562-32440-1-git-send-email-greearb@candelatech.com>
-	<87bnya6xey.fsf@kamboji.qca.qualcomm.com>
-	<530E325E.4060503@candelatech.com>
-Date: Thu, 27 Feb 2014 10:43:05 +0200
-In-Reply-To: <530E325E.4060503@candelatech.com> (Ben Greear's message of "Wed,
-	26 Feb 2014 10:28:46 -0800")
-Message-ID: <871typj692.fsf@kamboji.qca.qualcomm.com> (sfid-20140227_094314_743059_BE4A92EF)
+	Wed, 19 Feb 2014 17:29:39 -0500
+Received: by mail-wg0-f43.google.com with SMTP id a1so872294wgh.22
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:29:38 -0800 (PST)
+Message-ID: <5305304B.5050004@gmail.com> (sfid-20140219_232943_245486_88E4A921)
+Date: Wed, 19 Feb 2014 22:29:31 +0000
+From: Malcolm Priestley <tvboxspy@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Joe Perches <joe@perches.com>
+CC: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
+References: <1392846993.20211.15.camel@canaries64-MCP7A> <1392848134.24844.16.camel@joe-AO722>
+In-Reply-To: <1392848134.24844.16.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
-
-> On 02/13/2014 10:06 PM, Kalle Valo wrote:
->> greearb@candelatech.com writes:
->> 
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> When using multiple vdevs (stations, aps, etc), it is
->>> nice to be able to associate log messages with specific
->>> interfaces.  So, add vdev-id to most logging messages.
->>> Add return code as well, where it was missing.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> 
->> I did some changes just to have consistent style for warning messages,
->> see my incremental diff patch below. Let me know if you agree with my
->> changes, the full patch is in ath-next-test branch.
+On 19/02/14 22:15, Joe Perches wrote:
+> On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
+>> Replace with enum
+>> assign as u8 type.
+> []
+>> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+> []
+>> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
+>>   	struct sk_buff *pPacket;
+>>   	struct urb *pUrb;
+>>   	unsigned int uBufLen;
+>> -	CONTEXT_TYPE Type;
+>> +	u8 type;
 >
-> Are you wanting me to send in a revised version of this patch, or
-> is it fine as previously posted?
+> This doesn't really save any space in the struct.
+> You might move it immediately before or after bBoolInUse.
+>
+>>   	struct ethhdr sEthHeader;
+>>   	void *Next;
+>>   	bool bBoolInUse;
+>
+>
+No, but there are dead members in the structure that need removing.
 
-I was planning to send v2 myself, but travelling and vacation got in the
-way. I'll try to send it today.
+sEthHeader and Next are dead
 
--- 
-Kalle Valo
+
