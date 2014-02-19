@@ -1,269 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51430 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaBKKSU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 05:18:20 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/2] ath9k: implement p2p client powersave support
-Date: Tue, 11 Feb 2014 11:18:10 +0100
-Message-Id: <1392113890-5097-2-git-send-email-nbd@openwrt.org> (sfid-20140211_111828_144327_DA715C57)
-In-Reply-To: <1392113890-5097-1-git-send-email-nbd@openwrt.org>
-References: <1392113890-5097-1-git-send-email-nbd@openwrt.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:59740 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbaBSA7R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 19:59:17 -0500
+Received: by mail-pa0-f54.google.com with SMTP id fa1so17494407pad.13
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:59:16 -0800 (PST)
+From: "Zhao\, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 7/7] ieee80211: remove function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}
+References: <cover.1392728354.git.gamerh2o@gmail.com>
+	<cover.1392728354.git.gamerh2o@gmail.com>
+	<c9305f68668f20186c1b2a8f8f3f6dac3d23b5db.1392728354.git.gamerh2o@gmail.com>
+Date: Wed, 19 Feb 2014 08:59:05 +0800
+In-Reply-To: <c9305f68668f20186c1b2a8f8f3f6dac3d23b5db.1392728354.git.gamerh2o@gmail.com>
+	(Gang Zhao's message of "Tue, 18 Feb 2014 21:36:03 +0800")
+Message-ID: <878ut75352.fsf@will.lan> (sfid-20140219_015958_025011_F696602C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use generic TSF timers to trigger powersave state changes based
-information from the P2P NoA attribute.
-Opportunistic Powersave is not handled, because the driver does not
-support powersave at the moment.
+On Tue, 2014-02-18 at 21:36:03 +0800, Zhao, Gang wrote:
+> Function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan} have been
+> replaced with ieee80211_{channel_to_frequency, frequency_to_channel}.
+>
+> There should be no users of the two functions now. So remove them.
+>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+> ---
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  12 ++++
- drivers/net/wireless/ath/ath9k/init.c  |   6 ++
- drivers/net/wireless/ath/ath9k/main.c  | 104 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |   3 +
- 4 files changed, 125 insertions(+)
+Since staging driver wlan-ng uses function ieee80211_dsss_chan_to_freq,
+This patch "ieee80211: remove function ieee80211_{dsss_chan_to_freq,
+freq_to_dsss_chan}" should be applied later, when that staging-next
+patch "staging: wlan-ng: replace function ieee80211_dsss_chan_to_freq()"
+appear on wireless-next.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b5ac32c..65915e1 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -115,6 +115,9 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define ATH_TXFIFO_DEPTH           8
- #define ATH_TX_ERROR               0x01
- 
-+/* Stop tx traffic 1ms before the GO goes away */
-+#define ATH_P2P_PS_STOP_TIME       1000
-+
- #define IEEE80211_SEQ_SEQ_SHIFT    4
- #define IEEE80211_SEQ_MAX          4096
- #define IEEE80211_WEP_IVLEN        3
-@@ -363,11 +366,15 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- /********/
- 
- struct ath_vif {
-+	struct ieee80211_vif *vif;
- 	struct ath_node mcast_node;
- 	int av_bslot;
- 	bool primary_sta_vif;
- 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
- 	struct ath_buf *av_bcbuf;
-+
-+	/* P2P Client */
-+	struct ieee80211_noa_data noa;
- };
- 
- struct ath9k_vif_iter_data {
-@@ -472,6 +479,8 @@ int ath_update_survey_stats(struct ath_softc *sc);
- void ath_update_survey_nf(struct ath_softc *sc, int channel);
- void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
- void ath_ps_full_sleep(unsigned long data);
-+void ath9k_p2p_ps_timer(void *priv);
-+void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif);
- 
- /**********/
- /* BTCOEX */
-@@ -731,6 +740,9 @@ struct ath_softc {
- 	struct completion paprd_complete;
- 	wait_queue_head_t tx_wait;
- 
-+	struct ath_gen_timer *p2p_ps_timer;
-+	struct ath_vif *p2p_ps_vif;
-+
- 	unsigned long sc_flags;
- 	unsigned long driver_data;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 72ace06..3e3f12d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -797,6 +797,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		goto err_btcoex;
- 
-+	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
-+		NULL, sc, AR_FIRST_NDP_TIMER);
-+
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
- 	ath_fill_led_pin(sc);
-@@ -1067,6 +1070,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- {
- 	int i = 0;
- 
-+	if (sc->p2p_ps_timer)
-+		ath_gen_timer_free(sc->sc_ah, sc->p2p_ps_timer);
-+
- 	ath9k_deinit_btcoex(sc);
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5924f72..7634615 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -261,6 +261,8 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	sc->gtt_cnt = 0;
- 	ieee80211_wake_queues(sc->hw);
- 
-+	ath9k_p2p_ps_timer(sc);
-+
- 	return true;
- }
- 
-@@ -1117,6 +1119,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
-+	avp->vif = vif;
-+
- 	an->sc = sc;
- 	an->sta = NULL;
- 	an->vif = vif;
-@@ -1161,6 +1165,29 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static void
-+ath9k_update_p2p_ps_timer(struct ath_softc *sc, struct ath_vif *avp)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	s32 tsf, target_tsf;
-+
-+	if (!avp || !avp->noa.has_next_tsf)
-+		return;
-+
-+	ath9k_hw_gen_timer_stop(ah, sc->p2p_ps_timer);
-+
-+	tsf = ath9k_hw_gettsf32(sc->sc_ah);
-+
-+	target_tsf = avp->noa.next_tsf;
-+	if (!avp->noa.absent)
-+		target_tsf -= ATH_P2P_PS_STOP_TIME;
-+
-+	if (target_tsf - tsf < ATH_P2P_PS_STOP_TIME)
-+		target_tsf = tsf + ATH_P2P_PS_STOP_TIME;
-+
-+	ath9k_hw_gen_timer_start(ah, sc->p2p_ps_timer, (u32) target_tsf, 1000000);
-+}
-+
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
-@@ -1172,6 +1199,13 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&sc->mutex);
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+	if (avp == sc->p2p_ps_vif) {
-+		sc->p2p_ps_vif = NULL;
-+		ath9k_update_p2p_ps_timer(sc, NULL);
-+	}
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	sc->nvifs--;
- 	sc->tx99_vif = NULL;
- 
-@@ -1636,6 +1670,70 @@ static void ath9k_bss_assoc_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 		ath9k_set_assoc_state(sc, vif);
- }
- 
-+void ath9k_p2p_ps_timer(void *priv)
-+{
-+	struct ath_softc *sc = priv;
-+	struct ath_vif *avp = sc->p2p_ps_vif;
-+	struct ieee80211_vif *vif;
-+	struct ieee80211_sta *sta;
-+	struct ath_node *an;
-+	u32 tsf;
-+
-+	if (!avp)
-+		return;
-+
-+	tsf = ath9k_hw_gettsf32(sc->sc_ah);
-+	if (!avp->noa.absent)
-+		tsf += ATH_P2P_PS_STOP_TIME;
-+
-+	if (!avp->noa.has_next_tsf ||
-+	    avp->noa.next_tsf - tsf > BIT(31))
-+		ieee80211_update_p2p_noa(&avp->noa, tsf);
-+
-+	ath9k_update_p2p_ps_timer(sc, avp);
-+
-+	rcu_read_lock();
-+
-+	vif = avp->vif;
-+	sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
-+	if (!sta)
-+		goto out;
-+
-+	an = (void *) sta->drv_priv;
-+	if (an->sleeping == !!avp->noa.absent)
-+		goto out;
-+
-+	an->sleeping = avp->noa.absent;
-+	if (an->sleeping)
-+		ath_tx_aggr_sleep(sta, sc, an);
-+	else
-+		ath_tx_aggr_wakeup(sc, an);
-+
-+out:
-+	rcu_read_unlock();
-+}
-+
-+void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
-+{
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+	u32 tsf;
-+
-+	if (!sc->p2p_ps_timer)
-+		return;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION || !vif->p2p)
-+		return;
-+
-+	sc->p2p_ps_vif = avp;
-+
-+	if (sc->ps_flags & PS_BEACON_SYNC)
-+		return;
-+
-+	tsf = ath9k_hw_gettsf32(sc->sc_ah);
-+	ieee80211_parse_p2p_noa(&vif->bss_conf.p2p_noa_attr, &avp->noa, tsf);
-+	ath9k_update_p2p_ps_timer(sc, avp);
-+}
-+
- static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_bss_conf *bss_conf,
-@@ -1710,6 +1808,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (changed & BSS_CHANGED_P2P_PS) {
-+		spin_lock_bh(&sc->sc_pcu_lock);
-+		ath9k_update_p2p_ps(sc, vif);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
-+	}
-+
- 	if (changed & CHECK_ANI)
- 		ath_check_ani(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a0ebdd0..ddfb8ff 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -539,6 +539,9 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 		ath_dbg(common, PS,
- 			"Reconfigure beacon timers based on synchronized timestamp\n");
- 		ath9k_set_beacon(sc);
-+
-+		if (sc->p2p_ps_vif)
-+			ath9k_update_p2p_ps(sc, sc->p2p_ps_vif->vif);
- 	}
- 
- 	if (ath_beacon_dtim_pending_cab(skb)) {
--- 
-1.8.3.4 (Apple Git-47)
-
+>  include/linux/ieee80211.h | 36 ------------------------------------ 1
+>  file changed, 36 deletions(-)
+>
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 5f34935..0629904 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -2308,42 +2308,6 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
+>  }
+>  
+>  /**
+> - * ieee80211_dsss_chan_to_freq - get channel center frequency
+> - * @channel: the DSSS channel
+> - *
+> - * Convert IEEE802.11 DSSS channel to the center frequency (MHz).
+> - * Ref IEEE 802.11-2007 section 15.6
+> - */
+> -static inline int ieee80211_dsss_chan_to_freq(int channel)
+> -{
+> -	if ((channel > 0) && (channel < 14))
+> -		return 2407 + (channel * 5);
+> -	else if (channel == 14)
+> -		return 2484;
+> -	else
+> -		return -1;
+> -}
+> -
+> -/**
+> - * ieee80211_freq_to_dsss_chan - get channel
+> - * @freq: the frequency
+> - *
+> - * Convert frequency (MHz) to IEEE802.11 DSSS channel
+> - * Ref IEEE 802.11-2007 section 15.6
+> - *
+> - * This routine selects the channel with the closest center frequency.
+> - */
+> -static inline int ieee80211_freq_to_dsss_chan(int freq)
+> -{
+> -	if ((freq >= 2410) && (freq < 2475))
+> -		return (freq - 2405) / 5;
+> -	else if ((freq >= 2482) && (freq < 2487))
+> -		return 14;
+> -	else
+> -		return -1;
+> -}
+> -
+> -/**
+>   * ieee80211_tu_to_usec - convert time units (TU) to microseconds
+>   * @tu: the TUs
+>   */
