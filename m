@@ -1,161 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:51538 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946AbaBNSDz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 13:03:55 -0500
-From: Peter Wu <lekensteyn@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming_Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lekensteyn@gmail.com
-Subject: [PATCH 1/3] rtlwifi: avoid accessing RCR directly
-Date: Fri, 14 Feb 2014 19:03:44 +0100
-Message-Id: <1392401026-18417-2-git-send-email-lekensteyn@gmail.com> (sfid-20140214_190440_635501_8EB7EEF4)
-In-Reply-To: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
-References: <1392401026-18417-1-git-send-email-lekensteyn@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38899 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751245AbaBSMNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 07:13:02 -0500
+Date: Wed, 19 Feb 2014 13:15:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3.14] ath9k: protect tid->sched check
+Message-ID: <20140219121516.GB1851@redhat.com> (sfid-20140219_131310_422783_D302738A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl*_set_check_bssid functions are mostly the same, but access the
-RCR register in different ways. Use the get_hw_reg abstraction layer
-(which reads rtlpci->receive_config for PCI devices and mac->rx_conf for
-USB).
+We check tid->sched without a lock taken on ath_tx_aggr_sleep(). That
+is race condition which can result of doing list_del(&tid->list) twice
+(second time with poisoned list node) and cause crash like shown below:
 
-There is no functional change for cases where receive_config was
-accessed directly. For rtl8192ce, there is still no change because
-nothing modifies REG_RCR or receive_config. For rtl8192cu, it now also
-applies changes to rx_conf from configure_filter, but that can be
-considered a bug which is fixed later.
+[424271.637220] BUG: unable to handle kernel paging request at 00100104
+[424271.637328] IP: [<f90fc072>] ath_tx_aggr_sleep+0x62/0xe0 [ath9k]
+...
+[424271.639953] Call Trace:
+[424271.639998]  [<f90f6900>] ? ath9k_get_survey+0x110/0x110 [ath9k]
+[424271.640083]  [<f90f6942>] ath9k_sta_notify+0x42/0x50 [ath9k]
+[424271.640177]  [<f809cfef>] sta_ps_start+0x8f/0x1c0 [mac80211]
+[424271.640258]  [<c10f730e>] ? free_compound_page+0x2e/0x40
+[424271.640346]  [<f809e915>] ieee80211_rx_handlers+0x9d5/0x2340 [mac80211]
+[424271.640437]  [<c112f048>] ? kmem_cache_free+0x1d8/0x1f0
+[424271.640510]  [<c1345a84>] ? kfree_skbmem+0x34/0x90
+[424271.640578]  [<c10fc23c>] ? put_page+0x2c/0x40
+[424271.640640]  [<c1345a84>] ? kfree_skbmem+0x34/0x90
+[424271.640706]  [<c1345a84>] ? kfree_skbmem+0x34/0x90
+[424271.640787]  [<f809dde3>] ? ieee80211_rx_handlers_result+0x73/0x1d0 [mac80211]
+[424271.640897]  [<f80a07a0>] ieee80211_prepare_and_rx_handle+0x520/0xad0 [mac80211]
+[424271.641009]  [<f809e22d>] ? ieee80211_rx_handlers+0x2ed/0x2340 [mac80211]
+[424271.641104]  [<c13846ce>] ? ip_output+0x7e/0xd0
+[424271.641182]  [<f80a1057>] ieee80211_rx+0x307/0x7c0 [mac80211]
+[424271.641266]  [<f90fa6ee>] ath_rx_tasklet+0x88e/0xf70 [ath9k]
+[424271.641358]  [<f80a0f2c>] ? ieee80211_rx+0x1dc/0x7c0 [mac80211]
+[424271.641445]  [<f90f82db>] ath9k_tasklet+0xcb/0x130 [ath9k]
 
-Signed-off-by: Peter Wu <lekensteyn@gmail.com>
+Bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=70551
+
+Reported-and-tested-by: Max Sydorenko <maxim.stargazer@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 5 +++--
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 4 +++-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 4 +++-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 6 ++++--
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 5 +++--
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 5 +++--
- 6 files changed, 19 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-index e06971b..ce2226c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-@@ -1235,12 +1235,13 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
- void rtl88ee_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	u32 reg_rcr = rtlpci->receive_config;
-+	u32 reg_rcr;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a650704..9ec5a36 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1444,14 +1444,16 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
+ 	for (tidno = 0, tid = &an->tid[tidno];
+ 	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
  
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
+-		if (!tid->sched)
+-			continue;
+-
+ 		ac = tid->ac;
+ 		txq = ac->txq;
  
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
+ 		ath_txq_lock(sc, txq);
+ 
++		if (!tid->sched) {
++			ath_txq_unlock(sc, txq);
++			continue;
++		}
 +
- 	if (check_bssid == true) {
- 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index a82b30a..25e178c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1200,11 +1200,13 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
- void rtl92ce_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
-+	u32 reg_rcr;
+ 		buffered = ath_tid_has_buffered(tid);
  
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
- 
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-+
- 	if (check_bssid) {
- 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 468bf73..49ad106 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1379,11 +1379,13 @@ void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
--	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
-+	u32 reg_rcr;
- 
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
- 
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-+
- 	if (check_bssid) {
- 		u8 tmp;
- 		if (IS_NORMAL_CHIP(rtlhal->version)) {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-index c4a7db9..c16aa6b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1138,11 +1138,13 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
- void rtl92de_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	u32 reg_rcr = rtlpci->receive_config;
-+	u32 reg_rcr;
- 
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
-+
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-+
- 	if (check_bssid) {
- 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-index 4f46178..5aa39ef 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -1135,12 +1135,13 @@ void rtl92se_set_mac_addr(struct rtl_io *io, const u8 *addr)
- void rtl92se_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	u32 reg_rcr = rtlpci->receive_config;
-+	u32 reg_rcr;
- 
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
- 
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-+
- 	if (check_bssid) {
- 		reg_rcr |= (RCR_CBSSID);
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-index c333dfd..4680816 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-@@ -1112,12 +1112,13 @@ static int _rtl8723ae_set_media_status(struct ieee80211_hw *hw,
- void rtl8723ae_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	u32 reg_rcr = rtlpci->receive_config;
-+	u32 reg_rcr;
- 
- 	if (rtlpriv->psc.rfpwr_state != ERFON)
- 		return;
- 
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
-+
- 	if (check_bssid == true) {
- 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
+ 		tid->sched = false;
 -- 
-1.8.5.4
+1.7.11.7
 
