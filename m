@@ -1,157 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:60003 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbaBJQO5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56888 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129AbaBSQhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 11:14:57 -0500
-Received: by mail-ea0-f177.google.com with SMTP id m10so490879eaj.36
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 08:14:55 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH 3/3] ath10k: suspend hardware before reset
-Date: Mon, 10 Feb 2014 17:14:24 +0100
-Message-Id: <1392048864-13352-4-git-send-email-marek.puzyniak@tieto.com> (sfid-20140210_171518_595186_EAE6B2B7)
-In-Reply-To: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1392048864-13352-1-git-send-email-marek.puzyniak@tieto.com>
+	Wed, 19 Feb 2014 11:37:04 -0500
+Message-ID: <1392827818.4733.27.camel@jlt4.sipsolutions.net> (sfid-20140219_173709_490802_0BF3F18F)
+Subject: Re: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 17:36:58 +0100
+In-Reply-To: <20140219150937.GH1851@redhat.com>
+References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+	 <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
+	 <1392815649.4733.23.camel@jlt4.sipsolutions.net>
+	 <20140219133546.GE1851@redhat.com>
+	 <1392821503.4733.26.camel@jlt4.sipsolutions.net>
+	 <20140219150937.GH1851@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of warm reset target need to be suspended.
-Suspend function is extented to handle both cases
-with disabling interrupts and without disabling interrupts.
-Warm target reset requires suspend with all interrupts
-disabled.
+On Wed, 2014-02-19 at 16:09 +0100, Stanislaw Gruszka wrote:
+> On Wed, Feb 19, 2014 at 03:51:43PM +0100, Johannes Berg wrote:
+> > On Wed, 2014-02-19 at 14:35 +0100, Stanislaw Gruszka wrote:
+> > 
+> > > > It ultimately makes no difference at all, it just makes this code more
+> > > > difficult to read and understand.
+> > > 
+> > > It make difference when queue length value is modified on different CPU
+> > > and read on different CPU. Without lock you can 'see' old length value
+> > > on CPU that run ieee80211_tx_h_multicast_ps_buf() for undefined
+> > > period of time (ok maybe not undefined on x86), and current oldest
+> > > frame can be not necessarily dropped.
+> > 
+> > I don't see how that can be true, since the modifications of the queue
+> > length are under spinlock with the implied memory barriers.
+> 
+> On processor that read value there is no memory barrier. If you do:
+> 
+> CPU1				CPU2
+> 
+> 				b = a;
+> spin_lock(a_lock)
+> a = 1;				...
+> spin_unlock(a_lock)
+> 
+> 				b = a;
+> 
+> There is nothing that guarantee that on CPU2 b will be 1.
 
-This patch depends on
-ath10k: fix device initialization routine
+Well, OK, so there's some small window of time where the drop code isn't
+perfect. Does it matter? I'd argue it doesn't - if you're getting close
+to the drop case then the client is probably misbehaving anyway.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 14 +++-----------
- drivers/net/wireless/ath/ath10k/wmi.c  |  4 ++--
- drivers/net/wireless/ath/ath10k/wmi.h  |  2 +-
- 5 files changed, 31 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0d161cf..ebc5fc2 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -858,10 +858,34 @@ err:
- }
- EXPORT_SYMBOL(ath10k_core_start);
- 
-+int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt)
-+{
-+	int ret;
-+
-+	reinit_completion(&ar->target_suspend);
-+
-+	ret = ath10k_wmi_pdev_suspend_target(ar, suspend_opt);
-+	if (ret) {
-+		ath10k_warn("could not suspend target (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
-+
-+	if (ret == 0) {
-+		ath10k_warn("suspend timed out - target pause event never came\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
- void ath10k_core_stop(struct ath10k *ar)
- {
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	/* try to suspend target */
-+	ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
- 	ath10k_debug_stop(ar);
- 	ath10k_htc_stop(&ar->htc);
- 	ath10k_htt_detach(&ar->htt);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4f7ff9b..fae53f9 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -492,6 +492,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- void ath10k_core_destroy(struct ath10k *ar);
- 
- int ath10k_core_start(struct ath10k *ar);
-+int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt);
- void ath10k_core_stop(struct ath10k *ar);
- int ath10k_core_register(struct ath10k *ar, u32 chip_id);
- void ath10k_core_unregister(struct ath10k *ar);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 751284b..90a9ef6 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3442,22 +3442,14 @@ static int ath10k_suspend(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&ar->conf_mutex);
- 
--	reinit_completion(&ar->target_suspend);
--
--	ret = ath10k_wmi_pdev_suspend_target(ar);
-+	ret = ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND);
- 	if (ret) {
--		ath10k_warn("could not suspend target (%d)\n", ret);
-+		if (ret == -ETIMEDOUT)
-+			goto resume;
- 		ret = 1;
- 		goto exit;
- 	}
- 
--	ret = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
--
--	if (ret == 0) {
--		ath10k_warn("suspend timed out - target pause event never came\n");
--		goto resume;
--	}
--
- 	ret = ath10k_hif_suspend(ar);
- 	if (ret) {
- 		ath10k_warn("could not suspend hif (%d)\n", ret);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 7298c06..cf8dc13 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2443,7 +2443,7 @@ int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
- 				   ar->wmi.cmd->pdev_set_channel_cmdid);
- }
- 
--int ath10k_wmi_pdev_suspend_target(struct ath10k *ar)
-+int ath10k_wmi_pdev_suspend_target(struct ath10k *ar, u32 suspend_opt)
- {
- 	struct wmi_pdev_suspend_cmd *cmd;
- 	struct sk_buff *skb;
-@@ -2453,7 +2453,7 @@ int ath10k_wmi_pdev_suspend_target(struct ath10k *ar)
- 		return -ENOMEM;
- 
- 	cmd = (struct wmi_pdev_suspend_cmd *)skb->data;
--	cmd->suspend_opt = WMI_PDEV_SUSPEND;
-+	cmd->suspend_opt = __cpu_to_le32(suspend_opt);
- 
- 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->pdev_suspend_cmdid);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 083079f..fc1093a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4193,7 +4193,7 @@ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
- int ath10k_wmi_connect_htc_service(struct ath10k *ar);
- int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
- 				const struct wmi_channel_arg *);
--int ath10k_wmi_pdev_suspend_target(struct ath10k *ar);
-+int ath10k_wmi_pdev_suspend_target(struct ath10k *ar, u32 suspend_opt);
- int ath10k_wmi_pdev_resume_target(struct ath10k *ar);
- int ath10k_wmi_pdev_set_regdomain(struct ath10k *ar, u16 rd, u16 rd2g,
- 				  u16 rd5g, u16 ctl2g, u16 ctl5g);
--- 
-1.8.1.2
+johannes
 
