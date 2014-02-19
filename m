@@ -1,83 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:52696 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbaBJMii (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:35591 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbaBSAdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 07:38:38 -0500
+	Tue, 18 Feb 2014 19:33:50 -0500
+Received: by mail-lb0-f182.google.com with SMTP id w7so13105322lbi.27
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:33:49 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <52F8C373.9060108@rempel-privat.de>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Mon, 10 Feb 2014 16:38:17 +0400
-Message-ID: <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com> (sfid-20140210_133901_685934_0046F224)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-	open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 18 Feb 2014 16:33:29 -0800
+Message-ID: <CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com> (sfid-20140219_013354_116751_2EF4F3D7)
+Subject: Re: [PATCH] crda: handle AUTO bw setting in db2rd
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-10 16:17 GMT+04:00 Oleksij Rempel <linux@rempel-privat.de>:
-> Am 10.02.2014 13:05, schrieb Sergey Ryazanov:
->> 2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
->>> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
->>>> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
->>>>> The symbol is an orphan, get rid of it.
->>>>>
->>>>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>>>> ---
->>>>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
->>>>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
->>>>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
->>>>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
->>>>>  4 files changed, 5 insertions(+), 54 deletions(-)
->>>>>
->>>>
->>>> This code is used in OpenWrt with an out of tree arch code for the
->>>> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
->>>> this code to mainline Linux kernel, because of lack of time/interest.
->>>
->>> Sorry, we don't maintain out of tree code.
->>>
->>
->> Oleksij, Jonathan do you still working to make ar231x devices work
->> with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
->> team would like to add upstream support?
->>
->> 1. https://lkml.org/lkml/2013/5/13/321
->> 2. https://lkml.org/lkml/2013/5/13/358
->>
+On Wed, Feb 12, 2014 at 9:43 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Handle AUTO bandwidth setting in db2rd.
+> Don't add NL80211_ATTR_FREQ_RANGE_MAX_BW attribute
+> in case of AUTO bw calculation.
 >
-> Hi,
-> my current target was to provide barebox and openocd support.
-> - ar2313 is already upstream on barebox.
-> - ar2315-2318 (barebox) awaiting review by Anthony Pavlov.
-> - openocd (EJTAG) support is ready and i'll push it ASUP.
->
-WOW, Impressive.
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-> I hope Jonathan do kernel part. If not, i can provide some work, since i
-> have testing boards and expiriance on this hardware.
->
-If you need, I can test kernel part, or even do some porting work. I
-have some AR231x based boards, e.g. Ubnt LS2 and NS2.
+Please elaborate more on this. Who deals with the automatic math on
+the bandwidth?
 
--- 
-BR,
-Sergey
+  Luis
