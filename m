@@ -1,108 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:63316 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753655AbaBDJ27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:59 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0MY7dI-1Vfpt32udk-00UujY for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:57 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 13/13] ath9k_htc: catch fw panic pattern
-Date: Tue,  4 Feb 2014 10:27:50 +0100
-Message-Id: <1391506070-8636-14-git-send-email-linux@rempel-privat.de> (sfid-20140204_102937_611486_F4A4B11E)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:34658 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071AbaBSKAu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:00:50 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH 2/7] cfg80211: remove radar requirements check from cfg80211_can_use_iftype_chan()
+Date: Wed, 19 Feb 2014 12:00:40 +0200
+Message-Id: <1392804045-11258-3-git-send-email-luca@coelho.fi> (sfid-20140219_110058_615520_4D512F00)
+In-Reply-To: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... and print what we get.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+We don't have to double check whether the parameters passed to
+cfg80211_can_use_iftype_chan() are correct.  We should just make sure
+they *are* when we call this function.
+
+Remove the radar_detect argument check in
+cfg80211_can_use_iftype_chan() to simplify the code.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_hst.c | 36 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_hst.h | 12 +++++++++++
- 2 files changed, 48 insertions(+)
+ net/wireless/ibss.c | 10 ++++------
+ net/wireless/mesh.c |  6 ++++++
+ net/wireless/util.c | 31 +------------------------------
+ 3 files changed, 11 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index aac4a40..a0ff5b6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -358,6 +358,36 @@ ret:
- 		kfree_skb(skb);
- }
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 1470b90..c66c524 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -127,14 +127,12 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.ibss.chandef = params->chandef;
+ #endif
+ 	check_chan = params->chandef.chan;
+-	if (params->userspace_handles_dfs) {
+-		/* use channel NULL to check for radar even if the current
+-		 * channel is not a radar channel - it might decide to change
+-		 * to DFS channel later.
++	if (params->userspace_handles_dfs)
++		/* Check for radar even if the current channel is not
++		 * a radar channel - it might decide to change to DFS
++		 * channel later.
+ 		 */
+ 		radar_detect_width = BIT(params->chandef.width);
+-		check_chan = NULL;
+-	}
  
-+static void ath9k_htc_fw_panic_report(struct htc_target *htc_handle,
-+				      struct sk_buff *skb)
-+{
-+	uint32_t *pattern = (uint32_t *)skb->data;
-+
-+	switch (*pattern) {
-+	case 0x33221199:
-+		{
-+		struct htc_panic_bad_vaddr *htc_panic;
-+		htc_panic = (struct htc_panic_bad_vaddr *) skb->data;
-+		dev_err(htc_handle->dev, "ath: firmware panic! "
-+			"exccause: 0x%08x; pc: 0x%08x; badvaddr: 0x%08x.\n",
-+			htc_panic->exccause, htc_panic->pc,
-+			htc_panic->badvaddr);
-+		break;
-+		}
-+	case 0x33221299:
-+		{
-+		struct htc_panic_bad_epid *htc_panic;
-+		htc_panic = (struct htc_panic_bad_epid *) skb->data;
-+		dev_err(htc_handle->dev, "ath: firmware panic! "
-+			"bad epid: 0x%08x\n", htc_panic->epid);
-+		break;
-+		}
-+	default:
-+		dev_err(htc_handle->dev, "ath: uknown panic pattern!\n");
-+		break;
-+	}
-+}
-+
- /*
-  * HTC Messages are handled directly here and the obtained SKB
-  * is freed.
-@@ -379,6 +409,12 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 	htc_hdr = (struct htc_frame_hdr *) skb->data;
- 	epid = htc_hdr->endpoint_id;
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   check_chan,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index d42a3fc..5af5cc6 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -236,6 +236,12 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
  
-+	if (epid == 0x99) {
-+		ath9k_htc_fw_panic_report(htc_handle, skb);
-+		kfree_skb(skb);
-+		return;
-+	}
-+
- 	if (epid >= ENDPOINT_MAX) {
- 		if (pipe_id != USB_REG_IN_PIPE)
- 			dev_kfree_skb_any(skb);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index e1ffbb6..06474cc 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -77,6 +77,18 @@ struct htc_config_pipe_msg {
- 	u8 credits;
- } __packed;
++		/* cfg80211_can_use_chan() calls
++		 * cfg80211_can_use_iftype_chan() with no radar
++		 * detection, so if we're trying to use a radar
++		 * channel here, something is wrong.
++		 */
++		WARN_ON_ONCE(chandef->chan->flags & IEEE80211_CHAN_RADAR);
+ 		err = cfg80211_can_use_chan(rdev, wdev, chandef->chan,
+ 					    CHAN_MODE_SHARED);
+ 		if (err)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 780b454..57b3ce7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1269,7 +1269,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	bool radar_required = false;
+ 	int i, j;
  
-+struct htc_panic_bad_vaddr {
-+	__be32 pattern;
-+	__be32 exccause;
-+	__be32 pc;
-+	__be32 badvaddr;
-+} __packed;
-+
-+struct htc_panic_bad_epid {
-+	__be32 pattern;
-+	__be32 epid;
-+} __packed;
-+
- struct htc_ep_callbacks {
- 	void *priv;
- 	void (*tx) (void *, struct sk_buff *, enum htc_endpoint_id, bool txok);
+ 	ASSERT_RTNL();
+@@ -1277,35 +1276,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
+ 
+-	switch (iftype) {
+-	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_MESH_POINT:
+-	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_WDS:
+-		/* if the interface could potentially choose a DFS channel,
+-		 * then mark DFS as required.
+-		 */
+-		if (!chan) {
+-			if (chanmode != CHAN_MODE_UNDEFINED && radar_detect)
+-				radar_required = true;
+-			break;
+-		}
+-		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
+-		break;
+-	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_STATION:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+-	case NL80211_IFTYPE_MONITOR:
+-		break;
+-	case NUM_NL80211_IFTYPES:
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	if (radar_required && !radar_detect)
++	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+ 		return -EINVAL;
+ 
+ 	/* Always allow software iftypes */
 -- 
-1.9.rc1
+1.8.5.3
 
