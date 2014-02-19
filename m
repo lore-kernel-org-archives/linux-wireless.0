@@ -1,64 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:43023 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751751AbaBIN1D (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:64724 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751245AbaBSLBx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 08:27:03 -0500
-Date: Sun, 9 Feb 2014 15:26:54 +0200
-From: Petko Manolov <petkan@nucleusys.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi crash with 3.13
-Message-ID: <20140209132653.GA8352@localhost> (sfid-20140209_142707_877513_34709864)
-References: <20140123091659.GE9077@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
- <20140123123125.GA3424@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
- <20140123200045.GA4064@localhost>
- <52E17698.9070607@gmail.com>
- <20140123202142.GC4064@localhost>
- <20140207214054.GB7167@localhost>
- <52F67313.1030706@gmail.com>
+	Wed, 19 Feb 2014 06:01:53 -0500
+Received: by mail-bk0-f42.google.com with SMTP id 6so152964bkj.29
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 03:01:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52F67313.1030706@gmail.com>
+In-Reply-To: <1392804045-11258-8-git-send-email-luca@coelho.fi>
+References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+	<1392804045-11258-8-git-send-email-luca@coelho.fi>
+Date: Wed, 19 Feb 2014 12:01:51 +0100
+Message-ID: <CA+BoTQmFRoS-uEWx-guObucK5dwM8gm=yGt-58hzADQBPxOAtg@mail.gmail.com> (sfid-20140219_120156_665851_456C8DF8)
+Subject: Re: [PATCH 7/7] cfg80211/mac80211: move combination check to mac80211
+ for ibss
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-02-08 20:10:27, Emmanuel Grumbach wrote:
-> 
-> There is no problem to be fixed. When I said that I found the issue, I meant that you are using a NIC which is not supposed to work on 5GHz on 
-> these channels and this leads to the issues.
+On 19 February 2014 11:00, Luciano Coelho <luca@coelho.fi> wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+>
+> Now that mac80211 can check the interface combinations itself, move
+> the combinations check from cfg80211 to mac80211 when joining an IBSS.
+>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>  net/mac80211/ibss.c | 28 +++++++++++++++++++++++++---
+>  net/wireless/ibss.c | 27 ---------------------------
+>  2 files changed, 25 insertions(+), 30 deletions(-)
+>
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 56b0dce..49a25aa 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -1646,7 +1646,29 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+>         u32 changed = 0;
+>         u32 rate_flags;
+>         struct ieee80211_supported_band *sband;
+> +       enum ieee80211_chanctx_mode chanmode;
+> +       struct ieee80211_local *local = sdata->local;
+> +       int radar_detect_width;
+>         int i;
+> +       int ret;
+> +
+> +       radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
+> +                                                          &params->chandef,
+> +                                                          sdata->vif.type);
+> +       if (radar_detect_width < 0)
+> +               return radar_detect_width;
+> +
+> +       if (radar_detect_width > 0 && !params->userspace_handles_dfs)
+> +               return -EINVAL;
+> +
+> +       chanmode = (params->channel_fixed && !radar_detect_width) ?
+> +               IEEE80211_CHANCTX_SHARED : IEEE80211_CHANCTX_EXCLUSIVE;
+> +
+> +       ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
+> +                                          &params->chandef, chanmode,
+> +                                          radar_detect_width);
+> +       if (ret < 0)
+> +               return ret;
 
-Right, wireless-N 7260 is not advertised as 5GHz card.  I just got over my laziness and searched the net.
+Aren't you supposed to be holding chanctx_mtx while calling
+ieee80211_check_combinations()?
 
-> The fact that it doesn't work for you with -8.ucode proves that I am correct.
-
-This is something i'd rather not comment on. :P
-
-> I sent a patch that will disable 5GHz band for you from the driver level so that you won't suffer from firmware asserts.
-
-Sweet.
-
-> You told me you could work on 5GHz with this NIC - good for you. Conclude whatever you want from this, this is none of my business - but for 
-> sure, the "issues" you are seeing are related to the fact that your NIC isn't supposed to be working on 5GHz, and hence, there is no bug to be 
-> fixed.
-
-Now that's funny.  Intel made an effort to put 5GHz radio on this card.  They even released firmware that can actually make use of this band.  I 
-am pretty sure you won't answer these, but i'll ask why is that anyway:
-
-	a) is the 'A' band implementation so buggy that you/Intel decided to disable it altogether?
-	b) it is on sale too cheap to give it's customers the 'A' band;
-	c) a mix of both (or none) of the above;
-
-I kind of doubt it is a) since my laptop would happily stay connected to the router (on AN band) for days.  Were it not for the ugly 'dmesg' i'd 
-never know there is a problem.  I have no idea of the device internals, but blowing up the workqueue (or whatever) is a bit too much.  With or 
-without the A band functionality. ;)
-
-Thanks for taking the time to look at my 'problem'.
+I hope you're aware this can end up with not being able to connect?
+chanctx isn't claimed until __ieee80211_sta_join_ibss() so you could
+possibly start other interface and break combinations. Or am I missing
+something?
 
 
-		Petko
+> @@ -1661,7 +1683,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+>
+>         /* fix basic_rates if channel does not support these rates */
+>         rate_flags = ieee80211_chandef_rate_flags(&params->chandef);
+> -       sband = sdata->local->hw.wiphy->bands[params->chandef.chan->band];
+> +       sband = local->hw.wiphy->bands[params->chandef.chan->band];
+>         for (i = 0; i < sband->n_bitrates; i++) {
+>                 if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
+>                         sdata->u.ibss.basic_rates &= ~BIT(i);
+> @@ -1710,9 +1732,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+>         ieee80211_bss_info_change_notify(sdata, changed);
+>
+>         sdata->smps_mode = IEEE80211_SMPS_OFF;
+> -       sdata->needed_rx_chains = sdata->local->rx_chains;
+> +       sdata->needed_rx_chains = local->rx_chains;
+>
+> -       ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+> +       ieee80211_queue_work(&local->hw, &sdata->work);
+>
+>         return 0;
+>  }
+
+Hmm, I don't think this belongs to this patch?
+
+
+Michał
