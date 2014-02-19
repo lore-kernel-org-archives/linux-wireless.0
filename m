@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2181 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752637AbaBSMkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 07:40:04 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 1/2] mac80211: fix calling ieee80211_free_txskb with
- NULL skb
-Date: Wed, 19 Feb 2014 12:39:27 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D6BD5D@HASMSX103.ger.corp.intel.com> (sfid-20140219_134009_658036_07461898)
-References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
-	 (sfid-20140219_132640_718975_460F3097)
- <1392813218.4733.20.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1392813218.4733.20.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:60801 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751874AbaBSMBB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 07:01:01 -0500
+Message-ID: <1392811257.12095.95.camel@porter.coelho.fi> (sfid-20140219_130106_682390_7EDD3E97)
+Subject: Re: [PATCH 6/7] cfg80211/mac80211: move interface counting for
+ combination check to mac80211
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de, Bing Zhao <bzhao@marvell.com>,
+	arend@broadcom.com
+Date: Wed, 19 Feb 2014 14:00:57 +0200
+In-Reply-To: <CA+BoTQ=ZAgOd0suPiTy_6SP6OzGsMcicv_f+foqBUCrL91NU5g@mail.gmail.com>
+References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+	 <1392804045-11258-7-git-send-email-luca@coelho.fi>
+	 <CA+BoTQ=ZAgOd0suPiTy_6SP6OzGsMcicv_f+foqBUCrL91NU5g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gK0VtbWFudWVsDQo+IA0KPiBJbnRlcmVzdGluZy4gV2UganVzdCByYW4gaW50byB0aGUg
-c2FtZSBpc3N1ZSBhcyB3ZWxsLg0KPiANCj4gPiArCQlzdHJ1Y3Qgc2tfYnVmZiAqb2xkX3NrYiA9
-IE5VTEw7DQo+ID4gKwkJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gPg0KPiA+ICAJCXBzX2RiZyhz
-dGEtPnNkYXRhLCAiU1RBICVwTSBhaWQgJWQ6IFBTIGJ1ZmZlciBmb3IgQUMNCj4gJWRcbiIsDQo+
-ID4gIAkJICAgICAgIHN0YS0+c3RhLmFkZHIsIHN0YS0+c3RhLmFpZCwgYWMpOw0KPiA+ICAJCWlm
-ICh0eC0+bG9jYWwtPnRvdGFsX3BzX2J1ZmZlcmVkID49DQo+IFRPVEFMX01BWF9UWF9CVUZGRVIp
-DQo+ID4gIAkJCXB1cmdlX29sZF9wc19idWZmZXJzKHR4LT5sb2NhbCk7DQo+ID4gIAkJaWYgKHNr
-Yl9xdWV1ZV9sZW4oJnN0YS0+cHNfdHhfYnVmW2FjXSkgPj0NCj4gU1RBX01BWF9UWF9CVUZGRVIp
-IHsNCj4gPiAtCQkJc3RydWN0IHNrX2J1ZmYgKm9sZCA9IHNrYl9kZXF1ZXVlKCZzdGEtDQo+ID5w
-c190eF9idWZbYWNdKTsNCj4gPiArCQkJc3Bpbl9sb2NrX2lycXNhdmUoJnN0YS0+cHNfdHhfYnVm
-W2FjXS5sb2NrLCBmbGFncyk7DQo+ID4gKwkJCS8qIHF1ZXVlIGNvdWxkIGJlIG1vZGlmaWVkLCBy
-ZWNoZWNrIGxlbmd0aCB3aXRoIGxvY2sNCj4gdGFrZW4gKi8NCj4gPiArCQkJaWYgKHNrYl9xdWV1
-ZV9sZW4oJnN0YS0+cHNfdHhfYnVmW2FjXSkgPj0NCj4gU1RBX01BWF9UWF9CVUZGRVIpDQo+ID4g
-KwkJCQlvbGRfc2tiID0gX19za2JfZGVxdWV1ZSgmc3RhLQ0KPiA+cHNfdHhfYnVmW2FjXSk7DQo+
-ID4gKwkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnN0YS0+cHNfdHhfYnVmW2FjXS5sb2NrLA0K
-PiBmbGFncyk7DQo+ID4gKwkJfQ0KPiA+ICsJCWlmIChvbGRfc2tiKSB7DQo+IA0KPiBJIHRoaW5r
-IHRoYXQncyBwb2ludGxlc3MsIHlvdSBjYW4ganVzdCBzYXkgImlmIChvbGQpIiBpbnN0ZWFkIGFz
-IHRoZSBkZXF1ZXVlDQo+IHdvdWxkIHJldHVybiBOVUxMLg0KDQpZZWFoIC0gSSBoYWQgdGhlIGlm
-IChvbGQpIHBhdGNoIGludGVybmFsbHkgLSBqdXN0IDEgaG91ciBiZWZvcmUgeW91IHNlbnQgeW91
-cnMgOikNCg0KVGhpbmcgaXMgdGhhdCBJIGRvbid0IHVuZGVyc3RhbmQgaG93IGl0IGV2ZW4gaGVs
-cHMgc2luY2UgeW91IGxvY2sgb25seSBvbiBzaWRlIG9mIHRoZSBwYXRoPyBBdCBsZWFzdCBmb3Ig
-dS1hcHNkIC8gcHMtcG9sbCBkZWxpdmVyIEkgZG9uJ3Qgc2VlIGhvdyB0aGF0J2QgaGVscD8NCkkg
-bWVhbiB0aGF0IHVhcHNkIC8gcHMtcG9sbCBjb2RlIGRlcXVldWVzIHBhY2tldHMgd2l0aG91dCB0
-YWtpbmcgdGhlIGxvY2suDQoNCg0KPiANCj4gSW4gYW55IGNhc2UsIHdoaWxlIHRoaXMgc29sdmVz
-IHRoZSBjcmFzaCB3aGljaCBpcyBhIGdvb2QgdGhpbmcsIGl0IHN0aWxsIGxlYXZlcyB0aGUNCj4g
-Y29kZSBidWdneS4gVGhpcyBjcmFzaCBzZWVtcyB0byBvY2N1ciBpbiB0aGUgZm9sbG93aW5nIHJh
-Y3kNCj4gc2NlbmFyaW86DQo+IA0KPiAgKiBzdGF0aW9uIGlzIHNsZWVwaW5nDQo+ICAqIGZyYW1l
-IFRYIHRvIHN0YXRpb24gYmVnaW5zDQo+ICAqIHN0YXRpb24gd2FrZXMgdXANCj4gICogZnJhbWUg
-VFggZ29lcyBpbnRvIHRoZSBxdWV1ZSBsZW5ndGggY2hlY2ssIGZpbmRzIGxvbmcgcXVldWUNCj4g
-ICogcGVuZGluZyBmcmFtZXMgYXJlIHRyYW5zbWl0dGVkDQo+ICAqIHF1ZXVlIGlzIG5vdyBlbXB0
-eQ0KPiAgKiBvbGQgPSBza2JfZGVxdWV1ZSgpIHJldHVybnMgTlVMTA0KPiAgKiAqa2Fib29tKg0K
-PiANCj4gVGhlIHByb2JsZW0gaXMgdGhhdCB5b3UncmUganVzdCBmaXhpbmcgdGhlICIqa2Fib29t
-KiIgcGFydCwgc28gdGhlIGNvZGUgd2lsbA0KPiBjb250aW51ZSBsaWtlIHRoaXM6DQo+IA0KPiAg
-KiBvbGQgaXMgTlVMTA0KPiAgKiBubyBrYWJvb20NCj4gICogbmV3IGZyYW1lIGlzIHF1ZXVlZCBv
-biBwc190eF9idWYgcXVldWUNCj4gICogZnJhbWUgbmV2ZXIgZ2V0cyB0cmFuc21pdHRlZA0KPiAN
-Cj4gam9oYW5uZXMNCg0K
+On Wed, 2014-02-19 at 12:51 +0100, Michal Kazior wrote:
+> On 19 February 2014 11:00, Luciano Coelho <luca@coelho.fi> wrote:
+> > From: Luciano Coelho <luciano.coelho@intel.com>
+> >
+> > Move the counting part of the interface combination check from
+> > cfg80211 to mac80211.
+> >
+> > This is needed to simplify locking when the driver has to perform a
+> > combination check by itself (eg. with channel-switch).
+> >
+> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> > ---
+> 
+> [...]
+> 
+> > @@ -520,6 +521,23 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+> >         WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
+> >
+> >         mutex_lock(&local->chanctx_mtx);
+> > +
+> > +       radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
+> > +                                                          chandef,
+> > +                                                          sdata->vif.type);
+> > +       if (radar_detect_width < 0) {
+> > +               ret = radar_detect_width;
+> > +               goto out;
+> > +       }
+> > +
+> > +       sdata->radar_required = !!(radar_detect_width);
+> > +
+> > +       ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
+> > +                                          chandef, IEEE80211_CHANCTX_SHARED,
+> > +                                          radar_detect_width);
+> > +       if (ret < 0)
+> > +               goto out;
+> > +
+> 
+> Shouldn't you be using `mode` function argument instead of
+> IEEE80211_CHANCTX_SHARED?
+
+Good catch! Someone is paying attention, apparently *I* was not. :P
+I'll fix it in v2.
+
+--
+Luca.
+
