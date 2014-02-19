@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:47158 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbaB0XHV (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:46985 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660AbaBSHjO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:07:21 -0500
-Received: by mail-we0-f180.google.com with SMTP id u57so3500082wes.11
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:20 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/7] staging: vt6656: s_nsBulkOutIoCompleteWrite remove buf_len.
-Date: Thu, 27 Feb 2014 23:06:14 +0000
-Message-Id: <1393542375-13110-6-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000732_117148_0ED3B87D)
-In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
-References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 19 Feb 2014 02:39:14 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so14052eei.21
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 23:39:12 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix sta_rc_update for non-ap iftype
+Date: Wed, 19 Feb 2014 08:33:07 +0100
+Message-Id: <1392795187-2870-1-git-send-email-michal.kazior@tieto.com> (sfid-20140219_083917_556016_9A2667DB)
+In-Reply-To: <CA+BoTQmNdn3ELFRyiMwRE=nq5XukvSy2m7BNoqXnoz95JuDYOw@mail.gmail.com>
+References: <CA+BoTQmNdn3ELFRyiMwRE=nq5XukvSy2m7BNoqXnoz95JuDYOw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use context->uBufLen directly which is unsigned int.
+The arsta structure wasn't initialized for
+non-ap interfaces. This should fix related
+warnings/crashes.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reported-By: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Ben, does this fix the lockdep splat for you?
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index fb9200e..57efb7f 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -584,7 +584,6 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	struct vnt_usb_send_context *context = urb->context;
- 	struct vnt_private *priv = context->pDevice;
- 	u8 context_type = context->type;
--	unsigned long buf_len = context->uBufLen;
- 	int status;
+
+ drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 94a70a9..9cb3eae 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3207,6 +3207,13 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 	int max_num_peers;
+ 	int ret = 0;
  
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
-@@ -610,7 +609,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
++	if (old_state == IEEE80211_STA_NOTEXIST &&
++	    new_state == IEEE80211_STA_NONE) {
++		memset(arsta, 0, sizeof(*arsta));
++		arsta->arvif = arvif;
++		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
++	}
++
+ 	/* cancel must be done outside the mutex to avoid deadlock */
+ 	if ((old_state == IEEE80211_STA_NONE &&
+ 	     new_state == IEEE80211_STA_NOTEXIST))
+@@ -3236,10 +3243,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			   "mac vdev %d peer create %pM (new sta) num_peers %d\n",
+ 			   arvif->vdev_id, sta->addr, ar->num_peers);
  
- 	if (status == STATUS_SUCCESS) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"Write %d bytes\n", (int)buf_len);
-+			"Write %d bytes\n", context->uBufLen);
- 	} else {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 				"BULK Out failed %d\n", status);
-@@ -622,7 +621,7 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 			dev_kfree_skb_irq(context->pPacket);
- 			context->pPacket = NULL;
- 			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--				"tx  %d bytes\n", (int)buf_len);
-+				"tx  %d bytes\n", context->uBufLen);
- 		}
- 
- 		priv->dev->trans_start = jiffies;
+-		memset(arsta, 0, sizeof(*arsta));
+-		arsta->arvif = arvif;
+-		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
+-
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
+ 		if (ret)
+ 			ath10k_warn("Failed to add peer %pM for vdev %d when adding a new sta: %i\n",
 -- 
-1.9.0
+1.8.5.3
 
