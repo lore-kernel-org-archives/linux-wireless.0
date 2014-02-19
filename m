@@ -1,152 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:52007 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988AbaBXUyi (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10272 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751205AbaBSKvY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:54:38 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v4 4/4] cfg80211/mac80211: move combination check to mac80211 for ibss
-Date: Mon, 24 Feb 2014 22:54:30 +0200
-Message-Id: <1393275270-7255-5-git-send-email-luca@coelho.fi> (sfid-20140224_215443_844875_91F38807)
-In-Reply-To: <1393275270-7255-1-git-send-email-luca@coelho.fi>
-References: <1393275270-7255-1-git-send-email-luca@coelho.fi>
+	Wed, 19 Feb 2014 05:51:24 -0500
+Date: Wed, 19 Feb 2014 16:07:17 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 1/3] mwl8k: Adding support to access BBP registers
+Message-ID: <20140219103717.GA3284@markyou.marvell.com> (sfid-20140219_115127_271512_DBD3342A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Adding AP firmware command to access BBP
+regs. This will be used for retrieving
+different counters CCA/RX needed for ACS
 
-Now that mac80211 can check the interface combinations itself, move
-the combinations check from cfg80211 to mac80211 when joining an IBSS.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
 ---
-In v2:
+ drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations(). (Thanks Michal);
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-In v3:
-
-   * moved the second change from v2 (pass the mode argument...) to
-     the previous patch, where it should be;
-
-In v4:
-
-   * rebased on top of slightly modified applied patches
----
- net/mac80211/ibss.c | 30 +++++++++++++++++++++++++++---
- net/wireless/ibss.c | 28 ----------------------------
- 2 files changed, 27 insertions(+), 31 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index bca7d09..745b445 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1643,7 +1643,31 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	u32 changed = 0;
- 	u32 rate_flags;
- 	struct ieee80211_supported_band *sband;
-+	enum ieee80211_chanctx_mode chanmode;
-+	struct ieee80211_local *local = sdata->local;
-+	int radar_detect_width;
- 	int i;
-+	int ret;
-+
-+	radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
-+							   &params->chandef,
-+							   sdata->vif.type);
-+	if (radar_detect_width < 0)
-+		return radar_detect_width;
-+
-+	if (radar_detect_width > 0 && !params->userspace_handles_dfs)
-+		return -EINVAL;
-+
-+	chanmode = (params->channel_fixed && !radar_detect_width) ?
-+		IEEE80211_CHANCTX_SHARED : IEEE80211_CHANCTX_EXCLUSIVE;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
-+					   &params->chandef, chanmode,
-+					   radar_detect_width);
-+	mutex_unlock(&local->chanctx_mtx);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (params->bssid) {
- 		memcpy(sdata->u.ibss.bssid, params->bssid, ETH_ALEN);
-@@ -1658,7 +1682,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 
- 	/* fix basic_rates if channel does not support these rates */
- 	rate_flags = ieee80211_chandef_rate_flags(&params->chandef);
--	sband = sdata->local->hw.wiphy->bands[params->chandef.chan->band];
-+	sband = local->hw.wiphy->bands[params->chandef.chan->band];
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
- 			sdata->u.ibss.basic_rates &= ~BIT(i);
-@@ -1707,9 +1731,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	sdata->smps_mode = IEEE80211_SMPS_OFF;
--	sdata->needed_rx_chains = sdata->local->rx_chains;
-+	sdata->needed_rx_chains = local->rx_chains;
- 
--	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4987c3f..159125e 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -396,6 +396,7 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
+ #define MWL8K_CMD_SET_HW_SPEC		0x0004
+ #define MWL8K_CMD_MAC_MULTICAST_ADR	0x0010
+ #define MWL8K_CMD_GET_STAT		0x0014
++#define MWL8K_CMD_BBP_REG_ACCESS	0x001a
+ #define MWL8K_CMD_RADIO_CONTROL		0x001c
+ #define MWL8K_CMD_RF_TX_POWER		0x001e
+ #define MWL8K_CMD_TX_POWER		0x001f
+@@ -2987,6 +2988,45 @@ static int mwl8k_cmd_set_pre_scan(struct ieee80211_hw *hw)
  }
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index d81cb68..8282de8 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -88,8 +88,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 			 struct cfg80211_cached_keys *connkeys)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	struct ieee80211_channel *check_chan;
--	u8 radar_detect_width = 0;
- 	int err;
  
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -126,32 +124,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- #ifdef CONFIG_CFG80211_WEXT
- 	wdev->wext.ibss.chandef = params->chandef;
- #endif
--	check_chan = params->chandef.chan;
--	if (params->userspace_handles_dfs) {
--		/* Check for radar even if the current channel is not
--		 * a radar channel - it might decide to change to DFS
--		 * channel later.
--		 */
--		radar_detect_width = BIT(params->chandef.width);
--	}
--
--	/* TODO: We need to check the combinations at this point, we
--	 * probably must move this call down to join_ibss() in
--	 * mac80211.
--	 */
--	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
--					   check_chan,
--					   (params->channel_fixed &&
--					    !radar_detect_width)
--					   ? CHAN_MODE_SHARED
--					   : CHAN_MODE_EXCLUSIVE,
--					   radar_detect_width);
--
--	if (err) {
--		wdev->connect_keys = NULL;
--		return err;
--	}
--
- 	err = rdev_join_ibss(rdev, dev, params);
- 	if (err) {
- 		wdev->connect_keys = NULL;
+ /*
++ * CMD_BBP_REG_ACCESS.
++ */
++struct mwl8k_cmd_bbp_reg_access {
++	struct mwl8k_cmd_pkt header;
++	__le16 action;
++	__le16 offset;
++	u8 value;
++	u8 rsrv[3];
++} __packed;
++
++static int
++mwl8k_cmd_bbp_reg_access(struct ieee80211_hw *hw,
++			 u16 action,
++			 u16 offset,
++			 u8 *value)
++{
++	struct mwl8k_cmd_bbp_reg_access *cmd;
++	int rc;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (cmd == NULL)
++		return -ENOMEM;
++
++	cmd->header.code = cpu_to_le16(MWL8K_CMD_BBP_REG_ACCESS);
++	cmd->header.length = cpu_to_le16(sizeof(*cmd));
++	cmd->action = cpu_to_le16(action);
++	cmd->offset = cpu_to_le16(offset);
++
++	rc = mwl8k_post_cmd(hw, &cmd->header);
++
++	if (!rc)
++		*value = cmd->value;
++	else
++		*value = 0;
++
++	return rc;
++}
++
++/*
+  * CMD_SET_POST_SCAN.
+  */
+ struct mwl8k_cmd_set_post_scan {
 -- 
-1.8.5.3
+1.8.3.4
 
