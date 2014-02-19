@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:34672 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710AbaBSKAv (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14354 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753593AbaBSNBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:00:51 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH 4/7] mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
-Date: Wed, 19 Feb 2014 12:00:42 +0200
-Message-Id: <1392804045-11258-5-git-send-email-luca@coelho.fi> (sfid-20140219_110111_559046_4DE84649)
-In-Reply-To: <1392804045-11258-1-git-send-email-luca@coelho.fi>
-References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+	Wed, 19 Feb 2014 08:01:39 -0500
+Date: Wed, 19 Feb 2014 18:17:41 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/3 v2] Enable ACS Support
+Message-ID: <20140219124740.GA5341@markyou.marvell.com> (sfid-20140219_140142_643051_FCD1EB5C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+With these patches, mwl8k will able to use
+automatic channel selection feature from Hostapd.
 
-Error codes returned by cfg80211_chandef_dfs_required() are ignored
-when trying to join an IBSS.  Fix this by printing an error and
-returning.
+Yogesh Ashok Powar (3):
+  mwl8k: Adding support to access BBP registers
+  mwl8k: Implement sw_scan start/stop cbs
+  mwl8k: Adding support to gather survey per channel
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ibss.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mwl8k.c | 195 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 189 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 9c84b75..b558468 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -283,6 +283,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 
- 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
- 					    &chandef);
-+	if (err < 0) {
-+		sdata_info(sdata,
-+			   "Failed to join IBSS, invalid chandef\n");
-+		return;
-+	}
- 	if (err > 0) {
- 		if (!ifibss->userspace_handles_dfs) {
- 			sdata_info(sdata,
 -- 
-1.8.5.3
+1.8.3.4
 
