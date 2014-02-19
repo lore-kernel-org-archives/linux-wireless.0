@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:58003 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbaB0HZB (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:50008 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753868AbaBSWA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 02:25:01 -0500
-Received: by mail-ea0-f182.google.com with SMTP id b10so596285eae.41
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 23:24:58 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/8] ath10k: performance improvements
-Date: Thu, 27 Feb 2014 08:19:39 +0100
-Message-Id: <1393485587-16879-1-git-send-email-michal.kazior@tieto.com> (sfid-20140227_082509_327824_6BC13BA4)
-In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 19 Feb 2014 17:00:27 -0500
+Received: by mail-la0-f49.google.com with SMTP id y1so741471lam.8
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:00:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAFED-jn0AfGVqJVFfeu6Pke2UBh-+nnRrhdVM-4acYHn9WdSjQ@mail.gmail.com>
+References: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
+ <CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com> <CAFED-jn0AfGVqJVFfeu6Pke2UBh-+nnRrhdVM-4acYHn9WdSjQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 19 Feb 2014 14:00:05 -0800
+Message-ID: <CAB=NE6UR3yQOSZr7NXA4kO2hKre0zBsmK9H1MTYZ=9Wh_=9AtA@mail.gmail.com> (sfid-20140219_230038_487558_335A1C21)
+Subject: Re: [PATCH] crda: handle AUTO bw setting in db2rd
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Feb 18, 2014 at 10:12 PM, Janusz Dziedzic
+<janusz.dziedzic@gmail.com> wrote:
+> 2014-02-19 1:33 GMT+01:00 Luis R. Rodriguez <mcgrof@do-not-panic.com>:
+>> On Wed, Feb 12, 2014 at 9:43 AM, Janusz Dziedzic
+>> <janusz.dziedzic@tieto.com> wrote:
+>>> Handle AUTO bandwidth setting in db2rd.
+>>> Don't add NL80211_ATTR_FREQ_RANGE_MAX_BW attribute
+>>> in case of AUTO bw calculation.
+>>>
+>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>> Please elaborate more on this. Who deals with the automatic math on
+>> the bandwidth?
+>>
+> cfg80211,
+>
+> Please check patch:
+> cfg80211: regulatory introduce maximum bandwidth calculation
 
-These patches aim at reducing host CPU load and
-thus improve performance on low-end systems.
+OK, so we don't send the max bandwidth attribute now, what about
+support for older kernels?
 
-In my setup I get a relative improvement of
-100mbps for both UDP Tx and Rx.
-
-               Tx ----->
-laptop:eth---eth:AP135:ath10k---ath10k:laptop
-               <----- Rx
-
-
-v2:
- * improve comments/commit messages
- * fix unbalanced locking
- * fix var naming (s/err/ret)
- * fix sparse/checkpatch/buildbot warnings
- * remove code that didn't belong here
- * split batch tx/rx into 2 patches
-   (+ath10k: reduce htt tx/rx spinlock overhead)
-
-v3:
- * just a resend (due to my mail-server issues the
-   other day not all of the v2 patches had been
-   sent out)
-
-Michal Kazior (8):
-  ath10k: remove DMA mapping wrappers
-  ath10k: remove is_aborted from skb_cb
-  ath10k: replace send_head() with tx_sg()
-  ath10k: bypass htc for htt tx path
-  ath10k: batch htt tx/rx completions
-  ath10k: reduce htt tx/rx spinlock overhead
-  ath10k: remove pci completion list
-  ath10k: minimize coherent dma accesses
-
- drivers/net/wireless/ath/ath10k/ce.c     |  16 +-
- drivers/net/wireless/ath/ath10k/ce.h     |   9 +-
- drivers/net/wireless/ath/ath10k/core.h   |  33 +--
- drivers/net/wireless/ath/ath10k/hif.h    |  25 +-
- drivers/net/wireless/ath/ath10k/htc.c    |  25 +-
- drivers/net/wireless/ath/ath10k/htt.h    |  17 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c | 147 ++++++++----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 205 ++++++++--------
- drivers/net/wireless/ath/ath10k/mac.c    |   4 +-
- drivers/net/wireless/ath/ath10k/pci.c    | 389 +++++++------------------------
- drivers/net/wireless/ath/ath10k/pci.h    |  28 ---
- drivers/net/wireless/ath/ath10k/txrx.c   |  15 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |  17 +-
- 13 files changed, 379 insertions(+), 551 deletions(-)
-
--- 
-1.8.5.3
-
+  Luis
