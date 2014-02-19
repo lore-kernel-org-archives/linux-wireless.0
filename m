@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:60220 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752456AbaBJKXq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbaBSK5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 05:23:46 -0500
-Received: by mail-ea0-f177.google.com with SMTP id m10so265450eaj.36
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 02:23:45 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+	Wed, 19 Feb 2014 05:57:08 -0500
+Message-ID: <1392807420.4733.11.camel@jlt4.sipsolutions.net> (sfid-20140219_115713_111685_18E23802)
+Subject: Re: [PATCH] cfg80211: bugfix in regulatory user hint process
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Cc: linux-wireless@vger.kernel.org,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH] ath10k: Set proper nss value for the peer
-Date: Mon, 10 Feb 2014 11:22:09 +0100
-Message-Id: <1392027729-8262-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140210_112356_292129_551392F8)
-To: unlisted-recipients:; (no To-header on input)
+	Inbal Hacohen <Inbal.Hacohen@intel.com>
+Date: Wed, 19 Feb 2014 11:57:00 +0100
+In-Reply-To: <1392190347-5570-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1392190347-5570-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was found during testing the nss calculation does not
-cover all corner cases. Station could request eq. only MCS8
-and MCS9 (nss=2 specific). Next num_rates=2 so the driver
-sets nss=(max((2+7)/8, 1))=1. Which is wrong. The in-driver
-calculation was introduced prior (commit ddcc347b70
-mac80211: fix rx_nss calculation for drivers with hw rc).
-Since it's fixed, use mac80211 provided value from now.
-End user will experience lower throuhputs than expected
-if the nss is wrongly calculated.
+On Wed, 2014-02-12 at 09:32 +0200, Emmanuel Grumbach wrote:
+> From: Inbal Hacohen <Inbal.Hacohen@intel.com>
+> 
+> After processing hint_user, we would want to schedule the
+> timeout work only if we are actually waiting to CRDA. This happens
+> when the status is not "IGNORE" nor "ALREADY_SET".
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 144b4d6..e6bf2e8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1149,7 +1149,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 			arg->peer_ht_rates.rates[n++] = i;
- 
- 	arg->peer_ht_rates.num_rates = n;
--	arg->peer_num_spatial_streams = max((n+7) / 8, 1);
-+	arg->peer_num_spatial_streams = sta->rx_nss;
- 
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
- 		   arg->addr,
--- 
-1.7.9.5
+johannes
 
