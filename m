@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10851 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbaBQRin (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40101 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292AbaBSW7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 12:38:43 -0500
-Message-ID: <53024920.8010104@broadcom.com> (sfid-20140217_183846_323522_E17D0DAD)
-Date: Mon, 17 Feb 2014 18:38:40 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 19 Feb 2014 17:59:08 -0500
+Received: by mail-wi0-f172.google.com with SMTP id e4so5275088wiv.17
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:59:07 -0800 (PST)
+Message-ID: <53053735.9020305@gmail.com> (sfid-20140219_235913_186029_0DACAE95)
+Date: Wed, 19 Feb 2014 22:59:01 +0000
+From: Malcolm Priestley <tvboxspy@gmail.com>
 MIME-Version: 1.0
-To: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
-CC: Samuel Ortiz <sameo@linux.intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	<frankyl@broadcom.com>
-Subject: Re: brcmfmac NVRAM files
-References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE> <530248DD.1050408@broadcom.com>
-In-Reply-To: <530248DD.1050408@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Joe Perches <joe@perches.com>
+CC: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
+References: <1392846993.20211.15.camel@canaries64-MCP7A>	 <1392848134.24844.16.camel@joe-AO722> <5305304B.5050004@gmail.com> <1392849119.24844.17.camel@joe-AO722>
+In-Reply-To: <1392849119.24844.17.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/14 18:37, Arend van Spriel wrote:
-> On 02/17/14 17:52, Bernd Wagener wrote:
->> Am 17.02.2014 17:33, schrieb Samuel Ortiz:
->>> On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
->>>> Hi Arend,
->>>>
->>>> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
->>>> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
->>>> file, but I could not find either a template on linux-firmware or any
->>>> kind of documentation about it.
->>>>
->>>> How do distro handle that ? Are they expected to build their own, or is
->>>> it completely OEM pecific ?
->>> Adding Franky to the Cc list.
+On 19/02/14 22:31, Joe Perches wrote:
+> On Wed, 2014-02-19 at 22:29 +0000, Malcolm Priestley wrote:
+>> On 19/02/14 22:15, Joe Perches wrote:
+>>> On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
+>>>> Replace with enum
+>>>> assign as u8 type.
+>>> []
+>>>> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+>>> []
+>>>> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
+>>>>    	struct sk_buff *pPacket;
+>>>>    	struct urb *pUrb;
+>>>>    	unsigned int uBufLen;
+>>>> -	CONTEXT_TYPE Type;
+>>>> +	u8 type;
 >>>
->>> Cheers,
->>> Samuel.
+>>> This doesn't really save any space in the struct.
+>>> You might move it immediately before or after bBoolInUse.
 >>>
->> Hi Samuel,
->> I had the same proble with a wandboard here and I guess it's a bug. In
->> /lib/firmware/brcm are all reqired *.bin files, but no *.txt file. On
->> www.wandboard.or I found a SDK-Kit with brcmfmac4329-sdio.txt, copied
->> the file and then the wlan was running.
->> The *.txt are simply forgotten to copy to the firmware directory.
->> No idea how to fix this.
+>>>>    	struct ethhdr sEthHeader;
+>>>>    	void *Next;
+>>>>    	bool bBoolInUse;
+>>>
+>>>
+>> No, but there are dead members in the structure that need removing.
+>>
+>> sEthHeader and Next are dead
 >
-> Hi Bernd,
+> Then it'll all work out well in the end...
 >
-> The hint to solve this is found on wireless.kernel.org [1] and the
-> answer is as Samuel suspects. This file is very board specific so OEMs
-> manufacturing/selling the board should provide it either upon request or
-> through some distribution like a SDK. Because of the nature of the file
-> we do not put it on linux-firmware although people like yourself can get
-> lucky trying ;-)
+Oh sorry sEthHeader isn't dead, but will go dead in the future under 
+mac80211.
 
-forgot:
-
-[1] http://wireless.kernel.org/en/users/Drivers/brcm80211
-
-> Regards,
-> Arend
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+I'll do a patch to reorder the structure.
 
