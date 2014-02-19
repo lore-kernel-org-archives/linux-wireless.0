@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59039 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbaB1Soa (ORCPT
+Received: from smtprelay0066.hostedemail.com ([216.40.44.66]:47371 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753060AbaBSWPg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 13:44:30 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21264.55526.187330.480735@gargle.gargle.HOWL> (sfid-20140228_194433_978245_2927B9DF)
-Date: Sat, 1 Mar 2014 00:13:50 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	c_manoha@qca.qualcomm.com
-Subject: Re: [PATCH 1/2] ath9k_hw: toggle weak signal detection in AP mode on older chipsets
-In-Reply-To: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
-References: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
+	Wed, 19 Feb 2014 17:15:36 -0500
+Message-ID: <1392848134.24844.16.camel@joe-AO722> (sfid-20140219_231545_389043_1BF2B3FE)
+Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
+From: Joe Perches <joe@perches.com>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 14:15:34 -0800
+In-Reply-To: <1392846993.20211.15.camel@canaries64-MCP7A>
+References: <1392846993.20211.15.camel@canaries64-MCP7A>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> -	if (ah->opmode != NL80211_IFTYPE_AP &&
-> -	    aniState->ofdmWeakSigDetect != weak_sig) {
-> -		ath9k_hw_ani_control(ah,
-> -				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
-> -				     entry_ofdm->ofdm_weak_signal_on);
-> -	}
-> +	else if (AR_SREV_9300_20_OR_LATER(ah) &&
-> +		 ah->opmode != NL80211_IFTYPE_STATION)
-> +		weak_sig = true;
-> +
-> +	if (aniState->ofdmWeakSigDetect != weak_sig)
-> +		ath9k_hw_ani_control(ah, ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
-> +				     weak_sig);
+On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
+> Replace with enum
+> assign as u8 type.
+[]
+> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+[]
+> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
+>  	struct sk_buff *pPacket;
+>  	struct urb *pUrb;
+>  	unsigned int uBufLen;
+> -	CONTEXT_TYPE Type;
+> +	u8 type;
 
-Any reason why this has been changed to disregard the WS-DET parameter from
-ofdm_level_table[] ?
+This doesn't really save any space in the struct.
+You might move it immediately before or after bBoolInUse.
 
-Sujith
+>  	struct ethhdr sEthHeader;
+>  	void *Next;
+>  	bool bBoolInUse;
+
+
