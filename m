@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:59819 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528AbaBCUjl (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:63383 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbaBSAKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:39:41 -0500
-Received: by mail-ee0-f41.google.com with SMTP id e51so1765561eek.28
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:39:40 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 8/8] iwlwifi: mvm: don't allow A band if SKU forbids it
-Date: Mon,  3 Feb 2014 22:39:22 +0200
-Message-Id: <1391459962-7381-8-git-send-email-egrumbach@gmail.com> (sfid-20140203_214002_254014_AACE1C31)
-In-Reply-To: <52EFFCE8.6070505@gmail.com>
-References: <52EFFCE8.6070505@gmail.com>
+	Tue, 18 Feb 2014 19:10:17 -0500
+Received: by mail-pb0-f53.google.com with SMTP id md12so17438770pbc.12
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:10:16 -0800 (PST)
+Date: Tue, 18 Feb 2014 16:10:12 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH v3 5/6] cfg80211: Enable GO operation on indoor channels
+Message-ID: <20140219001010.GE14296@garbanzo.do-not-panic.com> (sfid-20140219_011022_260640_5D0F8D25)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-6-git-send-email-ilan.peer@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390818118-27261-6-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Jan 27, 2014 at 12:21:57PM +0200, Ilan Peer wrote:
+> Allow GO operation on a channel marked with IEEE80211_CHAN_INDOOR_ONLY
+> iff there is a user hint indicating that the platform is operating in
+> an indoor environment, i.e., the platform is a printer or media center
+> device.
+> 
+> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+> ---
+>  net/wireless/chan.c |    6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index 87a9d0e..4ae3cd0 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -611,14 +611,20 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+>   * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+>   * associated to an AP on the same channel or on the same UNII band
+>   * (assuming that the AP is an authorized master).
+> + * In addition allow the GO to operate on a channel on which indoor operation is
+> + * allowed, iff we are currently operating in an indoor environment.
+>   */
+>  static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+>  					struct ieee80211_channel *chan)
+>  {
+>  	struct wireless_dev *wdev_iter;
+> +	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
+>  
+>  	ASSERT_RTNL();
+>  
+> +	if (regulatory_ir_allowed(wiphy, chan))
+> +		return true;
+> +
+>  	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+>  		return false;
 
-The driver wasn't reading the NVM properly. While this
-didn't lead to any issue until now, it seems that there
-is an old version of the NVM in the wild.
-In this version, the A band channels appear to be valid
-but the SKU capabilities (another field of the NVM) says
-that A band isn't supported at all.
-With this specific version of the NVM, the driver would
-think that A band is supported while the HW / firmware
-don't. This leads to asserts.
+Looks good.
 
-Cc: <stable@vger.kernel.org> [3.10+]
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index f06f4cb..725e954 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -182,6 +182,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 
- 	for (ch_idx = 0; ch_idx < IWL_NUM_CHANNELS; ch_idx++) {
- 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
-+
-+		if (ch_idx >= NUM_2GHZ_CHANNELS &&
-+		    !data->sku_cap_band_52GHz_enable)
-+			ch_flags &= ~NVM_CHANNEL_VALID;
-+
- 		if (!(ch_flags & NVM_CHANNEL_VALID)) {
- 			IWL_DEBUG_EEPROM(dev,
- 					 "Ch. %d Flags %x [%sGHz] - No traffic\n",
--- 
-1.7.9.5
-
+  Luis
