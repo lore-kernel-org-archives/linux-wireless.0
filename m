@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:55476 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbaB1Swh (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:57634 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbaBSWMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 13:52:37 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 19 Feb 2014 17:12:03 -0500
+Received: by mail-lb0-f178.google.com with SMTP id u14so749147lbd.37
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:12:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21264.56017.114049.511221@gargle.gargle.HOWL> (sfid-20140228_195241_145849_D665CC5C)
-Date: Sat, 1 Mar 2014 00:22:01 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k_hw: tweak noise immunity thresholds for older chipsets
-In-Reply-To: <1393610545-68025-2-git-send-email-nbd@openwrt.org>
-References: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
-	<1393610545-68025-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1392809288.4733.15.camel@jlt4.sipsolutions.net>
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1392807806.4733.14.camel@jlt4.sipsolutions.net> <CALhHN=rAT=FeEJcbDJEPG+-knGgMvV8Mt5eVvWRWD-1BgZYLpQ@mail.gmail.com>
+ <1392809288.4733.15.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 19 Feb 2014 14:11:40 -0800
+Message-ID: <CAB=NE6WDvxXGT21H5-D4H3tSJ_iZufp6X05_quPpoAeaoMkOog@mail.gmail.com> (sfid-20140219_231208_306165_33F16290)
+Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Older chipsets are more sensitive to high PHY error counts, and the
-> current noise immunity thresholds were based on tests run at QCA with
-> newer chipsets.
-> 
-> This patch brings back the values from the old ANI implementation for
-> old chipsets, and it also disables weak signal detection on an earlier
-> noise immunity level, to improve overall radio stability on affected
-> devices.
+On Wed, Feb 19, 2014 at 3:28 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Ah ok, thanks.
 
-Which devices ?
+Let me know if you merge this so I can apply and push the respective
+patch for CRDA. Not sure if you saw but as proposed this means this
+bumps the wireless-regdb format. Janusz, I see you submitted a
+respective patch for iw and CRDA but not one for wireless-regdb, we'll
+need one there in order to parse the new entries in db.txt.
 
-Since the old values were used in the old ANI implementation, I am not sure
-how just retrofitting them into the new ANI algorithm can improve things...
+John, this should mean we will need two releases for wireless-regdb
+moving on so that older versions of CRDA can read the new rules under
+the old format. Another option may be to have wireless-regdb spit out
+the file in two formats and we modify the new CRDA to jump to the new
+format section if it supports it. Otherwise I'm afraid we get stuck
+with the latest rules for old kernels forever, or we make a branch on
+wireless-regdb for the old format.
 
-Sujith
+Thoughts folks?
+
+  Luis
