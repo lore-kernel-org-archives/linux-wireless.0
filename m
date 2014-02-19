@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:26183 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbaBKMv7 (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:34672 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbaBSKAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 07:51:59 -0500
-Message-ID: <52FA1CE7.7040909@broadcom.com> (sfid-20140211_135202_636369_4500FD78)
-Date: Tue, 11 Feb 2014 13:51:51 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>,
-	Zhao Hongjiang <zhaohongjiang@huawei.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<zhousiyi@huawei.com>
-Subject: Re: Get multiple ip addresses by dhcp for wireless card
-References: <52F84DFD.4030602@huawei.com> <52F87608.808@candelatech.com> <52F88FEA.3000102@huawei.com> <52F92696.3030003@candelatech.com> <52F99ED7.3090304@huawei.com> <52F99FB8.8080001@candelatech.com>
-In-Reply-To: <52F99FB8.8080001@candelatech.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 19 Feb 2014 05:00:51 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH 4/7] mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
+Date: Wed, 19 Feb 2014 12:00:42 +0200
+Message-Id: <1392804045-11258-5-git-send-email-luca@coelho.fi> (sfid-20140219_110111_559046_4DE84649)
+In-Reply-To: <1392804045-11258-1-git-send-email-luca@coelho.fi>
+References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2014 04:57 AM, Ben Greear wrote:
-> On 02/10/2014 07:53 PM, Zhao Hongjiang wrote:
-> 
->>> What driver are you using?  I'm not sure anything other than ath9k
->>> can do this feature.  Ath5k probably works, and definitely worked
->>> at one time.  Ath10k supports this to some degree, and will have more
->>> support in the future.
->>>
->>> You typically have to disable hardware crypt to make this work.
->>>
->> I use bcm4329 chipset and it don't have "Disable HW encryption" options.
->> any suggestion for this is appreciated, thanks very much.
-> 
-> I doubt that chipset is going to support multiple stations.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-It definitely does not.
+Error codes returned by cfg80211_chandef_dfs_required() are ignored
+when trying to join an IBSS.  Fix this by printing an error and
+returning.
 
-Gr. AvS
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> Use ath9k and you should have more success.
-> 
-> Thanks,
-> Ben
-> 
->>
->>> Thanks,
->>> Ben
->>>
->>
-> 
-> 
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 9c84b75..b558468 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -283,6 +283,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+ 					    &chandef);
++	if (err < 0) {
++		sdata_info(sdata,
++			   "Failed to join IBSS, invalid chandef\n");
++		return;
++	}
+ 	if (err > 0) {
+ 		if (!ifibss->userspace_handles_dfs) {
+ 			sdata_info(sdata,
+-- 
+1.8.5.3
 
