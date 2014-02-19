@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10533 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbaBZMft (ORCPT
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:40005 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbaBSAPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 07:35:49 -0500
-Message-ID: <530DDFA1.4000102@broadcom.com> (sfid-20140226_133556_984020_00F16B99)
-Date: Wed, 26 Feb 2014 13:35:45 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 18 Feb 2014 19:15:07 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rp16so17534280pbb.20
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:15:07 -0800 (PST)
+Date: Tue, 18 Feb 2014 16:15:01 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
+ channels
+Message-ID: <20140219001458.GF14296@garbanzo.do-not-panic.com> (sfid-20140219_011512_791316_51C501CA)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
- device
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>						 <1393356639-19169-2-git-send-email-arend@broadcom.com>						 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>					 <530DAECD.8010405@broadcom.com>				 <1393406278.4133.4.camel@jlt4.sipsolutions.net>				 <530DB3BA.20106@broadcom.com>			 <1393407473.4133.5.camel@jlt4.sipsolutions.net>			 <530DC56E.9040202@broadcom.com>		 <1393413044.4133.6.camel@jlt4.sipsolutions.net>		 <530DD131.50205@broadcom.com>	 <1393415288.4133.7.camel@jlt4.sipsolutions.net>	 <530DDB91.3070807@broadcom.com> <1393417325.4133.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1393417325.4133.8.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 01:22 PM, Johannes Berg wrote:
-> On Wed, 2014-02-26 at 13:18 +0100, Arend van Spriel wrote:
+On Mon, Jan 27, 2014 at 12:21:58PM +0200, Ilan Peer wrote:
+> Allow active scanning and frame injection on channels marked with
+> IEEE80211_CHAN_NO_IR iff the channel is also marked with
+> IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
+> operates in an indoor environment.
 > 
->> Feeling sad :-( but thanks for checking. Clearly need to look into this
->> some more. John, can you please drop this one.
-> 
-> I think you probably still want to drop the other sleep?
+> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 
-Yeah. That one is pretty useless anyway given that it is under
-rtnl_lock. Just want to check that it works when I remove the sleep
-between cfg80211_disconnected() and unregister_netdev() as well.
+I don't see why being indoor should allow to override the NO-IR
+flag. I do see however why being indoor should enable to IR if
+you are IR if you have the indoor flag. Enabling to IR if you are
+indoor for all NO-IR channels is... pretty permissive I do not
+see the correlation.
 
-Gr. AvS
-
+  Luis
