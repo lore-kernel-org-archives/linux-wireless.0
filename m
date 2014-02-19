@@ -1,95 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:48101 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaBZUiI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11283 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbaBSPQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 15:38:08 -0500
-Received: by mail-pd0-f182.google.com with SMTP id g10so368779pdj.27
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 12:38:08 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v3] cfg80211: processing regulatory requests on netdev notifier
-Date: Wed, 26 Feb 2014 12:38:00 -0800
-Message-Id: <1393447080-9783-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140226_213813_457661_517EEE15)
+	Wed, 19 Feb 2014 10:16:03 -0500
+From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <jouni@qca.qualcomm.com>, <c_ppotte@qti.qualcomm.com>,
+	<djindal@qti.qualcomm.com>, <usdutt@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: Pass TDLS peer capability information in tdls_mgmt
+Date: Wed, 19 Feb 2014 20:45:52 +0530
+Message-ID: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20140219_161608_023983_BEACD75F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a trigger to review any pending regulatory
-requests whenever an 802.11 device interface is brought
-down or up. We use this as an opportunistic trigger
-for checking the regulatory work queues as otherwise
-they they're only checked upon an initial regulatory
-request or when beacon hints are found.
+While framing the TDLS Setup Confirmation frame, the driver needs to
+know if the TDLS peer is VHT/HT/WMM capable and thus shall construct
+the VHT/HT operation / WMM parameter elements accordingly. Supplicant
+determines if the TDLS peer is VHT/HT/WMM capable based on the
+presence of the respective IEs in the received TDLS Setup Response frame.
 
-This opportunistic mechanism can be used to trigger
-kicking the queues regulatory queues at any time from
-userspace without having to change the regulatory state.
+The host driver should not need to parse the received TDLS Response
+frame and thus, should be able to rely on the supplicant to indicate
+the capability of the peer through additional flags while transmitting
+the TDLS Setup Confirmation frame through tdls_mgmt operations.
 
-A timer just waiting upon init is not that appropriate
-as when it should be triggered will depend on systems,
-a much better approach is to use and add opportunistic
-triggers. The interface coming up is typically a good
-indicator that filesystems have been mounted since
-firmware is required for some devices.
-
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
 ---
- net/wireless/core.c | 2 ++
- net/wireless/reg.c  | 5 +++++
- net/wireless/reg.h  | 1 +
- 3 files changed, 8 insertions(+)
+ drivers/net/wireless/mwifiex/cfg80211.c |  4 ++--
+ include/net/cfg80211.h                  |  3 ++-
+ include/uapi/linux/nl80211.h            | 21 +++++++++++++++++++++
+ net/wireless/nl80211.c                  |  7 ++++++-
+ net/wireless/rdev-ops.h                 |  9 ++++++---
+ net/wireless/trace.h                    | 12 ++++++++----
+ 6 files changed, 45 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 276cf93..7110631 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -812,6 +812,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
- 		break;
- 	case NETDEV_REGISTER:
-+		reg_process_pending_work();
- 		/*
- 		 * NB: cannot take rdev->mtx here because this may be
- 		 * called within code protected by it when interfaces
-@@ -874,6 +875,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		wake_up(&rdev->dev_wait);
- 		break;
- 	case NETDEV_UP:
-+		reg_process_pending_work();
- 		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
- 		wdev_lock(wdev);
- 		switch (wdev->iftype) {
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7203b74..b358856 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -192,6 +192,11 @@ static DECLARE_WORK(reg_work, reg_todo);
- static void reg_timeout_work(struct work_struct *work);
- static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 436ba43..6948a97 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2600,8 +2600,8 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
+ static int
+ mwifiex_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			   u8 *peer, u8 action_code, u8 dialog_token,
+-			   u16 status_code, const u8 *extra_ies,
+-			   size_t extra_ies_len)
++			   u16 status_code, u32 peer_capability,
++			   const u8 *extra_ies, size_t extra_ies_len)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	int ret;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f90554..c89a5b5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2465,7 +2465,8 @@ struct cfg80211_ops {
  
-+void reg_process_pending_work(void)
-+{
-+	schedule_work(&reg_work);
-+}
+ 	int	(*tdls_mgmt)(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 *peer, u8 action_code,  u8 dialog_token,
+-			     u16 status_code, const u8 *buf, size_t len);
++			     u16 status_code, u32 peer_capability,
++			     const u8 *buf, size_t len);
+ 	int	(*tdls_oper)(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 *peer, enum nl80211_tdls_operation oper);
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a12e6ca..3465405 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1575,6 +1575,9 @@ enum nl80211_commands {
+  *	advertise values that cannot always be met. In such cases, an attempt
+  *	to add a new station entry with @NL80211_CMD_NEW_STATION may fail.
+  *
++ * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
++ *	As specified in the &enum nl80211_tdls_peer_capability.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1908,6 +1911,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MAX_AP_ASSOC_STA,
+ 
++	NL80211_ATTR_TDLS_PEER_CAPABILITY,
 +
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 6,
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 37c180d..51912b3 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -37,6 +37,7 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
- 				   const struct ieee80211_reg_rule *rule);
+ 	/* add attributes here, update the policy in nl80211.c */
  
- bool reg_last_request_cell_base(void);
-+void reg_process_pending_work(void);
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4079,4 +4084,20 @@ struct nl80211_vendor_cmd_info {
+ 	__u32 subcmd;
+ };
  
- /**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
++/**
++ * enum nl80211_tdls_peer_capability - TDLS peer flags.
++ *
++ * Used by tdls_mgmt() to determine which conditional elements need
++ * to be added to TDLS Setup frames. 
++ *
++ * @NL80211_TDLS_PEER_HT: TDLS peer is HT capable.
++ * @NL80211_TDLS_PEER_VHT: TDLS peer is VHT capable.
++ * @NL80211_TDLS_PEER_WMM: TDLS peer is WMM capable.
++ */
++enum nl80211_tdls_peer_capability {
++	NL80211_TDLS_PEER_HT = 1<<0,
++	NL80211_TDLS_PEER_VHT = 1<<1,
++	NL80211_TDLS_PEER_WMM = 1<<2,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8e6b6a2..8114c11 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -384,6 +384,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
+ 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
++	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -7269,6 +7270,7 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	u8 action_code, dialog_token;
++	u32 peer_capability = 0;
+ 	u16 status_code;
+ 	u8 *peer;
+ 
+@@ -7287,9 +7289,12 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	action_code = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_ACTION]);
+ 	status_code = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
+ 	dialog_token = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_DIALOG_TOKEN]);
++	if (info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY])
++		peer_capability =
++			nla_get_u32(info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY]);
+ 
+ 	return rdev_tdls_mgmt(rdev, dev, peer, action_code,
+-			      dialog_token, status_code,
++			      dialog_token, status_code, peer_capability,
+ 			      nla_data(info->attrs[NL80211_ATTR_IE]),
+ 			      nla_len(info->attrs[NL80211_ATTR_IE]));
+ }
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index c8e2259..74d97d3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -769,13 +769,16 @@ static inline int rdev_set_rekey_data(struct cfg80211_registered_device *rdev,
+ static inline int rdev_tdls_mgmt(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *dev, u8 *peer,
+ 				 u8 action_code, u8 dialog_token,
+-				 u16 status_code, const u8 *buf, size_t len)
++				 u16 status_code, u32 peer_capability,
++				 const u8 *buf, size_t len)
+ {
+ 	int ret;
+ 	trace_rdev_tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
+-			     dialog_token, status_code, buf, len);
++			     dialog_token, status_code, peer_capability,
++			     buf, len);
+ 	ret = rdev->ops->tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
+-				   dialog_token, status_code, buf, len);
++				   dialog_token, status_code, peer_capability,
++				   buf, len);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 5eaeed5..aabccf1 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1468,9 +1468,10 @@ TRACE_EVENT(rdev_sched_scan_start,
+ TRACE_EVENT(rdev_tdls_mgmt,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 u8 *peer, u8 action_code, u8 dialog_token,
+-		 u16 status_code, const u8 *buf, size_t len),
++		 u16 status_code, u32 peer_capability,
++		 const u8 *buf, size_t len),
+ 	TP_ARGS(wiphy, netdev, peer, action_code, dialog_token, status_code,
+-		buf, len),
++		peer_capability, buf, len),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+@@ -1478,6 +1479,7 @@ TRACE_EVENT(rdev_tdls_mgmt,
+ 		__field(u8, action_code)
+ 		__field(u8, dialog_token)
+ 		__field(u16, status_code)
++		__field(u32, peer_capability)
+ 		__dynamic_array(u8, buf, len)
+ 	),
+ 	TP_fast_assign(
+@@ -1487,13 +1489,15 @@ TRACE_EVENT(rdev_tdls_mgmt,
+ 		__entry->action_code = action_code;
+ 		__entry->dialog_token = dialog_token;
+ 		__entry->status_code = status_code;
++		__entry->peer_capability = peer_capability;
+ 		memcpy(__get_dynamic_array(buf), buf, len);
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT ", action_code: %u, "
+-		  "dialog_token: %u, status_code: %u, buf: %#.2x ",
++		  "dialog_token: %u, status_code: %u, peer_capability: %u buf: %#.2x ",
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
+ 		  __entry->action_code, __entry->dialog_token,
+-		  __entry->status_code, ((u8 *)__get_dynamic_array(buf))[0])
++		  __entry->status_code, __entry->peer_capability,
++		  ((u8 *)__get_dynamic_array(buf))[0])
+ );
+ 
+ TRACE_EVENT(rdev_dump_survey,
 -- 
-1.8.5.3
+1.8.2.1
 
