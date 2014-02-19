@@ -1,58 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38345 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbaBDLLy (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:51396 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbaBSVyw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:11:54 -0500
-Message-ID: <1391512311.26522.75.camel@porter.coelho.fi> (sfid-20140204_121157_736415_60DC7D22)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 04 Feb 2014 13:11:51 +0200
-In-Reply-To: <1391509992.4134.1.camel@jlt4.sipsolutions.net>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
-	 <1391508433.26522.61.camel@porter.coelho.fi>
-	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
+	Wed, 19 Feb 2014 16:54:52 -0500
+Received: by mail-wi0-f174.google.com with SMTP id f8so5225994wiw.13
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 13:54:50 -0800 (PST)
+Message-ID: <1392846885.20211.13.camel@canaries64-MCP7A> (sfid-20140219_225455_501554_326144A3)
+Subject: [PATCH  3/4] staging: vt6656: clean up s_nsBulkOutIoCompleteWrite.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 21:54:45 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 11:33 +0100, Johannes Berg wrote:
-> On Tue, 2014-02-04 at 12:07 +0200, Luca Coelho wrote:
-> 
-> > > Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
-> > > possible (userspace CSA) or cause the switching interface to disconnect,
-> > > rather than *others*??
-> > 
-> > It depends.  And this logic is too complicated to stay in the kernel,
-> > IMHO.  If we are in a GO-follows-STA scenario, we want to disconnect the
-> > GO.  Now, if you have an AP (with tons of STAs connected to it) and a
-> > P2P client gets a CSA for whatever reason, do we really want to stop the
-> > AP?
-> 
-> Well, what I was describing was really only the default policy if
-> userspace didn't do anything useful, which IMHO should really just be:
-> 
->  * client receives CSA - disconnect if it can't be done
->  * AP/GO wants CSA - refuse if it can't be done, let userspace sort it
-> out
-> 
-> In the first case, userspace still has the time between receiving the
-> CSA and actually acting on it to make another decision.
+Remove commented out, white space and camel case.
 
-Right, this is okay, but the point is, what happens to the *other*
-interfaces?
+Camel case changes
+pContext -> context
+pDevice -> priv
+ContextType -> context_type
+ulBufLen -> buf_len
 
-What does "it can't be done" mean for the client? If there's a GO in the
-same context and no free contexts for the switch, do we simply
-disconnect the client (and leave the GO hanging in the same channel)? We
-should probably tell the userspace and let it decide.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 88 ++++++++++++++++++++--------------------
+ 1 file changed, 43 insertions(+), 45 deletions(-)
 
---
-Luca.
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 61d8220..0ae5d20 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -607,14 +607,14 @@ int PIPEnsSendBulkOut(struct vnt_private *pDevice,
+ 
+ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ {
+-	struct vnt_usb_send_context *pContext =
++	struct vnt_usb_send_context *context =
+ 			(struct vnt_usb_send_context *)urb->context;
+-	struct vnt_private *pDevice = pContext->pDevice;
+-	CONTEXT_TYPE ContextType = pContext->Type;
+-	unsigned long ulBufLen = pContext->uBufLen;
++	struct vnt_private *priv = context->pDevice;
++	CONTEXT_TYPE context_type = context->Type;
++	unsigned long buf_len = context->uBufLen;
+ 	int status;
+ 
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
++	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
+ 
+ 	switch (urb->status) {
+ 	case 0:
+@@ -623,58 +623,56 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 	case -ECONNRESET:
+ 	case -ENOENT:
+ 	case -ESHUTDOWN:
+-		pContext->bBoolInUse = false;
++		context->bBoolInUse = false;
+ 		return;
+ 	default:
+ 		break;
+ 	}
+ 
+-    if (!netif_device_present(pDevice->dev))
+-	    return;
++	if (!netif_device_present(priv->dev))
++		return;
+ 
+-   //
+-    // Perform various IRP, URB, and buffer 'sanity checks'
+-    //
+ 
+-    status = urb->status;
++	status = urb->status;
+ 
+-    if(status == STATUS_SUCCESS) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Write %d bytes\n",(int)ulBufLen);
+-        pDevice->ulBulkOutBytesWrite += ulBufLen;
+-        pDevice->ulBulkOutContCRCError = 0;
+-    } else {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"BULK Out failed %d\n", status);
+-        pDevice->ulBulkOutError++;
+-    }
++	if (status == STATUS_SUCCESS) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++			"Write %d bytes\n", (int)buf_len);
++		priv->ulBulkOutBytesWrite += buf_len;
++		priv->ulBulkOutContCRCError = 0;
++	} else {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				"BULK Out failed %d\n", status);
++		priv->ulBulkOutError++;
++	}
+ 
+-//    pDevice->ulCheckForHangCount = 0;
+-//    pDevice->pPendingBulkOutContext = NULL;
+ 
+-    if ( CONTEXT_DATA_PACKET == ContextType ) {
+-        // Indicate to the protocol the status of the sent packet and return
+-        // ownership of the packet.
+-	    if (pContext->pPacket != NULL) {
+-	        dev_kfree_skb_irq(pContext->pPacket);
+-	        pContext->pPacket = NULL;
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"tx  %d bytes\n",(int)ulBufLen);
+-	    }
++	if (CONTEXT_DATA_PACKET == context_type) {
++		if (context->pPacket != NULL) {
++			dev_kfree_skb_irq(context->pPacket);
++			context->pPacket = NULL;
++			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				"tx  %d bytes\n", (int)buf_len);
++		}
+ 
+-        pDevice->dev->trans_start = jiffies;
++		priv->dev->trans_start = jiffies;
+ 
+-        if (status == STATUS_SUCCESS) {
+-            pDevice->packetsSent++;
+-        }
+-        else {
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Send USB error! [%08xh]\n", status);
+-            pDevice->packetsSentDropped++;
+-        }
++		if (status == STATUS_SUCCESS) {
++			priv->packetsSent++;
++		} else {
++			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				"Send USB error! [%08xh]\n", status);
++			priv->packetsSentDropped++;
++		}
+ 
+-    }
+-    if (pDevice->bLinkPass == true) {
+-        if (netif_queue_stopped(pDevice->dev))
+-            netif_wake_queue(pDevice->dev);
+-    }
+-    pContext->bBoolInUse = false;
++	}
+ 
+-    return;
++	if (priv->bLinkPass == true) {
++		if (netif_queue_stopped(priv->dev))
++			netif_wake_queue(priv->dev);
++	}
++
++	context->bBoolInUse = false;
++
++	return;
+ }
+-- 
+1.9.rc1
+
 
