@@ -1,99 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:47659 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbaBCU7Z (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:61102 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751245AbaBSL1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:25 -0500
-Received: by mail-ea0-f178.google.com with SMTP id a15so3936091eae.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:24 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 41/62] iwlwifi: mvm: add D0i3 ref/unref for scan
-Date: Mon,  3 Feb 2014 22:57:47 +0200
-Message-Id: <1391461088-8082-41-git-send-email-egrumbach@gmail.com> (sfid-20140203_220007_166232_923E66C7)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Wed, 19 Feb 2014 06:27:48 -0500
+Received: by mail-la0-f44.google.com with SMTP id hr13so193187lab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 03:27:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1392807806.4733.14.camel@jlt4.sipsolutions.net>
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1392807806.4733.14.camel@jlt4.sipsolutions.net>
+Date: Wed, 19 Feb 2014 12:27:47 +0100
+Message-ID: <CALhHN=rAT=FeEJcbDJEPG+-knGgMvV8Mt5eVvWRWD-1BgZYLpQ@mail.gmail.com> (sfid-20140219_122752_752636_913B6795)
+Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 19 February 2014 12:03, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-02-12 at 19:54 +0100, Janusz Dziedzic wrote:
+>
+>> -#define REG_RULE(start, end, bw, gain, eirp, reg_flags) \
+>> -{                                                    \
+>> -     .freq_range.start_freq_khz = MHZ_TO_KHZ(start), \
+>> -     .freq_range.end_freq_khz = MHZ_TO_KHZ(end),     \
+>> -     .freq_range.max_bandwidth_khz = MHZ_TO_KHZ(bw), \
+>> -     .power_rule.max_antenna_gain = DBI_TO_MBI(gain),\
+>> -     .power_rule.max_eirp = DBM_TO_MBM(eirp),        \
+>> -     .flags = reg_flags,                             \
+>> +#define REG_RULE_EXT(start, end, bw, gain, eirp, dfs_cac, reg_flags) \
+>> +{                                                                    \
+>> +     .freq_range.start_freq_khz = MHZ_TO_KHZ(start),                 \
+>> +     .freq_range.end_freq_khz = MHZ_TO_KHZ(end),                     \
+>> +     .freq_range.max_bandwidth_khz = MHZ_TO_KHZ(bw),                 \
+>> +     .power_rule.max_antenna_gain = DBI_TO_MBI(gain),                \
+>> +     .power_rule.max_eirp = DBM_TO_MBM(eirp),                        \
+>> +     .flags = reg_flags,                                             \
+>> +     .dfs_cac_ms = dfs_cac,                                          \
+>>  }
+>>
+>> +#define REG_RULE(start, end, bw, gain, eirp, reg_flags) \
+>> +     REG_RULE_EXT(start, end, bw, gain, eirp, 0, reg_flags)
+>
+> I don't see any users of this, is that really useful?
+>
 
-Take a reference when starting to scan and release it on completion.
-Note that if the scan is cancelled/aborted, a completion will still be
-sent up.
+genregdb.awk using this when internal regdb is used.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   12 +++++++++---
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |    1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c     |    3 +++
- 3 files changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index e121685..64d9efd 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1442,11 +1442,17 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	if (mvm->scan_status == IWL_MVM_SCAN_NONE)
--		ret = iwl_mvm_scan_request(mvm, vif, req);
--	else
-+	if (mvm->scan_status != IWL_MVM_SCAN_NONE) {
- 		ret = -EBUSY;
-+		goto out;
-+	}
- 
-+	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
-+
-+	ret = iwl_mvm_scan_request(mvm, vif, req);
-+	if (ret)
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
-+out:
- 	mutex_unlock(&mvm->mutex);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 9ffafe8..3a3e9f1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -241,6 +241,7 @@ enum iwl_mvm_smps_type_request {
- 
- enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_UCODE_DOWN,
-+	IWL_MVM_REF_SCAN,
- 
- 	IWL_MVM_REF_COUNT,
- };
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 6c5c173..8477902 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -407,6 +407,8 @@ int iwl_mvm_rx_scan_complete(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	mvm->scan_status = IWL_MVM_SCAN_NONE;
- 	ieee80211_scan_completed(mvm->hw, notif->status != SCAN_COMP_STATUS_OK);
- 
-+	iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
-+
- 	return 0;
- }
- 
-@@ -475,6 +477,7 @@ void iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
- 
- 	if (iwl_mvm_is_radio_killed(mvm)) {
- 		ieee80211_scan_completed(mvm->hw, true);
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 		mvm->scan_status = IWL_MVM_SCAN_NONE;
- 		return;
- 	}
--- 
-1.7.9.5
-
+BR
+Janusz
