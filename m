@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:55406 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705AbaBGPqc (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50397 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486AbaBSTsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 10:46:32 -0500
-Message-ID: <52F4FFD5.5070808@lwfinger.net> (sfid-20140207_164706_353229_A718F24F)
-Date: Fri, 07 Feb 2014 09:46:29 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 19 Feb 2014 14:48:08 -0500
+Message-ID: <53050A58.4000706@candelatech.com> (sfid-20140219_204812_024917_5887B064)
+Date: Wed, 19 Feb 2014 11:47:36 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Calvin Owens <jcalvinowens@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
- codes
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>	<1391675824.12789.3.camel@jlt4.sipsolutions.net> <87r47fkrsj.fsf@purkki.adurom.net>
-In-Reply-To: <87r47fkrsj.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: fix sta_rc_update for non-ap iftype
+References: <CA+BoTQmNdn3ELFRyiMwRE=nq5XukvSy2m7BNoqXnoz95JuDYOw@mail.gmail.com> <1392795187-2870-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1392795187-2870-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2014 06:53 AM, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Wed, 2014-02-05 at 19:44 -0600, Calvin Owens wrote:
->>> Create a function to return a descriptive string for each reason code,
->>> and print that instead of the numeric value in the kernel log. These
->>> codes are easily found on popular search engines, but one is generally
->>> not able to access the internet when dealing with wireless connectivity
->>> issues.
->>
->> I believe both iw and wpa_supplicant already have the reason code
->> printout, and if you're diagnosing connectivity issues then you're
->> probably using those anyway (e.g. iw event -t), so I don't really see
->> much point in adding this to the kernel?
->
-> FWIW I find this useful. When I have connection problems I rarely look
-> at wpasupplicant, mostly I'm so lazy that I just check from the kernel
-> log what's happening. Just my 0.02 EUR.
+On 02/18/2014 11:33 PM, Michal Kazior wrote:
+> The arsta structure wasn't initialized for
+> non-ap interfaces. This should fix related
+> warnings/crashes.
+> 
+> Reported-By: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> Ben, does this fix the lockdep splat for you?
 
-I would also find it useful. I assist with wireless problems on the openSUSE 
-Forum, and there we are lucky if we get dmesg output. When we do and it contains 
-a deauthentication reason, I always need to bring up a web page to interpret the 
-output. With this change, one step could be skipped.
+This does appear to fix it.
 
+Thanks,
+Ben
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
