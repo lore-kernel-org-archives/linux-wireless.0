@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57284 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139AbaBQRhg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735AbaBSOvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 12:37:36 -0500
-Message-ID: <530248DD.1050408@broadcom.com> (sfid-20140217_183741_439718_DAB9345D)
-Date: Mon, 17 Feb 2014 18:37:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
-CC: Samuel Ortiz <sameo@linux.intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	<frankyl@broadcom.com>
-Subject: Re: brcmfmac NVRAM files
-References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran> <53023E51.90202@Uni-Oldenburg.DE>
-In-Reply-To: <53023E51.90202@Uni-Oldenburg.DE>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 19 Feb 2014 09:51:47 -0500
+Message-ID: <1392821503.4733.26.camel@jlt4.sipsolutions.net> (sfid-20140219_155155_311360_299D6079)
+Subject: Re: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Feb 2014 15:51:43 +0100
+In-Reply-To: <20140219133546.GE1851@redhat.com>
+References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+	 <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
+	 <1392815649.4733.23.camel@jlt4.sipsolutions.net>
+	 <20140219133546.GE1851@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/14 17:52, Bernd Wagener wrote:
-> Am 17.02.2014 17:33, schrieb Samuel Ortiz:
->> On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
->>> Hi Arend,
->>>
->>> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
->>> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
->>> file, but I could not find either a template on linux-firmware or any
->>> kind of documentation about it.
->>>
->>> How do distro handle that ? Are they expected to build their own, or is
->>> it completely OEM pecific ?
->> Adding Franky to the Cc list.
->>
->> Cheers,
->> Samuel.
->>
-> Hi Samuel,
-> I had the same proble with a wandboard here and I guess it's a bug. In
-> /lib/firmware/brcm are all reqired *.bin files, but no *.txt file. On
-> www.wandboard.or I found a SDK-Kit with brcmfmac4329-sdio.txt, copied
-> the file and then the wlan was running.
-> The *.txt are simply forgotten to copy to the firmware directory.
-> No idea how to fix this.
+On Wed, 2014-02-19 at 14:35 +0100, Stanislaw Gruszka wrote:
 
-Hi Bernd,
+> > It ultimately makes no difference at all, it just makes this code more
+> > difficult to read and understand.
+> 
+> It make difference when queue length value is modified on different CPU
+> and read on different CPU. Without lock you can 'see' old length value
+> on CPU that run ieee80211_tx_h_multicast_ps_buf() for undefined
+> period of time (ok maybe not undefined on x86), and current oldest
+> frame can be not necessarily dropped.
 
-The hint to solve this is found on wireless.kernel.org [1] and the 
-answer is as Samuel suspects. This file is very board specific so OEMs 
-manufacturing/selling the board should provide it either upon request or 
-through some distribution like a SDK. Because of the nature of the file 
-we do not put it on linux-firmware although people like yourself can get 
-lucky trying ;-)
+I don't see how that can be true, since the modifications of the queue
+length are under spinlock with the implied memory barriers.
 
-Regards,
-Arend
+johannes
+
