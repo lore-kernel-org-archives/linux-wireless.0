@@ -1,51 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5469 "EHLO mx1.redhat.com"
+Received: from 0.mx.nanl.de ([217.115.11.12]:42019 "EHLO mail.nanl.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753891AbaBSPHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 10:07:15 -0500
-Date: Wed, 19 Feb 2014 16:09:39 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
-Message-ID: <20140219150937.GH1851@redhat.com> (sfid-20140219_160741_597590_41F2929B)
-References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
- <1392812916-13656-2-git-send-email-sgruszka@redhat.com>
- <1392815649.4733.23.camel@jlt4.sipsolutions.net>
- <20140219133546.GE1851@redhat.com>
- <1392821503.4733.26.camel@jlt4.sipsolutions.net>
+	id S1751606AbaBSMN2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Feb 2014 07:13:28 -0500
+Received: from mail-qc0-f174.google.com (mail-qc0-f174.google.com [209.85.216.174])
+	by mail.nanl.de (Postfix) with ESMTPSA id 7AAB246063
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 12:13:18 +0000 (UTC)
+Received: by mail-qc0-f174.google.com with SMTP id x13so272990qcv.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 04:13:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392821503.4733.26.camel@jlt4.sipsolutions.net>
+In-Reply-To: <20140219103717.GA3284@markyou.marvell.com>
+References: <20140219103717.GA3284@markyou.marvell.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Wed, 19 Feb 2014 13:12:56 +0100
+Message-ID: <CAOiHx==5geqrnqQyp6y_GoAZC0adWPzq8vXo1fPVA_t9Uhs-ww@mail.gmail.com> (sfid-20140219_131331_316637_DC9628C2)
+Subject: Re: [PATCH 1/3] mwl8k: Adding support to access BBP registers
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 03:51:43PM +0100, Johannes Berg wrote:
-> On Wed, 2014-02-19 at 14:35 +0100, Stanislaw Gruszka wrote:
-> 
-> > > It ultimately makes no difference at all, it just makes this code more
-> > > difficult to read and understand.
-> > 
-> > It make difference when queue length value is modified on different CPU
-> > and read on different CPU. Without lock you can 'see' old length value
-> > on CPU that run ieee80211_tx_h_multicast_ps_buf() for undefined
-> > period of time (ok maybe not undefined on x86), and current oldest
-> > frame can be not necessarily dropped.
-> 
-> I don't see how that can be true, since the modifications of the queue
-> length are under spinlock with the implied memory barriers.
+On Wed, Feb 19, 2014 at 11:37 AM, Yogesh Ashok Powar
+<yogeshp@marvell.com> wrote:
+> Adding AP firmware command to access BBP
+> regs. This will be used for retrieving
+> different counters CCA/RX needed for ACS
+>
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> ---
+>  drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 40 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index 4987c3f..159125e 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -2987,6 +2988,45 @@ static int mwl8k_cmd_set_pre_scan(struct ieee80211_hw *hw)
+>  }
+>
+>  /*
+> + * CMD_BBP_REG_ACCESS.
+> + */
+> +struct mwl8k_cmd_bbp_reg_access {
+> +       struct mwl8k_cmd_pkt header;
+> +       __le16 action;
+> +       __le16 offset;
+> +       u8 value;
+> +       u8 rsrv[3];
+> +} __packed;
+> +
+> +static int
+> +mwl8k_cmd_bbp_reg_access(struct ieee80211_hw *hw,
+> +                        u16 action,
+> +                        u16 offset,
+> +                        u8 *value)
+> +{
+> +       struct mwl8k_cmd_bbp_reg_access *cmd;
+> +       int rc;
+> +
+> +       cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+> +       if (cmd == NULL)
+> +               return -ENOMEM;
+> +
+> +       cmd->header.code = cpu_to_le16(MWL8K_CMD_BBP_REG_ACCESS);
+> +       cmd->header.length = cpu_to_le16(sizeof(*cmd));
+> +       cmd->action = cpu_to_le16(action);
+> +       cmd->offset = cpu_to_le16(offset);
+> +
+> +       rc = mwl8k_post_cmd(hw, &cmd->header);
+> +
+> +       if (!rc)
+> +               *value = cmd->value;
+> +       else
+> +               *value = 0;
+> +
+> +       return rc;
 
-On processor that read value there is no memory barrier. If you do:
+You don't free the allocated cmd anywhere, so you are leaking memory
+on every call.
 
-CPU1				CPU2
 
-				b = a;
-spin_lock(a_lock)
-a = 1;				...
-spin_unlock(a_lock)
-
-				b = a;
-
-There is nothing that guarantee that on CPU2 b will be 1.
-
-Stanislaw
+Regards
+Jonas
