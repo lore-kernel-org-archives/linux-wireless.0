@@ -1,209 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:42325 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864AbaBVQaJ convert rfc822-to-8bit (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:65096 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752239AbaBSOoT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 11:30:09 -0500
-Received: by mail-qc0-f174.google.com with SMTP id e16so408250qcx.33
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 08:30:08 -0800 (PST)
+	Wed, 19 Feb 2014 09:44:19 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"Spinadel, David" <david.spinadel@intel.com>
+Subject: RE: [PATCH v3 1/6] cfg80211: Add indoor only and GO concurrent
+ channel attributes
+Date: Wed, 19 Feb 2014 14:44:14 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033382369@HASMSX106.ger.corp.intel.com> (sfid-20140219_154423_044282_200C5EC0)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-2-git-send-email-ilan.peer@intel.com>
+ <20140218224950.GA14296@garbanzo.do-not-panic.com>
+In-Reply-To: <20140218224950.GA14296@garbanzo.do-not-panic.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <5308544D.4090507@rempel-privat.de>
-References: <3815E3D1-0BFD-480D-B2C4-3405B08D5C0D@ketell.com>
-	<5308544D.4090507@rempel-privat.de>
-Date: Sun, 23 Feb 2014 00:23:39 +0800
-Message-ID: <CALx5=V8t=ECpNXPO+v1TyHmireN6k1cTgqbm8GUPDDVMBprtHA@mail.gmail.com> (sfid-20140222_173015_435072_E58129DC)
-Subject: Re: Help with Intel 7260 on Debian Stable (wheezy)
-From: Matt Chen <mattsled@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Greg Ketell <greg@ketell.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doesn't the Answer of
-https://askubuntu.com/questions/331667/no-wireless-for-intel-corporation-7260-version-63
-answer your question ?
-Try to download
-http://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.11-rc3/backports-3.11-rc3-1.tar.bz2
-and follow the steps to build and install, reboot.
+Hi Luis,
 
-7260 is supported since kernel v3.10.
+Thanks for the comments.
 
-2014-02-22 15:39 GMT+08:00 Oleksij Rempel <linux@rempel-privat.de>:
-> Fallow this link:
->
-> https://askubuntu.com/questions/331667/no-wireless-for-intel-corporation-7260-version-63
->
-> Am 22.02.2014 02:50, schrieb Greg Ketell:
->> Hi folks,
->>
->> I’m trying to get the Intel 7260 working on Debian 7.4 (Kernel 3.2) running on a Giga-Byte GB-BXi5-4200.   The standard iwlwifi for wheezy doesn’t have support for the 7260 so I’ve installed the iwlwifi from debian-backports which lists that card as supported.  Unfortunately the card will not be recognized.
->>
->> # uname -a
->> Linux Brix1 3.2.0-4-amd64 #1 SMP Debian 3.2.54-2 x86_64 GNU/Linux
->>
->> # lspci -nnk
->> 00:00.0 Host bridge [0600]: Intel Corporation Haswell-ULT DRAM Controller [8086:0a04] (rev 09)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5000]
->> 00:02.0 VGA compatible controller [0300]: Intel Corporation Haswell-ULT Integrated Graphics Controller [8086:0a16] (rev 09)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:d000]
->> 00:03.0 Audio device [0403]: Intel Corporation Haswell-ULT HD Audio Controller [8086:0a0c] (rev 09)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5000]
->>       Kernel driver in use: snd_hda_intel
->> 00:14.0 USB controller [0c03]: Intel Corporation Lynx Point-LP USB xHCI HC [8086:9c31] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5004]
->>       Kernel driver in use: xhci_hcd
->> 00:16.0 Communication controller [0780]: Intel Corporation Lynx Point-LP HECI #0 [8086:9c3a] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
->> 00:1b.0 Audio device [0403]: Intel Corporation Lynx Point-LP HD Audio Controller [8086:9c20] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:fa50]
->>       Kernel driver in use: snd_hda_intel
->> 00:1c.0 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express Root Port 1 [8086:9c10] (rev e4)
->>       Kernel driver in use: pcieport
->> 00:1c.2 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express Root Port 3 [8086:9c14] (rev e4)
->>       Kernel driver in use: pcieport
->> 00:1c.3 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express Root Port 4 [8086:9c16] (rev e4)
->>       Kernel driver in use: pcieport
->> 00:1d.0 USB controller [0c03]: Intel Corporation Lynx Point-LP USB EHCI #1 [8086:9c26] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5004]
->>       Kernel driver in use: ehci_hcd
->> 00:1f.0 ISA bridge [0601]: Intel Corporation Lynx Point-LP LPC Controller [8086:9c43] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
->> 00:1f.2 SATA controller [0106]: Intel Corporation Lynx Point-LP SATA Controller 1 [AHCI mode] [8086:9c03] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:b002]
->>       Kernel driver in use: ahci
->> 00:1f.3 SMBus [0c05]: Intel Corporation Lynx Point-LP SMBus Controller [8086:9c22] (rev 04)
->>       Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
->> 02:00.0 Network controller [0280]: Intel Corporation Wireless 7260 [8086:08b1] (rev 73)
->>       Subsystem: Intel Corporation Dual Band Wireless-AC 7260 [8086:4070]
->> 03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 0c)
->>       Subsystem: Gigabyte Technology Co., Ltd Motherboard [1458:e000]
->>       Kernel driver in use: r8169
->>
->> root@Brix1:/home/gketell# modprobe -r iwlwifi
->> root@Brix1:/home/gketell# modprobe -vvv !$
->> modprobe -vvv iwlwifi
->> libkmod: DEBUG ../libkmod/libkmod-module.c:519 kmod_module_new_from_lookup: input alias=iwlwifi, normalized=iwlwifi
->> libkmod: DEBUG ../libkmod/libkmod-module.c:525 kmod_module_new_from_lookup: lookup modules.dep iwlwifi
->> libkmod: DEBUG ../libkmod/libkmod.c:542 kmod_search_moddep: use mmaped index 'modules.dep' modname=iwlwifi
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='iwlwifi' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f40de8d8680 key='iwlwifi'
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='mac80211' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='mac80211' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f40de8dc3c0 key='mac80211'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_depline: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='cfg80211' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='cfg80211' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f40de8dc530 key='cfg80211'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_depline: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='rfkill' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get module name='rfkill' found=(nil)
->> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f40de8dc650 key='rfkill'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_depline: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/rfkill/rfkill.ko
->> libkmod: DEBUG ../libkmod/libkmod-module.c:184 kmod_module_parse_depline: 3 dependencies for iwlwifi
->> libkmod: DEBUG ../libkmod/libkmod-module.c:546 kmod_module_new_from_lookup: lookup iwlwifi=0, list=0x7f40de8d84e0
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initstate: could not open '/sys/module/iwlwifi/initstate': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initstate: could not open '/sys/module/iwlwifi': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_pcsp mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_usb_audio mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=bt87x mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=cx88_alsa mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_atiixp_modem mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_intel8x0m mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_via82xx_modem mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=radeon mod->name=rfkill mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1220 kmod_module_probe_insert_module: Ignoring module 'rfkill': already loaded
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_pcsp mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_usb_audio mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=bt87x mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=cx88_alsa mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_atiixp_modem mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_intel8x0m mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_via82xx_modem mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=radeon mod->name=cfg80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initstate: could not open '/sys/module/cfg80211/initstate': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initstate: could not open '/sys/module/cfg80211': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='cfg80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='cfg80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko'
->> insmod /lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='cfg80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_pcsp mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_usb_audio mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=bt87x mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=cx88_alsa mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_atiixp_modem mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_intel8x0m mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_via82xx_modem mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=radeon mod->name=mac80211 mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initstate: could not open '/sys/module/mac80211/initstate': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initstate: could not open '/sys/module/mac80211': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='mac80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='mac80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko'
->> insmod /lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='mac80211' path='/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_pcsp mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_usb_audio mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=bt87x mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=cx88_alsa mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_atiixp_modem mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_intel8x0m mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=snd_via82xx_modem mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options: modname=radeon mod->name=iwlwifi mod->alias=(null)
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initstate: could not open '/sys/module/iwlwifi/initstate': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initstate: could not open '/sys/module/iwlwifi': No such file or directory
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='iwlwifi' path='/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='iwlwifi' path='/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko'
->> insmod /lib/modules/3.2.0-4-amd64/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko
->> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: name='iwlwifi' path='/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_module 0x7f40de8d8680 released
->> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f40de8d8680 key='iwlwifi'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_module 0x7f40de8dc650 released
->> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f40de8dc650 key='rfkill'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_module 0x7f40de8dc530 released
->> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f40de8dc530 key='cfg80211'
->> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_module 0x7f40de8dc3c0 released
->> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f40de8dc3c0 key='mac80211'
->> libkmod: INFO ../libkmod/libkmod.c:319 kmod_unref: context 0x7f40de8d8250 released
->>
->> # dpkg -l |grep -i iwlwifi
->> ii  firmware-iwlwifi                            0.40~bpo70+1                       all          Binary firmware for Intel Wireless cards
->>
->> https://packages.debian.org/wheezy-backports/firmware-iwlwifi shows that the 7260 card is part of the 0.40 iwlwifi driver package.
->>
->> And here is a listing of /dev/firmware showing that the ucode files are actually installed…
->> # ls /lib/firmware/ |grep iwlwifi
->> iwlwifi-1000-5.ucode
->> iwlwifi-100-5.ucode
->> iwlwifi-105-6.ucode
->> iwlwifi-135-6.ucode
->> iwlwifi-2000-6.ucode
->> iwlwifi-2030-6.ucode
->> iwlwifi-3160-7.ucode
->> iwlwifi-3945-2.ucode
->> iwlwifi-4965-2.ucode
->> iwlwifi-5000-2.ucode
->> iwlwifi-5000-5.ucode
->> iwlwifi-5150-2.ucode
->> iwlwifi-6000-4.ucode
->> iwlwifi-6000g2a-5.ucode
->> iwlwifi-6000g2a-6.ucode
->> iwlwifi-6000g2b-6.ucode
->> iwlwifi-6050-4.ucode
->> iwlwifi-6050-5.ucode
->> iwlwifi-7260-7.ucode
->> iwlwifi-7260-8.ucode
->>
->> Does anyone have any ideas what might be going wrong and how I can fix it?
->>
->> Thanks in advance!!
->> --
->> Greg Ketell
->
->
->
-> --
-> Regards,
-> Oleksij
->
+Ilan.
+
+> > + * @IEEE80211_CHAN_INDOOR_ONLY: Only indoor use is permitted on
+> this channel.
+> > + *	A channel marked with IEEE80211_CHAN_INDOOR_ONLY can only be
+> used when
+> > + *	there is a clear assessment that the device is operating in an indoor
+> > + *	surroundings, i.e., it is connected to AC power (and not through
+> > + *	portable DC inverters)
+> 
+> Curious, what are the plans to avoid the situation of portable DC inverters
+> from being used in this case ? Stating that is in the documentation alludes
+> that this is possible in userspace.
+> 
+> Is it?
+> 
+
+The motivation here was to allow this in cases that the device is truly an indoor device such as media center etc. I am not aware of plans to avoid such situations. Will take this with our regulatory people.
+
+> > or is under the control of a master that is
+> > + *	acting as an AP and is connected to AC power.
+> > + * @IEEE80211_CHAN_GO_CONCURRENT: GO operation is allowed on this
+> channel if
+> > + *	it's connected concurrently to a BSS on the same channel on 2.4 or
+> > + *	to a channel in the same UNII band on 5.2.
+> 
+> What do you mean "on 5.2" ? Maybe just "the 5 GHz band" would be better
+> if this is not UNII specific. If the rule applies to a UNII band then mentioning
+> the band name nomenclature would make it clearer, ie, UNII-1, or UNII-2. If
+> this flag could later be used by other 5 GHz UNII bands then making it in the
+> documentation UNII band agnostic and just using 5 GHz would suffice, while
+> your handler in code adjusts as regulations change.
+> 
+
+As far as I understand the concept of UNII bands, a UNII band is a group of channels/frequencies that share the same regulatory rules. Thus, if we are currently connected to a BSS on a channel in a specific UNII band, we can deduce that operating on all the channels in the same UNII band is allowed as these channels share the same operating rules as the channel we are currently connected to on the BSS interface. I'll rephrase the comment to better express so.
+
+> > + *	Instantiating a GO on a channel marked with
+> IEEE80211_CHAN_GO_CONCURRENT
+> > + *	can be done when there is a clear assessment that the device is
+> > + *	operating under the guidance of an authorized master, i.e., setting
+> up a
+> > + *	GO while the device is also connected to an AP with DFS and radar
+> > + *	detection on the UNII band (however, this example does not imply
+> that
+> > + *	all channels marked with IEEE80211_CHAN_RADAR must also be
+> marked with
+> > + *	IEEE80211_CHAN_GO_CONCURRENT and vise versa).
+> 
+> Your mentioning of DFS here makes things a bit confusing. We should be
+> distinguishing between the case of a device beign associated to on a BSS
+> where the AP is on a DFS channel, and the case where the AP is not on a DFS
+> channel. Are you saying that if IEEE80211_CHAN_GO_CONCURRENT is
+> enabled on a channel that also has IEEE80211_CHAN_RADAR that the device
+> can start GO on the same channel if it *doesn't support DFS itself* if its
+> associated to a real AP, which presumably supports DFS? If so consider then a
+> third GO which would associate to the secondary GO, we now have a link of 3
+> devices and an inherent delay can be created letting a master device do
+> things. How do we avoid latency issues in communication in this type of
+> setup?
+> 
+> If IEEE80211_CHAN_GO_CONCURRENT is meant only for channels that do
+> not have IEEE80211_CHAN_RADAR that makes it simpler but I think you were
+> trying to clarify that daisy chaning trust on the root AP is valid.
+> 
+> Please clarify both use cases on the documentation.
+
+Yep this required more clarification: the GO concurrent relaxation is intended for the NO_IR flag and not for the RADAR flag. If RADAR is set then a GO cannot be instantiated. I will clarify this in the documentation.
+
+> 
+> > diff --git a/include/uapi/linux/nl80211.h
+> > b/include/uapi/linux/nl80211.h index 91054fd..06440ac 100644
+> > --- a/include/uapi/linux/nl80211.h
+> > +++ b/include/uapi/linux/nl80211.h
+> > @@ -2304,6 +2304,11 @@ enum nl80211_band_attr {
+> >   * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not
+> 80+80) channel
+> >   *	using this channel as the primary or any of the secondary channels
+> >   *	isn't possible
+> > + * @NL80211_FREQUENCY_ATTR_INDOOR_ONLY: Indoor only use is
+> permitted
+> > + *	on this channel in current regulatory domain.
+> > + * @NL80211_FREQUENCY_ATTR_GO_CONCURRENT: GO operation is
+> allowed on this
+> > + *      channel if it's connected concurrently to a BSS on the same channel
+> on
+> > + *      2.4 or to a channel in the same UNII band on 5.2.
+> 
+> Same UNII band clarification applies here.
+> 
+>   Luis
