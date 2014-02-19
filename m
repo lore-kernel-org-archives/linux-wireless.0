@@ -1,103 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:64679 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751047AbaBZJEI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:04:08 -0500
-Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx102) with
- ESMTPSA (Nemesis) id 0Lpgew-1WvVWy2PTy-00fPrC for
- <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 10:04:06 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linville@tuxdriver.com, sujith@msujith.org,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 1/3] ath9k: remove unused listen_interval and sleepduration.
-Date: Wed, 26 Feb 2014 10:03:43 +0100
-Message-Id: <1393405425-16371-2-git-send-email-linux@rempel-privat.de> (sfid-20140226_100421_958125_1972AEEC)
-In-Reply-To: <1393405425-16371-1-git-send-email-linux@rempel-privat.de>
-References: <1393405425-16371-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:45990 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbaBSBK7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Feb 2014 20:10:59 -0500
+Received: by mail-lb0-f177.google.com with SMTP id 10so11142133lbg.22
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 17:10:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1389108901.4645.13.camel@jlt4.sipsolutions.net>
+References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+ <1387486399-4053-3-git-send-email-mcgrof@do-not-panic.com> <1389108901.4645.13.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 18 Feb 2014 17:10:37 -0800
+Message-ID: <CAB=NE6VeOM95u_-86yno0Hiz_DvXGz6b9G4tKdUT=PfYposLKA@mail.gmail.com> (sfid-20140219_021102_609055_11CB933D)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this variable never changed.
+On Tue, Jan 7, 2014 at 7:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
+>> This allows processing of the last regulatory request when
+>> we determine its still pending. This fixes the issue reported
+>> by Sander of when cfg80211 is built-in and no further regulatory
+>> domain processing can happen. This occurred because if the
+>> filesystem was not mounted upon kicking off the udev rule
+>> to run CRDA then the last request will always be left
+>> unprocessed.
+>
+> It'd be good to comment on what this actually changes and what happens,
+> in addition to discussing the user-visible effect?
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
- drivers/net/wireless/ath/ath9k/beacon.c | 21 +++++++--------------
- 2 files changed, 7 insertions(+), 15 deletions(-)
+Sure.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index e703ddad..f995c37 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -410,7 +410,6 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 
- struct ath_beacon_config {
- 	int beacon_interval;
--	u16 listen_interval;
- 	u16 dtim_period;
- 	u16 bmiss_timeout;
- 	u8 dtim_count;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 6569528..02eb4f1 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -519,7 +519,7 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_beacon_state bs;
--	int dtim_intval, sleepduration;
-+	int dtim_intval;
- 	u32 nexttbtt = 0, intval;
- 	u64 tsf;
- 
-@@ -538,7 +538,6 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
- 	 * last beacon we received (which may be none).
- 	 */
- 	dtim_intval = intval * conf->dtim_period;
--	sleepduration = conf->listen_interval * intval;
- 
- 	/*
- 	 * Pull nexttbtt forward to reflect the current
-@@ -560,16 +559,11 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
- 	 * need calculate based	on the beacon interval.  Note that we clamp the
- 	 * result to at most 15 beacons.
- 	 */
--	if (sleepduration > intval) {
--		bs.bs_bmissthreshold = conf->listen_interval *
--			ATH_DEFAULT_BMISS_LIMIT / 2;
--	} else {
--		bs.bs_bmissthreshold = DIV_ROUND_UP(conf->bmiss_timeout, intval);
--		if (bs.bs_bmissthreshold > 15)
--			bs.bs_bmissthreshold = 15;
--		else if (bs.bs_bmissthreshold <= 0)
--			bs.bs_bmissthreshold = 1;
--	}
-+	bs.bs_bmissthreshold = DIV_ROUND_UP(conf->bmiss_timeout, intval);
-+	if (bs.bs_bmissthreshold > 15)
-+		bs.bs_bmissthreshold = 15;
-+	else if (bs.bs_bmissthreshold <= 0)
-+		bs.bs_bmissthreshold = 1;
- 
- 	/*
- 	 * Calculate sleep duration. The configuration is given in ms.
-@@ -581,7 +575,7 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
- 	 */
- 
- 	bs.bs_sleepduration = TU_TO_USEC(roundup(IEEE80211_MS_TO_TU(100),
--						 sleepduration));
-+						 intval));
- 	if (bs.bs_sleepduration > bs.bs_dtimperiod)
- 		bs.bs_sleepduration = bs.bs_dtimperiod;
- 
-@@ -677,7 +671,6 @@ static void ath9k_cache_beacon_config(struct ath_softc *sc,
- 
- 	cur_conf->beacon_interval = bss_conf->beacon_int;
- 	cur_conf->dtim_period = bss_conf->dtim_period;
--	cur_conf->listen_interval = 1;
- 	cur_conf->dtim_count = 1;
- 	cur_conf->ibss_creator = bss_conf->ibss_creator;
- 	cur_conf->bmiss_timeout =
--- 
-1.9.0
-
+  Luis
