@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-relay02-dus.antispameurope.com ([94.100.134.202]:42109 "EHLO
-	mx-relay02-dus.antispameurope.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753700AbaBDNNr (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:39479 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754123AbaBSR42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 08:13:47 -0500
-Message-ID: <52F0E771.8070904@fokus.fraunhofer.de> (sfid-20140204_141355_548993_3DD78975)
-Date: Tue, 4 Feb 2014 14:13:21 +0100
-From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+	Wed, 19 Feb 2014 12:56:28 -0500
+Received: by mail-lb0-f177.google.com with SMTP id 10so538405lbg.8
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 09:56:26 -0800 (PST)
 MIME-Version: 1.0
-To: Daniel Borkmann <dborkman@redhat.com>
-CC: <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>
-Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
-References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com>
-In-Reply-To: <52F0E361.9000304@redhat.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <5304EBB1.904@broadcom.com>
+References: <1392824377-18254-1-git-send-email-ilan.peer@intel.com>
+ <1392824377-18254-2-git-send-email-ilan.peer@intel.com> <20140219161101.GJ14296@garbanzo.do-not-panic.com>
+ <5304EBB1.904@broadcom.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 19 Feb 2014 09:56:06 -0800
+Message-ID: <CAB=NE6WSag35Y+CrAHu1QTj27f3W1JavsPeiEXwEcLUL8Zj4XQ@mail.gmail.com> (sfid-20140219_185631_644631_0A8C3213)
+Subject: Re: [PATCH v4 1/5] cfg80211: Add indoor only and GO concurrent
+ channel attributes
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Ilan Peer <ilan.peer@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
-
-On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
-> Hi Mathias, [cc'ing Felix]
+On Wed, Feb 19, 2014 at 9:36 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 02/19/2014 05:11 PM, Luis R. Rodriguez wrote:
+>> On Wed, Feb 19, 2014 at 05:39:33PM +0200, Ilan Peer wrote:
+>>> From: David Spinadel <david.spinadel@intel.com>
+>>>
+>>> The FCC are clarifying some soft configuration requirements,
+>>> which among other include the following:
+>>>
+>>> 1. Indoor operation, where a device can use channels requiring indoor
+>>>    operation, subject to that it can guarantee indoor operation,
+>>>    i.e., the device is connected to AC Power or the device is under
+>>>    the control of a local master that is acting as an AP and is
+>>>    connected to AC Power.
+>>> 2. Concurrent GO operation, where devices may instantiate a P2P GO
+>>>    while they are under the guidance of an authorized master. For example,
+>>>    on a channel on which a BSS is connected to an authorized master, i.e.,
+>>>    with DFS and radar detection capability in the UNII band.
 >
-> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
->> Hi Daniel,
->>
->> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
->> user space using PF_PACKET sockets via RX_RING/TX_RING.
->>
->> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
->> proper optimization for our purposes.
->>
->> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
->> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
->> an older AMD Geode LX embedded board (ALiX).
->>
->> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
->> might be an interaction with the ieee80211 sub system.
+> So apparently FCC has another understanding than the WiFi Alliance (from
+> section 2.3 in WFA P2P-TS):
 >
-> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
-> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
-> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
-> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
-> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
-> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
-> be the best option in your case, perhaps you will run into increased power usage
-> in your NIC as a side-effect?
+> """
+> A P2P Device can operate concurrently with a WLAN (infrastructure
+> network). Such a device is considered a P2P Concurrent Device. The
+> concurrent operation requires a device to support multiple MAC entities.
+>         :
+>         :
+> A P2P Group may operate in the same or different operating class and
+> channel as a concurrently operating WLAN BSS. For example, a WLAN BSS
+> may operate in channel 36 in the 5.2 GHz band, while the P2P Group may
+> operate in channel 6 in the 2.4 GHz band.
+> """
 
-I'm not familiar with the exact implementation details, but from the description of 
-this option, it seems to me that this is exactly what one would want to use if the 
-goal is to send an Ethernet frame out on a particular interface without any further 
-processing by the kernel.
+But can a WLAN BSS operate on channel 6 in the 2.4 GHz band and infer
+it can start GO on channel 36? This question seems not related to
+concurrent stuff but rather pure regulatory but I suppose that will
+depend on the definition that the FCC intended behind GO concurrency.
+Is the definition of concurrency GO thing supposed to *restrict* the
+number of interfaces a device can create (STA, GO), or simply define
+permissive rules which would have otherwise been blocked?
 
-Why would this increase the power usage on the NIC ?  Due to a higher achievable 
-packet rate ?  That would be acceptable :)
-
-Cheers,
-
-Mathias
-
-
-> Cheers,
->
-> Daniel
-
+  Luis
