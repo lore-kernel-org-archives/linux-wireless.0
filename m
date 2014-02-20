@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58772 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbaBXUPO (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55935 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbaBTFKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:15:14 -0500
-Date: Mon, 24 Feb 2014 15:06:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2014-02-23
-Message-ID: <20140224200606.GI24810@tuxdriver.com> (sfid-20140224_211545_457465_08990C32)
-References: <530A51A4.6000007@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <530A51A4.6000007@gmail.com>
+	Thu, 20 Feb 2014 00:10:20 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v2 4/7] mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
+Date: Thu, 20 Feb 2014 07:10:10 +0200
+Message-Id: <1392873013-21772-5-git-send-email-luca@coelho.fi> (sfid-20140220_061052_431182_56D28555)
+In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 23, 2014 at 09:53:08PM +0200, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> Here is pull request intended for 3.15.
-> 
-> I have here a whole bunch of various things. Trivial cleanups, debugfs handlers and new stuff for the new generation of devices along with new capabilities for monitor mode. We also have support for power save for dual interface mode, but that is not supported by the firmware currently available.
-> 
-> I had to merge wireless-next to get the new bits for monitor mode I added in mac80211-next.git.
-> 
-> Let me know if you have any issue.
-> Thanks!
-> 
-> The following changes since commit e57f1734d87aa0e9a00905ed08888f0c62f56227:
-> Starting
->   mwifiex: add key material v2 support (2014-02-12 15:36:26 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to 82b715c211a53e80a1db83b9b71995a05fe32908:
-> 
->   iwlwifi: mvm: fix a few wd_disable comments (2014-02-23 21:38:54 +0200)
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Pulling now...
+Error codes returned by cfg80211_chandef_dfs_required() are ignored
+when trying to join an IBSS.  Fix this by printing an error and
+returning.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 9c84b75..b558468 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -283,6 +283,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+ 					    &chandef);
++	if (err < 0) {
++		sdata_info(sdata,
++			   "Failed to join IBSS, invalid chandef\n");
++		return;
++	}
+ 	if (err > 0) {
+ 		if (!ifibss->userspace_handles_dfs) {
+ 			sdata_info(sdata,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
