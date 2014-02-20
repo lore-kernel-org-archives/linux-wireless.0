@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:57074 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878AbaBKHVt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 02:21:49 -0500
-Date: Tue, 11 Feb 2014 18:21:28 +1100
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: [PATCH v2 08/30] mwifiex: implement extended scan feature
-Message-ID: <20140211072128.GR5487@us.netrek.org> (sfid-20140211_082152_770345_8AAF7641)
-References: <1391819017-20995-1-git-send-email-bzhao@marvell.com>
- <1391819017-20995-4-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391819017-20995-4-git-send-email-bzhao@marvell.com>
+Received: from mga09.intel.com ([134.134.136.24]:1716 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753346AbaBTMvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 07:51:41 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/4] net: rfkill: gpio: clean up and a few new acpi ids
+Date: Thu, 20 Feb 2014 14:51:33 +0200
+Message-Id: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140220_135446_934841_D99B8373)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 07, 2014 at 04:23:37PM -0800, Bing Zhao wrote:
-> [...]
-> @@ -1925,6 +1943,167 @@ check_next_scan:
->  }
->  
->  /*
-> + * This function prepares an extended scan command to be sent to the firmware
-> + *
-> + * This uses the scan command configiguration sent to the command processing
+Hi,
 
-                                      ^
+I was waiting for the DT support from Chen-Yu before sending these,
+but decided it makes no difference when I send them. I'm dropping the
+con ID in the second patch because Dan noticed the warning, but of
+course it will mean the "gpios" property can be used with DT.
 
-trivial typo, should be "configuration".
+The two last patches just add ACPI IDs for some new Baytrail based
+boards.
+
+
+Heikki Krogerus (4):
+  net: rfkill: gpio: remove unused and obsolete platform parameters
+  net: rfkill: gpio: remove gpio names
+  net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
+  net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
+
+ include/linux/rfkill-gpio.h | 10 ----------
+ net/rfkill/rfkill-gpio.c    | 38 +++++++-------------------------------
+ 2 files changed, 7 insertions(+), 41 deletions(-)
 
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.9.0.rc3
+
