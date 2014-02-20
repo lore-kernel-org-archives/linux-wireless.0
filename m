@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48193 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751105AbaBLM1N convert rfc822-to-8bit (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:35680 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752792AbaBTOge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 07:27:13 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless (ilw@linux.intel.com)" <ilw@linux.intel.com>
-Subject: RE: [RFC] iwlwifi: refactor the TX / RX ampdu override
-Date: Wed, 12 Feb 2014 12:27:05 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D66597@HASMSX103.ger.corp.intel.com> (sfid-20140212_132730_507204_D9B9514D)
-References: <1392196175-6219-1-git-send-email-egrumbach@gmail.com>
- <1392203989-15645-1-git-send-email-emmanuel.grumbach@intel.com>
- <20140212121314.GE1315@redhat.com>
-In-Reply-To: <20140212121314.GE1315@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 20 Feb 2014 09:36:34 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v3 4/7] mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
+Date: Thu, 20 Feb 2014 16:36:23 +0200
+Message-Id: <1392906986-12275-5-git-send-email-luca@coelho.fi> (sfid-20140220_153714_412582_F9CB1DD1)
+In-Reply-To: <1392906986-12275-1-git-send-email-luca@coelho.fi>
+References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Subject: Re: [RFC] iwlwifi: refactor the TX / RX ampdu override
-> 
-> On Wed, Feb 12, 2014 at 01:19:49PM +0200, Emmanuel Grumbach wrote:
-> > Note that this modifies the module parameter values / string which
-> > means that distro will need to update their *.conf file (if any).
-> 
-> Hmm, this is not something that I would like to do ...
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I thought you didn't care - ok - I'll respin
+Error codes returned by cfg80211_chandef_dfs_required() are ignored
+when trying to join an IBSS.  Fix this by printing an error and
+returning.
 
-> 
-> > -#define IWL_DISABLE_HT_ALL	BIT(0)
-> > -#define IWL_DISABLE_HT_TXAGG	BIT(1)
-> > -#define IWL_DISABLE_HT_RXAGG	BIT(2)
-> > -#define IWL_DISABLE_HT_ALL	BIT(1)
-> > +#define IWL_DISABLE_HT_TXAGG	BIT(1)
-> > +#define IWL_DISABLE_HT_RXAGG	BIT(1)
-> > +#define IWL_ENABLE_HT_TXAGG	BIT(2)
-> > +#define IWL_ENABLE_HT_RXAGG	BIT(3)
-> 
-> I think we can keep IWL_DISABLE_HT_ALL option. I should be possible to
-> make some per-device type default settings and if disable_11n == 0 use
-> them. Otherwise use settings from module parameter. Will that work ?
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-I'd prefer to have the default based on the iwldvm vs. iwlmvm instead of adding yet another per-HW field. But yeah - it is possible.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 9c84b75..b558468 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -283,6 +283,11 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+ 					    &chandef);
++	if (err < 0) {
++		sdata_info(sdata,
++			   "Failed to join IBSS, invalid chandef\n");
++		return;
++	}
+ 	if (err > 0) {
+ 		if (!ifibss->userspace_handles_dfs) {
+ 			sdata_info(sdata,
+-- 
+1.8.5.3
 
