@@ -1,63 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:56522 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752713AbaBCWCg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbaBTI0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 17:02:36 -0500
-Received: by mail-we0-f181.google.com with SMTP id w61so3308001wes.12
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 14:02:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAJwzM1kQJvfZwPi_suBSgCEquAHvYduwRWcM01==nT_TVd0d0g@mail.gmail.com>
-References: <CAAUTuq_bgXcfKquXR+ATumO7xkyTE_WLUvUOMZ7bPYCP0_XnuQ@mail.gmail.com>
- <CAJwzM1kzbvy7UnjJerJ8EmUxvp5GYPeKS-9988SgxfoQrv-Zjw@mail.gmail.com>
- <CAAUTuq_LnUCTBaHndBiLDk0ge+055YJJMY4Ni+bV7PrYq_KSHA@mail.gmail.com> <CAJwzM1kQJvfZwPi_suBSgCEquAHvYduwRWcM01==nT_TVd0d0g@mail.gmail.com>
-From: Andrew Wiley <wiley.andrew.j@gmail.com>
-Date: Mon, 3 Feb 2014 16:02:14 -0600
-Message-ID: <CAAUTuq9oU7+=_sjcix0WuSUp5_5OVRXK1cJdtRDtR1obaJrV1Q@mail.gmail.com> (sfid-20140203_230239_521765_FD67E473)
-Subject: Re: mwifiex and SD8787: TX queue timeout in AP mode
-To: Avinash Patil <avinashapatil@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 20 Feb 2014 03:26:39 -0500
+Message-ID: <1392884795.5073.6.camel@jlt4.sipsolutions.net> (sfid-20140220_092642_657720_0DCB6A42)
+Subject: Re: [PATCH v2] mac80211: check if the ps_buf skb queue hasn't been
+ drained
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Feb 2014 09:26:35 +0100
+In-Reply-To: <1392880931-18468-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1392877117-17869-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1392880931-18468-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Avinash,
+On Thu, 2014-02-20 at 09:22 +0200, Emmanuel Grumbach wrote:
 
-On Mon, Feb 3, 2014 at 12:47 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
-> Hi Andrew,
->
-> I would suggest few steps:
-> 1. Disable hostapd probe response generation with following setting in
-> hostadp conf
-> send_probe_response=0
+> Fix all this by syncing both path with sta_info->lock.
 
-This doesn't seem to have an effect on the issue.
+As I just found out, this causes a deadlock since we sometimes already
+hold sta->lock while transmitting.
 
-> 2. I see lot of prints for realloc headroom. While this is harmless,
-> if you have any setting to increase this headroom from network stack,
-> it would be good.
+I'll change the patch to use a new lock, and then later will make a
+separate patch to remove all the per-AC locks instead.
 
-I'm not sure what userspace setting would correspond to this. The only
-thing that looks related is /proc/sys/net/core/rmem_default and
-/proc/sys/net/core/wmem_default, but those seem to operate on memory
-pools rather than individual buffers.
+johannes
 
->
-> It looks like Tx to FW has timed out. Last TX happened at Line 11384.
-> This issue is different from earlier one.
-> Can you please let me know FW version?
-
-mwifiex logs this on startup:
-mwifiex_sdio mmc0:0001:1: driver_version = mwifiex 1.0 (14.66.9.p96)
-
-> Does this issue happens with station interface as well?
-
-I haven't really made use of station mode much, but I just tried it
-and it seems stable. The first time I tried to connect, the driver had
-a command timeout while scanning and the card dropped out, but the
-second time, it connected and has stayed stable for 30 minutes or so.
-The network I'm connected to uses WPA2. I'll continue to monitor the
-box to see if the queue hangs.
-
-Thanks,
-Andrew
