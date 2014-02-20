@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0167.hostedemail.com ([216.40.44.167]:46999 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754505AbaBDTnu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60231 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178AbaBTKI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 14:43:50 -0500
-Message-ID: <1391543026.2538.28.camel@joe-AO722> (sfid-20140204_204354_071168_1B3CABEF)
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
-From: Joe Perches <joe@perches.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Holger Schurig <holgerschurig@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Date: Tue, 04 Feb 2014 11:43:46 -0800
-In-Reply-To: <3469296.SINb5BZOG8@wuerfel>
-References: <1391483274-20331-1-git-send-email-sujith@msujith.org>
-	 <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com>
-	 <1391531796.2538.21.camel@joe-AO722> <3469296.SINb5BZOG8@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 20 Feb 2014 05:08:29 -0500
+Message-ID: <1392890906.5073.25.camel@jlt4.sipsolutions.net> (sfid-20140220_110835_307646_F80EF423)
+Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 20 Feb 2014 11:08:26 +0100
+In-Reply-To: <20140220100924.GF23439@redhat.com>
+References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+	 <20140220092154.GD23439@redhat.com>
+	 <1392888468.5073.11.camel@jlt4.sipsolutions.net>
+	 <20140220094057.GE23439@redhat.com>
+	 <1392889368.5073.17.camel@jlt4.sipsolutions.net>
+	 <20140220100924.GF23439@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 19:40 +0100, Arnd Bergmann wrote:
-> On Tuesday 04 February 2014 08:36:36 Joe Perches wrote:
-> > On Tue, 2014-02-04 at 08:03 +0100, Holger Schurig wrote:
-> > > Joe, look in linux/arch/arm/include/asm/delay.h. The macro udelay
-> > > cannot handle large values because of lost-of-precision.
+On Thu, 2014-02-20 at 11:09 +0100, Stanislaw Gruszka wrote:
+> On Thu, Feb 20, 2014 at 10:42:48AM +0100, Johannes Berg wrote:
+> > On Thu, 2014-02-20 at 10:40 +0100, Stanislaw Gruszka wrote:
+> > 
+> > > > This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
+> > > > clear until after WLAN_STA_PS_DRIVER is?
 > > > 
-> > > IMHO udelay on ARM is broken, because it also cannot work with fast
-> > > ARM processors (where bogomips >= 3355, which is in sight now). It's
-> > > just not broken enought that someone did something against it ...   so
-> > > the current kludge is good enought.
+> > > Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
+> > > flag currently cleared.
+> > > 
+> > > tatic void sta_unblock(struct work_struct *wk)
+> > > {
+> > >         if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+> > >                 local_bh_disable();
+> > >                 ieee80211_sta_ps_deliver_wakeup(sta);
+> > >                 local_bh_enable();
+> > > 
+> > > so on TX we should rather check WLAN_STA_PS_DRIVER flag .
 > > 
-> > Maybe something like this would be better?
+> > But that flag may never be set if the driver doesn't support/use it
+> > (which means it's racy, but anyway), so we need to check both.
 > > 
+> > Now I'm confused though. It seems the intent here was to clear the
+> > WLAN_STA_PS_STA flag in something like sta_ps_end() in the RX path, but
+> > we don't do that. I'm not sure how it works now, but I know from testing
+> > that it does ;-)
 > 
-> I actually like the fact that we get link errors for insane 'udelay'
-> times.
+> LOL. There is another call to ieee80211_sta_ps_deliver_wakeup() from
+> sta_ps_end(), I missed this somehow. Anyway, we need to check both
+> flags.
 
-For static values yes, for computed values no.
+Yeah but in the case that the driver actually blocked, it's still
+broken ... see my other email.
 
-This emits a warning/dump_stack on the non-static
-values.  It could also emit some similar #warning
-on static values > insane too.
-
-
+johannes
 
