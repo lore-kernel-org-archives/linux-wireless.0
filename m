@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:50617 "EHLO
-	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524AbaBRJIR (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:56544 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbaBTH5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 04:08:17 -0500
-Received: from /spool/local
-	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <clg@fr.ibm.com>;
-	Tue, 18 Feb 2014 09:08:15 -0000
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-	by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 08CC52190063
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 09:08:11 +0000 (GMT)
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by b06cxnps3075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s1I9819X1573172
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 09:08:01 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s1I98CFR013744
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 02:08:13 -0700
-From: =?UTF-8?q?C=C3=A9dric=20Le=20Goater?= <clg@fr.ibm.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	=?UTF-8?q?C=C3=A9dric=20Le=20Goater?= <clg@fr.ibm.com>
-Subject: [PATCH] hostap: add Netgear MA401 card
-Date: Tue, 18 Feb 2014 10:07:52 +0100
-Message-Id: <1392714472-13998-1-git-send-email-clg@fr.ibm.com> (sfid-20140218_100823_776644_2B865155)
+	Thu, 20 Feb 2014 02:57:08 -0500
+Received: by mail-lb0-f175.google.com with SMTP id p9so1072092lbv.20
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 23:57:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1392882691.5073.3.camel@jlt4.sipsolutions.net>
+References: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com>
+	<CAFED-jn0AfGVqJVFfeu6Pke2UBh-+nnRrhdVM-4acYHn9WdSjQ@mail.gmail.com>
+	<CAB=NE6UR3yQOSZr7NXA4kO2hKre0zBsmK9H1MTYZ=9Wh_=9AtA@mail.gmail.com>
+	<CALhHN=qc7m7oce6aiiNfpW5wUc7ypy2E+0TmYsKNth5_s5FpxQ@mail.gmail.com>
+	<1392882691.5073.3.camel@jlt4.sipsolutions.net>
+Date: Thu, 20 Feb 2014 08:57:06 +0100
+Message-ID: <CALhHN=owY-xYOmieHUeDpmSXqJir2VrmfxM8H3zjo0mVvM3GQg@mail.gmail.com> (sfid-20140220_085712_295235_98B06E0E)
+Subject: Re: [PATCH] crda: handle AUTO bw setting in db2rd
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a relatively old Prism2 card which is correctly supported
-by the hostap driver.
+On 20 February 2014 08:51, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-20 at 08:27 +0100, Janusz Dziedzic wrote:
+>> On 19 February 2014 23:00, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+>> > On Tue, Feb 18, 2014 at 10:12 PM, Janusz Dziedzic
+>> > <janusz.dziedzic@gmail.com> wrote:
+>> >> 2014-02-19 1:33 GMT+01:00 Luis R. Rodriguez <mcgrof@do-not-panic.com>:
+>> >>> On Wed, Feb 12, 2014 at 9:43 AM, Janusz Dziedzic
+>> >>> <janusz.dziedzic@tieto.com> wrote:
+>> >>>> Handle AUTO bandwidth setting in db2rd.
+>> >>>> Don't add NL80211_ATTR_FREQ_RANGE_MAX_BW attribute
+>> >>>> in case of AUTO bw calculation.
+>> >>>>
+>> >>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>> >>>
+>> >>> Please elaborate more on this. Who deals with the automatic math on
+>> >>> the bandwidth?
+>> >>>
+>> >> cfg80211,
+>> >>
+>> >> Please check patch:
+>> >> cfg80211: regulatory introduce maximum bandwidth calculation
+>> >
+>> > OK, so we don't send the max bandwidth attribute now, what about
+>> > support for older kernels?
+>> >
+>> Yes, seems we should send this even this is 0.
+>> Next for old kernel, all channels where BW=0 will be HT20 only.
+>
+> Is that really a good idea?
+>
+> Maybe crda should just get the logic to determine maximum bandwidth,
+> like you did in the kernel, and then we can even revert the kernel code
+> again?
+>
+Yes, this is possible to calculate this in crda (or even set this manually).
+In such case we have to remove this bw check in the kernel code:
 
-Signed-off-by: Cédric Le Goater <clg@fr.ibm.com>
----
- drivers/net/wireless/hostap/hostap_cs.c |    2 ++
- 1 file changed, 2 insertions(+)
+is_valid_reg_rule(...)
+    freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
 
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index 9f825f2620da..b6ec51923b20 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -677,6 +677,8 @@ static const struct pcmcia_device_id hostap_cs_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID12(
- 		"ZoomAir 11Mbps High", "Rate wireless Networking",
- 		0x273fe3db, 0x32a1eaee),
-+	PCMCIA_DEVICE_PROD_ID12("NETGEAR MA401 Wireless PC", "Card",
-+		0xa37434e9, 0x9762e8f1),
- 	PCMCIA_DEVICE_PROD_ID123(
- 		"Pretec", "CompactWLAN Card 802.11b", "2.5",
- 		0x1cadd3e5, 0xe697636c, 0x7a5bfcf1),
--- 
-1.7.10.4
+    if (freq_range->max_bandwidth_khz > freq_diff)
+         return false;
 
+BR
+Janusz
