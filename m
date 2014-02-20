@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:59396 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751556AbaBITnf (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55916 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbaBTFKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 14:43:35 -0500
-Message-ID: <1391975013.25855.5.camel@x220> (sfid-20140209_204356_484297_BFC8E1BA)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Joe Perches <joe@perches.com>
-Cc: Richard Weinberger <richard@nod.at>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Sun, 09 Feb 2014 20:43:33 +0100
-In-Reply-To: <1391972955.3178.1.camel@joe-AO722>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	 <1391971686-9517-10-git-send-email-richard@nod.at>
-	 <1391972955.3178.1.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Feb 2014 00:10:19 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v2 1/7] nl80211: make sure we check for DFS with mesh channel switch
+Date: Thu, 20 Feb 2014 07:10:07 +0200
+Message-Id: <1392873013-21772-2-git-send-email-luca@coelho.fi> (sfid-20140220_061048_044334_9C2FDC17)
+In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-09 at 11:09 -0800, Joe Perches wrote:
-> On Sun, 2014-02-09 at 19:47 +0100, Richard Weinberger wrote:
-> > The symbol is an orphan, get rid of it.
-> 
-> This description seems very incomplete as the symbol
-> is being used quite a bit and the code the symbol
-> controls is being deleted as well as the symbol.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Just yesterday I once again raised this issue (see
-https://lkml.org/lkml/2014/2/8/248 ). My patch - which dates form May
-2013 - removes quite a bit more than Richard's patch.
+Since mesh support for DFS channels was added, we also need to check
+for DFS channels when performing a channel switch with
+NL80211_IFTYPE_MESHPOINT.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Paul Bolle
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1797864..b78d734 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5912,7 +5912,8 @@ skip_beacons:
+ 
+ 	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
+ 	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO ||
+-	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC) {
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC ||
++	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MESH_POINT) {
+ 		err = cfg80211_chandef_dfs_required(wdev->wiphy,
+ 						    &params.chandef);
+ 		if (err < 0) {
+-- 
+1.8.5.3
 
