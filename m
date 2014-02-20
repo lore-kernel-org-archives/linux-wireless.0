@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.parallels.com ([195.214.232.42]:54802 "EHLO
-	relay.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525AbaBNMRa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 07:17:30 -0500
-Message-ID: <1392380269.5384.36.camel@tkhai> (sfid-20140214_131733_527212_66A4B574)
-Subject: [PATCH] hostap: Do not free priv until timer handler hasn't
- actually stopped using it
-From: Kirill Tkhai <ktkhai@parallels.com>
-To: Jouni Malinen <j@w1.fi>, John Linville <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 14 Feb 2014 16:17:49 +0400
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:1716 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754184AbaBTMvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 07:51:52 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
+Date: Thu, 20 Feb 2014 14:51:36 +0200
+Message-Id: <1392900697-27577-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140220_135402_012711_6D24530F)
+In-Reply-To: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function del_timer() does not guarantee that timer was really deleted.
-If the timer handler is beeing executed at the moment, the function
-does nothing. So, it's possible to use already freed memory in the handler:
+On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
 
-[ref: Documentation/DocBook/kernel-locking.tmpl]
-
-This was found using grep and compile-tested only. Please, consider
-applying or something similar to it.
-
-Signed-off-by: Kirill Tkhai <ktkhai@parallels.com>
-CC: Jouni Malinen <j@w1.fi>
-CC: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- drivers/net/wireless/hostap/hostap_ap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
-index d36e252..5965255 100644
---- a/drivers/net/wireless/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/hostap/hostap_ap.c
-@@ -147,7 +147,7 @@ static void ap_free_sta(struct ap_data *ap, struct sta_info *sta)
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index ad5e354..ec38884 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -158,6 +158,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
  
- 	if (!sta->ap && sta->u.sta.challenge)
- 		kfree(sta->u.sta.challenge);
--	del_timer(&sta->timer);
-+	del_timer_sync(&sta->timer);
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
++	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
  
- 	kfree(sta);
-
-
+-- 
+1.9.0.rc3
 
