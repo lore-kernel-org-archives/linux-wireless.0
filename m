@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36115 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:60095 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbaBUIwe (ORCPT
+	with ESMTP id S1751044AbaBTJ1x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 03:52:34 -0500
-Message-ID: <1392972748.4346.37.camel@jlt4.sipsolutions.net> (sfid-20140221_095237_770384_89420BF9)
-Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
+	Thu, 20 Feb 2014 04:27:53 -0500
+Message-ID: <1392888468.5073.11.camel@jlt4.sipsolutions.net> (sfid-20140220_102758_573858_1BB8700E)
+Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com
-Date: Fri, 21 Feb 2014 09:52:28 +0100
-In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195443_300379_ECEC4EEB)
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140212_195443_300379_ECEC4EEB)
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 20 Feb 2014 10:27:48 +0100
+In-Reply-To: <20140220092154.GD23439@redhat.com>
+References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+	 <20140220092154.GD23439@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-12 at 19:54 +0100, Janusz Dziedzic wrote:
+On Thu, 2014-02-20 at 10:21 +0100, Stanislaw Gruszka wrote:
+> On Thu, Feb 20, 2014 at 09:52:45AM +0100, Johannes Berg wrote:
+> > +
+> > +		/* sync with ieee80211_sta_ps_deliver_wakeup */
+> > +		spin_lock(&sta->ps_lock);
+> > +		/*
+> > +		 * STA woke up the meantime and all the frames on ps_tx_buf have
+> > +		 * been queued to pending queue. No reordering can happen, go
+> > +		 * ahead and Tx the packet.
+> > +		 */
+> > +		if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+> > +			spin_unlock(&sta->ps_lock);
+> 
+> Actually I'm not sure if we should check if both WLAN_STA_PS_DRIVER 
+> and WLAN_STA_PS_STA flags are clear ?
 
-> +++ b/include/net/regulatory.h
-> @@ -155,6 +155,7 @@ struct ieee80211_reg_rule {
->  	struct ieee80211_freq_range freq_range;
->  	struct ieee80211_power_rule power_rule;
->  	u32 flags;
-> +	u32 dfs_cac_ms;
->  };
-
-Does that really have to be per channel? That's a significant investment
-into bss size since we have a lot of channel structs.
-
-> +	if (rule1->dfs_cac_ms > rule2->dfs_cac_ms)
-> +		intersected_rule->dfs_cac_ms = rule1->dfs_cac_ms;
-> +	else
-> +		intersected_rule->dfs_cac_ms = rule2->dfs_cac_ms;
-
-please just use max() or max_t() if needed (shouldn't be)
-
-> @@ -2245,9 +2258,10 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
->  	const struct ieee80211_reg_rule *reg_rule = NULL;
->  	const struct ieee80211_freq_range *freq_range = NULL;
->  	const struct ieee80211_power_rule *power_rule = NULL;
-> -	char bw[32];
-> +	const int size = 32;
-> +	char bw[size], cac_time[size];
-
-I don't like that, size is const but it seems likely that sparse/smatch
-may complain. I've already changed some of the below code to just use
-sizeof(bw), please do that here as well.
+This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
+clear until after WLAN_STA_PS_DRIVER is?
 
 johannes
 
