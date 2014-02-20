@@ -1,79 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44801 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532AbaBYTap (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:32971 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753766AbaBTPOU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 14:30:45 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Kim <dekim@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 12/14] brcmfmac: Correct mcs index report
-Date: Tue, 25 Feb 2014 20:30:36 +0100
-Message-ID: <1393356639-19169-13-git-send-email-arend@broadcom.com> (sfid-20140225_203127_170387_03480FFA)
-In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 20 Feb 2014 10:14:20 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: allow driver to return error from sched_scan_stop
+Date: Thu, 20 Feb 2014 16:14:11 +0100
+Message-Id: <1392909251-5557-2-git-send-email-johannes@sipsolutions.net> (sfid-20140220_161423_693380_5ACB4780)
+In-Reply-To: <1392909251-5557-1-git-send-email-johannes@sipsolutions.net>
+References: <1392909251-5557-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Kim <dekim@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-There is a mismatch between the mcs index(0-7) reported to cfg80211
-and the actual mcs index(0-15) in use. This patch resolves the mismatch
-by setting mcs info with the number of chains read from FW.
+In order to solve races with sched_scan_stop, it is necessary
+for the driver to be able to return an error to propagate that
+to cfg80211 so it doesn't send an event.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Daniel Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |   17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  6 ++++--
+ drivers/net/wireless/ti/wlcore/main.c       |  6 ++++--
+ include/net/mac80211.h                      |  3 ++-
+ net/mac80211/driver-ops.h                   | 12 ++++++++----
+ net/mac80211/scan.c                         |  2 +-
+ 5 files changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 81be69d..da7d055 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -5306,6 +5306,8 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	u32 band_list[3];
- 	u32 nmode;
- 	u32 bw_cap[2] = { 0, 0 };
-+	u32 rxchain;
-+	u32 nchain;
- 	s8 phy;
- 	s32 err;
- 	u32 nband;
-@@ -5342,6 +5344,16 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 	brcmf_dbg(INFO, "nmode=%d, bw_cap=(%d, %d)\n", nmode,
- 		  bw_cap[IEEE80211_BAND_2GHZ], bw_cap[IEEE80211_BAND_5GHZ]);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index beaf8140abbf..7492fc0f2766 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1746,14 +1746,16 @@ out:
+ 	return ret;
+ }
  
-+	err = brcmf_fil_iovar_int_get(ifp, "rxchain", &rxchain);
-+	if (err) {
-+		brcmf_err("rxchain error (%d)\n", err);
-+		nchain = 1;
-+	} else {
-+		for (nchain = 0; rxchain; nchain++)
-+			rxchain = rxchain & (rxchain - 1);
-+	}
-+	brcmf_dbg(INFO, "nchain=%d\n", nchain);
+-static void iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
+-					struct ieee80211_vif *vif)
++static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 
+ 	mutex_lock(&mvm->mutex);
+ 	iwl_mvm_sched_scan_stop(mvm);
+ 	mutex_unlock(&mvm->mutex);
 +
- 	err = brcmf_construct_reginfo(cfg, bw_cap);
- 	if (err) {
- 		brcmf_err("brcmf_construct_reginfo failed (%d)\n", err);
-@@ -5370,10 +5382,7 @@ static s32 brcmf_update_wiphybands(struct brcmf_cfg80211_info *cfg)
- 		band->ht_cap.ht_supported = true;
- 		band->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 		band->ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16;
--		/* An HT shall support all EQM rates for one spatial
--		 * stream
--		 */
--		band->ht_cap.mcs.rx_mask[0] = 0xff;
-+		memset(band->ht_cap.mcs.rx_mask, 0xff, nchain);
- 		band->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
- 		bands[band->band] = band;
- 	}
++	return 0;
+ }
+ 
+ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 7aae5b3a0c2c..4175a57ac9f5 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3668,8 +3668,8 @@ out:
+ 	return ret;
+ }
+ 
+-static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+-				      struct ieee80211_vif *vif)
++static int wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+@@ -3691,6 +3691,8 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+ 	wl1271_ps_elp_sleep(wl);
+ out:
+ 	mutex_unlock(&wl->mutex);
++
++	return 0;
+ }
+ 
+ static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a6bcc39e146e..86faa413b37d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2460,6 +2460,7 @@ enum ieee80211_roc_type {
+  *	This process will continue until sched_scan_stop is called.
+  *
+  * @sched_scan_stop: Tell the hardware to stop an ongoing scheduled scan.
++ *	In this case, ieee80211_sched_scan_stopped() must not be called.
+  *
+  * @sw_scan_start: Notifier function that is called just before a software scan
+  *	is started. Can be NULL, if the driver doesn't need this notification.
+@@ -2807,7 +2808,7 @@ struct ieee80211_ops {
+ 				struct ieee80211_vif *vif,
+ 				struct cfg80211_sched_scan_request *req,
+ 				struct ieee80211_sched_scan_ies *ies);
+-	void (*sched_scan_stop)(struct ieee80211_hw *hw,
++	int (*sched_scan_stop)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif);
+ 	void (*sw_scan_start)(struct ieee80211_hw *hw);
+ 	void (*sw_scan_complete)(struct ieee80211_hw *hw);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index ef8b385eff04..fc689f5d971e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -354,16 +354,20 @@ drv_sched_scan_start(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
+-static inline void drv_sched_scan_stop(struct ieee80211_local *local,
+-				       struct ieee80211_sub_if_data *sdata)
++static inline int drv_sched_scan_stop(struct ieee80211_local *local,
++				      struct ieee80211_sub_if_data *sdata)
+ {
++	int ret;
++
+ 	might_sleep();
+ 
+ 	check_sdata_in_driver(sdata);
+ 
+ 	trace_drv_sched_scan_stop(local, sdata);
+-	local->ops->sched_scan_stop(&local->hw, &sdata->vif);
+-	trace_drv_return_void(local);
++	ret = local->ops->sched_scan_stop(&local->hw, &sdata->vif);
++	trace_drv_return_int(local, ret);
++
++	return ret;
+ }
+ 
+ static inline void drv_sw_scan_start(struct ieee80211_local *local)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b211e412511f..836f500dfbf3 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1056,7 +1056,7 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
+ 	local->sched_scan_req = NULL;
+ 
+ 	if (rcu_access_pointer(local->sched_scan_sdata))
+-		drv_sched_scan_stop(local, sdata);
++		ret = drv_sched_scan_stop(local, sdata);
+ 
+ out:
+ 	mutex_unlock(&local->mtx);
 -- 
-1.7.10.4
+1.8.5.3
 
