@@ -1,175 +1,377 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:49694 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbaBGTtB (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55940 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaBTFKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 14:49:01 -0500
-From: Marek Belisko <marek@goldelico.com>
-To: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	rob@landley.net, linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net, grant.likely@linaro.org
-Cc: neilb@suse.de, hns@goldelico.com, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Marek Belisko <marek@goldelico.com>
-Subject: [PATCH] net: rfkill-regulator: Add devicetree support.
-Date: Fri,  7 Feb 2014 20:48:49 +0100
-Message-Id: <1391802529-29861-1-git-send-email-marek@goldelico.com> (sfid-20140207_204932_810495_C6AC7592)
+	Thu, 20 Feb 2014 00:10:21 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v2 5/7] cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+Date: Thu, 20 Feb 2014 07:10:11 +0200
+Message-Id: <1392873013-21772-6-git-send-email-luca@coelho.fi> (sfid-20140220_061051_817562_046DE375)
+In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Marek Belisko <marek@goldelico.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
+
+Some interface types don't require DFS (such as STATION, P2P_CLIENT
+etc).  In order to centralize these decisions, make
+cfg80211_chandef_dfs_required() take the iftype into consideration.
+
+Additionally, the function now returns a bitmap with the channel width
+that requires DFS.  This is done to simplify some of the calls.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
-Based on Neil's patch and extend for documentation and bindings include.
+ include/net/cfg80211.h |  8 ++++--
+ net/mac80211/ibss.c    | 31 ++++++++++----------
+ net/mac80211/mesh.c    |  9 +++---
+ net/wireless/chan.c    | 77 +++++++++++++++++++++++++++++++++++++-------------
+ net/wireless/mesh.c    | 13 +++++----
+ net/wireless/nl80211.c | 37 +++++++++++-------------
+ 6 files changed, 106 insertions(+), 69 deletions(-)
 
- .../bindings/net/rfkill/rfkill-relugator.txt       | 28 ++++++++++++++++
- include/dt-bindings/net/rfkill-regulator.h         | 23 +++++++++++++
- net/rfkill/rfkill-regulator.c                      | 38 ++++++++++++++++++++++
- 3 files changed, 89 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
- create mode 100644 include/dt-bindings/net/rfkill-regulator.h
-
-diff --git a/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
-new file mode 100644
-index 0000000..cdb7dd7
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
-@@ -0,0 +1,28 @@
-+Regulator consumer for rfkill devices
-+
-+Required properties:
-+- compatible   : Must be "rfkill-regulator".
-+- label  : Name of rfkill device.
-+- type  : Type of rfkill device.
-+
-+Possible values (defined in include/dt-bindings/net/rfkill-regulator.h):
-+	RFKILL_TYPE_ALL
-+	RFKILL_TYPE_WLAN
-+	RFKILL_TYPE_BLUETOOTH
-+	RFKILL_TYPE_UWB
-+	RFKILL_TYPE_WIMAX
-+	RFKILL_TYPE_WWAN
-+	RFKILL_TYPE_GPS
-+	RFKILL_TYPE_FM
-+	RFKILL_TYPE_NFC
-+
-+- vrfkill-supply - regulator device.
-+
-+Example:
-+	gps-rfkill {
-+		compatible = "rfkill-regulator";
-+		label = "GPS";
-+		type = <RFKILL_TYPE_GPS>;
-+		vrfkill-supply = <&reg>;
-+	};
-+
-diff --git a/include/dt-bindings/net/rfkill-regulator.h b/include/dt-bindings/net/rfkill-regulator.h
-new file mode 100644
-index 0000000..ae32273
---- /dev/null
-+++ b/include/dt-bindings/net/rfkill-regulator.h
-@@ -0,0 +1,23 @@
-+/*
-+ * This header provides macros for rfkill-regulator bindings.
-+ *
-+ * Copyright (C) 2014 Marek Belisko <marek@goldelico.com>
-+ *
-+ * GPLv2 only
-+ */
-+
-+#ifndef __DT_BINDINGS_RFKILL_REGULATOR_H__
-+#define __DT_BINDINGS_RFKILL_REGULATOR_H__
-+
-+
-+#define RFKILL_TYPE_ALL		(0)
-+#define RFKILL_TYPE_WLAN	(1)
-+#define RFKILL_TYPE_BLUETOOTH	(2)
-+#define RFKILL_TYPE_UWB		(3)
-+#define RFKILL_TYPE_WIMAX	(4)
-+#define RFKILL_TYPE_WWAN	(5)
-+#define RFKILL_TYPE_GPS		(6)
-+#define RFKILL_TYPE_FM		(7)
-+#define RFKILL_TYPE_NFC		(8)
-+
-+#endif /* __DT_BINDINGS_RFKILL_REGULATOR_H__ */
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index cf5b145..a04aff8 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -19,6 +19,7 @@
- #include <linux/regulator/consumer.h>
- #include <linux/rfkill.h>
- #include <linux/rfkill-regulator.h>
-+#include <linux/of_platform.h>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e44d62b..a1ce7cd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -439,10 +439,14 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+  * cfg80211_chandef_dfs_required - checks if radar detection is required
+  * @wiphy: the wiphy to validate against
+  * @chandef: the channel definition to check
+- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
++ * @iftype: the interface type as specified in &enum nl80211_iftype
++ * Returns:
++ *	the channel bandwidth bitmask if radar detection is required,
++ *	0 if it is not, < 0 on error
+  */
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *chandef);
++				  const struct cfg80211_chan_def *chandef,
++				  enum nl80211_iftype);
  
- struct rfkill_regulator_data {
- 	struct rfkill *rf_kill;
-@@ -57,6 +58,31 @@ static struct rfkill_ops rfkill_regulator_ops = {
- 	.set_block = rfkill_regulator_set_block,
- };
+ /**
+  * ieee80211_chandef_rate_flags - returns rate flags for a channel
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index b558468..56b0dce 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -228,7 +228,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct beacon_data *presp;
+ 	enum nl80211_bss_scan_width scan_width;
+ 	bool have_higher_than_11mbit;
+-	bool radar_required = false;
++	bool radar_required;
+ 	int err;
  
-+#ifdef CONFIG_OF
-+static struct rfkill_regulator_platform_data *
-+rfkill_regulator_parse_pdata(struct device *dev)
-+{
-+	struct rfkill_regulator_platform_data *pdata;
-+	struct device_node *np = dev->of_node;
-+	u32 num;
-+	if (!np)
-+		return NULL;
-+	pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
-+	if (!pdata)
-+		return NULL;
-+	if (of_property_read_u32(np, "type", &num) == 0)
-+		pdata->type = num;
-+	of_property_read_string(np, "label", &pdata->name);
-+	return pdata;
-+}
-+#else
-+static inline struct rfkill_regulator_platform_data *
-+rfkill_regulator_parse_pdata(struct device *dev)
-+{
-+	return NULL;
-+}
-+#endif
+ 	sdata_assert_lock(sdata);
+@@ -282,21 +282,20 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &chandef);
++					    &chandef, NL80211_IFTYPE_ADHOC);
+ 	if (err < 0) {
+ 		sdata_info(sdata,
+ 			   "Failed to join IBSS, invalid chandef\n");
+ 		return;
+ 	}
+-	if (err > 0) {
+-		if (!ifibss->userspace_handles_dfs) {
+-			sdata_info(sdata,
+-				   "Failed to join IBSS, DFS channel without control program\n");
+-			return;
+-		}
+-		radar_required = true;
++	if (err > 0 && !ifibss->userspace_handles_dfs) {
++		sdata_info(sdata,
++			   "Failed to join IBSS, DFS channel without control program\n");
++		return;
+ 	}
+ 
++	radar_required = !!(err);
 +
- static int rfkill_regulator_probe(struct platform_device *pdev)
+ 	mutex_lock(&local->mtx);
+ 	if (ieee80211_vif_use_channel(sdata, &chandef,
+ 				      ifibss->fixed_channel ?
+@@ -778,7 +777,8 @@ static void ieee80211_ibss_csa_mark_radar(struct ieee80211_sub_if_data *sdata)
+ 	 * unavailable.
+ 	 */
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &ifibss->chandef);
++					    &ifibss->chandef,
++					    NL80211_IFTYPE_ADHOC);
+ 	if (err > 0)
+ 		cfg80211_radar_event(sdata->local->hw.wiphy, &ifibss->chandef,
+ 				     GFP_ATOMIC);
+@@ -876,16 +876,15 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &params.chandef);
++					    &params.chandef,
++					    NL80211_IFTYPE_ADHOC);
+ 	if (err < 0)
+ 		goto disconnect;
+-	if (err) {
++	if (err > 0 && !ifibss->userspace_handles_dfs)
+ 		/* IBSS-DFS only allowed with a control program */
+-		if (!ifibss->userspace_handles_dfs)
+-			goto disconnect;
++		goto disconnect;
+ 
+-		params.radar_required = true;
+-	}
++	params.radar_required = !!(err);
+ 
+ 	if (cfg80211_chandef_identical(&params.chandef,
+ 				       &sdata->vif.bss_conf.chandef)) {
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index f70e9cd..05eb540 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -903,14 +903,15 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &params.chandef);
++					    &params.chandef,
++					    NL80211_IFTYPE_MESH_POINT);
+ 	if (err < 0)
+ 		return false;
+-	if (err) {
+-		params.radar_required = true;
++	if (err > 0)
+ 		/* TODO: DFS not (yet) supported */
+ 		return false;
+-	}
++
++	params.radar_required = !!(err);
+ 
+ 	if (cfg80211_chandef_identical(&params.chandef,
+ 				       &sdata->vif.bss_conf.chandef)) {
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 5946450..f4b59a0 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -326,28 +326,58 @@ static int cfg80211_get_chans_dfs_required(struct wiphy *wiphy,
+ 
+ 
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *chandef)
++				  const struct cfg80211_chan_def *chandef,
++				  enum nl80211_iftype iftype)
  {
- 	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
-@@ -65,6 +91,9 @@ static int rfkill_regulator_probe(struct platform_device *pdev)
- 	struct rfkill *rf_kill;
- 	int ret = 0;
+ 	int width;
+-	int r;
++	int ret;
  
-+	if (!pdata)
-+		pdata = rfkill_regulator_parse_pdata(&pdev->dev);
+ 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+ 		return -EINVAL;
+ 
+-	width = cfg80211_chandef_get_width(chandef);
+-	if (width < 0)
+-		return -EINVAL;
++	switch (iftype) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_MESH_POINT:
++		width = cfg80211_chandef_get_width(chandef);
++		if (width < 0)
++			return -EINVAL;
+ 
+-	r = cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq1,
+-					    width);
+-	if (r)
+-		return r;
++		ret = cfg80211_get_chans_dfs_required(wiphy,
++						      chandef->center_freq1,
++						      width);
++		if (ret < 0)
++			return ret;
++		else if (ret > 0)
++			return BIT(chandef->width);
+ 
+-	if (!chandef->center_freq2)
+-		return 0;
++		if (!chandef->center_freq2)
++			return 0;
 +
- 	if (pdata == NULL) {
- 		dev_err(&pdev->dev, "no platform data\n");
- 		return -ENODEV;
-@@ -137,12 +166,21 @@ static int rfkill_regulator_remove(struct platform_device *pdev)
- 	return 0;
++		ret = cfg80211_get_chans_dfs_required(wiphy,
++						      chandef->center_freq2,
++						      width);
++		if (ret < 0)
++			return ret;
++		else if (ret > 0)
++			return BIT(chandef->width);
+ 
+-	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
+-					       width);
++		break;
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++	case NL80211_IFTYPE_P2P_DEVICE:
++		break;
++	case NUM_NL80211_IFTYPES:
++	default:
++		WARN_ON(1);
++	}
++
++	return 0;
  }
+ EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
  
-+#ifdef CONFIG_OF
-+static const struct of_device_id rfkill_regulator_match[] = {
-+	{.compatible = "rfkill-regulator"},
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, rfkill_regulator_match);
-+#endif
+@@ -615,7 +645,8 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+ 
+ 	trace_cfg80211_reg_can_beacon(wiphy, chandef);
+ 
+-	if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
++	if (cfg80211_chandef_dfs_required(wiphy, chandef,
++					  NL80211_IFTYPE_UNSPECIFIED) > 0 &&
+ 	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
+ 		/* We can skip IEEE80211_CHAN_NO_IR if chandef dfs available */
+ 		prohibited_flags = IEEE80211_CHAN_DISABLED;
+@@ -645,6 +676,8 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 		        enum cfg80211_chan_mode *chanmode,
+ 		        u8 *radar_detect)
+ {
++	int ret;
 +
- static struct platform_driver rfkill_regulator_driver = {
- 	.probe = rfkill_regulator_probe,
- 	.remove = rfkill_regulator_remove,
- 	.driver = {
- 		.name = "rfkill-regulator",
- 		.owner = THIS_MODULE,
-+		.of_match_table = of_match_ptr(rfkill_regulator_match),
- 	},
- };
+ 	*chan = NULL;
+ 	*chanmode = CHAN_MODE_UNDEFINED;
  
+@@ -687,9 +720,11 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 			*chan = wdev->chandef.chan;
+ 			*chanmode = CHAN_MODE_SHARED;
+ 
+-			if (cfg80211_chandef_dfs_required(wdev->wiphy,
+-							  &wdev->chandef))
+-				*radar_detect |= BIT(wdev->chandef.width);
++			ret = cfg80211_chandef_dfs_required(wdev->wiphy,
++							    &wdev->chandef,
++							    wdev->iftype);
++			WARN_ON(ret < 0);
++			*radar_detect |= ret;
+ 		}
+ 		return;
+ 	case NL80211_IFTYPE_MESH_POINT:
+@@ -697,9 +732,11 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 			*chan = wdev->chandef.chan;
+ 			*chanmode = CHAN_MODE_SHARED;
+ 
+-			if (cfg80211_chandef_dfs_required(wdev->wiphy,
+-							  &wdev->chandef))
+-				*radar_detect |= BIT(wdev->chandef.width);
++			ret = cfg80211_chandef_dfs_required(wdev->wiphy,
++							    &wdev->chandef,
++							    wdev->iftype);
++			WARN_ON(ret < 0);
++			*radar_detect |= ret;
+ 		}
+ 		return;
+ 	case NL80211_IFTYPE_MONITOR:
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 5af5cc6..c9458f2 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -99,7 +99,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 			 const struct mesh_config *conf)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	u8 radar_detect_width = 0;
++	u8 radar_detect_width;
+ 	int err;
+ 
+ 	BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN != IEEE80211_MAX_MESH_ID_LEN);
+@@ -178,11 +178,12 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &setup->chandef);
+-	if (err < 0)
+-		return err;
+-	if (err)
+-		radar_detect_width = BIT(setup->chandef.width);
++	radar_detect_width =
++		cfg80211_chandef_dfs_required(wdev->wiphy,
++					      &setup->chandef,
++					      NL80211_IFTYPE_MESH_POINT);
++	if (radar_detect_width < 0)
++		return radar_detect_width;
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   setup->chandef.chan,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b78d734..09ef2e1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3255,13 +3255,13 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
+-	if (err < 0)
+-		return err;
+-	if (err) {
+-		radar_detect_width = BIT(params.chandef.width);
+-		params.radar_required = true;
+-	}
++	radar_detect_width = cfg80211_chandef_dfs_required(wdev->wiphy,
++							   &params.chandef,
++							   NL80211_IFTYPE_AP);
++	if (radar_detect_width < 0)
++		return radar_detect_width;
++
++	params.radar_required = !!(err);
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
+@@ -5781,7 +5781,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (wdev->cac_started)
+ 		return -EBUSY;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
++	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef,
++					    NL80211_IFTYPE_UNSPECIFIED);
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -5910,19 +5911,13 @@ skip_beacons:
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
+-	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO ||
+-	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_ADHOC ||
+-	    dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MESH_POINT) {
+-		err = cfg80211_chandef_dfs_required(wdev->wiphy,
+-						    &params.chandef);
+-		if (err < 0) {
+-			return err;
+-		} else if (err) {
+-			radar_detect_width = BIT(params.chandef.width);
+-			params.radar_required = true;
+-		}
+-	}
++	radar_detect_width = cfg80211_chandef_dfs_required(wdev->wiphy,
++							   &params.chandef,
++							   wdev->iftype);
++	if (radar_detect_width < 0)
++		return radar_detect_width;
++
++	params.radar_required = !!(radar_detect_width);
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+ 					   params.chandef.chan,
 -- 
-1.8.3.2
+1.8.5.3
 
