@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:40068 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaBSLvH convert rfc822-to-8bit (ORCPT
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:59480 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723AbaBTUoj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 06:51:07 -0500
-Received: by mail-bk0-f47.google.com with SMTP id d7so169493bkh.34
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 03:51:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1392804045-11258-7-git-send-email-luca@coelho.fi>
-References: <1392804045-11258-1-git-send-email-luca@coelho.fi>
-	<1392804045-11258-7-git-send-email-luca@coelho.fi>
-Date: Wed, 19 Feb 2014 12:51:05 +0100
-Message-ID: <CA+BoTQ=ZAgOd0suPiTy_6SP6OzGsMcicv_f+foqBUCrL91NU5g@mail.gmail.com> (sfid-20140219_125111_333565_B4576A76)
-Subject: Re: [PATCH 6/7] cfg80211/mac80211: move interface counting for
- combination check to mac80211
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de, Bing Zhao <bzhao@marvell.com>,
-	arend@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Feb 2014 15:44:39 -0500
+From: Tejun Heo <tj@kernel.org>
+To: laijs@cn.fujitsu.com
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/9] wireless/rt2x00: don't use PREPARE_WORK in rt2800usb.c
+Date: Thu, 20 Feb 2014 15:44:23 -0500
+Message-Id: <1392929071-16555-2-git-send-email-tj@kernel.org> (sfid-20140220_214758_302962_407FE817)
+In-Reply-To: <1392929071-16555-1-git-send-email-tj@kernel.org>
+References: <1392929071-16555-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 February 2014 11:00, Luciano Coelho <luca@coelho.fi> wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
->
-> Move the counting part of the interface combination check from
-> cfg80211 to mac80211.
->
-> This is needed to simplify locking when the driver has to perform a
-> combination check by itself (eg. with channel-switch).
->
-> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> ---
+PREPARE_[DELAYED_]WORK() are being phased out.  They have few users
+and a nasty surprise in terms of reentrancy guarantee as workqueue
+considers work items to be different if they don't have the same work
+function.
 
-[...]
+Update rt2800usb.c to use INIT_WORK() instead of PREPARE_WORK().  As
+the work item isn't in active use during rt2800usb_probe_hw(), this
+doesn't cause any behavior difference.
 
-> @@ -520,6 +521,23 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
->         WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
->
->         mutex_lock(&local->chanctx_mtx);
-> +
-> +       radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
-> +                                                          chandef,
-> +                                                          sdata->vif.type);
-> +       if (radar_detect_width < 0) {
-> +               ret = radar_detect_width;
-> +               goto out;
-> +       }
-> +
-> +       sdata->radar_required = !!(radar_detect_width);
-> +
-> +       ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
-> +                                          chandef, IEEE80211_CHANCTX_SHARED,
-> +                                          radar_detect_width);
-> +       if (ret < 0)
-> +               goto out;
-> +
+It would probably be best to route this with other related updates
+through the workqueue tree.
 
-Shouldn't you be using `mode` function argument instead of
-IEEE80211_CHANCTX_SHARED?
+Only compile tested.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Michał
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index caddc1b..42a2e06 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -764,7 +764,7 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Overwrite TX done handler
+ 	 */
+-	PREPARE_WORK(&rt2x00dev->txdone_work, rt2800usb_work_txdone);
++	INIT_WORK(&rt2x00dev->txdone_work, rt2800usb_work_txdone);
+ 
+ 	return 0;
+ }
+-- 
+1.8.5.3
+
