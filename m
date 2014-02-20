@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:49994 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754396AbaBUOvO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 09:51:14 -0500
-Received: by mail-la0-f51.google.com with SMTP id c6so2379185lan.38
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 06:51:12 -0800 (PST)
-Message-ID: <530767DE.4070501@27m.se> (sfid-20140221_155117_617312_1F4C9531)
-Date: Fri, 21 Feb 2014 15:51:10 +0100
-From: Jones Desougi <jones.desougi@27m.se>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <luca@coelho.fi>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] cfg80211: docbook: fix small formatting error
-References: <1392907534-14470-1-git-send-email-luca@coelho.fi> <1392971037.4346.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1392971037.4346.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:53803 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752896AbaBTLnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 06:43:05 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v5 5/5] cfg80211: Enable GO operation on indoor channels
+Date: Thu, 20 Feb 2014 13:44:31 +0200
+Message-Id: <1392896671-4288-6-git-send-email-ilan.peer@intel.com> (sfid-20140220_124315_286914_E336E370)
+In-Reply-To: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2014 09:23 AM, Johannes Berg wrote:
-> On Thu, 2014-02-20 at 16:45 +0200, Luciano Coelho wrote:
->> From: Luciano Coelho <luciano.coelho@intel.com>
->>
->> docbook (or one of its friends) gets confused with semi-colons in the
->> argument descriptions, causing it to think that the semi-colon is
->> marking a new section in the description of addr_mask in wiphy struct.
->>
->> Prevent this by using hyphens instead of semi-colons in the mask
->> example.
-> 
-> Applied, thanks.
+Allow GO operation on a channel marked with IEEE80211_CHAN_INDOOR_ONLY
+iff there is a user hint indicating that the platform is operating in
+an indoor environment, i.e., the platform is a printer or media center
+device.
 
-Well, the changelog says that semi-colons are a problem while the patch
-actually replaces colons. Fishy. :)
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/chan.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-   /Jones
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 1d8c990..b18367d 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -611,6 +611,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+  * associated to an AP on the same channel or on the same UNII band
+  * (assuming that the AP is an authorized master).
++ * In addition allow the GO to operate on a channel on which indoor operation is
++ * allowed, iff we are currently operating in an indoor environment.
+  */
+ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 					struct ieee80211_channel *chan)
+@@ -621,8 +623,14 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 	ASSERT_RTNL();
+ 
+ 	if (!config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
+-	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR) ||
+-	    !(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
++	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
++		return false;
++
++	if (regulatory_indoor_allowed() &&
++	    (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++		return true;
++
++	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+ 		return false;
+ 
+ 	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
+-- 
+1.7.10.4
 
