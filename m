@@ -1,77 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:55924 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbaBVMs6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60127 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbaBTJgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 07:48:58 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so2117557ead.27
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 04:48:57 -0800 (PST)
-Received: from pendrak.localnet (093105044227.oswiecim.vectranet.pl. [93.105.44.227])
-        by mx.google.com with ESMTPSA id k6sm38527646eep.17.2014.02.22.04.48.55
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 22 Feb 2014 04:48:56 -0800 (PST)
-From: Mariusz Fik <fisiu82@jabster.pl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: /suse_update_desktop_file and Categories
-Date: Sat, 22 Feb 2014 13:48:54 +0100
-Message-ID: <6225254.q9g9eENvKF@pendrak> (sfid-20140222_134901_478940_AA5A44BB)
-In-Reply-To: <2171888.3xJjAhnGjq@pendrak>
-References: <2171888.3xJjAhnGjq@pendrak>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3897443.eWsUhf9u0D"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+	Thu, 20 Feb 2014 04:36:19 -0500
+Message-ID: <1392888972.5073.13.camel@jlt4.sipsolutions.net> (sfid-20140220_103623_570749_D5216775)
+Subject: Re: pull-request: mac80211 2014-02-20
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Feb 2014 10:36:12 +0100
+In-Reply-To: <1392887140.5073.10.camel@jlt4.sipsolutions.net> (sfid-20140220_100613_323680_C04BED1E)
+References: <1392887140.5073.10.camel@jlt4.sipsolutions.net>
+	 (sfid-20140220_100613_323680_C04BED1E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2014-02-20 at 10:05 +0100, Johannes Berg wrote:
+> John,
+> 
+> I've got a few more fixes for some issues here now.
 
---nextPart3897443.eWsUhf9u0D
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+Please ignore, sorry. I'll send a new one once we sort out the details
+of the last patch, and I have another race fix as well.
 
-Dnia sobota, 22 lutego 2014 13:28:16 piszesz:
-> Hi,
->=20
-> I'm trying to build kprinter4[1] package.
-> According to desktop file category guidelines[2], I included in spec =
-file:
->=20
-> %suse_update_desktop_file -r %{name} Utility Printing
->=20
-> But then build failed with:
-> WARNING: Category "Printing" is unknown \!
-> ERROR: No sufficient Category definition: {path_to_desktop_file}
-> Errors in installed desktop file detected. Please refer to=20
-> http://en.opensuse.org/SUSE_Package_Conventions/RPM_Macros
->=20
-> Where is a problem and what it's more important, what is a solution? =
-Our=20
-wiki=20
-> page with desktop menu categories are outdated? build/check tool issu=
-e?
->=20
-> [1] - https://github.com/credativ/kprinter4
-> [2] -=20
-> http://en.opensuse.org/openSUSE:Packaging_desktop_menu_categories#Uti=
-lity
->=20
-I'm so sorry. Wrong list. Please ignore this message.
-=2D-=20
-Pozdrawiam / Best regards,
-Mariusz Fik
-openSUSE Community Member
-GPG: 5FCE 7241 B3B9 32FD 455B C30E 42D6 6C88 9E83 7C3D
---nextPart3897443.eWsUhf9u0D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEABECAAYFAlMInLYACgkQQtZsiJ6DfD0qhACguZ6vGPGyBF52WiS3YUYawuRr
-epcAnR/flPGrlPK39LeiSpZ/Q/OefGD7
-=ne/R
------END PGP SIGNATURE-----
-
---nextPart3897443.eWsUhf9u0D--
+johannes
 
