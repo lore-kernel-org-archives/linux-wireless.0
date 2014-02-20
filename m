@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50332 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:60191 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbaBKNew (ORCPT
+	with ESMTP id S1751550AbaBTJyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 08:34:52 -0500
-Message-ID: <1392125688.4128.23.camel@jlt4.sipsolutions.net> (sfid-20140211_143455_775346_F8C7FDAA)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
+	Thu, 20 Feb 2014 04:54:00 -0500
+Message-ID: <1392890037.5073.18.camel@jlt4.sipsolutions.net> (sfid-20140220_105407_665561_81B48ECD)
+Subject: Re: [PATCH] cfg80211: Pass TDLS peer capability information in
+ tdls_mgmt
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 11 Feb 2014 14:34:48 +0100
-In-Reply-To: <1391602306.16723.57.camel@porter.coelho.fi>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 <1391434913.4488.24.camel@jlt4.sipsolutions.net>
-	 <1391508433.26522.61.camel@porter.coelho.fi>
-	 <CA+BoTQngW4Ycuv0H=ba5KWs2qDcqPQtKJWp-9XEwdqQv+Xu6CA@mail.gmail.com>
-	 <1391585999.16723.7.camel@porter.coelho.fi>
-	 <CA+BoTQkXjAYR0H4nHxagYz3Kn5atWJ048UUY1=gPrW77Gvqp+Q@mail.gmail.com>
-	 <1391602306.16723.57.camel@porter.coelho.fi>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, c_ppotte@qti.qualcomm.com,
+	djindal@qti.qualcomm.com
+Date: Thu, 20 Feb 2014 10:53:57 +0100
+In-Reply-To: <20140220094952.GA6290@jouni.qca.qualcomm.com>
+References: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com>
+	 <1392889161.5073.15.camel@jlt4.sipsolutions.net>
+	 <20140220094952.GA6290@jouni.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-05 at 14:11 +0200, Luca Coelho wrote:
-
-> It's the same if the STA CSA would be "started" in the userspace.  If
-> the remote AP sets a too short count, the userspace won't have the
-> chance to react.  In either case, we would have to send a notification
-> to the userspace and it would have to tell us what to do.  If we wait
-> for the userspace to react on our STA CSA, we will be too late on both
-> interfaces.  If mac80211 does the STA CSA directly, at least the STA CSA
-> will be done on time and the GO can move a bit later (or get
-> disconnected if we were short on chanctx's).
-
-I don't think the GO would get disconnected, rather the STA would, no?
-
-> > The purpose of ch_switch_finalize() is to perform the final switch
-> > atomically and make sure non-complying interfaces are disconnected
-> > before channel is actually switched (this could include Ilan's GO case
-> > in a clean way).
+On Thu, 2014-02-20 at 11:49 +0200, Jouni Malinen wrote:
+> On Thu, Feb 20, 2014 at 10:39:21AM +0100, Johannes Berg wrote:
+> > Generally, the patch looks fine, but I think you need to modify mac80211
+> > as well, and the mwifiex patch doesn't apply to my mac80211-next tree.
 > 
-> I was thinking about eventual drivers that offload the whole channel
-> switch process to the firmware.  The driver just sends the count, the
-> new channel and everything and the firmware takes care of it all.  It
-> will beacon for count TBTTs and perform the actual channel switch at the
-> right time.  In this case, all the decision making about what needs to
-> be disconnected or switched must be made at the beginning.
-> 
-> But I'll let Johannes comment more. ;)
+> How do you want to handle mwifiex then? That function is in
+> wireless-testing.git and if the cfg80211 API change goes through
+> mac80211-next that does not have mwifiex change, I'd assume the build
+> will break once that gets merged into wireless-testing (or whatever is
+> the first tree getting changes from both)?
 
-Yes, I'm pretty sure that this kind of situation will happen sooner or
-later, so preventing it in the APIs right now seems like a bad idea.
+Hmm, dunno. I could merge wireless-next into mac80211-next, if that
+helps?
 
 johannes
 
