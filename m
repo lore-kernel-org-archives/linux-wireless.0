@@ -1,96 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38353 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbaBZMcl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 07:32:41 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 10/14] brcmfmac: Use atomic functions for intstatus update.
-Date: Wed, 26 Feb 2014 13:32:32 +0100
-Message-ID: <1393417952-7594-1-git-send-email-arend@broadcom.com> (sfid-20140226_133246_063290_77833673)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:53803 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752286AbaBTLnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 06:43:00 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, David Spinadel <david.spinadel@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v5 1/5] cfg80211: Add indoor only and GO concurrent channel attributes
+Date: Thu, 20 Feb 2014 13:44:27 +0200
+Message-Id: <1392896671-4288-2-git-send-email-ilan.peer@intel.com> (sfid-20140220_124311_053653_521A4C7C)
+In-Reply-To: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: David Spinadel <david.spinadel@intel.com>
 
-The intstatus in sdio code can be updated from different
-threads. To protect intstatus access, atomic functions are
-used. The loop was replaced using atomic_set_mask().
+The FCC are clarifying some soft configuration requirements,
+which among other include the following:
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+1. Indoor operation, where a device can use channels requiring indoor
+   operation, subject to that it can guarantee indoor operation,
+   i.e., the device is connected to AC Power or the device is under
+   the control of a local master that is acting as an AP and is
+   connected to AC Power.
+2. Concurrent GO operation, where devices may instantiate a P2P GO
+   while they are under the guidance of an authorized master. For example,
+   on a channel on which a BSS is connected to an authorized master, i.e.,
+   with DFS and radar detection capability in the UNII band.
+
+See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
+
+Add support for advertising Indoor-only and GO-Concurrent channel
+properties.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ include/net/cfg80211.h       |    5 +++++
+ include/uapi/linux/nl80211.h |   23 +++++++++++++++++++++++
+ net/wireless/nl80211.c       |    6 ++++++
+ net/wireless/reg.c           |    2 ++
+ 4 files changed, 36 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index ac61419..0ccb7af 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2449,7 +2449,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	struct brcmf_core *buscore;
- 	u32 addr;
- 	unsigned long val;
--	int n, ret;
-+	int ret;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f90554..2ba017c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -109,6 +109,9 @@ enum ieee80211_band {
+  *	channel as the control or any of the secondary channels.
+  *	This may be due to the driver or due to regulatory bandwidth
+  *	restrictions.
++ * @IEEE80211_CHAN_INDOOR_ONLY: see %NL80211_FREQUENCY_ATTR_INDOOR_ONLY
++ * @IEEE80211_CHAN_GO_CONCURRENT: see %NL80211_FREQUENCY_ATTR_GO_CONCURRENT
++ *
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+@@ -120,6 +123,8 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_NO_OFDM		= 1<<6,
+ 	IEEE80211_CHAN_NO_80MHZ		= 1<<7,
+ 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
++	IEEE80211_CHAN_INDOOR_ONLY	= 1<<9,
++	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
+ };
  
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-@@ -2457,7 +2457,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
- 	if (ret != 0)
--		val = 0;
-+		return ret;
+ #define IEEE80211_CHAN_NO_HT40 \
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a12e6ca..061f8d4 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2329,9 +2329,30 @@ enum nl80211_band_attr {
+  * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
+  *	using this channel as the primary or any of the secondary channels
+  *	isn't possible
++ * @NL80211_FREQUENCY_ATTR_INDOOR_ONLY: Only indoor use is permitted on this
++ *	channel. A channel that has the INDOOR_ONLY attribute can only be
++ *	used when there is a clear assessment that the device is operating in
++ *	an indoor surroundings, i.e., it is connected to AC power (and not
++ *	through portable DC inverters) or is under the control of a master
++ *	that is acting as an AP and is connected to AC power.
++ * @NL80211_FREQUENCY_ATTR_GO_CONCURRENT: GO operation is allowed on this
++ *	channel if it's connected concurrently to a BSS on the same channel on
++ *	the 2 GHz band or to a channel in the same UNII band (on the 5 GHz
++ *	band), and IEEE80211_CHAN_RADAR is not set. Instantiating a GO on a
++ *	channel that has the GO_CONCURRENT attribute set can be done when there
++ *	is a clear assessment that the device is operating under the guidance of
++ *	an authorized master, i.e., setting up a GO while the device is also
++ *	connected to an AP with DFS and radar detection on the UNII band (it is
++ *	up to user-space, i.e., wpa_supplicant to perform the required
++ *	verifications)
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
++ *
++ * See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
++ * for more information on the FCC description of the relaxations allowed
++ * by NL80211_FREQUENCY_ATTR_INDOOR_ONLY and
++ * NL80211_FREQUENCY_ATTR_GO_CONCURRENT.
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -2347,6 +2368,8 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
+ 	NL80211_FREQUENCY_ATTR_NO_80MHZ,
+ 	NL80211_FREQUENCY_ATTR_NO_160MHZ,
++	NL80211_FREQUENCY_ATTR_INDOOR_ONLY,
++	NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
  
- 	val &= bus->hostintmask;
- 	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
-@@ -2466,13 +2466,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	if (val) {
- 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
- 		bus->sdcnt.f1regdata++;
--	}
--
--	if (ret) {
--		atomic_set(&bus->intstatus, 0);
--	} else if (val) {
--		for_each_set_bit(n, &val, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
-+		atomic_set_mask(val, &bus->intstatus);
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8e6b6a2..95a8c72 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -608,6 +608,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 		if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_INDOOR_ONLY) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_INDOOR_ONLY))
++			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_GO_CONCURRENT) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_GO_CONCURRENT))
++			goto nla_put_failure;
  	}
  
- 	return ret;
-@@ -2484,7 +2478,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	unsigned long intstatus;
- 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
- 	uint framecnt;			/* Temporary counter of tx/rx frames */
--	int err = 0, n;
-+	int err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2588,10 +2582,8 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	}
- 
- 	/* Keep still-pending events for next scheduling */
--	if (intstatus) {
--		for_each_set_bit(n, &intstatus, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
--	}
-+	if (intstatus)
-+		atomic_set_mask(intstatus, &bus->intstatus);
- 
- 	brcmf_sdio_clrintr(bus);
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 27c5253..eeccce3 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -867,6 +867,8 @@ static u32 map_regdom_flags(u32 rd_flags)
+ 		channel_flags |= IEEE80211_CHAN_RADAR;
+ 	if (rd_flags & NL80211_RRF_NO_OFDM)
+ 		channel_flags |= IEEE80211_CHAN_NO_OFDM;
++	if (rd_flags & NL80211_RRF_NO_OUTDOOR)
++		channel_flags |= IEEE80211_CHAN_INDOOR_ONLY;
+ 	return channel_flags;
+ }
  
 -- 
 1.7.10.4
