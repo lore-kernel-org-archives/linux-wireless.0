@@ -1,86 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52763 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbaBDLmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:42:47 -0500
-Message-ID: <1391514164.26522.89.camel@porter.coelho.fi> (sfid-20140204_124250_138209_B8A6B22E)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 04 Feb 2014 13:42:44 +0200
-In-Reply-To: <1391513092.4134.4.camel@jlt4.sipsolutions.net>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110356_335827_0A67B036) <1391434913.4488.24.camel@jlt4.sipsolutions.net>
-	 <1391508433.26522.61.camel@porter.coelho.fi>
-	 <1391509992.4134.1.camel@jlt4.sipsolutions.net>
-	 <1391512311.26522.75.camel@porter.coelho.fi>
-	 <1391513092.4134.4.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:27473 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753404AbaBTLmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 06:42:20 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v5 0/5] Enable additional channels for use
+Date: Thu, 20 Feb 2014 13:44:26 +0200
+Message-Id: <1392896671-4288-1-git-send-email-ilan.peer@intel.com> (sfid-20140220_124230_764265_AC1E20D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 12:24 +0100, Johannes Berg wrote:
-> On Tue, 2014-02-04 at 13:11 +0200, Luca Coelho wrote:
-> 
-> > > Well, what I was describing was really only the default policy if
-> > > userspace didn't do anything useful, which IMHO should really just be:
-> > > 
-> > >  * client receives CSA - disconnect if it can't be done
-> > >  * AP/GO wants CSA - refuse if it can't be done, let userspace sort it
-> > > out
-> > > 
-> > > In the first case, userspace still has the time between receiving the
-> > > CSA and actually acting on it to make another decision.
-> > 
-> > Right, this is okay, but the point is, what happens to the *other*
-> > interfaces?
-> 
-> Nothing! As far as that's permissible. Ilan's patchset might change
-> that, but that's mostly a regulatory thing, rather than a CSA thing.
+Includes some documentation fixes.
 
-Ah, you have some insider information! :P
+------
 
+As before, this series addresses the option of enabling additional channels for
+use based on the following relaxations:
 
+1. Indoor operation, where a device can use channels requiring indoor
+   operation, subject to that it can guarantee indoor operation.
+2. Concurrent GO operation, where devices may instantiate a P2P GO
+   while they are under the guidance of an authorized master.
 
-> > What does "it can't be done" mean for the client? If there's a GO in the
-> > same context and no free contexts for the switch, do we simply
-> > disconnect the client (and leave the GO hanging in the same channel)? We
-> > should probably tell the userspace and let it decide.
-> 
-> Yes, but we should only disconnect when the CSA actually needs to be
-> done, rather than immediately on receiving it.
+The series includes:
 
-Sure, but how does the userspace know that the other interface *needs*
-to be moved, regardless of regulatory problems? It needs to know that
-there are not enough contexts to keep the interfaces in different
-channels...
+* Some clarification (mainly in documentation) about the intended usage of
+  channels marked as INDOOR_ONLY and CONCURRENT GO.
+* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
+* Support for a user hint that the platform is operating in an indoor
+  environment, i.e., channel marked as INDOOR_ONLY can be used.
+* Allow initiating radiation on channel marked with INDOOR_ONLY also
+  for scanning an frame injection in monitor mode.
+* Some additional fixes for comments I got.
 
+Following is an example of a possible channel map that can be used to allow
+the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
 
-> > ...and, if the userspace doesn't react, we disconnect the GO.  I think
-> > it's safer this way for the GO-follows-STA case.
-> 
-> That would be a consequence of Ilan's work, yes.
+* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
+  information about the current regulatory domain, these channels can be used
+  for GO instantiation based on the concurrent GO relaxation.
+* The above is also true for channels 149-165 (a.k.a U-NII 3).
+* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
+  indoor only. While the Concurrent GO can be used as described above, the
+  indoor only setting allows to use these channels given the platform is
+  identified as an indoor one, i.e., media server.
 
-Okay, if that's going to be guaranteed, I'm fine with it.
+ 2412 MHz [1] (16.0 dBm)
+ 2417 MHz [2] (16.0 dBm)
+ 2422 MHz [3] (16.0 dBm)
+ 2427 MHz [4] (16.0 dBm)
+ 2432 MHz [5] (16.0 dBm)
+ 2437 MHz [6] (16.0 dBm)
+ 2442 MHz [7] (16.0 dBm)
+ 2447 MHz [8] (16.0 dBm)
+ 2452 MHz [9] (16.0 dBm)
+ 2457 MHz [10] (16.0 dBm)
+ 2462 MHz [11] (16.0 dBm)
+ 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
+ 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
+ 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
+ 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
+ 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
+ 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
+ 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
+ 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
+ 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
+ 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
+ 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
+ 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
+ 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
+ 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
+ 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
+ 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
+ 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
+ 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
+ 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
+ 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
+ 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
+ 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
+ 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
 
+Thanks in advance,
 
-> This typically won't happen, since userspace will do something else, but
-> we need to have some default policy. I don't think anything else makes
-> much sense?
+Ilan.
 
-My point was that a CSA could have been triggered due to regulatory
-(which the AP/GO is monitoring), so the safest would be to move everyone
-out of the channel by default.
+David Spinadel (1):
+  cfg80211: Add indoor only and GO concurrent channel attributes
 
-But now I agree that this is an unrelated feature that also needs to be
-handled when we do have free contexts to make the switch (and keep the
-two interfaces in different channels).
+Ilan Peer (4):
+  cfg80211: Add Kconfig option for cellular BS hints
+  cfg80211: Enable GO operation on additional channels
+  cfg80211: Add an option to hint indoor operation
+  cfg80211: Enable GO operation on indoor channels
 
---
-Luca.
+ include/net/cfg80211.h       |   14 +++++-
+ include/net/regulatory.h     |    6 +++
+ include/uapi/linux/nl80211.h |   26 +++++++++++
+ net/mac80211/ibss.c          |    9 ++--
+ net/wireless/Kconfig         |   37 ++++++++++++++++
+ net/wireless/chan.c          |   77 +++++++++++++++++++++++++++++++--
+ net/wireless/mesh.c          |    3 +-
+ net/wireless/nl80211.c       |   35 ++++++++-------
+ net/wireless/reg.c           |   97 +++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h           |   13 ++++++
+ net/wireless/trace.h         |   11 +++--
+ 11 files changed, 299 insertions(+), 29 deletions(-)
+
+-- 
+1.7.10.4
 
