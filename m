@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39730 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbaBFP7m (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:55629 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbaBTIDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 10:59:42 -0500
-Message-ID: <52F3B155.6010308@candelatech.com> (sfid-20140206_165945_152500_0C12400A)
-Date: Thu, 06 Feb 2014 07:59:17 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 20 Feb 2014 03:03:09 -0500
+Received: by mail-la0-f50.google.com with SMTP id ec20so1062028lab.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 00:03:07 -0800 (PST)
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2] ath9k: Remove ath9k rate control
-References: <1391662375-28781-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1391662375-28781-1-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1392883153.5073.4.camel@jlt4.sipsolutions.net>
+References: <1392226988-3878-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6VEmUr5rVhaeShdJQomhhQ3VeDcHaqeHo0jGNaWKtMwyQ@mail.gmail.com>
+	<CAFED-jn0AfGVqJVFfeu6Pke2UBh-+nnRrhdVM-4acYHn9WdSjQ@mail.gmail.com>
+	<CAB=NE6UR3yQOSZr7NXA4kO2hKre0zBsmK9H1MTYZ=9Wh_=9AtA@mail.gmail.com>
+	<CALhHN=qc7m7oce6aiiNfpW5wUc7ypy2E+0TmYsKNth5_s5FpxQ@mail.gmail.com>
+	<1392882691.5073.3.camel@jlt4.sipsolutions.net>
+	<CALhHN=owY-xYOmieHUeDpmSXqJir2VrmfxM8H3zjo0mVvM3GQg@mail.gmail.com>
+	<1392883153.5073.4.camel@jlt4.sipsolutions.net>
+Date: Thu, 20 Feb 2014 09:03:07 +0100
+Message-ID: <CALhHN=rPZqBJiOHnT4O32FH1JkCSxBYY7gQ1m6RDnnHC9stySQ@mail.gmail.com> (sfid-20140220_090313_336539_62CB9646)
+Subject: Re: [PATCH] crda: handle AUTO bw setting in db2rd
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2014 08:52 PM, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 20 February 2014 08:59, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-20 at 08:57 +0100, Janusz Dziedzic wrote:
 >
-> There is no benefit in retaining the legacy rate control module
-> in the driver codebase.
+>> >> Yes, seems we should send this even this is 0.
+>> >> Next for old kernel, all channels where BW=0 will be HT20 only.
+>> >
+>> > Is that really a good idea?
+>> >
+>> > Maybe crda should just get the logic to determine maximum bandwidth,
+>> > like you did in the kernel, and then we can even revert the kernel code
+>> > again?
+>> >
+>> Yes, this is possible to calculate this in crda (or even set this manually).
 >
-> It is known to be buggy and has less than optimal performance
-> in real-world environments compared with minstrel. The only
-> reason that it was kept when we made the switch to minstrel
-> as default was that it showed higher throughput numbers in a
-> clean/ideal environment.
+> Ok. Would that help older kernels? How would we handle genregdb.awk?
 >
-> This is no longer the case and minstrel can push ath9k to
-> the same throughput levels. In TCP, with 3-stream cards, more than
-> 295 Mbps can be obtained in open air, with 2-stream cards,
-> 210 Mbps is easily reached. To test performance issues,
-> instead of using a broken rate control module, it is better
-> to use the fixed-rate interface provided by mac80211 anyway.
+In case of older kernels we will fail (end_freq - start_freq < bw) with -EINVAL.
+So, bw=0 (cfg calculation) seems like best idea - will work with new
+and old kernels.
 
-Can you let us know the details on how your set up that TCP
-traffic?  For instance, number of streams, write size, socket
-buffer sizes, etc?  Upload, download, or are both similar
-throughput in your testing?
-
-I find that those settings influence throughput a great deal,
-and I have not yet been able to reach 295Mbps of TCP throughput
-in our testing w/out hacking the tcp-ack logic to increase ack delays.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+BR
+Janusz
