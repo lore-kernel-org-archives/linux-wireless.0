@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54662 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbaBYP2M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 10:28:12 -0500
-Message-ID: <1393342083.4170.16.camel@jlt4.sipsolutions.net> (sfid-20140225_162816_929920_EB641B3C)
-Subject: Re: [PATCH 2/2] cfg80211: regulatory, allow user to set world
- regdomain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com
-Date: Tue, 25 Feb 2014 16:28:03 +0100
-In-Reply-To: <1392364441-4640-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140214_085422_293607_23F25481)
-References: <1392364441-4640-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1392364441-4640-2-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140214_085422_293607_23F25481)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:64038 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753743AbaBTILZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 03:11:25 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Spinadel, David" <david.spinadel@intel.com>
+Subject: RE: [PATCH v4 1/5] cfg80211: Add indoor only and GO concurrent
+ channel attributes
+Date: Thu, 20 Feb 2014 08:11:21 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033383F88@HASMSX106.ger.corp.intel.com> (sfid-20140220_091129_363394_18DD4207)
+References: <1392824377-18254-1-git-send-email-ilan.peer@intel.com>
+ <1392824377-18254-2-git-send-email-ilan.peer@intel.com>
+ <20140219161101.GJ14296@garbanzo.do-not-panic.com>
+ <5304EBB1.904@broadcom.com>
+ <CAB=NE6WSag35Y+CrAHu1QTj27f3W1JavsPeiEXwEcLUL8Zj4XQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6WSag35Y+CrAHu1QTj27f3W1JavsPeiEXwEcLUL8Zj4XQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-14 at 08:54 +0100, Janusz Dziedzic wrote:
-> Allow to set world regulatory domain in case of user
-> request (iw reg set 00).
-
-Applied both, I took the first one for 3.14 still.
-
-johannes
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQo+IFNlbnQ6IFdl
+ZG5lc2RheSwgRmVicnVhcnkgMTksIDIwMTQgMTk6NTYNCj4gVG86IEFyZW5kIHZhbiBTcHJpZWwN
+Cj4gQ2M6IFBlZXIsIElsYW47IGxpbnV4LXdpcmVsZXNzOyBTcGluYWRlbCwgRGF2aWQNCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSCB2NCAxLzVdIGNmZzgwMjExOiBBZGQgaW5kb29yIG9ubHkgYW5kIEdP
+IGNvbmN1cnJlbnQNCj4gY2hhbm5lbCBhdHRyaWJ1dGVzDQo+IA0KDQo+ID4gU28gYXBwYXJlbnRs
+eSBGQ0MgaGFzIGFub3RoZXIgdW5kZXJzdGFuZGluZyB0aGFuIHRoZSBXaUZpIEFsbGlhbmNlDQo+
+ID4gKGZyb20gc2VjdGlvbiAyLjMgaW4gV0ZBIFAyUC1UUyk6DQoNCkkgZG8gbm90IHRoaW5rIHRo
+YXQgdGhlcmUgaXMgYSBjb250cmFkaWN0aW9uIGhlcmUsIGFzIHRoZSBXRkEgdXNlcyB0aGUgJ21h
+eScgbm90YXRpb24gYW5kIHRoZXkgYXJlIG5vdCByZWFsbHkgYWRkcmVzc2luZyByZWd1bGF0b3J5
+IGxpbWl0YXRpb25zLg0KDQo+ID4NCj4gPiAiIiINCj4gPiBBIFAyUCBEZXZpY2UgY2FuIG9wZXJh
+dGUgY29uY3VycmVudGx5IHdpdGggYSBXTEFOIChpbmZyYXN0cnVjdHVyZQ0KPiA+IG5ldHdvcmsp
+LiBTdWNoIGEgZGV2aWNlIGlzIGNvbnNpZGVyZWQgYSBQMlAgQ29uY3VycmVudCBEZXZpY2UuIFRo
+ZQ0KPiA+IGNvbmN1cnJlbnQgb3BlcmF0aW9uIHJlcXVpcmVzIGEgZGV2aWNlIHRvIHN1cHBvcnQg
+bXVsdGlwbGUgTUFDIGVudGl0aWVzLg0KPiA+ICAgICAgICAgOg0KPiA+ICAgICAgICAgOg0KPiA+
+IEEgUDJQIEdyb3VwIG1heSBvcGVyYXRlIGluIHRoZSBzYW1lIG9yIGRpZmZlcmVudCBvcGVyYXRp
+bmcgY2xhc3MgYW5kDQo+ID4gY2hhbm5lbCBhcyBhIGNvbmN1cnJlbnRseSBvcGVyYXRpbmcgV0xB
+TiBCU1MuIEZvciBleGFtcGxlLCBhIFdMQU4gQlNTDQo+ID4gbWF5IG9wZXJhdGUgaW4gY2hhbm5l
+bCAzNiBpbiB0aGUgNS4yIEdIeiBiYW5kLCB3aGlsZSB0aGUgUDJQIEdyb3VwIG1heQ0KPiA+IG9w
+ZXJhdGUgaW4gY2hhbm5lbCA2IGluIHRoZSAyLjQgR0h6IGJhbmQuDQo+ID4gIiIiDQoNCj4gDQo+
+IEJ1dCBjYW4gYSBXTEFOIEJTUyBvcGVyYXRlIG9uIGNoYW5uZWwgNiBpbiB0aGUgMi40IEdIeiBi
+YW5kIGFuZCBpbmZlciBpdCBjYW4NCj4gc3RhcnQgR08gb24gY2hhbm5lbCAzNj8gVGhpcyBxdWVz
+dGlvbiBzZWVtcyBub3QgcmVsYXRlZCB0byBjb25jdXJyZW50IHN0dWZmDQo+IGJ1dCByYXRoZXIg
+cHVyZSByZWd1bGF0b3J5IGJ1dCBJIHN1cHBvc2UgdGhhdCB3aWxsIGRlcGVuZCBvbiB0aGUgZGVm
+aW5pdGlvbg0KPiB0aGF0IHRoZSBGQ0MgaW50ZW5kZWQgYmVoaW5kIEdPIGNvbmN1cnJlbmN5Lg0K
+DQpOby4gQXMgbWVudGlvbmVkIGluIHByZXZpb3VzbHksIHRoZSBVTklJIGJhbmRzIGFyZSBidW5k
+bGVzIG9mIGNoYW5uZWxzIHdoaWNoIHNoYXJlIHRoZSBzYW1lIHJ1bGVzLCBzbyBzaW5jZSBjaGFu
+bmVscyA2IGlzIG5vdCBpbiB0aGUgc2FtZSBVTklJIGJhbmQgYXMgY2hhbm5lbCAzNiBpdCBpcyBu
+b3QgYWxsb3dlZCB0byBpbnN0YW50aWF0ZSBhIEdPIG9uIGNoYW5uZWwgMzYgYmFzZWQgb24gdGhl
+IEdPIGNvbmN1cnJlbnQgcmVsYXhhdGlvbi4NCg0KPiBJcyB0aGUgZGVmaW5pdGlvbiBvZiBjb25j
+dXJyZW5jeSBHTyB0aGluZyBzdXBwb3NlZCB0byAqcmVzdHJpY3QqIHRoZSBudW1iZXINCj4gb2Yg
+aW50ZXJmYWNlcyBhIGRldmljZSBjYW4gY3JlYXRlIChTVEEsIEdPKSwgb3Igc2ltcGx5IGRlZmlu
+ZSBwZXJtaXNzaXZlIHJ1bGVzDQo+IHdoaWNoIHdvdWxkIGhhdmUgb3RoZXJ3aXNlIGJlZW4gYmxv
+Y2tlZD8NCj4gDQoNClRoZSBkZWZpbml0aW9ucyB0byBub3QgbGltaXQvcmVzdHJpY3QgdGhlIG51
+bWJlciBvZiBjb25jdXJyZW50IGludGVyZmFjZSBidXQgYWxsb3cgcGVybWlzc2l2ZSBydWxlcyB0
+byBhbGxvdyBjZXJ0YWluIG9wZXJhdGlvbnMgd2hpY2ggaW4gb3RoZXIgY2lyY3Vtc3RhbmNlcyB3
+b3VsZCBiZSBibG9ja2VkLiANCg0KUmVnYXJkcywNCg0KSWxhbi4NCg0K
