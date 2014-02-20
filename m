@@ -1,51 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14501 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbaB0OVw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59998 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753254AbaBTIwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:21:52 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 16/16] wil6210: do not reorder groupcast Rx
-Date: Thu, 27 Feb 2014 16:20:55 +0200
-Message-ID: <1393510855-17566-17-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_154709_364117_8787C88F)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 20 Feb 2014 03:52:50 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
+Date: Thu, 20 Feb 2014 09:52:45 +0100
+Message-Id: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net> (sfid-20140220_095253_945304_E256E936)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Groupcast frames are not subject for BACK reordering because they are not
-ACK'ed and one can't request re-transmitt
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+There is a race between the TX path and the STA wakeup: while
+a station is sleeping, mac80211 buffers frames until it wakes
+up, then the frames are transmitted. However, the RX and TX
+path are concurrent, so the packet indicating wakeup can be
+processed while a packet is being transmitted.
+
+This can lead to a situation where the buffered frames list
+is emptied on the one side, while a frame is being added on
+the other side, as the station is still seen as sleeping in
+the TX path.
+
+As a result, the newly added frame will not be send anytime
+soon. It might be sent much later (and out of order) when the
+station goes to sleep and wakes up the next time.
+
+Additionally, it can lead to the crash below.
+
+Fix all this by synchronising both paths with a new lock.
+Both path are not fastpath since they handle PS situations.
+
+In a later patch we'll remove the extra skb queue locks to
+reduce locking overhead.
+
+BUG: unable to handle kernel
+NULL pointer dereference at 000000b0
+IP: [<ff6f1791>] ieee80211_report_used_skb+0x11/0x3e0 [mac80211]
+*pde = 00000000
+Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+EIP: 0060:[<ff6f1791>] EFLAGS: 00210282 CPU: 1
+EIP is at ieee80211_report_used_skb+0x11/0x3e0 [mac80211]
+EAX: e5900da0 EBX: 00000000 ECX: 00000001 EDX: 00000000
+ESI: e41d00c0 EDI: e5900da0 EBP: ebe458e4 ESP: ebe458b0
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+CR0: 8005003b CR2: 000000b0 CR3: 25a78000 CR4: 000407d0
+DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+DR6: ffff0ff0 DR7: 00000400
+Process iperf (pid: 3934, ti=ebe44000 task=e757c0b0 task.ti=ebe44000)
+iwlwifi 0000:02:00.0: I iwl_pcie_enqueue_hcmd Sending command LQ_CMD (#4e), seq: 0x0903, 92 bytes at 3[3]:9
+Stack:
+ e403b32c ebe458c4 00200002 00200286 e403b338 ebe458cc c10960bb e5900da0
+ ff76a6ec ebe458d8 00000000 e41d00c0 e5900da0 ebe458f0 ff6f1b75 e403b210
+ ebe4598c ff723dc1 00000000 ff76a6ec e597c978 e403b758 00000002 00000002
+Call Trace:
+ [<ff6f1b75>] ieee80211_free_txskb+0x15/0x20 [mac80211]
+ [<ff723dc1>] invoke_tx_handlers+0x1661/0x1780 [mac80211]
+ [<ff7248a5>] ieee80211_tx+0x75/0x100 [mac80211]
+ [<ff7249bf>] ieee80211_xmit+0x8f/0xc0 [mac80211]
+ [<ff72550e>] ieee80211_subif_start_xmit+0x4fe/0xe20 [mac80211]
+ [<c149ef70>] dev_hard_start_xmit+0x450/0x950
+ [<c14b9aa9>] sch_direct_xmit+0xa9/0x250
+ [<c14b9c9b>] __qdisc_run+0x4b/0x150
+ [<c149f732>] dev_queue_xmit+0x2c2/0xca0
+
+Cc: stable@vger.kernel.org
+Reported-by: Yaara Rozenblum <yaara.rozenblum@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+[reword commit log, use a separate lock]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ net/mac80211/sta_info.c |  4 ++++
+ net/mac80211/sta_info.h |  7 +++----
+ net/mac80211/tx.c       | 14 ++++++++++++++
+ 3 files changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 9b4388b..092081e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -529,8 +529,14 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
- 			skb->protocol = htons(ETH_P_802_2);
- 			wil_netif_rx_any(skb, ndev);
- 		} else {
-+			struct ethhdr *eth = (void *)skb->data;
-+
- 			skb->protocol = eth_type_trans(skb, ndev);
--			wil_rx_reorder(wil, skb);
-+
-+			if (is_unicast_ether_addr(eth->h_dest))
-+				wil_rx_reorder(wil, skb);
-+			else
-+				wil_netif_rx_any(skb, ndev);
- 		}
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index decd30c1e290..62a5f0889583 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -330,6 +330,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
  
+ 	spin_lock_init(&sta->lock);
++	spin_lock_init(&sta->ps_lock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
+ 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
+ 	mutex_init(&sta->ampdu_mlme.mtx);
+@@ -1109,6 +1110,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 
+ 	skb_queue_head_init(&pending);
+ 
++	/* sync with ieee80211_tx_h_unicast_ps_buf */
++	spin_lock(&sta->ps_lock);
+ 	/* Send all buffered frames to the station */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		int count = skb_queue_len(&pending), tmp;
+@@ -1128,6 +1131,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
  	}
+ 
+ 	ieee80211_add_pending_skbs_fn(local, &pending, clear_sta_ps_flags, sta);
++	spin_unlock(&sta->ps_lock);
+ 
+ 	/* This station just woke up and isn't aware of our SMPS state */
+ 	if (!ieee80211_smps_is_restrictive(sta->known_smps_mode,
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index d77ff7090630..d3a6d8208f2f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -267,6 +267,7 @@ struct ieee80211_tx_latency_stat {
+  * @drv_unblock_wk: used for driver PS unblocking
+  * @listen_interval: listen interval of this station, when we're acting as AP
+  * @_flags: STA flags, see &enum ieee80211_sta_info_flags, do not use directly
++ * @ps_lock: used for powersave (when mac80211 is the AP) related locking
+  * @ps_tx_buf: buffers (per AC) of frames to transmit to this station
+  *	when it leaves power saving state or polls
+  * @tx_filtered: buffers (per AC) of frames we already tried to
+@@ -356,10 +357,8 @@ struct sta_info {
+ 	/* use the accessors defined below */
+ 	unsigned long _flags;
+ 
+-	/*
+-	 * STA powersave frame queues, no more than the internal
+-	 * locking required.
+-	 */
++	/* STA powersave lock and frame queues */
++	spinlock_t ps_lock;
+ 	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
+ 	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
+ 	unsigned long driver_buffered_tids;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 97a02d3f7d87..c2ca9313595b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -478,6 +478,19 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		       sta->sta.addr, sta->sta.aid, ac);
+ 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 			purge_old_ps_buffers(tx->local);
++
++		/* sync with ieee80211_sta_ps_deliver_wakeup */
++		spin_lock(&sta->ps_lock);
++		/*
++		 * STA woke up the meantime and all the frames on ps_tx_buf have
++		 * been queued to pending queue. No reordering can happen, go
++		 * ahead and Tx the packet.
++		 */
++		if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
++			spin_unlock(&sta->ps_lock);
++			return TX_CONTINUE;
++		}
++
+ 		if (skb_queue_len(&sta->ps_tx_buf[ac]) >= STA_MAX_TX_BUFFER) {
+ 			struct sk_buff *old = skb_dequeue(&sta->ps_tx_buf[ac]);
+ 			ps_dbg(tx->sdata,
+@@ -492,6 +505,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 		info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 		skb_queue_tail(&sta->ps_tx_buf[ac], tx->skb);
++		spin_unlock(&sta->ps_lock);
+ 
+ 		if (!timer_pending(&local->sta_cleanup))
+ 			mod_timer(&local->sta_cleanup,
 -- 
-1.8.3.2
+1.8.5.3
 
