@@ -1,95 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21840 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbaBMPUh (ORCPT
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:63894 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753164AbaBTItB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 10:20:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix SMPS support
-References: <1391673591-8907-1-git-send-email-michal.kazior@tieto.com>
-	<87eh379jcm.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnC3uVQguO8U+nP9Q7mLypZ77hVBaiS-tqxSMBh6Ph4xQ@mail.gmail.com>
-Date: Thu, 13 Feb 2014 17:20:31 +0200
-In-Reply-To: <CA+BoTQnC3uVQguO8U+nP9Q7mLypZ77hVBaiS-tqxSMBh6Ph4xQ@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 13 Feb 2014 15:47:21 +0100")
-Message-ID: <87lhxf82f4.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_162040_879451_2C45066C)
+	Thu, 20 Feb 2014 03:49:01 -0500
+Received: by mail-qc0-f172.google.com with SMTP id w7so567136qcr.17
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 00:48:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Thu, 20 Feb 2014 08:48:59 +0000
+Message-ID: <CAMsipf_WdaPAh-=OmEqT8LXtXUf=h7Jiw_KOO=ruuaLmvQTa_g@mail.gmail.com> (sfid-20140220_094905_859391_8823AAE2)
+Subject: No beacon when running rtl8192cu in AP mode
+From: Duncan Palmer <dpalmer@digisoft.tv>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> On 13 February 2014 15:29, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> +static const u32 ath10k_smps_map[] = {
->>> +     [WLAN_HT_CAP_SM_PS_STATIC] = WMI_PEER_SMPS_STATIC,
->>> +     [WLAN_HT_CAP_SM_PS_DYNAMIC] = WMI_PEER_SMPS_DYNAMIC,
->>> +     [WLAN_HT_CAP_SM_PS_INVALID] = WMI_PEER_SMPS_PS_NONE,
->>> +     [WLAN_HT_CAP_SM_PS_DISABLED] = WMI_PEER_SMPS_PS_NONE,
->>> +};
->>> +
->>> +static int ath10k_setup_peer_smps(struct ath10k *ar, struct ath10k_vif *arvif,
->>> +                               const u8 *addr,
->>> +                               const struct ieee80211_sta_ht_cap *ht_cap)
->>> +{
->>> +     int smps;
->>> +
->>> +     if (!ht_cap->ht_supported)
->>> +             return 0;
->>> +
->>> +     smps = ht_cap->cap & IEEE80211_HT_CAP_SM_PS;
->>> +     smps >>= IEEE80211_HT_CAP_SM_PS_SHIFT;
->>> +
->>> +     if (smps >= ARRAY_SIZE(ath10k_smps_map))
->>> +             return -EINVAL;
->>> +
->>> +     return ath10k_wmi_peer_set_param(ar, arvif->vdev_id, addr,
->>> +                                      WMI_PEER_SMPS_STATE,
->>> +                                      ath10k_smps_map[smps]);
->>> +}
->>
->> ath10k_smps_map looks overkill (and fragile), wouldn't a switch
->> statement be simpler?
->
-> The map shouldn't really ever change since it depends on the 11n spec.
-> I just prefer it this way as it's shorter and easier to grasp. I can
-> change it to a switch() if you insist.
+I've some hardware with an rtl8192cu chipset on board, and I'm trying
+to get it working in AP mode. I'm using the driver from
+backports-3.13.2-1.
 
-No, I do not insist. I guess this is ok in this case.
+I've found that when in AP mode, the hardware is not sending a beacon.
+It looks like things have been this way for a while, however I've seen
+no comments since late 2012:
 
-But I just think that with a switch it's almost impossible to get this
-wrong, but with a table you have to be very careful not to break
-anything (reading out of bounds, missing enums etc). And with switch you
-automatically get compiler to check that all enums values are checked. I
-would just prefer to have safe code over clever hacks, even if it means
-few lines longer code.
+http://www.spinics.net/lists/linux-wireless/msg96128.html
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/96712
+http://www.spinics.net/lists/linux-wireless/msg100805.html
 
->>> @@ -1370,6 +1385,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
->>>  {
->>>       struct ath10k *ar = hw->priv;
->>>       struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
->>> +     struct ieee80211_sta_ht_cap ht_cap;
->>>       struct wmi_peer_assoc_complete_arg peer_arg;
->>>       struct ieee80211_sta *ap_sta;
->>>       int ret;
->>> @@ -1386,6 +1402,8 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
->>>               return;
->>>       }
->>>
->>> +     ht_cap = ap_sta->ht_cap;
->>
->> Why do you copy ht_cap? I can't figure out the reason.
->
-> It is used by ath10k_setup_peer_smps() which might sleep as it sends
-> wmi command. This means we have to leave rcu section and must not
-> touch ap_sta pointer anymore.
+I see that there is a call to set_bcn_reg() that is commented out in
+core.c, which is a bad sign. I've tried putting it back in, but not
+surprisingly, I didn't get any joy:
 
-Can you add a comment for that, please?
+diff -ur orig/backports-3.13-1/drivers/net/wireless/rtlwifi/core.c
+backports-3.13-1/drivers/net/wireless/rtlwifi/core.c
+--- orig/backports-3.13-1/drivers/net/wireless/rtlwifi/core.c
+2014-01-24 22:28:18.000000000 +0000
++++ backports-3.13-1/drivers/net/wireless/rtlwifi/core.c    2014-02-19
+15:02:10.768162831 +0000
+@@ -673,7 +673,7 @@
+                     "BSS_CHANGED_BEACON_ENABLED\n");
 
--- 
-Kalle Valo
+                /*start hw beacon interrupt. */
+-               /*rtlpriv->cfg->ops->set_bcn_reg(hw); */
++               rtlpriv->cfg->ops->set_bcn_reg(hw);
+                mac->beacon_enabled = 1;
+                rtlpriv->cfg->ops->update_interrupt_mask(hw,
+                        rtlpriv->cfg->maps
+
+Comparing backports-3.13.2-1 with the vendor driver doesn't show any
+omissions related to beacon setup, but I could easily have missing
+something.
+
+Does anyone know if there are reasons why beacon support isn't working
+with this driver, or could anyone offer me any hints for further
+investigation?
+
+Regards,
+Duncan Palmer
