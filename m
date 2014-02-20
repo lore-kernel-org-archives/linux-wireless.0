@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:41610 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbaBXM2s (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:36249 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755055AbaBTOph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 07:28:48 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v3 1/3] if_ether.h: add IEEE 802.21 Ethertype
-Date: Mon, 24 Feb 2014 13:28:38 +0100
-Message-Id: <1393244920-15903-2-git-send-email-sw@simonwunderlich.de> (sfid-20140224_132856_842379_81FC70AF)
-In-Reply-To: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de>
-References: <1393244920-15903-1-git-send-email-sw@simonwunderlich.de>
+	Thu, 20 Feb 2014 09:45:37 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/2] cfg80211: docbook: fix small formatting error
+Date: Thu, 20 Feb 2014 16:45:33 +0200
+Message-Id: <1392907534-14470-1-git-send-email-luca@coelho.fi> (sfid-20140220_154549_823865_8F4CD626)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the Ethertype for IEEE Std 802.21 - Media Independent Handover
-Protocol. This Ethertype is used for network control messages.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+docbook (or one of its friends) gets confused with semi-colons in the
+argument descriptions, causing it to think that the semi-colon is
+marking a new section in the description of addr_mask in wiphy struct.
+
+Prevent this by using hyphens instead of semi-colons in the mask
+example.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/uapi/linux/if_ether.h |    1 +
- 1 file changed, 1 insertion(+)
+ include/net/cfg80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
-index 2ce0f6a..2e27208 100644
---- a/include/uapi/linux/if_ether.h
-+++ b/include/uapi/linux/if_ether.h
-@@ -89,6 +89,7 @@
- #define ETH_P_FCOE	0x8906		/* Fibre Channel over Ethernet  */
- #define ETH_P_TDLS	0x890D          /* TDLS */
- #define ETH_P_FIP	0x8914		/* FCoE Initialization Protocol */
-+#define ETH_P_80221	0x8917		/* IEEE 802.21 Media Independent Handover Protocol */
- #define ETH_P_QINQ1	0x9100		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
- #define ETH_P_QINQ2	0x9200		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
- #define ETH_P_QINQ3	0x9300		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c89a5b5..2c53749 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2791,7 +2791,7 @@ struct wiphy_vendor_command {
+  * @perm_addr: permanent MAC address of this device
+  * @addr_mask: If the device supports multiple MAC addresses by masking,
+  *	set this to a mask with variable bits set to 1, e.g. if the last
+- *	four bits are variable then set it to 00:...:00:0f. The actual
++ *	four bits are variable then set it to 00-00-00-00-00-0f. The actual
+  *	variable bits shall be determined by the interfaces added, with
+  *	interfaces not matching the mask being rejected to be brought up.
+  * @n_addresses: number of addresses in @addresses.
 -- 
-1.7.10.4
+1.8.5.3
 
