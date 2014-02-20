@@ -1,100 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:59620 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483AbaBCNC0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 08:02:26 -0500
-Received: by mail-qc0-f178.google.com with SMTP id m20so10876879qcx.37
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 05:02:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1391175318.4141.8.camel@jlt4.sipsolutions.net>
-References: <1386252334-26696-1-git-send-email-marek.kwaczynski@tieto.com>
-	<1391175318.4141.8.camel@jlt4.sipsolutions.net>
-Date: Mon, 3 Feb 2014 14:02:25 +0100
-Message-ID: <CALDuf6jq7UnfkYub_MaRP8J4g5ANv3o1U2kdzssEPjiEvUtuYg@mail.gmail.com> (sfid-20140203_140229_804621_95D86000)
-Subject: Re: [PATCH V6] mac80211: Update opmode during adding new station
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:1716 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753346AbaBTMvn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 07:51:43 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] net: rfkill: gpio: remove unused and obsolete platform parameters
+Date: Thu, 20 Feb 2014 14:51:34 +0200
+Message-Id: <1392900697-27577-2-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140220_135417_567960_8A0B467F)
+In-Reply-To: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 January 2014 14:35, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Sorry, I had somehow lost this patch before.
->
->> +     if (params->opmode_notif_used) {
->> +             enum ieee80211_band band =
->> +                             ieee80211_get_sdata_band(sdata);
->> +             ieee80211_vht_recalc_handle_opmode(sdata, sta,
->> +                                                params->opmode_notif,
->> +                                                band, 0);
->> +     }
->
-> That last argument should be 'false', it seems. You're also ignoring the
-> return value, which seems wrong at first look? Maybe it's right, but
-> then you should probably add a comment?
+After upgrading to descriptor based gpios, the gpio numbers
+are not used anymore. The power_clk_name and the platform
+specific setup and close hooks are not used by anybody, and
+we should not encourage use of such things, so removing them.
 
-Yes, you are right I will change it.
->
->> +u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
->> +                                    struct sta_info *sta, u8 opmode,
->> +                                    enum ieee80211_band band, bool nss_only);
->>  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->>                                struct sta_info *sta, u8 opmode,
->>                                enum ieee80211_band band, bool nss_only);
->
-> It's not clear to me what those function name distinction means, maybe
-> it would be better to not call this 'recalc' but just give it two
-> underscores in the function name or so, since it's really the same but
-> without calling the RC upate?
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ include/linux/rfkill-gpio.h | 10 ----------
+ net/rfkill/rfkill-gpio.c    | 15 +--------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
-Yes, it was my intention, set only nss and bandwidth in station
-without calling the RC update.
-I will add two underscores in the function.
->
->> -     struct ieee80211_local *local = sdata->local;
->> -     struct ieee80211_supported_band *sband;
->>       enum ieee80211_sta_rx_bandwidth new_bw;
->> -     u32 changed = 0;
->>       u8 nss;
->> -
->> -     sband = local->hw.wiphy->bands[band];
->> +     u32 changed = 0;
->
-> Why change the order of nss/changed? If you leave as is the diff might
-> be simpler? Not that it matters, I was just wondering for a bit here
-> what was really changed on the 'changed' line.
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index 4d09f6e..20bcb55 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -27,21 +27,11 @@
+  * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
+  * for unused gpio's, the expected value is -1.
+  * @name:		name for the gpio rf kill instance
+- * @reset_gpio:		GPIO which is used for reseting rfkill switch
+- * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+- * @power_clk_name:	[optional] name of clk to turn off while blocked
+- * @gpio_runtime_close:	clean up platform specific gpio configuration
+- * @gpio_runtime_setup:	set up platform specific gpio configuration
+  */
+ 
+ struct rfkill_gpio_platform_data {
+ 	char			*name;
+-	int			reset_gpio;
+-	int			shutdown_gpio;
+-	const char		*power_clk_name;
+ 	enum rfkill_type	type;
+-	void	(*gpio_runtime_close)(struct platform_device *);
+-	int	(*gpio_runtime_setup)(struct platform_device *);
+ };
+ 
+ #endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index bd2a5b9..0adda44 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_gpio_data *rfkill;
+-	const char *clk_name = NULL;
+ 	struct gpio_desc *gpio;
+ 	int ret;
+ 	int len;
+@@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			return ret;
+ 	} else if (pdata) {
+-		clk_name = pdata->power_clk_name;
+ 		rfkill->name = pdata->name;
+ 		rfkill->type = pdata->type;
+ 	} else {
+@@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+ 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+ 
+-	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
++	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+ 
+ 	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+ 	if (!IS_ERR(gpio)) {
+@@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (pdata && pdata->gpio_runtime_setup) {
+-		ret = pdata->gpio_runtime_setup(pdev);
+-		if (ret) {
+-			dev_err(&pdev->dev, "can't set up gpio\n");
+-			return ret;
+-		}
+-	}
+-
+ 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+ 					  rfkill->type, &rfkill_gpio_ops,
+ 					  rfkill);
+@@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ static int rfkill_gpio_remove(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+-	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 
+-	if (pdata && pdata->gpio_runtime_close)
+-		pdata->gpio_runtime_close(pdev);
+ 	rfkill_unregister(rfkill->rfkill_dev);
+ 	rfkill_destroy(rfkill->rfkill_dev);
+ 
+-- 
+1.9.0.rc3
 
-I'm sorry, it was my mistake. Of course that change wasn't needed.
->
->
->>               sta->sta.bandwidth = new_bw;
->>               changed |= IEEE80211_RC_BW_CHANGED;
->>       }
->> +     return changed;
->
-> Would prefer a blank line after the }
-Ok, no problem
->
->> +void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->> +                              struct sta_info *sta, u8 opmode,
->> +                              enum ieee80211_band band, bool nss_only)
->> +{
->> +     struct ieee80211_local *local = sdata->local;
->> +     struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
->> +     u32 changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode,
->> +                                                      band, nss_only);
->> +     if (changed > 0)
->
-> And after the variable declarations, i.e. before the if
->
-> Sorry for the delay, not sure why I missed your patch!
->
-> johannes
->
->
-
-I will send a new version of the patch.
-
-Marek Kwaczynski
