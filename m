@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39426 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbaBZJH5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60205 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbaBTJ4j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:07:57 -0500
-Message-ID: <530DAECD.8010405@broadcom.com> (sfid-20140226_100810_781254_A1F70BFB)
-Date: Wed, 26 Feb 2014 10:07:25 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
- device
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>	 <1393356639-19169-2-git-send-email-arend@broadcom.com>	 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1393358376.4170.22.camel@jlt4.sipsolutions.net>
+	Thu, 20 Feb 2014 04:56:39 -0500
+Message-ID: <1392890196.5073.20.camel@jlt4.sipsolutions.net> (sfid-20140220_105644_736051_2F90A199)
+Subject: Re: [PATCH] cfg80211: Pass TDLS peer capability information in
+ tdls_mgmt
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	c_ppotte@qti.qualcomm.com, djindal@qti.qualcomm.com
+Date: Thu, 20 Feb 2014 10:56:36 +0100
+In-Reply-To: <1392889161.5073.15.camel@jlt4.sipsolutions.net> (sfid-20140220_103930_794452_A9A27F0F)
+References: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com>
+	 (sfid-20140219_161608_023983_BEACD75F) <1392889161.5073.15.camel@jlt4.sipsolutions.net>
+	 (sfid-20140220_103930_794452_A9A27F0F)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2014 08:59 PM, Johannes Berg wrote:
-> On Tue, 2014-02-25 at 20:30 +0100, Arend van Spriel wrote:
->> Upon deleting the interface a cfg80211_disconnected() is called under
->> rtnl_lock. Right after the unlocking the rtnl_lock we unregister the
->> network device. This patch adds delay before unregister so cfg80211
->> can handle disconnect and notify wpa_supplicant.
-> 
->> +				/* make sure cfg80211 can send disconnect event
->> +				 * before unregistering the netdevice below.
->> +				 */
->> +				msleep(100);
-> 
-> This has got to be one of the worst hacks I've seen in wireless so
-> far ... :)
+On Thu, 2014-02-20 at 10:39 +0100, Johannes Berg wrote:
+> Generally, the patch looks fine, but I think you need to modify mac80211
+> as well, and the mwifiex patch doesn't apply to my mac80211-next tree.
 
-Did you see I removed a sleep as well in this patch :-p
+Also
 
-I just don't see how I can assure cfg80211 has actually done the
-disconnect work. If we don't do a cfg80211_disconnected() I get a WARN
-from the cfg80211 netdev notifier (or at least I did in previous kernel).
+$ git am -s /tmp/\[PATCH\]_cfg80211
+\:_Pass_TDLS_peer_capability_information_in_tdls_mgmt.mbox
+Applying: cfg80211: Pass TDLS peer capability information in tdls_mgmt
+/home/johannes/sys/wireless/.git/rebase-apply/patch:70: trailing
+whitespace.
+ * to be added to TDLS Setup frames. 
+warning: 1 line adds whitespace errors.
 
-Should we consider a clean solution, ie. modify cfg80211 for this scenario?
-
-Gr. AvS
 
 
