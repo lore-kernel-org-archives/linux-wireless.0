@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53783 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbaBDOtD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 09:49:03 -0500
-Message-ID: <52F0FDD9.6060901@openwrt.org> (sfid-20140204_154912_435804_A38E804A)
-Date: Tue, 04 Feb 2014 15:48:57 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:43209 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaBTGH7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 01:07:59 -0500
+Received: by mail-lb0-f179.google.com with SMTP id l4so991087lbv.24
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 22:07:57 -0800 (PST)
 MIME-Version: 1.0
-To: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Daniel Borkmann <dborkman@redhat.com>
-CC: netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>
-Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
-References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com> <52F0E771.8070904@fokus.fraunhofer.de> <52F0F86C.3050402@redhat.com> <52F0FA96.7090903@fokus.fraunhofer.de>
-In-Reply-To: <52F0FA96.7090903@fokus.fraunhofer.de>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAB=NE6XQs17pWVWchN8FJrv9HZwzkOF94iCPY=nx1BsJ5_bLcg@mail.gmail.com>
+References: <1391071940-4296-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAB=NE6XQs17pWVWchN8FJrv9HZwzkOF94iCPY=nx1BsJ5_bLcg@mail.gmail.com>
+Date: Thu, 20 Feb 2014 07:07:57 +0100
+Message-ID: <CALhHN=qnWsY3cEewxAOR+KafW8L-VFFG9djk5shS_BSdepKqnw@mail.gmail.com> (sfid-20140220_070818_052879_92237473)
+Subject: Re: [PATCH v4] cfg80211: regulatory introduce maximum bandwidth calculation
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-02-04 15:35, Mathias Kretschmer wrote:
-> On 02/04/2014 03:25 PM, Daniel Borkmann wrote:
->> On 02/04/2014 02:13 PM, Mathias Kretschmer wrote:
->>> On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
->>>> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
->> ...
->>>>> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
->>>>> user space using PF_PACKET sockets via RX_RING/TX_RING.
->>>>>
->>>>> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
->>>>> proper optimization for our purposes.
->>>>>
->>>>> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
->>>>> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
->>>>> an older AMD Geode LX embedded board (ALiX).
->>>>>
->>>>> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
->>>>> might be an interaction with the ieee80211 sub system.
->>>>
->>>> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
->>>> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
->>>> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
->>>> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
->>>> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
->>>> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
->>>> be the best option in your case, perhaps you will run into increased power usage
->>>> in your NIC as a side-effect?
->>>
->>> I'm not familiar with the exact implementation details, but from the description
->>> of this option, it seems to me that this is exactly what one would want to use if
->>> the goal is to send an Ethernet frame out on a particular interface without any
->>> further processing by the kernel.
->>>
->>> Why would this increase the power usage on the NIC ?  Due to a higher achievable
->>> packet rate ?  That would be acceptable :)
+On 19 February 2014 19:51, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Thu, Jan 30, 2014 at 12:52 AM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
 >>
->> I'm not too familiar with the ieee80211 sub system, so I let Felix answer side
->> effects and if actually the WARN_ON() is needed. ;) PACKET_QDISC_BYPASS is, as
->> documented, designed for advanced pktgen resp. traffic generator like scenarios
->> where you just sort of "brute force" packets to your NIC to stress test a remote
->> machine for further analysis. I don't think it's very useful in your scenario
->> when you have a wired/wireless MPLS switch, you rather might want to buffer/queue
->> and therefore use qdisc layer instead.
-> 
-> Hm, I was hoping/assuming that we still get to use hardware queues, if provided by 
-> the driver. The main goal was to avoid any further PF_PACKET framework overhead.
-> 
-> If the WARN_ON() issue gets solved, we will revisit this option and evaluate its 
-> applicability.
-The reason for the WARN_ON is probably either the .ndo_select_queue call
-is not run, or its queue selection result is changed before the frame
-hits the driver's tx call.
-This call sets both the queue and the TID (similar to 802.1d tag), which
-makes it into the packet via 802.11e (WMM, QoS).
-It is important to the driver that the TID is in sync with the queue
-selection, if that is not the case, then pending frame counters can get
-messed up.
-If you really want to bypass qdisc, make sure that at least
-ndo_select_queue is called before passing the frame to the netdev.
+>> We don't need any changes in CRDA or internal regulatory.
+>
+> What happens if an old kernel gets a new wireless-regdb with AUTO on
+> all of its 5 GHz regdomain for the country it using ? I see no mention
+> of this anywhere in the documentation and at least from the code
+> review I just did it seemed like we'd use 0. I hope I'm wrong as
+> otherwise that'd introduce a severe regression when this is introduced
+> to wireless-regdb.
 
-- Felix
+Old wireless-regdb also allow 0 :-) (the same case like last one)
+
+Old-kernel + new wireless-regdb + new crda.
+In case of AUTO we will not set NL80211_ATTR_FREQ_RANGE_MAX_BW we will
+get -EINVAL
+
+Old-kernel + new wireless-regd + old crda (will send 0):
+We will set on channels: IEEE80211_CHAN_NO_HT40 |
+IEEE80211_CHAN_NO_HT80 | IEEE80211_CHAN_NO_HT160
+So, all channels where BW=0 will be HT20 only - isn't that default?
+
+BR
+Janusz
