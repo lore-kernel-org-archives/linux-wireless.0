@@ -1,68 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([5.45.105.125]:53033 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753916AbaBZTok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 14:44:40 -0500
-Date: Wed, 26 Feb 2014 20:44:36 +0100
-From: Sebastian Reichel <sre@ring0.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140226194436.GA20992@earth.universe> (sfid-20140226_204450_235937_B935E2CE)
-References: <20140125000929.GD25488@atomide.com>
- <1392419156-14394-1-git-send-email-sre@debian.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55910 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705AbaBTFKT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 00:10:19 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v2 0/7] cfg80211/mac80211: move interface combinations check to mac80211
+Date: Thu, 20 Feb 2014 07:10:06 +0200
+Message-Id: <1392873013-21772-1-git-send-email-luca@coelho.fi> (sfid-20140220_061049_293848_FFF4CC13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luciano Coelho <luciano.coelho@intel.com>
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Hi John,
+This is v2 of my patchset.  Just a couple of comments by Michal taken
+into consideration.  Thanks for Your review, Michal!
 
-On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
-> The following patchset adds device tree support to the spi variant of the
-> wl1251 driver, which is used in the Nokia N900. Tony requested, that you
-> take the whole series even if that may introduce merge conflicts:
->=20
-> > Sebastian, please resend the whole series to John and feel free to add =
-my
-> > acks.  It's best that John picks them all up, otherwise we'll have the =
-same
-> > issue for v3.15. It seems that we should have just taken the merge conf=
-lict
-> > rather than going back and forth with this.
+In v2:
 
-ping! Is there still anything wrong with this patchset?
+   * lock the chanctx mutex in ieee80211_ibss_join() before calling
+     ieee80211_check_combinations().
 
--- Sebastian
+   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
+     ieee80211_check_combinations() in ieee80211_vif_use_channel();
 
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+As Johannes suggested earlier, this patchset moves the interface
+combinations check from cfg80211 to mac80211.  This is needed to
+simplify the channel switch code.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+There are still some cases where cfg80211 may need to check the
+interface combinations (eg. when adding or changing an interface), so
+I created a helper function that can be called by cfg80211 itself or
+the drivers (such as mac80211).
 
-iQIcBAEBCgAGBQJTDkQkAAoJENju1/PIO/qaZgQP/0LzrICLIlaEVYR/oBosc3Y8
-QYr8Il7OEgVAB0IR1OEKmAraIGPFJWf8RhSU903MRg6CtkbSbkU0QqvqyU8Fqiyj
-BSbj/LF2+ymyYvDJr7kv+jL9UEhGjQdFzVobiNc4KRQjd2JvsCp4L8l7O/b8d8qH
-8t4g9kLXlseXwm0rkc9KZU2ol106Ix+M6xv3H2ab2dhY1VBXjfDlGcs4OBWCHJD+
-oPzwoe9E4kazYEiJtbAVwd0TsN6rtDdd1mRxWGJ5Q8upobIRwmvuHg/YwhdHlfo9
-4wJJ3pVKRE08KiJA1q1GsgPZIdDcnuIE5mmGNcQtGeK8I/clw2H3KVf2UxZQgqUc
-p5wrU+PaDZm4nvZzwvkj5y5k/NRF4byjqBHXZwSW+D4XW0b2nFcAKNXhR6RyxIci
-JOD1CQpCO6HQw5z7+e5ADfi5x3ZK9FaNlQqGJIRFivSra/gGSlDiV/OIi6VenUJh
-vc+ZwEFYkls4EIiL20VE6lOD+/Zr5zvA8R4jL7d5b5tSNxOeotsV471evaVSHfTD
-haJPpJHRbQCNScnNo53SiC8heu3IaX3LRI4vc93PeFz0qpVLXMoZ4WCYn8mflgMF
-6IvVZDFB3+8jzx7T+BejHzTzeyRB45vzGcULQfouLw/4qSa8GaptevB0K2TYOKH0
-YXzMGjZpvFVKUPqr1dxo
-=OIv4
------END PGP SIGNATURE-----
+Also, for now, I only moved the check in the cases where
+ieee80211_vif_use_channel() is called and for IBSS join.  There are
+still some trickier cases such as a libertas backward-compatibility
+workaround and the channel switch stuff.  These will be handled
+separately and it doesn't really hurt to leave it as it is, except
+because it's a bit inconsistent.
 
---azLHFNyN32YCQGCU--
+I had to shuffle some code around to make this whole thing a bit
+cleaner, including the check for whether radar detection is needed.
+
+In this series, I have included the two previous patches I sent,
+because they're somewhat related to the rest of the series.  For
+"cfg80211: remove radar requirements check from
+cfg80211_can_use_iftype_chan()" I have removed the excessive comments,
+since they become mostly outdated with the rest of the series anyway.
+
+This is not very thoroughly tested yet, I have just done some checks
+with AP and STA with and without chanctx and with 1 or 2 different
+channels.  This part seems to work, please test the rest. :)
+
+I'll try to add some hwsim tests to test this more thoroughly.
+
+Luca.
+
+Luciano Coelho (7):
+  nl80211: make sure we check for DFS with mesh channel switch
+  cfg80211: remove radar requirements check from
+    cfg80211_can_use_iftype_chan()
+  cfg80211: refactor cfg80211_can_use_iftype_chan()
+  mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
+  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+  cfg80211/mac80211: move interface counting for combination check to
+    mac80211
+  cfg80211/mac80211: move combination check to mac80211 for ibss
+
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  41 +++++++++-
+ net/mac80211/cfg.c               |   7 +-
+ net/mac80211/chan.c              |  17 +++++
+ net/mac80211/ibss.c              |  66 +++++++++++-----
+ net/mac80211/ieee80211_i.h       |   5 ++
+ net/mac80211/mesh.c              |   9 ++-
+ net/mac80211/mlme.c              |  14 ++++
+ net/mac80211/util.c              |  88 ++++++++++++++++++++++
+ net/wireless/chan.c              |  77 ++++++++++++++-----
+ net/wireless/core.h              |   7 ++
+ net/wireless/ibss.c              |  25 -------
+ net/wireless/mesh.c              |  24 +++---
+ net/wireless/mlme.c              |  14 +---
+ net/wireless/nl80211.c           |  48 ++++--------
+ net/wireless/util.c              | 157 ++++++++++++++++++---------------------
+ 16 files changed, 380 insertions(+), 220 deletions(-)
+
+-- 
+1.8.5.3
+
