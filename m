@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0007.hostedemail.com ([216.40.44.7]:47976 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751029AbaBSWcB (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:45455 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbaBTCrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 17:32:01 -0500
-Message-ID: <1392849119.24844.17.camel@joe-AO722> (sfid-20140219_233207_106774_FE8D19C3)
-Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
-From: Joe Perches <joe@perches.com>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 Feb 2014 14:31:59 -0800
-In-Reply-To: <5305304B.5050004@gmail.com>
-References: <1392846993.20211.15.camel@canaries64-MCP7A>
-	 <1392848134.24844.16.camel@joe-AO722> <5305304B.5050004@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 19 Feb 2014 21:47:46 -0500
+Received: by mail-vc0-f174.google.com with SMTP id im17so1328544vcb.33
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 18:47:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <877g8rxgyf.fsf@kamboji.qca.qualcomm.com>
+References: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
+	<877g8rxgyf.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 20 Feb 2014 10:47:45 +0800
+Message-ID: <CAEFj9870+z+2yxjO7F69bGv3XzKNmi+ddyF41WSnv2aR98kjrw@mail.gmail.com> (sfid-20140220_034749_941243_D041DE0F)
+Subject: Re: [PATCH] ath10k: set the mactime of ieee80211_rx_status
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-19 at 22:29 +0000, Malcolm Priestley wrote:
-> On 19/02/14 22:15, Joe Perches wrote:
-> > On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
-> >> Replace with enum
-> >> assign as u8 type.
-> > []
-> >> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-> > []
-> >> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
-> >>   	struct sk_buff *pPacket;
-> >>   	struct urb *pUrb;
-> >>   	unsigned int uBufLen;
-> >> -	CONTEXT_TYPE Type;
-> >> +	u8 type;
-> >
-> > This doesn't really save any space in the struct.
-> > You might move it immediately before or after bBoolInUse.
-> >
-> >>   	struct ethhdr sEthHeader;
-> >>   	void *Next;
-> >>   	bool bBoolInUse;
-> >
-> >
-> No, but there are dead members in the structure that need removing.
-> 
-> sEthHeader and Next are dead
+> Why? Where do you need tsf exactly? And what bug are you actually fixing
+> here?
 
-Then it'll all work out well in the end...
+There are two type of configuration modes that require local TSF, IBSS
+and mesh for operation and also monitor mode.
 
+For IBSS, it is use for merging of BSSID (mac address) with same SSID
+name, but currently this is taking care by the following "ugly" patch.
+http://lists.infradead.org/pipermail/ath10k/2014-February/001159.html
+
+Mesh mode needs this for more accurate synchronization purpose.
+
+Besides, the monitor mode requires this to add extra piece of
+information in radiotap header for local TSF.
+
+> Do we get some regressions because of proving only a 32 bit TSF? Which
+> one is better, provide a 32-bit TSF or not at all?
+32-bit is not good. It could cause problem when inter-operate with
+other non-ath10k drivers with 64-bit local TSF. The better is that we
+can get the 64-bit local TSF. providing high TSF and low TSF as found
+in "struct wmi_comb_phyerr_rx_hd". Is this possible with current FW?
+
+---
+Chun-Yeow
