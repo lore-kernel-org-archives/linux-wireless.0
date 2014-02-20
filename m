@@ -1,109 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:65125 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbaBSAIB (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:32823 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbaBTOa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 19:08:01 -0500
-Received: by mail-pb0-f48.google.com with SMTP id rr13so17405469pbb.7
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:08:01 -0800 (PST)
-Date: Tue, 18 Feb 2014 16:07:56 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
-Message-ID: <20140219000753.GD14296@garbanzo.do-not-panic.com> (sfid-20140219_010806_675903_4F5EF1B6)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Fig2xvG2VGoz8o/s"
-In-Reply-To: <1390818118-27261-5-git-send-email-ilan.peer@intel.com>
+	Thu, 20 Feb 2014 09:30:58 -0500
+Message-ID: <1392906648.5073.31.camel@jlt4.sipsolutions.net> (sfid-20140220_153103_239073_374D6E8D)
+Subject: Re: pull-request: mac80211 2014-02-20
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Feb 2014 15:30:48 +0100
+In-Reply-To: <1392887140.5073.10.camel@jlt4.sipsolutions.net> (sfid-20140220_100613_323680_C04BED1E)
+References: <1392887140.5073.10.camel@jlt4.sipsolutions.net>
+	 (sfid-20140220_100613_323680_C04BED1E)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-85Zna94B9/dl6pTjp++E"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---Fig2xvG2VGoz8o/s
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-85Zna94B9/dl6pTjp++E
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jan 27, 2014 at 12:21:56PM +0200, Ilan Peer wrote:
-> @@ -1450,6 +1465,11 @@ __reg_process_hint_user(struct regulatory_request =
-*user_request)
->  {
->  	struct regulatory_request *lr =3D get_last_request();
-> =20
-> +	if (reg_request_indoor(user_request)) {
-> +		reg_is_indoor =3D true;
-> +		return REG_REQ_ALREADY_SET;
+John,
 
-Please use another return value here and document it. This would
-enable other type of userspace hints and would not make this an
-obscure thing.
+I've got a few more fixes for some issues here now.
 
-> @@ -2014,6 +2047,8 @@ static void restore_regulatory_settings(bool reset_=
-user)
-> =20
->  	ASSERT_RTNL();
-> =20
-> +	reg_is_indoor =3D false;
+This time, I have a fix from Arik for scheduled scan recovery (something
+that only recently went into the tree), a memory leak fix from Eytan and
+a small regulatory bugfix from Inbal. The EAPOL change from Felix makes
+rekeying more stable while lots of traffic is flowing, and there's
+Emmanuel's and my fixes for a race in the code handling powersaving
+clients.
 
-:D
+Please pull.
 
-> +
->  	reset_regdomains(true, &world_regdom);
->  	restore_alpha2(alpha2, reset_user);
-> =20
-> @@ -2515,6 +2550,19 @@ int cfg80211_get_unii(int freq)
->  	return -EINVAL;
->  }
-> =20
-> +bool regulatory_ir_allowed(struct wiphy *wiphy, struct ieee80211_channel=
- *chan)
-> +{
-> +	if (config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) &&
-> +	    !(wiphy->regulatory_flags & REGULATORY_DISABLE_RELAX_NO_IR) &&
-
-Don't you want to make the flag REGULATORY_DISABLE_RELAX_NO_IR positive,
-that is REGULATORY_ENABLE_RELAX_NO_IR as otherwise you'd require
-everyone to disable it by default. I think we want to *disable* it by
-default it and let drivers set it explicitly to declare support.
+Thanks,
+johannes
 
 
-> +	    reg_is_indoor && (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
-> +		return true;
-> +
-> +	if (chan->flags & IEEE80211_CHAN_NO_IR)
-> +		return false;
-> +	return true;
-> +}
-> +EXPORT_SYMBOL(regulatory_ir_allowed);
+The following changes since commit fab57a6cc227468ca9e6a4c7ff8d3b10727785ee=
+:
 
-Please use EXPORT_SYMBOL_GPL() moving forward for regulatory core stuff.
-Proprietary drivers can kiss my hairy ass.
+  mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0=
+100)
 
-  Luis
+are available in the git repository at:
 
---Fig2xvG2VGoz8o/s
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to e3685e03b40f5ec7926d9a75bf63467fc4071df9:
+
+  mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      mac80211: fix sched_scan restart on recovery
+
+Emmanuel Grumbach (1):
+      mac80211: fix AP powersave TX vs. wakeup race
+
+Eytan Lifshitz (1):
+      mac80211: fix memory leak
+
+Felix Fietkau (1):
+      mac80211: send control port protocol frames to the VO queue
+
+Inbal Hacohen (1):
+      cfg80211: bugfix in regulatory user hint process
+
+Johannes Berg (2):
+      mac80211: insert stations before adding to driver
+      mac80211: fix station wakeup powersave race
+
+ net/mac80211/ieee80211_i.h | 10 ++-----
+ net/mac80211/mlme.c        |  1 +
+ net/mac80211/rx.c          |  7 +++++
+ net/mac80211/sta_info.c    | 66 +++++++++++++++++++++++++++++-------------=
+----
+ net/mac80211/sta_info.h    |  7 +++--
+ net/mac80211/tx.c          | 15 +++++++++++
+ net/mac80211/util.c        | 48 ++++++++++++++++-----------------
+ net/mac80211/wme.c         |  5 ++++
+ net/wireless/reg.c         |  2 +-
+ 9 files changed, 98 insertions(+), 63 deletions(-)
+
+
+--=-85Zna94B9/dl6pTjp++E
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
 
-iQIcBAEBAgAGBQJTA/XZAAoJEKwtdpJg+MHGFpAP/iQv59WiEZZINUwb4+0e32uE
-JhIqYaCcwLMNOxD+EeO2GWiBEm8rEGrR8dlXGQGL/VjoIK5jiznHkVjO5D5kXmzI
-XiwJZSAlAICWppOBmyXLu6adodfJrOoEmaKDSJj0m2cZTI9enHYOfZCI8gF6ZWOD
-wzkI3p4erp8XDx5vsiA06gscOp7jycgI3r5MAqftK6sKqB6w/dn3W0w4Ppf8Ycoi
-TdeOGtyrsKdTkIWNQI/dUFyc5AzBAG8x6ZLm7bLAAzVbrrSUu9MXOgrHmpcihqde
-6bJcHDK4Omk0a/0QU/r886VheUaJrjuIaY6ECT2+V6OAywe73nIgffQEt7lkqE0l
-cQ02CPuYI1E5XgHDWFiiR2msRUuyY7rinkM+tLZhLgzQc2KD6/Y71AcAqpxBV7wK
-oMZJWMN/1CprpJweUv9AvmnXfBKzk9Xp2QLlRmtSfQupDQgtVw2CnJ/q/pvT+lL8
-DnUnjoahJkxMBWxNxHXPqYLPM6BOS/qlLNeCmZUzWq7ymvT8JdQA4erg3WOIUHH1
-kyV+XbgUIgNjupE3NRAEoeAd19HcdEkGNV7KCNjJ+JVvm7J42OKFXEMmvhC4gLv9
-ZYXLL99Xa9n7wtD5RFTldulz15q1LNSmViBDPCoJqjejGzTp6NeOJwdeW5QYfm6G
-qoc2HD/6keu/D3aImLBF
-=WuDT
+iQIcBAABCAAGBQJTBhGYAAoJEDBSmw7B7bqrUOsP/2AwzScubPkatIVUnmW9kKLn
+4Ua6VrflGgHADiproviaVqmQ0WZcciOHD+EESblTbv9nnpezIifgHvPPvxCRUM9y
+KEr67c2hbvU2GjCOLgp588l90tdPzcEUZjcFpgDMjxJ6k0vYxolgnL10kV6DgJNY
+QFiZmbc8eHRFmBaulHYeJO9xsBEmmadFNYroZnQPa40+DIunDEBleJZOfWabxAyl
+WvbCmoqVrxyVm0NSgdk3Hp1EHjNp1vLaSQiD7W5uxzarmST/r72wHGel1Edg9Cgd
+unZaxL/s47XNzsCRg+pu0W6jt41ou1leiY7m+Gmv+fee/AQSn3j/y292YPypB32y
+BssnOm1jpb+6r8NjnweTCyuE2TBngWNW5+uvcqwyUcvmYLU2putScshV7+nK594Z
+Ah8lVZ8Smd1I3AdxcgT3LylVmVQf+W/is4FxUAzI1yVVphS0oYVZXZbK4LZAQJmv
+ayHxw+C93GukBS3Evf2U8dpJogk4Z5vrF0x8QQewX0N+XhNIHZ2jgmkFZXBfHBIm
+iELOZjl10K7qxCJFPe7tVsTB64oW5ESyTFlQCVXMgWJNlTWlJvm8FEFi/6/tdyTT
+QV3PqiBawBlFsjyoIoShB+4rQv31UiYkFsr4bhEkWjIUt0hBQH1QtXlnTVwLBOir
+wsXAi/fcHQIGkXOItr4s
+=cE3u
 -----END PGP SIGNATURE-----
 
---Fig2xvG2VGoz8o/s--
+--=-85Zna94B9/dl6pTjp++E--
+
