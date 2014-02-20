@@ -1,101 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42309 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754370AbaBDK1U (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57166 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaBTKGj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 05:27:20 -0500
-Message-ID: <1391509638.26522.72.camel@porter.coelho.fi> (sfid-20140204_112811_520036_B2246708)
-Subject: Re: [RFC 0/2] cfg80211: add channel switching awareness
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 04 Feb 2014 12:27:18 +0200
-In-Reply-To: <1391431407.4488.9.camel@jlt4.sipsolutions.net>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110347_817013_693B94E8) <1391431407.4488.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Feb 2014 05:06:39 -0500
+From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <jouni@qca.qualcomm.com>, <c_ppotte@qti.qualcomm.com>,
+	<djindal@qti.qualcomm.com>, <usdutt@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: Pass TDLS peer capability information in tdls_mgmt
+Date: Thu, 20 Feb 2014 15:36:28 +0530
+Message-ID: <1392890788-5967-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20140220_110647_105718_F3AC2BBE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-03 at 13:43 +0100, Johannes Berg wrote:
-> On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
-> 
-> > The patchset aims at making cfg80211 aware of
-> > channel switches.
-> 
-> That seems like a worthy goal :)
+While framing the TDLS Setup Confirmation frame, the driver needs to
+know if the TDLS peer is VHT/HT/WMM capable and thus shall construct
+the VHT/HT operation / WMM parameter elements accordingly. Supplicant
+determines if the TDLS peer is VHT/HT/WMM capable based on the
+presence of the respective IEs in the received TDLS Setup Response frame.
 
-I like the "awareness", but I don't like the control over channel switch
-so much.
+The host driver should not need to parse the received TDLS Response
+frame and thus, should be able to rely on the supplicant to indicate
+the capability of the peer through additional flags while transmitting
+the TDLS Setup Confirmation frame through tdls_mgmt operations.
 
+Signed-off-by: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |  4 ++--
+ include/net/cfg80211.h                  |  3 ++-
+ include/uapi/linux/nl80211.h            | 21 +++++++++++++++++++++
+ net/wireless/nl80211.c                  |  7 ++++++-
+ net/wireless/rdev-ops.h                 |  9 ++++++---
+ net/wireless/trace.h                    | 12 ++++++++----
+ 6 files changed, 45 insertions(+), 11 deletions(-)
 
-> > This makes it possible for more elegant channel
-> > switching behavior by moving the decision up to
-> > cfg80211.
-> > 
-> > Until now mac80211 could start channel switching
-> > internally for STA, mesh and IBSS interfaces
-> > without userspace interaction. This bypassed
-> > interface combination checks at the very least.
-> > 
-> > Now mac80211 requests cfg80211 to channel switch
-> > an interface, in a similar manner as userspace
-> > asks cfg80211 for a channel switch. This makes it
-> > possible to perform interface combination checks
-> > (albeit it is not implemented yet).
-> 
-> Couldn't you just return the decision to mac80211? It would also have to
-> keep track of start/end of the CSA period, I guess, since a few things
-> that Ilan is working on shouldn't be allowed while the AP announces CSA.
-
-mac80211 could keep track of the start/finalize callbacks.  But I don't
-think that's a good idea, as I mentioned in the other email.
-
-I think mac80211 should keep the client CSA control and the userspace
-should control the host interfaces.  cfg80211 should keep track of the
-channel switches and be asked if the switch is okay (so it can take the
-interface combinations and regulatory into consideration).
-
-Maybe mac80211 could call a cfg80211_reserve_channel() function? If that
-call fails, it means the switch cannot be done.  If it succeeds,
-cfg80211 keeps the reservation.  Same thing if the switch is coming from
-userspace, nl80211 could call cfg80211_reserve_channel() in the same
-way.
-
-
-> > The channel switch is split into two phases now -
-> > start and finalize. This is required to make
-> > cfg80211 in control of the whole channel
-> > switching process. It also makes it apparent that
-> > mac80211's STA CSA offload doesn't work quite well
-> > here. Can we kill it?
-> 
-> No. Well, you could make cfg80211 be in charge, but not wpa_supplicant,
-> I think.
-> 
-> > The initial patchset has a lot of TODOs in the
-> > code and the idea is to provide follow up patches
-> > that implement missing functionality.
-> > 
-> > Major drawback now is cfg80211 will refuse a
-> > channel switch if there's one in progress already,
-> > although this shouldn't be much of a problem in
-> > most use cases.
-> > 
-> > This approach should be suited for multi-interface
-> > CSA as well as some other cases such as
-> > "GO-follows-STA".
-> > 
-> > The patchset seemed to work in my limited testing
-> > (ath9k as AP and iwldvm as STA).
-> 
-> Nice. I hope Luca can take a look too :)
-
-I did. :) Hopefully I have added good points and not only complicated
-things further. :P
-
---
-Luca.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 436ba43..6948a97 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2600,8 +2600,8 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
+ static int
+ mwifiex_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			   u8 *peer, u8 action_code, u8 dialog_token,
+-			   u16 status_code, const u8 *extra_ies,
+-			   size_t extra_ies_len)
++			   u16 status_code, u32 peer_capability,
++			   const u8 *extra_ies, size_t extra_ies_len)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	int ret;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f90554..c89a5b5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2465,7 +2465,8 @@ struct cfg80211_ops {
+ 
+ 	int	(*tdls_mgmt)(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 *peer, u8 action_code,  u8 dialog_token,
+-			     u16 status_code, const u8 *buf, size_t len);
++			     u16 status_code, u32 peer_capability,
++			     const u8 *buf, size_t len);
+ 	int	(*tdls_oper)(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 *peer, enum nl80211_tdls_operation oper);
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a12e6ca..a0f133f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1575,6 +1575,9 @@ enum nl80211_commands {
+  *	advertise values that cannot always be met. In such cases, an attempt
+  *	to add a new station entry with @NL80211_CMD_NEW_STATION may fail.
+  *
++ * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
++ *	As specified in the &enum nl80211_tdls_peer_capability.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1908,6 +1911,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MAX_AP_ASSOC_STA,
+ 
++	NL80211_ATTR_TDLS_PEER_CAPABILITY,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4079,4 +4084,20 @@ struct nl80211_vendor_cmd_info {
+ 	__u32 subcmd;
+ };
+ 
++/**
++ * enum nl80211_tdls_peer_capability - TDLS peer flags.
++ *
++ * Used by tdls_mgmt() to determine which conditional elements need
++ * to be added to TDLS Setup frames.
++ *
++ * @NL80211_TDLS_PEER_HT: TDLS peer is HT capable.
++ * @NL80211_TDLS_PEER_VHT: TDLS peer is VHT capable.
++ * @NL80211_TDLS_PEER_WMM: TDLS peer is WMM capable.
++ */
++enum nl80211_tdls_peer_capability {
++	NL80211_TDLS_PEER_HT = 1<<0,
++	NL80211_TDLS_PEER_VHT = 1<<1,
++	NL80211_TDLS_PEER_WMM = 1<<2,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8e6b6a2..8114c11 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -384,6 +384,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
+ 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
++	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -7269,6 +7270,7 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	u8 action_code, dialog_token;
++	u32 peer_capability = 0;
+ 	u16 status_code;
+ 	u8 *peer;
+ 
+@@ -7287,9 +7289,12 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	action_code = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_ACTION]);
+ 	status_code = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
+ 	dialog_token = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_DIALOG_TOKEN]);
++	if (info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY])
++		peer_capability =
++			nla_get_u32(info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY]);
+ 
+ 	return rdev_tdls_mgmt(rdev, dev, peer, action_code,
+-			      dialog_token, status_code,
++			      dialog_token, status_code, peer_capability,
+ 			      nla_data(info->attrs[NL80211_ATTR_IE]),
+ 			      nla_len(info->attrs[NL80211_ATTR_IE]));
+ }
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index c8e2259..74d97d3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -769,13 +769,16 @@ static inline int rdev_set_rekey_data(struct cfg80211_registered_device *rdev,
+ static inline int rdev_tdls_mgmt(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *dev, u8 *peer,
+ 				 u8 action_code, u8 dialog_token,
+-				 u16 status_code, const u8 *buf, size_t len)
++				 u16 status_code, u32 peer_capability,
++				 const u8 *buf, size_t len)
+ {
+ 	int ret;
+ 	trace_rdev_tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
+-			     dialog_token, status_code, buf, len);
++			     dialog_token, status_code, peer_capability,
++			     buf, len);
+ 	ret = rdev->ops->tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
+-				   dialog_token, status_code, buf, len);
++				   dialog_token, status_code, peer_capability,
++				   buf, len);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 5eaeed5..aabccf1 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1468,9 +1468,10 @@ TRACE_EVENT(rdev_sched_scan_start,
+ TRACE_EVENT(rdev_tdls_mgmt,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 u8 *peer, u8 action_code, u8 dialog_token,
+-		 u16 status_code, const u8 *buf, size_t len),
++		 u16 status_code, u32 peer_capability,
++		 const u8 *buf, size_t len),
+ 	TP_ARGS(wiphy, netdev, peer, action_code, dialog_token, status_code,
+-		buf, len),
++		peer_capability, buf, len),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+@@ -1478,6 +1479,7 @@ TRACE_EVENT(rdev_tdls_mgmt,
+ 		__field(u8, action_code)
+ 		__field(u8, dialog_token)
+ 		__field(u16, status_code)
++		__field(u32, peer_capability)
+ 		__dynamic_array(u8, buf, len)
+ 	),
+ 	TP_fast_assign(
+@@ -1487,13 +1489,15 @@ TRACE_EVENT(rdev_tdls_mgmt,
+ 		__entry->action_code = action_code;
+ 		__entry->dialog_token = dialog_token;
+ 		__entry->status_code = status_code;
++		__entry->peer_capability = peer_capability;
+ 		memcpy(__get_dynamic_array(buf), buf, len);
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT ", action_code: %u, "
+-		  "dialog_token: %u, status_code: %u, buf: %#.2x ",
++		  "dialog_token: %u, status_code: %u, peer_capability: %u buf: %#.2x ",
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
+ 		  __entry->action_code, __entry->dialog_token,
+-		  __entry->status_code, ((u8 *)__get_dynamic_array(buf))[0])
++		  __entry->status_code, __entry->peer_capability,
++		  ((u8 *)__get_dynamic_array(buf))[0])
+ );
+ 
+ TRACE_EVENT(rdev_dump_survey,
+-- 
+1.8.2.1
 
