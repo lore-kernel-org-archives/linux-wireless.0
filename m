@@ -1,292 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:41980 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbaBOS2x (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55924 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaBTFKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Feb 2014 13:28:53 -0500
-Received: by mail-we0-f169.google.com with SMTP id t61so9715263wes.0
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 10:28:51 -0800 (PST)
-Message-ID: <1392488920.2518.17.camel@canaries64-MCP7A> (sfid-20140215_192857_289681_2311035E)
-Subject: [PATCH 1/3] staging: vt6656: Replace typedef enum _CARD_OP_MODE
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 15 Feb 2014 18:28:40 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Feb 2014 00:10:20 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v2 3/7] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Date: Thu, 20 Feb 2014 07:10:09 +0200
+Message-Id: <1392873013-21772-4-git-send-email-luca@coelho.fi> (sfid-20140220_061053_882942_88270D2A)
+In-Reply-To: <1392873013-21772-1-git-send-email-luca@coelho.fi>
+References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace typedef enum _CARD_OP_MODE eOPMode with op_mode enum nl80211_iftype
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-enum changes
-OP_MODE_INFRASTRUCTURE -> NL80211_IFTYPE_STATION
-OP_MODE_AP -> NL80211_IFTYPE_AP
-OP_MODE_DEF -> NL80211_IFTYPE_UNSPECIFIED
-OP_MODE_ADHOC -> NL80211_IFTYPE_ADHOC
+Separate the code that counts the interface types and channels from
+the code that check the interface combinations.  The new function that
+checks for combinations is exported so it can be called by the
+drivers.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This is done in preparation for moving the interface combinations
+checks out of cfg80211.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/card.h     |  7 -------
- drivers/staging/vt6656/device.h   |  4 +++-
- drivers/staging/vt6656/dpc.c      |  2 +-
- drivers/staging/vt6656/int.c      |  4 ++--
- drivers/staging/vt6656/iwctl.c    |  2 +-
- drivers/staging/vt6656/main_usb.c |  2 +-
- drivers/staging/vt6656/power.c    |  6 +++---
- drivers/staging/vt6656/rxtx.c     | 23 ++++++++++++-----------
- drivers/staging/vt6656/wmgr.c     |  8 ++++----
- 9 files changed, 27 insertions(+), 31 deletions(-)
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  29 ++++++++++
+ net/wireless/util.c              | 121 ++++++++++++++++++++++-----------------
+ 3 files changed, 97 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/staging/vt6656/card.h b/drivers/staging/vt6656/card.h
-index c3017a7..f843e50 100644
---- a/drivers/staging/vt6656/card.h
-+++ b/drivers/staging/vt6656/card.h
-@@ -39,13 +39,6 @@ typedef enum _CARD_PHY_TYPE {
-     PHY_TYPE_11A
- } CARD_PHY_TYPE, *PCARD_PHY_TYPE;
+diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
+index 46ad6fa..9135476 100644
+--- a/Documentation/DocBook/80211.tmpl
++++ b/Documentation/DocBook/80211.tmpl
+@@ -98,6 +98,7 @@
+ !Finclude/net/cfg80211.h priv_to_wiphy
+ !Finclude/net/cfg80211.h set_wiphy_dev
+ !Finclude/net/cfg80211.h wdev_priv
++!Finclude/net/cfg80211.h cfg80211_check_combinations
+       </chapter>
+       <chapter>
+       <title>Actions and configuration</title>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f90554..e44d62b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4667,6 +4667,35 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
  
--typedef enum _CARD_OP_MODE {
--    OP_MODE_INFRASTRUCTURE = 0,
--    OP_MODE_ADHOC,
--    OP_MODE_AP,
--    OP_MODE_UNKNOWN
--} CARD_OP_MODE, *PCARD_OP_MODE;
--
- #define CB_MAX_CHANNEL_24G  14
- #define CB_MAX_CHANNEL_5G       42 /* add channel9(5045MHz), 41==>42 */
- #define CB_MAX_CHANNEL      (CB_MAX_CHANNEL_24G+CB_MAX_CHANNEL_5G)
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 1f42257..2bca7c0 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -588,7 +588,9 @@ struct vnt_private {
- 	u16 wFragmentationThreshold;
- 	u8 byShortRetryLimit;
- 	u8 byLongRetryLimit;
--	CARD_OP_MODE eOPMode;
++/**
++ * cfg80211_check_combinations() - check interface combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @num_interfaces: the number of different interfaces we want to use
++ *	for verification
++ * @used_iftypes: a bitmap where each bit corresponds to an interface
++ *	type, as in the definition of &struct
++ *	ieee80211_iface_limit.@types.
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ *
++ * This function can be called by the driver to check whether a
++ * combination of interfaces and their types are allowed according to
++ * the interface combinations.
++ */
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const int num_interfaces,
++				const u32 used_iftypes,
++				const u8 radar_detect,
++				const int *iftype_num);
 +
-+	enum nl80211_iftype op_mode;
-+
- 	int bBSSIDFilter;
- 	u16 wMaxTransmitMSDULifetime;
- 	u8 abyBSSID[ETH_ALEN];
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index eca04c0..03351e7 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -627,7 +627,7 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
-     // Now it only supports 802.11g Infrastructure Mode, and support rate must up to 54 Mbps
-     if (pDevice->bDiversityEnable && (FrameSize>50) &&
--       (pDevice->eOPMode == OP_MODE_INFRASTRUCTURE) &&
-+	pDevice->op_mode == NL80211_IFTYPE_STATION &&
-        (pDevice->bLinkPass == true)) {
-         BBvAntennaDiversity(pDevice, s_byGetRateIdx(*pbyRxRate), 0);
-     }
-diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
-index e0e9386..d12036a 100644
---- a/drivers/staging/vt6656/int.c
-+++ b/drivers/staging/vt6656/int.c
-@@ -131,7 +131,7 @@ void INTnsProcessData(struct vnt_private *pDevice)
- 	}
- 	if (pINTData->byISR0 != 0) {
- 		if (pINTData->byISR0 & ISR_BNTX) {
--			if (pDevice->eOPMode == OP_MODE_AP) {
-+			if (pDevice->op_mode == NL80211_IFTYPE_AP) {
- 				if (pMgmt->byDTIMCount > 0) {
- 					pMgmt->byDTIMCount--;
- 					pMgmt->sNodeDBTable[0].bRxPSPoll =
-@@ -149,7 +149,7 @@ void INTnsProcessData(struct vnt_private *pDevice)
- 				bScheduleCommand((void *) pDevice,
- 						WLAN_CMD_BECON_SEND,
- 						NULL);
--			} /* if (pDevice->eOPMode == OP_MODE_AP) */
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 57b3ce7..fbc2f8a 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1253,6 +1253,69 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const int num_interfaces,
++				const u32 used_iftypes,
++				const u8 radar_detect,
++				const int *iftype_num)
++{
++	int i, j, iftype;
++
++	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
++
++		c = &wiphy->iface_combinations[i];
++
++		if (num_interfaces > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
++		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
++				 GFP_KERNEL);
++		if (!limits)
++			return -ENOMEM;
++
++		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++			if (wiphy->software_iftypes & BIT(iftype))
++				continue;
++			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
++				if (!(limits[j].types & BIT(iftype)))
++					continue;
++				if (limits[j].max < iftype_num[iftype])
++					goto cont;
++				limits[j].max -= iftype_num[iftype];
 +			}
- 		pDevice->bBeaconSent = true;
- 		} else {
- 			pDevice->bBeaconSent = false;
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index 3a68dfa..23320cc 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -57,7 +57,7 @@ struct iw_statistics *iwctl_get_wireless_stats(struct net_device *dev)
- 	struct vnt_private *pDevice = netdev_priv(dev);
- 	long ldBm;
++		}
++
++		if (radar_detect && !(c->radar_detect_widths & radar_detect))
++			goto cont;
++
++		/* Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/* This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
++		kfree(limits);
++		return 0;
++ cont:
++		kfree(limits);
++	}
++
++	return -EBUSY;
++}
++EXPORT_SYMBOL(cfg80211_check_combinations);
++
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+ 				 enum nl80211_iftype iftype,
+@@ -1269,7 +1332,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	int i, j;
++	int i;
  
--	pDevice->wstats.status = pDevice->eOPMode;
-+	pDevice->wstats.status = pDevice->op_mode;
- 	RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
- 	pDevice->wstats.qual.level = ldBm;
- 	pDevice->wstats.qual.noise = 0;
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 664781c..4f913d3 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -256,7 +256,7 @@ device_set_options(struct vnt_private *pDevice) {
-     pDevice->byShortPreamble = PREAMBLE_TYPE_DEF;
-     pDevice->ePSMode = PS_MODE_DEF;
-     pDevice->b11hEnable = X80211h_MODE_DEF;
--    pDevice->eOPMode = OP_MODE_DEF;
-+    pDevice->op_mode = NL80211_IFTYPE_UNSPECIFIED;
-     pDevice->uConnectionRate = DATA_RATE_DEF;
-     if (pDevice->uConnectionRate < RATE_AUTO) pDevice->bFixRate = true;
-     pDevice->byBBType = BBP_TYPE_DEF;
-diff --git a/drivers/staging/vt6656/power.c b/drivers/staging/vt6656/power.c
-index e7d5487..cd4f5bd 100644
---- a/drivers/staging/vt6656/power.c
-+++ b/drivers/staging/vt6656/power.c
-@@ -67,7 +67,7 @@ void PSvEnablePowerSaving(struct vnt_private *pDevice, u16 wListenInterval)
- 	/* set period of power up before TBTT */
- 	MACvWriteWord(pDevice, MAC_REG_PWBT, C_PWBT);
+ 	ASSERT_RTNL();
  
--	if (pDevice->eOPMode != OP_MODE_ADHOC) {
-+	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
- 		/* set AID */
- 		MACvWriteWord(pDevice, MAC_REG_AIDATIM, wAID);
- 	} else {
-@@ -106,7 +106,7 @@ void PSvEnablePowerSaving(struct vnt_private *pDevice, u16 wListenInterval)
- 	pDevice->bEnablePSMode = true;
+@@ -1360,59 +1423,9 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	if (total == 1 && !radar_detect)
+ 		return 0;
  
- 	/* We don't send null pkt in ad hoc mode since beacon will handle this. */
--	if (pDevice->eOPMode == OP_MODE_INFRASTRUCTURE)
-+	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
- 		PSbSendNullPacket(pDevice);
+-	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+-		const struct ieee80211_iface_combination *c;
+-		struct ieee80211_iface_limit *limits;
+-		u32 all_iftypes = 0;
+-
+-		c = &rdev->wiphy.iface_combinations[i];
+-
+-		if (total > c->max_interfaces)
+-			continue;
+-		if (num_different_channels > c->num_different_channels)
+-			continue;
+-
+-		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+-				 GFP_KERNEL);
+-		if (!limits)
+-			return -ENOMEM;
+-
+-		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-				continue;
+-			for (j = 0; j < c->n_limits; j++) {
+-				all_iftypes |= limits[j].types;
+-				if (!(limits[j].types & BIT(iftype)))
+-					continue;
+-				if (limits[j].max < num[iftype])
+-					goto cont;
+-				limits[j].max -= num[iftype];
+-			}
+-		}
+-
+-		if (radar_detect && !(c->radar_detect_widths & radar_detect))
+-			goto cont;
+-
+-		/*
+-		 * Finally check that all iftypes that we're currently
+-		 * using are actually part of this combination. If they
+-		 * aren't then we can't use this combination and have
+-		 * to continue to the next.
+-		 */
+-		if ((all_iftypes & used_iftypes) != used_iftypes)
+-			goto cont;
+-
+-		/*
+-		 * This combination covered all interface types and
+-		 * supported the requested numbers, so we're good.
+-		 */
+-		kfree(limits);
+-		return 0;
+- cont:
+-		kfree(limits);
+-	}
+-
+-	return -EBUSY;
++	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
++					   total, used_iftypes,
++					   radar_detect, num);
+ }
  
- 	pDevice->bPWBitOn = true;
-@@ -137,7 +137,7 @@ void PSvDisablePowerSaving(struct vnt_private *pDevice)
- 	MACvRegBitsOn(pDevice, MAC_REG_PSCTL, PSCTL_ALBCN);
- 	pDevice->bEnablePSMode = false;
- 
--	if (pDevice->eOPMode == OP_MODE_INFRASTRUCTURE)
-+	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
- 		PSbSendNullPacket(pDevice);
- 
- 	pDevice->bPWBitOn = false;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 51fff89..92146e5 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -553,12 +553,13 @@ static int vnt_fill_ieee80211_rts(struct vnt_private *priv,
- 	rts->duration = duration;
- 	rts->frame_control = TYPE_CTL_RTS;
- 
--	if (priv->eOPMode == OP_MODE_ADHOC || priv->eOPMode == OP_MODE_AP)
-+	if (priv->op_mode == NL80211_IFTYPE_ADHOC ||
-+				priv->op_mode == NL80211_IFTYPE_AP)
- 		memcpy(rts->ra, eth_hdr->h_dest, ETH_ALEN);
- 	else
- 		memcpy(rts->ra, priv->abyBSSID, ETH_ALEN);
- 
--	if (priv->eOPMode == OP_MODE_AP)
-+	if (priv->op_mode == NL80211_IFTYPE_AP)
- 		memcpy(rts->ta, priv->abyBSSID, ETH_ALEN);
- 	else
- 		memcpy(rts->ta, eth_hdr->h_source, ETH_ALEN);
-@@ -991,8 +992,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     //Set packet type
-     pTxBufHead->wFIFOCtl |= (u16)(byPktType<<8);
- 
--	if ((pDevice->>eOPMode == OP_MODE_ADHOC) ||
--			(pDevice->eOPMode == OP_MODE_AP)) {
-+	if (pDevice->op_mode == NL80211_IFTYPE_ADHOC ||
-+			pDevice->op_mode == NL80211_IFTYPE_AP) {
- 		if (is_multicast_ether_addr(psEthHeader->h_dest)) {
- 			bNeedACK = false;
- 			pTxBufHead->wFIFOCtl =
-@@ -1292,7 +1293,7 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
- 
- 	pMACHeader->frame_control = TYPE_802_11_DATA;
- 
--    if (pDevice->eOPMode == OP_MODE_AP) {
-+    if (pDevice->op_mode == NL80211_IFTYPE_AP) {
- 	memcpy(&(pMACHeader->addr1[0]),
- 	       &(psEthHeader->h_dest[0]),
- 	       ETH_ALEN);
-@@ -1302,7 +1303,7 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
- 	       ETH_ALEN);
-         pMACHeader->frame_control |= FC_FROMDS;
-     } else {
--	if (pDevice->eOPMode == OP_MODE_ADHOC) {
-+	if (pDevice->op_mode == NL80211_IFTYPE_ADHOC) {
- 		memcpy(&(pMACHeader->addr1[0]),
- 		       &(psEthHeader->h_dest[0]),
- 		       ETH_ALEN);
-@@ -1541,8 +1542,8 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-         pbyIVHead = (u8 *)(pbyTxBufferAddr + cbHeaderSize + cbMacHdLen + uPadding);
-         pbyPayloadHead = (u8 *)(pbyTxBufferAddr + cbHeaderSize + cbMacHdLen + uPadding + cbIVlen);
-         do {
--            if ((pDevice->eOPMode == OP_MODE_INFRASTRUCTURE) &&
--                (pDevice->bLinkPass == true)) {
-+	    if (pDevice->op_mode == NL80211_IFTYPE_STATION &&
-+					pDevice->bLinkPass == true) {
-                 pbyBSSID = pDevice->abyBSSID;
-                 // get pairwise key
-                 if (KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, PAIRWISE_KEY, &pTransmitKey) == false) {
-@@ -1560,7 +1561,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-             pbyBSSID = pDevice->abyBroadcastAddr;
-             if(KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, GROUP_KEY, &pTransmitKey) == false) {
-                 pTransmitKey = NULL;
--                DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"KEY is NULL. OP Mode[%d]\n", pDevice->eOPMode);
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"KEY is NULL. OP Mode[%d]\n", pDevice->op_mode);
-             } else {
-                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Get GTK.\n");
-             }
-@@ -2305,7 +2306,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-         }
-     }
-     else {
--        if (pDevice->eOPMode == OP_MODE_ADHOC) {
-+	if (pDevice->op_mode == NL80211_IFTYPE_ADHOC) {
-             // Adhoc Tx rate decided from node DB
- 	    if (is_multicast_ether_addr(pDevice->sTxEthHeader.h_dest)) {
-                 // Multicast use highest data rate
-@@ -2336,7 +2337,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-                 }
-             }
-         }
--        if (pDevice->eOPMode == OP_MODE_INFRASTRUCTURE) {
-+	if (pDevice->op_mode == NL80211_IFTYPE_STATION) {
-             // Infra STA rate decided from AP Node, index = 0
-             pDevice->wCurrentRate = pMgmt->sNodeDBTable[0].wTxDataRate;
-         }
-diff --git a/drivers/staging/vt6656/wmgr.c b/drivers/staging/vt6656/wmgr.c
-index d74b0e7..0d69719 100644
---- a/drivers/staging/vt6656/wmgr.c
-+++ b/drivers/staging/vt6656/wmgr.c
-@@ -2164,12 +2164,12 @@ void vMgrCreateOwnIBSS(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-         pMgmt->wCurrCapInfo |= WLAN_SET_CAP_INFO_ESS(1);
-         pMgmt->byDTIMPeriod = DEFAULT_DTIM_PERIOD;
-         pMgmt->byDTIMCount = pMgmt->byDTIMPeriod - 1;
--        pDevice->eOPMode = OP_MODE_AP;
-+	pDevice->op_mode = NL80211_IFTYPE_AP;
-     }
- 
-     if (pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) {
-         pMgmt->wCurrCapInfo |= WLAN_SET_CAP_INFO_IBSS(1);
--        pDevice->eOPMode = OP_MODE_ADHOC;
-+	pDevice->op_mode = NL80211_IFTYPE_ADHOC;
-     }
- 
-     if (pDevice->bEncryptionEnable) {
-@@ -2359,7 +2359,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
- 
-             pMgmt->eCurrState = WMAC_STATE_JOINTED;
-             // Adopt BSS state in Adapter Device Object
--            pDevice->eOPMode = OP_MODE_INFRASTRUCTURE;
-+	    pDevice->op_mode = NL80211_IFTYPE_STATION;
-             memcpy(pDevice->abyBSSID, pCurr->abyBSSID, WLAN_BSSID_LEN);
- 
-             // Add current BSS to Candidate list
-@@ -2500,7 +2500,7 @@ void vMgrJoinBSSBegin(struct vnt_private *pDevice, PCMD_STATUS pStatus)
-             pMgmt->eCurrMode = WMAC_MODE_IBSS_STA;
-             pMgmt->eCurrState = WMAC_STATE_STARTED;
-             // Adopt BSS state in Adapter Device Object
--            pDevice->eOPMode = OP_MODE_ADHOC;
-+	    pDevice->op_mode = NL80211_IFTYPE_ADHOC;
-             pDevice->bLinkPass = true;
-             ControlvMaskByte(pDevice,MESSAGE_REQUEST_MACREG,MAC_REG_PAPEDELAY,LEDSTS_STS,LEDSTS_INTER);
-             memcpy(pDevice->abyBSSID, pCurr->abyBSSID, WLAN_BSSID_LEN);
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
 -- 
-1.9.rc1
+1.8.5.3
 
