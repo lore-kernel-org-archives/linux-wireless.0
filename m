@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:47370 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752468AbaBYOOA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 09:14:00 -0500
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: [PATCH v1 2/6] mac80211: move flag IEEE80211_TX_CTL_FIRST_FRAGMENT into info->control.flags
-From: =?windows-1252?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1393244741.4190.10.camel@jlt4.sipsolutions.net>
-Date: Tue, 25 Feb 2014 15:13:54 +0100
-Cc: linville@tuxdriver.com,
+Received: from mail-la0-f52.google.com ([209.85.215.52]:33231 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259AbaBTHMX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 02:12:23 -0500
+Received: by mail-la0-f52.google.com with SMTP id c6so1040137lan.39
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 23:12:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6WDvxXGT21H5-D4H3tSJ_iZufp6X05_quPpoAeaoMkOog@mail.gmail.com>
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1392807806.4733.14.camel@jlt4.sipsolutions.net>
+	<CALhHN=rAT=FeEJcbDJEPG+-knGgMvV8Mt5eVvWRWD-1BgZYLpQ@mail.gmail.com>
+	<1392809288.4733.15.camel@jlt4.sipsolutions.net>
+	<CAB=NE6WDvxXGT21H5-D4H3tSJ_iZufp6X05_quPpoAeaoMkOog@mail.gmail.com>
+Date: Thu, 20 Feb 2014 08:12:20 +0100
+Message-ID: <CALhHN=qaD=WPxN=SUBiB0yWVMi3Tugsug6uDkjiiSJyCbVOeCA@mail.gmail.com> (sfid-20140220_081226_844370_00DB885F)
+Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Message-Id: <E84199A1-4743-47E5-AD95-D86998FD8DEA@net.t-labs.tu-berlin.de> (sfid-20140225_151404_272716_F267E029)
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393164527-13800-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393244741.4190.10.camel@jlt4.sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 19 February 2014 23:11, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> On Wed, Feb 19, 2014 at 3:28 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> Ah ok, thanks.
+>
+> Let me know if you merge this so I can apply and push the respective
+> patch for CRDA. Not sure if you saw but as proposed this means this
+> bumps the wireless-regdb format. Janusz, I see you submitted a
+> respective patch for iw and CRDA but not one for wireless-regdb, we'll
+> need one there in order to parse the new entries in db.txt.
+>
+[PATCH] wireless-regdb: add DFS CAC time parameter
 
-> On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
->> Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
->> ieee80211_tx_info->control is valid. Therefore this patch moves this flag
->> from info->flags structure into the info->control.flags and renames it to
->> IEEE80211_TX_CTRL_FIRST_FRAGMENT. Define new IEEE80211_TX_TEMPORARY_CTRL_FLAGS
->> to clear all temporary flags that are shifted to info->control.flags.
-> 
-> Similar to before... this can't be right, you have to assume
-> info->control.flags is cleared when you get status data, which is in
-> fact a problem in the first patch already, but here the clearing of
-> „temporary" flags is quite wrong.
+This one parse CAC time in wireless-regdb. I also change VERSION while
+binary format was changed.
+Didn't touch db.txt while will work as today (CAC = 0 - default CAC
+time defined in mac80211).
 
-ok… will send v2
+> John, this should mean we will need two releases for wireless-regdb
+> moving on so that older versions of CRDA can read the new rules under
+> the old format. Another option may be to have wireless-regdb spit out
+> the file in two formats and we modify the new CRDA to jump to the new
+> format section if it supports it. Otherwise I'm afraid we get stuck
+> with the latest rules for old kernels forever, or we make a branch on
+> wireless-regdb for the old format.
+>
+We can allow VERSION=19 and VERSION=20, and handle this in CRDA
+dynamically. This should be quite easy.
 
-> At least temporary flags don't suffer from the 'getting lost' problem as
-> in the first patch.
-> 
-> I'll also note that this flag is treated wrongly in software retry
-> scenarios anyway, but it won’t really matter I guess.
-
-Do you mean the case when fragments after the first one get retransmitted by software ?
-
-Greetings Thomas
+> Thoughts folks?
+>
+>   Luis
