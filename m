@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:44310 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbaBWT5j (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:55992 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444AbaBTLTp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:57:39 -0500
-Received: by mail-wi0-f171.google.com with SMTP id cc10so2368727wib.4
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:38 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/17] iwlwifi: mvm: fix a few wd_disable comments
-Date: Sun, 23 Feb 2014 21:57:08 +0200
-Message-Id: <1393185428-8524-17-git-send-email-egrumbach@gmail.com> (sfid-20140223_211709_446827_CF8154A1)
-In-Reply-To: <530A51A4.6000007@gmail.com>
-References: <530A51A4.6000007@gmail.com>
+	Thu, 20 Feb 2014 06:19:45 -0500
+Received: by mail-ob0-f178.google.com with SMTP id wn1so1897860obc.23
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 03:19:44 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 20 Feb 2014 19:19:44 +0800
+Message-ID: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com> (sfid-20140220_121948_499124_F0073E14)
+Subject: insmod: cannot insert `wl_high.ko': Success (17): Success ??
+From: Naughtboy <skylvlinux@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
+,but here is some erros .....
 
-Few minor comments.
+filename:       wl_high.ko
+license:        Proprietary
+alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
+alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
+depends:        bcm_usbshim
+vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
+parm:           oneonly:int
+parm:           piomode:int
+parm:           instance_base:int
+parm:           nompc:int
+parm:           name:string
+parm:           nvram_path:string
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c       |    3 +--
- drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+# insmod bcm_usbshim.ko    ----ok
+but  insmod wl_high.ko occur error  .....    as the follow ..
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index d49e9b9..847a0ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1351,8 +1351,7 @@ MODULE_PARM_DESC(antenna_coupling,
- 
- module_param_named(wd_disable, iwlwifi_mod_params.wd_disable, int, S_IRUGO);
- MODULE_PARM_DESC(wd_disable,
--		"Disable stuck queue watchdog timer 0=system default, "
--		"1=disable, 2=enable (default: 0)");
-+		"Disable stuck queue watchdog timer 0=system default, 1=disable (default: 1)");
- 
- module_param_named(nvm_file, iwlwifi_mod_params.nvm_file, charp, S_IRUGO);
- MODULE_PARM_DESC(nvm_file, "NVM file name");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-index 0a84ade..1d100f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-@@ -93,7 +93,7 @@ enum iwl_power_level {
-  *	use IWL_DISABLE_HT_* constants
-  * @amsdu_size_8K: enable 8K amsdu size, default = 0
-  * @restart_fw: restart firmware, default = 1
-- * @wd_disable: enable stuck queue check, default = 0
-+ * @wd_disable: disable stuck queue check, default = 1
-  * @bt_coex_active: enable bt coex, default = true
-  * @led_mode: system default, default = 0
-  * @power_save: disable power save, default = false
--- 
-1.7.9.5
+# insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+insmod: cannot insert `wl_high.ko': Success (17): Success
+# insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+insmod: cannot insert `wl_high.ko': Success (17): Success
 
+
+
+
+any bigman  can do me a gudiance
+
+thank you
+--Naughtboy
