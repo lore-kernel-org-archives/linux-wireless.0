@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:63934 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbaBTIkD convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:39114 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752240AbaBTLXM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 03:40:03 -0500
-Received: by mail-bk0-f47.google.com with SMTP id d7so526562bkh.6
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 00:40:02 -0800 (PST)
+	Thu, 20 Feb 2014 06:23:12 -0500
+Received: by mail-bk0-f48.google.com with SMTP id 6so580672bkj.21
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 03:23:11 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1392873013-21772-7-git-send-email-luca@coelho.fi>
-References: <1392873013-21772-1-git-send-email-luca@coelho.fi>
-	<1392873013-21772-7-git-send-email-luca@coelho.fi>
-Date: Thu, 20 Feb 2014 09:40:01 +0100
-Message-ID: <CA+BoTQmKZi4oTVdcz14P-mSH+kiFMbXoAWX0E7+a4EDpjc1J0w@mail.gmail.com> (sfid-20140220_094008_430831_44693018)
-Subject: Re: [PATCH v2 6/7] cfg80211/mac80211: move interface counting for
- combination check to mac80211
+In-Reply-To: <87lhx7xhno.fsf@kamboji.qca.qualcomm.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	<1392629563-31046-6-git-send-email-michal.kazior@tieto.com>
+	<87lhx7xhno.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 20 Feb 2014 12:23:10 +0100
+Message-ID: <CA+BoTQ=yRjvA9ZN6Dizp-Vf8_GRJE79uMfsVXNaNaidUchukfQ@mail.gmail.com> (sfid-20140220_122325_116816_1B044378)
+Subject: Re: [RFC/RFT 5/7] ath10k: batch htt tx/rx completions
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de, Bing Zhao <bzhao@marvell.com>,
-	arend@broadcom.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 February 2014 06:10, Luciano Coelho <luca@coelho.fi> wrote:
-
-[...]
-
-> @@ -520,6 +521,23 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
->         WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
+On 19 February 2014 16:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
->         mutex_lock(&local->chanctx_mtx);
-> +
-> +       radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
-> +                                                          chandef,
-> +                                                          sdata->vif.type);
-> +       if (radar_detect_width < 0) {
-> +               ret = radar_detect_width;
-> +               goto out;
-> +       }
-> +
-> +       sdata->radar_required = !!(radar_detect_width);
-> +
-> +       ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
-> +                                          chandef, IEEE80211_CHANCTX_SHARED,
-> +                                          radar_detect_width);
-> +       if (ret < 0)
-> +               goto out;
-> +
+>> HTT Rx endpoint processes both frame rx
+>> indications and frame tx completion indications.
+>>
+>> Those completions typically come in batches and
+>> may be mixed so it makes sense to defer processing
+>> hoping to get a bunch of them and take advantage
+>> of hot caches.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> [...]
+>
+>> @@ -270,7 +274,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+>>       int idx;
+>>       struct sk_buff *msdu;
+>>
+>> -     spin_lock_bh(&htt->rx_ring.lock);
+>> +     lockdep_assert_held(&htt->rx_ring.lock);
+>
+> There are some locking changes which I think would be better to have in
+> a separate patch.
 
-I think you forgot to change SHARED to `mode` :-)
+I don't think it makes much sense. It seems silly to move a few lines
+in one patch to move some of those lines again in another one.
+
+
+>>       case HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION: {
+>> +             struct htt_resp *resp = (struct htt_resp *)skb->data;
+>>               struct htt_tx_done tx_done = {};
+>>               int status = __le32_to_cpu(resp->mgmt_tx_completion.status);
+>>
+>> -             tx_done.msdu_id =
+>> -                     __le32_to_cpu(resp->mgmt_tx_completion.desc_id);
+>> +             tx_done.msdu_id = __le32_to_cpu(resp->mgmt_tx_completion.desc_id);
+>
+> I don't see any changes here.
+
+Right. I'll cut this hunk out.
 
 
 Michał
