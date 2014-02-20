@@ -1,256 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34960 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbaB0Ol1 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:32791 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310AbaBTW31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:41:27 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [RFC v2 2/4] mac80211: implement chanctx reservation
-Date: Thu, 27 Feb 2014 16:41:19 +0200
-Message-Id: <1393512081-31453-3-git-send-email-luca@coelho.fi> (sfid-20140227_154132_785420_6188F0B2)
-In-Reply-To: <1393512081-31453-1-git-send-email-luca@coelho.fi>
-References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+	Thu, 20 Feb 2014 17:29:27 -0500
+Date: Thu, 20 Feb 2014 17:29:22 -0500 (EST)
+Message-Id: <20140220.172922.864207706999214682.davem@davemloft.net> (sfid-20140220_232937_290587_8369760F)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-02-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140220203005.GF3657@tuxdriver.com>
+References: <20140220203005.GF3657@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
-
-In order to support channel switch with multiple vifs and multiple
-contexts, we implement a concept of channel context reservation.  This
-allows us to reserve a channel context to be used later.
-
-The reservation functionality is not tied directly to channel switch
-and may be used in other situations (eg. reserving a channel context
-during IBSS join).
-
-When reserving the context, the following algorithm is used:
-
-1) try to find an existing context that matches our future chandef and
-   reserve it if it exists;
-2) otherwise, check if we're the only vif in the current context, in
-   which case we can just change our current context.  To prevent
-   other vifs from joining this context in the meantime, we mark it as
-   exclusive.  This is an optimization to avoid using extra contexts
-   when not necessary and requires the driver to support changing a
-   context on-the-fly;
-3) if we're not the only vif in the current context, create a new
-   context and reserve it;
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In RFC v2:
-
-   * reformulated the patch to make channel reservation generic and
-     not only for channel switch, as we may find other uses for it in
-     the future;
-   * added ieee80211_vif_unreserve_chanctx();
-   * removed reservation of the current chanctx from this patch;
-   * added a stop_queue_reason for chanctx reservation;
-   * added a few TODOs according to Michal's comments to be handled in
-     future patch series;
-   * set sdata->csa_chandef to the received chandef in all cases (it
-     was only happening in the alone-in-the-vif case;
----
- net/mac80211/chan.c        | 139 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  11 ++++
- 2 files changed, 150 insertions(+)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a27c6ec..bd42d17 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -419,6 +419,9 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 
- 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
-+	if (sdata->reserved_chanctx)
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+
- 	ieee80211_unassign_vif_chanctx(sdata, ctx);
- 	if (ctx->refcount == 0)
- 		ieee80211_free_chanctx(local, ctx);
-@@ -611,6 +614,142 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
-+{
-+
-+	lockdep_assert_held(&sdata->local->chanctx_mtx);
-+
-+	if (WARN_ON(!sdata->reserved_chanctx))
-+		return -EINVAL;
-+
-+	if (--sdata->reserved_chanctx->refcount == 0)
-+		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
-+
-+	sdata->reserved_chanctx = NULL;
-+
-+	return 0;
-+}
-+
-+int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-+				  const struct cfg80211_chan_def *chandef)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *new_ctx, *curr_ctx;
-+	int ret = 0;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	/* try to find another context with the chandef we want */
-+	new_ctx = ieee80211_find_chanctx(local, chandef,
-+					 IEEE80211_CHANCTX_SHARED);
-+	if (!new_ctx) {
-+		/* create a new context */
-+		new_ctx = ieee80211_new_chanctx(local, chandef,
-+						IEEE80211_CHANCTX_SHARED);
-+		if (IS_ERR(new_ctx)) {
-+			ret = PTR_ERR(new_ctx);
-+			goto out;
-+		}
-+	}
-+
-+	/* reserve the new or existing context */
-+	sdata->reserved_chanctx = new_ctx;
-+	new_ctx->refcount++;
-+
-+	sdata->csa_chandef = *chandef;
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
-+int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
-+				       u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx *ctx;
-+	struct ieee80211_chanctx *old_ctx;
-+	struct ieee80211_chanctx_conf *conf;
-+	int ret, local_changed = *changed;
-+
-+	/* TODO: need to recheck if the chandef is usable etc.? */
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	mutex_lock(&local->chanctx_mtx);
-+
-+	ctx = sdata->reserved_chanctx;
-+	if (WARN_ON(!ctx)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ieee80211_stop_queues_by_reason(&local->hw,
-+					IEEE80211_MAX_QUEUE_MAP,
-+					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
-+
-+	ieee80211_unassign_vif_chanctx(sdata, old_ctx);
-+	if (old_ctx->refcount == 0)
-+		ieee80211_free_chanctx(local, old_ctx);
-+
-+	/* TODO: we're assuming that the bandwidth of the context
-+	 * changes here, but in fact, it will only change if the
-+	 * combination of the channels used in this context change.
-+	 * We should set this flag according to what happens when
-+	 * ieee80211_recalc_chanctx_chantype() is called.  Maybe the
-+	 * nicest thing to do would be to change that function so that
-+	 * it returns changed flags (which will be either 0 or
-+	 * BSS_CHANGED_BANDWIDTH).
-+	 */
-+
-+	if (sdata->vif.bss_conf.chandef.width != ctx->conf.def.width)
-+		local_changed |= BSS_CHANGED_BANDWIDTH;
-+
-+	sdata->vif.bss_conf.chandef = ctx->conf.def;
-+
-+	/* unref our reservation before assigning */
-+	ctx->refcount--;
-+	sdata->reserved_chanctx = NULL;
-+	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-+	if (ret) {
-+		/* if assign fails refcount stays the same */
-+		if (ctx->refcount == 0)
-+			ieee80211_free_chanctx(local, ctx);
-+		goto out;
-+	}
-+
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_MAX_QUEUE_MAP,
-+					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
-+
-+	*changed = local_changed;
-+
-+	ieee80211_recalc_chanctx_chantype(local, ctx);
-+	ieee80211_recalc_smps_chanctx(local, ctx);
-+	ieee80211_recalc_radar_chanctx(local, ctx);
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
- int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 				   const struct cfg80211_chan_def *chandef,
- 				   u32 *changed)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8603dfb..998fbbb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -756,6 +756,8 @@ struct ieee80211_sub_if_data {
- 	bool csa_radar_required;
- 	struct cfg80211_chan_def csa_chandef;
- 
-+	struct ieee80211_chanctx *reserved_chanctx;
-+
- 	/* used to reconfigure hardware SM PS */
- 	struct work_struct recalc_smps;
- 
-@@ -899,6 +901,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
- 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
- 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
-+	IEEE80211_QUEUE_STOP_REASON_CHANCTX,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
-@@ -1776,6 +1779,14 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 			  const struct cfg80211_chan_def *chandef,
- 			  enum ieee80211_chanctx_mode mode);
- int __must_check
-+ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-+			      const struct cfg80211_chan_def *chandef);
-+int __must_check
-+ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
-+				   u32 *changed);
-+int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata);
-+
-+int __must_check
- ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u32 *changed);
--- 
-1.8.5.3
-
+RnJvbTogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTog
+VGh1LCAyMCBGZWIgMjAxNCAxNTozMDowNSAtMDUwMA0KDQo+IFBsZWFzZSBwdWxsIHRoaXMgYmF0
+Y2ggb2Ygd2lyZWxlc3MgdXBkYXRlcyBpbnRlbmRlZCBmb3IgdGhlIDMuMTUNCj4gc3RyZWFtIQ0K
+PiANCj4gRm9yIHRoZSBtYWM4MDIxMSBiaXRzLCBKb2hhbm5lcyBzYXlzOg0KPiANCj4gIldlIGhh
+dmUgc29tZSBjbGVhbnVwcyBhbmQgbWlub3IgZml4ZXMgYXMgd2VsbCBhcyB1c2Vyc3BhY2UgQVBJ
+DQo+IGltcHJvdmVtZW50cyBmcm9tIGEgbG90IG9mIHBlb3BsZSwgZXh0ZW5kZWQgVkhUIHN1cHBv
+cnQgZm9yIHJhZGlvdGFwDQo+IGZyb20gRW1tYW51ZWwsIENTQSBpbXByb3ZlbWVudHMgZnJvbSBB
+bmRyZWksIEx1Y2EgYW5kIE1pY2hhbC4gSSd2ZSBhbHNvDQo+IGluY2x1ZGVkIG15IHdvcmsgb24g
+aHdzaW0gdG8gbWFrZSBkeW5hbWljIHJlZ2lzdHJhdGlvbiBvZiByYWRpb3MNCj4gcG9zc2libGUu
+Ig0KPiANCj4gQWxvbmcgd2l0aCB0aGF0LCB3ZSBnZXQgdGhlIHVzdWFsIHJvdW5kIG9mIHVwZGF0
+ZXMgdG8gYXRoOWssDQo+IGJyY21mbWFjLCBtd2lmaWV4LCB3Y24zNnh4LCBhbmQgdGhlIHRpIGRy
+aXZlcnMgLS0gbm90aGluZyBwYXJ0aWN1bGFybHkNCj4gbm90ZXdvcnRoeSwgbW9zdGx5IGp1c3Qg
+cmFuZG9tIHVwZGF0ZXMgYW5kIHJlZmFjdG9yaW5nLg0KPiANCj4gQWxzbyBpbmNsdWRlZCBpcyBh
+IHB1bGwgb2YgdGhlIHdpcmVsZXNzIHRyZWUsIGludGVuZGVkIHRvIHJlc29sdmUNCj4gc29tZSBw
+b3RlbnRpYWwgbWVyZ2UgaXNzdWVzLg0KPiANCj4gUGxlYXNlIGxldCBtZSBrbm93IGlmIHRoZXJl
+IGFyZSBwcm9ibGVtcyENCg0KUHVsbGVkLCBidXQgcGxlYXNlIGFkZHJlc3MgdGhpczoNCg0KZHJp
+dmVycy9zdGFnaW5nL3J0bDg4MjFhZS9ydGw4ODIxYWUvdHJ4LmM6IEluIGZ1bmN0aW9uIKFydGw4
+ODIxYWVfcnhfcXVlcnlfZGVzY6I6DQpkcml2ZXJzL3N0YWdpbmcvcnRsODgyMWFlL3J0bDg4MjFh
+ZS90cnguYzo2MTk6Mzogd2FybmluZzogcGFzc2luZyBhcmd1bWVudCAxIG9mIKFpZWVlODAyMTFf
+aXNfcm9idXN0X21nbXRfZnJhbWWiIGZyb20gaW5jb21wYXRpYmxlIHBvaW50ZXIgdHlwZSBbZW5h
+YmxlZCBieSBkZWZhdWx0XQ0KDQpJIHdhcyBnb2luZyB0byBkbyB0aGUgZWFzeSB0cmFuc2Zvcm1h
+dGlvbiB0byB0aGUgIl8iIHByZWZpeGVkIHZhcmlhbnQNCmJ1dCBub3RpY2VkIHRoYXQgdGhpcyBj
+b2RlIGRvZXNuJ3QgdmFsaWRhdGUgdGhlIHNrYiBsZW5ndGgsIHdoaWNoIGlzDQpwcmVjaXNlbHkg
+dGhlIHJlYXNvbiB3aHkgdGhpcyByb3V0aW5lIG5vdyB0YWtlcyBhbiBza2IuDQo=
