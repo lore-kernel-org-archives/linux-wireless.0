@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45641 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbaB0RDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:03:43 -0500
-Message-ID: <1393520708.9637.16.camel@dcbw.local> (sfid-20140227_180346_723305_A2FA7579)
-Subject: Re: [PATCH 3.14.0-rc4 v2 8/10] rsi: USB functionality
-From: Dan Williams <dcbw@redhat.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Fariya Fathima <fariya.f@redpinesignals.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 27 Feb 2014 11:05:08 -0600
-In-Reply-To: <1393482626.13669.5.camel@dubbel>
-References: <1845351523-16314@mail.redpinesignals.com>
-	 <1393437326.23587.5.camel@dcbw.local> <1393482626.13669.5.camel@dubbel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42137 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbaBTVAO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 16:00:14 -0500
+Date: Thu, 20 Feb 2014 15:45:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-02-20
+Message-ID: <20140220204544.GG3657@tuxdriver.com> (sfid-20140220_220018_799443_E1BA2D65)
+References: <1392887140.5073.10.camel@jlt4.sipsolutions.net>
+ <1392906648.5073.31.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392906648.5073.31.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 08:30 +0200, Luca Coelho wrote:
-> On Wed, 2014-02-26 at 11:55 -0600, Dan Williams wrote:
-> > On Wed, 2014-02-26 at 17:11 +0530, Fariya Fathima wrote:
-> > > Hello Dan,
-> > > 
-> > > Thanks for your valuable feedback. We have already started working on your comments. However, I was just thinking whether I should re-submit the patches (based on your comments) or wait for day or two for more feedback from Johannes and others. What do your suggest?
-> > 
-> > Waiting a couple days for more feedback from Johannes and others would
-> > not hurt.
+On Thu, Feb 20, 2014 at 03:30:48PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Sometimes people that are really busy wait for a "clean" submission (ie.
-> one where there are no pending comments) before they start reviewing it,
-> so they don't stumble into things that were already spotted by others.
-> I prefer a faster turnaround of new versions of the patches (though
-> don't look at me as a best example of doing this :P).
+> I've got a few more fixes for some issues here now.
+> 
+> This time, I have a fix from Arik for scheduled scan recovery (something
+> that only recently went into the tree), a memory leak fix from Eytan and
+> a small regulatory bugfix from Inbal. The EAPOL change from Felix makes
+> rekeying more stable while lots of traffic is flowing, and there's
+> Emmanuel's and my fixes for a race in the code handling powersaving
+> clients.
+> 
+> Please pull.
+> 
+> Thanks,
+> johannes
+> 
+> 
+> The following changes since commit fab57a6cc227468ca9e6a4c7ff8d3b10727785ee:
+> 
+>   mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to e3685e03b40f5ec7926d9a75bf63467fc4071df9:
+> 
+>   mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
 
-Fariya, if you don't hear anything from anyone else by the end of the
-week, just respin the patches and repost to the list.
+Pulling now...
 
-Dan
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
