@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:35675 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbaBLJoQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 04:44:16 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61142 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247AbaBTJik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 04:38:40 -0500
+Date: Thu, 20 Feb 2014 10:40:58 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
+Message-ID: <20140220094057.GE23439@redhat.com> (sfid-20140220_103845_499257_15F99CCC)
+References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+ <20140220092154.GD23439@redhat.com>
+ <1392888468.5073.11.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21243.16970.514799.362874@gargle.gargle.HOWL> (sfid-20140212_104422_682844_CD88AB83)
-Date: Wed, 12 Feb 2014 15:13:38 +0530
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Intel Linux Wireless \(ilw\@linux.intel.com\)" <ilw@linux.intel.com>
-Subject: RE: [PATCH] iwlwifi: disable TX AMPDU by default for iwldvm
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
-References: <52FB360D.2060502@gmail.com>
-	<1392195269-5514-1-git-send-email-egrumbach@gmail.com>
-	<20140212091008.GB1315@redhat.com>
-	<20140212092150.GC1315@redhat.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D663F1@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <1392888468.5073.11.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grumbach, Emmanuel wrote:
-> I have seen reports from many users and many devices - and unfortunately I
-> have never been able to reproduce - so I can't know if it affects all the
-> devices. All I can see is that I saw reports on very old devices (5150) and
-> with more recent devices (2230).
+On Thu, Feb 20, 2014 at 10:27:48AM +0100, Johannes Berg wrote:
+> On Thu, 2014-02-20 at 10:21 +0100, Stanislaw Gruszka wrote:
+> > On Thu, Feb 20, 2014 at 09:52:45AM +0100, Johannes Berg wrote:
+> > > +
+> > > +		/* sync with ieee80211_sta_ps_deliver_wakeup */
+> > > +		spin_lock(&sta->ps_lock);
+> > > +		/*
+> > > +		 * STA woke up the meantime and all the frames on ps_tx_buf have
+> > > +		 * been queued to pending queue. No reordering can happen, go
+> > > +		 * ahead and Tx the packet.
+> > > +		 */
+> > > +		if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+> > > +			spin_unlock(&sta->ps_lock);
+> > 
+> > Actually I'm not sure if we should check if both WLAN_STA_PS_DRIVER 
+> > and WLAN_STA_PS_STA flags are clear ?
+> 
+> This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
+> clear until after WLAN_STA_PS_DRIVER is?
 
-Is 5100 a very old device ? I have one of those cards in a laptop and starting
-11n TX traffic usually results in a crash like this: http://pastebin.com/HtUdCLR3
+Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
+flag currently cleared.
 
-Sujith
+tatic void sta_unblock(struct work_struct *wk)
+{
+        if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+                local_bh_disable();
+                ieee80211_sta_ps_deliver_wakeup(sta);
+                local_bh_enable();
 
+so on TX we should rather check WLAN_STA_PS_DRIVER flag .
 
+Stanislaw
