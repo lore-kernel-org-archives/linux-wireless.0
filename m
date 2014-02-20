@@ -1,233 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56687 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbaBTKwj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753586AbaBTKyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 05:52:39 -0500
-From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<c_ppotte@qti.qualcomm.com>, <djindal@qti.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>
-Subject: [PATCH] [PATCH v2]cfg80211: Pass TDLS peer capability information in tdls_mgmt
-Date: Thu, 20 Feb 2014 16:22:09 +0530
-Message-ID: <1392893529-8433-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20140220_115243_679599_BA18260E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 20 Feb 2014 05:54:22 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 3.14] mac80211: fix station wakeup powersave race
+Date: Thu, 20 Feb 2014 11:54:17 +0100
+Message-Id: <1392893657-26487-1-git-send-email-johannes@sipsolutions.net> (sfid-20140220_115439_806653_31B9AC50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While framing the TDLS Setup Confirmation frame, the driver needs to
-know if the TDLS peer is VHT/HT/WMM capable and thus shall construct
-the VHT/HT operation / WMM parameter elements accordingly. Supplicant
-determines if the TDLS peer is VHT/HT/WMM capable based on the
-presence of the respective IEs in the received TDLS Setup Response frame.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The host driver should not need to parse the received TDLS Response
-frame and thus, should be able to rely on the supplicant to indicate
-the capability of the peer through additional flags while transmitting
-the TDLS Setup Confirmation frame through tdls_mgmt operations.
+Consider the following (relatively unlikely) scenario:
+ 1) station goes to sleep while frames are buffered in driver
+ 2) driver blocks wakeup (until no more frames are buffered)
+ 3) station wakes up again
+ 4) driver unblocks wakeup
 
-Signed-off-by: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+In this case, the current mac80211 code will do the following:
+ 1) WLAN_STA_PS_STA set
+ 2) WLAN_STA_PS_DRIVER set
+ 3) - nothing -
+ 4) WLAN_STA_PS_DRIVER cleared
+
+As a result, no frames will be delivered to the client, even
+though it is awake, until it sends another frame to us that
+triggers ieee80211_sta_ps_deliver_wakeup() in sta_ps_end().
+
+Since we now take the PS spinlock, we can fix this while at
+the same time removing the complexity with the pending skb
+queue function. This was broken since my commit 50a9432daeec
+("mac80211: fix powersaving clients races") due to removing
+the clearing of WLAN_STA_PS_STA in the RX path.
+
+While at it, fix a cleanup path issue when a station is
+removed while the driver is still blocking its wakeup.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |  4 ++--
- include/net/cfg80211.h                  |  3 ++-
- include/uapi/linux/nl80211.h            | 21 +++++++++++++++++++++
- net/mac80211/cfg.c                      |  4 ++--
- net/wireless/nl80211.c                  |  7 ++++++-
- net/wireless/rdev-ops.h                 |  9 ++++++---
- net/wireless/trace.h                    | 12 ++++++++----
- 7 files changed, 47 insertions(+), 13 deletions(-)
+ net/mac80211/ieee80211_i.h | 10 ++--------
+ net/mac80211/rx.c          |  7 +++++++
+ net/mac80211/sta_info.c    | 32 ++++++++++++++------------------
+ net/mac80211/util.c        |  8 ++------
+ 4 files changed, 25 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 436ba43..6948a97 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2600,8 +2600,8 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
- static int
- mwifiex_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 			   u8 *peer, u8 action_code, u8 dialog_token,
--			   u16 status_code, const u8 *extra_ies,
--			   size_t extra_ies_len)
-+			   u16 status_code, u32 peer_capability,
-+			   const u8 *extra_ies, size_t extra_ies_len)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	int ret;
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9f90554..c89a5b5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2465,7 +2465,8 @@ struct cfg80211_ops {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3701930c6649..5e44e3179e02 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1692,14 +1692,8 @@ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue);
+ void ieee80211_add_pending_skb(struct ieee80211_local *local,
+ 			       struct sk_buff *skb);
+-void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
+-				   struct sk_buff_head *skbs,
+-				   void (*fn)(void *data), void *data);
+-static inline void ieee80211_add_pending_skbs(struct ieee80211_local *local,
+-					      struct sk_buff_head *skbs)
+-{
+-	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
+-}
++void ieee80211_add_pending_skbs(struct ieee80211_local *local,
++				struct sk_buff_head *skbs);
+ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 			    struct ieee80211_sub_if_data *sdata);
  
- 	int	(*tdls_mgmt)(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 *peer, u8 action_code,  u8 dialog_token,
--			     u16 status_code, const u8 *buf, size_t len);
-+			     u16 status_code, u32 peer_capability,
-+			     const u8 *buf, size_t len);
- 	int	(*tdls_oper)(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 *peer, enum nl80211_tdls_operation oper);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c24ca0d0f469..3e57f96c9666 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1128,6 +1128,13 @@ static void sta_ps_end(struct sta_info *sta)
+ 	       sta->sta.addr, sta->sta.aid);
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index a12e6ca..a0f133f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1575,6 +1575,9 @@ enum nl80211_commands {
-  *	advertise values that cannot always be met. In such cases, an attempt
-  *	to add a new station entry with @NL80211_CMD_NEW_STATION may fail.
-  *
-+ * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-+ *	As specified in the &enum nl80211_tdls_peer_capability.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1908,6 +1911,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_MAX_AP_ASSOC_STA,
- 
-+	NL80211_ATTR_TDLS_PEER_CAPABILITY,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4079,4 +4084,20 @@ struct nl80211_vendor_cmd_info {
- 	__u32 subcmd;
- };
- 
-+/**
-+ * enum nl80211_tdls_peer_capability - TDLS peer flags.
-+ *
-+ * Used by tdls_mgmt() to determine which conditional elements need
-+ * to be added to TDLS Setup frames.
-+ *
-+ * @NL80211_TDLS_PEER_HT: TDLS peer is HT capable.
-+ * @NL80211_TDLS_PEER_VHT: TDLS peer is VHT capable.
-+ * @NL80211_TDLS_PEER_WMM: TDLS peer is WMM capable.
-+ */
-+enum nl80211_tdls_peer_capability {
-+	NL80211_TDLS_PEER_HT = 1<<0,
-+	NL80211_TDLS_PEER_VHT = 1<<1,
-+	NL80211_TDLS_PEER_WMM = 1<<2,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 363d19b..bcc65ef 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3647,8 +3647,8 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
- 
- static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 			       u8 *peer, u8 action_code, u8 dialog_token,
--			       u16 status_code, const u8 *extra_ies,
--			       size_t extra_ies_len)
-+			       u16 status_code, u32 peer_capability,
-+			       const u8 *extra_ies, size_t extra_ies_len)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
++		/*
++		 * Clear the flag only if the other one is still set
++		 * so that the TX path won't start TX'ing new frames
++		 * directly ... In the case that the driver flag isn't
++		 * set ieee80211_sta_ps_deliver_wakeup() will clear it.
++		 */
++		clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 		ps_dbg(sta->sdata, "STA %pM aid %d driver-ps-blocked\n",
+ 		       sta->sta.addr, sta->sta.aid);
+ 		return;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index ffc1ee6a2ec1..a023b432143b 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -99,7 +99,8 @@ static void __cleanup_single_sta(struct sta_info *sta)
  	struct ieee80211_local *local = sdata->local;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8e6b6a2..8114c11 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -384,6 +384,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
- };
+ 	struct ps_data *ps;
  
- /* policy for the key attributes */
-@@ -7269,6 +7270,7 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
- 	u8 action_code, dialog_token;
-+	u32 peer_capability = 0;
- 	u16 status_code;
- 	u8 *peer;
+-	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
++	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
++	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
+ 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			ps = &sdata->bss->ps;
+@@ -109,6 +110,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 			return;
  
-@@ -7287,9 +7289,12 @@ static int nl80211_tdls_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	action_code = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_ACTION]);
- 	status_code = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
- 	dialog_token = nla_get_u8(info->attrs[NL80211_ATTR_TDLS_DIALOG_TOKEN]);
-+	if (info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY])
-+		peer_capability =
-+			nla_get_u32(info->attrs[NL80211_ATTR_TDLS_PEER_CAPABILITY]);
+ 		clear_sta_flag(sta, WLAN_STA_PS_STA);
++		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
  
- 	return rdev_tdls_mgmt(rdev, dev, peer, action_code,
--			      dialog_token, status_code,
-+			      dialog_token, status_code, peer_capability,
- 			      nla_data(info->attrs[NL80211_ATTR_IE]),
- 			      nla_len(info->attrs[NL80211_ATTR_IE]));
+ 		atomic_dec(&ps->num_sta_ps);
+ 		sta_info_recalc_tim(sta);
+@@ -1090,10 +1092,14 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
  }
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index c8e2259..74d97d3 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -769,13 +769,16 @@ static inline int rdev_set_rekey_data(struct cfg80211_registered_device *rdev,
- static inline int rdev_tdls_mgmt(struct cfg80211_registered_device *rdev,
- 				 struct net_device *dev, u8 *peer,
- 				 u8 action_code, u8 dialog_token,
--				 u16 status_code, const u8 *buf, size_t len)
-+				 u16 status_code, u32 peer_capability,
-+				 const u8 *buf, size_t len)
+ EXPORT_SYMBOL(ieee80211_find_sta);
+ 
+-static void clear_sta_ps_flags(void *_sta)
++/* powersave support code */
++void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
  {
- 	int ret;
- 	trace_rdev_tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
--			     dialog_token, status_code, buf, len);
-+			     dialog_token, status_code, peer_capability,
-+			     buf, len);
- 	ret = rdev->ops->tdls_mgmt(&rdev->wiphy, dev, peer, action_code,
--				   dialog_token, status_code, buf, len);
-+				   dialog_token, status_code, peer_capability,
-+				   buf, len);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5eaeed5..aabccf1 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1468,9 +1468,10 @@ TRACE_EVENT(rdev_sched_scan_start,
- TRACE_EVENT(rdev_tdls_mgmt,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 u8 *peer, u8 action_code, u8 dialog_token,
--		 u16 status_code, const u8 *buf, size_t len),
-+		 u16 status_code, u32 peer_capability,
-+		 const u8 *buf, size_t len),
- 	TP_ARGS(wiphy, netdev, peer, action_code, dialog_token, status_code,
--		buf, len),
-+		peer_capability, buf, len),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		NETDEV_ENTRY
-@@ -1478,6 +1479,7 @@ TRACE_EVENT(rdev_tdls_mgmt,
- 		__field(u8, action_code)
- 		__field(u8, dialog_token)
- 		__field(u16, status_code)
-+		__field(u32, peer_capability)
- 		__dynamic_array(u8, buf, len)
- 	),
- 	TP_fast_assign(
-@@ -1487,13 +1489,15 @@ TRACE_EVENT(rdev_tdls_mgmt,
- 		__entry->action_code = action_code;
- 		__entry->dialog_token = dialog_token;
- 		__entry->status_code = status_code;
-+		__entry->peer_capability = peer_capability;
- 		memcpy(__get_dynamic_array(buf), buf, len);
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT ", action_code: %u, "
--		  "dialog_token: %u, status_code: %u, buf: %#.2x ",
-+		  "dialog_token: %u, status_code: %u, peer_capability: %u buf: %#.2x ",
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
- 		  __entry->action_code, __entry->dialog_token,
--		  __entry->status_code, ((u8 *)__get_dynamic_array(buf))[0])
-+		  __entry->status_code, __entry->peer_capability,
-+		  ((u8 *)__get_dynamic_array(buf))[0])
- );
+-	struct sta_info *sta = _sta;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff_head pending;
++	int filtered = 0, buffered = 0, ac;
++	unsigned long flags;
+ 	struct ps_data *ps;
  
- TRACE_EVENT(rdev_dump_survey,
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+@@ -1104,20 +1110,6 @@ static void clear_sta_ps_flags(void *_sta)
+ 	else
+ 		return;
+ 
+-	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
+-		atomic_dec(&ps->num_sta_ps);
+-}
+-
+-/* powersave support code */
+-void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff_head pending;
+-	int filtered = 0, buffered = 0, ac;
+-	unsigned long flags;
+-
+ 	clear_sta_flag(sta, WLAN_STA_SP);
+ 
+ 	BUILD_BUG_ON(BITS_TO_LONGS(IEEE80211_NUM_TIDS) > 1);
+@@ -1148,9 +1140,13 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 		buffered += tmp - count;
+ 	}
+ 
+-	ieee80211_add_pending_skbs_fn(local, &pending, clear_sta_ps_flags, sta);
++	ieee80211_add_pending_skbs(local, &pending);
++	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
++	clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 	spin_unlock(&sta->ps_lock);
+ 
++	atomic_dec(&ps->num_sta_ps);
++
+ 	/* This station just woke up and isn't aware of our SMPS state */
+ 	if (!ieee80211_smps_is_restrictive(sta->known_smps_mode,
+ 					   sdata->smps_mode) &&
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 1d1bb7084c05..b8700d417a9c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -435,9 +435,8 @@ void ieee80211_add_pending_skb(struct ieee80211_local *local,
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+ 
+-void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
+-				   struct sk_buff_head *skbs,
+-				   void (*fn)(void *data), void *data)
++void ieee80211_add_pending_skbs(struct ieee80211_local *local,
++				struct sk_buff_head *skbs)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct sk_buff *skb;
+@@ -461,9 +460,6 @@ void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
+ 		__skb_queue_tail(&local->pending[queue], skb);
+ 	}
+ 
+-	if (fn)
+-		fn(data);
+-
+ 	for (i = 0; i < hw->queues; i++)
+ 		__ieee80211_wake_queue(hw, i,
+ 			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
 -- 
-1.8.2.1
+1.8.5.3
 
