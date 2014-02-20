@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:45455 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbaBTCrq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59610 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750883AbaBTHIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 21:47:46 -0500
-Received: by mail-vc0-f174.google.com with SMTP id im17so1328544vcb.33
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 18:47:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <877g8rxgyf.fsf@kamboji.qca.qualcomm.com>
-References: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
-	<877g8rxgyf.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 20 Feb 2014 10:47:45 +0800
-Message-ID: <CAEFj9870+z+2yxjO7F69bGv3XzKNmi+ddyF41WSnv2aR98kjrw@mail.gmail.com> (sfid-20140220_034749_941243_D041DE0F)
-Subject: Re: [PATCH] ath10k: set the mactime of ieee80211_rx_status
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 20 Feb 2014 02:08:17 -0500
+Message-ID: <1392880090.5073.2.camel@jlt4.sipsolutions.net> (sfid-20140220_080819_877750_C0707216)
+Subject: Re: [PATCH v4] cfg80211: regulatory introduce maximum bandwidth
+ calculation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Feb 2014 08:08:10 +0100
+In-Reply-To: <CALhHN=qnWsY3cEewxAOR+KafW8L-VFFG9djk5shS_BSdepKqnw@mail.gmail.com> (sfid-20140220_070758_613044_2C66DDE2)
+References: <1391071940-4296-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <CAB=NE6XQs17pWVWchN8FJrv9HZwzkOF94iCPY=nx1BsJ5_bLcg@mail.gmail.com>
+	 <CALhHN=qnWsY3cEewxAOR+KafW8L-VFFG9djk5shS_BSdepKqnw@mail.gmail.com>
+	 (sfid-20140220_070758_613044_2C66DDE2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Why? Where do you need tsf exactly? And what bug are you actually fixing
-> here?
+On Thu, 2014-02-20 at 07:07 +0100, Janusz Dziedzic wrote:
 
-There are two type of configuration modes that require local TSF, IBSS
-and mesh for operation and also monitor mode.
+> > What happens if an old kernel gets a new wireless-regdb with AUTO on
+> > all of its 5 GHz regdomain for the country it using ? I see no mention
+> > of this anywhere in the documentation and at least from the code
+> > review I just did it seemed like we'd use 0. I hope I'm wrong as
+> > otherwise that'd introduce a severe regression when this is introduced
+> > to wireless-regdb.
 
-For IBSS, it is use for merging of BSSID (mac address) with same SSID
-name, but currently this is taking care by the following "ugly" patch.
-http://lists.infradead.org/pipermail/ath10k/2014-February/001159.html
+> Old-kernel + new wireless-regdb + new crda.
+> In case of AUTO we will not set NL80211_ATTR_FREQ_RANGE_MAX_BW we will
+> get -EINVAL
 
-Mesh mode needs this for more accurate synchronization purpose.
+That seems like a problem.
 
-Besides, the monitor mode requires this to add extra piece of
-information in radiotap header for local TSF.
+johannes
 
-> Do we get some regressions because of proving only a 32 bit TSF? Which
-> one is better, provide a 32-bit TSF or not at all?
-32-bit is not good. It could cause problem when inter-operate with
-other non-ath10k drivers with 64-bit local TSF. The better is that we
-can get the 64-bit local TSF. providing high TSF and low TSF as found
-in "struct wmi_comb_phyerr_rx_hd". Is this possible with current FW?
-
----
-Chun-Yeow
