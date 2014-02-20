@@ -1,111 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:47875 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbaB0XHA (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24238 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752422AbaBTR4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:07:00 -0500
-Received: by mail-wi0-f169.google.com with SMTP id bs8so1243013wib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:06:58 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/7] staging: vt6656: Remove all variables ulBulk*
-Date: Thu, 27 Feb 2014 23:06:09 +0000
-Message-Id: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000704_499227_622A3EEF)
+	Thu, 20 Feb 2014 12:56:05 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH] brcmfmac: fix txglomming scatter-gather packet transfers
+Date: Thu, 20 Feb 2014 18:55:55 +0100
+Message-ID: <1392918955-4488-1-git-send-email-arend@broadcom.com> (sfid-20140220_185610_505315_6D649475)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-None of these variables reach user or in any debug messages.
+The driver concatenates multiple packets in one MMC transfer. For
+scatter-gather to work the total length need to be multiple of 512
+bytes. A pre-allocated buffer was used to add padding to accomplish
+that. However, the length was not properly set and it was freed after
+the first transfer causing a crash.
 
-Remove them all.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/vt6656/device.h  | 10 ----------
- drivers/staging/vt6656/usbpipe.c | 10 ----------
- 2 files changed, 20 deletions(-)
+Hi John,
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index ce1587a..50262dc 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -424,16 +424,6 @@ struct vnt_private {
- 	DEFAULT_CONFIG config_file;
+This patch is intended for 3.14 fixing a kernel crash. The patch applies
+to the master branc of the wireless repository.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 3e99189..119ee6e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -457,7 +457,6 @@ struct brcmf_sdio {
  
- 	/* Statistic for USB */
--	unsigned long ulBulkInPosted;
--	unsigned long ulBulkInError;
--	unsigned long ulBulkInContCRCError;
--	unsigned long ulBulkInBytesRead;
--
--	unsigned long ulBulkOutPosted;
--	unsigned long ulBulkOutError;
--	unsigned long ulBulkOutContCRCError;
--	unsigned long ulBulkOutBytesWrite;
--
- 	unsigned long ulIntInPosted;
- 	unsigned long ulIntInError;
- 	unsigned long ulIntInContCRCError;
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 54c68a5..ce396b9 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -372,7 +372,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
- 		"s_nsInterruptUsbIoCompleteRead Status %d\n", status);
- 
- 	if (status != STATUS_SUCCESS) {
--		priv->ulBulkInError++;
- 		priv->int_buf.in_use = false;
- 
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-@@ -419,8 +418,6 @@ int PIPEnsBulkInUsbRead(struct vnt_private *priv, struct vnt_rcb *rcb)
- 	if (priv->Flags & fMP_DISCONNECTED)
- 		return STATUS_FAILURE;
- 
--	priv->ulBulkInPosted++;
--
- 	urb = rcb->pUrb;
- 	if (rcb->skb == NULL) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"rcb->skb is null\n");
-@@ -473,8 +470,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 
- 	switch (urb->status) {
- 	case 0:
--		priv->ulBulkInContCRCError = 0;
--		priv->ulBulkInBytesRead += urb->actual_length;
- 		break;
- 	case -ECONNRESET:
- 	case -ENOENT:
-@@ -482,7 +477,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
- 		return;
- 	case -ETIMEDOUT:
- 	default:
--		priv->ulBulkInError++;
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 				"BULK In failed %d\n", urb->status);
- 		break;
-@@ -541,7 +535,6 @@ int PIPEnsSendBulkOut(struct vnt_private *priv,
- 	}
- 
- 	urb = context->pUrb;
--	priv->ulBulkOutPosted++;
- 
- 	usb_fill_bulk_urb(urb,
- 			priv->usb,
-@@ -622,12 +615,9 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	if (status == STATUS_SUCCESS) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 			"Write %d bytes\n", (int)buf_len);
--		priv->ulBulkOutBytesWrite += buf_len;
--		priv->ulBulkOutContCRCError = 0;
+ 	u8 tx_hdrlen;		/* sdio bus header length for tx packet */
+ 	bool txglom;		/* host tx glomming enable flag */
+-	struct sk_buff *txglom_sgpad;	/* scatter-gather padding buffer */
+ 	u16 head_align;		/* buffer pointer alignment */
+ 	u16 sgentry_align;	/* scatter-gather buffer alignment */
+ };
+@@ -1944,9 +1943,8 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+ 	if (lastfrm && chain_pad)
+ 		tail_pad += blksize - chain_pad;
+ 	if (skb_tailroom(pkt) < tail_pad && pkt->len > blksize) {
+-		pkt_pad = bus->txglom_sgpad;
+-		if (pkt_pad == NULL)
+-			  brcmu_pkt_buf_get_skb(tail_pad + tail_chop);
++		pkt_pad = brcmu_pkt_buf_get_skb(tail_pad + tail_chop +
++						bus->head_align);
+ 		if (pkt_pad == NULL)
+ 			return -ENOMEM;
+ 		ret = brcmf_sdio_txpkt_hdalign(bus, pkt_pad);
+@@ -1957,6 +1955,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+ 		       tail_chop);
+ 		*(u32 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
+ 		skb_trim(pkt, pkt->len - tail_chop);
++		skb_trim(pkt_pad, tail_pad + tail_chop);
+ 		__skb_queue_after(pktq, pkt, pkt_pad);
  	} else {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 				"BULK Out failed %d\n", status);
--		priv->ulBulkOutError++;
- 	}
+ 		ntail = pkt->data_len + tail_pad -
+@@ -2011,7 +2010,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
+ 			return ret;
+ 		head_pad = (u16)ret;
+ 		if (head_pad)
+-			memset(pkt_next->data, 0, head_pad + bus->tx_hdrlen);
++			memset(pkt_next->data + bus->tx_hdrlen, 0, head_pad);
  
+ 		total_len += pkt_next->len;
  
+@@ -3486,10 +3485,6 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 		bus->txglom = false;
+ 		value = 1;
+ 		pad_size = bus->sdiodev->func[2]->cur_blksize << 1;
+-		bus->txglom_sgpad = brcmu_pkt_buf_get_skb(pad_size);
+-		if (!bus->txglom_sgpad)
+-			brcmf_err("allocating txglom padding skb failed, reduced performance\n");
+-
+ 		err = brcmf_iovar_data_set(bus->sdiodev->dev, "bus:rxglom",
+ 					   &value, sizeof(u32));
+ 		if (err < 0) {
+@@ -4053,7 +4048,6 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 			brcmf_sdio_chip_detach(&bus->ci);
+ 		}
+ 
+-		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
+ 		kfree(bus->rxbuf);
+ 		kfree(bus->hdrbuf);
+ 		kfree(bus);
 -- 
-1.9.0
+1.7.10.4
 
