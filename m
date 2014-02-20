@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:37783 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbaBGUtq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60141 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399AbaBTJmv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 15:49:46 -0500
-Date: Fri, 7 Feb 2014 14:50:12 -0600
-From: Calvin Owens <jcalvinowens@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
- codes
-Message-ID: <20140207205012.GA2974@gmail.com> (sfid-20140207_215031_217968_394093C8)
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
- <1391675824.12789.3.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1391675824.12789.3.camel@jlt4.sipsolutions.net>
+	Thu, 20 Feb 2014 04:42:51 -0500
+Message-ID: <1392889368.5073.17.camel@jlt4.sipsolutions.net> (sfid-20140220_104256_666518_C373168B)
+Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 20 Feb 2014 10:42:48 +0100
+In-Reply-To: <20140220094057.GE23439@redhat.com>
+References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
+	 <20140220092154.GD23439@redhat.com>
+	 <1392888468.5073.11.camel@jlt4.sipsolutions.net>
+	 <20140220094057.GE23439@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02/06 at 09:37 +0100, Johannes Berg wrote:
-> On Wed, 2014-02-05 at 19:44 -0600, Calvin Owens wrote:
-> > Create a function to return a descriptive string for each reason code,
-> > and print that instead of the numeric value in the kernel log. These
-> > codes are easily found on popular search engines, but one is generally
-> > not able to access the internet when dealing with wireless connectivity
-> > issues.
+On Thu, 2014-02-20 at 10:40 +0100, Stanislaw Gruszka wrote:
+
+> > This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
+> > clear until after WLAN_STA_PS_DRIVER is?
 > 
-> I believe both iw and wpa_supplicant already have the reason code
-> printout, and if you're diagnosing connectivity issues then you're
-> probably using those anyway (e.g. iw event -t), so I don't really see
-> much point in adding this to the kernel?
+> Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
+> flag currently cleared.
 > 
-> johannes
+> tatic void sta_unblock(struct work_struct *wk)
+> {
+>         if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
+>                 local_bh_disable();
+>                 ieee80211_sta_ps_deliver_wakeup(sta);
+>                 local_bh_enable();
+> 
+> so on TX we should rather check WLAN_STA_PS_DRIVER flag .
 
-Ah, I didn't realize `iw` would interpret the reason code for you.
+But that flag may never be set if the driver doesn't support/use it
+(which means it's racy, but anyway), so we need to check both.
 
-There were a couple of other replies expressing interest in this though.
-Should I rewrite the patch per Joe Perches' suggestions and resend it?
-Or should I just drop it since you can obtain the info from `iw`?
+Now I'm confused though. It seems the intent here was to clear the
+WLAN_STA_PS_STA flag in something like sta_ps_end() in the RX path, but
+we don't do that. I'm not sure how it works now, but I know from testing
+that it does ;-)
 
-Thanks,
-Calvin
+Do you think the v2 patch is fine?
+
+johannes
+
