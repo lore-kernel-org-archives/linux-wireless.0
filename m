@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61351 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbaBZLeO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 06:34:14 -0500
-Message-ID: <530DD131.50205@broadcom.com> (sfid-20140226_123422_936614_4818375E)
-Date: Wed, 26 Feb 2014 12:34:09 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
- device
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>				 <1393356639-19169-2-git-send-email-arend@broadcom.com>				 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>			 <530DAECD.8010405@broadcom.com>		 <1393406278.4133.4.camel@jlt4.sipsolutions.net>		 <530DB3BA.20106@broadcom.com>	 <1393407473.4133.5.camel@jlt4.sipsolutions.net>	 <530DC56E.9040202@broadcom.com> <1393413044.4133.6.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1393413044.4133.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from nbd.name ([46.4.11.11]:48860 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754491AbaBUKpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Feb 2014 05:45:42 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH] ath9k: list more reset causes in debugfs
+Date: Fri, 21 Feb 2014 11:45:36 +0100
+Message-Id: <1392979536-68161-1-git-send-email-nbd@openwrt.org> (sfid-20140221_114546_415183_A0E1B713)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 12:10 PM, Johannes Berg wrote:
-> On Wed, 2014-02-26 at 11:43 +0100, Arend van Spriel wrote:
-> 
->> Actually, this was not the reason for the doing the msleep(). The
->> problem was that wpa_supplicant received RTM_DELLINK, before getting the
->> NL08211_DISCONNECT. This resulted in RTM_DELLINK, immediately followed
->> by RTM_ADDLINK, followed by NL80211_DISCONNECT.
-> 
-> I'm not sure this isn't still possible? I don't know when DELLINK is
-> sent.
+Number of MAC hangs and stuck beacons were missing
 
-Given the behaviour I would say before the netdev notifier, which may be
-considered wrong. It depends whether the notifier was intended for the
-kind of thing that cfg80211 is doing, ie. send a netlink event to
-user-space?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index ab7264c..f42ed3b 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -866,6 +866,12 @@ static ssize_t read_file_reset(struct file *file, char __user *user_buf,
+ 			 "%17s: %2d\n", "PLL RX Hang",
+ 			 sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
+ 	len += scnprintf(buf + len, sizeof(buf) - len,
++			 "%17s: %2d\n", "MAC Hang",
++			 sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
++	len += scnprintf(buf + len, sizeof(buf) - len,
++			 "%17s: %2d\n", "Stuck Beacon",
++			 sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
++	len += scnprintf(buf + len, sizeof(buf) - len,
+ 			 "%17s: %2d\n", "MCI Reset",
+ 			 sc->debug.stats.reset[RESET_TYPE_MCI]);
+ 
+-- 
+1.8.3.4 (Apple Git-47)
+
