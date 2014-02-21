@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:44852 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935AbaBPBg0 convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:49994 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396AbaBUOvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Feb 2014 20:36:26 -0500
-Received: by mail-oa0-f42.google.com with SMTP id i7so16393354oag.29
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2014 17:36:25 -0800 (PST)
+	Fri, 21 Feb 2014 09:51:14 -0500
+Received: by mail-la0-f51.google.com with SMTP id c6so2379185lan.38
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 06:51:12 -0800 (PST)
+Message-ID: <530767DE.4070501@27m.se> (sfid-20140221_155117_617312_1F4C9531)
+Date: Fri, 21 Feb 2014 15:51:10 +0100
+From: Jones Desougi <jones.desougi@27m.se>
 MIME-Version: 1.0
-In-Reply-To: <DUB407-EAS234BDBA262417A0C8EAA5369B9E0@phx.gbl>
-References: <DUB407-EAS234BDBA262417A0C8EAA5369B9E0@phx.gbl>
-Date: Sun, 16 Feb 2014 02:36:25 +0100
-Message-ID: <CACna6ryazDCqFcbagd12Gfh=Gi8wczd8tdZOzSyKTntRJebWwA@mail.gmail.com> (sfid-20140216_023651_511708_F502A148)
-Subject: Re: Driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: MHD HA <muhamad_cte@hotmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <luca@coelho.fi>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: docbook: fix small formatting error
+References: <1392907534-14470-1-git-send-email-luca@coelho.fi> <1392971037.4346.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1392971037.4346.16.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-16 1:42 GMT+01:00 MHD HA <muhamad_cte@hotmail.com>:
-> Can you please send me the download source of the intel PRO/Wireless 2200GB Driver for Linux, the link that attached on the sourceforge.net is not working.
+On 02/21/2014 09:23 AM, Johannes Berg wrote:
+> On Thu, 2014-02-20 at 16:45 +0200, Luciano Coelho wrote:
+>> From: Luciano Coelho <luciano.coelho@intel.com>
+>>
+>> docbook (or one of its friends) gets confused with semi-colons in the
+>> argument descriptions, causing it to think that the semi-colon is
+>> marking a new section in the description of addr_mask in wiphy struct.
+>>
+>> Prevent this by using hyphens instead of semi-colons in the mask
+>> example.
+> 
+> Applied, thanks.
 
-When reporting problem with a page, URL is really helpful.
+Well, the changelog says that semi-colons are a problem while the patch
+actually replaces colons. Fishy. :)
 
-I guess you meant the firmware, not a driver?
-I guess you meant:
-http://ipw2200.sourceforge.net/firmware.php
-http://ipw2200.sourceforge.net/firmware.php?fid=8
-URLs?
+   /Jones
 
-The second URL has a link "I Agree" but it doesn't seem to work currently.
-
--- 
-Rafał
