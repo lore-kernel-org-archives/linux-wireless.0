@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:48698 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbaBRW7o (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:40979 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282AbaBUXgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 17:59:44 -0500
-Received: by mail-pb0-f50.google.com with SMTP id rq2so17362168pbb.23
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 14:59:43 -0800 (PST)
-Date: Tue, 18 Feb 2014 14:59:39 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH v3 2/6] cfg80211: Add Kconfig option for cellular BS hints
-Message-ID: <20140218225936.GB14296@garbanzo.do-not-panic.com> (sfid-20140218_235950_773492_326EA834)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-3-git-send-email-ilan.peer@intel.com>
+	Fri, 21 Feb 2014 18:36:41 -0500
+Received: by mail-la0-f43.google.com with SMTP id pv20so2923579lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 15:36:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390818118-27261-3-git-send-email-ilan.peer@intel.com>
+In-Reply-To: <1392896671-4288-2-git-send-email-ilan.peer@intel.com>
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com> <1392896671-4288-2-git-send-email-ilan.peer@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 21 Feb 2014 15:36:20 -0800
+Message-ID: <CAB=NE6X4a5QWhFHXtp2KSvMTo2U8f2=NhX0o-pG3Kb7Rpxqj=A@mail.gmail.com> (sfid-20140222_003645_641372_AE76561E)
+Subject: Re: [PATCH v5 1/5] cfg80211: Add indoor only and GO concurrent
+ channel attributes
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 12:21:54PM +0200, Ilan Peer wrote:
-> Move the regulatory cellular base station hints support under
-> a specific configuration option and make the option depend
-> on CFG80211_CERTIFICATION_ONUS.
-> 
+On Thu, Feb 20, 2014 at 3:44 AM, Ilan Peer <ilan.peer@intel.com> wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+>
+> The FCC are clarifying some soft configuration requirements,
+> which among other include the following:
+>
+> 1. Indoor operation, where a device can use channels requiring indoor
+>    operation, subject to that it can guarantee indoor operation,
+>    i.e., the device is connected to AC Power or the device is under
+>    the control of a local master that is acting as an AP and is
+>    connected to AC Power.
+> 2. Concurrent GO operation, where devices may instantiate a P2P GO
+>    while they are under the guidance of an authorized master. For example,
+>    on a channel on which a BSS is connected to an authorized master, i.e.,
+>    with DFS and radar detection capability in the UNII band.
+>
+> See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
+>
+> Add support for advertising Indoor-only and GO-Concurrent channel
+> properties.
+>
+> Signed-off-by: David Spinadel <david.spinadel@intel.com>
 > Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-> ---
->  net/wireless/Kconfig |    7 +++++++
->  net/wireless/reg.c   |    2 +-
->  2 files changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index 16d08b3..81c05e4 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -95,6 +95,13 @@ config CFG80211_CERTIFICATION_ONUS
->  	  you are a wireless researcher and are working in a controlled
->  	  and approved environment by your local regulatory agency.
->  
-> +config CFG80211_REG_CELLULAR_HINTS
-> +	bool "cfg80211 regulatory support for cellular base station hints"
-> +	depends on CFG80211_CERTIFICATION_ONUS
-> +	---help---
-> +	  This option adds support for drivers that can receive regulatory
-> +	  hints from cellular base stations
 
-Please use:
-
-This option enables support for parsing regulatory
-hints from cellular base stations. If enabled and at
-least one driver claims support for parsing cellular
-base station hints the regulatory core will allow and
-parse these regulatory hints. The regulatory core will
-only apply these regulatory hints on drivers that support
-this feature. You should only enable this feature if you
-have tested and validated this feature on your systems.
+Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
   Luis
