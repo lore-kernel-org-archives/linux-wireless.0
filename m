@@ -1,153 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30292 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751516AbaBIQHg convert rfc822-to-8bit (ORCPT
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:49075 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754375AbaBUBzt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 11:07:36 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "mcgrof@do-not-panic.com" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v3 0/6] Enable additional channels for use
-Date: Sun, 9 Feb 2014 16:06:59 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033377C1A@HASMSX106.ger.corp.intel.com> (sfid-20140209_170740_336208_477E729E)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-In-Reply-To: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 20 Feb 2014 20:55:49 -0500
 MIME-Version: 1.0
+In-Reply-To: <53062F97.3050407@wwwdotorg.org>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com> <53062F97.3050407@wwwdotorg.org>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Fri, 21 Feb 2014 09:55:28 +0800
+Message-ID: <CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com> (sfid-20140221_025625_979801_BBA237D9)
+Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Hi,
 
-Did you get a chance to look at this patch set? 
+On Fri, Feb 21, 2014 at 12:38 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> On 02/20/2014 05:51 AM, Heikki Krogerus wrote:
+>> There is no use for them in this driver. This will fix a
+>> static checker warning..
+>
+> Didn't you remove the use:
+>
+> -       gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+> +       gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
+>
+> doesn't that parameter get put into the sysfs GPIO debug file, so people
+> can see which GPIOs are used for what?
 
-Thanks in advance,
+That's correct. However using con_id to pass this results in different
+behavior across DT and ACPI. A better way is to export the labeling
+function so consumers can set meaningful labels themselves.
 
-Ilan.
 
-> -----Original Message-----
-> From: Peer, Ilan
-> Sent: Monday, January 27, 2014 12:22
-> To: linux-wireless@vger.kernel.org
-> Cc: wireless-regdb@lists.infradead.org; Peer, Ilan
-> Subject: [PATCH v3 0/6] Enable additional channels for use
-> 
-> This set addresses comments from Luis:
-> 
-> 1. Added a regulatory flag that can be used by drivers to disable the P2P
->    GO relaxation.
-> 2. Renamed the configuration option to
-> CONFIG_CFG80211_REG_P2P_GO_RELAX.
-> 3. Some code cleanups.
-> 
-> ------
-> 
-> As before, this series addresses the option of enabling additional channels
-> for use based on the following relaxations:
-> 
-> 1. Indoor operation, where a device can use channels requiring indoor
->    operation, subject to that it can guarantee indoor operation.
-> 2. Concurrent GO operation, where devices may instantiate a P2P GO
->    while they are under the guidance of an authorized master.
-> 
-> The series includes:
-> 
-> * Some clarification (mainly in documentation) about the intended usage of
->   channels marked as INDOOR_ONLY and CONCURRENT GO.
-> * Mapping of NL80211_RFF_NO_OUTDOOR to
-> NL80211_CHAN_INDOOR_ONLY
-> * Support for a user hint that the platform is operating in an indoor
->   environment, i.e., channel marked as INDOOR_ONLY can be used.
-> * Allow initiating radiation on channel marked with INDOOR_ONLY also
->   for scanning an frame injection in monitor mode.
-> * Some additional fixes for comments I got.
-> 
-> Following is an example of a possible channel map that can be used to allow
-> the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
-> 
-> * Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
->   information about the current regulatory domain, these channels can be
-> used
->   for GO instantiation based on the concurrent GO relaxation.
-> * The above is also true for channels 149-165 (a.k.a U-NII 3).
-> * Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO
-> and
->   indoor only. While the Concurrent GO can be used as described above, the
->   indoor only setting allows to use these channels given the platform is
->   identified as an indoor one, i.e., media server.
-> 
->  2412 MHz [1] (16.0 dBm)
->  2417 MHz [2] (16.0 dBm)
->  2422 MHz [3] (16.0 dBm)
->  2427 MHz [4] (16.0 dBm)
->  2432 MHz [5] (16.0 dBm)
->  2437 MHz [6] (16.0 dBm)
->  2442 MHz [7] (16.0 dBm)
->  2447 MHz [8] (16.0 dBm)
->  2452 MHz [9] (16.0 dBm)
->  2457 MHz [10] (16.0 dBm)
->  2462 MHz [11] (16.0 dBm)
->  2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
->  2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
->  5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
->  5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
->  5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
->  5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
->  5260 MHz [52] (16.0 dBm) (no IR, radar detection)
->  5280 MHz [56] (16.0 dBm) (no IR, radar detection)
->  5300 MHz [60] (16.0 dBm) (no IR, radar detection)
->  5320 MHz [64] (16.0 dBm) (no IR, radar detection)
->  5500 MHz [100] (16.0 dBm) (no IR, radar detection)
->  5520 MHz [104] (16.0 dBm) (no IR, radar detection)
->  5540 MHz [108] (16.0 dBm) (no IR, radar detection)
->  5560 MHz [112] (16.0 dBm) (no IR, radar detection)
->  5580 MHz [116] (16.0 dBm) (no IR, radar detection)
->  5600 MHz [120] (16.0 dBm) (no IR, radar detection)
->  5620 MHz [124] (16.0 dBm) (no IR, radar detection)
->  5640 MHz [128] (16.0 dBm) (no IR, radar detection)
->  5660 MHz [132] (16.0 dBm) (no IR, radar detection)
->  5680 MHz [136] (16.0 dBm) (no IR, radar detection)
->  5700 MHz [140] (16.0 dBm) (no IR, radar detection)
->  5720 MHz [144] (16.0 dBm) (no IR, radar detection)
->  5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
->  5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
->  5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
->  5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
->  5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
-> 
-> Thanks in advance,
-> 
-> Ilan.
-> 
-> David Spinadel (1):
->   cfg80211: Add indoor only and GO concurrent channel attributes
-> 
-> Ilan Peer (5):
->   cfg80211: Add Kconfig option for cellular BS hints
->   cfg80211: Enable GO operation on additional channels
->   cfg80211: Add an option to hint indoor operation
->   cfg80211: Enable GO operation on indoor channels
->   mac80211: Enable initiating radiation on indoor channels
-> 
->  include/net/cfg80211.h       |   41 ++++++++++++++++++++-
->  include/net/regulatory.h     |    4 ++
->  include/uapi/linux/nl80211.h |   10 +++++
->  net/mac80211/ibss.c          |    9 +++--
->  net/mac80211/scan.c          |   15 +++++---
->  net/mac80211/tx.c            |    3 +-
->  net/wireless/Kconfig         |   21 +++++++++++
->  net/wireless/chan.c          |   74
-> +++++++++++++++++++++++++++++++++++--
->  net/wireless/mesh.c          |    3 +-
->  net/wireless/nl80211.c       |   35 +++++++++++-------
->  net/wireless/reg.c           |   84
-> ++++++++++++++++++++++++++++++++++++++++--
->  net/wireless/reg.h           |   13 +++++++
->  net/wireless/trace.h         |   11 ++++--
->  13 files changed, 286 insertions(+), 37 deletions(-)
-> 
-> --
-> 1.7.10.4
-
+Cheers
+ChenYu
