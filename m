@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38258 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbaBENw4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36008 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754028AbaBUIbz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 08:52:56 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] mac80211: move VHT related RX_FLAG to another variable
-References: <1391597333-6398-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1391597333-6398-2-git-send-email-emmanuel.grumbach@intel.com>
-	<8738jxllqy.fsf@kamboji.qca.qualcomm.com>
-	<CANUX_P2Z+FTZz83D5HR7w9z3F3=nhP8p_4wRb-5XBe0kv1vu2A@mail.gmail.com>
-Date: Wed, 5 Feb 2014 15:52:50 +0200
-In-Reply-To: <CANUX_P2Z+FTZz83D5HR7w9z3F3=nhP8p_4wRb-5XBe0kv1vu2A@mail.gmail.com>
-	(Emmanuel Grumbach's message of "Wed, 5 Feb 2014 15:49:11 +0200")
-Message-ID: <87y51pk6od.fsf@kamboji.qca.qualcomm.com> (sfid-20140205_145259_630532_B206BE84)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 21 Feb 2014 03:31:55 -0500
+Message-ID: <1392971510.4346.22.camel@jlt4.sipsolutions.net> (sfid-20140221_093158_980231_F6E092AF)
+Subject: Re: [PATCH v3 1/7] nl80211: make sure we check for DFS with mesh
+ channel switch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Date: Fri, 21 Feb 2014 09:31:50 +0100
+In-Reply-To: <1392906986-12275-2-git-send-email-luca@coelho.fi>
+References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
+	 <1392906986-12275-2-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@gmail.com> writes:
+On Thu, 2014-02-20 at 16:36 +0200, Luciano Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> Since mesh support for DFS channels was added, we also need to check
+> for DFS channels when performing a channel switch with
+> NL80211_IFTYPE_MESHPOINT.
 
-> On Wed, Feb 5, 2014 at 3:41 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->>
->>> ieee80211_rx_status.flags is full. Define a new vht_flag
->>> variable to be able to set more VHT related flags and make
->>> room in flags.
->>>
->>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>
->> [...]
->>
->>> @@ -866,9 +863,6 @@ enum mac80211_rx_flags {
->>>       RX_FLAG_AMPDU_DELIM_CRC_KNOWN   = BIT(20),
->>>       RX_FLAG_MACTIME_END             = BIT(21),
->>>       RX_FLAG_VHT                     = BIT(22),
->>> -     RX_FLAG_80MHZ                   = BIT(23),
->>> -     RX_FLAG_80P80MHZ                = BIT(24),
->>> -     RX_FLAG_160MHZ                  = BIT(25),
->>
->> Doesn't this break ath10k?
->
-> yep it does... It seems that I need to run with a few more drivers enabled :)
+Applied, but I've changed it to a switch statement and did a small code
+cleanup as well.
 
-For changes like this allmodconfig is your best friend ;)
+johannes
 
--- 
-Kalle Valo
