@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:48942 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751586AbaB1O1M convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 09:27:12 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
-Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ into info->control.flags
-From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1393340740.4170.5.camel@jlt4.sipsolutions.net>
-Date: Fri, 28 Feb 2014 15:27:09 +0100
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Message-Id: <214A2CB4-EC3E-4434-AEA4-92956A149C73@net.t-labs.tu-berlin.de> (sfid-20140228_152716_304336_FE75E02A)
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393244624.4190.8.camel@jlt4.sipsolutions.net> <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de> <1393340740.4170.5.camel@jlt4.sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from smtprelay0203.hostedemail.com ([216.40.44.203]:51498 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755500AbaBUWqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Feb 2014 17:46:47 -0500
+Message-ID: <1393022803.2594.27.camel@joe-AO722> (sfid-20140221_234714_746340_1D1A5614)
+Subject: [PATCH net-next] ath9k: Use static const
+From: Joe Perches <joe@perches.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Date: Fri, 21 Feb 2014 14:46:43 -0800
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Trivially reduces text size too.
 
->> As far as I can see, software-retry frames get in status.c the flag
->> IEEE80211_TX_INTFL_RETRANSMISSION
->> assigned (in function ieee80211_handle_filtered_frame). And this flag
->> prevents in function
->> invoke_tx_handlers() the call of ieee80211_tx_h_sequence(), so there
->> is not new seqno assigned in case of a software-retry within tx.c.
-> 
-> Right, but if IEEE80211_TX_CTL_ASSIGN was set then it also isn't
-> cleared.
+$ size drivers/net/wireless/ath/ath9k/debug.o*
+   text	   data	    bss	    dec	    hex	filename
+  34436	   2528	   5128	  42092	   a46c	drivers/net/wireless/ath/ath9k/debug.o.new
+  34464	   2528	   5128	  42120	   a488	drivers/net/wireless/ath/ath9k/debug.o.old
 
-So the standard conform behavior should be to re-use the same sequno in case of a software retry ?
-I could re-assign the flag IEEE80211_TX_CTL_ASSIGN_SEQ when a software retry happens by add
-a test to function ieee80211_handle_filtered_frame. Something like:
-	 if (!ieee80211_is_data_qos(hdr->frame_control) || is_multicast_ether_addr(hdr->addr1)) {
-		/* driver should assign sequence number */
-		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-	}
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Would this be right ?
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index ab7264c..9131175 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -135,7 +135,8 @@ static ssize_t read_file_ani(struct file *file, char __user *user_buf,
+ 	struct ath_softc *sc = file->private_data;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_hw *ah = sc->sc_ah;
+-	unsigned int len = 0, size = 1024;
++	unsigned int len = 0;
++	const unsigned int size = 1024;
+ 	ssize_t retval = 0;
+ 	char *buf;
+ 
+@@ -307,13 +308,13 @@ static ssize_t read_file_antenna_diversity(struct file *file,
+ 	struct ath_antenna_stats *as_main = &sc->debug.stats.ant_stats[ANT_MAIN];
+ 	struct ath_antenna_stats *as_alt = &sc->debug.stats.ant_stats[ANT_ALT];
+ 	struct ath_hw_antcomb_conf div_ant_conf;
+-	unsigned int len = 0, size = 1024;
++	unsigned int len = 0;
++	const unsigned int size = 1024;
+ 	ssize_t retval = 0;
+ 	char *buf;
+-	char *lna_conf_str[4] = {"LNA1_MINUS_LNA2",
+-				 "LNA2",
+-				 "LNA1",
+-				 "LNA1_PLUS_LNA2"};
++	static const char *lna_conf_str[4] = {
++		"LNA1_MINUS_LNA2", "LNA2", "LNA1", "LNA1_PLUS_LNA2"
++	};
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
+@@ -716,10 +717,13 @@ static ssize_t read_file_queues(struct file *file, char __user *user_buf,
+ 	struct ath_softc *sc = file->private_data;
+ 	struct ath_txq *txq;
+ 	char *buf;
+-	unsigned int len = 0, size = 1024;
++	unsigned int len = 0;
++	const unsigned int size = 1024;
+ 	ssize_t retval = 0;
+ 	int i;
+-	char *qname[4] = {"VO", "VI", "BE", "BK"};
++	static const char *qname[4] = {
++		"VO", "VI", "BE", "BK"
++	};
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
 
->> But in case of a software retry there is info->control set to zero.
->> After I would move IEEE80211_TX_CTL_ASSIGN_SEQ into
->> info->control.flags this flag is zero.
->> Hence also drivers do not assign a new sequence number.
-> 
-> But now the frame might not have *any* sequence number assigned at all,
-> if e.g. the firmware assigns sequence numbers and they're not written
-> back to the frame. Thus I think you're losing the entire sequence number
-> assignment in this case.
-> 
-
-If I re-assign the IEEE80211_TX_CTL_ASSIGN_SEQ flag for software retries, than drivers
-that assigned a sequence number in the first try, could probably assign a new one. Would that
-be ok ?
-
-Greetings Thomas
-
-
-> johannes
-> 
 
