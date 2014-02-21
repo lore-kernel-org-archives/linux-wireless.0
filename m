@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:56380 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaBIQYh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36149 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837AbaBUJDE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 11:24:37 -0500
-Received: by mail-ob0-f178.google.com with SMTP id wn1so6192041obc.37
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Feb 2014 08:24:36 -0800 (PST)
-Message-ID: <52F7ABC2.30506@lwfinger.net> (sfid-20140209_172502_561003_5D6DCDC8)
-Date: Sun, 09 Feb 2014 10:24:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Amr Abd Elaziz <amrabdelaziz.mime@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: lubunto 13.10
-References: <CA+3akvnV66kn50fA8oVv4oiD9kH+Kzw+CVBJmnyXgA34VjLuzQ@mail.gmail.com>
-In-Reply-To: <CA+3akvnV66kn50fA8oVv4oiD9kH+Kzw+CVBJmnyXgA34VjLuzQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 21 Feb 2014 04:03:04 -0500
+Message-ID: <1392973379.4346.41.camel@jlt4.sipsolutions.net> (sfid-20140221_100319_964711_59B91896)
+Subject: Re: [PATCH v5 4/5] cfg80211: Add an option to hint indoor operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com
+Date: Fri, 21 Feb 2014 10:02:59 +0100
+In-Reply-To: <1392898909-15953-1-git-send-email-ilan.peer@intel.com> (sfid-20140220_131946_336789_F6B979EE)
+References: <1392896671-4288-5-git-send-email-ilan.peer@intel.com>
+	 <1392898909-15953-1-git-send-email-ilan.peer@intel.com>
+	 (sfid-20140220_131946_336789_F6B979EE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2014 08:03 AM, Amr Abd Elaziz wrote:
-> i need wireless drive for acer travelmate 2420
+On Thu, 2014-02-20 at 14:21 +0200, Ilan Peer wrote:
 
-Could you please supply more information? Not many of us have that computer, and 
-we have no idea what wireless card is in it. In addition, my crystal ball is broken.
+> +bool regulatory_indoor_allowed(void)
+> +{
+> +	return reg_is_indoor;
+> +}
+> +EXPORT_SYMBOL_GPL(regulatory_indoor_allowed);
 
-If it is a PCI device, the appropriate part of 'lspci -nn' is what we need. If 
-it is a USB device, then lsusb output is needed. In addition, 'uname -r' will 
-tell use what Linux kernel you are using.
+I don't see any user of this (in particular none that would need it
+exported)?
 
-Larry
-
+johannes
 
