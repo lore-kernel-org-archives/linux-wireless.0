@@ -1,193 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:41677 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbaBYTas (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247AbaBUIyy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 14:30:48 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 13/14] brcmfmac: use pre-allocated scatter-gather table for txglomming
-Date: Tue, 25 Feb 2014 20:30:37 +0100
-Message-ID: <1393356639-19169-14-git-send-email-arend@broadcom.com> (sfid-20140225_203117_763938_2113A3E9)
-In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 21 Feb 2014 03:54:54 -0500
+Message-ID: <1392972891.4346.39.camel@jlt4.sipsolutions.net> (sfid-20140221_095456_629206_2C8BC6A1)
+Subject: Re: [PATCH 4/4] cfg80211: DFS get CAC time from regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com
+Date: Fri, 21 Feb 2014 09:54:51 +0100
+In-Reply-To: <1392231266-28479-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195441_189422_FB19079E)
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1392231266-28479-4-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140212_195441_189422_FB19079E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of allocating a scatter-gather table for every transmit
-reuse a pre-allocated table. The transmit path will be faster by
-taking out this allocation.
+On Wed, 2014-02-12 at 19:54 +0100, Janusz Dziedzic wrote:
 
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   45 ++++++++++++++++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +---
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
- 3 files changed, 39 insertions(+), 16 deletions(-)
+> +	if (t2 > t1)
+> +		t1 = t2;
+> +
+> +	return t1;
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 07e7d25..3866209 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,6 +53,12 @@
- /* Maximum milliseconds to wait for F2 to come up */
- #define SDIO_WAIT_F2RDY	3000
- 
-+#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
-+#define BRCMF_DEFAULT_RXGLOM_SIZE	32  /* max rx frames in glom chain */
-+
-+static int brcmf_sdiod_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
-+module_param_named(txglomsz, brcmf_sdiod_txglomsz, int, 0);
-+MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
- 
- static irqreturn_t brcmf_sdiod_oob_irqhandler(int irq, void *dev_id)
- {
-@@ -487,7 +493,6 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	struct mmc_request mmc_req;
- 	struct mmc_command mmc_cmd;
- 	struct mmc_data mmc_dat;
--	struct sg_table st;
- 	struct scatterlist *sgl;
- 	int ret = 0;
- 
-@@ -532,16 +537,11 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	pkt_offset = 0;
- 	pkt_next = target_list->next;
- 
--	if (sg_alloc_table(&st, max_seg_cnt, GFP_KERNEL)) {
--		ret = -ENOMEM;
--		goto exit;
--	}
--
- 	memset(&mmc_req, 0, sizeof(struct mmc_request));
- 	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
- 	memset(&mmc_dat, 0, sizeof(struct mmc_data));
- 
--	mmc_dat.sg = st.sgl;
-+	mmc_dat.sg = sdiodev->sgtable.sgl;
- 	mmc_dat.blksz = func_blk_sz;
- 	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
- 	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
-@@ -557,7 +557,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	while (seg_sz) {
- 		req_sz = 0;
- 		sg_cnt = 0;
--		sgl = st.sgl;
-+		sgl = sdiodev->sgtable.sgl;
- 		/* prep sg table */
- 		while (pkt_next != (struct sk_buff *)target_list) {
- 			pkt_data = pkt_next->data + pkt_offset;
-@@ -639,7 +639,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	}
- 
- exit:
--	sg_free_table(&st);
-+	sg_init_table(sdiodev->sgtable.sgl, sdiodev->sgtable.orig_nents);
- 	while ((pkt_next = __skb_dequeue(&local_list)) != NULL)
- 		brcmu_pkt_buf_free_skb(pkt_next);
- 
-@@ -863,6 +863,27 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- 	return 0;
- }
- 
-+static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
-+{
-+	uint nents;
-+	int err;
-+
-+	if (!sdiodev->sg_support)
-+		return;
-+
-+	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
-+	nents += (nents >> 4) + 1;
-+
-+	WARN_ON(nents > sdiodev->max_segment_count);
-+
-+	brcmf_dbg(TRACE, "nents=%d\n", nents);
-+	err = sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
-+	if (err < 0) {
-+		brcmf_err("allocation failed: disable scatter-gather");
-+		sdiodev->sg_support = false;
-+	}
-+}
-+
- static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- {
- 	if (sdiodev->bus) {
-@@ -880,6 +901,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- 	sdio_disable_func(sdiodev->func[1]);
- 	sdio_release_host(sdiodev->func[1]);
- 
-+	sg_free_table(&sdiodev->sgtable);
- 	sdiodev->sbwad = 0;
- 
- 	return 0;
-@@ -935,6 +957,11 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- 					   SG_MAX_SINGLE_ALLOC);
- 	sdiodev->max_segment_size = host->max_seg_size;
- 
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	brcmf_sdiod_sgtable_alloc(sdiodev);
-+
- 	/* try to attach to the target device */
- 	sdiodev->bus = brcmf_sdio_probe(sdiodev);
- 	if (!sdiodev->bus) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 8871d94..3b8f46e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -113,8 +113,6 @@ struct rte_console {
- #define BRCMF_TXBOUND	20	/* Default for max tx frames in
- 				 one scheduling */
- 
--#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
--
- #define BRCMF_TXMINMAX	1	/* Max tx frames if rx still pending */
- 
- #define MEMBLOCK	2048	/* Block size used for downloading
-@@ -511,10 +509,6 @@ static const uint max_roundup = 512;
- 
- #define ALIGNMENT  4
- 
--static int brcmf_sdio_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
--module_param_named(txglomsz, brcmf_sdio_txglomsz, int, 0);
--MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
--
- enum brcmf_sdio_frmtype {
- 	BRCMF_SDIO_FT_NORMAL,
- 	BRCMF_SDIO_FT_SUPER,
-@@ -2321,7 +2315,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		__skb_queue_head_init(&pktq);
- 		if (bus->txglom)
- 			pkt_num = min_t(u8, bus->tx_max - bus->tx_seq,
--					brcmf_sdio_txglomsz);
-+					bus->sdiodev->txglomsz);
- 		pkt_num = min_t(u32, pkt_num,
- 				brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol));
- 		spin_lock_bh(&bus->txqlock);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 5e53eb1..3deab79 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -180,6 +180,8 @@ struct brcmf_sdio_dev {
- 	uint max_request_size;
- 	ushort max_segment_count;
- 	uint max_segment_size;
-+	uint txglomsz;
-+	struct sg_table sgtable;
- };
- 
- /* sdio core registers */
--- 
-1.7.10.4
+return max(t1, t2);
+
+Is there any real reason to split patches 3/4? It seems to me they
+should go together.
+
+johannes
 
