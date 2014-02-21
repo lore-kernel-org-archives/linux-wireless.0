@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35634 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbaBWT53 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35980 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbaBUIYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:57:29 -0500
-Received: by mail-wi0-f177.google.com with SMTP id e4so2355820wiv.4
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:28 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/17] iwlwifi: mvm: fix possible memory leak
-Date: Sun, 23 Feb 2014 21:57:01 +0200
-Message-Id: <1393185428-8524-10-git-send-email-egrumbach@gmail.com> (sfid-20140223_205733_980127_1D16E61A)
-In-Reply-To: <530A51A4.6000007@gmail.com>
-References: <530A51A4.6000007@gmail.com>
+	Fri, 21 Feb 2014 03:24:30 -0500
+Message-ID: <1392971068.4346.17.camel@jlt4.sipsolutions.net> (sfid-20140221_092433_750138_657A800A)
+Subject: Re: [PATCH 2/2] cfg80211: docbook: add interface combinations
+ documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 21 Feb 2014 09:24:28 +0100
+In-Reply-To: <1392907534-14470-2-git-send-email-luca@coelho.fi>
+References: <1392907534-14470-1-git-send-email-luca@coelho.fi>
+	 <1392907534-14470-2-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eytan Lifshitz <eytan.lifshitz@intel.com>
+On Thu, 2014-02-20 at 16:45 +0200, Luciano Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> Add the ieee80211_iface_limit and the ieee80211_iface_combination
+> structures to docbook.  Reformat the examples of combinations
+> slightly, so it looks a bit better on docbook.
 
-iwl_parse_nvm_data() doesn't free allocated memory if it is
-fed with invalid parameter. Fix this.
+Applied, thanks.
 
-Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index df3ea60..80c4096 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -516,6 +516,7 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		if (!nvm_calib) {
- 			IWL_ERR_DEV(dev,
- 				    "Can't parse empty Calib NVM sections\n");
-+			kfree(data);
- 			return NULL;
- 		}
- 		/* in family 8000 Xtal calibration values moved to OTP */
--- 
-1.7.9.5
+johannes
 
