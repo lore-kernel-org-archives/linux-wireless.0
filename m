@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22072 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbaBENmD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 08:42:03 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] mac80211: move VHT related RX_FLAG to another variable
-References: <1391597333-6398-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1391597333-6398-2-git-send-email-emmanuel.grumbach@intel.com>
-Date: Wed, 5 Feb 2014 15:41:57 +0200
-In-Reply-To: <1391597333-6398-2-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Wed, 5 Feb 2014 12:48:52 +0200")
-Message-ID: <8738jxllqy.fsf@kamboji.qca.qualcomm.com> (sfid-20140205_144217_324036_50EDEA61)
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:21619 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752417AbaBUUTh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Feb 2014 15:19:37 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Fengguang Wu <fengguang.wu@intel.com>,
+	Yogesh Powar <yogeshp@marvell.com>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 21 Feb 2014 12:19:27 -0800
+Subject: RE: [mwifiex/USB8897] Error: Driver 'usb8xxx' is already
+ registered, aborting...
+Message-ID: <477F20668A386D41ADCC57781B1F70430F53B2A485@SC-VEXCH1.marvell.com> (sfid-20140221_212042_460600_464F8592)
+References: <20140221085235.GA2055@localhost>
+In-Reply-To: <20140221085235.GA2055@localhost>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+Hi Fengguang,
 
-> ieee80211_rx_status.flags is full. Define a new vht_flag
-> variable to be able to set more VHT related flags and make
-> room in flags.
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Greetings,
+> 
+> I got the below dmesg and the first bad commit is
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+> commit 68458dede7e0055198318dcb0318df3b4f419507
+> CommitDate: Mon Jan 13 14:46:59 2014 -0500
+> 
+>     mwifiex: add USB8897 support
+> 
+> [    6.211307] Error: Driver 'usb8xxx' is already registered, aborting...
+> [    6.211307] Error: Driver 'usb8xxx' is already registered, aborting...
+> [    6.217261] mwifiex_usb: Driver register failed!
+> [    6.217261] mwifiex_usb: Driver register failed!
 
-[...]
+Thanks for reporting this bug.
+I will send the patch to fix it shortly.
 
-> @@ -866,9 +863,6 @@ enum mac80211_rx_flags {
->  	RX_FLAG_AMPDU_DELIM_CRC_KNOWN	= BIT(20),
->  	RX_FLAG_MACTIME_END		= BIT(21),
->  	RX_FLAG_VHT			= BIT(22),
-> -	RX_FLAG_80MHZ			= BIT(23),
-> -	RX_FLAG_80P80MHZ		= BIT(24),
-> -	RX_FLAG_160MHZ			= BIT(25),
+Regards,
+Bing
 
-Doesn't this break ath10k?
-
--- 
-Kalle Valo
