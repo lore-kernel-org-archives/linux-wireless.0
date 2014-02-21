@@ -1,92 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:52443 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753385AbaBLSyk (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45823 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755680AbaBUVWD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 13:54:40 -0500
-Received: by mail-ea0-f182.google.com with SMTP id r15so4645659ead.13
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 10:54:39 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 3/4] cfg80211/mac80211: DFS pass CAC time as a parameter
-Date: Wed, 12 Feb 2014 19:54:22 +0100
-Message-Id: <1392231266-28479-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140212_195448_295334_3DE109AA)
-In-Reply-To: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 21 Feb 2014 16:22:03 -0500
+Message-ID: <1393017719.18879.1.camel@porter.coelho.fi> (sfid-20140221_222230_838612_CA751B3D)
+Subject: Re: [PATCH v3 3/7] cfg80211: refactor cfg80211_can_use_iftype_chan()
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Date: Fri, 21 Feb 2014 23:21:59 +0200
+In-Reply-To: <1392971822.4346.25.camel@jlt4.sipsolutions.net>
+References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
+	 <1392906986-12275-4-git-send-email-luca@coelho.fi>
+	 <1392971822.4346.25.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send Channel Availability Check time as a parameter
-of start_radar_detection() callback.
-We will get this time from regulatory database.
+On Fri, 2014-02-21 at 09:37 +0100, Johannes Berg wrote:
+> On Thu, 2014-02-20 at 16:36 +0200, Luciano Coelho wrote:
+> 
+> > +/**
+> > + * cfg80211_check_combinations() - check interface combinations
+> 
+> I don't think those parentheses are right?
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/net/cfg80211.h |    3 ++-
- net/mac80211/cfg.c     |    8 ++++----
- net/wireless/nl80211.c |    3 ++-
- 3 files changed, 8 insertions(+), 6 deletions(-)
+Right.  Fixed.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e1ea2ed..14e2671 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2499,7 +2499,8 @@ struct cfg80211_ops {
- 
- 	int	(*start_radar_detection)(struct wiphy *wiphy,
- 					 struct net_device *dev,
--					 struct cfg80211_chan_def *chandef);
-+					 struct cfg80211_chan_def *chandef,
-+					 u32 cac_time_ms);
- 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_update_ft_ies_params *ftie);
- 	int	(*crit_proto_start)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7f01f2ae..f504205 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2912,11 +2912,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
- 
- static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 					   struct net_device *dev,
--					   struct cfg80211_chan_def *chandef)
-+					   struct cfg80211_chan_def *chandef,
-+					   u32 cac_time_ms)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	unsigned long timeout;
- 	int err;
- 
- 	mutex_lock(&local->mtx);
-@@ -2935,9 +2935,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	if (err)
- 		goto out_unlock;
- 
--	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	ieee80211_queue_delayed_work(&sdata->local->hw,
--				     &sdata->dfs_cac_timer_work, timeout);
-+				     &sdata->dfs_cac_timer_work,
-+				     msecs_to_jiffies(cac_time_ms));
- 
-  out_unlock:
- 	mutex_unlock(&local->mtx);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0bf69da..4a4c988 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5811,7 +5811,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
--	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
-+	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
-+					       IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	if (!err) {
- 		wdev->chandef = chandef;
- 		wdev->cac_started = true;
--- 
-1.7.9.5
+
+> > + *
+> > + * @wiphy: the wiphy
+> > + * @num_different_channels: the number of different channels we want
+> > + *	to use for verification
+> > + * @num_interfaces: the number of different interfaces we want to use
+> > + *	for verification
+> > + * @used_iftypes: a bitmap where each bit corresponds to an interface
+> > + *	type, as in the definition of &struct
+> > + *	ieee80211_iface_limit.@types.
+> > + * @radar_detect: a bitmap where each bit corresponds to a channel
+> > + *	width where radar detection is needed, as in the definition of
+> > + *	&struct ieee80211_iface_combination.@radar_detect_widths
+> 
+> Doesn't that need to be something like hweight(radar_detect) == 1?
+
+No, at this point we should have already checked all the interfaces and
+pass the combination of radar widths required.
+
+
+
+> > + * @iftype_num: array with the numbers of interfaces of each interface
+> > + *	type.  The index is the interface type as specified in &enum
+> > + *	nl80211_iftype.
+> > + *
+> > + * This function can be called by the driver to check whether a
+> > + * combination of interfaces and their types are allowed according to
+> > + * the interface combinations.
+> > + */
+> > +int cfg80211_check_combinations(struct wiphy *wiphy,
+> > +				const int num_different_channels,
+> > +				const int num_interfaces,
+> > +				const u32 used_iftypes,
+> > +				const u8 radar_detect,
+> > +				const int *iftype_num);
+> 
+> I think that array should be const int iftype_num[NUM_NL80211_IFTYPES],
+> I'm pretty sure that works as a function argument as well and would
+> serve as a bit of documentation (and possibly even compiler warnings if
+> somebody has an array that's too short)
+
+Yep, sounds good.  Fixed.
+
+--
+Luca.
 
