@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:61885 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbaBJLrr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 06:47:47 -0500
-Received: by mail-wg0-f54.google.com with SMTP id x13so4168362wgg.9
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:46 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/18] wlcore: block read/writes to FW during ELP
-Date: Mon, 10 Feb 2014 13:47:19 +0200
-Message-Id: <1392032854-28126-4-git-send-email-eliad@wizery.com> (sfid-20140210_124751_576441_DC9C9114)
-In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
-References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+Received: from mga01.intel.com ([192.55.52.88]:32797 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755610AbaBUBEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Feb 2014 20:04:33 -0500
+Date: Fri, 21 Feb 2014 02:04:07 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "Mark A. Greer" <mgreer@animalcreek.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/3] NFC: trf7970a: Add DTS Documentation
+Message-ID: <20140221010407.GU18868@zurbaran> (sfid-20140221_020441_920188_FA0CAC85)
+References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
+ <1391206631-9862-4-git-send-email-mgreer@animalcreek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1391206631-9862-4-git-send-email-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Barak Bercovitz <barak@wizery.com>
+Hi Mark,
 
-When the chip is in ELP mode read/write to FW is invalid and may cause
-the lower layers to get stuck. The reads/writes concerning ELP wakeup
-are the exception here and are checked for. In addition to blocking the
-IO, produce a warning.
+On Fri, Jan 31, 2014 at 03:17:11PM -0700, Mark A. Greer wrote:
+> Describe the properies used by the trf7970a
+> RFID/NFC/15693 transceiver driver.
+> 
+> Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
+> ---
+>  .../devicetree/bindings/net/nfc/trf7970a.txt       | 37 ++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+Not a DT expert, but this looks good to me.
+Could you please amend this patch by adding
+Documentation/devicetree/bindings/net/nfc/ to the MAINTAINERS NFC
+section ?
 
-Signed-off-by: Barak Bercovitz <barak@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/io.h | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index 07e3d6a..0305729 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -60,7 +60,9 @@ static inline int __must_check wlcore_raw_write(struct wl1271 *wl, int addr,
- {
- 	int ret;
- 
--	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags))
-+	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags) ||
-+	    WARN_ON((test_bit(WL1271_FLAG_IN_ELP, &wl->flags) &&
-+		     addr != HW_ACCESS_ELP_CTRL_REG)))
- 		return -EIO;
- 
- 	ret = wl->if_ops->write(wl->dev, addr, buf, len, fixed);
-@@ -76,7 +78,9 @@ static inline int __must_check wlcore_raw_read(struct wl1271 *wl, int addr,
- {
- 	int ret;
- 
--	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags))
-+	if (test_bit(WL1271_FLAG_IO_FAILED, &wl->flags) ||
-+	    WARN_ON((test_bit(WL1271_FLAG_IN_ELP, &wl->flags) &&
-+		     addr != HW_ACCESS_ELP_CTRL_REG)))
- 		return -EIO;
- 
- 	ret = wl->if_ops->read(wl->dev, addr, buf, len, fixed);
 -- 
-1.8.5.2.229.g4448466.dirty
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
