@@ -1,118 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:53298 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbaBGKLh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36095 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583AbaBUIq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 05:11:37 -0500
-Received: by mail-oa0-f53.google.com with SMTP id m1so3812977oag.26
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Feb 2014 02:11:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140131121621.GA19138@redhat.com>
-References: <20140117100613.GD1425@redhat.com>
-	<A411C6B4-8474-47AC-97E1-0D92B24EB675@gmail.com>
-	<1390133995.6945.11.camel@X1Carbon.localdomain>
-	<03574886-F38F-461C-97FC-B10DCCCF30E8@gmail.com>
-	<52DC1761.9080608@openwrt.org>
-	<CABikg9zdW7GjaaghfW3fLcPKEiF0-3P5Ht2DY9hx6r0-XcguRw@mail.gmail.com>
-	<20140120185044.GA1682@redhat.com>
-	<CABikg9y_jd6TWGGN09edqabXboO9VoBTPUtLWFyWZjfSr6dnqg@mail.gmail.com>
-	<20140122162522.GA10630@redhat.com>
-	<CABikg9w7JjdeD7EU1cw9A-aARddDigDZzaxoL5yk6YeFtJB4hw@mail.gmail.com>
-	<20140131121621.GA19138@redhat.com>
-Date: Fri, 7 Feb 2014 11:11:36 +0100
-Message-ID: <CABikg9y9gRgZyqhkBf=yq8rfQH+kgO1HEf1wfqVE2rdiEHRsSA@mail.gmail.com> (sfid-20140207_111142_577488_22F13278)
-Subject: Re: USB rt2x00 driver regression
-From: Sergei Antonov <saproj@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 21 Feb 2014 03:46:57 -0500
+Message-ID: <1392972409.4346.34.camel@jlt4.sipsolutions.net> (sfid-20140221_094727_375276_3B9AAFFD)
+Subject: Re: [PATCH v3 6/7] cfg80211/mac80211: move interface counting for
+ combination check to mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Date: Fri, 21 Feb 2014 09:46:49 +0100
+In-Reply-To: <1392906986-12275-7-git-send-email-luca@coelho.fi>
+References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
+	 <1392906986-12275-7-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 January 2014 13:16, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Wed, Jan 29, 2014 at 06:45:31PM +0100, Sergei Antonov wrote:
->> > On older kernels "TX status timeout" messages were only enabled if
->> > kernel was compiled with CONFIG_RT2X00_DEBUG option , so perhaps
->> > that is the reason why you did not see them on older kernel with
->> > older firmware. But if really TX status timeouts start to happen after
->> > firmware update, we should fix our driver to better talk to the
->> > firmware, though I do not have idea how. If not, we should probably
->> > disable those messages in non-debug mode as it was on old kernels.
->>
->> Yes, it could have been due to CONFIG_RT2X00_DEBUG=n that I didn't
->> have warnings.
->
-> I will move those annoying messages back to debug level, they are
-> printed by default by mistake anyway.
->
->> The AP with which I have the warnings is another Linux computer with
->> hostapd-2.0. Can it be the cause of this "TX status" thing?
->
-> It can be that AP does not ACK some frames for some reason and we see
-> those warnings. Could you please provide me details about that AP (what
-> H/W and driver is used and hostapd config file), I will see if I could
-> reproduce those messages locally.
+On Thu, 2014-02-20 at 16:36 +0200, Luciano Coelho wrote:
 
-OK. The details about HW follow.
+> @@ -2928,13 +2927,17 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+>  	/* whatever, but channel contexts should not complain about that one */
+>  	sdata->smps_mode = IEEE80211_SMPS_OFF;
+>  	sdata->needed_rx_chains = local->rx_chains;
+> -	sdata->radar_required = true;
+>  
+>  	err = ieee80211_vif_use_channel(sdata, chandef,
+>  					IEEE80211_CHANCTX_SHARED);
+>  	if (err)
+>  		goto out_unlock;
+>  
+> +	/* Something is wrong if cfg80211 asked us to start radar
+> +	 * detection but we don't think we need to.
+> +	 */
+> +	WARN_ON(!sdata->radar_required);
 
-It's a PCI Ralink card with firmware file taken recently from linux-firmware:
-===============================
-ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 2872, rev 0200 detected
-ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0003 detected
-ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware
-file 'rt2860.bin'
-ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected -
-version: 0.34
-===============================
+Might that happen for regdomain changes? Or simply if userspace asks for
+radar detection without really needing it?
 
-The hostapd.conf:
-===============================
-interface=wlan0
-driver=nl80211
-ssid=myname
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -3949,6 +3949,13 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+>  	u16 auth_alg;
+>  	int err;
+>  
+> +	/* TODO: in cfg80211_mlme_auth() we used to check if the
+> +	 * channel can be used *before* this function was called.  Do
+> +	 * we still need to do it or can we rely on the combinations
+> +	 * check that will happen later, in
+> +	 * ieee80211_vif_use_channel()?
+> +	 */
 
-country_code=DE
-hw_mode=g
+We'll do it a few lines down in ieee80211_prep_connection(), so I don't
+see why we'd need to do it earlier?
 
-channel=11
+> @@ -4103,6 +4110,13 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+>  	const u8 *ssidie, *ht_ie, *vht_ie;
+>  	int i, err;
+>  
+> +	/* TODO: in cfg80211_mlme_assoc() we used to check if the
+> +	 * channel can be used *before* this function was called.  Do
+> +	 * we still need to do it or can we rely on the combinations
+> +	 * check that will happen later, in
+> +	 * ieee80211_vif_use_channel()?
+> +	 */
 
-auth_algs=1
-logger_syslog=-1
-logger_syslog_level=3
-logger_stdout=-1
-logger_stdout_level=2
-ignore_broadcast_ssid=0
+ditto
 
-wpa=2
-wpa_key_mgmt=WPA-PSK
-wpa_passphrase=*******
-rsn_pairwise=CCMP
+> +int ieee80211_check_combinations(struct wiphy *wiphy,
+> +				 struct wireless_dev *wdev,
+> +				 const struct cfg80211_chan_def *chandef,
+> +				 enum ieee80211_chanctx_mode chanmode,
+> +				 u8 radar_detect)
 
-macaddr_acl=1
-accept_mac_file=/etc/hostapd.accept
-===============================
+Why do you pass a wiphy here? In mac80211 we use local or hw except for
+API, and this isn't called from cfg80211? Same for 'wdev' vs. 'sdata'?
 
-The kernel I originally used was 3.4. But I just upgraded it to 3.13.1
-and the problem remains. Config values are:
-CONFIG_RT2X00=y
-# CONFIG_RT2400PCI is not set
-# CONFIG_RT2500PCI is not set
-# CONFIG_RT61PCI is not set
-CONFIG_RT2800PCI=y
-# CONFIG_RT2800PCI_RT33XX is not set
-# CONFIG_RT2800PCI_RT35XX is not set
-# CONFIG_RT2800PCI_RT53XX is not set
-CONFIG_RT2800PCI_RT3290=y
-# CONFIG_RT2500USB is not set
-# CONFIG_RT73USB is not set
-# CONFIG_RT2800USB is not set
-CONFIG_RT2800_LIB=y
-CONFIG_RT2800_LIB_MMIO=y
-CONFIG_RT2X00_LIB_MMIO=y
-CONFIG_RT2X00_LIB_PCI=y
-CONFIG_RT2X00_LIB=y
-CONFIG_RT2X00_LIB_FIRMWARE=y
-CONFIG_RT2X00_LIB_CRYPTO=y
-CONFIG_RT2X00_LIB_LEDS=y
-CONFIG_RT2X00_DEBUG=y
-CONFIG_RTL_CARDS=y
+> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+> +		wdev_iter = &sdata->wdev;
+> +		if (wdev_iter == wdev)
+> +			continue;
+> +		if (wdev_iter->iftype == NL80211_IFTYPE_P2P_DEVICE) {
+> +			if (!wdev_iter->p2p_started)
+> +				continue;
+> +		} else if (wdev_iter->netdev) {
+> +			if (!netif_running(wdev_iter->netdev))
+> +				continue;
+
+That should probably be combined to sdata_running(), but shouldn't it
+also only be done if the interface is actually doing something (e.g. has
+joined an IBSS, ...), i.e. has a channel context assigned?
+
+> +++ b/net/wireless/core.h
+> @@ -406,6 +406,9 @@ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+>  			      struct wireless_dev *wdev,
+>  			      enum nl80211_iftype iftype)
+>  {
+> +	/* TODO: For this function, we'll probably need to keep some
+> +	 * kind of interface combination check in cfg80211...
+> +	 */
+>  	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+>  					    CHAN_MODE_UNDEFINED, 0);
+>  }
+
+We could always jsut request the change from the driver/mac80211.
+
+> @@ -426,6 +429,10 @@ cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
+>  		      struct ieee80211_channel *chan,
+>  		      enum cfg80211_chan_mode chanmode)
+>  {
+> +	/* TODO: for libertas, we probably need to move the
+> +	 * combination check into that driver if we get rid of the
+> +	 * cfg80211_can_use_chan() function.
+> +	 */
+>  	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+>  					    chan, chanmode, 0);
+>  }
+
+That doesn't even have combinations, I believe?
+
+johannes
+
