@@ -1,292 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:47289 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbaB1VRN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497AbaBUKME (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 16:17:13 -0500
-Received: by mail-ob0-f175.google.com with SMTP id uy5so1249626obc.20
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 13:17:12 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+	Fri, 21 Feb 2014 05:12:04 -0500
+Message-ID: <1392977516.4346.47.camel@jlt4.sipsolutions.net> (sfid-20140221_111209_444785_B269BB42)
+Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 07/16 V3] rtlwifi: rtl8723ae: rtl8723-common: Copy common dynamic power management code
-Date: Fri, 28 Feb 2014 15:16:49 -0600
-Message-Id: <1393622218-1455-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140228_221856_984966_41A1804A)
-In-Reply-To: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	John Linville <linville@tuxdriver.com>
+Date: Fri, 21 Feb 2014 11:11:56 +0100
+In-Reply-To: <CALhHN=ommG9hB7HmMecJPb1UHdn1OqHRnSbS16b-BxowwP61FQ@mail.gmail.com> (sfid-20140221_110909_899698_3CFDCAEF)
+References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1392972748.4346.37.camel@jlt4.sipsolutions.net>
+	 <CALhHN=ovcEvFsYSjc_dZSS0j0Zmiq-y6y2Kwo5RK1Qpb456MbQ@mail.gmail.com>
+	 <1392976535.4346.46.camel@jlt4.sipsolutions.net>
+	 <CALhHN=ommG9hB7HmMecJPb1UHdn1OqHRnSbS16b-BxowwP61FQ@mail.gmail.com>
+	 (sfid-20140221_110909_899698_3CFDCAEF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The drivers for RTL8723AE and RTL8723BE have some code in common.
-This commit copies the common power management routines into the shared
-code.
+On Fri, 2014-02-21 at 11:09 +0100, Janusz Dziedzic wrote:
+> On 21 February 2014 10:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2014-02-21 at 10:47 +0100, Janusz Dziedzic wrote:
+> >> On 21 February 2014 09:52, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> > On Wed, 2014-02-12 at 19:54 +0100, Janusz Dziedzic wrote:
+> >> >
+> >> >> +++ b/include/net/regulatory.h
+> >> >> @@ -155,6 +155,7 @@ struct ieee80211_reg_rule {
+> >> >>       struct ieee80211_freq_range freq_range;
+> >> >>       struct ieee80211_power_rule power_rule;
+> >> >>       u32 flags;
+> >> >> +     u32 dfs_cac_ms;
+> >> >>  };
+> >> >
+> >> > Does that really have to be per channel? That's a significant investment
+> >> > into bss size since we have a lot of channel structs.
+> >> >
+> >> This seems easiest way to handle ETSI VHT80/40 case for channels with
+> >> different CAC time (eg):
+> >> VHT80:
+> >> - 116 (60s)
+> >> - 120 (600s)
+> >> - 124 (600s)
+> >> - 128 (600s)
+> >>
+> >> VHT40/HT40:
+> >> - 132 (600s)
+> >> - 136 (60s)
+> >
+> > Huh, but you don't distinguish between channel widths in this whole
+> > patchset?
+> >
+> In patch  cfg80211: DFS get CAC time from regulatory I check whole
+> chandef and get max channel cac value.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        | 42 ++------------
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |  5 +-
- drivers/net/wireless/rtlwifi/rtl8723com/Makefile   |  1 +
- .../net/wireless/rtlwifi/rtl8723com/dm_common.c    | 65 ++++++++++++++++++++++
- .../net/wireless/rtlwifi/rtl8723com/dm_common.h    | 33 +++++++++++
- 6 files changed, 106 insertions(+), 41 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h
+Oh, right, I misunderstood your other email.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-index a36eee2..863ddb3 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-@@ -35,6 +35,7 @@
- #include "def.h"
- #include "phy.h"
- #include "dm.h"
-+#include "../rtl8723com/dm_common.h"
- #include "fw.h"
- #include "hal_btc.h"
- 
-@@ -483,16 +484,6 @@ static void rtl8723ae_dm_dig(struct ieee80211_hw *hw)
- 	rtl8723ae_dm_ctrl_initgain_by_twoport(hw);
- }
- 
--static void rtl8723ae_dm_init_dynamic_txpower(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--
--	rtlpriv->dm.dynamic_txpower_enable = false;
--
--	rtlpriv->dm.last_dtp_lvl = TXHIGHPWRLEVEL_NORMAL;
--	rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_NORMAL;
--}
--
- static void rtl8723ae_dm_dynamic_txpower(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -585,19 +576,6 @@ void rtl8723ae_dm_write_dig(struct ieee80211_hw *hw)
- 	}
- }
- 
--static void rtl8723ae_dm_pwdmonitor(struct ieee80211_hw *hw)
--{
--}
--
--void rtl8723ae_dm_init_edca_turbo(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--
--	rtlpriv->dm.current_turbo_edca = false;
--	rtlpriv->dm.is_any_nonbepkts = false;
--	rtlpriv->dm.is_cur_rdlstate = false;
--}
--
- static void rtl8723ae_dm_check_edca_turbo(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -778,17 +756,6 @@ static void rtl8723ae_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
- 	}
- }
- 
--static void rtl8723ae_dm_init_dynamic_bpowersaving(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--
--	rtlpriv->dm_pstable.pre_ccastate = CCA_MAX;
--	rtlpriv->dm_pstable.cur_ccasate = CCA_MAX;
--	rtlpriv->dm_pstable.pre_rfstate = RF_MAX;
--	rtlpriv->dm_pstable.cur_rfstate = RF_MAX;
--	rtlpriv->dm_pstable.rssi_val_min = 0;
--}
--
- void rtl8723ae_dm_rf_saving(struct ieee80211_hw *hw, u8 force_in_normal)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -905,11 +872,11 @@ void rtl8723ae_dm_init(struct ieee80211_hw *hw)
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
- 	rtl8723ae_dm_diginit(hw);
--	rtl8723ae_dm_init_dynamic_txpower(hw);
--	rtl8723ae_dm_init_edca_turbo(hw);
-+	rtl8723_dm_init_dynamic_txpower(hw);
-+	rtl8723_dm_init_edca_turbo(hw);
- 	rtl8723ae_dm_init_rate_adaptive_mask(hw);
- 	rtl8723ae_dm_initialize_txpower_tracking(hw);
--	rtl8723ae_dm_init_dynamic_bpowersaving(hw);
-+	rtl8723_dm_init_dynamic_bb_powersaving(hw);
- }
- 
- void rtl8723ae_dm_watchdog(struct ieee80211_hw *hw)
-@@ -930,7 +897,6 @@ void rtl8723ae_dm_watchdog(struct ieee80211_hw *hw)
- 	if ((ppsc->rfpwr_state == ERFON) &&
- 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
- 	    (!ppsc->rfchange_inprogress)) {
--		rtl8723ae_dm_pwdmonitor(hw);
- 		rtl8723ae_dm_dig(hw);
- 		rtl8723ae_dm_false_alarm_counter_statistics(hw);
- 		rtl8723ae_dm_dynamic_bpowersaving(hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
-index a372b02..d253bb5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
-@@ -147,7 +147,6 @@ enum dm_dig_connect_e {
- void rtl8723ae_dm_init(struct ieee80211_hw *hw);
- void rtl8723ae_dm_watchdog(struct ieee80211_hw *hw);
- void rtl8723ae_dm_write_dig(struct ieee80211_hw *hw);
--void rtl8723ae_dm_init_edca_turbo(struct ieee80211_hw *hw);
- void rtl8723ae_dm_init_rate_adaptive_mask(struct ieee80211_hw *hw);
- void rtl8723ae_dm_rf_saving(struct ieee80211_hw *hw, u8 bforce_in_normal);
- void rtl8723ae_dm_bt_coexist(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-index 7eff1c5..8a8577a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-@@ -38,6 +38,7 @@
- #include "def.h"
- #include "phy.h"
- #include "dm.h"
-+#include "../rtl8723com/dm_common.h"
- #include "fw.h"
- #include "../rtl8723com/fw_common.h"
- #include "led.h"
-@@ -305,7 +306,7 @@ void rtl8723ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break; }
- 	case HW_VAR_AC_PARAM:{
- 		u8 e_aci = *((u8 *) val);
--		rtl8723ae_dm_init_edca_turbo(hw);
-+		rtl8723_dm_init_edca_turbo(hw);
- 
- 		if (rtlpci->acm_method != EACMWAY2_SW)
- 			rtlpriv->cfg->ops->set_hw_reg(hw,
-@@ -1155,7 +1156,7 @@ void rtl8723ae_set_qos(struct ieee80211_hw *hw, int aci)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	rtl8723ae_dm_init_edca_turbo(hw);
-+	rtl8723_dm_init_edca_turbo(hw);
- 	switch (aci) {
- 	case AC1_BK:
- 		rtl_write_dword(rtlpriv, REG_EDCA_BK_PARAM, 0xa44f);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/Makefile b/drivers/net/wireless/rtlwifi/rtl8723com/Makefile
-index 97c7eac..345a68a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723com/Makefile
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/Makefile
-@@ -1,5 +1,6 @@
- rtl8723-common-objs :=		\
- 		main.o		\
-+		dm_common.o	\
- 		fw_common.o	\
- 		phy_common.o
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c
-new file mode 100644
-index 0000000..4e254b7
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c
-@@ -0,0 +1,65 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2014  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "../wifi.h"
-+#include "dm_common.h"
-+#include "../rtl8723ae/dm.h"
-+#include <linux/module.h>
-+
-+/* These routines are common to RTL8723AE and RTL8723bE */
-+
-+void rtl8723_dm_init_dynamic_txpower(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	rtlpriv->dm.dynamic_txpower_enable = false;
-+
-+	rtlpriv->dm.last_dtp_lvl = TXHIGHPWRLEVEL_NORMAL;
-+	rtlpriv->dm.dynamic_txhighpower_lvl = TXHIGHPWRLEVEL_NORMAL;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_dm_init_dynamic_txpower);
-+
-+void rtl8723_dm_init_edca_turbo(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	rtlpriv->dm.current_turbo_edca = false;
-+	rtlpriv->dm.is_any_nonbepkts = false;
-+	rtlpriv->dm.is_cur_rdlstate = false;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_dm_init_edca_turbo);
-+
-+void rtl8723_dm_init_dynamic_bb_powersaving(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	rtlpriv->dm_pstable.pre_ccastate = CCA_MAX;
-+	rtlpriv->dm_pstable.cur_ccasate = CCA_MAX;
-+	rtlpriv->dm_pstable.pre_rfstate = RF_MAX;
-+	rtlpriv->dm_pstable.cur_rfstate = RF_MAX;
-+	rtlpriv->dm_pstable.rssi_val_min = 0;
-+	rtlpriv->dm_pstable.initialize = 0;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_dm_init_dynamic_bb_powersaving);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h
-new file mode 100644
-index 0000000..5c1b94c
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h
-@@ -0,0 +1,33 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2014  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __DM_COMMON_H__
-+#define __DM_COMMON_H__
-+
-+void rtl8723_dm_init_dynamic_txpower(struct ieee80211_hw *hw);
-+void rtl8723_dm_init_edca_turbo(struct ieee80211_hw *hw);
-+void rtl8723_dm_init_dynamic_bb_powersaving(struct ieee80211_hw *hw);
-+
-+#endif
--- 
-1.8.4.5
+johannes
 
