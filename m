@@ -1,53 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36617 "EHLO nbd.name"
+Received: from mout.gmx.net ([212.227.17.21]:55779 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbaBVMsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 07:48:36 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.14] ath9k: fix ps-poll responses under a-mpdu sessions
-Date: Sat, 22 Feb 2014 13:48:19 +0100
-Message-Id: <1393073299-4831-1-git-send-email-nbd@openwrt.org> (sfid-20140222_134839_848505_90498FC0)
+	id S932239AbaBUNzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Feb 2014 08:55:22 -0500
+Received: from fb07-iapwap2.localnet ([134.176.19.122]) by mail.gmx.com
+ (mrgmx101) with ESMTPSA (Nemesis) id 0MXUmw-1Wjwgb1bWg-00WX6H for
+ <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 14:55:20 +0100
+From: Marc Dietrich <marvin24@gmx.de>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] net: rfkill: gpio: remove unused and obsolete platform parameters
+Date: Fri, 21 Feb 2014 14:55:14 +0100
+Message-ID: <1723302.jKkc8NDNRI@fb07-iapwap2> (sfid-20140221_145637_590292_36DC3077)
+In-Reply-To: <1392900697-27577-2-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com> <1392900697-27577-2-git-send-email-heikki.krogerus@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When passing tx frames to the U-APSD queue for powersave poll responses,
-the ath_atx_tid pointer needs to be passed to ath_tx_setup_buffer for
-proper sequence number accounting.
+Hi Heikki,
 
-This fixes high latency and connection stability issues with ath9k
-running as AP and a few kinds of mobile phones as client, when PS-Poll
-is heavily used
+Am Donnerstag, 20. Februar 2014, 14:51:34 schrieb Heikki Krogerus:
+> After upgrading to descriptor based gpios, the gpio numbers
+> are not used anymore. The power_clk_name and the platform
+> specific setup and close hooks are not used by anybody, and
+> we should not encourage use of such things, so removing them.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+arch/arm/mach-tegra/board-paz00.c is still using platform data. Is there some 
+prerequisite patch I'm missing (3.14-rc3) or how can this file be converted? 
+We are waiting for DT support to arrive so we can finally remove this file.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4f4ce83..f042a18 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2186,14 +2186,15 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		txq->stopped = true;
- 	}
- 
-+	if (txctl->an)
-+		tid = ath_get_skb_tid(sc, txctl->an, skb);
-+
- 	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
- 		ath_txq_unlock(sc, txq);
- 		txq = sc->tx.uapsdq;
- 		ath_txq_lock(sc, txq);
- 	} else if (txctl->an &&
- 		   ieee80211_is_data_present(hdr->frame_control)) {
--		tid = ath_get_skb_tid(sc, txctl->an, skb);
--
- 		WARN_ON(tid->ac->txq != txctl->txq);
- 
- 		if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
--- 
-1.8.3.4 (Apple Git-47)
+Marc
+
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> ---
+>  include/linux/rfkill-gpio.h | 10 ----------
+>  net/rfkill/rfkill-gpio.c    | 15 +--------------
+>  2 files changed, 1 insertion(+), 24 deletions(-)
+> 
+> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+> index 4d09f6e..20bcb55 100644
+> --- a/include/linux/rfkill-gpio.h
+> +++ b/include/linux/rfkill-gpio.h
+> @@ -27,21 +27,11 @@
+>   * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
+> * for unused gpio's, the expected value is -1.
+>   * @name:		name for the gpio rf kill instance
+> - * @reset_gpio:		GPIO which is used for reseting rfkill switch
+> - * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+> - * @power_clk_name:	[optional] name of clk to turn off while blocked
+> - * @gpio_runtime_close:	clean up platform specific gpio configuration
+> - * @gpio_runtime_setup:	set up platform specific gpio configuration
+>   */
+> 
+>  struct rfkill_gpio_platform_data {
+>  	char			*name;
+> -	int			reset_gpio;
+> -	int			shutdown_gpio;
+> -	const char		*power_clk_name;
+>  	enum rfkill_type	type;
+> -	void	(*gpio_runtime_close)(struct platform_device *);
+> -	int	(*gpio_runtime_setup)(struct platform_device *);
+>  };
+> 
+>  #endif /* __RFKILL_GPIO_H */
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index bd2a5b9..0adda44 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+> {
+>  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+>  	struct rfkill_gpio_data *rfkill;
+> -	const char *clk_name = NULL;
+>  	struct gpio_desc *gpio;
+>  	int ret;
+>  	int len;
+> @@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device
+> *pdev) if (ret)
+>  			return ret;
+>  	} else if (pdata) {
+> -		clk_name = pdata->power_clk_name;
+>  		rfkill->name = pdata->name;
+>  		rfkill->type = pdata->type;
+>  	} else {
+> @@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device
+> *pdev) snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+> snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+> 
+> -	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
+> +	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+> 
+>  	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+>  	if (!IS_ERR(gpio)) {
+> @@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device
+> *pdev) return -EINVAL;
+>  	}
+> 
+> -	if (pdata && pdata->gpio_runtime_setup) {
+> -		ret = pdata->gpio_runtime_setup(pdev);
+> -		if (ret) {
+> -			dev_err(&pdev->dev, "can't set up gpio\n");
+> -			return ret;
+> -		}
+> -	}
+> -
+>  	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+>  					  rfkill->type, &rfkill_gpio_ops,
+>  					  rfkill);
+> @@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device
+> *pdev) static int rfkill_gpio_remove(struct platform_device *pdev)
+>  {
+>  	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+> -	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+> 
+> -	if (pdata && pdata->gpio_runtime_close)
+> -		pdata->gpio_runtime_close(pdev);
+>  	rfkill_unregister(rfkill->rfkill_dev);
+>  	rfkill_destroy(rfkill->rfkill_dev);
 
