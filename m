@@ -1,550 +1,336 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:58612 "EHLO mout.gmx.net"
+Received: from mout.gmx.net ([212.227.17.22]:59731 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752962AbaBYNtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:49:18 -0500
-Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
- ESMTPSA (Nemesis) id 0Ll0tl-1WqWfn1Job-00aoL7 for
- <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:16 +0100
+	id S1751596AbaBVHkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Feb 2014 02:40:06 -0500
+Received: from [192.168.1.221] ([93.218.100.117]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0Lw1vh-1XKNSw03jB-017pH6 for
+ <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 08:40:04 +0100
+Message-ID: <5308544D.4090507@rempel-privat.de> (sfid-20140222_084012_664940_B3F87942)
+Date: Sat, 22 Feb 2014 08:39:57 +0100
 From: Oleksij Rempel <linux@rempel-privat.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 1/7] ath9k: move ath9k_init_channels_rates to common-init
-Date: Tue, 25 Feb 2014 14:48:50 +0100
-Message-Id: <1393336136-31069-2-git-send-email-linux@rempel-privat.de> (sfid-20140225_144922_274402_44A16CB7)
-In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
-References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Greg Ketell <greg@ketell.com>, linux-wireless@vger.kernel.org,
+	ilw@linux.intel.com
+Subject: Re: Help with Intel 7260 on Debian Stable (wheezy)
+References: <3815E3D1-0BFD-480D-B2C4-3405B08D5C0D@ketell.com>
+In-Reply-To: <3815E3D1-0BFD-480D-B2C4-3405B08D5C0D@ketell.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="dMMbma0St51hp8JS9riRjHwBlEii2qbp4"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and rename it to ath9k_cmn_init_channels_rates.
-sbands are move to ath_common as well.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--dMMbma0St51hp8JS9riRjHwBlEii2qbp4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath.h               |   1 +
- drivers/net/wireless/ath/ath9k/Makefile      |   3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h       |   1 -
- drivers/net/wireless/ath/ath9k/beacon.c      |   2 +-
- drivers/net/wireless/ath/ath9k/common-init.c | 170 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-init.h |  17 +++
- drivers/net/wireless/ath/ath9k/common.h      |   2 +
- drivers/net/wireless/ath/ath9k/init.c        | 172 ++-------------------------
- drivers/net/wireless/ath/ath9k/xmit.c        |   3 +-
- 9 files changed, 208 insertions(+), 163 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/common-init.c
- create mode 100644 drivers/net/wireless/ath/ath9k/common-init.h
+Fallow this link:
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 6260b83..d0e7ba8 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -163,6 +163,7 @@ struct ath_common {
- 	bool bt_ant_diversity;
- 
- 	int last_rssi;
-+	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 747975e..b58fe99 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -51,7 +51,8 @@ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
- 
- obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
--ath9k_common-y:=	common.o
-+ath9k_common-y:=	common.o \
-+			common-init.o
- 
- ath9k_htc-y +=	htc_hst.o \
- 		hif_usb.o \
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 21d13bc..e703ddad 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -753,7 +753,6 @@ struct ath_softc {
- 	struct ath_rx rx;
- 	struct ath_tx tx;
- 	struct ath_beacon beacon;
--	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- 
- #ifdef CONFIG_MAC80211_LEDS
- 	bool led_registered;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 32d00e8..6569528 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -80,7 +80,7 @@ static void ath9k_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	u8 chainmask = ah->txchainmask;
- 	u8 rate = 0;
- 
--	sband = &sc->sbands[common->hw->conf.chandef.chan->band];
-+	sband = &common->sbands[common->hw->conf.chandef.chan->band];
- 	rate = sband->bitrates[rateidx].hw_value;
- 	if (vif->bss_conf.use_short_preamble)
- 		rate |= sband->bitrates[rateidx].hw_value_short;
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-new file mode 100644
-index 0000000..1fa30c3
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -0,0 +1,170 @@
-+/*
-+ * Copyright (c) 2008-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+/* We use the hw_value as an index into our private channel structure */
-+
-+#include "common.h"
-+
-+#define CHAN2G(_freq, _idx)  { \
-+	.band = IEEE80211_BAND_2GHZ, \
-+	.center_freq = (_freq), \
-+	.hw_value = (_idx), \
-+	.max_power = 20, \
-+}
-+
-+#define CHAN5G(_freq, _idx) { \
-+	.band = IEEE80211_BAND_5GHZ, \
-+	.center_freq = (_freq), \
-+	.hw_value = (_idx), \
-+	.max_power = 20, \
-+}
-+
-+/* Some 2 GHz radios are actually tunable on 2312-2732
-+ * on 5 MHz steps, we support the channels which we know
-+ * we have calibration data for all cards though to make
-+ * this static */
-+static const struct ieee80211_channel ath9k_2ghz_chantable[] = {
-+	CHAN2G(2412, 0), /* Channel 1 */
-+	CHAN2G(2417, 1), /* Channel 2 */
-+	CHAN2G(2422, 2), /* Channel 3 */
-+	CHAN2G(2427, 3), /* Channel 4 */
-+	CHAN2G(2432, 4), /* Channel 5 */
-+	CHAN2G(2437, 5), /* Channel 6 */
-+	CHAN2G(2442, 6), /* Channel 7 */
-+	CHAN2G(2447, 7), /* Channel 8 */
-+	CHAN2G(2452, 8), /* Channel 9 */
-+	CHAN2G(2457, 9), /* Channel 10 */
-+	CHAN2G(2462, 10), /* Channel 11 */
-+	CHAN2G(2467, 11), /* Channel 12 */
-+	CHAN2G(2472, 12), /* Channel 13 */
-+	CHAN2G(2484, 13), /* Channel 14 */
-+};
-+
-+/* Some 5 GHz radios are actually tunable on XXXX-YYYY
-+ * on 5 MHz steps, we support the channels which we know
-+ * we have calibration data for all cards though to make
-+ * this static */
-+static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
-+	/* _We_ call this UNII 1 */
-+	CHAN5G(5180, 14), /* Channel 36 */
-+	CHAN5G(5200, 15), /* Channel 40 */
-+	CHAN5G(5220, 16), /* Channel 44 */
-+	CHAN5G(5240, 17), /* Channel 48 */
-+	/* _We_ call this UNII 2 */
-+	CHAN5G(5260, 18), /* Channel 52 */
-+	CHAN5G(5280, 19), /* Channel 56 */
-+	CHAN5G(5300, 20), /* Channel 60 */
-+	CHAN5G(5320, 21), /* Channel 64 */
-+	/* _We_ call this "Middle band" */
-+	CHAN5G(5500, 22), /* Channel 100 */
-+	CHAN5G(5520, 23), /* Channel 104 */
-+	CHAN5G(5540, 24), /* Channel 108 */
-+	CHAN5G(5560, 25), /* Channel 112 */
-+	CHAN5G(5580, 26), /* Channel 116 */
-+	CHAN5G(5600, 27), /* Channel 120 */
-+	CHAN5G(5620, 28), /* Channel 124 */
-+	CHAN5G(5640, 29), /* Channel 128 */
-+	CHAN5G(5660, 30), /* Channel 132 */
-+	CHAN5G(5680, 31), /* Channel 136 */
-+	CHAN5G(5700, 32), /* Channel 140 */
-+	/* _We_ call this UNII 3 */
-+	CHAN5G(5745, 33), /* Channel 149 */
-+	CHAN5G(5765, 34), /* Channel 153 */
-+	CHAN5G(5785, 35), /* Channel 157 */
-+	CHAN5G(5805, 36), /* Channel 161 */
-+	CHAN5G(5825, 37), /* Channel 165 */
-+};
-+
-+/* Atheros hardware rate code addition for short premble */
-+#define SHPCHECK(__hw_rate, __flags) \
-+	((__flags & IEEE80211_RATE_SHORT_PREAMBLE) ? (__hw_rate | 0x04 ) : 0)
-+
-+#define RATE(_bitrate, _hw_rate, _flags) {              \
-+	.bitrate        = (_bitrate),                   \
-+	.flags          = (_flags),                     \
-+	.hw_value       = (_hw_rate),                   \
-+	.hw_value_short = (SHPCHECK(_hw_rate, _flags))  \
-+}
-+
-+static struct ieee80211_rate ath9k_legacy_rates[] = {
-+	RATE(10, 0x1b, 0),
-+	RATE(20, 0x1a, IEEE80211_RATE_SHORT_PREAMBLE),
-+	RATE(55, 0x19, IEEE80211_RATE_SHORT_PREAMBLE),
-+	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
-+	RATE(60, 0x0b, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(90, 0x0f, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(120, 0x0a, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(180, 0x0e, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(240, 0x09, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(360, 0x0d, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(480, 0x08, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+	RATE(540, 0x0c, (IEEE80211_RATE_SUPPORTS_5MHZ |
-+			 IEEE80211_RATE_SUPPORTS_10MHZ)),
-+};
-+
-+int ath9k_cmn_init_channels_rates(struct ath_common *common)
-+{
-+	struct ath_hw *ah = (struct ath_hw *)common->ah;
-+	void *channels;
-+
-+	BUILD_BUG_ON(ARRAY_SIZE(ath9k_2ghz_chantable) +
-+		     ARRAY_SIZE(ath9k_5ghz_chantable) !=
-+		     ATH9K_NUM_CHANNELS);
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ) {
-+		channels = devm_kzalloc(ah->dev,
-+			sizeof(ath9k_2ghz_chantable), GFP_KERNEL);
-+		if (!channels)
-+		    return -ENOMEM;
-+
-+		memcpy(channels, ath9k_2ghz_chantable,
-+		       sizeof(ath9k_2ghz_chantable));
-+		common->sbands[IEEE80211_BAND_2GHZ].channels = channels;
-+		common->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
-+		common->sbands[IEEE80211_BAND_2GHZ].n_channels =
-+			ARRAY_SIZE(ath9k_2ghz_chantable);
-+		common->sbands[IEEE80211_BAND_2GHZ].bitrates = ath9k_legacy_rates;
-+		common->sbands[IEEE80211_BAND_2GHZ].n_bitrates =
-+			ARRAY_SIZE(ath9k_legacy_rates);
-+	}
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ) {
-+		channels = devm_kzalloc(ah->dev,
-+			sizeof(ath9k_5ghz_chantable), GFP_KERNEL);
-+		if (!channels)
-+			return -ENOMEM;
-+
-+		memcpy(channels, ath9k_5ghz_chantable,
-+		       sizeof(ath9k_5ghz_chantable));
-+		common->sbands[IEEE80211_BAND_5GHZ].channels = channels;
-+		common->sbands[IEEE80211_BAND_5GHZ].band = IEEE80211_BAND_5GHZ;
-+		common->sbands[IEEE80211_BAND_5GHZ].n_channels =
-+			ARRAY_SIZE(ath9k_5ghz_chantable);
-+		common->sbands[IEEE80211_BAND_5GHZ].bitrates =
-+			ath9k_legacy_rates + 4;
-+		common->sbands[IEEE80211_BAND_5GHZ].n_bitrates =
-+			ARRAY_SIZE(ath9k_legacy_rates) - 4;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_init_channels_rates);
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.h b/drivers/net/wireless/ath/ath9k/common-init.h
-new file mode 100644
-index 0000000..8fc9049
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/common-init.h
-@@ -0,0 +1,17 @@
-+/*
-+ * Copyright (c) 2009-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+int ath9k_cmn_init_channels_rates(struct ath_common *common);
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 38b5609..4c449e3 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -21,6 +21,8 @@
- #include "hw.h"
- #include "hw-ops.h"
- 
-+#include "common-init.h"
-+
- /* Common header for Atheros 802.11n base driver cores */
- 
- #define WME_BA_BMP_SIZE         64
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 07a0315..172b2f9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -62,111 +62,6 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- bool is_ath9k_unloaded;
--/* We use the hw_value as an index into our private channel structure */
--
--#define CHAN2G(_freq, _idx)  { \
--	.band = IEEE80211_BAND_2GHZ, \
--	.center_freq = (_freq), \
--	.hw_value = (_idx), \
--	.max_power = 20, \
--}
--
--#define CHAN5G(_freq, _idx) { \
--	.band = IEEE80211_BAND_5GHZ, \
--	.center_freq = (_freq), \
--	.hw_value = (_idx), \
--	.max_power = 20, \
--}
--
--/* Some 2 GHz radios are actually tunable on 2312-2732
-- * on 5 MHz steps, we support the channels which we know
-- * we have calibration data for all cards though to make
-- * this static */
--static const struct ieee80211_channel ath9k_2ghz_chantable[] = {
--	CHAN2G(2412, 0), /* Channel 1 */
--	CHAN2G(2417, 1), /* Channel 2 */
--	CHAN2G(2422, 2), /* Channel 3 */
--	CHAN2G(2427, 3), /* Channel 4 */
--	CHAN2G(2432, 4), /* Channel 5 */
--	CHAN2G(2437, 5), /* Channel 6 */
--	CHAN2G(2442, 6), /* Channel 7 */
--	CHAN2G(2447, 7), /* Channel 8 */
--	CHAN2G(2452, 8), /* Channel 9 */
--	CHAN2G(2457, 9), /* Channel 10 */
--	CHAN2G(2462, 10), /* Channel 11 */
--	CHAN2G(2467, 11), /* Channel 12 */
--	CHAN2G(2472, 12), /* Channel 13 */
--	CHAN2G(2484, 13), /* Channel 14 */
--};
--
--/* Some 5 GHz radios are actually tunable on XXXX-YYYY
-- * on 5 MHz steps, we support the channels which we know
-- * we have calibration data for all cards though to make
-- * this static */
--static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
--	/* _We_ call this UNII 1 */
--	CHAN5G(5180, 14), /* Channel 36 */
--	CHAN5G(5200, 15), /* Channel 40 */
--	CHAN5G(5220, 16), /* Channel 44 */
--	CHAN5G(5240, 17), /* Channel 48 */
--	/* _We_ call this UNII 2 */
--	CHAN5G(5260, 18), /* Channel 52 */
--	CHAN5G(5280, 19), /* Channel 56 */
--	CHAN5G(5300, 20), /* Channel 60 */
--	CHAN5G(5320, 21), /* Channel 64 */
--	/* _We_ call this "Middle band" */
--	CHAN5G(5500, 22), /* Channel 100 */
--	CHAN5G(5520, 23), /* Channel 104 */
--	CHAN5G(5540, 24), /* Channel 108 */
--	CHAN5G(5560, 25), /* Channel 112 */
--	CHAN5G(5580, 26), /* Channel 116 */
--	CHAN5G(5600, 27), /* Channel 120 */
--	CHAN5G(5620, 28), /* Channel 124 */
--	CHAN5G(5640, 29), /* Channel 128 */
--	CHAN5G(5660, 30), /* Channel 132 */
--	CHAN5G(5680, 31), /* Channel 136 */
--	CHAN5G(5700, 32), /* Channel 140 */
--	/* _We_ call this UNII 3 */
--	CHAN5G(5745, 33), /* Channel 149 */
--	CHAN5G(5765, 34), /* Channel 153 */
--	CHAN5G(5785, 35), /* Channel 157 */
--	CHAN5G(5805, 36), /* Channel 161 */
--	CHAN5G(5825, 37), /* Channel 165 */
--};
--
--/* Atheros hardware rate code addition for short premble */
--#define SHPCHECK(__hw_rate, __flags) \
--	((__flags & IEEE80211_RATE_SHORT_PREAMBLE) ? (__hw_rate | 0x04 ) : 0)
--
--#define RATE(_bitrate, _hw_rate, _flags) {              \
--	.bitrate        = (_bitrate),                   \
--	.flags          = (_flags),                     \
--	.hw_value       = (_hw_rate),                   \
--	.hw_value_short = (SHPCHECK(_hw_rate, _flags))  \
--}
--
--static struct ieee80211_rate ath9k_legacy_rates[] = {
--	RATE(10, 0x1b, 0),
--	RATE(20, 0x1a, IEEE80211_RATE_SHORT_PREAMBLE),
--	RATE(55, 0x19, IEEE80211_RATE_SHORT_PREAMBLE),
--	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
--	RATE(60, 0x0b, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(90, 0x0f, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(120, 0x0a, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(180, 0x0e, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(240, 0x09, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(360, 0x0d, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(480, 0x08, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--	RATE(540, 0x0c, (IEEE80211_RATE_SUPPORTS_5MHZ |
--			 IEEE80211_RATE_SUPPORTS_10MHZ)),
--};
- 
- #ifdef CONFIG_MAC80211_LEDS
- static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
-@@ -486,51 +381,6 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 	return 0;
- }
- 
--static int ath9k_init_channels_rates(struct ath_softc *sc)
--{
--	void *channels;
--
--	BUILD_BUG_ON(ARRAY_SIZE(ath9k_2ghz_chantable) +
--		     ARRAY_SIZE(ath9k_5ghz_chantable) !=
--		     ATH9K_NUM_CHANNELS);
--
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ) {
--		channels = devm_kzalloc(sc->dev,
--			sizeof(ath9k_2ghz_chantable), GFP_KERNEL);
--		if (!channels)
--		    return -ENOMEM;
--
--		memcpy(channels, ath9k_2ghz_chantable,
--		       sizeof(ath9k_2ghz_chantable));
--		sc->sbands[IEEE80211_BAND_2GHZ].channels = channels;
--		sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
--		sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
--			ARRAY_SIZE(ath9k_2ghz_chantable);
--		sc->sbands[IEEE80211_BAND_2GHZ].bitrates = ath9k_legacy_rates;
--		sc->sbands[IEEE80211_BAND_2GHZ].n_bitrates =
--			ARRAY_SIZE(ath9k_legacy_rates);
--	}
--
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ) {
--		channels = devm_kzalloc(sc->dev,
--			sizeof(ath9k_5ghz_chantable), GFP_KERNEL);
--		if (!channels)
--			return -ENOMEM;
--
--		memcpy(channels, ath9k_5ghz_chantable,
--		       sizeof(ath9k_5ghz_chantable));
--		sc->sbands[IEEE80211_BAND_5GHZ].channels = channels;
--		sc->sbands[IEEE80211_BAND_5GHZ].band = IEEE80211_BAND_5GHZ;
--		sc->sbands[IEEE80211_BAND_5GHZ].n_channels =
--			ARRAY_SIZE(ath9k_5ghz_chantable);
--		sc->sbands[IEEE80211_BAND_5GHZ].bitrates =
--			ath9k_legacy_rates + 4;
--		sc->sbands[IEEE80211_BAND_5GHZ].n_bitrates =
--			ARRAY_SIZE(ath9k_legacy_rates) - 4;
--	}
--	return 0;
--}
--
- static void ath9k_init_misc(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -793,7 +643,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		goto err_btcoex;
- 
--	ret = ath9k_init_channels_rates(sc);
-+	ret = ath9k_cmn_init_channels_rates(common);
- 	if (ret)
- 		goto err_btcoex;
- 
-@@ -823,10 +673,11 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct cfg80211_chan_def chandef;
- 	int i;
- 
--	sband = &sc->sbands[band];
-+	sband = &common->sbands[band];
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
- 		ah->curchan = &ah->channels[chan->hw_value];
-@@ -851,13 +702,16 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 
- void ath9k_reload_chainmask_settings(struct ath_softc *sc)
- {
--	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_HT))
- 		return;
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &common->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &common->sbands[IEEE80211_BAND_5GHZ].ht_cap);
- }
- 
- static const struct ieee80211_iface_limit if_limits[] = {
-@@ -969,10 +823,10 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
--			&sc->sbands[IEEE80211_BAND_2GHZ];
-+			&common->sbands[IEEE80211_BAND_2GHZ];
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
--			&sc->sbands[IEEE80211_BAND_5GHZ];
-+			&common->sbands[IEEE80211_BAND_5GHZ];
- 
- 	ath9k_init_wow(hw);
- 	ath9k_reload_chainmask_settings(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9ec5a36..8b31e2e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1076,6 +1076,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 			     struct ath_tx_info *info, int len, bool rts)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
-@@ -1145,7 +1146,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 		}
- 
- 		/* legacy rates */
--		rate = &sc->sbands[tx_info->band].bitrates[rates[i].idx];
-+		rate = &common->sbands[tx_info->band].bitrates[rates[i].idx];
- 		if ((tx_info->band == IEEE80211_BAND_2GHZ) &&
- 		    !(rate->flags & IEEE80211_RATE_ERP_G))
- 			phy = WLAN_RC_PHY_CCK;
--- 
-1.9.0
+https://askubuntu.com/questions/331667/no-wireless-for-intel-corporation-=
+7260-version-63
 
+Am 22.02.2014 02:50, schrieb Greg Ketell:
+> Hi folks,
+>=20
+> I=E2=80=99m trying to get the Intel 7260 working on Debian 7.4 (Kernel =
+3.2) running on a Giga-Byte GB-BXi5-4200.   The standard iwlwifi for whee=
+zy doesn=E2=80=99t have support for the 7260 so I=E2=80=99ve installed th=
+e iwlwifi from debian-backports which lists that card as supported.  Unfo=
+rtunately the card will not be recognized.
+>=20
+> # uname -a
+> Linux Brix1 3.2.0-4-amd64 #1 SMP Debian 3.2.54-2 x86_64 GNU/Linux
+>=20
+> # lspci -nnk
+> 00:00.0 Host bridge [0600]: Intel Corporation Haswell-ULT DRAM Controll=
+er [8086:0a04] (rev 09)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5000]
+> 00:02.0 VGA compatible controller [0300]: Intel Corporation Haswell-ULT=
+ Integrated Graphics Controller [8086:0a16] (rev 09)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:d000]
+> 00:03.0 Audio device [0403]: Intel Corporation Haswell-ULT HD Audio Con=
+troller [8086:0a0c] (rev 09)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5000]
+> 	Kernel driver in use: snd_hda_intel
+> 00:14.0 USB controller [0c03]: Intel Corporation Lynx Point-LP USB xHCI=
+ HC [8086:9c31] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5004]
+> 	Kernel driver in use: xhci_hcd
+> 00:16.0 Communication controller [0780]: Intel Corporation Lynx Point-L=
+P HECI #0 [8086:9c3a] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
+> 00:1b.0 Audio device [0403]: Intel Corporation Lynx Point-LP HD Audio C=
+ontroller [8086:9c20] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:fa50]
+> 	Kernel driver in use: snd_hda_intel
+> 00:1c.0 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express =
+Root Port 1 [8086:9c10] (rev e4)
+> 	Kernel driver in use: pcieport
+> 00:1c.2 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express =
+Root Port 3 [8086:9c14] (rev e4)
+> 	Kernel driver in use: pcieport
+> 00:1c.3 PCI bridge [0604]: Intel Corporation Lynx Point-LP PCI Express =
+Root Port 4 [8086:9c16] (rev e4)
+> 	Kernel driver in use: pcieport
+> 00:1d.0 USB controller [0c03]: Intel Corporation Lynx Point-LP USB EHCI=
+ #1 [8086:9c26] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5004]
+> 	Kernel driver in use: ehci_hcd
+> 00:1f.0 ISA bridge [0601]: Intel Corporation Lynx Point-LP LPC Controll=
+er [8086:9c43] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
+> 00:1f.2 SATA controller [0106]: Intel Corporation Lynx Point-LP SATA Co=
+ntroller 1 [AHCI mode] [8086:9c03] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:b002]
+> 	Kernel driver in use: ahci
+> 00:1f.3 SMBus [0c05]: Intel Corporation Lynx Point-LP SMBus Controller =
+[8086:9c22] (rev 04)
+> 	Subsystem: Gigabyte Technology Co., Ltd Device [1458:5001]
+> 02:00.0 Network controller [0280]: Intel Corporation Wireless 7260 [808=
+6:08b1] (rev 73)
+> 	Subsystem: Intel Corporation Dual Band Wireless-AC 7260 [8086:4070]
+> 03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL=
+8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 0=
+c)
+> 	Subsystem: Gigabyte Technology Co., Ltd Motherboard [1458:e000]
+> 	Kernel driver in use: r8169
+>=20
+> root@Brix1:/home/gketell# modprobe -r iwlwifi
+> root@Brix1:/home/gketell# modprobe -vvv !$
+> modprobe -vvv iwlwifi
+> libkmod: DEBUG ../libkmod/libkmod-module.c:519 kmod_module_new_from_loo=
+kup: input alias=3Diwlwifi, normalized=3Diwlwifi
+> libkmod: DEBUG ../libkmod/libkmod-module.c:525 kmod_module_new_from_loo=
+kup: lookup modules.dep iwlwifi
+> libkmod: DEBUG ../libkmod/libkmod.c:542 kmod_search_moddep: use mmaped =
+index 'modules.dep' modname=3Diwlwifi
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'iwlwifi' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f4=
+0de8d8680 key=3D'iwlwifi'
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'mac80211' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'mac80211' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f4=
+0de8dc3c0 key=3D'mac80211'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_deplin=
+e: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'cfg80211' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'cfg80211' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f4=
+0de8dc530 key=3D'cfg80211'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_deplin=
+e: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'rfkill' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:390 kmod_pool_get_module: get modul=
+e name=3D'rfkill' found=3D(nil)
+> libkmod: DEBUG ../libkmod/libkmod.c:398 kmod_pool_add_module: add 0x7f4=
+0de8dc650 key=3D'rfkill'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:178 kmod_module_parse_deplin=
+e: add dep: /lib/modules/3.2.0-4-amd64/kernel/net/rfkill/rfkill.ko
+> libkmod: DEBUG ../libkmod/libkmod-module.c:184 kmod_module_parse_deplin=
+e: 3 dependencies for iwlwifi
+> libkmod: DEBUG ../libkmod/libkmod-module.c:546 kmod_module_new_from_loo=
+kup: lookup iwlwifi=3D0, list=3D0x7f40de8d84e0
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initsta=
+te: could not open '/sys/module/iwlwifi/initstate': No such file or direc=
+tory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initsta=
+te: could not open '/sys/module/iwlwifi': No such file or directory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_pcsp mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_usb_audio mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dbt87x mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dcx88_alsa mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_atiixp_modem mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_intel8x0m mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_via82xx_modem mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dradeon mod->name=3Drfkill mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1220 kmod_module_probe_inser=
+t_module: Ignoring module 'rfkill': already loaded
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_pcsp mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_usb_audio mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dbt87x mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dcx88_alsa mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_atiixp_modem mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_intel8x0m mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_via82xx_modem mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dradeon mod->name=3Dcfg80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initsta=
+te: could not open '/sys/module/cfg80211/initstate': No such file or dire=
+ctory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initsta=
+te: could not open '/sys/module/cfg80211': No such file or directory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'cfg80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cf=
+g80211.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'cfg80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cf=
+g80211.ko'
+> insmod /lib/modules/3.2.0-4-amd64/kernel/net/wireless/cfg80211.ko=20
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'cfg80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/wireless/cf=
+g80211.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_pcsp mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_usb_audio mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dbt87x mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dcx88_alsa mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_atiixp_modem mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_intel8x0m mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_via82xx_modem mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dradeon mod->name=3Dmac80211 mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initsta=
+te: could not open '/sys/module/mac80211/initstate': No such file or dire=
+ctory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initsta=
+te: could not open '/sys/module/mac80211': No such file or directory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'mac80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/ma=
+c80211.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'mac80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/ma=
+c80211.ko'
+> insmod /lib/modules/3.2.0-4-amd64/kernel/net/mac80211/mac80211.ko=20
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'mac80211' path=3D'/lib/modules/3.2.0-4-amd64/kernel/net/mac80211/ma=
+c80211.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_pcsp mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_usb_audio mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dbt87x mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dcx88_alsa mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_atiixp_modem mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_intel8x0m mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dsnd_via82xx_modem mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1303 kmod_module_get_options=
+: modname=3Dradeon mod->name=3Diwlwifi mod->alias=3D(null)
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1651 kmod_module_get_initsta=
+te: could not open '/sys/module/iwlwifi/initstate': No such file or direc=
+tory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:1661 kmod_module_get_initsta=
+te: could not open '/sys/module/iwlwifi': No such file or directory
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'iwlwifi' path=3D'/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wire=
+less/iwlwifi/iwlwifi.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'iwlwifi' path=3D'/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wire=
+less/iwlwifi/iwlwifi.ko'
+> insmod /lib/modules/3.2.0-4-amd64/kernel/drivers/net/wireless/iwlwifi/i=
+wlwifi.ko=20
+> libkmod: DEBUG ../libkmod/libkmod-module.c:709 kmod_module_get_path: na=
+me=3D'iwlwifi' path=3D'/lib/modules/3.2.0-4-amd64/kernel/drivers/net/wire=
+less/iwlwifi/iwlwifi.ko'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_=
+module 0x7f40de8d8680 released
+> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f4=
+0de8d8680 key=3D'iwlwifi'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_=
+module 0x7f40de8dc650 released
+> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f4=
+0de8dc650 key=3D'rfkill'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_=
+module 0x7f40de8dc530 released
+> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f4=
+0de8dc530 key=3D'cfg80211'
+> libkmod: DEBUG ../libkmod/libkmod-module.c:435 kmod_module_unref: kmod_=
+module 0x7f40de8dc3c0 released
+> libkmod: DEBUG ../libkmod/libkmod.c:406 kmod_pool_del_module: del 0x7f4=
+0de8dc3c0 key=3D'mac80211'
+> libkmod: INFO ../libkmod/libkmod.c:319 kmod_unref: context 0x7f40de8d82=
+50 released
+>=20
+> # dpkg -l |grep -i iwlwifi
+> ii  firmware-iwlwifi                            0.40~bpo70+1           =
+            all          Binary firmware for Intel Wireless cards
+>=20
+> https://packages.debian.org/wheezy-backports/firmware-iwlwifi shows tha=
+t the 7260 card is part of the 0.40 iwlwifi driver package.
+>=20
+> And here is a listing of /dev/firmware showing that the ucode files are=
+ actually installed=E2=80=A6
+> # ls /lib/firmware/ |grep iwlwifi
+> iwlwifi-1000-5.ucode
+> iwlwifi-100-5.ucode
+> iwlwifi-105-6.ucode
+> iwlwifi-135-6.ucode
+> iwlwifi-2000-6.ucode
+> iwlwifi-2030-6.ucode
+> iwlwifi-3160-7.ucode
+> iwlwifi-3945-2.ucode
+> iwlwifi-4965-2.ucode
+> iwlwifi-5000-2.ucode
+> iwlwifi-5000-5.ucode
+> iwlwifi-5150-2.ucode
+> iwlwifi-6000-4.ucode
+> iwlwifi-6000g2a-5.ucode
+> iwlwifi-6000g2a-6.ucode
+> iwlwifi-6000g2b-6.ucode
+> iwlwifi-6050-4.ucode
+> iwlwifi-6050-5.ucode
+> iwlwifi-7260-7.ucode
+> iwlwifi-7260-8.ucode
+>=20
+> Does anyone have any ideas what might be going wrong and how I can fix =
+it?
+>=20
+> Thanks in advance!!
+> --
+> Greg Ketell
+
+
+
+--=20
+Regards,
+Oleksij
+
+
+--dMMbma0St51hp8JS9riRjHwBlEii2qbp4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iF4EAREIAAYFAlMIVFEACgkQHwImuRkmbWmahgD9FEAfvYJ9wb25OpFEYgz5TbRi
+oBi64lXkyphtLesTmqgA/iYFJ0Q5waw0jQY6UsvX+3P74+CMI2CFTfE/On5JTUjB
+=YjkP
+-----END PGP SIGNATURE-----
+
+--dMMbma0St51hp8JS9riRjHwBlEii2qbp4--
