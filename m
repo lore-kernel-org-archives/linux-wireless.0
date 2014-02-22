@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50196 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbaBGFAl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 00:00:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/7] ath9k: Check explicitly for IQ calibration
-Date: Fri,  7 Feb 2014 10:29:50 +0530
-Message-Id: <1391749195-24381-3-git-send-email-sujith@msujith.org> (sfid-20140207_060107_271206_5DDF034A)
-In-Reply-To: <1391749195-24381-1-git-send-email-sujith@msujith.org>
-References: <1391749195-24381-1-git-send-email-sujith@msujith.org>
+Received: from nbd.name ([46.4.11.11]:54794 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750866AbaBVNxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Feb 2014 08:53:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 1/2] ath9k: do not set half/quarter channel flags in AR_PHY_MODE
+Date: Sat, 22 Feb 2014 14:52:48 +0100
+Message-Id: <1393077169-65244-1-git-send-email-nbd@openwrt.org> (sfid-20140222_145337_497232_96CB687F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+5/10 MHz channel bandwidth is configured via the PLL clock, instead of
+the AR_PHY_MODE register. Using that register is AR93xx specific, and
+makes the mode incompatible with earlier chipsets.
 
-In chips like AR955x, the initvals contain the information
-whether IQ calibration is to be done in the HW when an
-AGC calibration is triggered. Check if IQ-CAL is enabled
-in the initvals before flagging 'txiqcal_done' as true.
+In some early versions, these flags were apparently applied at the wrong
+point in time and thus did not cause connectivity issues, however now
+they are causing problems, as pointed out in this OpenWrt ticket:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+https://dev.openwrt.org/ticket/14916
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 225b758..0ee4250 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1485,7 +1485,12 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 	 * AGC calibration. Specifically, AR9550 in SoC chips.
- 	 */
- 	if (ah->enabled_cals & TX_IQ_ON_AGC_CAL) {
--		txiqcal_done = true;
-+		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
-+				   AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL)) {
-+				txiqcal_done = true;
-+		} else {
-+			txiqcal_done = false;
-+		}
- 		run_agc_cal = true;
- 	} else {
- 		sep_iq_cal = true;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 09facba..8927fc3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -868,10 +868,6 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
+ 
+ 	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		rfMode |= (AR_PHY_MODE_DYNAMIC | AR_PHY_MODE_DYN_CCK_DISABLE);
+-	if (IS_CHAN_QUARTER_RATE(chan))
+-		rfMode |= AR_PHY_MODE_QUARTER;
+-	if (IS_CHAN_HALF_RATE(chan))
+-		rfMode |= AR_PHY_MODE_HALF;
+ 
+ 	if (rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF))
+ 		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL,
 -- 
-1.8.5.3
+1.8.3.4 (Apple Git-47)
 
