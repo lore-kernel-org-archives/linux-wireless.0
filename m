@@ -1,313 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17056 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751475AbaBHA15 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:27:57 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 15/30] mwifiex: move station list functions to common code
-Date: Fri, 7 Feb 2014 16:27:30 -0800
-Message-ID: <1391819254-21130-5-git-send-email-bzhao@marvell.com> (sfid-20140208_012801_317144_E9F94B2D)
-In-Reply-To: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
-References: <1391819254-21130-1-git-send-email-bzhao@marvell.com>
+Received: from mga09.intel.com ([134.134.136.24]:56038 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911AbaBVSzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Feb 2014 13:55:47 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: RE: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor
+ channels
+Date: Sat, 22 Feb 2014 18:55:42 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033385C8E@HASMSX106.ger.corp.intel.com> (sfid-20140222_195551_287912_C1133F6B)
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-7-git-send-email-ilan.peer@intel.com>
+ <20140219001458.GF14296@garbanzo.do-not-panic.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A03338353E@HASMSX106.ger.corp.intel.com>
+ <20140219160301.GH14296@garbanzo.do-not-panic.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A033383EED@HASMSX106.ger.corp.intel.com>
+ <CAB=NE6WD93GCtsKpXUJB8pZ-+9wOcF1E4QxNX4rRyed26JCHoQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6WD93GCtsKpXUJB8pZ-+9wOcF1E4QxNX4rRyed26JCHoQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
-
-These functions are now needed by TDLS while managing station list.
-Move them from AP related file to utility file.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h      |  10 +++
- drivers/net/wireless/mwifiex/uap_event.c | 118 -------------------------------
- drivers/net/wireless/mwifiex/util.c      | 114 +++++++++++++++++++++++++++++
- 3 files changed, 124 insertions(+), 118 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 58855af..ab53fad 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1167,6 +1167,16 @@ void mwifiex_dnld_txpwr_table(struct mwifiex_private *priv);
- 
- extern const struct ethtool_ops mwifiex_ethtool_ops;
- 
-+void mwifiex_del_all_sta_list(struct mwifiex_private *priv);
-+void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac);
-+void
-+mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
-+		       int ies_len, struct mwifiex_sta_node *node);
-+struct mwifiex_sta_node *
-+mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac);
-+struct mwifiex_sta_node *
-+mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac);
-+
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
- void mwifiex_debugfs_remove(void);
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 7180665..2d47ba7 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -21,126 +21,8 @@
- #include "main.h"
- #include "11n.h"
- 
--/*
-- * This function will return the pointer to station entry in station list
-- * table which matches specified mac address.
-- * This function should be called after acquiring RA list spinlock.
-- * NULL is returned if station entry is not found in associated STA list.
-- */
--struct mwifiex_sta_node *
--mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac)
--{
--	struct mwifiex_sta_node *node;
--
--	if (!mac)
--		return NULL;
--
--	list_for_each_entry(node, &priv->sta_list, list) {
--		if (!memcmp(node->mac_addr, mac, ETH_ALEN))
--			return node;
--	}
- 
--	return NULL;
--}
--
--/*
-- * This function will add a sta_node entry to associated station list
-- * table with the given mac address.
-- * If entry exist already, existing entry is returned.
-- * If received mac address is NULL, NULL is returned.
-- */
--static struct mwifiex_sta_node *
--mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
--{
--	struct mwifiex_sta_node *node;
--	unsigned long flags;
- 
--	if (!mac)
--		return NULL;
--
--	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
--	node = mwifiex_get_sta_entry(priv, mac);
--	if (node)
--		goto done;
--
--	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
--	if (!node)
--		goto done;
--
--	memcpy(node->mac_addr, mac, ETH_ALEN);
--	list_add_tail(&node->list, &priv->sta_list);
--
--done:
--	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--	return node;
--}
--
--/*
-- * This function will search for HT IE in association request IEs
-- * and set station HT parameters accordingly.
-- */
--static void
--mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
--		       int ies_len, struct mwifiex_sta_node *node)
--{
--	const struct ieee80211_ht_cap *ht_cap;
--
--	if (!ies)
--		return;
--
--	ht_cap = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
--	if (ht_cap) {
--		node->is_11n_enabled = 1;
--		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
--				  IEEE80211_HT_CAP_MAX_AMSDU ?
--				  MWIFIEX_TX_DATA_BUF_SIZE_8K :
--				  MWIFIEX_TX_DATA_BUF_SIZE_4K;
--	} else {
--		node->is_11n_enabled = 0;
--	}
--
--	return;
--}
--
--/*
-- * This function will delete a station entry from station list
-- */
--static void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac)
--{
--	struct mwifiex_sta_node *node;
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
--
--	node = mwifiex_get_sta_entry(priv, mac);
--	if (node) {
--		list_del(&node->list);
--		kfree(node);
--	}
--
--	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--	return;
--}
--
--/*
-- * This function will delete all stations from associated station list.
-- */
--static void mwifiex_del_all_sta_list(struct mwifiex_private *priv)
--{
--	struct mwifiex_sta_node *node, *tmp;
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
--
--	list_for_each_entry_safe(node, tmp, &priv->sta_list, list) {
--		list_del(&node->list);
--		kfree(node);
--	}
--
--	INIT_LIST_HEAD(&priv->sta_list);
--	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--	return;
--}
- 
- /*
-  * This function handles AP interface specific events generated by firmware.
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 9b82e22..8d37bfc 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -252,3 +252,117 @@ int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
- 
- 	return 0;
- }
-+
-+/* This function will return the pointer to station entry in station list
-+ * table which matches specified mac address.
-+ * This function should be called after acquiring RA list spinlock.
-+ * NULL is returned if station entry is not found in associated STA list.
-+ */
-+struct mwifiex_sta_node *
-+mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac)
-+{
-+	struct mwifiex_sta_node *node;
-+
-+	if (!mac)
-+		return NULL;
-+
-+	list_for_each_entry(node, &priv->sta_list, list) {
-+		if (!memcmp(node->mac_addr, mac, ETH_ALEN))
-+			return node;
-+	}
-+
-+	return NULL;
-+}
-+
-+/* This function will add a sta_node entry to associated station list
-+ * table with the given mac address.
-+ * If entry exist already, existing entry is returned.
-+ * If received mac address is NULL, NULL is returned.
-+ */
-+struct mwifiex_sta_node *
-+mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
-+{
-+	struct mwifiex_sta_node *node;
-+	unsigned long flags;
-+
-+	if (!mac)
-+		return NULL;
-+
-+	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
-+	node = mwifiex_get_sta_entry(priv, mac);
-+	if (node)
-+		goto done;
-+
-+	node = kzalloc(sizeof(*node), GFP_ATOMIC);
-+	if (!node)
-+		goto done;
-+
-+	memcpy(node->mac_addr, mac, ETH_ALEN);
-+	list_add_tail(&node->list, &priv->sta_list);
-+
-+done:
-+	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
-+	return node;
-+}
-+
-+/* This function will search for HT IE in association request IEs
-+ * and set station HT parameters accordingly.
-+ */
-+void
-+mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
-+		       int ies_len, struct mwifiex_sta_node *node)
-+{
-+	const struct ieee80211_ht_cap *ht_cap;
-+
-+	if (!ies)
-+		return;
-+
-+	ht_cap = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
-+	if (ht_cap) {
-+		node->is_11n_enabled = 1;
-+		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
-+				  IEEE80211_HT_CAP_MAX_AMSDU ?
-+				  MWIFIEX_TX_DATA_BUF_SIZE_8K :
-+				  MWIFIEX_TX_DATA_BUF_SIZE_4K;
-+	} else {
-+		node->is_11n_enabled = 0;
-+	}
-+
-+	return;
-+}
-+
-+/* This function will delete a station entry from station list */
-+void mwifiex_del_sta_entry(struct mwifiex_private *priv, u8 *mac)
-+{
-+	struct mwifiex_sta_node *node;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
-+
-+	node = mwifiex_get_sta_entry(priv, mac);
-+	if (node) {
-+		list_del(&node->list);
-+		kfree(node);
-+	}
-+
-+	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
-+	return;
-+}
-+
-+/* This function will delete all stations from associated station list. */
-+void mwifiex_del_all_sta_list(struct mwifiex_private *priv)
-+{
-+	struct mwifiex_sta_node *node, *tmp;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
-+
-+	list_for_each_entry_safe(node, tmp, &priv->sta_list, list) {
-+		list_del(&node->list);
-+		kfree(node);
-+	}
-+
-+	INIT_LIST_HEAD(&priv->sta_list);
-+	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
-+	return;
-+}
--- 
-1.8.2.3
-
+PiA+PiBUaGUgb3JpZ2luYWwgYmVhY29uIGhpbnQgbWVjaGFuaXNtIGlzIHZlcnkgZXhwYW5zaXZl
+IHRvIGFsbCBiZWFjb25zDQo+ID4+IG9uIG5vbiA1IEdIeiBERlMgY2hhbm5lbHMgYW5kIG5vbiAy
+LjQgY2hhbm5lbA0KPiA+PiAxMiBvciAxMy4gSWYgYSB2ZW5kb3IgY2FuIHBvc3NpYmx5IG5vdCBs
+aWtlIHRoYXQgYmVhY29uIGhpbnQNCj4gPj4gaW1wbGVtZW50YXRpb24gYXMgaXRzIHRvbyBwZXJt
+aXNzaXZlIChhbmQgSSBkb24ndCB0aGluayBpdCBpcykgYnV0DQo+ID4+IHRoZXkgZG8gd2FudCB0
+byB0cnVzdCBiZWFjb24gaGludHMgZnJvbSBBUHMgaW4gdGhlIGNhc2UgeW91IGFyZQ0KPiA+PiBk
+ZXNjcmliaW5nIHRoZW4geW91IGNhbiBlbmFibGUgYSBuZXcgZmVhdHVyZSBmbGFnIHRvIGRpc3Rp
+bmd1aXNoDQo+ID4+IHRoaXMuIFRoZSBiZWFjb24gaW5mcmFzdHJ1Y3R1cmUgY29kZSB3b3VsZCB0
+aGVuIGlnbm9yZSB0aGUgcmVndWxhcg0KPiA+PiBiZWFjb24gaGludHMgb24gZGV2aWNlcyB0aGF0
+IGRvbid0IGhhdmUgdGhlIG9sZCBmbGFnLCBidXQgd291bGQgdHJ1c3QNCj4gPj4gdGhpcyBuZXcg
+Zm9ybSBvZiBiZWFjb24gaGludC4gSWYgYSBkZXZpY2Ugc3VwcG9ydGVkIHRoZSBvbGQgYWxsDQo+
+ID4+IGluY2x1c2l2ZSBmbGFnIHRoZXknZCB0cnVzdCBib3RoLiBZb3UnZCBoYXZlIHRvIHVwZGF0
+ZSB0aGUga2RvY3MgZm9yIHRoZSBvbGQNCj4gb25lLCBhbmQgbGlrZWx5IGFkZCBhIG5ldyByb3V0
+aW5lIHNpbWlsYXIgdG8gcmVndWxhdG9yeV9oaW50X2ZvdW5kX2JlYWNvbigpLg0KPiA+Pg0KPiA+
+DQo+ID4gVGhpcyBtYWtlIHNlbnNlIChhbHNvIGdvdCBhIGRpcmVjdCBhbnN3ZXIgZnJvbSBvdXIg
+cmVndWxhdG9yeSBmb2xrcyBvbg0KPiA+IHRoaXMgLi4uIGZpbmFsbHkgOykpDQo+IA0KPiBPaCB3
+b3csIGFyZSB0aGV5IG9uIHRoZSB3aXJlbGVzcy1yZWdkYiBsaXN0Pw0KDQpOb3Qgc3VyZSAuLi4g
+SSBhc2tlZCB0aGVtIHRvIGpvaW4gc29tZSB0aW1lIGFnbyAuLi4NCg0KPiANCj4gPj4gSSdtIG5v
+dCBzdXJlIGl0cyB3b3J0aCBpdCB0aG91Z2gsIEknZCByYXRoZXIgcHVzaCB2ZW5kb3JzIHRvIGNv
+bnNpZGVyDQo+ID4+IGZpcnN0IHVzaW5nIHRoZSByZWd1bGFyIGJlY2FvbiBoaW50IG1lY2hhbmlz
+bSBhbmQgdHJ1c3RpbmcgaXQuIE1heWJlDQo+ID4+IGRldmljZXMgdGhhdCB3YW50IHRoaXMgbmV3
+IGZ1bmN0aW9uYWxpdHkgeW91IGFyZSB0cnVzdGluZyBzaG91bGQNCj4gPj4gaW1wbGljYXRlIHJl
+dmlzaW5nIHRydXN0aW5nIGJlYWNvbiBoaW50IG1lY2hhbmlzbSA/DQo+ID4+DQo+ID4NCj4gPiBP
+dXIgcmVndWxhdG9yeSBwZW9wbGUgc2FpZCB0aGF0IGEgc2ltaWxhciBhcHByb2FjaCBpcyBXSVAg
+aW4gdGhlIEZDQyB3aGVyZQ0KPiB0aGV5IGFyZSB3aWxsaW5nIHRvIHVzZSBhIHNpbWlsYXIgcmVs
+YXhhdGlvbiBhcyB0aGUgYmVhY29ucyBoaW50cyBidXQgd2l0aCBzb21lDQo+IGxpbWl0YXRpb25z
+IHN1Y2ggYXMgaGF2aW5nIGF0IGxlYXN0IGEgbnVtYmVyIG9mIEFQcyBvcGVyYXRpbmcgb24gdGhl
+IGNoYW5uZWwNCj4gZXRjLg0KPiANCj4gVGhhdCBzZWVtcyB0byBiZSBiaWFzZWQgdG93YXJkcyBw
+b3B1bGF0ZWQgc3BlY3RydW0gYXJlYXMuIEkgc3VzcGVjdCB0aGUNCj4gY29uZmxpY3QgaGVyZSB3
+b3VsZCBiZSBub3Qgd2FudGluZyB0byB0cnVzdCBHTydzLCBidXQgY29uc2lkZXINCg0KQWN0dWFs
+bHkgbm8uIFRoZSBjb25jZXJuIGlzIG1vcmUgdG8gdGhlIGluY3JlYXNpbmcgbnVtYmVyIG9mIEFQ
+cyB0aGF0IGFyZSBib3VnaHQgaXQgb25lIGNvdW50cnkgYW5kIHRoZW4gdXNlZCBpbiBzb21lIG90
+aGVyIGNvdW50cnksIHRodXMgcG9zc2libHkgdmlvbGF0aW5nIHJlZ3VsYXRvcnkuIEFGQUlLLCBv
+bmUgb2YgdGhlIG9wdGlvbnMgdGhleSBhcmUgY29uc2lkZXJpbmcgaXMgdG8gYWxsb3cgc3VjaCBy
+ZWxheGF0aW9uIGlmIGJlYWNvbiBmcm9tIHNldmVyYWwgKD4xKSBkaWZmZXJlbnQgQlNTIHdhcyBy
+ZWNlaXZlZC4NCg0KPiB0aGlzOiB3aHkgbm90PyBHTydzIHdvbid0IElSIHVubGVzcyB0aGV5IGhh
+dmUgc29tZSBoZXVyaXN0aWNzIGxpa2UgdGhlIG9uZQ0KPiB5b3UgYXJlIGFkZGluZyB0byBkZXRl
+cm1pbmUgaXRzIE9LIHRvIElSLiBGdXJ0aGVybW9yZSBvdXIgb3duIGJlYWNvbiBoaW50DQo+IGlu
+ZnJhc3RydWN0dXJlIGluIHRoZSBrZXJuZWwgZG9lcyBjaGVjayB0byBlbnN1cmUgd2UgZG9uJ3Qg
+dHJ1c3QgbWVzaCBvcg0KPiBJQlNTLCB3ZSBlbnN1cmUgaXRzIGZyb20gYW4gRVNTLCBpZSBXTEFO
+X0NBUEFCSUxJVFlfRVNTOg0KPiANCj4gaWYgKHJlcy0+cHViLmNhcGFiaWxpdHkgJiBXTEFOX0NB
+UEFCSUxJVFlfRVNTKQ0KPiAgIHJlZ3VsYXRvcnlfaGludF9mb3VuZF9iZWFjb24od2lwaHksIGNo
+YW5uZWwsIGdmcCk7DQo+IA0KPiBCVFcgSSBqdXN0IHVwZGF0ZWQgb3VyIGRvY3VtZW50YXRpb24g
+Zm9yIHRoaXMsIGhlcmU6DQo+IA0KPiBodHRwOi8vd2lyZWxlc3Mua2VybmVsLm9yZy9lbi9kZXZl
+bG9wZXJzL1JlZ3VsYXRvcnkvcHJvY2Vzc2luZ19ydWxlcyNCZWENCj4gY29uX2hpbnRzDQo+IA0K
+PiBQbGVhc2UgZmVlbCBmcmVlIHRvIHNvY2lhbGl6ZSB0aGlzIGFsZ29yaXRobSB3aXRoIHRoZSBG
+Q0MgUEhCcyBhbmQgb3RoZXINCj4gcmVndWxhdG9yeSBmb2xrcyB0byBzZWUgaWYgdGhleSBjYW4g
+c2VlIGFueSBsb29waG9sZXMgb3Igd291bGQgcHJlZmVyIGFueQ0KPiBvdGhlciBjb25zaWRlcmF0
+aW9ucyBvciBBUElzIHRvIGJlIGV4dGVuZGVkLiBJIHRoaW5rIHRoaXMgaXMgcHJldHR5IHNhZmUg
+YW5kIEknZA0KPiBsb3ZlIHRvIGtub3cgb2YgaXNzdWVzIHRoYXQgcGVvcGxlIGNvdWxkIGJlIGNv
+bmNlcm5lZCBvdmVyIHRoaXMuDQo+IA0KDQpTdXJlLCBidXQgYXMgSSB3cm90ZSBhYm92ZSwgdGhl
+IEZDQyBkb2VzIG5vdCBjb25zaWRlciBhIGJlYWNvbiBvZiBhIHNpbmdsZSBCU1Mgc3VmZmljaWVu
+dCBhbmQgd291bGQgbGlrZSBiZXR0ZXIgYXNzdXJhbmNlIHRoYXQgaXQgaXMgc2FmZSB0byBlbmFi
+bGUgSVIuIFdpbGwgdXBkYXRlIG9uY2UgSSBnZXQgc29tZSBhbnN3ZXJzLg0KDQo+ID4gSWYgaXRz
+IG9rIHdpdGggeW91IEkgcHJlZmVyIHRvIGxlYXZlIHRoaW5ncyBhcyBpcyBmb3Igbm93Lg0KPiAN
+Cj4gWW91IG1lYW4geW91J2xsIGRyb3AgdGhpcyBwYXRjaCBmb3Igc3VyZSB0aGVuIHdoaWxlIHdl
+IGhvcGUgYSBzb2NpYWxpemF0aW9uIG9mDQo+IG91ciBhbGdvcml0aG0gY2FuIGJlIHByb3ZlbiBh
+cyByZWFzb25hYmxlIGZvciBJbnRlbCB0byBlbWJyYWNlIDopID8NCg0KRFNUTSA7KSAuLi4gYW55
+d2F5LCBJJ2xsIGRyb3AgaXQgc2luY2UgSSBkbyBub3Qgc2VlIHRoZSBiZW5lZml0IGFuZCBzaW5j
+ZSB5b3VyIGFyZ3VtZW50IGFib3V0IGluZG9vciBub3QgaW1wbHlpbmcgSVIgaXMgdHJ1ZSBhbmQg
+SSdtIHdhaXRpbmcgZm9yIGFuc3dlcnMgaWYgdGhpcyBpcyBhbHNvIGFsbG93ZWQgYW5vdGhlciB0
+aGUgTk9fSVIgcmVsYXhhdGlvbnMuDQoNClJlZ2FyZHMsDQoNCklsYW4uDQo=
