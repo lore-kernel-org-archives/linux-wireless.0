@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34872 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbaBFRJe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 12:09:34 -0500
-Received: by mail-wi0-f171.google.com with SMTP id cc10so27496wib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Feb 2014 09:09:31 -0800 (PST)
-Message-ID: <52F3C1C7.8080504@gmail.com> (sfid-20140206_180938_594089_A1BBCF23)
-Date: Thu, 06 Feb 2014 18:09:27 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:49214 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751677AbaBVTyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Feb 2014 14:54:38 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v5 5/5] cfg80211: Enable GO operation on indoor channels
+Date: Sat, 22 Feb 2014 19:54:34 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A033385CFB@HASMSX106.ger.corp.intel.com> (sfid-20140222_205441_732319_07F255E0)
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
+ <1392896671-4288-6-git-send-email-ilan.peer@intel.com>
+ <CAB=NE6Vo2WsVc7zwpB3xnRre1MWL2FeQLvqMsheRFXG5hOxwTw@mail.gmail.com>
+In-Reply-To: <CAB=NE6Vo2WsVc7zwpB3xnRre1MWL2FeQLvqMsheRFXG5hOxwTw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>
-Subject: Google Summer of Code 2014 - Project ideas page for the Linux Foundation
- online
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I have set up a page for project ideas for the Linux Foundation's
-participation in the Google Summer of Code 2014:
-
-https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2014
-
-Please add your ideas to the sub-page of your work group. If you have
-problems mail me with your project idea.
-
-Please also take into account that the deadline for our application as 
-mentoring organization is Feb 14 and after that Google will evaluate the 
-applications. So have your ideas (at least most of them, ideas can be 
-posted up to the student application deadline) in by then to raise our 
-chances to get accepted.
-
-    Till
-
+PiA+ICBzdGF0aWMgYm9vbCBjZmc4MDIxMV9nb19wZXJtaXNzaXZlX2NoYW4oc3RydWN0DQo+IGNm
+ZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2LA0KPiA+ICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwNCj4gPiAqY2hhbikg
+QEAgLTYyMSw4ICs2MjMsMTQgQEAgc3RhdGljIGJvb2wNCj4gY2ZnODAyMTFfZ29fcGVybWlzc2l2
+ZV9jaGFuKHN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAqcmRldiwNCj4gPiAgICAg
+ICAgIEFTU0VSVF9SVE5MKCk7DQo+ID4NCj4gPiAgICAgICAgIGlmICghY29uZmlnX2VuYWJsZWQo
+Q09ORklHX0NGRzgwMjExX1JFR19SRUxBWF9OT19JUikgfHwNCj4gPiAtICAgICAgICAgICAhKHdp
+cGh5LT5yZWd1bGF0b3J5X2ZsYWdzICYgUkVHVUxBVE9SWV9FTkFCTEVfUkVMQVhfTk9fSVIpDQo+
+IHx8DQo+ID4gLSAgICAgICAgICAgIShjaGFuLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0dPX0NP
+TkNVUlJFTlQpKQ0KPiA+ICsgICAgICAgICAgICEod2lwaHktPnJlZ3VsYXRvcnlfZmxhZ3MgJiBS
+RUdVTEFUT1JZX0VOQUJMRV9SRUxBWF9OT19JUikpDQo+ID4gKyAgICAgICAgICAgICAgIHJldHVy
+biBmYWxzZTsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAocmVndWxhdG9yeV9pbmRvb3JfYWxsb3dl
+ZCgpICYmDQo+ID4gKyAgICAgICAgICAgKGNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fSU5E
+T09SX09OTFkpKQ0KPiA+ICsgICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTsNCj4gPiArDQo+ID4g
+KyAgICAgICBpZiAoIShjaGFuLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0dPX0NPTkNVUlJFTlQp
+KQ0KPiA+ICAgICAgICAgICAgICAgICByZXR1cm4gZmFsc2U7DQo+IA0KPiBTaG91bGRuJ3QgdGhp
+cyBjaGVjayBnbyBiZWZvcmUgdGhlIGluZG9vciBvbmU/DQo+IA0KDQpJIGRvIG5vdCB0aGluayBz
+bywgYXMgdGhpcyByZWxheGF0aW9ucyBpcyBvcnRob2dvbmFsIHRvIHRoZSBHTyBjb25jdXJyZW50
+IG9uZS4gSXQgbWVhbnMgdGhhdCBJZiBhIGNoYW5uZWwgaXMgZW5hYmxlZCBidXQgb25seSB1bmRl
+ciBpbmRvb3IgYW5kIGluZG9vciBvcGVyYXRpb24gaXMgaGludGVkIHRoZSByZWxheGF0aW9uIHJl
+bW92ZXMgdGhlIE5PX0lSIHJlc3RyaWN0aW9uIGlmIHN1Y2ggZXhpc3RzICh3aXRob3V0IHRoZSBy
+ZWxheGF0aW9uIGluZG9vciBvcGVyYXRpb24gd291bGQgYmUgIGFsbG93ZWQgYnV0IG5vdCAgZm9y
+IEdPKS4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
