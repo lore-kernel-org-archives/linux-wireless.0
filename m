@@ -1,86 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:46834 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754129AbaBMKqG (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:40791 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544AbaBVRT7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 05:46:06 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Joe Perches <joe@perches.com>
-Subject: Re: [net-next 3/3] cfg80211: add MPLS and 802.21 classification
-Date: Thu, 13 Feb 2014 11:46:01 +0100
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-	linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de
-References: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de> <1392202386-8826-4-git-send-email-sw@simonwunderlich.de> <1392205783.1868.5.camel@joe-AO722>
-In-Reply-To: <1392205783.1868.5.camel@joe-AO722>
+	Sat, 22 Feb 2014 12:19:59 -0500
+Message-ID: <5308DC3E.8000501@lwfinger.net> (sfid-20140222_182022_780179_4C139D68)
+Date: Sat, 22 Feb 2014 11:19:58 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201402131146.01749.sw@simonwunderlich.de> (sfid-20140213_114614_833220_F10F8B9C)
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] rtlwifi: Convert drivers to use new API for ieee80211_is_robust_mgmt_frame()
+References: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net> <1393089433-28270-18-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1393089433-28270-18-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Joe,
+On 02/22/2014 11:17 AM, Larry Finger wrote:
+> Drivers rtl8188ee, rtl8192ce, rtl8192se, and rtl8723ae all use this routine.
+> In addition, all callers of ieee80211_is_robust_mgmt_frame() have access to the
+> skb. Thus, it is trivial to use the new API rather than the underscored old version.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> ---
 
-thanks for the comments!
+John and Johannes,
 
-> On Wed, 2014-02-12 at 11:53 +0100, Simon Wunderlich wrote:
-> > MPLS labels may contain traffic control information, which should be
-> > evaluated and used by the wireless subsystem if present.
-> 
-> trivial notes:
-> > diff --git a/net/wireless/util.c b/net/wireless/util.c
-> 
-> []
-> 
-> > @@ -11,6 +11,7 @@
-> > 
-> >  #include <net/ip.h>
-> >  #include <net/dsfield.h>
-> >  #include <linux/if_vlan.h>
-> > 
-> > +#include <uapi/linux/mpls.h>
-> 
-> Please try not to #include uapi files.
-> 
+Ignore this one. It was sent by mistake.
 
-why not? The packet definition header has been put in UAPI, so I need that 
-there ... or should we move that to some place else? Other protocol definition 
-headers like IP, udp, tcp have been defined in uapi too the same way, so I 
-figured that would be the right position.
+Larry
 
-> > @@ -710,6 +711,29 @@ unsigned int cfg80211_classify8021d(struct sk_buff
-> > *skb,
-> > 
-> >  			return vlan_priority;
-> >  	
-> >  	}
-> > 
-> > +	if (skb_headlen(skb) >= sizeof(struct ethhdr)) {
-> > +		struct ethhdr *eh = (struct ethhdr *) skb->data;
-> > +		struct mpls_label_stack mpls_tmp, *mpls;
-> > +
-> > +		switch (eh->h_proto) {
-> > +		case __constant_htons(ETH_P_MPLS_UC):
-> 
-> > +		case __constant_htons(ETH_P_MPLS_MC):
-> __constant_ isn't necessary for these labels.
-> 
 
-OK, I will change that.
-
-> >  	switch (skb->protocol) {
-> >  	
-> >  	case htons(ETH_P_IP):
-> >  		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-> 
-> like this, just case htons(ETH_<FOO>) is enough.
-
-OK.
-
-I can rework and resend this particular patch - probably to linux wireless. If 
-the other patches are ok, would you guys merge the first two patches to net-
-next then?
-
-Thanks,
-    Simon
