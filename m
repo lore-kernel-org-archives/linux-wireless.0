@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:51513 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914AbaB0XHY (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:35731 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbaBVQ4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:07:24 -0500
-Received: by mail-wg0-f42.google.com with SMTP id x13so3451198wgg.13
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:23 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/7] staging: vt6656: s_nsBulkOutIoCompleteWrite Remove variable status.
-Date: Thu, 27 Feb 2014 23:06:15 +0000
-Message-Id: <1393542375-13110-7-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000734_922691_6B7FB2DC)
-In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
-References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 22 Feb 2014 11:56:52 -0500
+Received: by mail-ea0-f180.google.com with SMTP id o10so2212615eaj.39
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 08:56:51 -0800 (PST)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: dan.carpenter@oracle.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de,
+	andrea merello <andrea.merello@gmail.com>
+Subject: [PATCH 3/7 V2] rtl818x: check for pci_map_single() success when initializing RX ring
+Date: Sat, 22 Feb 2014 17:57:23 +0100
+Message-Id: <1393088243-22740-1-git-send-email-andrea.merello@gmail.com> (sfid-20140222_175702_109464_FBD77EAA)
+In-Reply-To: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com>
+References: <CAN8YU5OK8MLc0y0NaMJSJLOnh1K2FjLmEQiJ4fGd=Nyi5neUeQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove status and move debug messages to switch statement.
+From: andrea merello <andrea.merello@gmail.com>
 
-Remove duplicate second debug message.
+During initialization a number of RX skbs are allocated and mapped
+for DMA.
+Currently if pci_map_single() fails, it will result in passing to the
+HW a wrong DMA address (to write to!).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This patch adds check for this condition and eventually causes the
+driver not to initialize, avoiding at least dangerous DMAs.
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 24 +++++-------------------
- 1 file changed, 5 insertions(+), 19 deletions(-)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 57efb7f..a4a4bf2 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -584,38 +584,29 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 	struct vnt_usb_send_context *context = urb->context;
- 	struct vnt_private *priv = context->pDevice;
- 	u8 context_type = context->type;
--	int status;
- 
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
- 
- 	switch (urb->status) {
- 	case 0:
--	case -ETIMEDOUT:
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+			"Write %d bytes\n", context->uBufLen);
- 		break;
- 	case -ECONNRESET:
- 	case -ENOENT:
- 	case -ESHUTDOWN:
- 		context->bBoolInUse = false;
- 		return;
-+	case -ETIMEDOUT:
- 	default:
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+				"BULK Out failed %d\n", urb->status);
- 		break;
- 	}
- 
- 	if (!netif_device_present(priv->dev))
- 		return;
- 
--
--	status = urb->status;
--
--	if (status == STATUS_SUCCESS) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--			"Write %d bytes\n", context->uBufLen);
--	} else {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--				"BULK Out failed %d\n", status);
--	}
--
--
- 	if (CONTEXT_DATA_PACKET == context_type) {
- 		if (context->pPacket != NULL) {
- 			dev_kfree_skb_irq(context->pPacket);
-@@ -625,11 +616,6 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
- 		}
- 
- 		priv->dev->trans_start = jiffies;
--
--		if (status != STATUS_SUCCESS) {
--			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
--				"Send USB error! [%08xh]\n", status);
--		}
- 	}
- 
- 	if (priv->bLinkPass == true) {
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index bf59ff9..0102da2 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -483,6 +483,13 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ 		mapping = (dma_addr_t *)skb->cb;
+ 		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
+ 					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++
++		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
++			kfree_skb(skb);
++			wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
++			return -ENOMEM;
++		}
++
+ 		entry->rx_buf = cpu_to_le32(*mapping);
+ 		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
+ 					   MAX_RX_SIZE);
 -- 
-1.9.0
+1.8.3.2
 
