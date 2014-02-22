@@ -1,65 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbaBUIhG (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:41903 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbaBVA2Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 03:37:06 -0500
-Message-ID: <1392971822.4346.25.camel@jlt4.sipsolutions.net> (sfid-20140221_093712_320527_A285DBD3)
-Subject: Re: [PATCH v3 3/7] cfg80211: refactor cfg80211_can_use_iftype_chan()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Date: Fri, 21 Feb 2014 09:37:02 +0100
-In-Reply-To: <1392906986-12275-4-git-send-email-luca@coelho.fi>
-References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
-	 <1392906986-12275-4-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 21 Feb 2014 19:28:24 -0500
+Received: by mail-la0-f52.google.com with SMTP id c6so2902214lan.25
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 16:28:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1392896671-4288-5-git-send-email-ilan.peer@intel.com>
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com> <1392896671-4288-5-git-send-email-ilan.peer@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 21 Feb 2014 16:28:01 -0800
+Message-ID: <CAB=NE6X4YbNcOonHqPiR7L_ZcQgVz2a=Y3KLA9aogJN0p3fiKw@mail.gmail.com> (sfid-20140222_012828_582767_28C26BB6)
+Subject: Re: [PATCH 4/5] cfg80211: Add an option to hint indoor operation
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 16:36 +0200, Luciano Coelho wrote:
+On Thu, Feb 20, 2014 at 3:44 AM, Ilan Peer <ilan.peer@intel.com> wrote:
+> + * Note: currently not protected by any synchronization primitive.
 
-> +/**
-> + * cfg80211_check_combinations() - check interface combinations
+You should verify this is protected by RTNL as the other stuff.
 
-I don't think those parentheses are right?
-
-> + *
-> + * @wiphy: the wiphy
-> + * @num_different_channels: the number of different channels we want
-> + *	to use for verification
-> + * @num_interfaces: the number of different interfaces we want to use
-> + *	for verification
-> + * @used_iftypes: a bitmap where each bit corresponds to an interface
-> + *	type, as in the definition of &struct
-> + *	ieee80211_iface_limit.@types.
-> + * @radar_detect: a bitmap where each bit corresponds to a channel
-> + *	width where radar detection is needed, as in the definition of
-> + *	&struct ieee80211_iface_combination.@radar_detect_widths
-
-Doesn't that need to be something like hweight(radar_detect) == 1?
-
-> + * @iftype_num: array with the numbers of interfaces of each interface
-> + *	type.  The index is the interface type as specified in &enum
-> + *	nl80211_iftype.
-> + *
-> + * This function can be called by the driver to check whether a
-> + * combination of interfaces and their types are allowed according to
-> + * the interface combinations.
-> + */
-> +int cfg80211_check_combinations(struct wiphy *wiphy,
-> +				const int num_different_channels,
-> +				const int num_interfaces,
-> +				const u32 used_iftypes,
-> +				const u8 radar_detect,
-> +				const int *iftype_num);
-
-I think that array should be const int iftype_num[NUM_NL80211_IFTYPES],
-I'm pretty sure that works as a function argument as well and would
-serve as a bit of documentation (and possibly even compiler warnings if
-somebody has an array that's too short)
-
-johannes
-
+  Luis
