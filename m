@@ -1,49 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbaB1I5k (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:64208 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbaBVRRj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 03:57:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.14] mac80211: fix association to 20/40 MHz VHT networks
-Date: Fri, 28 Feb 2014 09:57:36 +0100
-Message-Id: <1393577856-9882-1-git-send-email-johannes@sipsolutions.net> (sfid-20140228_095743_631849_AFCEE6DE)
+	Sat, 22 Feb 2014 12:17:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 16/16 V2] rtlwifi: rtl8723be: Turn on building of new driver
+Date: Sat, 22 Feb 2014 11:17:12 -0600
+Message-Id: <1393089433-28270-17-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140222_181916_329132_187F0247)
+In-Reply-To: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+All code for the new driver was previously committed and it is now
+possible to build the new driver.
 
-When a VHT network uses 20 or 40 MHz as per the HT operation
-information, the channel center frequency segment 0 field in
-the VHT operation information is reserved, so ignore it.
+This commit also modifies this new driver for the changed API for
+ieee80211_is_robust_mgmt_frame().
 
-This fixes association with such networks when the AP puts 0
-into the field, previously we'd disconnect due to an invalid
-channel with the message
-wlan0: AP VHT information is invalid, disable VHT
-
-Cc: stable@vger.kernel.org
-Fixes: f2d9d270c15ae ("mac80211: support VHT association")
-Reported-by: Tim Nelson <tim.l.nelson@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/rtlwifi/Kconfig            | 19 ++++++++++++++++---
+ drivers/net/wireless/rtlwifi/Makefile           |  1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/Makefile | 20 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c    |  2 +-
+ 4 files changed, 38 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/Makefile
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c415f00cd6b6..245dce969b31 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -222,6 +222,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	switch (vht_oper->chan_width) {
- 	case IEEE80211_VHT_CHANWIDTH_USE_HT:
- 		vht_chandef.width = chandef->width;
-+		vht_chandef.center_freq1 = chandef->center_freq1;
- 		break;
- 	case IEEE80211_VHT_CHANWIDTH_80MHZ:
- 		vht_chandef.width = NL80211_CHAN_WIDTH_80;
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index 9251e0d..bf3cf12 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -5,7 +5,7 @@ menuconfig RTL_CARDS
+ 	---help---
+ 	  This option will enable support for the Realtek mac80211-based
+ 	  wireless drivers. Drivers rtl8192ce, rtl8192cu, rtl8192se, rtl8192de,
+-	  rtl8723ae, and rtl8188ae share some common code.
++	  rtl8723ae, rtl8723be, and rtl8188ae share some common code.
+ 
+ if RTL_CARDS
+ 
+@@ -56,6 +56,19 @@ config RTL8723AE
+ 
+ 	If you choose to build it as a module, it will be called rtl8723ae
+ 
++config RTL8723BE
++	tristate "Realtek RTL8723BE PCIe Wireless Network Adapter"
++	depends on PCI
++	select RTLWIFI
++	select RTLWIFI_PCI
++	select RTL8723_COMMON
++	select RTLBTCOEXIST
++	---help---
++	This is the driver for Realtek RTL8723BE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8723be
++
+ config RTL8188EE
+ 	tristate "Realtek RTL8188EE Wireless Network Adapter"
+ 	depends on PCI
+@@ -105,12 +118,12 @@ config RTL8192C_COMMON
+ 
+ config RTL8723_COMMON
+ 	tristate
+-	depends on RTL8723AE
++	depends on RTL8723AE || RTL8723BE
+ 	default y
+ 
+ config RTLBTCOEXIST
+ 	tristate
+-	depends on RTL8723AE
++	depends on RTL8723AE || RTL8723BE
+ 	default y
+ 
+ endif
+diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+index d97d1b9..bba36a0 100644
+--- a/drivers/net/wireless/rtlwifi/Makefile
++++ b/drivers/net/wireless/rtlwifi/Makefile
+@@ -24,6 +24,7 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
+ obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
+ obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
+ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
++obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
+ obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
+ obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/Makefile b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+new file mode 100644
+index 0000000..4a75aab
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+@@ -0,0 +1,20 @@
++obj-m := rtl8723be.o
++
++
++rtl8723be-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		phy.o		\
++		pwrseq.o	\
++		pwrseqcmd.o	\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o		\
++
++
++obj-$(CONFIG_RTL8723BE) += rtl8723be.o
++
++ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+index d84adb3..58f1fa1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+@@ -602,7 +602,7 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
+ 			return false;
+ 		}
+ 
+-		if ((ieee80211_is_robust_mgmt_frame(hdr)) &&
++		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
+ 		    (ieee80211_has_protected(hdr->frame_control)))
+ 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
+ 		else
 -- 
-1.8.5.3
+1.8.4.5
 
