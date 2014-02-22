@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:57477 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbaBNIGA (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:60346 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbaBVUXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 03:06:00 -0500
-Received: by mail-ee0-f45.google.com with SMTP id b15so5488046eek.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Feb 2014 00:05:59 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	linville@tuxdriver.com, Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] wireless-regdb: set AUTO bandwidth for world regulatory
-Date: Fri, 14 Feb 2014 09:05:49 +0100
-Message-Id: <1392365149-4829-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140214_090611_305332_AA8D2298)
+	Sat, 22 Feb 2014 15:23:17 -0500
+Received: by mail-la0-f50.google.com with SMTP id ec20so3740201lab.37
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 12:23:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A033385C8E@HASMSX106.ger.corp.intel.com>
+References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
+ <1390818118-27261-7-git-send-email-ilan.peer@intel.com> <20140219001458.GF14296@garbanzo.do-not-panic.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A03338353E@HASMSX106.ger.corp.intel.com>
+ <20140219160301.GH14296@garbanzo.do-not-panic.com> <CB3B3D4774441E42AA3EA0E1BA8230A033383EED@HASMSX106.ger.corp.intel.com>
+ <CAB=NE6WD93GCtsKpXUJB8pZ-+9wOcF1E4QxNX4rRyed26JCHoQ@mail.gmail.com> <CB3B3D4774441E42AA3EA0E1BA8230A033385C8E@HASMSX106.ger.corp.intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sat, 22 Feb 2014 12:22:56 -0800
+Message-ID: <CAB=NE6VHVuRkxK0GbTNfkz2Cn+Bv19hO7cKe35KQhPVbUCB_bQ@mail.gmail.com> (sfid-20140222_212336_670652_0D8A7F77)
+Subject: Re: [PATCH v3 6/6] mac80211: Enable initiating radiation on indoor channels
+To: "Peer, Ilan" <ilan.peer@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set AUTO bandwidth calculation for world regulatory
-domain. This will fix CRDA veryfication issue for
-world regulatory domain. This will also allow to set
-world regulatory from user mode (using iw/hostapd).
+On Sat, Feb 22, 2014 at 10:55 AM, Peer, Ilan <ilan.peer@intel.com> wrote:
+> AFAIK, one of the options they are considering is to allow such relaxation if beacon from several (>1) different BSS was received.
 
-Before we fail when check bandwidth for rule:
-2457 - 2482 @ 40 - where (2482 - 2457) < 40
+This can just go upstream, ie the existing implementation can be
+modified to account for this for FCC only.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- db.txt |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index fcab208..1fa16fe 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1,8 +1,8 @@
- # This is the world regulatory domain
- country 00:
--	(2402 - 2472 @ 40), (20)
-+	(2402 - 2472 @ AUTO), (20)
- 	# Channel 12 - 13.
--	(2457 - 2482 @ 40), (20), NO-IR
-+	(2457 - 2482 @ AUTO), (20), NO-IR
- 	# Channel 14. Only JP enables this and for 802.11b only
- 	(2474 - 2494 @ 20), (20), NO-IR
- 	# Channel 36 - 48
--- 
-1.7.9.5
-
+  Luis
