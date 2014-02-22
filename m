@@ -1,97 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:35456 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151AbaBYMWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:22:50 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-Date: Tue, 25 Feb 2014 14:22:28 +0200
-Message-Id: <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132358_929853_56B3A40E)
-In-Reply-To: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:44050 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbaBVVKj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Feb 2014 16:10:39 -0500
+Received: by mail-la0-f48.google.com with SMTP id gf5so806540lab.35
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 13:10:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A033385D1C@HASMSX106.ger.corp.intel.com>
+References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
+ <1392896671-4288-5-git-send-email-ilan.peer@intel.com> <CAB=NE6X4YbNcOonHqPiR7L_ZcQgVz2a=Y3KLA9aogJN0p3fiKw@mail.gmail.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A033385D1C@HASMSX106.ger.corp.intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sat, 22 Feb 2014 13:10:18 -0800
+Message-ID: <CAB=NE6UJ2G-S4fgFeXWvwCByin25wBGpkNkTmY-nKHXQG+uK-A@mail.gmail.com> (sfid-20140222_221042_135597_C80968A4)
+Subject: Re: [PATCH 4/5] cfg80211: Add an option to hint indoor operation
+To: "Peer, Ilan" <ilan.peer@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no use for them in this driver. This will fix a
-static checker warning..
+On Sat, Feb 22, 2014 at 12:00 PM, Peer, Ilan <ilan.peer@intel.com> wrote:
+>> -----Original Message-----
+>> From: mcgrof@gmail.com [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
+>> Rodriguez
+>> Sent: Saturday, February 22, 2014 02:28
+>> To: Peer, Ilan
+>> Cc: linux-wireless
+>> Subject: Re: [PATCH 4/5] cfg80211: Add an option to hint indoor operation
+>>
+>> On Thu, Feb 20, 2014 at 3:44 AM, Ilan Peer <ilan.peer@intel.com> wrote:
+>> > + * Note: currently not protected by any synchronization primitive.
+>>
+>> You should verify this is protected by RTNL as the other stuff.
+>>
+>
+> It is protect in all cases by RTNL ... I just did not think that it is needed. Do you a problematic scenario that requires RTNL?
 
-net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
-	warn: variable dereferenced before check 'rfkill->name'
+It will depend on where the hints are consumed and readers, and also
+resets of regulatory, so yes, its needed, just extend the
+documentation as with the others to indicate its under RTNL.
 
-This will also make sure that when DT support is added,
-"gpios" property can be used as no con_id labels are
-provided.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/rfkill-gpio.c | 19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
-
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 0adda44..ad5e354 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -36,8 +36,6 @@ struct rfkill_gpio_data {
- 	struct gpio_desc	*shutdown_gpio;
- 
- 	struct rfkill		*rfkill_dev;
--	char			*reset_name;
--	char			*shutdown_name;
- 	struct clk		*clk;
- 
- 	bool			clk_enabled;
-@@ -89,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	struct rfkill_gpio_data *rfkill;
- 	struct gpio_desc *gpio;
- 	int ret;
--	int len;
- 
- 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
- 	if (!rfkill)
-@@ -106,21 +103,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
--	len = strlen(rfkill->name);
--	rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
--	if (!rfkill->reset_name)
--		return -ENOMEM;
--
--	rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
--	if (!rfkill->shutdown_name)
--		return -ENOMEM;
--
--	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
--	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
--
- 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
- 
--	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
-+	gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
- 	if (!IS_ERR(gpio)) {
- 		ret = gpiod_direction_output(gpio, 0);
- 		if (ret)
-@@ -128,7 +113,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		rfkill->reset_gpio = gpio;
- 	}
- 
--	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
-+	gpio = devm_gpiod_get_index(&pdev->dev, NULL, 1);
- 	if (!IS_ERR(gpio)) {
- 		ret = gpiod_direction_output(gpio, 0);
- 		if (ret)
--- 
-1.9.0.rc3
-
+  Luis
