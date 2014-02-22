@@ -1,137 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:58107 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473AbaBCU7O (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:38763 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306AbaBVRRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:14 -0500
-Received: by mail-ee0-f50.google.com with SMTP id d17so3854751eek.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:13 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 36/62] iwlwifi: add enter/exit D0i3 ops
-Date: Mon,  3 Feb 2014 22:57:42 +0200
-Message-Id: <1391461088-8082-36-git-send-email-egrumbach@gmail.com> (sfid-20140203_223008_163583_AB11DAA1)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Sat, 22 Feb 2014 12:17:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/16 V2] Add new driver for RTL8723BE
+Date: Sat, 22 Feb 2014 11:16:56 -0600
+Message-Id: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140222_181802_278374_61842DBC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+This set of patches modifies rtlwifi to incorporate a new driver for
+the RTL8723BE wireless device. New variables are needed in the common
+structs, and some routines that are common to rtl8723ae and rtl8723be
+are moved into a common mini driver.
 
-Add new enter_d0i3 and exit_d0i3 ops that
-will be called by the transport on D0i3 enter/exit.
+This driver is intended for the -next stream for 3.15.
 
-Each one of these ops will include the host commands
-mentionned in the previous patch.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    2 ++
- drivers/net/wireless/iwlwifi/iwl-op-mode.h |   22 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/ops.c     |   18 ++++++++++++++++++
- 3 files changed, 42 insertions(+)
+V2 - Apparently, my repo had some bit rot as the V1 set would not apply
+     to a freshly pulled repo. That is fixed, and the code modified for
+     the new API for ieee80211_is_robust_mgmt_frame().
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index a75aac9..c8cbdbe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -126,6 +126,7 @@ do {                                            			\
- /* 0x00000F00 - 0x00000100 */
- #define IWL_DL_POWER		0x00000100
- #define IWL_DL_TEMP		0x00000200
-+#define IWL_DL_RPM		0x00000400
- #define IWL_DL_SCAN		0x00000800
- /* 0x0000F000 - 0x00001000 */
- #define IWL_DL_ASSOC		0x00001000
-@@ -189,5 +190,6 @@ do {                                            			\
- #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
- #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
- #define IWL_DEBUG_11H(p, f, a...)	IWL_DEBUG(p, IWL_DL_11H, f, ## a)
-+#define IWL_DEBUG_RPM(p, f, a...)	IWL_DEBUG(p, IWL_DL_RPM, f, ## a)
- 
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index b5be51f..f83b244 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -131,6 +131,8 @@ struct iwl_cfg;
-  * @nic_config: configure NIC, called before firmware is started.
-  *	May sleep
-  * @wimax_active: invoked when WiMax becomes active. May sleep
-+ * @enter_d0i3: configure the fw to enter d0i3. May sleep.
-+ * @exit_d0i3: configure the fw to exit d0i3. May sleep.
-  */
- struct iwl_op_mode_ops {
- 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
-@@ -148,6 +150,8 @@ struct iwl_op_mode_ops {
- 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
- 	void (*nic_config)(struct iwl_op_mode *op_mode);
- 	void (*wimax_active)(struct iwl_op_mode *op_mode);
-+	int (*enter_d0i3)(struct iwl_op_mode *op_mode);
-+	int (*exit_d0i3)(struct iwl_op_mode *op_mode);
- };
- 
- int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops);
-@@ -226,4 +230,22 @@ static inline void iwl_op_mode_wimax_active(struct iwl_op_mode *op_mode)
- 	op_mode->ops->wimax_active(op_mode);
- }
- 
-+static inline int iwl_op_mode_enter_d0i3(struct iwl_op_mode *op_mode)
-+{
-+	might_sleep();
-+
-+	if (!op_mode->ops->enter_d0i3)
-+		return 0;
-+	return op_mode->ops->enter_d0i3(op_mode);
-+}
-+
-+static inline int iwl_op_mode_exit_d0i3(struct iwl_op_mode *op_mode)
-+{
-+	might_sleep();
-+
-+	if (!op_mode->ops->exit_d0i3)
-+		return 0;
-+	return op_mode->ops->exit_d0i3(op_mode);
-+}
-+
- #endif /* __iwl_op_mode_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index cf33a12..0f87bc3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -812,6 +812,22 @@ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
- 	iwl_mvm_nic_restart(mvm);
- }
- 
-+static int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
-+{
-+	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
-+
-+	IWL_DEBUG_RPM(mvm, "MVM entering D0i3\n");
-+	return 0;
-+}
-+
-+static int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
-+{
-+	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
-+
-+	IWL_DEBUG_RPM(mvm, "MVM exiting D0i3\n");
-+	return 0;
-+}
-+
- static const struct iwl_op_mode_ops iwl_mvm_ops = {
- 	.start = iwl_op_mode_mvm_start,
- 	.stop = iwl_op_mode_mvm_stop,
-@@ -823,4 +839,6 @@ static const struct iwl_op_mode_ops iwl_mvm_ops = {
- 	.nic_error = iwl_mvm_nic_error,
- 	.cmd_queue_full = iwl_mvm_cmd_queue_full,
- 	.nic_config = iwl_mvm_nic_config,
-+	.enter_d0i3 = iwl_mvm_enter_d0i3,
-+	.exit_d0i3 = iwl_mvm_exit_d0i3,
- };
+Larry Finger (16):
+  rtlwifi: btcoexist: Add headers for new mini driver
+  rtlwifi: btcoexist: Add source for new mini driver - part 1
+  rtlwifi: btcoexist: Add source for new mini driver - part 2
+  rtlwifi: Prepare existing drivers for new driver
+  rtlwifi: rtl8723ae: rtl8723-common: Create new driver for common code
+  rtlwifi: rtl8723ae: rtl8723-common: Copy common firmware code
+  rtlwifi: rtl8723ae: rtl8723-common: Copy common dynamic power
+    management code
+  rtlwifi: rtl8723be: Add files for new driver - part 1
+  rtlwifi: rtl8723be: Add files for new driver - part 2
+  rtlwifi: rtl8723be: Add files for new driver - part 3
+  rtlwifi: rtl8723be: Add files for new driver - part 4
+  rtlwifi: rtl8723be: Add files for new driver - part 5
+  rtlwifi: rtl8723be: Add files for new driver - part 6
+  rtlwifi: rtl8723be: Add files for new driver - part 7
+  rtlwifi: rtl8723be: Add files for new driver - part 8
+  rtlwifi: rtl8723be: Turn on building of new driver
+
+ drivers/net/wireless/rtlwifi/Kconfig               |   27 +-
+ drivers/net/wireless/rtlwifi/Makefile              |    3 +
+ drivers/net/wireless/rtlwifi/btcoexist/Makefile    |    7 +
+ .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |   87 +
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.c   | 3698 ++++++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |  173 +
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  | 1011 ++++++
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  559 +++
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |  218 ++
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |   52 +
+ drivers/net/wireless/rtlwifi/core.c                |   12 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |    4 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   18 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |    5 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |   42 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  260 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   18 +-
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |    2 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |   36 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |  482 +--
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |   21 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |   13 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |    6 -
+ drivers/net/wireless/rtlwifi/rtl8723be/Makefile    |   20 +
+ drivers/net/wireless/rtlwifi/rtl8723be/def.h       |  248 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c        | 1325 +++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h        |  310 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c        |  628 ++++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.h        |  248 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c        | 2529 +++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.h        |   64 +
+ drivers/net/wireless/rtlwifi/rtl8723be/led.c       |  153 +
+ drivers/net/wireless/rtlwifi/rtl8723be/led.h       |   35 +
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.c       | 2175 ++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.h       |  217 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.c    |  106 +
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h    |  305 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c |  140 +
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.h |   95 +
+ drivers/net/wireless/rtlwifi/rtl8723be/reg.h       | 2293 ++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.c        |  504 +++
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.h        |   43 +
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c        |  385 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.h        |   35 +
+ drivers/net/wireless/rtlwifi/rtl8723be/table.c     |  572 +++
+ drivers/net/wireless/rtlwifi/rtl8723be/table.h     |   43 +
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c       |  959 +++++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h       |  616 ++++
+ drivers/net/wireless/rtlwifi/rtl8723com/Makefile   |    9 +
+ .../net/wireless/rtlwifi/rtl8723com/dm_common.c    |   65 +
+ .../net/wireless/rtlwifi/rtl8723com/dm_common.h    |   33 +
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    |  329 ++
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.h    |  126 +
+ drivers/net/wireless/rtlwifi/rtl8723com/main.c     |   33 +
+ .../net/wireless/rtlwifi/rtl8723com/phy_common.c   |  434 +++
+ .../net/wireless/rtlwifi/rtl8723com/phy_common.h   |   89 +
+ drivers/net/wireless/rtlwifi/usb.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |  309 +-
+ 71 files changed, 21378 insertions(+), 910 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbt_precomp.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/pwrseqcmd.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/trx.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/dm_common.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/fw_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/fw_common.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/main.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h
+
 -- 
-1.7.9.5
+1.8.4.5
 
