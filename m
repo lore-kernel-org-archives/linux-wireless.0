@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:32907 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbaBJJaC (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:37262 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977AbaBWMyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 04:30:02 -0500
-Received: by mail-wg0-f52.google.com with SMTP id b13so3907861wgh.31
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 01:30:01 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: Ben Hutchings <ben@decadent.org.uk>,
-	<linux-wireless@vger.kernel.org>
-Cc: Arik Nemtsov <arik@wizery.com>
-Subject: linux-firmware: pull-request TI wireless firmware 2014-02-10
-Date: Mon, 10 Feb 2014 11:29:56 +0200
-Message-Id: <1392024596-22285-1-git-send-email-arik@wizery.com> (sfid-20140210_103011_903401_0F1D36C1)
+	Sun, 23 Feb 2014 07:54:37 -0500
+Received: by mail-ob0-f176.google.com with SMTP id wo20so215483obc.35
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 04:54:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
+References: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
+Date: Sun, 23 Feb 2014 20:54:37 +0800
+Message-ID: <CAKH5=Lu4EP9bx+nHtvGRgho7RKCV3n43VaweR0VnoHB1rAPvjw@mail.gmail.com> (sfid-20140223_135507_139219_4E111062)
+Subject: Re: insmod: cannot insert `wl_high.ko': Success (17): Success ??
+From: Naughtboy <skylvlinux@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Ben,
+any big boy can guidiance me !!
 
-Here's an updated FW for the Wilink 8 chip. The name change is due to changes
-in some driver/FW APIs. Sorry for the double send, adding the linux-wireless
-list now as well.
-
-The following changes since commit 4164c23d2e3b4863ca42d72f40dc7cc5d9fb8c6c:
-
-  rtlwifi: Add firmware for rtl8192ee (2014-02-09 13:26:05 +0000)
-
-are available in the git repository at:
-
-  git://github.com/TI-OpenLink/firmwares.git master
-
-for you to fetch changes up to 7f9cf6ebdedb4776d3c977003b9a7e33537014b2:
-
-  wl18xx: add version 3 of the wl18xx firmware (2014-02-10 11:02:23 +0200)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      wl18xx: add version 3 of the wl18xx firmware
-
- WHENCE                          |   2 ++
- ti-connectivity/wl18xx-fw-3.bin | Bin 0 -> 673328 bytes
- 2 files changed, 2 insertions(+)
- create mode 100644 ti-connectivity/wl18xx-fw-3.bin
-
-diff --git a/WHENCE b/WHENCE
-index a5c0444..7263c1d 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1835,6 +1835,8 @@ File: ti-connectivity/wl18xx-fw.bin
- Version: 8.2.0.0.100
- File: ti-connectivity/wl18xx-fw-2.bin
- Version: 8.5.0.0.55
-+File: ti-connectivity/wl18xx-fw-3.bin
-+Version: 8.8.0.0.13
- File: ti-connectivity/wl18xx-conf.bin
- Version: 6/5
- 
-diff --git a/ti-connectivity/wl18xx-fw-3.bin b/ti-connectivity/wl18xx-fw-3.bin
-new file mode 100644
-index 0000000..3c799a3
-Binary files /dev/null and b/ti-connectivity/wl18xx-fw-3.bin differ
+2014-02-20 19:19 GMT+08:00 Naughtboy <skylvlinux@gmail.com>:
+> i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
+> ,but here is some erros .....
+>
+> filename:       wl_high.ko
+> license:        Proprietary
+> alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
+> depends:        bcm_usbshim
+> vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
+> parm:           oneonly:int
+> parm:           piomode:int
+> parm:           instance_base:int
+> parm:           nompc:int
+> parm:           name:string
+> parm:           nvram_path:string
+>
+> # insmod bcm_usbshim.ko    ----ok
+> but  insmod wl_high.ko occur error  .....    as the follow ..
+>
+> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+> insmod: cannot insert `wl_high.ko': Success (17): Success
+> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+> insmod: cannot insert `wl_high.ko': Success (17): Success
+>
+>
+>
+>
+> any bigman  can do me a gudiance
+>
+> thank you
+> --Naughtboy
