@@ -1,131 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:38301 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbaB1PDT (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:63862 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbaBWT5a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 10:03:19 -0500
-Received: by mail-ee0-f52.google.com with SMTP id c41so2339982eek.11
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:03:18 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Sun, 23 Feb 2014 14:57:30 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hi5so2351583wib.5
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:29 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] cfg80211: fix cfg80211_leave() locking
-Date: Fri, 28 Feb 2014 15:58:00 +0100
-Message-Id: <1393599480-27908-1-git-send-email-michal.kazior@tieto.com> (sfid-20140228_160329_016663_0BC2BB43)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/17] iwlwifi: pcie: stop the firmware when we restart it
+Date: Sun, 23 Feb 2014 21:57:02 +0200
+Message-Id: <1393185428-8524-11-git-send-email-egrumbach@gmail.com> (sfid-20140223_211709_127522_3ABA9B54)
+In-Reply-To: <530A51A4.6000007@gmail.com>
+References: <530A51A4.6000007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon_interval was set unprotected by
-wdev.mtx. This could possibly lead to inconsistent
-cfg80211 states.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+In case the firmware didn't assert but we want to restart
+it, e.g. we didn't get the reply for a host command, or the
+Tx queues are stuck, we should stop the firmware by
+provoking an interrupt. This allows to better debug the
+firmware in these bad scenarios.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/wireless/ap.c   |  4 ++--
- net/wireless/core.c | 10 +++++-----
- net/wireless/core.h |  4 ++++
- net/wireless/mesh.c |  4 ++--
- 4 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/tx.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 3e02ade..bdad1f9 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -6,8 +6,8 @@
- #include "rdev-ops.h"
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index e476d9e..3b0c72c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -207,7 +207,7 @@ static void iwl_pcie_txq_stuck_timer(unsigned long data)
+ 		IWL_ERR(trans, "scratch %d = 0x%08x\n", i,
+ 			le32_to_cpu(txq->scratchbufs[i].scratch));
  
+-	iwl_trans_fw_error(trans);
++	iwl_write_prph(trans, DEVICE_SET_NMI_REG, 1);
+ }
  
--static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
--			      struct net_device *dev, bool notify)
-+int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
-+		       struct net_device *dev, bool notify)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 276cf93..55599f7 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -758,16 +758,16 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
- 
- 	ASSERT_RTNL();
- 
-+	wdev_lock(wdev);
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_ADHOC:
--		cfg80211_leave_ibss(rdev, dev, true);
-+		__cfg80211_leave_ibss(rdev, dev, true);
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
- 		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
- 			__cfg80211_stop_sched_scan(rdev, false);
- 
--		wdev_lock(wdev);
- #ifdef CONFIG_CFG80211_WEXT
- 		kfree(wdev->wext.ie);
- 		wdev->wext.ie = NULL;
-@@ -776,20 +776,20 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
- #endif
- 		cfg80211_disconnect(rdev, dev,
- 				    WLAN_REASON_DEAUTH_LEAVING, true);
--		wdev_unlock(wdev);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		cfg80211_leave_mesh(rdev, dev);
-+		__cfg80211_leave_mesh(rdev, dev);
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
--		cfg80211_stop_ap(rdev, dev, true);
-+		__cfg80211_stop_ap(rdev, dev, true);
- 		break;
- 	default:
- 		break;
+ /*
+@@ -1024,7 +1024,7 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 		if (nfreed++ > 0) {
+ 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
+ 				idx, q->write_ptr, q->read_ptr);
+-			iwl_trans_fw_error(trans);
++			iwl_write_prph(trans, DEVICE_SET_NMI_REG, 1);
+ 		}
  	}
  
- 	wdev->beacon_interval = 0;
-+	wdev_unlock(wdev);
- }
+@@ -1583,6 +1583,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 			       get_cmd_string(trans_pcie, cmd->id));
+ 		ret = -ETIMEDOUT;
  
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3975ffa..912d822 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -275,6 +275,8 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev,
- 		       struct mesh_setup *setup,
- 		       const struct mesh_config *conf);
-+int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
-+			  struct net_device *dev);
- int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
- 			struct net_device *dev);
- int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
-@@ -282,6 +284,8 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 			      struct cfg80211_chan_def *chandef);
++		iwl_write_prph(trans, DEVICE_SET_NMI_REG, 1);
+ 		iwl_trans_fw_error(trans);
  
- /* AP */
-+int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
-+		       struct net_device *dev, bool notify);
- int cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 		     struct net_device *dev, bool notify);
- 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 5af5cc6..b5c304e 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -262,8 +262,8 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
--static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
--				 struct net_device *dev)
-+int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
-+			  struct net_device *dev)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
+ 		goto cancel;
 -- 
-1.8.5.3
+1.7.9.5
 
