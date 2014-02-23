@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:35456 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbaBYMWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:22:44 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv2 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
-Date: Tue, 25 Feb 2014 14:22:25 +0200
-Message-Id: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132723_136225_353D4239)
+Received: from smtprelay0068.hostedemail.com ([216.40.44.68]:48930 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751763AbaBWUKg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Feb 2014 15:10:36 -0500
+Message-ID: <1393186232.11020.6.camel@joe-AO722> (sfid-20140223_211041_870751_106D08C8)
+Subject: Re: [PATCH 13/17] iwlwifi: mvm: add Rx frames statistics via debugfs
+From: Joe Perches <joe@perches.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Sun, 23 Feb 2014 12:10:32 -0800
+In-Reply-To: <1393185428-8524-13-git-send-email-egrumbach@gmail.com>
+References: <530A51A4.6000007@gmail.com>
+	 <1393185428-8524-13-git-send-email-egrumbach@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes since v1:
-- Removed the gpio entries from arch/arm/mach-tegra/board-paz00.c
+On Sun, 2014-02-23 at 21:57 +0200, Emmanuel Grumbach wrote:
+> From: Eyal Shapira <eyal@wizery.com>
+> 
+> Collect statistics regarding rates and aggregations in Rx
+> frames and export the data via debugfs.
+[]
+> diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+[]
+> +static ssize_t iwl_dbgfs_frame_stats_read(struct iwl_mvm *mvm,
+> +					  char __user *user_buf, size_t count,
+> +					  loff_t *ppos,
+> +					  struct iwl_mvm_frame_stats *stats)
+> +{
+> +	char *buff;
+> +	int pos = 0, idx, i;
 
-Hi,
+I think this would be shorter code using pos as a char *
 
-I was waiting for the DT support from Chen-Yu before sending these,
-but decided it makes no difference when I send them. I'm dropping the
-con ID in the second patch because Dan noticed the warning, but of
-course it will mean the "gpios" property can be used with DT.
+> +	int ret;
+> +	size_t bufsz = 1024;
 
-The two last patches just add ACPI IDs for some new Baytrail based
-boards.
+I'd prefer #define or static const though the compiler
+should do the same thing.
 
+> +	buff = kmalloc(bufsz, GFP_KERNEL);
+> +	if (!buff)
+> +		return -ENOMEM;
+> +
+> +	spin_lock_bh(&mvm->drv_stats_lock);
 
-Heikki Krogerus (5):
-  ARM: tegra: remove obsolete gpio entries
-  net: rfkill: gpio: remove unused and obsolete platform parameters
-  net: rfkill: gpio: remove gpio names
-  net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
-  net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
+	pos = buff;
+	endpos = pos + bufsz;
 
- arch/arm/mach-tegra/board-paz00.c |  4 +---
- include/linux/rfkill-gpio.h       | 10 ----------
- net/rfkill/rfkill-gpio.c          | 40 +++++++++------------------------------
- 3 files changed, 10 insertions(+), 44 deletions(-)
+> +	pos += scnprintf(buff + pos, bufsz - pos,
+> +			 "Legacy/HT/VHT\t:\t%d/%d/%d\n",
+> +			 stats->legacy_frames,
+> +			 stats->ht_frames,
+> +			 stats->vht_frames);
 
--- 
-1.9.0.rc3
+	pos += scnprintf(pos, endpos - pos, etc...
+
+etc...
+
 
