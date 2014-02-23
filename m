@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59531 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753526AbaBYTap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 14:30:45 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 00/14] brcmfmac: driver cleanup and rework
-Date: Tue, 25 Feb 2014 20:30:24 +0100
-Message-ID: <1393356639-19169-1-git-send-email-arend@broadcom.com> (sfid-20140225_203125_784662_44B069DA)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:11402 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750754AbaBWHLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Feb 2014 02:11:35 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v6 5/5] cfg80211: Enable GO operation on indoor channels
+Date: Sun, 23 Feb 2014 09:13:03 +0200
+Message-Id: <1393139583-7249-6-git-send-email-ilan.peer@intel.com> (sfid-20140223_081138_678545_6E947539)
+In-Reply-To: <1393139583-7249-1-git-send-email-ilan.peer@intel.com>
+References: <1393139583-7249-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series includes a number of cleanup changes and rework mainly
-in the sdio driver. These are intended for 3.15 kernel and apply
-on the master branch of the wireless-next repository.
+Allow GO operation on a channel marked with IEEE80211_CHAN_INDOOR_ONLY
+iff there is a user hint indicating that the platform is operating in
+an indoor environment, i.e., the platform is a printer or media center
+device.
 
-Arend van Spriel (5):
-  brcmfmac: add delay before unregistering the network device
-  brcmfmac: fix use of skb control buffer in SDIO driver part
-  brcmfmac: remove unused variable data_len from
-    brcmf_sdio_bus_txdata()
-  brcmfmac: use pre-allocated scatter-gather table for txglomming
-  brcmfmac: reset suspend flag upon sdio suspend failure
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/chan.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Daniel Kim (1):
-  brcmfmac: Correct mcs index report
-
-Hante Meuleman (8):
-  brcmfmac: Make firmeware roaming a module param.
-  brcmfmac: Correct header debug dump for sdio tx hdrs.
-  brcmfmac: de-init driver layers in correct order.
-  brcmfmac: Minimize SDIO dpc scheduling.
-  brcmfmac: Remove immediate sleep support from SDIO.
-  brcmfmac: Small cleanup of redundant code.
-  brcmfmac: Use atomic functions for intstatus update.
-  brcmfmac: Put frame sdio tx error handling in sub function.
-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   53 +++--
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    8 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  209 +++++++-------------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   64 +++---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    1 -
- 6 files changed, 154 insertions(+), 183 deletions(-)
-
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index cc255eb..62c0e29 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -611,6 +611,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+  * associated to an AP on the same channel or on the same UNII band
+  * (assuming that the AP is an authorized master).
++ * In addition allow the GO to operate on a channel on which indoor operation is
++ * allowed, iff we are currently operating in an indoor environment.
+  */
+ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 					struct ieee80211_channel *chan)
+@@ -621,8 +623,14 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 	ASSERT_RTNL();
+ 
+ 	if (!config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
+-	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR) ||
+-	    !(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
++	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
++		return false;
++
++	if (regulatory_indoor_allowed() &&
++	    (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++		return true;
++
++	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+ 		return false;
+ 
+ 	/*
 -- 
 1.7.10.4
 
