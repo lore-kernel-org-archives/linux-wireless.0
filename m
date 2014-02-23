@@ -1,91 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:44342 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbaB0Gxm (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:59525 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486AbaBWT5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 01:53:42 -0500
-Received: by mail-we0-f181.google.com with SMTP id q58so1138440wes.12
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 22:53:40 -0800 (PST)
-Message-ID: <530EE0EA.5030105@gmail.com> (sfid-20140227_075404_564820_9694F57C)
-Date: Thu, 27 Feb 2014 08:53:30 +0200
+	Sun, 23 Feb 2014 14:57:17 -0500
+Received: by mail-wi0-f172.google.com with SMTP id e4so2366148wiv.17
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:14 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: pull request: iwlwifi 2014-02-27
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="MG86hBBa0Vhtf4lMI9opF2ixRPgbwEtAT"
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/17] iwlwifi: pcie: clean iwl_pcie_[rt]xq_inc_wr_ptr a bit
+Date: Sun, 23 Feb 2014 21:56:52 +0200
+Message-Id: <1393185428-8524-1-git-send-email-egrumbach@gmail.com> (sfid-20140223_205730_046790_65360444)
+In-Reply-To: <530A51A4.6000007@gmail.com>
+References: <530A51A4.6000007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---MG86hBBa0Vhtf4lMI9opF2ixRPgbwEtAT
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Eliad Peller <eliad@wizery.com>
 
-Hi John,
+The various code blocks in iwl_pcie_[rt]xq_inc_wr_ptr
+finally do the same things, so just merge them
+all and make the functions cleaner.
 
-I have two fixes for 3.14.
-Johannes fixes a long standing bug in the AMPDU status reporting.
-Max fixes the listen time which was way too long and causes trouble to se=
-veral APs.
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   47 +++++++++---------------
+ drivers/net/wireless/iwlwifi/pcie/tx.c |   63 +++++++++++++++-----------------
+ 2 files changed, 47 insertions(+), 63 deletions(-)
 
-Please pull - thanks
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 41f684d..cf49f6c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -155,37 +155,26 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
+ 	if (rxq->need_update == 0)
+ 		goto exit_unlock;
+ 
+-	if (trans->cfg->base_params->shadow_reg_enable) {
+-		/* shadow register enabled */
+-		/* Device expects a multiple of 8 */
+-		rxq->write_actual = (rxq->write & ~0x7);
+-		iwl_write32(trans, FH_RSCSR_CHNL0_WPTR, rxq->write_actual);
+-	} else {
+-		/* If power-saving is in use, make sure device is awake */
+-		if (test_bit(STATUS_TPOWER_PMI, &trans->status)) {
+-			reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
+-
+-			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
+-				IWL_DEBUG_INFO(trans,
+-					"Rx queue requesting wakeup,"
+-					" GP1 = 0x%x\n", reg);
+-				iwl_set_bit(trans, CSR_GP_CNTRL,
+-					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-				goto exit_unlock;
+-			}
+-
+-			rxq->write_actual = (rxq->write & ~0x7);
+-			iwl_write_direct32(trans, FH_RSCSR_CHNL0_WPTR,
+-					   rxq->write_actual);
+-
+-		/* Else device is assumed to be awake */
+-		} else {
+-			/* Device expects a multiple of 8 */
+-			rxq->write_actual = (rxq->write & ~0x7);
+-			iwl_write_direct32(trans, FH_RSCSR_CHNL0_WPTR,
+-					   rxq->write_actual);
++	/*
++	 * explicitly wake up the NIC if:
++	 * 1. shadow registers aren't enabled
++	 * 2. there is a chance that the NIC is asleep
++	 */
++	if (!trans->cfg->base_params->shadow_reg_enable &&
++	    test_bit(STATUS_TPOWER_PMI, &trans->status)) {
++		reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
++
++		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
++			IWL_DEBUG_INFO(trans, "Rx queue requesting wakeup, GP1 = 0x%x\n",
++				       reg);
++			iwl_set_bit(trans, CSR_GP_CNTRL,
++				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++			goto exit_unlock;
+ 		}
+ 	}
++
++	rxq->write_actual = round_down(rxq->write, 8);
++	iwl_write32(trans, FH_RSCSR_CHNL0_WPTR, rxq->write_actual);
+ 	rxq->need_update = 0;
+ 
+  exit_unlock:
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 2541264..e476d9e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -296,43 +296,38 @@ void iwl_pcie_txq_inc_wr_ptr(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	if (txq->need_update == 0)
+ 		return;
+ 
+-	if (trans->cfg->base_params->shadow_reg_enable ||
+-	    txq_id == trans_pcie->cmd_queue) {
+-		/* shadow register enabled */
+-		iwl_write32(trans, HBUS_TARG_WRPTR,
+-			    txq->q.write_ptr | (txq_id << 8));
+-	} else {
+-		/* if we're trying to save power */
+-		if (test_bit(STATUS_TPOWER_PMI, &trans->status)) {
+-			/* wake up nic if it's powered down ...
+-			 * uCode will wake up, and interrupt us again, so next
+-			 * time we'll skip this part. */
+-			reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
+-
+-			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
+-				IWL_DEBUG_INFO(trans,
+-					"Tx queue %d requesting wakeup,"
+-					" GP1 = 0x%x\n", txq_id, reg);
+-				iwl_set_bit(trans, CSR_GP_CNTRL,
+-					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-				return;
+-			}
+-
+-			IWL_DEBUG_TX(trans, "Q:%d WR: 0x%x\n", txq_id,
+-				     txq->q.write_ptr);
+-
+-			iwl_write_direct32(trans, HBUS_TARG_WRPTR,
+-				     txq->q.write_ptr | (txq_id << 8));
+-
++	/*
++	 * explicitly wake up the NIC if:
++	 * 1. shadow registers aren't enabled
++	 * 2. NIC is woken up for CMD regardless of shadow outside this function
++	 * 3. there is a chance that the NIC is asleep
++	 */
++	if (!trans->cfg->base_params->shadow_reg_enable &&
++	    txq_id != trans_pcie->cmd_queue &&
++	    test_bit(STATUS_TPOWER_PMI, &trans->status)) {
+ 		/*
+-		 * else not in power-save mode,
+-		 * uCode will never sleep when we're
+-		 * trying to tx (during RFKILL, we're not trying to tx).
++		 * wake up nic if it's powered down ...
++		 * uCode will wake up, and interrupt us again, so next
++		 * time we'll skip this part.
+ 		 */
+-		} else
+-			iwl_write32(trans, HBUS_TARG_WRPTR,
+-				    txq->q.write_ptr | (txq_id << 8));
++		reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
++
++		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
++			IWL_DEBUG_INFO(trans, "Tx queue %d requesting wakeup, GP1 = 0x%x\n",
++				       txq_id, reg);
++			iwl_set_bit(trans, CSR_GP_CNTRL,
++				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++			return;
++		}
+ 	}
++
++	/*
++	 * if not in power-save mode, uCode will never sleep when we're
++	 * trying to tx (during RFKILL, we're not trying to tx).
++	 */
++	IWL_DEBUG_TX(trans, "Q:%d WR: 0x%x\n", txq_id, txq->q.write_ptr);
++	iwl_write32(trans, HBUS_TARG_WRPTR, txq->q.write_ptr | (txq_id << 8));
++
+ 	txq->need_update = 0;
+ }
+ 
+-- 
+1.7.9.5
 
-  emmanuel
-
-The following changes since commit ec6f678c74dbdb06a6a775bbb00f1d26c17c40=
-4b:
-
-  iwlwifi: dvm: clear IWL_STA_UCODE_INPROGRESS when assoc fails (2014-02-=
-20 19:16:27 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- master
-
-for you to fetch changes up to d8105a24fce48b7b016e868923000871f4196e63:
-
-  iwlwifi: mvm: fix TX status for aggregated packets (2014-02-27 08:50:32=
- +0200)
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      iwlwifi: mvm: fix TX status for aggregated packets
-
-Max Stepanov (1):
-      iwlmvm: change of listen interval from 70 to 10
-
- drivers/net/wireless/iwlwifi/dvm/tx.c  | 14 +++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h |  2 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c  | 18 +++++++++---------
- 3 files changed, 19 insertions(+), 15 deletions(-)
-
-
---MG86hBBa0Vhtf4lMI9opF2ixRPgbwEtAT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTDuDxAAoJEC0Llv5uNjIBEIgP/2PIakmJ5J9yuWGwWlqBhIS6
-tsrQibM9joKEH4RguFCmut93JLoYJ8eX2QECOP1s79sW7GW3+T5Fa7F8yvDHbMCR
-xrCW5wEeHVMLVbqxchJkGA4QMocFyHnq5oOIcxFRncn/HNwwV9uydAJOUZ6ZKXIT
-oTLwNgST2R3YWfHIasjB/r/7XE0gslyKhU+0hKEB7DT6MY7fpfVLCaLWvclRvGHV
-45S3gbY3p57aRrNo+Ap5FuiyZFvfkAgdGktM9ufsH5Q2bl7QzGuojpm2tnt0C2QG
-wKnQMzYmKxqmZXdpuC+iD23IDwoOxqDj48suMTtOw3cOlpjSq3MqKwVYdRajgEKx
-SOe0bCBcLImpmoq8n2I32Vb8MBNFBIegl4sp4xTNox6m4hL9l81pRvEwR2lX1/qz
-1Wa/hZsBIZt7wgy4Cp8F0OSfkBodOCH7zarZkOQ6IXmB5ujDdL63UieFzyHk41Yj
-E4TABx9HI4t8lBU+MFfP6VYTmPnKFeSZGmy7JkaHtMrpvhvyeaZSB6yRFdaRbemo
-8QJYyFdpAAs7NmTrDXZOGIBOHXn01FDVWhMUWc9DH4uF5qyYmmhlHL+P8UW4a+7/
-M42kPzPZY+tI/Y+995BNdH3t3882Xfh22ZKV8ZhCj4xRLMUmWeJVCC9bU+u5iXPE
-VRQoYhVM5IV806XqK1Hg
-=dJEL
------END PGP SIGNATURE-----
-
---MG86hBBa0Vhtf4lMI9opF2ixRPgbwEtAT--
