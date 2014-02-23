@@ -1,396 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53803 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753404AbaBTLnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 06:43:02 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v5 3/5] cfg80211: Enable GO operation on additional channels
-Date: Thu, 20 Feb 2014 13:44:29 +0200
-Message-Id: <1392896671-4288-4-git-send-email-ilan.peer@intel.com> (sfid-20140220_124318_050694_075841C4)
-In-Reply-To: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
-References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:55282 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbaBWGzs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Feb 2014 01:55:48 -0500
+Received: by mail-ob0-f177.google.com with SMTP id wp18so5869444obc.8
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Feb 2014 22:55:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D6FFEB@HASMSX103.ger.corp.intel.com>
+References: <CAC45b7kjErBZ=bZEnbsmdbXkEowQRtkkoN-obSxpn3cRLrCvwQ@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D6FFEB@HASMSX103.ger.corp.intel.com>
+Date: Sat, 22 Feb 2014 22:55:47 -0800
+Message-ID: <CAC45b7ma=+QY1_woBPC44UkBeiWOG+iUNrScJ0gJ9qVfirNGsw@mail.gmail.com> (sfid-20140223_075551_832739_2E6D8B78)
+Subject: Re: [Ilw] RX laggy/choppy/stuck without TX on Intel Wireless 7260
+ with iwlwifi
+From: Stephen Kent <smkent@smkent.net>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow GO operation on a channel marked with IEEE80211_CHAN_GO_CONCURRENT
-iff there is an active station interface that is associated to
-an AP operating on the same channel in the 2 GHz band or the same UNII band
-(in the 5 GHz band). This relaxation is not allowed if the channel is
-marked with IEEE80211_CHAN_RADAR.
+On Sat, Feb 22, 2014 at 10:18 PM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>>
+>> (Resending as plain text)
+>>
+>> I have a strange issue with my Intel Wireless 7260 adapter on my Dell XPS 13
+>> (Haswell). It seems that packets are received but aren't processed by the
+>> kernel or something until more packets are transmitted. The net effect is
+>> that the laptop's wireless seems somewhat choppy. I can demonstrate this
+>> by running something in a remote ssh session that generates periodic
+>> output, and that output doesn't appear until I generate more outgoing
+>> traffic. It's hard to describe it beyond that, but I took a screen capture which
+>> demonstrates this very well:
+>> http://www.youtube.com/watch?v=4RMURSMszmc
+>>
+>> lspci shows the wireless card as: 02:00.0 Network controller: Intel Corporation
+>> Wireless 7260 (rev 6b) uname -a: Linux dalek 3.11.0-12-generic #19-Ubuntu
+>> SMP Wed Oct 9 16:20:46UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+>>
+>> I googled this without success. I can gather diagnostic information if you send
+>> me instructions, I'm just not sure where to start or what to look for. Is this a
+>> bug in the driver? Maybe in the card microcode itself? Has anyone else
+>> reported this issue? It seems very strange.
+>> Any help is appreciated.
+>
+> Can you please send the output of dmesg?
+> Tracing output can help too - but let's start with dmesg output.
+>
 
-Note that this is a permissive approach to the FCC definitions,
-that require a clear assessment that the device operating the AP is
-an authorized master, i.e., with radar detection and DFS capabilities.
+My full dmesg output is here: http://smkent.net/stuff/dmesg-dalek-20140222
 
-It is assumed that such restrictions are enforced by user space.
-Furthermore, it is assumed, that if the conditions that allowed for
-the operation of the GO on such a channel change, i.e., the station
-interface disconnected from the AP, it is the responsibility of user
-space to evacuate the GO from the channel.
+Here's some selected output. I'm not sure if it's useful.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- include/net/cfg80211.h   |    4 ++-
- include/net/regulatory.h |    6 ++++
- net/mac80211/ibss.c      |    9 ++++--
- net/wireless/Kconfig     |   24 ++++++++++++++++
- net/wireless/chan.c      |   69 ++++++++++++++++++++++++++++++++++++++++++++--
- net/wireless/mesh.c      |    3 +-
- net/wireless/nl80211.c   |   11 +++++---
- net/wireless/reg.c       |   29 +++++++++++++++++++
- net/wireless/reg.h       |   12 ++++++++
- net/wireless/trace.h     |   11 +++++---
- 10 files changed, 162 insertions(+), 16 deletions(-)
+smkent@dalek Desktop $ grep -ie iwl -e 80211 dmesg-dalek-20140222
+[    3.968070] cfg80211: Calling CRDA to update world regulatory domain
+[    3.976500] iwlwifi 0000:02:00.0: can't disable ASPM; OS doesn't
+have ASPM control
+[    3.976585] iwlwifi 0000:02:00.0: irq 59 for MSI/MSI-X
+[    4.115345] iwlwifi 0000:02:00.0: loaded firmware version 22.1.7.0
+op_mode iwlmvm
+[    4.157435] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
+Wireless AC 7260, REV=0x144
+[    4.157523] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[    4.157691] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[    4.269377] cfg80211: World regulatory domain updated:
+[    4.269383] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[    4.269387] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[    4.269390] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[    4.269393] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[    4.269396] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[    4.269399] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[    4.379283] ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+[    4.709497] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[    4.709671] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[ 9676.817175] cfg80211: Calling CRDA to update world regulatory domain
+[ 9676.823809] cfg80211: World regulatory domain updated:
+[ 9676.823820] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[ 9676.823827] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 9676.823834] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 9676.823840] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[ 9676.823846] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 9676.823851] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 9680.014722] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+[ 9680.014890] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2ba017c..e872c9c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4521,12 +4521,14 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
-  * cfg80211_reg_can_beacon - check if beaconing is allowed
-  * @wiphy: the wiphy
-  * @chandef: the channel definition
-+ * @iftype: interface type
-  *
-  * Return: %true if there is no secondary channel or the secondary channel(s)
-  * can be used for beaconing (i.e. is not a radar channel etc.)
-  */
- bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
--			     struct cfg80211_chan_def *chandef);
-+			     struct cfg80211_chan_def *chandef,
-+			     enum nl80211_iftype iftype);
- 
- /*
-  * cfg80211_ch_switch_notify - update wdev channel and notify userspace
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index b07cdc9..0d96cd0 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -131,6 +131,11 @@ struct regulatory_request {
-  * 	all country IE information processed by the regulatory core. This will
-  * 	override %REGULATORY_COUNTRY_IE_FOLLOW_POWER as all country IEs will
-  * 	be ignored.
-+ * @REGULATORY_ENABLE_RELAX_NO_IR: for devices that wish to allow the
-+ *      NO_IR relaxation, which enables transmissions on channels on which
-+ *      otherwise initiating radiation is not allowed. This will enable the
-+ *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
-+ *      option
-  */
- enum ieee80211_regulatory_flags {
- 	REGULATORY_CUSTOM_REG			= BIT(0),
-@@ -138,6 +143,7 @@ enum ieee80211_regulatory_flags {
- 	REGULATORY_DISABLE_BEACON_HINTS		= BIT(2),
- 	REGULATORY_COUNTRY_IE_FOLLOW_POWER	= BIT(3),
- 	REGULATORY_COUNTRY_IE_IGNORE		= BIT(4),
-+	REGULATORY_ENABLE_RELAX_NO_IR           = BIT(5),
- };
- 
- struct ieee80211_freq_range {
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 4453e27..a3b9561 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -262,7 +262,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	/* make a copy of the chandef, it could be modified below. */
- 	chandef = *req_chandef;
- 	chan = chandef.chan;
--	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
-+	if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef,
-+				     NL80211_IFTYPE_ADHOC)) {
- 		if (chandef.width == NL80211_CHAN_WIDTH_5 ||
- 		    chandef.width == NL80211_CHAN_WIDTH_10 ||
- 		    chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
-@@ -274,7 +275,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		chandef.width = NL80211_CHAN_WIDTH_20;
- 		chandef.center_freq1 = chan->center_freq;
- 		/* check again for downgraded chandef */
--		if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef)) {
-+		if (!cfg80211_reg_can_beacon(local->hw.wiphy, &chandef,
-+					     NL80211_IFTYPE_ADHOC)) {
- 			sdata_info(sdata,
- 				   "Failed to join IBSS, beacons forbidden\n");
- 			return;
-@@ -856,7 +858,8 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		goto disconnect;
- 	}
- 
--	if (!cfg80211_reg_can_beacon(sdata->local->hw.wiphy, &params.chandef)) {
-+	if (!cfg80211_reg_can_beacon(sdata->local->hw.wiphy, &params.chandef,
-+				     NL80211_IFTYPE_ADHOC)) {
- 		sdata_info(sdata,
- 			   "IBSS %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), disconnecting\n",
- 			   ifibss->bssid,
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 2a891bc..405f3c4 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -108,6 +108,30 @@ config CFG80211_REG_CELLULAR_HINTS
- 	  feature if you have tested and validated this feature on your
- 	  systems.
- 
-+config CFG80211_REG_RELAX_NO_IR
-+	bool "cfg80211 support for NO_IR relaxation"
-+	depends on CFG80211_CERTIFICATION_ONUS
-+	---help---
-+	 This option enables support for relaxation of the NO_IR flag for
-+	 situations that certain regulatory bodies have provided clarifications
-+	 on how relaxation can occur. This feature has an inherent dependency on
-+	 userspace features which must have been properly tested and as such is
-+	 not enabled by default.
-+
-+	 A relaxation feature example is allowing the operation of a P2P group
-+	 owner (GO) on channels marked with NO_IR if there is an additional BSS
-+	 interface which associated to an AP which userspace assumes or confirms
-+	 to be an authorized master, i.e., with radar detection support and DFS
-+	 capabilities. However, note that in order to not create daisy chain
-+	 scenarios, this relaxation is not allowed in cases that the BSS client
-+	 is associated to P2P GO and in addition the P2P GO instantiated on
-+	 a channel due to this relaxation should not allow connection from
-+	 non P2P clients.
-+
-+	 The regulatory core will apply these relaxations only for drivers that
-+	 support this feature by declaring the appropriate channel flags and
-+	 capabilities in their registration flow.
-+
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
- 	depends on CFG80211
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index f8ab7df..1d8c990 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -605,15 +605,78 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(cfg80211_chandef_usable);
- 
-+/*
-+ * For GO only, check if the channel can be used under permissive conditions
-+ * mandated by the some regulatory bodies, i.e., the channel is marked with
-+ * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
-+ * associated to an AP on the same channel or on the same UNII band
-+ * (assuming that the AP is an authorized master).
-+ */
-+static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
-+					struct ieee80211_channel *chan)
-+{
-+	struct wireless_dev *wdev_iter;
-+	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
-+
-+	ASSERT_RTNL();
-+
-+	if (!config_enabled(CONFIG_CFG80211_REG_RELAX_NO_IR) ||
-+	    !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR) ||
-+	    !(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
-+		return false;
-+
-+	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
-+		struct ieee80211_channel *other_chan = NULL;
-+		int r1, r2;
-+
-+		if (wdev_iter->iftype != NL80211_IFTYPE_STATION ||
-+		    !netif_running(wdev_iter->netdev))
-+				continue;
-+
-+		wdev_lock(wdev_iter);
-+		if (wdev_iter->current_bss)
-+			other_chan = wdev_iter->current_bss->pub.channel;
-+		wdev_unlock(wdev_iter);
-+
-+		if (!other_chan)
-+			continue;
-+
-+		if (chan == other_chan)
-+			return true;
-+
-+		if (chan->band != IEEE80211_BAND_5GHZ)
-+			continue;
-+
-+		r1 = cfg80211_get_unii(chan->center_freq);
-+		r2 = cfg80211_get_unii(other_chan->center_freq);
-+
-+		if (r1 != -EINVAL && r1 == r2)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
--			     struct cfg80211_chan_def *chandef)
-+			     struct cfg80211_chan_def *chandef,
-+			     enum nl80211_iftype iftype)
- {
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	bool res;
- 	u32 prohibited_flags = IEEE80211_CHAN_DISABLED |
--			       IEEE80211_CHAN_NO_IR |
- 			       IEEE80211_CHAN_RADAR;
- 
--	trace_cfg80211_reg_can_beacon(wiphy, chandef);
-+	trace_cfg80211_reg_can_beacon(wiphy, chandef, iftype);
-+
-+	/*
-+	 * Under certain conditions suggested by the some regulatory bodies
-+	 * a GO can operate on channels marked with IEEE80211_NO_IR
-+	 * so set this flag only if such relaxations are not enabled and
-+	 * the conditions are not met.
-+	 */
-+	if (iftype != NL80211_IFTYPE_P2P_GO ||
-+	    !cfg80211_go_permissive_chan(rdev, chandef->chan))
-+		prohibited_flags |= IEEE80211_CHAN_NO_IR;
- 
- 	if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
- 	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index d42a3fc..45c2c85 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -175,7 +175,8 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 							       scan_width);
- 	}
- 
--	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
-+	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef,
-+				     NL80211_IFTYPE_MESH_POINT))
- 		return -EINVAL;
- 
- 	err = cfg80211_chandef_dfs_required(wdev->wiphy, &setup->chandef);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 95a8c72..2270d9b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1933,7 +1933,7 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
- 			result = -EBUSY;
- 			break;
- 		}
--		if (!cfg80211_reg_can_beacon(&rdev->wiphy, &chandef)) {
-+		if (!cfg80211_reg_can_beacon(&rdev->wiphy, &chandef, iftype)) {
- 			result = -EINVAL;
- 			break;
- 		}
-@@ -3259,7 +3259,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	} else if (!nl80211_get_ap_channel(rdev, &params))
- 		return -EINVAL;
- 
--	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
-+	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef,
-+				     wdev->iftype))
- 		return -EINVAL;
- 
- 	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
-@@ -5914,7 +5915,8 @@ skip_beacons:
- 	if (err)
- 		return err;
- 
--	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
-+	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef,
-+				     wdev->iftype))
- 		return -EINVAL;
- 
- 	if (dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
-@@ -6685,7 +6687,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
--	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &ibss.chandef))
-+	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &ibss.chandef,
-+				     NL80211_IFTYPE_ADHOC))
- 		return -EINVAL;
- 
- 	switch (ibss.chandef.width) {
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 096268f..8f5b460 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2597,6 +2597,35 @@ static void reg_timeout_work(struct work_struct *work)
- 	rtnl_unlock();
- }
- 
-+/*
-+ * See http://www.fcc.gov/document/5-ghz-unlicensed-spectrum-unii, for
-+ * UNII band definitions
-+ */
-+int cfg80211_get_unii(int freq)
-+{
-+	/* UNII-1 */
-+	if (freq >= 5150 && freq <= 5250)
-+		return 0;
-+
-+	/* UNII-2A */
-+	if (freq > 5250 && freq <= 5350)
-+		return 1;
-+
-+	/* UNII-2B */
-+	if (freq > 5350 && freq <= 5470)
-+		return 2;
-+
-+	/* UNII-2C */
-+	if (freq > 5470 && freq <= 5725)
-+		return 3;
-+
-+	/* UNII-3 */
-+	if (freq > 5725 && freq <= 5825)
-+		return 4;
-+
-+	return -EINVAL;
-+}
-+
- int __init regulatory_init(void)
- {
- 	int err = 0;
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 1852461..9c11e72 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -105,4 +105,16 @@ void regulatory_hint_country_ie(struct wiphy *wiphy,
-  */
- void regulatory_hint_disconnect(void);
- 
-+/**
-+ * cfg80211_get_unii - get the U-NII band for the frequency
-+ * @freq: the frequency for which we want to get the UNII band.
-+
-+ * Get a value specifying the U-NII band frequency belongs to.
-+ * U-NII bands are defined by the FCC in C.F.R 47 part 15.
-+ *
-+ * Returns -EINVAL if freq is invalid, 0 for UNII-1, 1 for UNII-2A,
-+ * 2 for UNII-2B, 3 for UNII-2C and 4 for UNII-3.
-+ */
-+int cfg80211_get_unii(int freq);
-+
- #endif  /* __NET_WIRELESS_REG_H */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5eaeed5..6293e8d 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2189,18 +2189,21 @@ TRACE_EVENT(cfg80211_cqm_rssi_notify,
- );
- 
- TRACE_EVENT(cfg80211_reg_can_beacon,
--	TP_PROTO(struct wiphy *wiphy, struct cfg80211_chan_def *chandef),
--	TP_ARGS(wiphy, chandef),
-+	TP_PROTO(struct wiphy *wiphy, struct cfg80211_chan_def *chandef,
-+		 enum nl80211_iftype iftype),
-+	TP_ARGS(wiphy, chandef, iftype),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		CHAN_DEF_ENTRY
-+		__field(enum nl80211_iftype, iftype)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		CHAN_DEF_ASSIGN(chandef);
-+		__entry->iftype = iftype;
- 	),
--	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT,
--		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG)
-+	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT ", iftype=%d",
-+		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG, __entry->iftype)
- );
- 
- TRACE_EVENT(cfg80211_chandef_dfs_required,
--- 
-1.7.10.4
+I haven't taken a kernel trace before but I'm happy to do so if you
+can point me toward some instructions.
 
+Thanks,
+
+Stephen
