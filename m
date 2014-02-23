@@ -1,72 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:61766 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbaBXH2z (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:39233 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbaBWT5V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 02:28:55 -0500
-Received: by mail-wi0-f182.google.com with SMTP id f8so2670361wiw.9
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 23:28:53 -0800 (PST)
-Message-ID: <530AF48F.8050802@gmail.com> (sfid-20140224_082903_068917_3425C930)
-Date: Mon, 24 Feb 2014 09:28:15 +0200
+	Sun, 23 Feb 2014 14:57:21 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hi5so2360331wib.2
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:19 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: [ANN] New firmware for Intel 7260 / 3160 - 22.24.8.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF"
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/17] iwlwifi: mvm: add debugfs for prph reg read/write
+Date: Sun, 23 Feb 2014 21:56:56 +0200
+Message-Id: <1393185428-8524-5-git-send-email-egrumbach@gmail.com> (sfid-20140223_205733_275771_96F8F4E1)
+In-Reply-To: <530A51A4.6000007@gmail.com>
+References: <530A51A4.6000007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Eliad Peller <eliad@wizery.com>
 
-Hi,
+Allow reading/writing prph registers.
 
-we have released a new firmware for 7260 and 3160 WiFi Intel devices.
-This firmware is supported starting 3.13 kernel.
-We have a here quite a few bug fixes with a few new features.
-Most of the improvements concern P2P client and GO modes.
+The address is set in the first argument
+of the write operation. second argument
+is optional and can be used for writing.
 
-The firmware for 7260 is available at [1] and for 3160 at [2].
-I will send a pull request to linux-firmware.git soon.
+e.g.
+echo '0xA01234 0x99' > /sys/kernel/debug/ieee80211/phy0/iwlwifi/iwlmvm/prph_reg
+will write 0x99 into reg 0xA01234
 
-The new firmware's version number is 22.24.8.0:
+cat /sys/kernel/debug/ieee80211/phy0/iwlwifi/iwlmvm/prph_reg
+will show its current value (probably 0x99)
 
-$ dmesg | grep loaded\ firmware
-loaded firmware version 22.24.8.0 op_mode iwlmvm
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c |   44 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |    1 +
+ 2 files changed, 45 insertions(+)
 
-[1] http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=3DAttachFi=
-le&do=3Dget&target=3Diwlwifi-7260-ucode-22.24.8.0.tgz
-[2] http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=3DAttachFi=
-le&do=3Dget&target=3Diwlwifi-3160-ucode-22.24.8.0.tgz
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 6853e5e..9b98337 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -907,6 +907,49 @@ static ssize_t iwl_dbgfs_d0i3_refs_write(struct iwl_mvm *mvm, char *buf,
+ #define MVM_DEBUGFS_ADD_FILE(name, parent, mode) \
+ 	MVM_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
+ 
++static ssize_t
++iwl_dbgfs_prph_reg_read(struct file *file,
++			char __user *user_buf,
++			size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	int pos = 0;
++	char buf[32];
++	const size_t bufsz = sizeof(buf);
++
++	if (!mvm->dbgfs_prph_reg_addr)
++		return -EINVAL;
++
++	pos += scnprintf(buf + pos, bufsz - pos, "Reg 0x%x: (0x%x)\n",
++		mvm->dbgfs_prph_reg_addr,
++		iwl_read_prph(mvm->trans, mvm->dbgfs_prph_reg_addr));
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
++static ssize_t
++iwl_dbgfs_prph_reg_write(struct iwl_mvm *mvm, char *buf,
++			 size_t count, loff_t *ppos)
++{
++	u8 args;
++	u32 value;
++
++	args = sscanf(buf, "%i %i", &mvm->dbgfs_prph_reg_addr, &value);
++	/* if we only want to set the reg address - nothing more to do */
++	if (args == 1)
++		goto out;
++
++	/* otherwise, make sure we have both address and value */
++	if (args != 2)
++		return -EINVAL;
++
++	iwl_write_prph(mvm->trans, mvm->dbgfs_prph_reg_addr, value);
++out:
++	return count;
++}
++
++MVM_DEBUGFS_READ_WRITE_FILE_OPS(prph_reg, 64);
++
+ /* Device wide debugfs entries */
+ MVM_DEBUGFS_WRITE_FILE_OPS(tx_flush, 16);
+ MVM_DEBUGFS_WRITE_FILE_OPS(sta_drain, 8);
+@@ -951,6 +994,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(fw_nmi, mvm->debugfs_dir, S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(scan_ant_rxchain, mvm->debugfs_dir,
+ 			     S_IWUSR | S_IRUSR);
++	MVM_DEBUGFS_ADD_FILE(prph_reg, mvm->debugfs_dir, S_IWUSR | S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
+ 
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index bde8190..29d11d9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -518,6 +518,7 @@ struct iwl_mvm {
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct dentry *debugfs_dir;
+ 	u32 dbgfs_sram_offset, dbgfs_sram_len;
++	u32 dbgfs_prph_reg_addr;
+ 	bool disable_power_off;
+ 	bool disable_power_off_d3;
+ 
+-- 
+1.7.9.5
 
-
-
---pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTCvSpAAoJEC0Llv5uNjIBFw4P+gPEvxj1SADF2U9ebMpRrz64
-y9wyGyQBPqC1vaAhXESwh6T/Jg5BwWTeeUL+zMhWMn3ROChjGRn63WWvtX/OOvMo
-vYiAIDlJhsVUCOs192w+rqzDqN1LiAoAcVxZyE/MwTSNczbDySjoTGs+KeM+IPkj
-2JpdyNADUjBD7R3VqGP7kRjJDbgmk8NpRAJ4KGYLDGCiJoYFHvLFk33U/hwr92Of
-FinKraFoN5l59mu1btrTcn4awFuAHhejnjZItu1RwvwMhMf6PiOISZG/oVuB09Wk
-NFIeYosV1HuN6vkBmnBmMiLuwKyUGKWn8emSMsuHvTHD9wIo0n5fbyzRkrYTY28H
-FoZEx6Pu8jcv/RMvC/41MYXGx+5bczk3dzYCL+HsxxdINmpteruKP4zqyrmt9rRe
-4tlEe131ZuEZMCKWXJijSm7Y18mnVbRSIDOmGkxruFJtnuj4Bwe8bkNM01iKPDdh
-uU6zoSuDCeJ+nyxJQZhgnnxd50pn8EA3328qiQMhZRhILv7ttbTTUuTN+CIp9Mee
-wRBey5LK3OXRGvGEXZK2ZCTtcDcCNFIJSMeDrnr682rcCL8TnrRDaljsH2j/CSw0
-5r7a73dQ36Vu+FhuFoD5SGq1niLl4r/AlNh00Ebk7Ejb4Qg7lC/LEEiXDhZheayL
-LBNiLIlioTX09AG03i0K
-=lxhV
------END PGP SIGNATURE-----
-
---pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF--
