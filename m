@@ -1,121 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64083 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:6387 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751157AbaB0RiM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:38:12 -0500
-From: "Gross, Mark" <mark.gross@intel.com>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-CC: Chen-Yu Tsai <wens@csie.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"mgross@linux.intel.com" <mgross@linux.intel.com>
-Subject: RE: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-Date: Thu, 27 Feb 2014 17:38:09 +0000
-Message-ID: <BD75D217E5BAC84080F8EFB2582976378B327178@ORSMSX109.amr.corp.intel.com> (sfid-20140227_183839_366267_C8D5C48D)
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
-	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
-	<53062F97.3050407@wwwdotorg.org>
-	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
-	<5306E599.7020605@wwwdotorg.org>
- <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
-In-Reply-To: <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1750749AbaBWHKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Feb 2014 02:10:48 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v6 0/5] Enable additional channels for use
+Date: Sun, 23 Feb 2014 09:12:58 +0200
+Message-Id: <1393139583-7249-1-git-send-email-ilan.peer@intel.com> (sfid-20140223_081115_767504_A5516072)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please know that no one should not consider me an authority on ACPI at this time.  But, I have some comments / context / thoughts below.
+Some additional documentation fixes.
 
-Also I apologize in advance for any email formatting issues caused by replying to this via my work exchange account / outlook client.  Folks can use mgross@linux.intel.com to avoid outlook-isms from me in the future.
+------
 
-> -----Original Message-----
-> From: Linus Walleij [mailto:linus.walleij@linaro.org]
-> Sent: Tuesday, February 25, 2014 1:14 AM
-> To: Stephen Warren; Alexandre Courbot; Grant Likely;
-> devicetree@vger.kernel.org
-> Cc: Chen-Yu Tsai; Heikki Krogerus; Johannes Berg; David S. Miller; Rhyland
-> Klein; linux-wireless; netdev; linux-kernel; Arnd Bergmann; Gross, Mark
-> Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-> 
-> On Fri, Feb 21, 2014 at 6:35 AM, Stephen Warren
-> <swarren@wwwdotorg.org> wrote:
-> > On 02/20/2014 06:55 PM, Chen-Yu Tsai wrote:
-> 
-> >> That's correct. However using con_id to pass this results in
-> >> different behavior across DT and ACPI. A better way is to export the
-> >> labeling function so consumers can set meaningful labels themselves.
-> >
-> > But this code is the consumer of those GPIOs. IF the parameter to
-> > devm_gpiod_get_index() isn't intended to be used, why does it exist?
-> 
-> Kerneldoc says:
-> 
-> /**
->  * gpiod_get_index - obtain a GPIO from a multi-index GPIO function
->  * @dev:        GPIO consumer, can be NULL for system-global GPIOs
->  * @con_id:     function within the GPIO consumer
->  * @idx:        index of the GPIO to obtain in the consumer
->  *
-> 
-> Basically it is just exposing the fact that of_find_gpio() and
-> acpi_find_gpio() both take a con_id as argument.
-> 
-> If we drill into this, we find that it is used to conjure the arbitrary string
-> before the gpios in the DT case, like:
-> 
-> foo-gpios = <...>;
-> 
-> As in tegra30-beaver.dts...
-> 
->     sdhci@78000000 {
->             status = "okay";
->             cd-gpios = <&gpio TEGRA_GPIO(I, 5) GPIO_ACTIVE_LOW>;
->             wp-gpios = <&gpio TEGRA_GPIO(T, 3) GPIO_ACTIVE_HIGH>;
->             power-gpios = <&gpio TEGRA_GPIO(D, 7) GPIO_ACTIVE_HIGH>;
->             bus-width = <4>;
->     };
-> 
-> Instead of passing the GPIOs as index 0,1,2 they are named and I do admit
-> this has a nice "things are under control" aspect to it.
-[Gross, Mark] FWIW I don't think this is as "under control" as you do.  Those names in the above sdhci example are derived from a specific SDHCI tegra spec sheet or schematic.  Those names likely come from the data sheet for the controller.  I would like SDHCI kernel drivers to work pretty much the same for all compatible controllers.  The set of compatible controllers have spec sheets that use different naming conventions for their pins and thus a name space pollution of the SDHCI enumeration ABI will be a problem.
+As before, this series addresses the option of enabling additional channels for
+use based on the following relaxations:
 
-> 
-> In the ACPI case the con_id is not used for anything.
-> 
-> So it is basically there to satisfy the habit in some device tree bindings to
-> name gpio arrays instead of just passing gpios = <...>; (The latter should be
-> encouraged going forward.)
-[Gross, Mark] This is in fact just an idiom of the ACPI ABI inherited from writing linux drivers that work on systems with BIOS/FW developed for MS-Windows.  For the devices I work on we have a number of driver teams filing bugs against the BIOS/FW to add named GPIO objects to device name spaces such that they can directly query for the GPIO their driver needs and avoid assuming the 3rd GPIO is the special one they need for whatever...
+1. Indoor operation, where a device can use channels requiring indoor
+   operation, subject to that it can guarantee indoor operation.
+2. Concurrent GO operation, where devices may instantiate a P2P GO
+   while they are under the guidance of an authorized master.
 
-So if you have the luxury of being able to influence (file bugs against or write) the platform enumeration ABI then with ACPI you can have a named gpio today.  Note: there is an expectation that the _PRP feature to go into the next version of ACPI and that should enable a trivial 1-1 mapping (when _prp is used by the ACPI platform) between the different platform enumeration API's (DT and ACPI).
+The series includes:
 
-Still, from a platform enumeration ABI point of view I see the arbitrariness of indexes not much worse than the arbitrary naming of pins off of spec sheets or schematics.  Given that the authors of those specs/layouts come up with a new naming schemes every time they log into their workstations (especially for the schematics).  I do admit names are a little better but still have the scaling issue WRT namespaces and arbitrary naming by HW engineers over time.
+* Some clarification (mainly in documentation) about the intended usage of
+  channels marked as INDOOR_ONLY and CONCURRENT GO.
+* Mapping of NL80211_RFF_NO_OUTDOOR to NL80211_CHAN_INDOOR_ONLY
+* Support for a user hint that the platform is operating in an indoor
+  environment, i.e., channel marked as INDOOR_ONLY can be used.
+* Allow initiating radiation on channel marked with INDOOR_ONLY also
+  for scanning an frame injection in monitor mode.
+* Some additional fixes for comments I got.
 
-> 
-> As DT is ABI we need to keep this forever, and driver may need to look for
-> foo-gpios=<> and gpios=<> alike for backward compatibility if we'd change it,
-> sweet isn't it? :-)
-> 
-> I don't quite like this, as it is adding stupid nonsens arguments for ACPI GPIO
-> producers (which only take an index AFAICT), but it is a first sacrifice on the
-> altar of trying to mask the differences between DT and ACPI probe paths
-> about which I have mixed feelings.
-[Gross, Mark] I don't have mixed feelings.  I want to see converged probe paths that can handle both ACPI and DT platform ABI's seamlessly so we can reuse drivers across architectures effectively.  I think the _PRP will help with that even though its use assumes you have influence over the platform FW and this will not help with supporting of legacy BIOS's will burden us with gpio index assumptions.
+Following is an example of a possible channel map that can be used to allow
+the INDOOR_ONLY and CONCURRENT_GO relaxations. Note that:
 
---mark
+* Channels 12,13 are marked as Concurrent GO, so even in the lack of exact
+  information about the current regulatory domain, these channels can be used
+  for GO instantiation based on the concurrent GO relaxation.
+* The above is also true for channels 149-165 (a.k.a U-NII 3).
+* Channels 36-48 (a.k.a thee U-NII 1), are marked both with Concurrent GO and
+  indoor only. While the Concurrent GO can be used as described above, the
+  indoor only setting allows to use these channels given the platform is
+  identified as an indoor one, i.e., media server.
 
-> 
-> Yours,
-> LInus Walleij
+ 2412 MHz [1] (16.0 dBm)
+ 2417 MHz [2] (16.0 dBm)
+ 2422 MHz [3] (16.0 dBm)
+ 2427 MHz [4] (16.0 dBm)
+ 2432 MHz [5] (16.0 dBm)
+ 2437 MHz [6] (16.0 dBm)
+ 2442 MHz [7] (16.0 dBm)
+ 2447 MHz [8] (16.0 dBm)
+ 2452 MHz [9] (16.0 dBm)
+ 2457 MHz [10] (16.0 dBm)
+ 2462 MHz [11] (16.0 dBm)
+ 2467 MHz [12] (16.0 dBm) (no IR, Concurrent GO)
+ 2472 MHz [13] (16.0 dBm) (no IR, Concurrent GO)
+ 5180 MHz [36] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5200 MHz [40] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5220 MHz [44] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5240 MHz [48] (16.0 dBm) (no IR, Indoor Only, Concurrent GO)
+ 5260 MHz [52] (16.0 dBm) (no IR, radar detection)
+ 5280 MHz [56] (16.0 dBm) (no IR, radar detection)
+ 5300 MHz [60] (16.0 dBm) (no IR, radar detection)
+ 5320 MHz [64] (16.0 dBm) (no IR, radar detection)
+ 5500 MHz [100] (16.0 dBm) (no IR, radar detection)
+ 5520 MHz [104] (16.0 dBm) (no IR, radar detection)
+ 5540 MHz [108] (16.0 dBm) (no IR, radar detection)
+ 5560 MHz [112] (16.0 dBm) (no IR, radar detection)
+ 5580 MHz [116] (16.0 dBm) (no IR, radar detection)
+ 5600 MHz [120] (16.0 dBm) (no IR, radar detection)
+ 5620 MHz [124] (16.0 dBm) (no IR, radar detection)
+ 5640 MHz [128] (16.0 dBm) (no IR, radar detection)
+ 5660 MHz [132] (16.0 dBm) (no IR, radar detection)
+ 5680 MHz [136] (16.0 dBm) (no IR, radar detection)
+ 5700 MHz [140] (16.0 dBm) (no IR, radar detection)
+ 5720 MHz [144] (16.0 dBm) (no IR, radar detection)
+ 5745 MHz [149] (16.0 dBm) (no IR, Concurrent GO)
+ 5765 MHz [153] (16.0 dBm) (no IR, Concurrent GO)
+ 5785 MHz [157] (16.0 dBm) (no IR, Concurrent GO)
+ 5805 MHz [161] (16.0 dBm) (no IR, Concurrent GO)
+ 5825 MHz [165] (16.0 dBm) (no IR, Concurrent GO)
+
+Thanks in advance,
+
+Ilan.
+
+David Spinadel (1):
+  cfg80211: Add indoor only and GO concurrent channel attributes
+
+Ilan Peer (4):
+  cfg80211: Add Kconfig option for cellular BS hints
+  cfg80211: Enable GO operation on additional channels
+  cfg80211: Add an option to hint indoor operation
+  cfg80211: Enable GO operation on indoor channels
+
+ include/net/cfg80211.h       |   14 +++++-
+ include/net/regulatory.h     |    6 +++
+ include/uapi/linux/nl80211.h |   26 ++++++++++++
+ net/mac80211/ibss.c          |    9 ++--
+ net/wireless/Kconfig         |   37 ++++++++++++++++
+ net/wireless/chan.c          |   84 ++++++++++++++++++++++++++++++++++--
+ net/wireless/mesh.c          |    3 +-
+ net/wireless/nl80211.c       |   35 ++++++++-------
+ net/wireless/reg.c           |   96 +++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h           |   13 ++++++
+ net/wireless/trace.h         |   11 +++--
+ 11 files changed, 305 insertions(+), 29 deletions(-)
+
+-- 
+1.7.10.4
+
