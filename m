@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:65082 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbaB0XHO (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:53607 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbaBWPnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:07:14 -0500
-Received: by mail-wg0-f45.google.com with SMTP id m15so13325wgh.16
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:12 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/7] staging: vt6656: struct vnt_usb_send_context remove sEthHeader.
-Date: Thu, 27 Feb 2014 23:06:11 +0000
-Message-Id: <1393542375-13110-3-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000719_279805_03F25611)
-In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
-References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+	Sun, 23 Feb 2014 10:43:06 -0500
+Received: by mail-oa0-f51.google.com with SMTP id i7so3043255oag.24
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 07:43:05 -0800 (PST)
+Message-ID: <530A1707.6010700@lwfinger.net> (sfid-20140223_164310_863804_F22DCC78)
+Date: Sun, 23 Feb 2014 09:43:03 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Naughtboy <skylvlinux@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: insmod: cannot insert `wl_high.ko': Success (17): Success ??
+References: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com> <CAKH5=Lu4EP9bx+nHtvGRgho7RKCV3n43VaweR0VnoHB1rAPvjw@mail.gmail.com>
+In-Reply-To: <CAKH5=Lu4EP9bx+nHtvGRgho7RKCV3n43VaweR0VnoHB1rAPvjw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In nsDMA_tx_packet and bRelayPacketSend s_vSaveTxPktInfo points
-to sEthHeader.h_dest which is the wrong viable.
+On 02/23/2014 06:54 AM, Naughtboy wrote:
+> any big boy can guidiance me !!
+>
+> 2014-02-20 19:19 GMT+08:00 Naughtboy <skylvlinux@gmail.com>:
+>> i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
+>> ,but here is some erros .....
+>>
+>> filename:       wl_high.ko
+>> license:        Proprietary
+>> alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
+>> alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
+>> depends:        bcm_usbshim
+>> vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
+>> parm:           oneonly:int
+>> parm:           piomode:int
+>> parm:           instance_base:int
+>> parm:           nompc:int
+>> parm:           name:string
+>> parm:           nvram_path:string
+>>
+>> # insmod bcm_usbshim.ko    ----ok
+>> but  insmod wl_high.ko occur error  .....    as the follow ..
+>>
+>> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+>> insmod: cannot insert `wl_high.ko': Success (17): Success
+>> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+>> insmod: cannot insert `wl_high.ko': Success (17): Success
 
-Correct and point to pDevice->sTxEthHeader.
+That is a proprietary, closed-source driver. To get help for it, you need to 
+contact the program's authors. You can, however, look at the dmesg output to see 
+what is wrong.
 
-This is only relevant in the non fuctioning hostapd access point
-mode, shortly to be removed from driver.
+Larry
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h | 1 -
- drivers/staging/vt6656/rxtx.c   | 4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 2574029..72bcafb 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -179,7 +179,6 @@ struct vnt_usb_send_context {
- 	void *pDevice;
- 	struct sk_buff *pPacket;
- 	struct urb *pUrb;
--	struct ethhdr sEthHeader;
- 	unsigned int uBufLen;
- 	u8 type;
- 	bool bBoolInUse;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index ba0184a..7083af3 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -2444,7 +2444,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
--			&pContext->sEthHeader.h_dest[0],
-+			&pDevice->sTxEthHeader.h_dest[0],
- 			(u16)(BytesToWrite-uHeaderLen),
- 			pTX_Buffer->fifo_head.wFIFOCtl);
- 
-@@ -2598,7 +2598,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
-     s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
--		&pContext->sEthHeader.h_dest[0],
-+		&pDevice->sTxEthHeader.h_dest[0],
- 		(u16)(BytesToWrite - uHeaderLen),
- 		pTX_Buffer->fifo_head.wFIFOCtl);
- 
--- 
-1.9.0
 
