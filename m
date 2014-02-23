@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35534 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbaB0R6J (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:44310 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbaBWT5j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:58:09 -0500
-Message-ID: <1393523885.4648.12.camel@jlt4.sipsolutions.net> (sfid-20140227_185813_646736_1C81C834)
-Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Nelson <tim.l.nelson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Feb 2014 18:58:05 +0100
-In-Reply-To: <1393523695.4648.11.camel@jlt4.sipsolutions.net> (sfid-20140227_185501_959792_F40EE445)
-References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
-	 <1393517094.4648.3.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
-	 <1393517627.4648.4.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
-	 <CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
-	 <1393519119.4648.7.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
-	 <1393519539.4648.10.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6aWWh3y8b-iRsouxFV+d9oKSpL4hkeVyJ6sarGEVzyOdg@mail.gmail.com>
-	 <CAOAOC6bzV8yZfOPRj1zCa0ONQ8VQ=vwBug6jga6LgzEADdk=Ww@mail.gmail.com>
-	 (sfid-20140227_184955_785023_7183652A) <1393523695.4648.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20140227_185501_959792_F40EE445)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 23 Feb 2014 14:57:39 -0500
+Received: by mail-wi0-f171.google.com with SMTP id cc10so2368727wib.4
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:38 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/17] iwlwifi: mvm: fix a few wd_disable comments
+Date: Sun, 23 Feb 2014 21:57:08 +0200
+Message-Id: <1393185428-8524-17-git-send-email-egrumbach@gmail.com> (sfid-20140223_211709_446827_CF8154A1)
+In-Reply-To: <530A51A4.6000007@gmail.com>
+References: <530A51A4.6000007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 18:54 +0100, Johannes Berg wrote:
-> On Thu, 2014-02-27 at 12:49 -0500, Tim Nelson wrote:
-> > Feb 27 12:44:41 nix-tn kernel: [ 1733.272390] wlan0: AP VHT
-> > information is invalid, disable VHT
-> 
-> That's a clue :)
+From: Eliad Peller <eliad@wizery.com>
 
-iw event -t -f would help
+Few minor comments.
 
-easier for me would be
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-iw wlan0 interface add moni0 type monitor flags none
-ip link set moni0 up
-tcpdump -i moni0 -s 0 -w /tmp/assoc.pcap
-
-and then compress/send me that file after such a failed 11ac
-association. If you want send it privately.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index d49e9b9..847a0ed 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1351,8 +1351,7 @@ MODULE_PARM_DESC(antenna_coupling,
+ 
+ module_param_named(wd_disable, iwlwifi_mod_params.wd_disable, int, S_IRUGO);
+ MODULE_PARM_DESC(wd_disable,
+-		"Disable stuck queue watchdog timer 0=system default, "
+-		"1=disable, 2=enable (default: 0)");
++		"Disable stuck queue watchdog timer 0=system default, 1=disable (default: 1)");
+ 
+ module_param_named(nvm_file, iwlwifi_mod_params.nvm_file, charp, S_IRUGO);
+ MODULE_PARM_DESC(nvm_file, "NVM file name");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index 0a84ade..1d100f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -93,7 +93,7 @@ enum iwl_power_level {
+  *	use IWL_DISABLE_HT_* constants
+  * @amsdu_size_8K: enable 8K amsdu size, default = 0
+  * @restart_fw: restart firmware, default = 1
+- * @wd_disable: enable stuck queue check, default = 0
++ * @wd_disable: disable stuck queue check, default = 1
+  * @bt_coex_active: enable bt coex, default = true
+  * @led_mode: system default, default = 0
+  * @power_save: disable power save, default = false
+-- 
+1.7.9.5
 
