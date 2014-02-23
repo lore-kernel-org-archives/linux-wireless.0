@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:47400 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195AbaBJMFp (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:36937 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbaBWT5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 07:05:45 -0500
-MIME-Version: 1.0
-In-Reply-To: <52F7DF21.70207@nod.at>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Mon, 10 Feb 2014 16:05:24 +0400
-Message-ID: <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com> (sfid-20140210_130556_434274_A02FC135)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Richard Weinberger <richard@nod.at>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Jonathan Bither <jonbither@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:ATHEROS ATH5K WIR..." <linux-wireless@vger.kernel.org>,
-	"open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-	open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 23 Feb 2014 14:57:36 -0500
+Received: by mail-wg0-f45.google.com with SMTP id l18so3960962wgh.0
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 11:57:35 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Inbal Hacohen <Inbal.Hacohen@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/17] iwlwifi: mvm: remove redundant define in fw.c
+Date: Sun, 23 Feb 2014 21:57:06 +0200
+Message-Id: <1393185428-8524-15-git-send-email-egrumbach@gmail.com> (sfid-20140223_211709_711351_9F179616)
+In-Reply-To: <530A51A4.6000007@gmail.com>
+References: <530A51A4.6000007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-02-10 0:03 GMT+04:00 Richard Weinberger <richard@nod.at>:
-> Am 09.02.2014 20:18, schrieb Hauke Mehrtens:
->> On 02/09/2014 07:47 PM, Richard Weinberger wrote:
->>> The symbol is an orphan, get rid of it.
->>>
->>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>> ---
->>>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
->>>  drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
->>>  drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
->>>  drivers/net/wireless/ath/ath5k/led.c   |  7 -------
->>>  4 files changed, 5 insertions(+), 54 deletions(-)
->>>
->>
->> This code is used in OpenWrt with an out of tree arch code for the
->> Atheros 231x/531x SoC. [0] I do not think anyone is working on adding
->> this code to mainline Linux kernel, because of lack of time/interest.
->
-> Sorry, we don't maintain out of tree code.
->
+From: Inbal Hacohen <Inbal.Hacohen@intel.com>
 
-Oleksij, Jonathan do you still working to make ar231x devices work
-with upstream, since your posts [1, 2]? Or may be someone from OpenWRT
-team would like to add upstream support?
+This define is a leftover from dvm (in mvm, it
+was replaced by MVM_UCODE_ALIVE_TIMEOUT).
 
-1. https://lkml.org/lkml/2013/5/13/321
-2. https://lkml.org/lkml/2013/5/13/358
+Signed-off-by: Inbal Hacohen <Inbal.Hacohen@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw.c |    2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 93e1b4d..7ce2006 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -369,8 +369,6 @@ out:
+ 	return ret;
+ }
+ 
+-#define UCODE_CALIB_TIMEOUT	(2*HZ)
+-
+ int iwl_mvm_up(struct iwl_mvm *mvm)
+ {
+ 	int ret, i;
 -- 
-BR,
-Sergey
+1.7.9.5
+
