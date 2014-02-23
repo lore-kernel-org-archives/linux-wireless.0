@@ -1,72 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:54997 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbaBNGsA convert rfc822-to-8bit (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:46590 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751144AbaBWOIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Feb 2014 01:48:00 -0500
-Received: by mail-bk0-f45.google.com with SMTP id mz13so107103bkb.18
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 22:47:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1392318594-32540-1-git-send-email-greearb@candelatech.com>
-References: <1392318594-32540-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 14 Feb 2014 07:47:58 +0100
-Message-ID: <CA+BoTQmDCrmkB3FErCN-XDX6M_Vzk3BuAK3AXcNK00qePje7XA@mail.gmail.com> (sfid-20140214_074806_346791_46DDFE8D)
-Subject: Re: [RFC] wmi: Handle failure to start scan.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 23 Feb 2014 09:08:54 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v1 4/6] mac80211: move flag IEEE80211_TX_CTL_MORE_FRAMES into info->control.flags
+Date: Sun, 23 Feb 2014 15:08:45 +0100
+Message-Id: <1393164527-13800-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140223_150928_258872_A410A27C)
+In-Reply-To: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 February 2014 20:09,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Properly clean up driver state in case firmware fails
-> to start scan for some reason.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 20 +++++++++++++++++++-
->  1 file changed, 19 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 20f7c79..a5be0d3 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -770,7 +770,25 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
->                 ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_PREEMPTED\n");
->                 break;
->         case WMI_SCAN_EVENT_START_FAILED:
-> -               ath10k_dbg(ATH10K_DBG_WMI, "WMI_SCAN_EVENT_START_FAILED\n");
-> +               ath10k_warn("WMI_SCAN_EVENT_START_FAILED, reason: %i\n", reason);
-> +
-> +               ar->scan_channel = NULL;
-> +               if (!ar->scan.in_progress) {
-> +                       ath10k_warn("scan-start-failed: no scan requested, ignoring\n");
-> +                       break;
-> +               }
-> +
-> +               if (ar->scan.is_roc) {
-> +                       ath10k_offchan_tx_purge(ar);
-> +
-> +                       if (!ar->scan.aborting)
-> +                               ieee80211_remain_on_channel_expired(ar->hw);
-> +               } else {
-> +                       ieee80211_scan_completed(ar->hw, ar->scan.aborting);
-> +               }
-> +
-> +               del_timer(&ar->scan.timeout);
-> +               ar->scan.in_progress = false;
->                 break;
->         default:
->                 break;
+Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
+ieee80211_tx_info->control is valid. Therefore this patch moves this flag
+from info->flags structure into the info->control.flags and renames it to
+IEEE80211_TX_CTRL_MORE_FRAMES.
 
-We already wait for EVENT_STARTED in mac.c (see ath10k_start_scan) and
-clean up stuff (ath10k_abort_scan). Why not add the missing bits in
-there? Or is it possible to get EVENT_START_FAILED *after*
-EVENT_STARTED? Or am I missing something else here?
+Signed-off-by: Alexander Couzens <lynxis@fe80.eu>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
+ include/net/mac80211.h                    |   41 +++++++++++++++--------------
+ net/mac80211/tx.c                         |    2 +-
+ 3 files changed, 23 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index bed86cc..076d44a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -473,7 +473,7 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Check if more frames (!= fragments) are pending
+ 	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)
++	if (tx_info->control.flags & IEEE80211_TX_CTRL_MORE_FRAMES)
+ 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
+ 
+ 	/*
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 352e2629..696aa5a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -413,10 +413,6 @@ struct ieee80211_bss_conf {
+  *	used to indicate that a frame was already retried due to PS
+  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
+  *	used to indicate frame should not be encrypted
+- * @IEEE80211_TX_CTL_MORE_FRAMES: More frames will be passed to the
+- *	transmit function after the current frame, this can be used
+- *	by drivers to kick the DMA queue only if unset or when the
+- *	queue gets full.
+  * @IEEE80211_TX_INTFL_RETRANSMISSION: This frame is being retransmitted
+  *	after TX status because the destination was asleep, it must not
+  *	be modified again (no seqno assignment, crypto, etc.)
+@@ -472,22 +468,21 @@ enum mac80211_tx_info_flags {
+ 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(12),
+ 	IEEE80211_TX_INTFL_RETRIED		= BIT(13),
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(14),
+-	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(15),
+-	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(16),
+-	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(17),
+-	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(18),
+-	IEEE80211_TX_CTL_LDPC			= BIT(19),
+-	IEEE80211_TX_CTL_STBC			= BIT(20) | BIT(21),
+-	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(22),
+-	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(23),
+-	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(24),
+-	IEEE80211_TX_STATUS_EOSP		= BIT(25),
+-	IEEE80211_TX_CTL_USE_MINRATE		= BIT(26),
+-	IEEE80211_TX_CTL_DONTFRAG		= BIT(27),
+-	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(28),
++	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(15),
++	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(16),
++	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(17),
++	IEEE80211_TX_CTL_LDPC			= BIT(18),
++	IEEE80211_TX_CTL_STBC			= BIT(19) | BIT(20),
++	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(21),
++	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(22),
++	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(23),
++	IEEE80211_TX_STATUS_EOSP		= BIT(24),
++	IEEE80211_TX_CTL_USE_MINRATE		= BIT(25),
++	IEEE80211_TX_CTL_DONTFRAG		= BIT(26),
++	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(27),
+ };
+ 
+-#define IEEE80211_TX_CTL_STBC_SHIFT		20
++#define IEEE80211_TX_CTL_STBC_SHIFT		19
+ 
+ /**
+  * enum mac80211_tx_control_flags - flags to describe transmit control
+@@ -507,6 +502,11 @@ enum mac80211_tx_info_flags {
+  *	802.11-2007 7.1.3.4.1 paragraph 3. This flag will always be set for
+  *	beacons and always be clear for frames without a sequence number field.
+  *
++ * @IEEE80211_TX_CTRL_MORE_FRAMES: More frames will be passed to the
++ *	transmit function after the current frame, this can be used
++ *	by drivers to kick the DMA queue only if unset or when the
++ *	queue gets full.
++ *
+  * These flags are used in tx_info->control.flags.
+  */
+ enum mac80211_tx_control_flags {
+@@ -514,6 +514,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_ASSIGN_SEQ		= BIT(1),
+ 	IEEE80211_TX_CTRL_FIRST_FRAGMENT        = BIT(3),
+ 	IEEE80211_TX_CTRL_NO_PS_BUFFER          = BIT(4),
++	IEEE80211_TX_CTRL_MORE_FRAMES           = BIT(5),
+ };
+ 
+ /*
+@@ -526,7 +527,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
+ 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_STBC |	      \
+-	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC)
++	IEEE80211_TX_CTL_LDPC)
+ 
+ /*
+  * This definition is used to clear all temporary flags, which are only used
+@@ -534,7 +535,7 @@ enum mac80211_tx_control_flags {
+  * info->control.flags is used.
+  */
+ #define IEEE80211_TX_TEMPORARY_CTRL_FLAGS (IEEE80211_TX_CTRL_FIRST_FRAGMENT |  \
+-	IEEE80211_TX_CTRL_NO_PS_BUFFER)
++	IEEE80211_TX_CTRL_NO_PS_BUFFER | IEEE80211_TX_CTRL_MORE_FRAMES)
+ 
+ /**
+  * enum mac80211_rate_control_flags - per-rate flags set by the
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4d4c48e..6cb6ba3 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -861,7 +861,7 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
+ 		info->control.flags &= ~(IEEE80211_TX_CTRL_FIRST_FRAGMENT);
+ 
+ 		if (rem)
+-			info->flags |= IEEE80211_TX_CTL_MORE_FRAMES;
++			info->control.flags |= IEEE80211_TX_CTRL_MORE_FRAMES;
+ 
+ 		skb_copy_queue_mapping(tmp, skb);
+ 		tmp->priority = skb->priority;
+-- 
+1.7.9.5
 
-Michał
