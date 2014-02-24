@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:41328 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbaBZMS3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722AbaBXMZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 07:18:29 -0500
-Message-ID: <530DDB91.3070807@broadcom.com> (sfid-20140226_131837_827088_E7E1C2D3)
-Date: Wed, 26 Feb 2014 13:18:25 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
- device
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>					 <1393356639-19169-2-git-send-email-arend@broadcom.com>					 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>				 <530DAECD.8010405@broadcom.com>			 <1393406278.4133.4.camel@jlt4.sipsolutions.net>			 <530DB3BA.20106@broadcom.com>		 <1393407473.4133.5.camel@jlt4.sipsolutions.net>		 <530DC56E.9040202@broadcom.com>	 <1393413044.4133.6.camel@jlt4.sipsolutions.net>	 <530DD131.50205@broadcom.com> <1393415288.4133.7.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1393415288.4133.7.camel@jlt4.sipsolutions.net>
+	Mon, 24 Feb 2014 07:25:45 -0500
+Message-ID: <1393244741.4190.10.camel@jlt4.sipsolutions.net> (sfid-20140224_132548_202348_CF67EA2A)
+Subject: Re: [PATCH v1 2/6] mac80211: move flag
+ IEEE80211_TX_CTL_FIRST_FRAGMENT into info->control.flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@nbd.name
+Date: Mon, 24 Feb 2014 13:25:41 +0100
+In-Reply-To: <1393164527-13800-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393164527-13800-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2014 12:48 PM, Johannes Berg wrote:
-> On Wed, 2014-02-26 at 12:34 +0100, Arend van Spriel wrote:
-> 
->>> I'm not sure this isn't still possible? I don't know when DELLINK is
->>> sent.
->>
->> Given the behaviour I would say before the netdev notifier, which may be
->> considered wrong. It depends whether the notifier was intended for the
->> kind of thing that cfg80211 is doing, ie. send a netlink event to
->> user-space?
-> 
-> Well, I checked:
-> 
->                 call_netdevice_notifiers(NETDEV_UNREGISTER, dev);
-> 
->                 if (!dev->rtnl_link_ops ||
->                     dev->rtnl_link_state == RTNL_LINK_INITIALIZED)
->                         rtmsg_ifinfo(RTM_DELLINK, dev, ~0U, GFP_KERNEL);
-> 
-> so ... :)
+On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
+> Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
+> ieee80211_tx_info->control is valid. Therefore this patch moves this flag
+> from info->flags structure into the info->control.flags and renames it to
+> IEEE80211_TX_CTRL_FIRST_FRAGMENT. Define new IEEE80211_TX_TEMPORARY_CTRL_FLAGS
+> to clear all temporary flags that are shifted to info->control.flags.
 
-Feeling sad :-( but thanks for checking. Clearly need to look into this
-some more. John, can you please drop this one.
+Similar to before... this can't be right, you have to assume
+info->control.flags is cleared when you get status data, which is in
+fact a problem in the first patch already, but here the clearing of
+"temporary" flags is quite wrong.
 
-Gr. AvS
+At least temporary flags don't suffer from the 'getting lost' problem as
+in the first patch.
+
+I'll also note that this flag is treated wrongly in software retry
+scenarios anyway, but it won't really matter I guess.
+
+johannes
+
