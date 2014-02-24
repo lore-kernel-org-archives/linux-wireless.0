@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:42671 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494AbaB0PsO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58794 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbaBXUPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 10:48:14 -0500
-Received: by mail-ee0-f43.google.com with SMTP id e53so1331733eek.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 07:48:12 -0800 (PST)
+	Mon, 24 Feb 2014 15:15:31 -0500
+Date: Mon, 24 Feb 2014 15:03:06 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com,
+	ath10k@lists.infradead.org
+Subject: Re: Pull request: ath 20140217
+Message-ID: <20140224200305.GF24810@tuxdriver.com> (sfid-20140224_211539_152386_81DE66D1)
+References: <87txbx3etu.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
-References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
-From: Tom Gundersen <teg@jklm.no>
-Date: Thu, 27 Feb 2014 16:47:51 +0100
-Message-ID: <CAG-2HqWahCVvDLPwoMo7O4kam+W0o7BQGm4cRBvc9=X_p0fF7Q@mail.gmail.com> (sfid-20140227_164832_770527_5DF5B7F2)
-Subject: Re: [PATCH 0/4] Provide netdev naming-policy via sysfs
-To: David Herrmann <dh.herrmann@gmail.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	Johannes berg <johannes@sipsolutions.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87txbx3etu.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 3:47 PM, David Herrmann <dh.herrmann@gmail.com> wrote:
-> This series implements a new sysfs attribute for netdevs called
-> "name_assign_type". It provides an integer that describes where an interface
-> name comes from. See Patch #1 for a description of this attribute. It is
-> modelled after the existing "addr_assign_type" attribute.
->
-> The main use-case is to allow udev to skip applying reliable ifnames to virtual
-> devices. For instance, if wifi-P2P devices are created, wpas already provides a
-> suitable naming-policy and udev shouldn't touch these devices. Same is true for
-> other virtual devices.
-> The idea is that if a device-name was provided by user-space, we should always
-> prefer fixing this naming-policy instead of making udev rename the device. For
-> kernel provided names that's hardly possible, though. Providing the
-> naming-policy source via sysfs is thus a simple way to see whether renames are
-> needed.
->
-> Additionally, this field allows to detect whether a netdev has been manually
-> renamed, which is quite useful for debugging and during crash-recovery.
+On Mon, Feb 17, 2014 at 06:05:01PM +0200, Kalle Valo wrote:
+> Hi John,
+> 
+> here's a new pull request for ath6kl and ath10k. 
+> 
+> For ath10k Alexander did some cleanup to PCI error cases and switched
+> ath10k to use pci_enable_msi_range(). Michal implemented AP CSA support
+> and sta_rc_update() operation. I enabled firmware "STA quick kickout"
+> functionality for faster detection of disappeared clients.
+> 
+> Also there are lots of small fixes to everywhere from various people.
+> 
+> For ath6kl Julien did two small USB related fixes.
+> 
+> Please let me know if there are any problmes
+> 
+> The following changes since commit 38dbfb59d1175ef458d006556061adeaa8751b72:
+> 
+>   Linus 3.14-rc1 (2014-02-02 16:42:13 -0800)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git for-linville
+> 
+> for you to fetch changes up to 9797febc4cc112869b19a110f70e0dedb1bb63d6:
+> 
+>   ath10k: implement sta_rc_update() (2014-02-15 08:49:02 +0200)
 
-Moreover, it would be useful for udev to reliably know if some other
-userspace process already renamed a device, so we know not to touch
-it. This can easily happen for instance if some renaming happens in
-the initrd or from script called from udev rules.
+Pulling now...
 
-Acked-by: Tom Gundersen <teg@jklm.no>
-
-> David Herrmann (4):
->   net: add name_assign_type netdev attribute
->   mac80211: set NET_NAME_USER for user-space created ifs
->   ath6kl: set NET_NAME_USER for P2P ifs
->   brcmfmac: set NET_NAME_USER for P2P ifs
->
->  drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
->  drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
->  drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
->  drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
->  include/linux/netdevice.h                     | 6 ++++++
->  net/core/dev.c                                | 7 +++++++
->  net/core/net-sysfs.c                          | 2 ++
->  net/core/rtnetlink.c                          | 2 ++
->  net/mac80211/iface.c                          | 1 +
->  9 files changed, 26 insertions(+), 3 deletions(-)
->
-> --
-> 1.9.0
->
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
