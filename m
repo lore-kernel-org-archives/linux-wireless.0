@@ -1,776 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:62255 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530AbaBJLrv (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:51988 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbaBXUyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 06:47:51 -0500
-Received: by mail-we0-f176.google.com with SMTP id q58so4054170wes.7
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2014 03:47:49 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/18] wlcore/wl12xx/wl18xx: simplify fw_status handling
-Date: Mon, 10 Feb 2014 13:47:21 +0200
-Message-Id: <1392032854-28126-6-git-send-email-eliad@wizery.com> (sfid-20140210_124756_478581_F78EB681)
-In-Reply-To: <1392032854-28126-1-git-send-email-eliad@wizery.com>
-References: <1392032854-28126-1-git-send-email-eliad@wizery.com>
+	Mon, 24 Feb 2014 15:54:37 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v4 1/4] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Date: Mon, 24 Feb 2014 22:54:27 +0200
+Message-Id: <1393275270-7255-2-git-send-email-luca@coelho.fi> (sfid-20140224_215448_196667_E0558B06)
+In-Reply-To: <1393275270-7255-1-git-send-email-luca@coelho.fi>
+References: <1393275270-7255-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of splitting the fw_status into 2 and using some
-complex calculations, read the fw status and let each low-level
-driver (wl12xx/wl18xx) convert it into a common struct.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This is required for the upcoming fw api changes, which
-break the current logic anyway.
+Separate the code that counts the interface types and channels from
+the code that check the interface combinations.  The new function that
+checks for combinations is exported so it can be called by the
+drivers.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+This is done in preparation for moving the interface combinations
+checks out of cfg80211.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ti/wl12xx/main.c     | 35 ++++++++++-
- drivers/net/wireless/ti/wl12xx/wl12xx.h   | 50 ++++++++++++++++
- drivers/net/wireless/ti/wl18xx/main.c     | 39 ++++++++++++-
- drivers/net/wireless/ti/wl18xx/tx.c       |  4 +-
- drivers/net/wireless/ti/wl18xx/wl18xx.h   | 53 +++++++++++++++++
- drivers/net/wireless/ti/wlcore/cmd.c      | 11 +++-
- drivers/net/wireless/ti/wlcore/hw_ops.h   |  9 +++
- drivers/net/wireless/ti/wlcore/main.c     | 96 +++++++++++++++----------------
- drivers/net/wireless/ti/wlcore/rx.c       |  2 +-
- drivers/net/wireless/ti/wlcore/rx.h       |  2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |  7 ++-
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 72 ++++++++++-------------
- 12 files changed, 277 insertions(+), 103 deletions(-)
+In v4:
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index be7129b..3ad8767 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1378,7 +1378,7 @@ static u32 wl12xx_get_rx_packet_len(struct wl1271 *wl, void *rx_data,
+   * rebased on top of slightly modified applied patches
+   * removed the parenthesis from the comment (not needed for docbook)
+   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
+---
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  29 ++++++++++
+ net/wireless/util.c              | 121 ++++++++++++++++++++++-----------------
+ 3 files changed, 97 insertions(+), 54 deletions(-)
+
+diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
+index 044b764..d9b9416 100644
+--- a/Documentation/DocBook/80211.tmpl
++++ b/Documentation/DocBook/80211.tmpl
+@@ -100,6 +100,7 @@
+ !Finclude/net/cfg80211.h wdev_priv
+ !Finclude/net/cfg80211.h ieee80211_iface_limit
+ !Finclude/net/cfg80211.h ieee80211_iface_combination
++!Finclude/net/cfg80211.h cfg80211_check_combinations
+       </chapter>
+       <chapter>
+       <title>Actions and configuration</title>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8c9ba44..5f5a598 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4677,6 +4677,35 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
  
- static int wl12xx_tx_delayed_compl(struct wl1271 *wl)
- {
--	if (wl->fw_status_1->tx_results_counter ==
-+	if (wl->fw_status->tx_results_counter ==
- 	    (wl->tx_results_count & 0xff))
++/**
++ * cfg80211_check_combinations - check interface combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @num_interfaces: the number of different interfaces we want to use
++ *	for verification
++ * @used_iftypes: a bitmap where each bit corresponds to an interface
++ *	type, as in the definition of &struct
++ *	ieee80211_iface_limit.@types.
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ *
++ * This function can be called by the driver to check whether a
++ * combination of interfaces and their types are allowed according to
++ * the interface combinations.
++ */
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const int num_interfaces,
++				const u32 used_iftypes,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES]);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 57b3ce7..d562dd6 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1253,6 +1253,69 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const int num_interfaces,
++				const u32 used_iftypes,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int i, j, iftype;
++
++	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
++
++		c = &wiphy->iface_combinations[i];
++
++		if (num_interfaces > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
++		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
++				 GFP_KERNEL);
++		if (!limits)
++			return -ENOMEM;
++
++		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++			if (wiphy->software_iftypes & BIT(iftype))
++				continue;
++			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
++				if (!(limits[j].types & BIT(iftype)))
++					continue;
++				if (limits[j].max < iftype_num[iftype])
++					goto cont;
++				limits[j].max -= iftype_num[iftype];
++			}
++		}
++
++		if (radar_detect && !(c->radar_detect_widths & radar_detect))
++			goto cont;
++
++		/* Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/* This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
++		kfree(limits);
++		return 0;
++ cont:
++		kfree(limits);
++	}
++
++	return -EBUSY;
++}
++EXPORT_SYMBOL(cfg80211_check_combinations);
++
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+ 				 enum nl80211_iftype iftype,
+@@ -1269,7 +1332,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	int i, j;
++	int i;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1360,59 +1423,9 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	if (total == 1 && !radar_detect)
  		return 0;
  
-@@ -1438,6 +1438,37 @@ out:
- 	return ret;
- }
- 
-+static void wl12xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
-+				     struct wl_fw_status *fw_status)
-+{
-+	struct wl12xx_fw_status *int_fw_status = raw_fw_status;
-+
-+	fw_status->intr = le32_to_cpu(int_fw_status->intr);
-+	fw_status->fw_rx_counter = int_fw_status->fw_rx_counter;
-+	fw_status->drv_rx_counter = int_fw_status->drv_rx_counter;
-+	fw_status->tx_results_counter = int_fw_status->tx_results_counter;
-+	fw_status->rx_pkt_descs = int_fw_status->rx_pkt_descs;
-+
-+	fw_status->fw_localtime = le32_to_cpu(int_fw_status->fw_localtime);
-+	fw_status->link_ps_bitmap = le32_to_cpu(int_fw_status->link_ps_bitmap);
-+	fw_status->link_fast_bitmap =
-+			le32_to_cpu(int_fw_status->link_fast_bitmap);
-+	fw_status->total_released_blks =
-+			le32_to_cpu(int_fw_status->total_released_blks);
-+	fw_status->tx_total = le32_to_cpu(int_fw_status->tx_total);
-+
-+	fw_status->counters.tx_released_pkts =
-+			int_fw_status->counters.tx_released_pkts;
-+	fw_status->counters.tx_lnk_free_pkts =
-+			int_fw_status->counters.tx_lnk_free_pkts;
-+	fw_status->counters.tx_voice_released_blks =
-+			int_fw_status->counters.tx_voice_released_blks;
-+	fw_status->counters.tx_last_rate =
-+			int_fw_status->counters.tx_last_rate;
-+
-+	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
-+}
-+
- static u32 wl12xx_sta_get_ap_rate_mask(struct wl1271 *wl,
- 				       struct wl12xx_vif *wlvif)
- {
-@@ -1677,6 +1708,7 @@ static struct wlcore_ops wl12xx_ops = {
- 	.tx_delayed_compl	= wl12xx_tx_delayed_compl,
- 	.hw_init		= wl12xx_hw_init,
- 	.init_vif		= NULL,
-+	.convert_fw_status	= wl12xx_convert_fw_status,
- 	.sta_get_ap_rate_mask	= wl12xx_sta_get_ap_rate_mask,
- 	.get_pg_ver		= wl12xx_get_pg_ver,
- 	.get_mac		= wl12xx_get_mac,
-@@ -1725,6 +1757,7 @@ static int wl12xx_setup(struct wl1271 *wl)
- 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
- 	wl->hw_tx_rate_tbl_size = WL12XX_CONF_HW_RXTX_RATE_MAX;
- 	wl->hw_min_ht_rate = WL12XX_CONF_HW_RXTX_RATE_MCS0;
-+	wl->fw_status_len = sizeof(struct wl12xx_fw_status);
- 	wl->fw_status_priv_len = 0;
- 	wl->stats.fw_stats_len = sizeof(struct wl12xx_acx_statistics);
- 	wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ, &wl12xx_ht_cap);
-diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-index 9e5484a..b9950f8 100644
---- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-@@ -79,4 +79,54 @@ struct wl12xx_priv {
- 	struct wl127x_rx_mem_pool_addr *rx_mem_addr;
- };
- 
-+struct wl12xx_fw_packet_counters {
-+	/* Cumulative counter of released packets per AC */
-+	u8 tx_released_pkts[NUM_TX_QUEUES];
-+
-+	/* Cumulative counter of freed packets per HLID */
-+	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
-+
-+	/* Cumulative counter of released Voice memory blocks */
-+	u8 tx_voice_released_blks;
-+
-+	/* Tx rate of the last transmitted packet */
-+	u8 tx_last_rate;
-+
-+	u8 padding[2];
-+} __packed;
-+
-+/* FW status registers */
-+struct wl12xx_fw_status {
-+	__le32 intr;
-+	u8  fw_rx_counter;
-+	u8  drv_rx_counter;
-+	u8  reserved;
-+	u8  tx_results_counter;
-+	__le32 rx_pkt_descs[WL12XX_NUM_RX_DESCRIPTORS];
-+
-+	__le32 fw_localtime;
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID)
-+	 * to indicate if the station is in PS mode.
-+	 */
-+	__le32 link_ps_bitmap;
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID) to indicate
-+	 * if the station is in Fast mode
-+	 */
-+	__le32 link_fast_bitmap;
-+
-+	/* Cumulative counter of total released mem blocks since FW-reset */
-+	__le32 total_released_blks;
-+
-+	/* Size (in Memory Blocks) of TX pool */
-+	__le32 tx_total;
-+
-+	struct wl12xx_fw_packet_counters counters;
-+
-+	__le32 log_start_addr;
-+} __packed;
-+
- #endif /* __WL12XX_PRIV_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index ec37b16..cbf9bf3 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1133,6 +1133,39 @@ static int wl18xx_hw_init(struct wl1271 *wl)
- 	return ret;
- }
- 
-+static void wl18xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
-+				     struct wl_fw_status *fw_status)
-+{
-+	struct wl18xx_fw_status *int_fw_status = raw_fw_status;
-+
-+	fw_status->intr = le32_to_cpu(int_fw_status->intr);
-+	fw_status->fw_rx_counter = int_fw_status->fw_rx_counter;
-+	fw_status->drv_rx_counter = int_fw_status->drv_rx_counter;
-+	fw_status->tx_results_counter = int_fw_status->tx_results_counter;
-+	fw_status->rx_pkt_descs = int_fw_status->rx_pkt_descs;
-+
-+	fw_status->fw_localtime = le32_to_cpu(int_fw_status->fw_localtime);
-+	fw_status->link_ps_bitmap = le32_to_cpu(int_fw_status->link_ps_bitmap);
-+	fw_status->link_fast_bitmap =
-+			le32_to_cpu(int_fw_status->link_fast_bitmap);
-+	fw_status->total_released_blks =
-+			le32_to_cpu(int_fw_status->total_released_blks);
-+	fw_status->tx_total = le32_to_cpu(int_fw_status->tx_total);
-+
-+	fw_status->counters.tx_released_pkts =
-+			int_fw_status->counters.tx_released_pkts;
-+	fw_status->counters.tx_lnk_free_pkts =
-+			int_fw_status->counters.tx_lnk_free_pkts;
-+	fw_status->counters.tx_voice_released_blks =
-+			int_fw_status->counters.tx_voice_released_blks;
-+	fw_status->counters.tx_last_rate =
-+			int_fw_status->counters.tx_last_rate;
-+
-+	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
-+
-+	fw_status->priv = &int_fw_status->priv;
-+}
-+
- static void wl18xx_set_tx_desc_csum(struct wl1271 *wl,
- 				    struct wl1271_tx_hw_descr *desc,
- 				    struct sk_buff *skb)
-@@ -1572,7 +1605,7 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
- {
- 	u8 thold;
- 	struct wl18xx_fw_status_priv *status_priv =
--		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
-+		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
- 	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
- 
- 	/* suspended links are never high priority */
-@@ -1594,7 +1627,7 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
- {
- 	u8 thold;
- 	struct wl18xx_fw_status_priv *status_priv =
--		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
-+		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
- 	u32 suspend_bitmap = le32_to_cpu(status_priv->link_suspend_bitmap);
- 
- 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
-@@ -1632,6 +1665,7 @@ static struct wlcore_ops wl18xx_ops = {
- 	.tx_immediate_compl = wl18xx_tx_immediate_completion,
- 	.tx_delayed_compl = NULL,
- 	.hw_init	= wl18xx_hw_init,
-+	.convert_fw_status = wl18xx_convert_fw_status,
- 	.set_tx_desc_csum = wl18xx_set_tx_desc_csum,
- 	.get_pg_ver	= wl18xx_get_pg_ver,
- 	.set_rx_csum = wl18xx_set_rx_csum,
-@@ -1726,6 +1760,7 @@ static int wl18xx_setup(struct wl1271 *wl)
- 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
- 	wl->hw_tx_rate_tbl_size = WL18XX_CONF_HW_RXTX_RATE_MAX;
- 	wl->hw_min_ht_rate = WL18XX_CONF_HW_RXTX_RATE_MCS0;
-+	wl->fw_status_len = sizeof(struct wl18xx_fw_status);
- 	wl->fw_status_priv_len = sizeof(struct wl18xx_fw_status_priv);
- 	wl->stats.fw_stats_len = sizeof(struct wl18xx_acx_statistics);
- 	wl->static_data_priv_len = sizeof(struct wl18xx_static_data_priv);
-diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
-index 57c6943..be1ebd5 100644
---- a/drivers/net/wireless/ti/wl18xx/tx.c
-+++ b/drivers/net/wireless/ti/wl18xx/tx.c
-@@ -32,7 +32,7 @@ static
- void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
- 			     struct ieee80211_tx_rate *rate)
- {
--	u8 fw_rate = wl->fw_status_2->counters.tx_last_rate;
-+	u8 fw_rate = wl->fw_status->counters.tx_last_rate;
- 
- 	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
- 		wl1271_error("last Tx rate invalid: %d", fw_rate);
-@@ -139,7 +139,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- void wl18xx_tx_immediate_complete(struct wl1271 *wl)
- {
- 	struct wl18xx_fw_status_priv *status_priv =
--		(struct wl18xx_fw_status_priv *)wl->fw_status_2->priv;
-+		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
- 	struct wl18xx_priv *priv = wl->priv;
- 	u8 i;
- 
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 9204e07..d32a6af 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -109,6 +109,59 @@ struct wl18xx_fw_status_priv {
- 	u8 padding[3];
- };
- 
-+struct wl18xx_fw_packet_counters {
-+	/* Cumulative counter of released packets per AC */
-+	u8 tx_released_pkts[NUM_TX_QUEUES];
-+
-+	/* Cumulative counter of freed packets per HLID */
-+	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
-+
-+	/* Cumulative counter of released Voice memory blocks */
-+	u8 tx_voice_released_blks;
-+
-+	/* Tx rate of the last transmitted packet */
-+	u8 tx_last_rate;
-+
-+	u8 padding[2];
-+} __packed;
-+
-+/* FW status registers */
-+struct wl18xx_fw_status {
-+	__le32 intr;
-+	u8  fw_rx_counter;
-+	u8  drv_rx_counter;
-+	u8  reserved;
-+	u8  tx_results_counter;
-+	__le32 rx_pkt_descs[WL18XX_NUM_RX_DESCRIPTORS];
-+
-+	__le32 fw_localtime;
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID)
-+	 * to indicate if the station is in PS mode.
-+	 */
-+	__le32 link_ps_bitmap;
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID) to indicate
-+	 * if the station is in Fast mode
-+	 */
-+	__le32 link_fast_bitmap;
-+
-+	/* Cumulative counter of total released mem blocks since FW-reset */
-+	__le32 total_released_blks;
-+
-+	/* Size (in Memory Blocks) of TX pool */
-+	__le32 tx_total;
-+
-+	struct wl18xx_fw_packet_counters counters;
-+
-+	__le32 log_start_addr;
-+
-+	/* Private status to be used by the lower drivers */
-+	struct wl18xx_fw_status_priv priv;
-+} __packed;
-+
- #define WL18XX_PHY_VERSION_MAX_LEN 20
- 
- struct wl18xx_static_data_priv {
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 9b2ecf5..4d19fd2 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -324,9 +324,14 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	__set_bit(link, wlvif->links_map);
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
--	/* take the last "freed packets" value from the current FW status */
--	wl->links[link].prev_freed_pkts =
--			wl->fw_status_2->counters.tx_lnk_free_pkts[link];
-+	/*
-+	 * take the last "freed packets" value from the current FW status.
-+	 * on recovery, we might not have fw_status yet, and
-+	 * tx_lnk_free_pkts will be NULL. check for it.
-+	 */
-+	if (wl->fw_status->counters.tx_lnk_free_pkts)
-+		wl->links[link].prev_freed_pkts =
-+			wl->fw_status->counters.tx_lnk_free_pkts[link];
- 	wl->links[link].wlvif = wlvif;
- 
- 	/*
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index 51f8d63..1555ff9 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -106,6 +106,15 @@ wlcore_hw_init_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	return 0;
- }
- 
-+static inline void
-+wlcore_hw_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
-+			    struct wl_fw_status *fw_status)
-+{
-+	BUG_ON(!wl->ops->convert_fw_status);
-+
-+	wl->ops->convert_fw_status(wl, raw_fw_status, fw_status);
-+}
-+
- static inline u32
- wlcore_hw_sta_get_ap_rate_mask(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 1e19196..70a3e57 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -357,12 +357,12 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
- 
- static void wl12xx_irq_update_links_status(struct wl1271 *wl,
- 					   struct wl12xx_vif *wlvif,
--					   struct wl_fw_status_2 *status)
-+					   struct wl_fw_status *status)
- {
- 	u32 cur_fw_ps_map;
- 	u8 hlid;
- 
--	cur_fw_ps_map = le32_to_cpu(status->link_ps_bitmap);
-+	cur_fw_ps_map = status->link_ps_bitmap;
- 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
- 		wl1271_debug(DEBUG_PSM,
- 			     "link ps prev 0x%x cur 0x%x changed 0x%x",
-@@ -377,41 +377,38 @@ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
- 					    wl->links[hlid].allocated_pkts);
- }
- 
--static int wlcore_fw_status(struct wl1271 *wl,
--			    struct wl_fw_status_1 *status_1,
--			    struct wl_fw_status_2 *status_2)
-+static int wlcore_fw_status(struct wl1271 *wl, struct wl_fw_status *status)
- {
- 	struct wl12xx_vif *wlvif;
- 	struct timespec ts;
- 	u32 old_tx_blk_count = wl->tx_blocks_available;
- 	int avail, freed_blocks;
- 	int i;
--	size_t status_len;
- 	int ret;
- 	struct wl1271_link *lnk;
- 
--	status_len = WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
--		sizeof(*status_2) + wl->fw_status_priv_len;
+-	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+-		const struct ieee80211_iface_combination *c;
+-		struct ieee80211_iface_limit *limits;
+-		u32 all_iftypes = 0;
 -
--	ret = wlcore_raw_read_data(wl, REG_RAW_FW_STATUS_ADDR, status_1,
--				   status_len, false);
-+	ret = wlcore_raw_read_data(wl, REG_RAW_FW_STATUS_ADDR,
-+				   wl->raw_fw_status,
-+				   wl->fw_status_len, false);
- 	if (ret < 0)
- 		return ret;
- 
-+	wlcore_hw_convert_fw_status(wl, wl->raw_fw_status, wl->fw_status);
-+
- 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
- 		     "drv_rx_counter = %d, tx_results_counter = %d)",
--		     status_1->intr,
--		     status_1->fw_rx_counter,
--		     status_1->drv_rx_counter,
--		     status_1->tx_results_counter);
-+		     status->intr,
-+		     status->fw_rx_counter,
-+		     status->drv_rx_counter,
-+		     status->tx_results_counter);
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		/* prevent wrap-around in freed-packets counter */
- 		wl->tx_allocated_pkts[i] -=
--				(status_2->counters.tx_released_pkts[i] -
-+				(status->counters.tx_released_pkts[i] -
- 				wl->tx_pkts_freed[i]) & 0xff;
- 
--		wl->tx_pkts_freed[i] = status_2->counters.tx_released_pkts[i];
-+		wl->tx_pkts_freed[i] = status->counters.tx_released_pkts[i];
- 	}
- 
- 
-@@ -420,29 +417,28 @@ static int wlcore_fw_status(struct wl1271 *wl,
- 		lnk = &wl->links[i];
- 
- 		/* prevent wrap-around in freed-packets counter */
--		diff = (status_2->counters.tx_lnk_free_pkts[i] -
-+		diff = (status->counters.tx_lnk_free_pkts[i] -
- 		       lnk->prev_freed_pkts) & 0xff;
- 
- 		if (diff == 0)
- 			continue;
- 
- 		lnk->allocated_pkts -= diff;
--		lnk->prev_freed_pkts = status_2->counters.tx_lnk_free_pkts[i];
-+		lnk->prev_freed_pkts = status->counters.tx_lnk_free_pkts[i];
- 
- 		/* accumulate the prev_freed_pkts counter */
- 		lnk->total_freed_pkts += diff;
- 	}
- 
- 	/* prevent wrap-around in total blocks counter */
--	if (likely(wl->tx_blocks_freed <=
--		   le32_to_cpu(status_2->total_released_blks)))
--		freed_blocks = le32_to_cpu(status_2->total_released_blks) -
-+	if (likely(wl->tx_blocks_freed <= status->total_released_blks))
-+		freed_blocks = status->total_released_blks -
- 			       wl->tx_blocks_freed;
- 	else
- 		freed_blocks = 0x100000000LL - wl->tx_blocks_freed +
--			       le32_to_cpu(status_2->total_released_blks);
-+			       status->total_released_blks;
- 
--	wl->tx_blocks_freed = le32_to_cpu(status_2->total_released_blks);
-+	wl->tx_blocks_freed = status->total_released_blks;
- 
- 	wl->tx_allocated_blocks -= freed_blocks;
- 
-@@ -458,7 +454,7 @@ static int wlcore_fw_status(struct wl1271 *wl,
- 			cancel_delayed_work(&wl->tx_watchdog_work);
- 	}
- 
--	avail = le32_to_cpu(status_2->tx_total) - wl->tx_allocated_blocks;
-+	avail = status->tx_total - wl->tx_allocated_blocks;
- 
- 	/*
- 	 * The FW might change the total number of TX memblocks before
-@@ -477,15 +473,15 @@ static int wlcore_fw_status(struct wl1271 *wl,
- 
- 	/* for AP update num of allocated TX blocks per link and ps status */
- 	wl12xx_for_each_wlvif_ap(wl, wlvif) {
--		wl12xx_irq_update_links_status(wl, wlvif, status_2);
-+		wl12xx_irq_update_links_status(wl, wlvif, status);
- 	}
- 
- 	/* update the host-chipset time offset */
- 	getnstimeofday(&ts);
- 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
--		(s64)le32_to_cpu(status_2->fw_localtime);
-+		(s64)(status->fw_localtime);
- 
--	wl->fw_fast_lnk_map = le32_to_cpu(status_2->link_fast_bitmap);
-+	wl->fw_fast_lnk_map = status->link_fast_bitmap;
- 
- 	return 0;
- }
-@@ -549,13 +545,13 @@ static int wlcore_irq_locked(struct wl1271 *wl)
- 		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
- 		smp_mb__after_clear_bit();
- 
--		ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
-+		ret = wlcore_fw_status(wl, wl->fw_status);
- 		if (ret < 0)
- 			goto out;
- 
- 		wlcore_hw_tx_immediate_compl(wl);
- 
--		intr = le32_to_cpu(wl->fw_status_1->intr);
-+		intr = wl->fw_status->intr;
- 		intr &= WLCORE_ALL_INTR_MASK;
- 		if (!intr) {
- 			done = true;
-@@ -584,7 +580,7 @@ static int wlcore_irq_locked(struct wl1271 *wl)
- 		if (likely(intr & WL1271_ACX_INTR_DATA)) {
- 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
- 
--			ret = wlcore_rx(wl, wl->fw_status_1);
-+			ret = wlcore_rx(wl, wl->fw_status);
- 			if (ret < 0)
- 				goto out;
- 
-@@ -843,11 +839,11 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
- 		wl12xx_cmd_stop_fwlog(wl);
- 
- 	/* Read the first memory block address */
--	ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
-+	ret = wlcore_fw_status(wl, wl->fw_status);
- 	if (ret < 0)
- 		goto out;
- 
--	addr = le32_to_cpu(wl->fw_status_2->log_start_addr);
-+	addr = wl->fw_status->log_start_addr;
- 	if (!addr)
- 		goto out;
- 
-@@ -990,23 +986,23 @@ static int wlcore_fw_wakeup(struct wl1271 *wl)
- 
- static int wl1271_setup(struct wl1271 *wl)
- {
--	wl->fw_status_1 = kzalloc(WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc) +
--				  sizeof(*wl->fw_status_2) +
--				  wl->fw_status_priv_len, GFP_KERNEL);
--	if (!wl->fw_status_1)
--		return -ENOMEM;
-+	wl->raw_fw_status = kzalloc(wl->fw_status_len, GFP_KERNEL);
-+	if (!wl->raw_fw_status)
-+		goto err;
- 
--	wl->fw_status_2 = (struct wl_fw_status_2 *)
--				(((u8 *) wl->fw_status_1) +
--				WLCORE_FW_STATUS_1_LEN(wl->num_rx_desc));
-+	wl->fw_status = kzalloc(sizeof(*wl->fw_status), GFP_KERNEL);
-+	if (!wl->fw_status)
-+		goto err;
- 
- 	wl->tx_res_if = kzalloc(sizeof(*wl->tx_res_if), GFP_KERNEL);
--	if (!wl->tx_res_if) {
--		kfree(wl->fw_status_1);
--		return -ENOMEM;
+-		c = &rdev->wiphy.iface_combinations[i];
+-
+-		if (total > c->max_interfaces)
+-			continue;
+-		if (num_different_channels > c->num_different_channels)
+-			continue;
+-
+-		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+-				 GFP_KERNEL);
+-		if (!limits)
+-			return -ENOMEM;
+-
+-		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-				continue;
+-			for (j = 0; j < c->n_limits; j++) {
+-				all_iftypes |= limits[j].types;
+-				if (!(limits[j].types & BIT(iftype)))
+-					continue;
+-				if (limits[j].max < num[iftype])
+-					goto cont;
+-				limits[j].max -= num[iftype];
+-			}
+-		}
+-
+-		if (radar_detect && !(c->radar_detect_widths & radar_detect))
+-			goto cont;
+-
+-		/*
+-		 * Finally check that all iftypes that we're currently
+-		 * using are actually part of this combination. If they
+-		 * aren't then we can't use this combination and have
+-		 * to continue to the next.
+-		 */
+-		if ((all_iftypes & used_iftypes) != used_iftypes)
+-			goto cont;
+-
+-		/*
+-		 * This combination covered all interface types and
+-		 * supported the requested numbers, so we're good.
+-		 */
+-		kfree(limits);
+-		return 0;
+- cont:
+-		kfree(limits);
 -	}
-+	if (!wl->tx_res_if)
-+		goto err;
- 
- 	return 0;
-+err:
-+	kfree(wl->fw_status);
-+	kfree(wl->raw_fw_status);
-+	return -ENOMEM;
+-
+-	return -EBUSY;
++	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
++					   total, used_iftypes,
++					   radar_detect, num);
  }
  
- static int wl12xx_set_power_on(struct wl1271 *wl)
-@@ -1952,9 +1948,10 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
- 
- 	wl1271_debugfs_reset(wl);
- 
--	kfree(wl->fw_status_1);
--	wl->fw_status_1 = NULL;
--	wl->fw_status_2 = NULL;
-+	kfree(wl->raw_fw_status);
-+	wl->raw_fw_status = NULL;
-+	kfree(wl->fw_status);
-+	wl->fw_status = NULL;
- 	kfree(wl->tx_res_if);
- 	wl->tx_res_if = NULL;
- 	kfree(wl->target_mem_map);
-@@ -6025,7 +6022,8 @@ int wlcore_free_hw(struct wl1271 *wl)
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
- 
--	kfree(wl->fw_status_1);
-+	kfree(wl->raw_fw_status);
-+	kfree(wl->fw_status);
- 	kfree(wl->tx_res_if);
- 	destroy_workqueue(wl->freezable_wq);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 94ab445..a047e87 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -203,7 +203,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	return is_data;
- }
- 
--int wlcore_rx(struct wl1271 *wl, struct wl_fw_status_1 *status)
-+int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
- {
- 	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
- 	u32 buf_size;
-diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
-index 3363f60..a3b1618 100644
---- a/drivers/net/wireless/ti/wlcore/rx.h
-+++ b/drivers/net/wireless/ti/wlcore/rx.h
-@@ -142,7 +142,7 @@ struct wl1271_rx_descriptor {
- 	u8  reserved;
- } __packed;
- 
--int wlcore_rx(struct wl1271 *wl, struct wl_fw_status_1 *status);
-+int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status);
- u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- int wl1271_rx_filter_enable(struct wl1271 *wl,
- 			    int index, bool enable,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index a3cc117..cec5265 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -73,6 +73,8 @@ struct wlcore_ops {
- 	void (*tx_immediate_compl)(struct wl1271 *wl);
- 	int (*hw_init)(struct wl1271 *wl);
- 	int (*init_vif)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
-+	void (*convert_fw_status)(struct wl1271 *wl, void *raw_fw_status,
-+				  struct wl_fw_status *fw_status);
- 	u32 (*sta_get_ap_rate_mask)(struct wl1271 *wl,
- 				    struct wl12xx_vif *wlvif);
- 	int (*get_pg_ver)(struct wl1271 *wl, s8 *ver);
-@@ -346,8 +348,8 @@ struct wl1271 {
- 	u32 buffer_cmd;
- 	u32 buffer_busyword[WL1271_BUSY_WORD_CNT];
- 
--	struct wl_fw_status_1 *fw_status_1;
--	struct wl_fw_status_2 *fw_status_2;
-+	void *raw_fw_status;
-+	struct wl_fw_status *fw_status;
- 	struct wl1271_tx_hw_res_if *tx_res_if;
- 
- 	/* Current chipset configuration */
-@@ -448,6 +450,7 @@ struct wl1271 {
- 	struct ieee80211_sta_ht_cap ht_cap[WLCORE_NUM_BANDS];
- 
- 	/* size of the private FW status data */
-+	size_t fw_status_len;
- 	size_t fw_status_priv_len;
- 
- 	/* RX Data filter rule state - enabled/disabled */
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 3815332..32e1e8b 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -120,70 +120,58 @@ struct wl1271_chip {
- 
- #define AP_MAX_STATIONS            8
- 
--struct wl_fw_packet_counters {
--	/* Cumulative counter of released packets per AC */
--	u8 tx_released_pkts[NUM_TX_QUEUES];
--
--	/* Cumulative counter of freed packets per HLID */
--	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
--
--	/* Cumulative counter of released Voice memory blocks */
--	u8 tx_voice_released_blks;
--
--	/* Tx rate of the last transmitted packet */
--	u8 tx_last_rate;
--
--	u8 padding[2];
--} __packed;
--
--/* FW status registers */
--struct wl_fw_status_1 {
--	__le32 intr;
-+struct wl_fw_status {
-+	u32 intr;
- 	u8  fw_rx_counter;
- 	u8  drv_rx_counter;
--	u8  reserved;
- 	u8  tx_results_counter;
--	__le32 rx_pkt_descs[0];
--} __packed;
--
--/*
-- * Each HW arch has a different number of Rx descriptors.
-- * The length of the status depends on it, since it holds an array
-- * of descriptors.
-- */
--#define WLCORE_FW_STATUS_1_LEN(num_rx_desc) \
--		(sizeof(struct wl_fw_status_1) + \
--		(sizeof(((struct wl_fw_status_1 *)0)->rx_pkt_descs[0])) * \
--		num_rx_desc)
-+	__le32 *rx_pkt_descs;
- 
--struct wl_fw_status_2 {
--	__le32 fw_localtime;
-+	u32 fw_localtime;
- 
- 	/*
- 	 * A bitmap (where each bit represents a single HLID)
- 	 * to indicate if the station is in PS mode.
- 	 */
--	__le32 link_ps_bitmap;
-+	u32 link_ps_bitmap;
- 
- 	/*
- 	 * A bitmap (where each bit represents a single HLID) to indicate
- 	 * if the station is in Fast mode
- 	 */
--	__le32 link_fast_bitmap;
-+	u32 link_fast_bitmap;
- 
- 	/* Cumulative counter of total released mem blocks since FW-reset */
--	__le32 total_released_blks;
-+	u32 total_released_blks;
- 
- 	/* Size (in Memory Blocks) of TX pool */
--	__le32 tx_total;
-+	u32 tx_total;
- 
--	struct wl_fw_packet_counters counters;
-+	struct {
-+		/*
-+		 * Cumulative counter of released packets per AC
-+		 * (length of the array is NUM_TX_QUEUES)
-+		 */
-+		u8 *tx_released_pkts;
-+
-+		/*
-+		 * Cumulative counter of freed packets per HLID
-+		 * (length of the array is WL12XX_MAX_LINKS)
-+		 */
-+		u8 *tx_lnk_free_pkts;
-+
-+		/* Cumulative counter of released Voice memory blocks */
-+		u8 tx_voice_released_blks;
-+
-+		/* Tx rate of the last transmitted packet */
-+		u8 tx_last_rate;
-+	} counters;
- 
--	__le32 log_start_addr;
-+	u32 log_start_addr;
- 
- 	/* Private status to be used by the lower drivers */
--	u8 priv[0];
--} __packed;
-+	void *priv;
-+};
- 
- #define WL1271_MAX_CHANNELS 64
- struct wl1271_scan {
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
 -- 
-1.8.5.2.229.g4448466.dirty
+1.8.5.3
 
