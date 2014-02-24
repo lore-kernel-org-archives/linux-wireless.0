@@ -1,145 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:64699 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752341AbaBLTFF (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:52007 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbaBXUyi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:05:05 -0500
-Received: by mail-we0-f177.google.com with SMTP id t61so6455149wes.36
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:04 -0800 (PST)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 5/9] wcn36xx: Print FW capabilities
-Date: Wed, 12 Feb 2014 19:04:44 +0000
-Message-Id: <1392231888-2191-5-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200517_359499_F12343DE)
-In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
-References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+	Mon, 24 Feb 2014 15:54:38 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v4 4/4] cfg80211/mac80211: move combination check to mac80211 for ibss
+Date: Mon, 24 Feb 2014 22:54:30 +0200
+Message-Id: <1393275270-7255-5-git-send-email-luca@coelho.fi> (sfid-20140224_215443_844875_91F38807)
+In-Reply-To: <1393275270-7255-1-git-send-email-luca@coelho.fi>
+References: <1393275270-7255-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-After fw caps exchange, print the FW's capabilities.
+Now that mac80211 can check the interface combinations itself, move
+the combinations check from cfg80211 to mac80211 when joining an IBSS.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 45 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.c  |  9 +++----
- drivers/net/wireless/ath/wcn36xx/smd.h  |  3 +++
- 3 files changed, 51 insertions(+), 6 deletions(-)
+In v2:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index a801aaa..95fd5c6 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -178,6 +178,49 @@ static inline u8 get_sta_index(struct ieee80211_vif *vif,
- 	       sta_priv->sta_index;
- }
+   * lock the chanctx mutex in ieee80211_ibss_join() before calling
+     ieee80211_check_combinations(). (Thanks Michal);
+
+   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
+     ieee80211_check_combinations() in ieee80211_vif_use_channel();
+
+In v3:
+
+   * moved the second change from v2 (pass the mode argument...) to
+     the previous patch, where it should be;
+
+In v4:
+
+   * rebased on top of slightly modified applied patches
+---
+ net/mac80211/ibss.c | 30 +++++++++++++++++++++++++++---
+ net/wireless/ibss.c | 28 ----------------------------
+ 2 files changed, 27 insertions(+), 31 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index bca7d09..745b445 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1643,7 +1643,31 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 	u32 changed = 0;
+ 	u32 rate_flags;
+ 	struct ieee80211_supported_band *sband;
++	enum ieee80211_chanctx_mode chanmode;
++	struct ieee80211_local *local = sdata->local;
++	int radar_detect_width;
+ 	int i;
++	int ret;
++
++	radar_detect_width = cfg80211_chandef_dfs_required(local->hw.wiphy,
++							   &params->chandef,
++							   sdata->vif.type);
++	if (radar_detect_width < 0)
++		return radar_detect_width;
++
++	if (radar_detect_width > 0 && !params->userspace_handles_dfs)
++		return -EINVAL;
++
++	chanmode = (params->channel_fixed && !radar_detect_width) ?
++		IEEE80211_CHANCTX_SHARED : IEEE80211_CHANCTX_EXCLUSIVE;
++
++	mutex_lock(&local->chanctx_mtx);
++	ret = ieee80211_check_combinations(local->hw.wiphy, &sdata->wdev,
++					   &params->chandef, chanmode,
++					   radar_detect_width);
++	mutex_unlock(&local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
  
-+static const char * const wcn36xx_caps_names[] = {
-+	"MCC",				/* 0 */
-+	"P2P",				/* 1 */
-+	"DOT11AC",			/* 2 */
-+	"SLM_SESSIONIZATION",		/* 3 */
-+	"DOT11AC_OPMODE",		/* 4 */
-+	"SAP32STA",			/* 5 */
-+	"TDLS",				/* 6 */
-+	"P2P_GO_NOA_DECOUPLE_INIT_SCAN",/* 7 */
-+	"WLANACTIVE_OFFLOAD",		/* 8 */
-+	"BEACON_OFFLOAD",		/* 9 */
-+	"SCAN_OFFLOAD",			/* 10 */
-+	"ROAM_OFFLOAD",			/* 11 */
-+	"BCN_MISS_OFFLOAD",		/* 12 */
-+	"STA_POWERSAVE",		/* 13 */
-+	"STA_ADVANCED_PWRSAVE",		/* 14 */
-+	"AP_UAPSD",			/* 15 */
-+	"AP_DFS",			/* 16 */
-+	"BLOCKACK",			/* 17 */
-+	"PHY_ERR",			/* 18 */
-+	"BCN_FILTER",			/* 19 */
-+	"RTT",				/* 20 */
-+	"RATECTRL",			/* 21 */
-+	"WOW"				/* 22 */
-+};
-+
-+static const char *wcn36xx_get_cap_name(enum place_holder_in_cap_bitmap x)
-+{
-+	if (x >= ARRAY_SIZE(wcn36xx_caps_names))
-+		return "UNKNOWN";
-+	return wcn36xx_caps_names[x];
-+}
-+
-+static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
-+		if (get_feat_caps(wcn->fw_feat_caps, i))
-+			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-+	}
-+}
-+
- static int wcn36xx_start(struct ieee80211_hw *hw)
- {
- 	struct wcn36xx *wcn = hw->priv;
-@@ -237,6 +280,8 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
- 		ret = wcn36xx_smd_feature_caps_exchange(wcn);
- 		if (ret)
- 			wcn36xx_warn("Exchange feature caps failed\n");
-+		else
-+			wcn36xx_feat_caps_info(wcn);
- 	}
- 	INIT_LIST_HEAD(&wcn->vif_list);
+ 	if (params->bssid) {
+ 		memcpy(sdata->u.ibss.bssid, params->bssid, ETH_ALEN);
+@@ -1658,7 +1682,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* fix basic_rates if channel does not support these rates */
+ 	rate_flags = ieee80211_chandef_rate_flags(&params->chandef);
+-	sband = sdata->local->hw.wiphy->bands[params->chandef.chan->band];
++	sband = local->hw.wiphy->bands[params->chandef.chan->band];
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
+ 			sdata->u.ibss.basic_rates &= ~BIT(i);
+@@ -1707,9 +1731,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+-	sdata->needed_rx_chains = sdata->local->rx_chains;
++	sdata->needed_rx_chains = local->rx_chains;
+ 
+-	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++	ieee80211_queue_work(&local->hw, &sdata->work);
+ 
  	return 0;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index d5e90c4..ae36409 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1685,8 +1685,7 @@ out:
- 	return ret;
  }
- 
--static inline void set_feat_caps(u32 *bitmap,
--				 enum place_holder_in_cap_bitmap cap)
-+void set_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index d81cb68..8282de8 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -88,8 +88,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 			 struct cfg80211_cached_keys *connkeys)
  {
- 	int arr_idx, bit_idx;
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	struct ieee80211_channel *check_chan;
+-	u8 radar_detect_width = 0;
+ 	int err;
  
-@@ -1700,8 +1699,7 @@ static inline void set_feat_caps(u32 *bitmap,
- 	bitmap[arr_idx] |= (1 << bit_idx);
- }
- 
--static inline int get_feat_caps(u32 *bitmap,
--				enum place_holder_in_cap_bitmap cap)
-+int get_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- {
- 	int arr_idx, bit_idx;
- 	int ret = 0;
-@@ -1717,8 +1715,7 @@ static inline int get_feat_caps(u32 *bitmap,
- 	return ret;
- }
- 
--static inline void clear_feat_caps(u32 *bitmap,
--				enum place_holder_in_cap_bitmap cap)
-+void clear_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- {
- 	int arr_idx, bit_idx;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index c46246f..008d034 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -112,6 +112,9 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
- int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
- 			     u32 arg3, u32 arg4, u32 arg5);
- int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
-+void set_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap);
-+int get_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap);
-+void clear_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap);
- 
- int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
- 		struct ieee80211_sta *sta,
+ 	ASSERT_WDEV_LOCK(wdev);
+@@ -126,32 +124,6 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ #ifdef CONFIG_CFG80211_WEXT
+ 	wdev->wext.ibss.chandef = params->chandef;
+ #endif
+-	check_chan = params->chandef.chan;
+-	if (params->userspace_handles_dfs) {
+-		/* Check for radar even if the current channel is not
+-		 * a radar channel - it might decide to change to DFS
+-		 * channel later.
+-		 */
+-		radar_detect_width = BIT(params->chandef.width);
+-	}
+-
+-	/* TODO: We need to check the combinations at this point, we
+-	 * probably must move this call down to join_ibss() in
+-	 * mac80211.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   check_chan,
+-					   (params->channel_fixed &&
+-					    !radar_detect_width)
+-					   ? CHAN_MODE_SHARED
+-					   : CHAN_MODE_EXCLUSIVE,
+-					   radar_detect_width);
+-
+-	if (err) {
+-		wdev->connect_keys = NULL;
+-		return err;
+-	}
+-
+ 	err = rdev_join_ibss(rdev, dev, params);
+ 	if (err) {
+ 		wdev->connect_keys = NULL;
 -- 
-1.8.3.2
+1.8.5.3
 
