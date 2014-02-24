@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48527 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbaB0Qmm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:42:42 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: skip management frames in HTT path
-References: <1393311399-8070-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Thu, 27 Feb 2014 18:42:36 +0200
-In-Reply-To: <1393311399-8070-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Tue, 25 Feb 2014 07:56:39 +0100")
-Message-ID: <87d2i8eccj.fsf@kamboji.qca.qualcomm.com> (sfid-20140227_174246_205562_4C5C2013)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from nbd.name ([46.4.11.11]:42838 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753078AbaBYKYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 05:24:03 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.14 1/2] ath9k: reduce baseband hang detection false positive rate
+Date: Mon, 24 Feb 2014 22:26:05 +0100
+Message-Id: <1393277166-28356-1-git-send-email-nbd@openwrt.org> (sfid-20140225_112448_299924_4C9626B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+Check if the baseband state remains stable, and add a small delay
+between register reads.
 
-> After we pass frames with INV_PEER to upper layer in patch:
->
-> ath10k: pass frames with invalid peer status to upper layer
->
-> we could pass some management frames (in case INVALID_PEER
-> and MGMT_CTRL) twice to upper layer, once via WMI and once
-> via HTT. Next we could handle assoc request twice. This
-> patch remove such regression.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 11eab9f..303ce27 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1534,7 +1534,7 @@ EXPORT_SYMBOL(ath9k_hw_check_nav);
+ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ {
+ 	int count = 50;
+-	u32 reg;
++	u32 reg, last_val;
+ 
+ 	if (AR_SREV_9300(ah))
+ 		return !ath9k_hw_detect_mac_hang(ah);
+@@ -1542,9 +1542,13 @@ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ 	if (AR_SREV_9285_12_OR_LATER(ah))
+ 		return true;
+ 
++	last_val = REG_READ(ah, AR_OBS_BUS_1);
+ 	do {
+ 		reg = REG_READ(ah, AR_OBS_BUS_1);
++		if (reg != last_val)
++			return true;
+ 
++		last_val = reg;
+ 		if ((reg & 0x7E7FFFEF) == 0x00702400)
+ 			continue;
+ 
+@@ -1556,6 +1560,8 @@ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ 		default:
+ 			return true;
+ 		}
++
++		udelay(1);
+ 	} while (count-- > 0);
+ 
+ 	return false;
 -- 
-Kalle Valo
+1.8.3.4 (Apple Git-47)
+
