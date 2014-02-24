@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:40697 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085AbaBCU60 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58773 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545AbaBXUPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:26 -0500
-Received: by mail-ee0-f50.google.com with SMTP id d17so3854391eek.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:25 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/62] iwlwifi: pcie: Disable L0S exit timer for 8000 HW family
-Date: Mon,  3 Feb 2014 22:57:12 +0200
-Message-Id: <1391461088-8082-6-git-send-email-egrumbach@gmail.com> (sfid-20140203_215832_444977_2EC4B704)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Mon, 24 Feb 2014 15:15:14 -0500
+Date: Mon, 24 Feb 2014 15:03:58 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2014-02-21
+Message-ID: <20140224200358.GG24810@tuxdriver.com> (sfid-20140224_211519_456239_EE124068)
+References: <1392976254.4346.45.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392976254.4346.45.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Fri, Feb 21, 2014 at 10:50:54AM +0100, Johannes Berg wrote:
+> Hi John,
+> 
+> More content for -next ... :) I've merged wireless-next to get the TDLS
+> patch to apply properly without causing undue conflicts in mwifiex.
+> 
+> This time, I have a number of small fixes and improvements, and those
+> are fairly straight-forward. More interesting changes come from Luca
+> with some preparations for the CSA work, mostly around interface/channel
+> combinations checking. One other possibly interesting change is a small
+> one by myself to add NAPI support back to mac80211, which can help
+> improve TCP behaviour through GRO.
+> 
+> Let me know if there's any problem!
+> 
+> johannes
+> 
+> ---
+> 
+> The following changes since commit 35582ad9d342025653aaf28ed321bf5352488d7f:
+> 
+>   Staging: rtl8812ae: remove modules field of rate_control_ops (2014-02-13 15:23:23 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 6658ab80fd4ef940fc2366ddb66690a15ea69c18:
+> 
+>   mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes (2014-02-21 09:37:46 +0100)
 
-This configuration is invalid for this family.
+Pulling now...
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Dor Shaish <dor.shaish@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 53a3457..ff7d70d 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -132,8 +132,9 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
- 	 */
- 
- 	/* Disable L0S exit timer (platform NMI Work/Around) */
--	iwl_set_bit(trans, CSR_GIO_CHICKEN_BITS,
--		    CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
-+	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000)
-+		iwl_set_bit(trans, CSR_GIO_CHICKEN_BITS,
-+			    CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
- 
- 	/*
- 	 * Disable L0s without affecting L1;
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
