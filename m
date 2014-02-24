@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34985 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753792AbaBDOZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 09:25:59 -0500
-Message-ID: <52F0F86C.3050402@redhat.com> (sfid-20140204_152615_705695_7BD52D6A)
-Date: Tue, 04 Feb 2014 15:25:48 +0100
-From: Daniel Borkmann <dborkman@redhat.com>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:61766 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040AbaBXH2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Feb 2014 02:28:55 -0500
+Received: by mail-wi0-f182.google.com with SMTP id f8so2670361wiw.9
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 23:28:53 -0800 (PST)
+Message-ID: <530AF48F.8050802@gmail.com> (sfid-20140224_082903_068917_3425C930)
+Date: Mon, 24 Feb 2014 09:28:15 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-CC: netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>
-Subject: Re: linux-3.14-rc1 & PACKET_QDISC_BYPASS : slow_path warning
-References: <52F01C97.20001@fokus.fraunhofer.de> <52F0E361.9000304@redhat.com> <52F0E771.8070904@fokus.fraunhofer.de>
-In-Reply-To: <52F0E771.8070904@fokus.fraunhofer.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: [ANN] New firmware for Intel 7260 / 3160 - 22.24.8.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2014 02:13 PM, Mathias Kretschmer wrote:
-> On 02/04/2014 01:56 PM, Daniel Borkmann wrote:
->> On 02/03/2014 11:47 PM, Mathias Kretschmer wrote:
-...
->>> we are developing a wired/wireless MPLS switch. Currently the data plane runs in
->>> user space using PF_PACKET sockets via RX_RING/TX_RING.
->>>
->>> We had hoped to test the PACKET_QDISC_BYPASS option since this seems to be the
->>> proper optimization for our purposes.
->>>
->>> Unfortunately, we're seeing a 'slow path' warning for every packet that is being
->>> sent out. With PACKET_QDISC_BYPASS disabled, no warnings are dumped. Hardware is
->>> an older AMD Geode LX embedded board (ALiX).
->>>
->>> BTW, this happens while sending via a wireless (802.11) adhoc interface. Hence, it
->>> might be an interaction with the ieee80211 sub system.
->>
->> Hm, so the WARN_ON() is triggered inside ath9k driver in relation to 802.11 QoS,
->> and came in from commit 066dae93bdf ("ath9k: rework tx queue selection and fix
->> queue stopping/waking"). We did the stress testing of that option for PF_PACKET
->> on 10Gbit/s NICs. Seems to me you might be running into the same issue when using
->> pktgen as it randomly or per round-robin selects tx queues as well? Not entirely
->> sure how necessary this WARN_ON() is though, Felix? I think QDISC_BYPASS might not
->> be the best option in your case, perhaps you will run into increased power usage
->> in your NIC as a side-effect?
->
-> I'm not familiar with the exact implementation details, but from the description of this option, it seems to me that this is exactly what one would want to use if the goal is to send an Ethernet frame out on a particular interface without any further processing by the kernel.
->
-> Why would this increase the power usage on the NIC ?  Due to a higher achievable packet rate ?  That would be acceptable :)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I'm not too familiar with the ieee80211 sub system, so I let Felix answer side
-effects and if actually the WARN_ON() is needed. ;) PACKET_QDISC_BYPASS is, as
-documented, designed for advanced pktgen resp. traffic generator like scenarios
-where you just sort of "brute force" packets to your NIC to stress test a remote
-machine for further analysis. I don't think it's very useful in your scenario
-when you have a wired/wireless MPLS switch, you rather might want to buffer/queue
-and therefore use qdisc layer instead.
+Hi,
+
+we have released a new firmware for 7260 and 3160 WiFi Intel devices.
+This firmware is supported starting 3.13 kernel.
+We have a here quite a few bug fixes with a few new features.
+Most of the improvements concern P2P client and GO modes.
+
+The firmware for 7260 is available at [1] and for 3160 at [2].
+I will send a pull request to linux-firmware.git soon.
+
+The new firmware's version number is 22.24.8.0:
+
+$ dmesg | grep loaded\ firmware
+loaded firmware version 22.24.8.0 op_mode iwlmvm
+
+[1] http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=3DAttachFi=
+le&do=3Dget&target=3Diwlwifi-7260-ucode-22.24.8.0.tgz
+[2] http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=3DAttachFi=
+le&do=3Dget&target=3Diwlwifi-3160-ucode-22.24.8.0.tgz
+
+
+
+--pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTCvSpAAoJEC0Llv5uNjIBFw4P+gPEvxj1SADF2U9ebMpRrz64
+y9wyGyQBPqC1vaAhXESwh6T/Jg5BwWTeeUL+zMhWMn3ROChjGRn63WWvtX/OOvMo
+vYiAIDlJhsVUCOs192w+rqzDqN1LiAoAcVxZyE/MwTSNczbDySjoTGs+KeM+IPkj
+2JpdyNADUjBD7R3VqGP7kRjJDbgmk8NpRAJ4KGYLDGCiJoYFHvLFk33U/hwr92Of
+FinKraFoN5l59mu1btrTcn4awFuAHhejnjZItu1RwvwMhMf6PiOISZG/oVuB09Wk
+NFIeYosV1HuN6vkBmnBmMiLuwKyUGKWn8emSMsuHvTHD9wIo0n5fbyzRkrYTY28H
+FoZEx6Pu8jcv/RMvC/41MYXGx+5bczk3dzYCL+HsxxdINmpteruKP4zqyrmt9rRe
+4tlEe131ZuEZMCKWXJijSm7Y18mnVbRSIDOmGkxruFJtnuj4Bwe8bkNM01iKPDdh
+uU6zoSuDCeJ+nyxJQZhgnnxd50pn8EA3328qiQMhZRhILv7ttbTTUuTN+CIp9Mee
+wRBey5LK3OXRGvGEXZK2ZCTtcDcCNFIJSMeDrnr682rcCL8TnrRDaljsH2j/CSw0
+5r7a73dQ36Vu+FhuFoD5SGq1niLl4r/AlNh00Ebk7Ejb4Qg7lC/LEEiXDhZheayL
+LBNiLIlioTX09AG03i0K
+=lxhV
+-----END PGP SIGNATURE-----
+
+--pqfwKdO1dWm4jKtDgTwvV4T34IMrN36WF--
