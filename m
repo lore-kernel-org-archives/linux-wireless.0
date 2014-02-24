@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31345 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582AbaBMPrC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49586 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851AbaBXMVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 10:47:02 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: AP: handle HT station which does not have HT RX MCS
-References: <1392034375-13532-1-git-send-email-bartosz.markowski@tieto.com>
-	<8761omdqe5.fsf@kamboji.qca.qualcomm.com>
-	<CACKGw+Es7YsNHtg+MJE_82Ffm5m9hHu+qo6nZbo-hoOfqCDmOQ@mail.gmail.com>
-Date: Thu, 13 Feb 2014 17:46:53 +0200
-In-Reply-To: <CACKGw+Es7YsNHtg+MJE_82Ffm5m9hHu+qo6nZbo-hoOfqCDmOQ@mail.gmail.com>
-	(Bartosz Markowski's message of "Tue, 11 Feb 2014 09:10:56 +0100")
-Message-ID: <874n438176.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_164716_020419_04B9CE08)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 24 Feb 2014 07:21:19 -0500
+Message-ID: <1393244470.4190.6.camel@jlt4.sipsolutions.net> (sfid-20140224_132122_210980_5AFEFF84)
+Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ
+ into info->control.flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@nbd.name
+Date: Mon, 24 Feb 2014 13:21:10 +0100
+In-Reply-To: <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
 
-> On 11 February 2014 09:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->>
->>> This is a workaround for HT-enabled STAs which break the spec
->>> and have no HT capabilities RX mask (no HT RX MCS map).
->>>
->>> As per spec, in section 20.3.5 Modulation and coding scheme (MCS),
->>> MCS 0 through 7 are mandatory in 20MHz with 800 ns GI at all STAs.
->>>
->>> Firmware asserts if such situation occurs.
->>>
->>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->>
->> This conflicted with Marek K's patch "ath10k: Set proper nss value for
->> the peer". Please check that my resolution in ath-next-test is correct:
->>
->> https://github.com/kvalo/ath/commit/d56aa0e779c17f8048a70a9dbd5228b54d9a712e
->
-> Looks good.
+>  enum mac80211_tx_info_flags {
+>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+> -	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(1),
+> -	IEEE80211_TX_CTL_NO_ACK			= BIT(2),
 
-Thanks, applied.
+I'd prefer you didn't renumber all of them in every single patch ...
+maybe in the last one if you need it for some reason, or better
+separately I guess.
 
--- 
-Kalle Valo
+johannes
+
