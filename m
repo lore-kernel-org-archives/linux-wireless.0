@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:34646 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753007AbaBSKAu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:00:50 -0500
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH 0/7] cfg80211/mac80211: move interface combinations check to mac80211
-Date: Wed, 19 Feb 2014 12:00:38 +0200
-Message-Id: <1392804045-11258-1-git-send-email-luca@coelho.fi> (sfid-20140219_110105_259391_ACEBA16C)
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:47370 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752468AbaBYOOA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 09:14:00 -0500
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: [PATCH v1 2/6] mac80211: move flag IEEE80211_TX_CTL_FIRST_FRAGMENT into info->control.flags
+From: =?windows-1252?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1393244741.4190.10.camel@jlt4.sipsolutions.net>
+Date: Tue, 25 Feb 2014 15:13:54 +0100
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Message-Id: <E84199A1-4743-47E5-AD95-D86998FD8DEA@net.t-labs.tu-berlin.de> (sfid-20140225_151404_272716_F267E029)
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393164527-13800-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <1393244741.4190.10.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi Johannes,
 
-Hi,
+> On Sun, 2014-02-23 at 15:08 +0100, Thomas Huehn wrote:
+>> Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
+>> ieee80211_tx_info->control is valid. Therefore this patch moves this flag
+>> from info->flags structure into the info->control.flags and renames it to
+>> IEEE80211_TX_CTRL_FIRST_FRAGMENT. Define new IEEE80211_TX_TEMPORARY_CTRL_FLAGS
+>> to clear all temporary flags that are shifted to info->control.flags.
+> 
+> Similar to before... this can't be right, you have to assume
+> info->control.flags is cleared when you get status data, which is in
+> fact a problem in the first patch already, but here the clearing of
+> „temporary" flags is quite wrong.
 
-As Johannes suggested earlier, this patchset moves the interface
-combinations check from cfg80211 to mac80211.  This is needed to
-simplify the channel switch code.
+ok… will send v2
 
-There are still some cases where cfg80211 may need to check the
-interface combinations (eg. when adding or changing an interface), so
-I created a helper function that can be called by cfg80211 itself or
-the drivers (such as mac80211).
+> At least temporary flags don't suffer from the 'getting lost' problem as
+> in the first patch.
+> 
+> I'll also note that this flag is treated wrongly in software retry
+> scenarios anyway, but it won’t really matter I guess.
 
-Also, for now, I only moved the check in the cases where
-ieee80211_vif_use_channel() is called and for IBSS join.  There are
-still some trickier cases such as a libertas backward-compatibility
-workaround and the channel switch stuff.  These will be handled
-separately and it doesn't really hurt to leave it as it is, except
-because it's a bit inconsistent.
+Do you mean the case when fragments after the first one get retransmitted by software ?
 
-I had to shuffle some code around to make this whole thing a bit
-cleaner, including the check for whether radar detection is needed.
-
-In this series, I have included the two previous patches I sent,
-because they're somewhat related to the rest of the series.  For
-"cfg80211: remove radar requirements check from
-cfg80211_can_use_iftype_chan()" I have removed the excessive comments,
-since they become mostly outdated with the rest of the series anyway.
-
-This is not very thoroughly tested yet, I have just done some checks
-with AP and STA with and without chanctx and with 1 or 2 different
-channels.  This part seems to work, please test the rest. :)
-
-I'll try to add some hwsim tests to test this more thoroughly.
-
-Luca.
-
-
-Luciano Coelho (7):
-  nl80211: make sure we check for DFS with mesh channel switch
-  cfg80211: remove radar requirements check from
-    cfg80211_can_use_iftype_chan()
-  cfg80211: refactor cfg80211_can_use_iftype_chan()
-  mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes
-  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-  cfg80211/mac80211: move interface counting for combination check to
-    mac80211
-  cfg80211/mac80211: move combination check to mac80211 for ibss
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  41 +++++++++-
- net/mac80211/cfg.c               |   7 +-
- net/mac80211/chan.c              |  18 +++++
- net/mac80211/ibss.c              |  64 +++++++++++-----
- net/mac80211/ieee80211_i.h       |   5 ++
- net/mac80211/mesh.c              |   9 ++-
- net/mac80211/mlme.c              |  14 ++++
- net/mac80211/util.c              |  88 ++++++++++++++++++++++
- net/wireless/chan.c              |  77 ++++++++++++++-----
- net/wireless/core.h              |   7 ++
- net/wireless/ibss.c              |  25 -------
- net/wireless/mesh.c              |  24 +++---
- net/wireless/mlme.c              |  14 +---
- net/wireless/nl80211.c           |  48 ++++--------
- net/wireless/util.c              | 157 ++++++++++++++++++---------------------
- 16 files changed, 379 insertions(+), 220 deletions(-)
-
--- 
-1.8.5.3
-
+Greetings Thomas
