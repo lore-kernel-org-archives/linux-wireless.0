@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47599 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679AbaBQSAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 13:00:47 -0500
-Date: Mon, 17 Feb 2014 19:00:33 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	frankyl@broadcom.com
-Subject: Re: brcmfmac NVRAM files
-Message-ID: <20140217180033.GM18868@zurbaran> (sfid-20140217_190050_915091_35B13917)
-References: <20140217150640.GJ18868@zurbaran>
- <20140217163315.GA22010@zurbaran>
- <53023E51.90202@Uni-Oldenburg.DE>
- <530248DD.1050408@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <530248DD.1050408@broadcom.com>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:53497 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585AbaBYUyD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 15:54:03 -0500
+Received: by mail-we0-f175.google.com with SMTP id q59so908101wes.34
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 12:54:01 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	Joe Perches <joe@perches.com>
+Subject: [PATCH 10/10] staging: vt6656: struct vnt_usb_send_context struct size optimization.
+Date: Tue, 25 Feb 2014 20:51:52 +0000
+Message-Id: <1393361512-13805-10-git-send-email-tvboxspy@gmail.com> (sfid-20140225_215413_156516_D2EE0875)
+In-Reply-To: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
+References: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Reorder in size and remove dead member Next.
 
-On Mon, Feb 17, 2014 at 06:37:33PM +0100, Arend van Spriel wrote:
-> Hi Bernd,
-> 
-> The hint to solve this is found on wireless.kernel.org [1] and the
-> answer is as Samuel suspects. This file is very board specific so
-> OEMs manufacturing/selling the board should provide it either upon
-> request or through some distribution like a SDK.
-There are several Win8 2-in-1 devices that do run the SDIO Full MAC
-chipsets and obviously there is no SDK for those. Which means no distro
-will ever be able to run out of the box on those.
-I may be completely off the mark here, but isn't there a sensible
-template for those guys ? Nothing optimised, but just something that
-would at least make things work...
+Reported-by: Joe Perches <joe@perches.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Also, the hint for pre 3.13 kernel is to copy the .bin into a .txt. Is
-that still the case for post 3.13 ?
-
-Cheers,
-Samuel.
-
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 54c6383..ce1587a 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -179,10 +179,9 @@ struct vnt_usb_send_context {
+ 	void *pDevice;
+ 	struct sk_buff *pPacket;
+ 	struct urb *pUrb;
++	struct ethhdr sEthHeader;
+ 	unsigned int uBufLen;
+ 	u8 type;
+-	struct ethhdr sEthHeader;
+-	void *Next;
+ 	bool bBoolInUse;
+ 	unsigned char Data[MAX_TOTAL_SIZE_WITH_ALL_HEADERS];
+ };
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.9.0
+
