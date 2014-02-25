@@ -1,113 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:58719 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbaBMU1i (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:41677 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbaBYTas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 15:27:38 -0500
-Date: Fri, 14 Feb 2014 07:27:16 +1100
-From: James Cameron <quozl@laptop.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: libertas: probe responses with zero length SSID cause scan
- result loss
-Message-ID: <20140213202715.GB2793@us.netrek.org> (sfid-20140213_214141_263214_9E698D0A)
-References: <20140211063329.GO5487@us.netrek.org>
- <1392310868.18472.11.camel@dcbw.local>
+	Tue, 25 Feb 2014 14:30:48 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 13/14] brcmfmac: use pre-allocated scatter-gather table for txglomming
+Date: Tue, 25 Feb 2014 20:30:37 +0100
+Message-ID: <1393356639-19169-14-git-send-email-arend@broadcom.com> (sfid-20140225_203117_763938_2113A3E9)
+In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392310868.18472.11.camel@dcbw.local>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 11:01:08AM -0600, Dan Williams wrote:
-> On Tue, 2014-02-11 at 17:33 +1100, James Cameron wrote:
-> > G'day,
-> > 
-> > I'd appreciate a sanity check, as I'm not sure what I am doing.
-> > 
-> > We saw for years that scan results for an OLPC XO-1 laptop would be
-> > unreliable in large groups.  APs would not be easily found.  We
-> > presumed other causes until recently.
-> > 
-> > Using monitor mode on another computer, and "iwlist eth0 scan" on the
-> > XO-1, I found probe responses from an AP, and ACKs from the host to
-> > the AP, but the output omitted the AP.
-> > 
-> > Further, the AP would be missing if there was a probe response from
-> > another XO-1 running mesh, and an ACK from the host to that XO-1.
-> > 
-> > Enabling debugging, lbs_ret_scan was reporting "scan response: invalid
-> > IE fmt" because the probe response had a zero length SSID IE.
-> > 
-> > Is a zero length SSID IE valid?  (We can't change the wireless firmware
-> > at this stage.)
-> 
-> I think technically a zero-length IE would be valid, but I'm not sure
-> about a zero-length *SSID* IE.  Is that zero length SSID IE coming from
-> an AP, or from an XO?
+Instead of allocating a scatter-gather table for every transmit
+reuse a pre-allocated table. The transmit path will be faster by
+taking out this allocation.
 
-Both.
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   45 ++++++++++++++++----
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +---
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
+ 3 files changed, 39 insertions(+), 16 deletions(-)
 
-There's one for every XO-1 in the room seen on monitor, but only the
-usb8388 device passes it up to the host.  The sd8686 device does
-not.
-
-len = 38 00                         // start of a bss in scan response
-bssid = 00 00 00 00 00 00
-rssi = 00
-tsf = 07 e6 7c 68 77 00 00 00
-intvl = 90 01                       // 409.6ms beacon interval
-capa = 00 00
-ie = 00 00                          // SSID (zero length)
-ie = 01 04 82 84 8b 96              // supported rates
-ie = 03 01 01                       // channel
-ie = 32 08 0c 12 18 24 30 48 60 6c
-ie = dd 0e 00 50 43 04 00 00 00 00 00 04 6d 65 73 68
-
-There's one for some of the hidden APs.  Both devices pass it up to
-the host.  For example:
-
-len = 6b 00                         // start of a bss in scan resp
-bssid = 2e b0 5d a6 86 ec
-rssi = 1e
-tsf = 80 a3 0b 41 05 00 00 00
-intvl = 64 00
-capa = 11 04
-ie = 00 00                          // SSID (zero length)
-ie = 01 08 82 84 8b 96 0c 12 18 24  // supported rates
-ie = 03 01 06                       // channel
-ie = 05 04 00 02 00 00
-ie = 07 06 41 55 20 01 0b 14        // country
-...
-
-In both monitor mode and scan results, some hidden APs respond to a
-probe with a zero-length SSID IE, and some do not.  Whether they do or
-not seems to be a characteristic of the AP firmware.
-
-> If the scan was a passive scan, then a zero-length SSID IE *would*
-> be valid, since the passive scans usually just listen for beacons,
-> and hidden APs wouldn't report a real SSID.  So perhaps what's
-> happening here is if there is a hidden AP, the firmware sometimes
-> gets the beacon from the AP before the AP responds to the XO's probe
-> request?
-
-I don't think so.
-
-I have infrequently seen beacons on monitor in the time between the
-probe request for the first channel, and the probe request for the
-second channel, but these don't end up in the scan results.  Only the
-probe responses that the device ACKed end up in the scan results.
-
-The tests I've made with kernel are only active scans.
-
-Tests made with Open Firmware included both active and passive, and
-passive scans also included the mesh and hidden APs if a beacon was
-seen in the scan period.
-
-> In any case, I think the patch is OK.
-
-Thanks.  I shall resubmit with signoff.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 07e7d25..3866209 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -53,6 +53,12 @@
+ /* Maximum milliseconds to wait for F2 to come up */
+ #define SDIO_WAIT_F2RDY	3000
+ 
++#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
++#define BRCMF_DEFAULT_RXGLOM_SIZE	32  /* max rx frames in glom chain */
++
++static int brcmf_sdiod_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
++module_param_named(txglomsz, brcmf_sdiod_txglomsz, int, 0);
++MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
+ 
+ static irqreturn_t brcmf_sdiod_oob_irqhandler(int irq, void *dev_id)
+ {
+@@ -487,7 +493,6 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	struct mmc_request mmc_req;
+ 	struct mmc_command mmc_cmd;
+ 	struct mmc_data mmc_dat;
+-	struct sg_table st;
+ 	struct scatterlist *sgl;
+ 	int ret = 0;
+ 
+@@ -532,16 +537,11 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	pkt_offset = 0;
+ 	pkt_next = target_list->next;
+ 
+-	if (sg_alloc_table(&st, max_seg_cnt, GFP_KERNEL)) {
+-		ret = -ENOMEM;
+-		goto exit;
+-	}
+-
+ 	memset(&mmc_req, 0, sizeof(struct mmc_request));
+ 	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
+ 	memset(&mmc_dat, 0, sizeof(struct mmc_data));
+ 
+-	mmc_dat.sg = st.sgl;
++	mmc_dat.sg = sdiodev->sgtable.sgl;
+ 	mmc_dat.blksz = func_blk_sz;
+ 	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
+ 	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
+@@ -557,7 +557,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	while (seg_sz) {
+ 		req_sz = 0;
+ 		sg_cnt = 0;
+-		sgl = st.sgl;
++		sgl = sdiodev->sgtable.sgl;
+ 		/* prep sg table */
+ 		while (pkt_next != (struct sk_buff *)target_list) {
+ 			pkt_data = pkt_next->data + pkt_offset;
+@@ -639,7 +639,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	}
+ 
+ exit:
+-	sg_free_table(&st);
++	sg_init_table(sdiodev->sgtable.sgl, sdiodev->sgtable.orig_nents);
+ 	while ((pkt_next = __skb_dequeue(&local_list)) != NULL)
+ 		brcmu_pkt_buf_free_skb(pkt_next);
+ 
+@@ -863,6 +863,27 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ 	return 0;
+ }
+ 
++static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
++{
++	uint nents;
++	int err;
++
++	if (!sdiodev->sg_support)
++		return;
++
++	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
++	nents += (nents >> 4) + 1;
++
++	WARN_ON(nents > sdiodev->max_segment_count);
++
++	brcmf_dbg(TRACE, "nents=%d\n", nents);
++	err = sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
++	if (err < 0) {
++		brcmf_err("allocation failed: disable scatter-gather");
++		sdiodev->sg_support = false;
++	}
++}
++
+ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	if (sdiodev->bus) {
+@@ -880,6 +901,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ 	sdio_disable_func(sdiodev->func[1]);
+ 	sdio_release_host(sdiodev->func[1]);
+ 
++	sg_free_table(&sdiodev->sgtable);
+ 	sdiodev->sbwad = 0;
+ 
+ 	return 0;
+@@ -935,6 +957,11 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ 					   SG_MAX_SINGLE_ALLOC);
+ 	sdiodev->max_segment_size = host->max_seg_size;
+ 
++	/* allocate scatter-gather table. sg support
++	 * will be disabled upon allocation failure.
++	 */
++	brcmf_sdiod_sgtable_alloc(sdiodev);
++
+ 	/* try to attach to the target device */
+ 	sdiodev->bus = brcmf_sdio_probe(sdiodev);
+ 	if (!sdiodev->bus) {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 8871d94..3b8f46e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -113,8 +113,6 @@ struct rte_console {
+ #define BRCMF_TXBOUND	20	/* Default for max tx frames in
+ 				 one scheduling */
+ 
+-#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
+-
+ #define BRCMF_TXMINMAX	1	/* Max tx frames if rx still pending */
+ 
+ #define MEMBLOCK	2048	/* Block size used for downloading
+@@ -511,10 +509,6 @@ static const uint max_roundup = 512;
+ 
+ #define ALIGNMENT  4
+ 
+-static int brcmf_sdio_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
+-module_param_named(txglomsz, brcmf_sdio_txglomsz, int, 0);
+-MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
+-
+ enum brcmf_sdio_frmtype {
+ 	BRCMF_SDIO_FT_NORMAL,
+ 	BRCMF_SDIO_FT_SUPER,
+@@ -2321,7 +2315,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		__skb_queue_head_init(&pktq);
+ 		if (bus->txglom)
+ 			pkt_num = min_t(u8, bus->tx_max - bus->tx_seq,
+-					brcmf_sdio_txglomsz);
++					bus->sdiodev->txglomsz);
+ 		pkt_num = min_t(u32, pkt_num,
+ 				brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol));
+ 		spin_lock_bh(&bus->txqlock);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index 5e53eb1..3deab79 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -180,6 +180,8 @@ struct brcmf_sdio_dev {
+ 	uint max_request_size;
+ 	ushort max_segment_count;
+ 	uint max_segment_size;
++	uint txglomsz;
++	struct sg_table sgtable;
+ };
+ 
+ /* sdio core registers */
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.7.10.4
+
