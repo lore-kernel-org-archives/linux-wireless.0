@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58731 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080AbaB1Rq6 (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:33281 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbaBYG5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 12:46:58 -0500
-Message-ID: <5310CB75.9030706@candelatech.com> (sfid-20140228_184712_133198_B5A8D55C)
-Date: Fri, 28 Feb 2014 09:46:29 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: bartosz.markowski@tieto.com
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: Re: [PATCH] ath10k: add recalc RTS/CTS protection method
-References: <1393571908-23734-1-git-send-email-marek.kwaczynski@tieto.com>
-In-Reply-To: <1393571908-23734-1-git-send-email-marek.kwaczynski@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 25 Feb 2014 01:57:17 -0500
+Received: by mail-ee0-f43.google.com with SMTP id e51so3642437eek.30
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Feb 2014 22:57:16 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: skip management frames in HTT path
+Date: Tue, 25 Feb 2014 07:56:39 +0100
+Message-Id: <1393311399-8070-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140225_075722_960738_CEF9771D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2014 11:18 PM, bartosz.markowski@tieto.com wrote:
-> From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-> 
-> Add recalculation of RTS/CTS protection when one or more legacy
-> stations are connected to ath10k. In this case enable RTS/CTS
-> protection and set sw retry profile are needed in the FW.
-> Without this change legacy station is starved and has very low
-> throughput.
+After we pass frames with INV_PEER to upper layer in patch:
 
-> -			ath10k_warn("Failed to set CTS prot for VDEV: %d\n",
-> -				    arvif->vdev_id);
-> +			ath10k_warn("failed to recalc RTS/CTS prot %d\n",
-> +				    ret);
+ath10k: pass frames with invalid peer status to upper layer
 
-Did you remove the vdev ID from the logging message on purpose?
+we could pass some management frames (in case INVALID_PEER
+and MGMT_CTRL) twice to upper layer, once via WMI and once
+via HTT. Next we could handle assoc request twice. This
+patch remove such regression.
 
-I find having vdev ID in logging messages helps, especially when
-trying to compare firmware logs with the driver logs...
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c7a5822..316433f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -852,6 +852,20 @@ static bool ath10k_htt_rx_has_mic_err(struct sk_buff *skb)
+ 	return false;
+ }
+ 
++static bool ath10k_htt_rx_is_mgmt(struct sk_buff *skb)
++{
++	struct htt_rx_desc *rxd;
++	u32 flags;
++
++	rxd = (void *)skb->data - sizeof(*rxd);
++	flags = __le32_to_cpu(rxd->attention.flags);
++
++	if (flags & RX_ATTENTION_FLAGS_MGMT_TYPE)
++		return true;
++
++	return false;
++}
++
+ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
+ {
+ 	struct htt_rx_desc *rxd;
+@@ -944,7 +958,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			status = info.status;
+ 
+ 			/* Skip mgmt frames while we handle this in WMI */
+-			if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL) {
++			if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
++			    ath10k_htt_rx_is_mgmt(msdu_head)) {
+ 				ath10k_htt_rx_free_msdu_chain(msdu_head);
+ 				continue;
+ 			}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
