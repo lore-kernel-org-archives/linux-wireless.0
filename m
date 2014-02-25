@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:50085 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474AbaBJMyI (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:47715 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531AbaBYUxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 07:54:08 -0500
-Date: Mon, 10 Feb 2014 13:54:04 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wlwifi - Microcode SW error detected.
-Message-ID: <20140210125404.GD7117@dhcp22.suse.cz> (sfid-20140210_135427_036107_ACF64E46)
-References: <20140207151942.GE5121@dhcp22.suse.cz>
- <0BA3FCBA62E2DC44AF3030971E174FB303D640E9@HASMSX103.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D640E9@HASMSX103.ger.corp.intel.com>
+	Tue, 25 Feb 2014 15:53:53 -0500
+Received: by mail-wg0-f44.google.com with SMTP id a1so891476wgh.15
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 12:53:52 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/10] staging: vt6656: s_nsBulkInUsbIoCompleteRead Replace error handling.
+Date: Tue, 25 Feb 2014 20:51:48 +0000
+Message-Id: <1393361512-13805-6-git-send-email-tvboxspy@gmail.com> (sfid-20140225_215357_701994_D972056F)
+In-Reply-To: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
+References: <1393361512-13805-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 09-02-14 06:46:20, Grumbach, Emmanuel wrote:
-[...]
-> Is this a regression?
+Use switch on urb->status
 
-No idea. I haven't tried to reproduce it.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-> To me, it looks like a pure firmware issue.
-
-The message points at FW but I have no idea what it actually tries to
-tell, except that something went really wrong.
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 87601b7..1cab7a3 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -473,21 +473,22 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkInUsbIoCompleteRead\n");
+ 
+-    if (urb->status) {
+-        pDevice->ulBulkInError++;
+-	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"BULK In failed %d\n", urb->status);
+-//todo...xxxxxx
+-//        if (status == USBD_STATUS_CRC) {
+-//            pDevice->ulBulkInContCRCError++;
+-//        }
+-//        if (status == STATUS_DEVICE_NOT_CONNECTED )
+-//        {
+-//            MP_SET_FLAG(pDevice, fMP_DISCONNECTED);
+-//        }
+-    } else {
+-        pDevice->ulBulkInContCRCError = 0;
+-	pDevice->ulBulkInBytesRead += urb->actual_length;
+-    }
++	switch (urb->status) {
++	case 0:
++		pDevice->ulBulkInContCRCError = 0;
++		pDevice->ulBulkInBytesRead += urb->actual_length;
++		break;
++	case -ECONNRESET:
++	case -ENOENT:
++	case -ESHUTDOWN:
++		return;
++	case -ETIMEDOUT:
++	default:
++		pDevice->ulBulkInError++;
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				"BULK In failed %d\n", urb->status);
++		break;
++	}
+ 
+     if (urb->actual_length) {
+         spin_lock(&pDevice->lock);
 -- 
-Michal Hocko
-SUSE Labs
+1.9.0
+
