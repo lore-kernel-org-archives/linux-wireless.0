@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16828 "EHLO mga09.intel.com"
+Received: from mout.gmx.net ([212.227.17.20]:62827 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752118AbaBYMXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 07:23:05 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv2 5/5] net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
-Date: Tue, 25 Feb 2014 14:22:30 +0200
-Message-Id: <1393330950-7283-6-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132337_490465_5B436A82)
-In-Reply-To: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1753003AbaBYNtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 08:49:47 -0500
+Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0Lu3J4-1XHIiu428E-011RsU for
+ <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:45 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 5/7] ath9k-common: set maxstream=1 for ar9271
+Date: Tue, 25 Feb 2014 14:48:54 +0100
+Message-Id: <1393336136-31069-6-git-send-email-linux@rempel-privat.de> (sfid-20140225_144949_667963_2A231E3C)
+In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds ACPI IDs for Broadcom bluetooth chip BCM43241 used
-on various Baytrail based boards such as Lenovo Miix 2 and
-Asus Transformer Book T100TA.
-
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/rfkill/rfkill-gpio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath9k/common-init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index ec38884..c4d7c6b 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -156,11 +156,16 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
+index 8e2fa03..8775ab2 100644
+--- a/drivers/net/wireless/ath/ath9k/common-init.c
++++ b/drivers/net/wireless/ath/ath9k/common-init.c
+@@ -191,7 +191,7 @@ void ath9k_cmn_setup_ht_cap(struct ath_hw *ah,
+ 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
  
-+#ifdef CONFIG_ACPI
- static const struct acpi_device_id rfkill_acpi_match[] = {
-+	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
-+	{ "BCM2E39", RFKILL_TYPE_BLUETOOTH },
-+	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
- 	{ "BCM4752", RFKILL_TYPE_GPS },
- 	{ "LNV4752", RFKILL_TYPE_GPS },
- 	{ },
- };
-+#endif
- 
- static struct platform_driver rfkill_gpio_driver = {
- 	.probe = rfkill_gpio_probe,
+-	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
+ 		max_streams = 1;
+ 	else if (AR_SREV_9462(ah))
+ 		max_streams = 2;
 -- 
-1.9.0.rc3
+1.9.0
 
