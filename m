@@ -1,742 +1,742 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:44429 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbaBCU6S (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:38020 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888AbaBYQ0M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:18 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so3882601eek.16
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:17 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 25 Feb 2014 11:26:12 -0500
+Message-ID: <530CC254.3070209@redpinesignals.com> (sfid-20140225_172616_624441_90770529)
+Date: Tue, 25 Feb 2014 21:48:28 +0530
+From: Fariya Fatima <fariya.f@redpinesignals.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/62] iwlwifi: mvm: implement AP/GO uAPSD support
-Date: Mon,  3 Feb 2014 22:57:07 +0200
-Message-Id: <1391461088-8082-1-git-send-email-egrumbach@gmail.com> (sfid-20140203_215822_242034_F59F38A8)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+Subject: [PATCH 3.14.0-rc4 v2 1/10] rsi: Adding RS9113 driver files
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Newer firmware will support uAPSD clients in AP/GO mode, so complete
-the driver support for it. The way it works is described in comments
-in the code, but basically the driver just has to pass down all the
-mac80211 requests and do accounting on agg/non-agg queues properly.
 
-For older firmware, this doesn't change anything as it ignores the
-fields used by the new firmware, and we only advertise uAPSD support
-when the firmware does.
+From: Fariya Fatima
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This driver supports the RS9113 chipset from Redpine Signals Inc. This
+driver
+supports b/g/n standards. Both SDIO and USB interfaces are supported.
+This patch contains the include files.
+
+Signed-off-by: Fariya Fatima <fariya.f@redpinesignals.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw.h         |    2 +
- drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h |   31 +++--
- drivers/net/wireless/iwlwifi/mvm/fw-api.h     |    1 +
- drivers/net/wireless/iwlwifi/mvm/mac80211.c   |   59 +++++++--
- drivers/net/wireless/iwlwifi/mvm/ops.c        |    3 +
- drivers/net/wireless/iwlwifi/mvm/sta.c        |  171 ++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/mvm/sta.h        |   57 ++++++---
- drivers/net/wireless/iwlwifi/mvm/tx.c         |   23 ++++
- 8 files changed, 270 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 5f1493c..7263277 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -95,6 +95,7 @@
-  * @IWL_UCODE_TLV_FLAGS_P2P_PS: P2P client power save is supported (only on a
-  *	single bound interface).
-  * @IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD: P2P client supports uAPSD power save
-+ * @IWL_UCODE_TLV_FLAGS_GO_UAPSD: AP/GO interfaces support uAPSD clients
-  */
- enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_PAN			= BIT(0),
-@@ -119,6 +120,7 @@ enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_P2P_PS		= BIT(21),
- 	IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT	= BIT(24),
- 	IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD	= BIT(26),
-+	IWL_UCODE_TLV_FLAGS_GO_UAPSD		= BIT(30),
- };
+Kconfig               |    1 
+Makefile              |    1 
+rsi/Kconfig           |   31 ++++++
+rsi/Makefile          |   12 ++
+rsi/rsi_boot_params.h |  126 +++++++++++++++++++++++++
+rsi/rsi_common.h      |  244 ++++++++++++++++++++++++++++++++++++++++++++++++++
+rsi/rsi_debugfs.h     |   52 ++++++++++
+rsi/rsi_sdio.h        |  129 ++++++++++++++++++++++++++
+rsi/rsi_usb.h         |   57 +++++++++++
+9 files changed, 653 insertions(+)
+
+diff -rupN linux-3.14-rc4/drivers/net/wireless/Kconfig linux-3.14-rc4_new/drivers/net/wireless/Kconfig
+--- linux-3.14-rc4/drivers/net/wireless/Kconfig	2014-02-24 07:10:03.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/Kconfig	2014-02-25 14:39:38.305337287 +0530
+@@ -281,5 +281,6 @@ source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/mwifiex/Kconfig"
+ source "drivers/net/wireless/cw1200/Kconfig"
++source "drivers/net/wireless/rsi/Kconfig"
  
- /* The default calibrate table size if not specified by firmware file */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-index 1b60fdf..d636478 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
-@@ -199,11 +199,14 @@ enum iwl_sta_modify_flag {
-  * @STA_SLEEP_STATE_AWAKE:
-  * @STA_SLEEP_STATE_PS_POLL:
-  * @STA_SLEEP_STATE_UAPSD:
-+ * @STA_SLEEP_STATE_MOREDATA: set more-data bit on
-+ *	(last) released frame
-  */
- enum iwl_sta_sleep_flag {
--	STA_SLEEP_STATE_AWAKE	= 0,
--	STA_SLEEP_STATE_PS_POLL	= BIT(0),
--	STA_SLEEP_STATE_UAPSD	= BIT(1),
-+	STA_SLEEP_STATE_AWAKE		= 0,
-+	STA_SLEEP_STATE_PS_POLL		= BIT(0),
-+	STA_SLEEP_STATE_UAPSD		= BIT(1),
-+	STA_SLEEP_STATE_MOREDATA	= BIT(2),
- };
+ endif # WLAN
+diff -rupN linux-3.14-rc4/drivers/net/wireless/Makefile linux-3.14-rc4_new/drivers/net/wireless/Makefile
+--- linux-3.14-rc4/drivers/net/wireless/Makefile	2014-02-24 07:10:03.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/Makefile	2014-02-25 14:39:18.607583543 +0530
+@@ -59,3 +59,4 @@ obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
+ obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
  
- /* STA ID and color bits definitions */
-@@ -318,13 +321,15 @@ struct iwl_mvm_add_sta_cmd_v5 {
- } __packed; /* ADD_STA_CMD_API_S_VER_5 */
- 
- /**
-- * struct iwl_mvm_add_sta_cmd_v6 - Add / modify a station
-- * VER_6 of this command is quite similar to VER_5 except
-+ * struct iwl_mvm_add_sta_cmd_v7 - Add / modify a station
-+ * VER_7 of this command is quite similar to VER_5 except
-  * exclusion of all fields related to the security key installation.
-+ * It only differs from VER_6 by the "awake_acs" field that is
-+ * reserved and ignored in VER_6.
-  */
--struct iwl_mvm_add_sta_cmd_v6 {
-+struct iwl_mvm_add_sta_cmd_v7 {
- 	u8 add_modify;
--	u8 reserved1;
-+	u8 awake_acs;
- 	__le16 tid_disable_tx;
- 	__le32 mac_id_n_color;
- 	u8 addr[ETH_ALEN];	/* _STA_ID_MODIFY_INFO_API_S_VER_1 */
-@@ -342,7 +347,7 @@ struct iwl_mvm_add_sta_cmd_v6 {
- 	__le16 assoc_id;
- 	__le16 beamform_flags;
- 	__le32 tfd_queue_msk;
--} __packed; /* ADD_STA_CMD_API_S_VER_6 */
-+} __packed; /* ADD_STA_CMD_API_S_VER_7 */
- 
- /**
-  * struct iwl_mvm_add_sta_key_cmd - add/modify sta key
-@@ -432,5 +437,15 @@ struct iwl_mvm_wep_key_cmd {
- 	struct iwl_mvm_wep_key wep_key[0];
- } __packed; /* SEC_CURR_WEP_KEY_CMD_API_S_VER_2 */
- 
+ obj-$(CONFIG_CW1200)	+= cw1200/
++obj-$(CONFIG_RSI_91x)   += rsi/
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/Kconfig linux-3.14-rc4_new/drivers/net/wireless/rsi/Kconfig
+--- linux-3.14-rc4/drivers/net/wireless/rsi/Kconfig	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/Kconfig	2014-02-25 14:40:54.981378704 +0530
+@@ -0,0 +1,31 @@
++config RSI_91x
++	tristate "Redpine Signals Inc 91x WLAN driver support"
++	depends on MAC80211
++	default m
++	---help---
++	  This option enabes support for RSI 1x1 devices.
++	  Select M (recommended), if you have a RSI 1x1 wireless module.
++
++config RSI_DEBUGFS
++	bool "Redpine Signals Inc debug support"
++	depends on RSI_91x
++	default y
++	---help---
++	 Say Y, if you would like to enable debug support. This option
++	 creates debugfs entries
++
++config RSI_SDIO
++	tristate "Redpine Signals SDIO bus support"
++	depends on MMC && RSI_91x
++	default m
++	---help---
++	  This option enables the SDIO bus support in rsi drivers.
++	  Select M (recommended), if you have a RSI 1x1 wireless module.
++
++config RSI_USB
++	tristate "Redpine Signals USB bus support"
++	depends on USB && RSI_91x
++	default m
++	---help---
++	  This option enables the USB bus support in rsi drivers.
++	  Select M (recommended), if you have a RSI 1x1 wireless module.
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/Makefile linux-3.14-rc4_new/drivers/net/wireless/rsi/Makefile
+--- linux-3.14-rc4/drivers/net/wireless/rsi/Makefile	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/Makefile	2014-02-25 14:41:00.410310833 +0530
+@@ -0,0 +1,12 @@
++rsi_91x-y			+= rsi_91x_main.o
++rsi_91x-y			+= rsi_91x_core.o
++rsi_91x-y			+= rsi_91x_mac80211.o
++rsi_91x-y			+= rsi_91x_mgmt.o
++rsi_91x-y			+= rsi_91x_pkt.o
++rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
++
++rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
++rsi_sdio-y			+= rsi_91x_sdio.o rsi_91x_sdio_ops.o
++obj-$(CONFIG_RSI_91x) 		+= rsi_91x.o
++obj-$(CONFIG_RSI_SDIO)		+= rsi_sdio.o
++obj-$(CONFIG_RSI_USB)		+= rsi_usb.o
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/rsi_boot_params.h linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_boot_params.h
+--- linux-3.14-rc4/drivers/net/wireless/rsi/rsi_boot_params.h	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_boot_params.h	2014-02-25 14:41:09.410198319 +0530
+@@ -0,0 +1,126 @@
 +/**
-+ * struct iwl_mvm_eosp_notification - EOSP notification from firmware
-+ * @remain_frame_count: # of frames remaining, non-zero if SP was cut
-+ *	short by GO absence
-+ * @sta_id: station ID
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
-+struct iwl_mvm_eosp_notification {
-+	__le32 remain_frame_count;
-+	__le32 sta_id;
-+} __packed; /* UAPSD_EOSP_NTFY_API_S_VER_1 */
- 
- #endif /* __fw_api_sta_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 989d7db..a043a1f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -163,6 +163,7 @@ enum {
- 	TX_ANT_CONFIGURATION_CMD = 0x98,
- 	BT_CONFIG = 0x9b,
- 	STATISTICS_NOTIFICATION = 0x9d,
-+	EOSP_NOTIFICATION = 0x9e,
- 	REDUCE_TX_POWER_CMD = 0x9f,
- 
- 	/* RF-KILL commands and notifications */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index c49b507..5b9cfe1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -203,6 +203,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG |
- 				       REGULATORY_DISABLE_BEACON_HINTS;
- 
-+	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_GO_UAPSD)
-+		hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
 +
- 	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
- 	hw->wiphy->n_iface_combinations =
- 		ARRAY_SIZE(iwl_mvm_iface_combinations);
-@@ -305,6 +308,9 @@ static void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
- 			   struct sk_buff *skb)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct ieee80211_sta *sta = control->sta;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
- 
- 	if (iwl_mvm_is_radio_killed(mvm)) {
- 		IWL_DEBUG_DROP(mvm, "Dropping - RF/CT KILL\n");
-@@ -315,8 +321,16 @@ static void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
- 	    !test_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status))
- 		goto drop;
- 
--	if (control->sta) {
--		if (iwl_mvm_tx_skb(mvm, skb, control->sta))
-+	/* treat non-bufferable MMPDUs as broadcast if sta is sleeping */
-+	if (unlikely(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER &&
-+		     ieee80211_is_mgmt(hdr->frame_control) &&
-+		     !ieee80211_is_deauth(hdr->frame_control) &&
-+		     !ieee80211_is_disassoc(hdr->frame_control) &&
-+		     !ieee80211_is_action(hdr->frame_control)))
-+		sta = NULL;
++#ifndef __RSI_BOOTPARAMS_HEADER_H__
++#define __RSI_BOOTPARAMS_HEADER_H__
 +
-+	if (sta) {
-+		if (iwl_mvm_tx_skb(mvm, skb, sta))
- 			goto drop;
- 		return;
- 	}
-@@ -1168,20 +1182,32 @@ static void iwl_mvm_mac_cancel_hw_scan(struct ieee80211_hw *hw,
- 
- static void
- iwl_mvm_mac_allow_buffered_frames(struct ieee80211_hw *hw,
--				  struct ieee80211_sta *sta, u16 tid,
-+				  struct ieee80211_sta *sta, u16 tids,
- 				  int num_frames,
- 				  enum ieee80211_frame_release_type reason,
- 				  bool more_data)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 
--	/* TODO: how do we tell the fw to send frames for a specific TID */
-+	/* Called when we need to transmit (a) frame(s) from mac80211 */
- 
--	/*
--	 * The fw will send EOSP notification when the last frame will be
--	 * transmitted.
--	 */
--	iwl_mvm_sta_modify_sleep_tx_count(mvm, sta, reason, num_frames);
-+	iwl_mvm_sta_modify_sleep_tx_count(mvm, sta, reason, num_frames,
-+					  tids, more_data, false);
++#define CRYSTAL_GOOD_TIME                BIT(0)
++#define BOOTUP_MODE_INFO                 BIT(1)
++#define WIFI_TAPLL_CONFIGS               BIT(5)
++#define WIFI_PLL960_CONFIGS              BIT(6)
++#define WIFI_AFEPLL_CONFIGS              BIT(7)
++#define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
++
++#define TA_PLL_M_VAL_20                  8
++#define TA_PLL_N_VAL_20                  1
++#define TA_PLL_P_VAL_20                  4
++
++#define PLL960_M_VAL_20                  0x14
++#define PLL960_N_VAL_20                  0
++#define PLL960_P_VAL_20                  5
++
++#define UMAC_CLK_40MHZ                   40
++
++#define TA_PLL_M_VAL_40                  46
++#define TA_PLL_N_VAL_40                  3
++#define TA_PLL_P_VAL_40                  3
++
++#define PLL960_M_VAL_40                  0x14
++#define PLL960_N_VAL_40                  0
++#define PLL960_P_VAL_40                  5
++
++#define UMAC_CLK_20BW \
++	(((TA_PLL_M_VAL_20 + 1) * 40) / \
++	 ((TA_PLL_N_VAL_20 + 1) * (TA_PLL_P_VAL_20 + 1)))
++#define VALID_20 \
++	(WIFI_PLL960_CONFIGS | WIFI_AFEPLL_CONFIGS | WIFI_SWITCH_CLK_CONFIGS)
++#define UMAC_CLK_40BW   \
++	(((TA_PLL_M_VAL_40 + 1) * 40) / \
++	 ((TA_PLL_N_VAL_40 + 1) * (TA_PLL_P_VAL_40 + 1)))
++#define VALID_40 \
++	(WIFI_PLL960_CONFIGS | WIFI_AFEPLL_CONFIGS | WIFI_SWITCH_CLK_CONFIGS | \
++	 WIFI_TAPLL_CONFIGS | CRYSTAL_GOOD_TIME | BOOTUP_MODE_INFO)
++
++/* structure to store configs related to TAPLL programming */
++struct tapll_info {
++	__le16 pll_reg_1;
++	__le16 pll_reg_2;
++} __packed;
++
++/* structure to store configs related to PLL960 programming */
++struct pll960_info {
++	__le16 pll_reg_1;
++	__le16 pll_reg_2;
++	__le16 pll_reg_3;
++} __packed;
++
++/* structure to store configs related to AFEPLL programming */
++struct afepll_info {
++	__le16 pll_reg;
++} __packed;
++
++/* structure to store configs related to pll configs */
++struct pll_config {
++	struct tapll_info tapll_info_g;
++	struct pll960_info pll960_info_g;
++	struct afepll_info afepll_info_g;
++} __packed;
++
++/* structure to store configs related to UMAC clk programming */
++struct switch_clk {
++	__le16 switch_clk_info;
++	/* If switch_bbp_lmac_clk_reg is set then this value will be programmed
++	 * into reg
++	 */
++	__le16 bbp_lmac_clk_reg_val;
++	/* if switch_umac_clk is set then this value will be programmed */
++	__le16 umac_clock_reg_config;
++	/* if switch_qspi_clk is set then this value will be programmed */
++	__le16 qspi_uart_clock_reg_config;
++} __packed;
++
++struct device_clk_info {
++	struct pll_config pll_config_g;
++	struct switch_clk switch_clk_g;
++} __packed;
++
++struct bootup_params {
++	__le16 magic_number;
++	__le16 crystal_good_time;
++	__le32 valid;
++	__le32 reserved_for_valids;
++	__le16 bootup_mode_info;
++	/* configuration used for digital loop back */
++	__le16 digital_loop_back_params;
++	__le16 rtls_timestamp_en;
++	__le16 host_spi_intr_cfg;
++	struct device_clk_info device_clk_info[3];
++	/* ulp buckboost wait time  */
++	__le32 buckboost_wakeup_cnt;
++	/* pmu wakeup wait time & WDT EN info */
++	__le16 pmu_wakeup_wait;
++	u8 shutdown_wait_time;
++	/* Sleep clock source selection */
++	u8 pmu_slp_clkout_sel;
++	/* WDT programming values */
++	__le32 wdt_prog_value;
++	/* WDT soc reset delay */
++	__le32 wdt_soc_rst_delay;
++	/* dcdc modes configs */
++	__le32 dcdc_operation_mode;
++	__le32 soc_reset_wait_cnt;
++} __packed;
++#endif
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/rsi_common.h linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_common.h
+--- linux-3.14-rc4/drivers/net/wireless/rsi/rsi_common.h	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_common.h	2014-02-25 14:41:09.410198319 +0530
+@@ -0,0 +1,244 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_COMMON_H__
++#define __RSI_COMMON_H__
++
++#include <linux/string.h>
++#include <linux/skbuff.h>
++#include <net/mac80211.h>
++
++#define ERR_ZONE                        BIT(0)  /* For Error Msgs             */
++#define INFO_ZONE                       BIT(1)  /* For General Status Msgs    */
++#define INIT_ZONE                       BIT(2)  /* For Driver Init Seq Msgs   */
++#define MGMT_TX_ZONE                    BIT(3)  /* For TX Mgmt Path Msgs      */
++#define MGMT_RX_ZONE                    BIT(4)  /* For RX Mgmt Path Msgs      */
++#define DATA_TX_ZONE                    BIT(5)  /* For TX Data Path Msgs      */
++#define DATA_RX_ZONE                    BIT(6)  /* For RX Data Path Msgs      */
++#define FSM_ZONE                        BIT(7)  /* For State Machine Msgs     */
++#define ISR_ZONE                        BIT(8)  /* For Interrupt Msgs         */
++
++#define FSM_CARD_NOT_READY              0
++#define FSM_BOOT_PARAMS_SENT            1
++#define FSM_EEPROM_READ_MAC_ADDR        2
++#define FSM_RESET_MAC_SENT              3
++#define FSM_RADIO_CAPS_SENT             4
++#define FSM_BB_RF_PROG_SENT             5
++#define FSM_MAC_INIT_DONE               6
++
++extern u32 rsi_zone_enabled;
++
++static inline void rsi_dbg(u32 zone, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	if (zone & rsi_zone_enabled)
++		pr_info("%pV", &vaf);
++	va_end(args);
 +}
 +
-+static void
-+iwl_mvm_mac_release_buffered_frames(struct ieee80211_hw *hw,
-+				    struct ieee80211_sta *sta, u16 tids,
-+				    int num_frames,
-+				    enum ieee80211_frame_release_type reason,
-+				    bool more_data)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++#define RSI_MAX_VIFS                    1
++#define NUM_EDCA_QUEUES                 4
++#define IEEE80211_ADDR_LEN              6
++#define FRAME_DESC_SZ                   16
++#define MIN_802_11_HDR_LEN              24
 +
-+	/* Called when we need to transmit (a) frame(s) from agg queue */
++#define IEEE80211_QOS_ENABLED           0x80
 +
-+	iwl_mvm_sta_modify_sleep_tx_count(mvm, sta, reason, num_frames,
-+					  tids, more_data, true);
- }
- 
- static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
-@@ -1191,11 +1217,25 @@ static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	int tid;
- 
- 	switch (cmd) {
- 	case STA_NOTIFY_SLEEP:
- 		if (atomic_read(&mvm->pending_frames[mvmsta->sta_id]) > 0)
- 			ieee80211_sta_block_awake(hw, sta, true);
-+		spin_lock_bh(&mvmsta->lock);
-+		for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
-+			struct iwl_mvm_tid_data *tid_data;
++#define DATA_QUEUE_WATER_MARK           400
++#define MIN_DATA_QUEUE_WATER_MARK       300
++#define MULTICAST_WATER_MARK            200
++#define MAC_80211_HDR_FRAME_CONTROL     0
++#define WME_NUM_AC                      4
++#define NUM_SOFT_QUEUES                 5
++#define MAX_HW_QUEUES                   8
++#define INVALID_QUEUE                   0xff
++#define MAX_CONTINUOUS_VO_PKTS          8
++#define MAX_CONTINUOUS_VI_PKTS          4
 +
-+			tid_data = &mvmsta->tid_data[tid];
-+			if (tid_data->state != IWL_AGG_ON &&
-+			    tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA)
-+				continue;
-+			if (iwl_mvm_tid_queued(tid_data) == 0)
-+				continue;
-+			ieee80211_sta_set_buffered(sta, tid, true);
-+		}
-+		spin_unlock_bh(&mvmsta->lock);
- 		/*
- 		 * The fw updates the STA to be asleep. Tx packets on the Tx
- 		 * queues to this station will not be transmitted. The fw will
-@@ -1914,6 +1954,7 @@ struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.sta_state = iwl_mvm_mac_sta_state,
- 	.sta_notify = iwl_mvm_mac_sta_notify,
- 	.allow_buffered_frames = iwl_mvm_mac_allow_buffered_frames,
-+	.release_buffered_frames = iwl_mvm_mac_release_buffered_frames,
- 	.set_rts_threshold = iwl_mvm_mac_set_rts_threshold,
- 	.sta_rc_update = iwl_mvm_sta_rc_update,
- 	.conf_tx = iwl_mvm_mac_conf_tx,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index a3d43de..a65eeb3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -222,6 +222,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 
- 	RX_HANDLER(TIME_EVENT_NOTIFICATION, iwl_mvm_rx_time_event_notif, false),
- 
-+	RX_HANDLER(EOSP_NOTIFICATION, iwl_mvm_rx_eosp_notif, false),
++/* Queue information */
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define IEEE80211_MGMT_FRAME            0x00
++#define IEEE80211_CTL_FRAME             0x04
 +
- 	RX_HANDLER(SCAN_REQUEST_CMD, iwl_mvm_rx_scan_response, false),
- 	RX_HANDLER(SCAN_COMPLETE_NOTIFICATION, iwl_mvm_rx_scan_complete, false),
- 	RX_HANDLER(SCAN_OFFLOAD_COMPLETE,
-@@ -284,6 +286,7 @@ static const char *iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(BEACON_NOTIFICATION),
- 	CMD(BEACON_TEMPLATE_CMD),
- 	CMD(STATISTICS_NOTIFICATION),
-+	CMD(EOSP_NOTIFICATION),
- 	CMD(REDUCE_TX_POWER_CMD),
- 	CMD(TX_ANT_CONFIGURATION_CMD),
- 	CMD(D3_CONFIG_CMD),
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index ec18121..af94f75 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -66,27 +66,27 @@
- #include "sta.h"
- #include "rs.h"
- 
--static void iwl_mvm_add_sta_cmd_v6_to_v5(struct iwl_mvm_add_sta_cmd_v6 *cmd_v6,
-+static void iwl_mvm_add_sta_cmd_v7_to_v5(struct iwl_mvm_add_sta_cmd_v7 *cmd_v7,
- 					 struct iwl_mvm_add_sta_cmd_v5 *cmd_v5)
- {
- 	memset(cmd_v5, 0, sizeof(*cmd_v5));
- 
--	cmd_v5->add_modify = cmd_v6->add_modify;
--	cmd_v5->tid_disable_tx = cmd_v6->tid_disable_tx;
--	cmd_v5->mac_id_n_color = cmd_v6->mac_id_n_color;
--	memcpy(cmd_v5->addr, cmd_v6->addr, ETH_ALEN);
--	cmd_v5->sta_id = cmd_v6->sta_id;
--	cmd_v5->modify_mask = cmd_v6->modify_mask;
--	cmd_v5->station_flags = cmd_v6->station_flags;
--	cmd_v5->station_flags_msk = cmd_v6->station_flags_msk;
--	cmd_v5->add_immediate_ba_tid = cmd_v6->add_immediate_ba_tid;
--	cmd_v5->remove_immediate_ba_tid = cmd_v6->remove_immediate_ba_tid;
--	cmd_v5->add_immediate_ba_ssn = cmd_v6->add_immediate_ba_ssn;
--	cmd_v5->sleep_tx_count = cmd_v6->sleep_tx_count;
--	cmd_v5->sleep_state_flags = cmd_v6->sleep_state_flags;
--	cmd_v5->assoc_id = cmd_v6->assoc_id;
--	cmd_v5->beamform_flags = cmd_v6->beamform_flags;
--	cmd_v5->tfd_queue_msk = cmd_v6->tfd_queue_msk;
-+	cmd_v5->add_modify = cmd_v7->add_modify;
-+	cmd_v5->tid_disable_tx = cmd_v7->tid_disable_tx;
-+	cmd_v5->mac_id_n_color = cmd_v7->mac_id_n_color;
-+	memcpy(cmd_v5->addr, cmd_v7->addr, ETH_ALEN);
-+	cmd_v5->sta_id = cmd_v7->sta_id;
-+	cmd_v5->modify_mask = cmd_v7->modify_mask;
-+	cmd_v5->station_flags = cmd_v7->station_flags;
-+	cmd_v5->station_flags_msk = cmd_v7->station_flags_msk;
-+	cmd_v5->add_immediate_ba_tid = cmd_v7->add_immediate_ba_tid;
-+	cmd_v5->remove_immediate_ba_tid = cmd_v7->remove_immediate_ba_tid;
-+	cmd_v5->add_immediate_ba_ssn = cmd_v7->add_immediate_ba_ssn;
-+	cmd_v5->sleep_tx_count = cmd_v7->sleep_tx_count;
-+	cmd_v5->sleep_state_flags = cmd_v7->sleep_state_flags;
-+	cmd_v5->assoc_id = cmd_v7->assoc_id;
-+	cmd_v5->beamform_flags = cmd_v7->beamform_flags;
-+	cmd_v5->tfd_queue_msk = cmd_v7->tfd_queue_msk;
- }
- 
- static void
-@@ -110,7 +110,7 @@ iwl_mvm_add_sta_key_to_add_sta_cmd_v5(struct iwl_mvm_add_sta_key_cmd *key_cmd,
- }
- 
- static int iwl_mvm_send_add_sta_cmd_status(struct iwl_mvm *mvm,
--					   struct iwl_mvm_add_sta_cmd_v6 *cmd,
-+					   struct iwl_mvm_add_sta_cmd_v7 *cmd,
- 					   int *status)
- {
- 	struct iwl_mvm_add_sta_cmd_v5 cmd_v5;
-@@ -119,14 +119,14 @@ static int iwl_mvm_send_add_sta_cmd_status(struct iwl_mvm *mvm,
- 		return iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA, sizeof(*cmd),
- 						   cmd, status);
- 
--	iwl_mvm_add_sta_cmd_v6_to_v5(cmd, &cmd_v5);
-+	iwl_mvm_add_sta_cmd_v7_to_v5(cmd, &cmd_v5);
- 
- 	return iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA, sizeof(cmd_v5),
- 					   &cmd_v5, status);
- }
- 
- static int iwl_mvm_send_add_sta_cmd(struct iwl_mvm *mvm, u32 flags,
--				    struct iwl_mvm_add_sta_cmd_v6 *cmd)
-+				    struct iwl_mvm_add_sta_cmd_v7 *cmd)
- {
- 	struct iwl_mvm_add_sta_cmd_v5 cmd_v5;
- 
-@@ -134,7 +134,7 @@ static int iwl_mvm_send_add_sta_cmd(struct iwl_mvm *mvm, u32 flags,
- 		return iwl_mvm_send_cmd_pdu(mvm, ADD_STA, flags,
- 					    sizeof(*cmd), cmd);
- 
--	iwl_mvm_add_sta_cmd_v6_to_v5(cmd, &cmd_v5);
-+	iwl_mvm_add_sta_cmd_v7_to_v5(cmd, &cmd_v5);
- 
- 	return iwl_mvm_send_cmd_pdu(mvm, ADD_STA, flags, sizeof(cmd_v5),
- 				    &cmd_v5);
-@@ -196,7 +196,7 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			   bool update)
- {
- 	struct iwl_mvm_sta *mvm_sta = (void *)sta->drv_priv;
--	struct iwl_mvm_add_sta_cmd_v6 add_sta_cmd;
-+	struct iwl_mvm_add_sta_cmd_v7 add_sta_cmd;
- 	int ret;
- 	u32 status;
- 	u32 agg_size = 0, mpdu_dens = 0;
-@@ -368,7 +368,7 @@ int iwl_mvm_update_sta(struct iwl_mvm *mvm,
- int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 		      bool drain)
- {
--	struct iwl_mvm_add_sta_cmd_v6 cmd = {};
-+	struct iwl_mvm_add_sta_cmd_v7 cmd = {};
- 	int ret;
- 	u32 status;
- 
-@@ -587,13 +587,13 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
- 				      const u8 *addr,
- 				      u16 mac_id, u16 color)
- {
--	struct iwl_mvm_add_sta_cmd_v6 cmd;
-+	struct iwl_mvm_add_sta_cmd_v7 cmd;
- 	int ret;
- 	u32 status;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	memset(&cmd, 0, sizeof(struct iwl_mvm_add_sta_cmd_v6));
-+	memset(&cmd, 0, sizeof(struct iwl_mvm_add_sta_cmd_v7));
- 	cmd.sta_id = sta->sta_id;
- 	cmd.mac_id_n_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mac_id,
- 							     color));
-@@ -735,7 +735,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		       int tid, u16 ssn, bool start)
- {
- 	struct iwl_mvm_sta *mvm_sta = (void *)sta->drv_priv;
--	struct iwl_mvm_add_sta_cmd_v6 cmd = {};
-+	struct iwl_mvm_add_sta_cmd_v7 cmd = {};
- 	int ret;
- 	u32 status;
- 
-@@ -794,7 +794,7 @@ static int iwl_mvm_sta_tx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			      int tid, u8 queue, bool start)
- {
- 	struct iwl_mvm_sta *mvm_sta = (void *)sta->drv_priv;
--	struct iwl_mvm_add_sta_cmd_v6 cmd = {};
-+	struct iwl_mvm_add_sta_cmd_v7 cmd = {};
- 	int ret;
- 	u32 status;
- 
-@@ -833,7 +833,7 @@ static int iwl_mvm_sta_tx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	return ret;
- }
- 
--static const u8 tid_to_ac[] = {
-+static const u8 tid_to_mac80211_ac[] = {
- 	IEEE80211_AC_BE,
- 	IEEE80211_AC_BK,
- 	IEEE80211_AC_BK,
-@@ -844,6 +844,17 @@ static const u8 tid_to_ac[] = {
- 	IEEE80211_AC_VO,
- };
- 
-+static const u8 tid_to_ucode_ac[] = {
-+	AC_BE,
-+	AC_BK,
-+	AC_BK,
-+	AC_BE,
-+	AC_VI,
-+	AC_VI,
-+	AC_VO,
-+	AC_VO,
++#define IEEE80211_QOS_TID               0x0f
++#define IEEE80211_NONQOS_TID            16
++
++#define TID_TO_WME_AC(_tid) (      \
++	((_tid) == 0 || (_tid) == 3) ? BE_Q : \
++	((_tid) < 3) ? BK_Q : \
++	((_tid) < 6) ? VI_Q : \
++	VO_Q)
++
++#define WME_AC(_q) (    \
++	((_q) == BK_Q) ? IEEE80211_AC_BK : \
++	((_q) == BE_Q) ? IEEE80211_AC_BE : \
++	((_q) == VI_Q) ? IEEE80211_AC_VI : \
++	IEEE80211_AC_VO)
++
++struct version_info {
++	u16 major;
++	u16 minor;
++	u16 release_num;
++	u16 patch_num;
++} __packed;
++
++struct skb_info {
++	s8 rssi;
++	u32 flags;
++	u16 channel;
++	s8 tid;
++	s8 sta_id;
 +};
 +
- int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta, u16 tid, u16 *ssn)
- {
-@@ -874,7 +885,7 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	}
- 
- 	/* the new tx queue is still connected to the same mac80211 queue */
--	mvm->queue_to_mac80211[txq_id] = vif->hw_queue[tid_to_ac[tid]];
-+	mvm->queue_to_mac80211[txq_id] = vif->hw_queue[tid_to_mac80211_ac[tid]];
- 
- 	spin_lock_bh(&mvmsta->lock);
- 	tid_data = &mvmsta->tid_data[tid];
-@@ -916,7 +927,7 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	tid_data->ssn = 0xffff;
- 	spin_unlock_bh(&mvmsta->lock);
- 
--	fifo = iwl_mvm_ac_to_tx_fifo[tid_to_ac[tid]];
-+	fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
- 
- 	ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
- 	if (ret)
-@@ -1411,7 +1422,7 @@ void iwl_mvm_sta_modify_ps_wake(struct iwl_mvm *mvm,
- 				struct ieee80211_sta *sta)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_mvm_add_sta_cmd_v6 cmd = {
-+	struct iwl_mvm_add_sta_cmd_v7 cmd = {
- 		.add_modify = STA_MODE_MODIFY,
- 		.sta_id = mvmsta->sta_id,
- 		.station_flags_msk = cpu_to_le32(STA_FLG_PS),
-@@ -1427,28 +1438,102 @@ void iwl_mvm_sta_modify_ps_wake(struct iwl_mvm *mvm,
- void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
--				       u16 cnt)
-+				       u16 cnt, u16 tids, bool more_data,
-+				       bool agg)
- {
--	u16 sleep_state_flags =
--		(reason == IEEE80211_FRAME_RELEASE_UAPSD) ?
--			STA_SLEEP_STATE_UAPSD : STA_SLEEP_STATE_PS_POLL;
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_mvm_add_sta_cmd_v6 cmd = {
-+	struct iwl_mvm_add_sta_cmd_v7 cmd = {
- 		.add_modify = STA_MODE_MODIFY,
- 		.sta_id = mvmsta->sta_id,
- 		.modify_mask = STA_MODIFY_SLEEPING_STA_TX_COUNT,
- 		.sleep_tx_count = cpu_to_le16(cnt),
- 		.mac_id_n_color = cpu_to_le32(mvmsta->mac_id_n_color),
--		/*
--		 * Same modify mask for sleep_tx_count and sleep_state_flags so
--		 * we must set the sleep_state_flags too.
--		 */
--		.sleep_state_flags = cpu_to_le16(sleep_state_flags),
- 	};
--	int ret;
-+	int tid, ret;
-+	unsigned long _tids = tids;
++enum EDCA_QUEUE {
++	BK_Q,
++	BE_Q,
++	VI_Q,
++	VO_Q,
++	MGMT_SOFT_Q
++};
 +
-+	/* convert TIDs to ACs - we don't support TSPEC so that's OK
-+	 * Note that this field is reserved and unused by firmware not
-+	 * supporting GO uAPSD, so it's safe to always do this.
-+	 */
-+	for_each_set_bit(tid, &_tids, IWL_MAX_TID_COUNT)
-+		cmd.awake_acs |= BIT(tid_to_ucode_ac[tid]);
++struct security_info {
++	bool security_enable;
++	u32 ptk_cipher;
++	u32 gtk_cipher;
++};
 +
-+	/* If we're releasing frames from aggregation queues then check if the
-+	 * all queues combined that we're releasing frames from have
-+	 *  - more frames than the service period, in which case more_data
-+	 *    needs to be set
-+	 *  - fewer than 'cnt' frames, in which case we need to adjust the
-+	 *    firmware command (but do that unconditionally)
-+	 */
-+	if (agg) {
-+		int remaining = cnt;
++struct wmm_qinfo {
++	s32 weight;
++	s32 wme_params;
++	s32 pkt_contended;
++};
 +
-+		spin_lock_bh(&mvmsta->lock);
-+		for_each_set_bit(tid, &_tids, IWL_MAX_TID_COUNT) {
-+			struct iwl_mvm_tid_data *tid_data;
-+			u16 n_queued;
++struct transmit_q_stats {
++	u32 total_tx_pkt_send[NUM_EDCA_QUEUES + 1];
++	u32 total_tx_pkt_freed[NUM_EDCA_QUEUES + 1];
++};
 +
-+			tid_data = &mvmsta->tid_data[tid];
-+			if (WARN(tid_data->state != IWL_AGG_ON &&
-+				 tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA,
-+				 "TID %d state is %d\n",
-+				 tid, tid_data->state)) {
-+				spin_unlock_bh(&mvmsta->lock);
-+				ieee80211_sta_eosp(sta);
-+				return;
-+			}
++struct vif_priv {
++	bool is_ht;
++	bool sgi;
++	u16 seq_start;
++};
 +
-+			n_queued = iwl_mvm_tid_queued(tid_data);
-+			if (n_queued > remaining) {
-+				more_data = true;
-+				remaining = 0;
-+				break;
-+			}
-+			remaining -= n_queued;
-+		}
-+		spin_unlock_bh(&mvmsta->lock);
++struct rsi_thread {
++	void (*thread_function)(void *);
++	struct completion completion;
++	struct task_struct *task;
++};
 +
-+		cmd.sleep_tx_count = cpu_to_le16(cnt - remaining);
-+		if (WARN_ON(cnt - remaining == 0)) {
-+			ieee80211_sta_eosp(sta);
-+			return;
-+		}
-+	}
++struct rsi_event {
++	atomic_t event_condition;
++	wait_queue_head_t event_queue;
++};
 +
-+	/* Note: this is ignored by firmware not supporting GO uAPSD */
-+	if (more_data)
-+		cmd.sleep_state_flags |= cpu_to_le16(STA_SLEEP_STATE_MOREDATA);
++struct rsi_hw;
 +
-+	if (reason == IEEE80211_FRAME_RELEASE_PSPOLL) {
-+		mvmsta->next_status_eosp = true;
-+		cmd.sleep_state_flags |= cpu_to_le16(STA_SLEEP_STATE_PS_POLL);
-+	} else {
-+		cmd.sleep_state_flags |= cpu_to_le16(STA_SLEEP_STATE_UAPSD);
-+	}
- 
--	/* TODO: somehow the fw doesn't seem to take PS_POLL into account */
- 	ret = iwl_mvm_send_add_sta_cmd(mvm, CMD_ASYNC, &cmd);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to send ADD_STA command (%d)\n", ret);
- }
++struct rsi_common {
++	struct rsi_hw *priv;
++	struct vif_priv vif_info[RSI_MAX_VIFS];
 +
-+int iwl_mvm_rx_eosp_notif(struct iwl_mvm *mvm,
-+			  struct iwl_rx_cmd_buffer *rxb,
-+			  struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_mvm_eosp_notification *notif = (void *)pkt->data;
-+	struct ieee80211_sta *sta;
-+	u32 sta_id = le32_to_cpu(notif->sta_id);
++	bool mgmt_q_block;
++	struct version_info driver_ver;
++	struct version_info fw_ver;
 +
-+	if (WARN_ON_ONCE(sta_id >= IWL_MVM_STATION_COUNT))
-+		return 0;
++	struct rsi_thread tx_thread;
++	/* rx_thread used only in case of USB */
++	struct rsi_thread rx_thread;
++	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
++	struct rsi_event tx_event;
++	struct rsi_event rx_event;
++	/* Mutex declaration */
++	struct mutex mutex;
++	/* Mutex used between tx/rx threads */
++	struct mutex tx_rxlock;
++	atomic_t tx_thread_done;
++	atomic_t rx_thread_done;
++	u8 endpoint;
 +
-+	rcu_read_lock();
-+	sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
-+	if (!IS_ERR_OR_NULL(sta))
-+		ieee80211_sta_eosp(sta);
-+	rcu_read_unlock();
++	/* Channel/band related */
++	u8 band;
++	u8 channel_width;
 +
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
-index 4968d02..64f9a1b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
-@@ -195,24 +195,33 @@ struct iwl_mvm;
- /**
-  * DOC: AP mode - PS
-  *
-- * When a station is asleep, the fw will set it as "asleep". All the
-- * non-aggregation frames to that station will be dropped by the fw
-- * (%TX_STATUS_FAIL_DEST_PS failure code).
-+ * When a station is asleep, the fw will set it as "asleep". All frames on
-+ * shared queues (i.e. non-aggregation queues) to that station will be dropped
-+ * by the fw (%TX_STATUS_FAIL_DEST_PS failure code).
++	u16 rts_threshold;
++	u16 bitrate_mask[2];
++	u32 fixedrate_mask[2];
++
++	u8 rf_reset;
++	struct transmit_q_stats tx_stats;
++	struct security_info secinfo;
++	struct wmm_qinfo tx_qinfo[NUM_EDCA_QUEUES];
++	struct ieee80211_tx_queue_params edca_params[NUM_EDCA_QUEUES];
++	u8 mac_addr[IEEE80211_ADDR_LEN];
++
++	/* state related */
++	u32 fsm_state;
++	bool init_done;
++	u8 bb_rf_prog_count;
++	bool iface_down;
++
++	/* Generic */
++	u8 channel;
++	u8 *rx_data_pkt;
++	u8 mac_id;
++	u8 radio_id;
++	u16 rate_pwr[20];
++	u16 min_rate;
++
++	/* WMM algo related */
++	u8 selected_qnum;
++	u32 pkt_cnt;
++	u8 min_weight;
++};
++
++enum rsi_91x_intf {
++	RSI_91X_INTF_USB,
++	RSI_91X_INTF_SDIO
++};
++
++struct rsi_hw_intf_ops {
++	int (*host_intf_read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*host_intf_write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*read_buffer_status)(struct rsi_hw *adapter);
++	int (*rx_urb_submit)(struct rsi_hw *adapter);
++};
++
++struct rsi_hw {
++	struct rsi_common *priv;
++	struct ieee80211_hw *hw;
++	struct ieee80211_vif *vifs[RSI_MAX_VIFS];
++	struct ieee80211_tx_queue_params edca_params[NUM_EDCA_QUEUES];
++	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
++
++	struct device *device;
++	u8 sc_nvifs;
++
++#ifdef CONFIG_RSI_DEBUGFS
++	struct rsi_debugfs *dfsentry;
++#endif
++	void *rsi_device;
++	enum rsi_91x_intf hw_intf;
++	struct rsi_hw_intf_ops *hw_intf_ops;
++};
++#endif
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/rsi_debugfs.h linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_debugfs.h
+--- linux-3.14-rc4/drivers/net/wireless/rsi/rsi_debugfs.h	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_debugfs.h	2014-02-25 14:41:09.410198319 +0530
+@@ -0,0 +1,52 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
 + *
-  * AMPDUs are in a separate queue that is stopped by the fw. We just need to
-- * let mac80211 know how many frames we have in these queues so that it can
-+ * let mac80211 know when there are frames in these queues so that it can
-  * properly handle trigger frames.
-- * When the a trigger frame is received, mac80211 tells the driver to send
-- * frames from the AMPDU queues or AC queue depending on which queue are
-- * delivery-enabled and what TID has frames to transmit (Note that mac80211 has
-- * all the knowledege since all the non-agg frames are buffered / filtered, and
-- * the driver tells mac80211 about agg frames). The driver needs to tell the fw
-- * to let frames out even if the station is asleep. This is done by
-- * %iwl_mvm_sta_modify_sleep_tx_count.
-- * When we receive a frame from that station with PM bit unset, the
-- * driver needs to let the fw know that this station isn't alseep any more.
-- * This is done by %iwl_mvm_sta_modify_ps_wake.
-- *
-- * TODO - EOSP handling
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
 + *
-+ * When a trigger frame is received, mac80211 tells the driver to send frames
-+ * from the AMPDU queues or sends frames to non-aggregation queues itself,
-+ * depending on which ACs are delivery-enabled and what TID has frames to
-+ * transmit. Note that mac80211 has all the knowledege since all the non-agg
-+ * frames are buffered / filtered, and the driver tells mac80211 about agg
-+ * frames). The driver needs to tell the fw to let frames out even if the
-+ * station is asleep. This is done by %iwl_mvm_sta_modify_sleep_tx_count.
-+ *
-+ * When we receive a frame from that station with PM bit unset, the driver
-+ * needs to let the fw know that this station isn't asleep any more. This is
-+ * done by %iwl_mvm_sta_modify_ps_wake in response to mac80211 signalling the
-+ * station's wakeup.
-+ *
-+ * For a GO, the Service Period might be cut short due to an absence period
-+ * of the GO. In this (and all other cases) the firmware notifies us with the
-+ * EOSP_NOTIFICATION, and we notify mac80211 of that. Further frames that we
-+ * already sent to the device will be rejected again.
-+ *
-+ * See also "AP support for powersaving clients" in mac80211.h.
-  */
- 
- /**
-@@ -261,6 +270,12 @@ struct iwl_mvm_tid_data {
- 	u16 ssn;
- };
- 
-+static inline u16 iwl_mvm_tid_queued(struct iwl_mvm_tid_data *tid_data)
-+{
-+	return ieee80211_sn_sub(IEEE80211_SEQ_TO_SN(tid_data->seq_number),
-+				tid_data->next_reclaimed);
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_DEBUGFS_H__
++#define __RSI_DEBUGFS_H__
++
++#include "rsi_common.h"
++#include <linux/debugfs.h>
++
++#define FOPS(fopen) { \
++	.owner = THIS_MODULE, \
++	.open = (fopen), \
++	.read = seq_read, \
++	.llseek = seq_lseek, \
 +}
 +
- /**
-  * struct iwl_mvm_sta - representation of a station in the driver
-  * @sta_id: the index of the station in the fw (will be replaced by id_n_color)
-@@ -270,6 +285,8 @@ struct iwl_mvm_tid_data {
-  *	tid.
-  * @max_agg_bufsize: the maximal size of the AGG buffer for this station
-  * @bt_reduced_txpower: is reduced tx power enabled for this station
-+ * @next_status_eosp: the next reclaimed packet is a PS-Poll response and
-+ *	we need to signal the EOSP
-  * @lock: lock to protect the whole struct. Since %tid_data is access from Tx
-  * and from Tx response flow, it needs a spinlock.
-  * @tid_data: per tid data. Look at %iwl_mvm_tid_data.
-@@ -288,6 +305,7 @@ struct iwl_mvm_sta {
- 	u16 tid_disable_agg;
- 	u8 max_agg_bufsize;
- 	bool bt_reduced_txpower;
-+	bool next_status_eosp;
- 	spinlock_t lock;
- 	struct iwl_mvm_tid_data tid_data[IWL_MAX_TID_COUNT];
- 	struct iwl_lq_sta lq_sta;
-@@ -345,6 +363,10 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- 			     struct ieee80211_sta *sta, u32 iv32,
- 			     u16 *phase1key);
- 
-+int iwl_mvm_rx_eosp_notif(struct iwl_mvm *mvm,
-+			  struct iwl_rx_cmd_buffer *rxb,
-+			  struct iwl_device_cmd *cmd);
++#define FOPS_RW(fopen, fwrite) { \
++	.owner = THIS_MODULE, \
++	.open = (fopen), \
++	.read = seq_read, \
++	.llseek = seq_lseek, \
++	.write = (fwrite), \
++}
 +
- /* AMPDU */
- int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		       int tid, u16 ssn, bool start);
-@@ -375,7 +397,8 @@ void iwl_mvm_sta_modify_ps_wake(struct iwl_mvm *mvm,
- void iwl_mvm_sta_modify_sleep_tx_count(struct iwl_mvm *mvm,
- 				       struct ieee80211_sta *sta,
- 				       enum ieee80211_frame_release_type reason,
--				       u16 cnt);
-+				       u16 cnt, u16 tids, bool more_data,
-+				       bool agg);
- int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 		      bool drain);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 90378c2..8d18bf2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -377,6 +377,13 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
- 	/* From now on, we cannot access info->control */
- 
-+	/*
-+	 * we handle that entirely ourselves -- for uAPSD the firmware
-+	 * will always send a notification, and for PS-Poll responses
-+	 * we'll notify mac80211 when getting frame status
-+	 */
-+	info->flags &= ~IEEE80211_TX_STATUS_EOSP;
++struct rsi_dbg_files {
++	const char *name;
++	umode_t perms;
++	const struct file_operations fops;
++};
 +
- 	spin_lock(&mvmsta->lock);
- 
- 	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
-@@ -437,6 +444,17 @@ static void iwl_mvm_check_ratid_empty(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvmsta->lock);
- 
-+	if ((tid_data->state == IWL_AGG_ON ||
-+	     tid_data->state == IWL_EMPTYING_HW_QUEUE_DELBA) &&
-+	    iwl_mvm_tid_queued(tid_data) == 0) {
-+		/*
-+		 * Now that this aggregation queue is empty tell mac80211 so it
-+		 * knows we no longer have frames buffered for the station on
-+		 * this TID (for the TIM bitmap calculation.)
-+		 */
-+		ieee80211_sta_set_buffered(sta, tid, false);
++struct rsi_debugfs {
++	struct dentry *subdir;
++	struct rsi_dbg_ops *dfs_get_ops;
++	struct dentry *rsi_files[4];
++};
++
++int rsi_init_dbgfs(struct rsi_hw *adapter);
++void rsi_remove_dbgfs(struct rsi_hw *adapter);
++#endif
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/rsi_sdio.h linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_sdio.h
+--- linux-3.14-rc4/drivers/net/wireless/rsi/rsi_sdio.h	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_sdio.h	2014-02-25 14:41:09.410198319 +0530
+@@ -0,0 +1,129 @@
++/**
++ * @section LICENSE
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ */
++
++#ifndef __RSI_SDIO_INTF__
++#define __RSI_SDIO_INTF__
++
++#include <linux/mmc/card.h>
++#include <linux/mmc/mmc.h>
++#include <linux/mmc/host.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/sd.h>
++#include <linux/mmc/sdio_ids.h>
++#include "rsi_common.h"
++
++enum SDIO_INTERRUPT_TYPE {
++	BUFFER_FULL         = 0x0,
++	BUFFER_AVAILABLE    = 0x1,
++	FIRMWARE_ASSERT_IND = 0x3,
++	MSDU_PACKET_PENDING = 0x4,
++	UNKNOWN_INT         = 0XE
++};
++
++/* Buffer status register related info */
++#define PKT_BUFF_SEMI_FULL                      0
++#define PKT_BUFF_FULL                           1
++#define PKT_MGMT_BUFF_FULL                      2
++#define MSDU_PKT_PENDING                        3
++/* Interrupt Bit Related Macros */
++#define PKT_BUFF_AVAILABLE                      0
++#define FW_ASSERT_IND                           2
++
++#define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
++#define RSI_FN1_INT_REGISTER                    0xf9
++#define RSI_SD_REQUEST_MASTER                   0x10000
++
++/* FOR SD CARD ONLY */
++#define SDIO_RX_NUM_BLOCKS_REG                  0x000F1
++#define SDIO_FW_STATUS_REG                      0x000F2
++#define SDIO_NXT_RD_DELAY2                      0x000F5
++#define SDIO_MASTER_ACCESS_MSBYTE               0x000FA
++#define SDIO_MASTER_ACCESS_LSBYTE               0x000FB
++#define SDIO_READ_START_LVL                     0x000FC
++#define SDIO_READ_FIFO_CTL                      0x000FD
++#define SDIO_WRITE_FIFO_CTL                     0x000FE
++#define SDIO_FUN1_INTR_CLR_REG                  0x0008
++#define SDIO_REG_HIGH_SPEED                     0x0013
++
++#define RSI_GET_SDIO_INTERRUPT_TYPE(_I, TYPE)      \
++	{					   \
++		TYPE =                             \
++		(_I & (1 << PKT_BUFF_AVAILABLE)) ? \
++		BUFFER_AVAILABLE :		   \
++		(_I & (1 << MSDU_PKT_PENDING)) ?   \
++		MSDU_PACKET_PENDING :              \
++		(_I & (1 << FW_ASSERT_IND)) ?      \
++		FIRMWARE_ASSERT_IND : UNKNOWN_INT; \
 +	}
 +
- 	if (tid_data->ssn != tid_data->next_reclaimed)
- 		return;
- 
-@@ -674,6 +692,11 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			iwl_mvm_check_ratid_empty(mvm, sta, tid);
- 			spin_unlock_bh(&mvmsta->lock);
- 		}
++/* common registers in SDIO function1 */
++#define TA_SOFT_RESET_REG            0x0004
++#define TA_TH0_PC_REG                0x0400
++#define TA_HOLD_THREAD_REG           0x0844
++#define TA_RELEASE_THREAD_REG        0x0848
 +
-+		if (mvmsta->next_status_eosp) {
-+			mvmsta->next_status_eosp = false;
-+			ieee80211_sta_eosp(sta);
-+		}
- 	} else {
- 		sta = NULL;
- 		mvmsta = NULL;
--- 
-1.7.9.5
++#define TA_SOFT_RST_CLR              0
++#define TA_SOFT_RST_SET              BIT(0)
++#define TA_PC_ZERO                   0
++#define TA_HOLD_THREAD_VALUE         cpu_to_le32(0xF)
++#define TA_RELEASE_THREAD_VALUE      cpu_to_le32(0xF)
++#define TA_BASE_ADDR                 0x2200
++#define MISC_CFG_BASE_ADDR           0x4150
++
++struct receive_info {
++	bool buffer_full;
++	bool semi_buffer_full;
++	bool mgmt_buffer_full;
++	u32 mgmt_buf_full_counter;
++	u32 buf_semi_full_counter;
++	u8 watch_bufferfull_count;
++	u32 sdio_intr_status_zero;
++	u32 sdio_int_counter;
++	u32 total_sdio_msdu_pending_intr;
++	u32 total_sdio_unknown_intr;
++	u32 buf_full_counter;
++	u32 buf_avilable_counter;
++};
++
++struct rsi_91xdev {
++	struct sdio_func *pfunction;
++	struct task_struct *in_sdio_litefi_irq;
++	struct receive_info rx_info;
++	u32 next_read_delay;
++	u32 sdio_high_speed_enable;
++	u8 sdio_clock_speed;
++	u32 cardcapability;
++	u8 prev_desc[16];
++	u32 tx_blk_size;
++	u8 write_fail;
++};
++
++void rsi_interrupt_handler(struct rsi_hw *adapter);
++int rsi_init_sdio_slave_regs(struct rsi_hw *adapter);
++int rsi_device_init(struct rsi_common *common);
++int rsi_device_deinit(struct rsi_hw *adapter);
++struct rsi_hw_intf_ops *rsi_get_hw_intf_ops(void);
++int rsi_read_register(struct rsi_hw *adapter, u32 addr, u8 *data);
++int rsi_host_intf_read_pkt(struct rsi_hw *adapter, u8 *pkt, u32 length);
++int rsi_host_intf_write_pkt(struct rsi_hw *adapter, u8 *pkt, u32 len);
++int rsi_write_register(struct rsi_hw *adapter, u8 function, u32 addr, u8 *data);
++int rsi_write_register_multiple(struct rsi_hw *adapter, u32 addr,
++				u8 *data, u32 count);
++void rsi_ack_interrupt(struct rsi_hw *adapter, u8 int_bit);
++#endif
+diff -rupN linux-3.14-rc4/drivers/net/wireless/rsi/rsi_usb.h linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_usb.h
+--- linux-3.14-rc4/drivers/net/wireless/rsi/rsi_usb.h	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc4_new/drivers/net/wireless/rsi/rsi_usb.h	2014-02-25 14:41:09.410198319 +0530
+@@ -0,0 +1,57 @@
++/**
++ * @section LICENSE
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_USB_INTF__
++#define __RSI_USB_INTF__
++
++#include <linux/usb.h>
++#include "rsi_common.h"
++
++#define USB_INTERNAL_REG_1           0x25000
++#define RSI_USB_READY_MAGIC_NUM      0xab
++#define FW_STATUS_REG                0x41050012
++
++#define USB_VENDOR_REGISTER_READ     0x15
++#define USB_VENDOR_REGISTER_WRITE    0x16
++#define RSI_USB_TX_HEAD_ROOM         128
++
++#define MAX_RX_URBS                  1
++#define MAX_BULK_EP                  8
++#define MGMT_EP                      1
++#define DATA_EP                      2
++
++struct rsi_91xdev {
++	u8 endpoint;
++	struct usb_device *usbdev;
++	struct usb_interface *pfunction;
++	struct urb *rx_usb_urb[MAX_RX_URBS];
++	u8 *tx_buffer;
++	u32 bulkin_size;
++	u8 bulkin_endpoint_addr;
++	u32 bulkout_size[MAX_BULK_EP];
++	u8 bulkout_endpoint_addr[MAX_BULK_EP];
++	u32 tx_blk_size;
++	u8 write_fail;
++};
++struct rsi_hw_intf_ops *rsi_get_hw_intf_ops(void);
++int rsi_device_init(struct rsi_common *common);
++int rsi_device_deinit(struct rsi_hw *adapter);
++int rsi_write_ta_register_multiple(struct rsi_hw *adapter, u32 addr,
++				   u8 *data, u32 count);
++int rsi_rx_urb_submit(struct rsi_hw *adapter);
++int rsi_host_intf_write_pkt(struct rsi_hw *adapter, u8 *pkt, u32 len);
++#endif
+
+
+
+
+
 
