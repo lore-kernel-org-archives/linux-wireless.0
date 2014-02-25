@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45823 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755680AbaBUVWD (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:57391 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbaBYRph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 16:22:03 -0500
-Message-ID: <1393017719.18879.1.camel@porter.coelho.fi> (sfid-20140221_222230_838612_CA751B3D)
-Subject: Re: [PATCH v3 3/7] cfg80211: refactor cfg80211_can_use_iftype_chan()
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Date: Fri, 21 Feb 2014 23:21:59 +0200
-In-Reply-To: <1392971822.4346.25.camel@jlt4.sipsolutions.net>
-References: <1392906986-12275-1-git-send-email-luca@coelho.fi>
-	 <1392906986-12275-4-git-send-email-luca@coelho.fi>
-	 <1392971822.4346.25.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Feb 2014 12:45:37 -0500
+Message-ID: <530cd6bf.c45a0f0a.7c86.ffffd79d@mx.google.com> (sfid-20140225_184618_798487_1C856417)
+From: Silvan Jegen <s.jegen@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	devel@driverdev.osuosl.org
+CC: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 25 Feb 2014 18:07:10 +0100
+Subject: [PATCH] Staging: rtl8192e: Replace min macro with min_t
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-02-21 at 09:37 +0100, Johannes Berg wrote:
-> On Thu, 2014-02-20 at 16:36 +0200, Luciano Coelho wrote:
-> 
-> > +/**
-> > + * cfg80211_check_combinations() - check interface combinations
-> 
-> I don't think those parentheses are right?
+Instead of an explicit cast the min_t macro should be used.
 
-Right.  Fixed.
+Signed-off-by: Silvan Jegen <s.jegen@gmail.com>
+---
+ drivers/staging/rtl8192e/rtl8192e/rtl_wx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-> > + *
-> > + * @wiphy: the wiphy
-> > + * @num_different_channels: the number of different channels we want
-> > + *	to use for verification
-> > + * @num_interfaces: the number of different interfaces we want to use
-> > + *	for verification
-> > + * @used_iftypes: a bitmap where each bit corresponds to an interface
-> > + *	type, as in the definition of &struct
-> > + *	ieee80211_iface_limit.@types.
-> > + * @radar_detect: a bitmap where each bit corresponds to a channel
-> > + *	width where radar detection is needed, as in the definition of
-> > + *	&struct ieee80211_iface_combination.@radar_detect_widths
-> 
-> Doesn't that need to be something like hweight(radar_detect) == 1?
-
-No, at this point we should have already checked all the interfaces and
-pass the combination of radar widths required.
-
-
-
-> > + * @iftype_num: array with the numbers of interfaces of each interface
-> > + *	type.  The index is the interface type as specified in &enum
-> > + *	nl80211_iftype.
-> > + *
-> > + * This function can be called by the driver to check whether a
-> > + * combination of interfaces and their types are allowed according to
-> > + * the interface combinations.
-> > + */
-> > +int cfg80211_check_combinations(struct wiphy *wiphy,
-> > +				const int num_different_channels,
-> > +				const int num_interfaces,
-> > +				const u32 used_iftypes,
-> > +				const u8 radar_detect,
-> > +				const int *iftype_num);
-> 
-> I think that array should be const int iftype_num[NUM_NL80211_IFTYPES],
-> I'm pretty sure that works as a function argument as well and would
-> serve as a bit of documentation (and possibly even compiler warnings if
-> somebody has an array that's too short)
-
-Yep, sounds good.  Fixed.
-
---
-Luca.
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+index 6202358..498995d 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
+@@ -609,7 +609,7 @@ static int r8192_wx_set_nick(struct net_device *dev,
+ 	if (wrqu->data.length > IW_ESSID_MAX_SIZE)
+ 		return -E2BIG;
+ 	down(&priv->wx_sem);
+-	wrqu->data.length = min((size_t) wrqu->data.length, sizeof(priv->nick));
++	wrqu->data.length = min_t(size_t, wrqu->data.length, sizeof(priv->nick));
+ 	memset(priv->nick, 0, sizeof(priv->nick));
+ 	memcpy(priv->nick, extra, wrqu->data.length);
+ 	up(&priv->wx_sem);
+-- 
+1.9.0
 
