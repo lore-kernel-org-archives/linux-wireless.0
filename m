@@ -1,80 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:47777 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbaBMOt4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 09:49:56 -0500
-Received: by mail-bk0-f45.google.com with SMTP id mz11so2690524bkb.32
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2014 06:49:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8738jn9ijt.fsf@kamboji.qca.qualcomm.com>
-References: <1391676841-11107-1-git-send-email-michal.kazior@tieto.com>
-	<1392042915-11648-1-git-send-email-michal.kazior@tieto.com>
-	<8738jn9ijt.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 13 Feb 2014 15:49:55 +0100
-Message-ID: <CA+BoTQmGWuQe=zjk0eeftE0R-i=+f0ZHoGcCdebc1W69FWRNWw@mail.gmail.com> (sfid-20140213_154959_324633_58201EC8)
-Subject: Re: [PATCH v2] ath10k: implement sta_rc_update()
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:35456 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752657AbaBYMWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 07:22:46 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv2 2/5] net: rfkill: gpio: remove unused and obsolete platform parameters
+Date: Tue, 25 Feb 2014 14:22:27 +0200
+Message-Id: <1393330950-7283-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132644_315930_99A491B2)
+In-Reply-To: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 February 2014 15:46, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> This allows dynamic changes of bandwidth/nss/smps,
->> e.g. via ht/vht operation mode change
->> notification.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> --- a/drivers/net/wireless/ath/ath10k/core.h
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->> @@ -228,6 +228,17 @@ struct ath10k_peer {
->>       struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
->>  };
->>
->> +struct ath10k_sta {
->> +     struct ath10k_vif *arvif;
->> +
->> +     u32 changed; /* IEEE80211_RC_* */
->> +     u32 bw;
->> +     u32 nss;
->> +     u32 smps;
->> +
->> +     struct work_struct update_wk;
->> +};
->
-> Apparently this structure is protected with data_lock, but it would be
-> good to document that in the code to make it clear.
+After upgrading to descriptor based gpios, the gpio numbers
+are not used anymore. The power_clk_name and the platform
+specific setup and close hooks are not used by anybody, and
+we should not encourage use of such things, so removing them.
 
-Good point.
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ include/linux/rfkill-gpio.h | 10 ----------
+ net/rfkill/rfkill-gpio.c    | 15 +--------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index 4d09f6e..20bcb55 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -27,21 +27,11 @@
+  * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
+  * for unused gpio's, the expected value is -1.
+  * @name:		name for the gpio rf kill instance
+- * @reset_gpio:		GPIO which is used for reseting rfkill switch
+- * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+- * @power_clk_name:	[optional] name of clk to turn off while blocked
+- * @gpio_runtime_close:	clean up platform specific gpio configuration
+- * @gpio_runtime_setup:	set up platform specific gpio configuration
+  */
+ 
+ struct rfkill_gpio_platform_data {
+ 	char			*name;
+-	int			reset_gpio;
+-	int			shutdown_gpio;
+-	const char		*power_clk_name;
+ 	enum rfkill_type	type;
+-	void	(*gpio_runtime_close)(struct platform_device *);
+-	int	(*gpio_runtime_setup)(struct platform_device *);
+ };
+ 
+ #endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index bd2a5b9..0adda44 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_gpio_data *rfkill;
+-	const char *clk_name = NULL;
+ 	struct gpio_desc *gpio;
+ 	int ret;
+ 	int len;
+@@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			return ret;
+ 	} else if (pdata) {
+-		clk_name = pdata->power_clk_name;
+ 		rfkill->name = pdata->name;
+ 		rfkill->type = pdata->type;
+ 	} else {
+@@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+ 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+ 
+-	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
++	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+ 
+ 	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+ 	if (!IS_ERR(gpio)) {
+@@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (pdata && pdata->gpio_runtime_setup) {
+-		ret = pdata->gpio_runtime_setup(pdev);
+-		if (ret) {
+-			dev_err(&pdev->dev, "can't set up gpio\n");
+-			return ret;
+-		}
+-	}
+-
+ 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+ 					  rfkill->type, &rfkill_gpio_ops,
+ 					  rfkill);
+@@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ static int rfkill_gpio_remove(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+-	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 
+-	if (pdata && pdata->gpio_runtime_close)
+-		pdata->gpio_runtime_close(pdev);
+ 	rfkill_unregister(rfkill->rfkill_dev);
+ 	rfkill_destroy(rfkill->rfkill_dev);
+ 
+-- 
+1.9.0.rc3
 
-
->> +             case IEEE80211_STA_RX_BW_160:
->> +                     ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
->> +                     bw = WMI_PEER_CHWIDTH_20MHZ;
->> +                     break;
->
-> I think it would be also useful to print STA's address in the warning.
->
-
-[...]
-
->> +             case IEEE80211_SMPS_NUM_MODES:
->> +                     ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
->> +                     smps = WMI_PEER_SMPS_PS_NONE;
->> +                     break;
->
-> Maybe here as well?
-
-Sounds good. I'll send a v3 with all these things fixed.
-
-
-Michał
