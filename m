@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:57634 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaBSWMD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:55512 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752583AbaBYT7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 17:12:03 -0500
-Received: by mail-lb0-f178.google.com with SMTP id u14so749147lbd.37
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:12:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1392809288.4733.15.camel@jlt4.sipsolutions.net>
-References: <1392231266-28479-1-git-send-email-janusz.dziedzic@tieto.com>
- <1392807806.4733.14.camel@jlt4.sipsolutions.net> <CALhHN=rAT=FeEJcbDJEPG+-knGgMvV8Mt5eVvWRWD-1BgZYLpQ@mail.gmail.com>
- <1392809288.4733.15.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 19 Feb 2014 14:11:40 -0800
-Message-ID: <CAB=NE6WDvxXGT21H5-D4H3tSJ_iZufp6X05_quPpoAeaoMkOog@mail.gmail.com> (sfid-20140219_231208_306165_33F16290)
-Subject: Re: [PATCH 1/4] cfg80211: regulatory, introduce DFS CAC time
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 25 Feb 2014 14:59:45 -0500
+Message-ID: <1393358376.4170.22.camel@jlt4.sipsolutions.net> (sfid-20140225_205949_264108_BA2FE7F1)
+Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the
+ network device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 25 Feb 2014 20:59:36 +0100
+In-Reply-To: <1393356639-19169-2-git-send-email-arend@broadcom.com> (sfid-20140225_203048_842452_A39499B6)
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+	 <1393356639-19169-2-git-send-email-arend@broadcom.com>
+	 (sfid-20140225_203048_842452_A39499B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 3:28 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Ah ok, thanks.
+On Tue, 2014-02-25 at 20:30 +0100, Arend van Spriel wrote:
+> Upon deleting the interface a cfg80211_disconnected() is called under
+> rtnl_lock. Right after the unlocking the rtnl_lock we unregister the
+> network device. This patch adds delay before unregister so cfg80211
+> can handle disconnect and notify wpa_supplicant.
 
-Let me know if you merge this so I can apply and push the respective
-patch for CRDA. Not sure if you saw but as proposed this means this
-bumps the wireless-regdb format. Janusz, I see you submitted a
-respective patch for iw and CRDA but not one for wireless-regdb, we'll
-need one there in order to parse the new entries in db.txt.
+> +				/* make sure cfg80211 can send disconnect event
+> +				 * before unregistering the netdevice below.
+> +				 */
+> +				msleep(100);
 
-John, this should mean we will need two releases for wireless-regdb
-moving on so that older versions of CRDA can read the new rules under
-the old format. Another option may be to have wireless-regdb spit out
-the file in two formats and we modify the new CRDA to jump to the new
-format section if it supports it. Otherwise I'm afraid we get stuck
-with the latest rules for old kernels forever, or we make a branch on
-wireless-regdb for the old format.
+This has got to be one of the worst hacks I've seen in wireless so
+far ... :)
 
-Thoughts folks?
+johannes
 
-  Luis
