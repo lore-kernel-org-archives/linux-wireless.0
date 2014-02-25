@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:41058 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbaBLTYp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:24:45 -0500
-Received: by mail-we0-f180.google.com with SMTP id u57so6512190wes.11
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:24:44 -0800 (PST)
-Message-ID: <1392232848.4053.6.camel@canaries32-MCP7A> (sfid-20140212_202448_048785_424F7F18)
-Subject: [PATCH 2/3] staging: vt6656: device_set_multi: set filter off with
- MACvWriteMultiAddr
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Feb 2014 19:20:48 +0000
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:35456 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753294AbaBYMWx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 07:22:53 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv2 4/5] net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
+Date: Tue, 25 Feb 2014 14:22:29 +0200
+Message-Id: <1393330950-7283-5-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132339_127071_C3103FDE)
+In-Reply-To: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-set u64 mc_filter to ~0x0 multi cast filter off and write MAC_REG_MAR0 using
-MACvWriteMultiAddr to replace pbyData.
+On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- drivers/staging/vt6656/main_usb.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index c5e9dee2..e682c9d 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1354,7 +1354,6 @@ static void device_set_multi(struct net_device *dev)
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	struct netdev_hw_addr *ha;
- 	u64 mc_filter = 0;
--	u8 pbyData[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 	u8 byTmpMode = 0;
- 	int rc;
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index ad5e354..ec38884 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -158,6 +158,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
  
-@@ -1377,13 +1376,9 @@ static void device_set_multi(struct net_device *dev)
-     }
-     else if ((netdev_mc_count(dev) > pDevice->multicast_limit) ||
- 	     (dev->flags & IFF_ALLMULTI)) {
--        CONTROLnsRequestOut(pDevice,
--                            MESSAGE_TYPE_WRITE,
--                            MAC_REG_MAR0,
--                            MESSAGE_REQUEST_MACREG,
--                            8,
--                            pbyData
--                            );
-+	mc_filter = ~0x0;
-+	MACvWriteMultiAddr(pDevice, mc_filter);
-+
-         pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
-     }
-     else {
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
++	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
+ 
 -- 
-1.8.5.3
+1.9.0.rc3
 
