@@ -1,61 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:36214 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbaB0ROk (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34899 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753258AbaBYM0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:14:40 -0500
+	Tue, 25 Feb 2014 07:26:09 -0500
+Date: Tue, 25 Feb 2014 17:42:09 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 2/3 v3] mwl8k: Implement sw_scan start/stop cbs
+Message-ID: <20140225121209.GA5643@markyou.marvell.com> (sfid-20140225_132616_108869_B2612068)
 MIME-Version: 1.0
-In-Reply-To: <1393517912.4648.5.camel@jlt4.sipsolutions.net>
-References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
-	<1393512434-1325-3-git-send-email-dh.herrmann@gmail.com>
-	<1393512787.4648.1.camel@jlt4.sipsolutions.net>
-	<CANq1E4RNbtbdVhC2PgyZMGN_duScbmCOGeMxAYiKLL-8H=EWSA@mail.gmail.com>
-	<1393517912.4648.5.camel@jlt4.sipsolutions.net>
-Date: Thu, 27 Feb 2014 18:14:40 +0100
-Message-ID: <CANq1E4TBeNbovfpVF1ByxostkNczdcK5R3c0jQ=qKp6V299kCg@mail.gmail.com> (sfid-20140227_181501_770220_5AC5C4D6)
-Subject: Re: [PATCH 2/4] mac80211: set NET_NAME_USER for user-space created ifs
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	Tom Gundersen <teg@jklm.no>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Implement sw_scan start and stop callbacks.
+Reset BBP registers for channel, RX busy and
+average noise stats which clear on read.
 
-On Thu, Feb 27, 2014 at 5:18 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2014-02-27 at 15:56 +0100, David Herrmann wrote:
->
->> >> +++ b/net/mac80211/iface.c
->> >> @@ -1620,6 +1620,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
->> >>                                       + IEEE80211_ENCRYPT_HEADROOM;
->> >>               ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
->> >>
->> >> +             ndev->name_assign_type = NET_NAME_USER;
->> >
->> > this is wrong because we call this in main.c with a "wlan%d" argument
->> > for the name, which gets expanded.
->>
->> Whoops, yeah, same issue as with ath6kl where I fixed it with a
->> separate "name_assign_type" argument. I will do the same here for v2.
->
-> I'm not sure that helps - the user could potentially pass "foobar%d" as
-> the interface name and get a number assigned by the kernel. In that case
-> you probably *don't* want to set it to "name assigned by user"?
->
-> Maybe this whole thing can just be handled in __dev_alloc_name() since
-> no kernel user should pass just a string without "%d" in it.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-Nope, I still want to set NET_NAME_USER in that case. It's not about
-the %d suffix, it's about who chooses the suffix. If wpas decides to
-use p2p-wlanX-%d, this is fine, as it's a virtual device where stable
-IDs are not required at all.
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 6c002f3..61d5bea 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -81,6 +81,9 @@ MODULE_PARM_DESC(ap_mode_default,
+  */
+ 
+ #define	MWL8K_HW_TIMER_REGISTER			0x0000a600
++#define BBU_RXRDY_CNT_REG			0x0000a860
++#define NOK_CCA_CNT_REG				0x0000a6a0
++#define BBU_AVG_NOISE_VAL			0x67
+ 
+ #define MWL8K_A2H_EVENTS	(MWL8K_A2H_INT_DUMMY | \
+ 				 MWL8K_A2H_INT_CHNL_SWITCHED | \
+@@ -289,6 +292,9 @@ struct mwl8k_priv {
+ 
+ 	/* bitmap of running BSSes */
+ 	u32 running_bsses;
++
++	/* ACS related */
++	bool sw_scan_start;
+ };
+ 
+ #define MAX_WEP_KEY_LEN         13
+@@ -5448,6 +5454,38 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	return rc;
+ }
+ 
++static void mwl8k_sw_scan_start(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++	u8 tmp;
++
++	if (!priv->ap_fw)
++		return;
++
++	/* clear all stats */
++	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
++	ioread32(priv->regs + NOK_CCA_CNT_REG);
++	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
++
++	priv->sw_scan_start = true;
++}
++
++static void mwl8k_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++	u8 tmp;
++
++	if (!priv->ap_fw)
++		return;
++
++	priv->sw_scan_start = false;
++
++	/* clear all stats */
++	ioread32(priv->regs + BBU_RXRDY_CNT_REG);
++	ioread32(priv->regs + NOK_CCA_CNT_REG);
++	mwl8k_cmd_bbp_reg_access(priv->hw, 0, BBU_AVG_NOISE_VAL, &tmp);
++}
++
+ static const struct ieee80211_ops mwl8k_ops = {
+ 	.tx			= mwl8k_tx,
+ 	.start			= mwl8k_start,
+@@ -5466,6 +5504,8 @@ static const struct ieee80211_ops mwl8k_ops = {
+ 	.get_stats		= mwl8k_get_stats,
+ 	.get_survey		= mwl8k_get_survey,
+ 	.ampdu_action		= mwl8k_ampdu_action,
++	.sw_scan_start		= mwl8k_sw_scan_start,
++	.sw_scan_complete	= mwl8k_sw_scan_complete,
+ };
+ 
+ static void mwl8k_finalize_join_worker(struct work_struct *work)
+-- 
+1.8.3.4
 
-Thanks
-David
