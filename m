@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:33959 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462AbaBBWRN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829AbaBYPFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 17:17:13 -0500
-Received: by mail-ee0-f42.google.com with SMTP id b15so1466868eek.15
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Feb 2014 14:17:11 -0800 (PST)
-Message-ID: <52EEC3E6.5040601@gmail.com> (sfid-20140202_231716_090465_72F56062)
-Date: Sun, 02 Feb 2014 23:17:10 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-CC: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2800: disable PS by default on USB
-References: <1391013757-13078-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1391013757-13078-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 25 Feb 2014 10:05:51 -0500
+Message-ID: <1393340740.4170.5.camel@jlt4.sipsolutions.net> (sfid-20140225_160554_666436_15E5F332)
+Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ
+ into info->control.flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Date: Tue, 25 Feb 2014 16:05:40 +0100
+In-Reply-To: <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de>
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393244624.4190.8.camel@jlt4.sipsolutions.net>
+	 <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/14 17:42, Stanislaw Gruszka wrote:
-> We have disabled it currently on other buses. PS can cause some issues,
-> not necessarily with our driver but on AP, that are not easy to debug.
-> Since behaviour differs on rt2800usb and rt2800pci, user usually blame
-> for malfunction rt2800usb driver, whereas issue is on AP side.
+On Tue, 2014-02-25 at 14:31 +0100, Thomas Hühn wrote:
+
+> > I'm not convinced this patch is correct, so you need to convince me.
+> > What happens to software-retry frames? They probably *shouldn't* get a
+> > new seqno, but if the driver doesn't modify the SKB (say because
+> > hardware/firmware assigns it) then this is certainly not right.
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> As far as I can see, software-retry frames get in status.c the flag
+> IEEE80211_TX_INTFL_RETRANSMISSION
+> assigned (in function ieee80211_handle_filtered_frame). And this flag
+> prevents in function
+> invoke_tx_handlers() the call of ieee80211_tx_h_sequence(), so there
+> is not new seqno assigned in case of a software-retry within tx.c.
 
-Looks a bit drastic to me, but if it helps users:
+Right, but if IEEE80211_TX_CTL_ASSIGN was set then it also isn't
+cleared.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> But in case of a software retry there is info->control set to zero.
+> After I would move IEEE80211_TX_CTL_ASSIGN_SEQ into
+> info->control.flags this flag is zero.
+> Hence also drivers do not assign a new sequence number.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 776aff3..510dde0 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -7453,10 +7453,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	u32 reg;
->  
->  	/*
-> -	 * Disable powersaving as default on PCI devices.
-> +	 * Disable powersaving as default.
->  	 */
-> -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
-> -		rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
->  
->  	/*
->  	 * Initialize all hw fields.
-> 
+But now the frame might not have *any* sequence number assigned at all,
+if e.g. the firmware assigns sequence numbers and they're not written
+back to the frame. Thus I think you're losing the entire sequence number
+assignment in this case.
 
+johannes
 
--- 
----
-Gertjan
