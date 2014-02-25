@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f196.google.com ([209.85.215.196]:56392 "EHLO
-	mail-ea0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbaBCOr1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54565 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbaBYPHA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 09:47:27 -0500
-Received: by mail-ea0-f196.google.com with SMTP id l9so1068098eaj.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 06:47:26 -0800 (PST)
-Message-ID: <52EFABEE.2050004@gmail.com> (sfid-20140203_154730_718794_B75653AC)
-Date: Mon, 03 Feb 2014 15:47:10 +0100
-From: coputer engineer <computer.engineer.ds@gmail.com>
-MIME-Version: 1.0
-To: luca@coelho.fi
-CC: linux-wireless@vger.kernel.org
-Subject: wl12xx interrupt watchdog!!
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 25 Feb 2014 10:07:00 -0500
+Message-ID: <1393340816.4170.6.camel@jlt4.sipsolutions.net> (sfid-20140225_160706_655338_91CB4B42)
+Subject: Re: [PATCH v1 2/6] mac80211: move flag
+ IEEE80211_TX_CTL_FIRST_FRAGMENT into info->control.flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Date: Tue, 25 Feb 2014 16:06:56 +0100
+In-Reply-To: <E84199A1-4743-47E5-AD95-D86998FD8DEA@net.t-labs.tu-berlin.de>
+References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393164527-13800-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1393244741.4190.10.camel@jlt4.sipsolutions.net>
+	 <E84199A1-4743-47E5-AD95-D86998FD8DEA@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Tue, 2014-02-25 at 15:13 +0100, Thomas Hühn wrote:
 
-I have the wl12xx interrupt watchdog!!
-I am using wl127x-fw-4-sr.bin firmware with Rev (6.3.5.0.98 ) with 
-driver version R5_00_18
-The kernel is 2.6.37 with this processor DM368.
+> > At least temporary flags don't suffer from the 'getting lost' problem as
+> > in the first patch.
+> > 
+> > I'll also note that this flag is treated wrongly in software retry
+> > scenarios anyway, but it won’t really matter I guess.
+> 
+> Do you mean the case when fragments after the first one get retransmitted by software ?
 
-Do you know some patch or witch is the solution for this problem ?
+Yeah, something about those cases is fishy ... but it doesn't matter
+much for your patch.
 
-Thanks and best regards,
-
-George
+johannes
 
