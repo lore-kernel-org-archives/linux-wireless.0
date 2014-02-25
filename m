@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11826 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbaBXIif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:38:35 -0500
-Date: Mon, 24 Feb 2014 10:38:20 +0200
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] net: rfkill: gpio: remove unused and
- obsoleteplatform parameters
-Message-ID: <20140224083820.GA15512@xps8300> (sfid-20140224_093857_861008_2620AFE2)
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1723302.jKkc8NDNRI@fb07-iapwap2>
- <20140221142349.GB10489@xps8300>
- <2556368.zbgmUK7WzX@ax5200p>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:62640 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbaBYVSA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 16:18:00 -0500
+Received: by mail-qc0-f176.google.com with SMTP id r5so6723711qcx.21
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 13:18:00 -0800 (PST)
+Received: from [192.168.1.85] (108-238-17-205.lightspeed.sndgca.sbcglobal.net. [108.238.17.205])
+        by mx.google.com with ESMTPSA id y19sm3364017qae.20.2014.02.25.13.17.58
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Tue, 25 Feb 2014 13:17:59 -0800 (PST)
+Message-ID: <530D0885.6040305@gmail.com> (sfid-20140225_221805_644221_81FC2189)
+Date: Tue, 25 Feb 2014 13:17:57 -0800
+From: Bryan Batten <bryanbatten@gmail.com>
+Reply-To: BryanBatten@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2556368.zbgmUK7WzX@ax5200p>
+To: linux-wireless@vger.kernel.org
+Subject: Status of PID rate control algorithm patch
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 22, 2014 at 11:32:04PM +0100, Marc Dietrich wrote:
-> On Friday 21 February 2014 16:23:49 Heikki Krogerus wrote:
-> > On Fri, Feb 21, 2014 at 02:55:14PM +0100, Marc Dietrich wrote:
-> > > arch/arm/mach-tegra/board-paz00.c is still using platform data. Is there
-> > > some prerequisite patch I'm missing (3.14-rc3) or how can this file be
-> > > converted? We are waiting for DT support to arrive so we can finally
-> > > remove this file.
-> > True! It still set's the shutdown_gpio and reset_gpio members. I think
-> > I'll leave the header untouched and just clean net/rfkill/rfkill-gpio.c
-> > in this patch. We can remove the whole header after you guys have moved
-> > to DT.
-> 
-> Why? Just update the board file to remove those entries. I just checked that 
-> it's working fine without. So if you don't mind, add a patch to remove the 
-> entries as the first patch in your series.
-
-I was hoping I wouldn't have to touch arch/arm/mach-tegra/board-paz00.c
-any more. But OK, I'll add a patch and remove the entries.
+I found the thread 
+(http://itee.uq.edu.au/~uqwyin/publications/MSWiM2011) on Wei in's 
+proposed PID rate control algorithm patch for kernel 3.3.0. It doesn't 
+look like it's in the kernel yet (as of 3.12.11 anyway). What is it's 
+status? Is it upstream?
 
 Thanks,
-
 -- 
-heikki
+Bryan
+-
+Large corporations are not notably capitalistic.
