@@ -1,74 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47557 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753424AbaB0OV0 (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:46785 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbaBYJNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:21:26 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 03/16] wil6210: [DEBUG] Improve Vring printing
-Date: Thu, 27 Feb 2014 16:20:42 +0200
-Message-ID: <1393510855-17566-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152136_312750_5DD3974B)
-In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 25 Feb 2014 04:13:36 -0500
+Received: by mail-oa0-f52.google.com with SMTP id i4so101540oah.39
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 01:13:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5306E599.7020605@wwwdotorg.org>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
+	<53062F97.3050407@wwwdotorg.org>
+	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
+	<5306E599.7020605@wwwdotorg.org>
+Date: Tue, 25 Feb 2014 10:13:35 +0100
+Message-ID: <CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com> (sfid-20140225_101409_206693_80E49C0B)
+Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Gross <mark.gross@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print '_' for the 'idle' descriptors - this makes vring representation more visible.
-Also, for the Tx side, differentiate descriptors having associated skb's - print ones
-with skb as 'H' and without as 'h'. Good to represent scattered frames.
+On Fri, Feb 21, 2014 at 6:35 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> On 02/20/2014 06:55 PM, Chen-Yu Tsai wrote:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+>> That's correct. However using con_id to pass this results in different
+>> behavior across DT and ACPI. A better way is to export the labeling
+>> function so consumers can set meaningful labels themselves.
+>
+> But this code is the consumer of those GPIOs. IF the parameter to
+> devm_gpiod_get_index() isn't intended to be used, why does it exist?
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 74bb427..6fdab1a 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -30,7 +30,8 @@ static u32 dbg_vring_index; /* 25 for Rx, 0..24 for Tx */
- #define WIL_DBG_VRING_INDEX_RX (WIL6210_MAX_TX_RINGS + 1)
- 
- static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
--			    const char *name, struct vring *vring)
-+			    const char *name, struct vring *vring,
-+			    char _s, char _h)
- {
- 	void __iomem *x = wmi_addr(wil, vring->hwtail);
- 
-@@ -52,8 +53,8 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
- 			volatile struct vring_tx_desc *d = &vring->va[i].tx;
- 			if ((i % 64) == 0 && (i != 0))
- 				seq_printf(s, "\n");
--			seq_printf(s, "%s", (d->dma.status & BIT(0)) ?
--					"S" : (vring->ctx[i].skb ? "H" : "h"));
-+			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
-+					_s : (vring->ctx[i].skb ? _h : 'h'));
- 		}
- 		seq_printf(s, "\n");
- 	}
-@@ -65,14 +66,14 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
- 	uint i;
- 	struct wil6210_priv *wil = s->private;
- 
--	wil_print_vring(s, wil, "rx", &wil->vring_rx);
-+	wil_print_vring(s, wil, "rx", &wil->vring_rx, 'S', '_');
- 
- 	for (i = 0; i < ARRAY_SIZE(wil->vring_tx); i++) {
- 		struct vring *vring = &(wil->vring_tx[i]);
- 		if (vring->va) {
- 			char name[10];
- 			snprintf(name, sizeof(name), "tx_%2d", i);
--			wil_print_vring(s, wil, name, vring);
-+			wil_print_vring(s, wil, name, vring, '_', 'H');
- 		}
- 	}
- 
--- 
-1.8.3.2
+Kerneldoc says:
 
+/**
+ * gpiod_get_index - obtain a GPIO from a multi-index GPIO function
+ * @dev:        GPIO consumer, can be NULL for system-global GPIOs
+ * @con_id:     function within the GPIO consumer
+ * @idx:        index of the GPIO to obtain in the consumer
+ *
+
+Basically it is just exposing the fact that of_find_gpio() and
+acpi_find_gpio() both take a con_id as argument.
+
+If we drill into this, we find that it is used to conjure the
+arbitrary string before the gpios in the DT case, like:
+
+foo-gpios = <...>;
+
+As in tegra30-beaver.dts...
+
+    sdhci@78000000 {
+            status = "okay";
+            cd-gpios = <&gpio TEGRA_GPIO(I, 5) GPIO_ACTIVE_LOW>;
+            wp-gpios = <&gpio TEGRA_GPIO(T, 3) GPIO_ACTIVE_HIGH>;
+            power-gpios = <&gpio TEGRA_GPIO(D, 7) GPIO_ACTIVE_HIGH>;
+            bus-width = <4>;
+    };
+
+Instead of passing the GPIOs as index 0,1,2 they are named
+and I do admit this has a nice "things are under control" aspect
+to it.
+
+In the ACPI case the con_id is not used for anything.
+
+So it is basically there to satisfy the habit in some device
+tree bindings to name gpio arrays instead of just passing gpios = <...>;
+(The latter should be encouraged going forward.)
+
+As DT is ABI we need to keep this forever, and driver may need to
+look for foo-gpios=<> and gpios=<> alike for backward compatibility
+if we'd change it, sweet isn't it? :-)
+
+I don't quite like this, as it is adding stupid nonsens arguments for
+ACPI GPIO producers (which only take an index AFAICT), but it is a
+first sacrifice on the altar of trying to mask the differences between DT
+and ACPI probe paths about which I have mixed feelings.
+
+Yours,
+LInus Walleij
