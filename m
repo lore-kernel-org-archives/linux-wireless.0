@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:53237 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128AbaBZBJz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 20:09:55 -0500
-Received: by mail-pb0-f50.google.com with SMTP id md12so216575pbc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 17:09:54 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, linux@eikelenboom.it,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 1/3] cfg80211: allow reprocessing of pending requests
-Date: Tue, 25 Feb 2014 17:09:40 -0800
-Message-Id: <1393376982-28276-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20140226_021006_412249_4631A0AE)
-In-Reply-To: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga09.intel.com ([134.134.136.24]:16828 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752118AbaBYMXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 07:23:05 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv2 5/5] net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
+Date: Tue, 25 Feb 2014 14:22:30 +0200
+Message-Id: <1393330950-7283-6-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132337_490465_5B436A82)
+In-Reply-To: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In certain situations we want to trigger reprocessing
-of the last regulatory hint. One situation in which
-this makes sense is the case where the cfg80211 was
-built-in to the kernel, CFG80211_INTERNAL_REGDB was not
-enabled and the CRDA binary is on a partition not availble
-during early boot. In such a case we want to be able to
-re-process the same request at some other point.
+This adds ACPI IDs for Broadcom bluetooth chip BCM43241 used
+on various Baytrail based boards such as Lenovo Miix 2 and
+Asus Transformer Book T100TA.
 
-When we are asked to re-process the same request we need
-to be careful to not kfree it, addresses that.
-
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- net/wireless/reg.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ net/rfkill/rfkill-gpio.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b95e9cf..f5b120f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -240,19 +240,21 @@ static char user_alpha2[2];
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--static void reg_kfree_last_request(void)
-+static void reg_kfree_last_request(struct regulatory_request *lr)
- {
--	struct regulatory_request *lr;
--
--	lr = get_last_request();
--
- 	if (lr != &core_request_world && lr)
- 		kfree_rcu(lr, rcu_head);
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index ec38884..c4d7c6b 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -156,11 +156,16 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 	return 0;
  }
  
- static void reg_update_last_request(struct regulatory_request *request)
- {
--	reg_kfree_last_request();
-+	struct regulatory_request *lr;
-+
-+	lr = get_last_request();
-+	if (lr == request)
-+		return;
-+
-+	reg_kfree_last_request(lr);
- 	rcu_assign_pointer(last_request, request);
- }
++#ifdef CONFIG_ACPI
+ static const struct acpi_device_id rfkill_acpi_match[] = {
++	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
++	{ "BCM2E39", RFKILL_TYPE_BLUETOOTH },
++	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
+ 	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
++#endif
  
+ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
 -- 
-1.8.5.3
+1.9.0.rc3
 
