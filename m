@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa11-09.prod.phx3.secureserver.net ([68.178.252.110]:37642
-	"EHLO p3plsmtpa11-09.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751809AbaBZV6k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 16:58:40 -0500
-Date: Wed, 26 Feb 2014 14:54:14 -0700
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/3] NFC: trf7970a: Add DTS Documentation
-Message-ID: <20140226215414.GC21867@animalcreek.com> (sfid-20140226_225850_024894_5114B646)
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-4-git-send-email-mgreer@animalcreek.com>
- <20140221010407.GU18868@zurbaran>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140221010407.GU18868@zurbaran>
+Received: from mout.gmx.net ([212.227.15.19]:50668 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752682AbaBYNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 08:49:59 -0500
+Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx101) with
+ ESMTPSA (Nemesis) id 0LwF9u-1XJTVi1soI-0181SY for
+ <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 14:49:58 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 7/7] ath9k_htc: use ath9k_cmn_reload_chainmask
+Date: Tue, 25 Feb 2014 14:48:56 +0100
+Message-Id: <1393336136-31069-8-git-send-email-linux@rempel-privat.de> (sfid-20140225_145002_198165_479B7A29)
+In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 02:04:07AM +0100, Samuel Ortiz wrote:
-> Hi Mark,
-> 
-> On Fri, Jan 31, 2014 at 03:17:11PM -0700, Mark A. Greer wrote:
-> > Describe the properies used by the trf7970a
-> > RFID/NFC/15693 transceiver driver.
-> > 
-> > Signed-off-by: Mark A. Greer <mgreer@animalcreek.com>
-> > ---
-> >  .../devicetree/bindings/net/nfc/trf7970a.txt       | 37 ++++++++++++++++++++++
-> >  1 file changed, 37 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> Not a DT expert, but this looks good to me.
-> Could you please amend this patch by adding
-> Documentation/devicetree/bindings/net/nfc/ to the MAINTAINERS NFC
-> section ?
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-Sure.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 5220f46..a8f30dc 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -616,14 +616,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&common->sbands[IEEE80211_BAND_5GHZ];
+ 
+-	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+-			ath9k_cmn_setup_ht_cap(ah,
+-				     &common->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+-		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+-			ath9k_cmn_setup_ht_cap(ah,
+-				     &common->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+-	}
++	ath9k_cmn_reload_chainmask(ah);
+ 
+ 	pBase = ath9k_htc_get_eeprom_base(priv);
+ 	if (pBase) {
+-- 
+1.9.0
+
