@@ -1,125 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:39371 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656AbaBTLzv (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:41677 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752009AbaBYTap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 06:55:51 -0500
-Received: by mail-ee0-f54.google.com with SMTP id c41so29074eek.13
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2014 03:55:50 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: add soft/hard firmware crash option to simulate_fw_crash
-Date: Thu, 20 Feb 2014 12:55:30 +0100
-Message-Id: <1392897330-4678-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20140220_125605_425771_1AEA5281)
+	Tue, 25 Feb 2014 14:30:45 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/14] brcmfmac: Minimize SDIO dpc scheduling.
+Date: Tue, 25 Feb 2014 20:30:31 +0100
+Message-ID: <1393356639-19169-8-git-send-email-arend@broadcom.com> (sfid-20140225_203123_089599_E691168B)
+In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Command WMI_FORCE_FW_HANG_CMDID is not supported in firmware 10.1.
-In order to have firmware crash simulation functionality also
-in firmware 10.1 driver can force firmware crash by performing
-not allowed operation. Driver can deliberately crash firmware
-when setting vdev param for vdev id out of range.
-This patch introduces two keywords to simulate_fw_crash:
-'soft' which will cause firmware crash that is recoverable
-       by warm firmware reset but supported only in main firmware.
-'hard' which will cause firmware crash recoverable by cold
-       firmware reset, this option works for both firmwares.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Commands to trigger firmware soft/hard crash:
-echo 'soft' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
-echo 'hard' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
+SDIO dpc scheduling is done (repeated) when counter is set. This
+counter gets decreased when dpc is finished. It is more efficient
+to set counter to 0 before the dpc is actullay run. This will
+minimize the frequency with which dpc is executed.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This was patch: ath10k:change simulate_fw_crash to work with 10.1 firmware
-but after review updates I changed commit message.
-
-Previous patch was updated to support two keywords 'soft','hard' in order to
-distinguish different kind of firmware crashes.
-
- drivers/net/wireless/ath/ath10k/debug.c | 43 ++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 6debd28..20f4c4b 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -451,12 +451,23 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
- 					     char __user *user_buf,
- 					     size_t count, loff_t *ppos)
- {
--	const char buf[] = "To simulate firmware crash write the keyword"
--			   " `crash` to this file.\nThis will force firmware"
--			   " to report a crash to the host system.\n";
-+	const char buf[] = "To simulate firmware crash write one of the"
-+			   " keywords to this file:\n `soft` - this will send"
-+			   " WMI_FORCE_FW_HANG_ASSERT to firmware if FW"
-+			   " supports that command.\n `hard` - this will send"
-+			   " to firmware command with illegal parameters"
-+			   " causing firmware crash.\n";
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index ce99732..cc0f1ad 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3758,8 +3758,8 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
+ 					      datawork);
+ 
+ 	while (atomic_read(&bus->dpc_tskcnt)) {
++		atomic_set(&bus->dpc_tskcnt, 0);
+ 		brcmf_sdio_dpc(bus);
+-		atomic_dec(&bus->dpc_tskcnt);
+ 	}
  }
  
-+/* Simulate firmware crash:
-+ * 'soft': Call wmi command causing firmware hang. This firmware hang is
-+ * recoverable by warm firmware reset.
-+ * 'hard': Force firmware crash by setting any vdev parameter for not allowed
-+ * vdev id. This is hard firmware crash because it is recoverable only by cold
-+ * firmware reset.
-+ */
- static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 					      const char __user *user_buf,
- 					      size_t count, loff_t *ppos)
-@@ -464,14 +475,11 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 	struct ath10k *ar = file->private_data;
- 	char buf[32] = {};
- 	int ret;
-+	const char *mode;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
- 	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
--	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
--		ret = -EINVAL;
--		goto exit;
--	}
- 
- 	if (ar->state != ATH10K_STATE_ON &&
- 	    ar->state != ATH10K_STATE_RESTARTED) {
-@@ -479,15 +487,22 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 		goto exit;
- 	}
- 
--	ath10k_info("simulating firmware crash\n");
--
--	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
--	if (ret)
--		ath10k_warn("failed to force fw hang (%d)\n", ret);
-+	if (!strcmp(buf, "soft") || !strcmp(buf, "soft\n")) {
-+		mode = "soft";
-+		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
-+	} else if (!strcmp(buf, "hard") || !strcmp(buf, "hard\n")) {
-+		mode = "hard";
-+		ret = ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
-+					ar->wmi.vdev_param->rts_threshold, 0);
-+	} else {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
- 
--	if (ret == 0)
-+	if (ret == 0) {
- 		ret = count;
--
-+		ath10k_info("simulating firmware %s crash\n", mode);
-+	}
- exit:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
 -- 
-1.8.1.2
+1.7.10.4
 
