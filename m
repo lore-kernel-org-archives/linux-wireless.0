@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:38016 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbaBEJZQ (ORCPT
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:53937 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547AbaBYJp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 04:25:16 -0500
-Date: Wed, 5 Feb 2014 04:25:12 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zoran Markovic <zoran.markovic@linaro.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Shaibal Dutta <shaibal.dutta@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [RFC PATCH] net: wireless: move regulatory timeout work to power
- efficient workqueue
-Message-ID: <20140205092512.GB32349@htj.dyndns.org> (sfid-20140205_102522_588900_9F9EC1CE)
-References: <1391123310-6425-1-git-send-email-zoran.markovic@linaro.org>
- <1391160084.4141.1.camel@jlt4.sipsolutions.net>
- <20140131093531.GA25559@mtj.dyndns.org>
- <20140205091742.GA1978@redhat.com>
+	Tue, 25 Feb 2014 04:45:27 -0500
+Received: by mail-ve0-f170.google.com with SMTP id c14so141255vea.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 01:45:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140205091742.GA1978@redhat.com>
+In-Reply-To: <CAC+NB+NcYvmTRht1Go4Dar_Jg2CYTa=GQ4E6YxpBeu8MM=zCAg@mail.gmail.com>
+References: <CAC+NB+MuEPfbgt8fLWvk_oUZFyX4o=mbPY_cOeQs13kqgO0VFg@mail.gmail.com>
+	<047d7b3a89462f279c04f170647e@google.com>
+	<CAC+NB+NcYvmTRht1Go4Dar_Jg2CYTa=GQ4E6YxpBeu8MM=zCAg@mail.gmail.com>
+Date: Tue, 25 Feb 2014 10:45:26 +0100
+Message-ID: <CABp9189Gbgg7aeemd_wA90HVLfps6p_LhNMbuyJ0czv7X3LPMQ@mail.gmail.com> (sfid-20140225_104535_945655_84F44909)
+Subject: Fwd: Delivery Status Notification (Failure)
+From: =?ISO-8859-1?Q?Jakub_J=F3zefowicz?= <jjozefowicz@gmail.com>
+To: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi,
 
-On Wed, Feb 05, 2014 at 10:17:42AM +0100, Stanislaw Gruszka wrote:
-> What are selection criteria when choosing between system_wq or
-> system_power_efficient_wq on drivers ? IOW if I would be writing
-> a new driver which workqueue should I use and when ?
+I am looking for the support with below mentioned problem. I have a Intel
+Corporation PRO/Wireless 3945ABG [Golan] Network Connection (rev 02) wifi
+card instaled. From the Intel technical support I received the information,
+that this card is dual band and supports 5GHz standard. I cannot see this
+network, but only 2,4GHz one. I have Ubuntu 12.04 instaled and tried to
+update given below drivers. I am afraid I need a help with this process.
+Would you be so kind and give me step by step manual, how to update the
+intel drivers (together with needed commands, if possible)?
 
-Yeah, it's a bit ad-hoc at the moment.  The original intention was
-just marking the ones which can be shown to have noticeable power
-impacts which weren't expected to be too many but we may now have an
-self-feeding feedback loop growing new usages, likely somewhat
-overzealously and be better off making things more generic.
+Thank you in advance.
 
-> I think that should be driver independent, at least for most of drivers.
-> If system have to run in low power mode, system_power_efficient_wq
-> should be chosen automatically by schedule_work(), otherwise when high
-> performance is more important schedule_work() should use system_wq.
+.
 
-The problem there is that system_wq has traditionally guaranteed
-per-cpu execution.  It can't automatically be switched to unbound
-behavior.  The best long term solution would be isolating the users
-which depend on per-cpu behavior and mark them specially rather than
-the other way around that we're doing now, making per-cpu guarantee
-the special case rather than the norm.  That's gonna take a lot of
-auditing tho.
+---------- Forwarded message ----------
+From: <support.replies@mailbox.intel.com>
+Date: 2014-01-30
+Subject: {ticketno:[8000861141]} - Your Intel Customer Support Inquiry
 
-Thanks.
 
--- 
-tejun
+Dear Sir,
+
+Thank you for contacting Intel Customer Support.
+
+As we understand it, you would like to know about your wireless card
+compatibility. The Wireless card you mentioned is dual band and support
+5ghz. Please check for your driver version for Linux as it may be outdated.
+On the following link we have support for linux drivers and community
+forums that may be able to answer your questions.
+
+http://wireless.kernel.org/en/users/Drivers/iwlwifi
+
+*Important note: Should you need further assistance from us regarding your
+inquiry, we would highly appreciate if you could simply reply to this email
+of ours, instead of sending a brand new email, unless it is a different
+issue/inquiry.  This will allow us to provide timely support and will keep
+the communications for this issue/inquiry as part of the same service
+ticket.*
+
+Sincerely,
+
+Manfred M.
+Intel Customer Support
