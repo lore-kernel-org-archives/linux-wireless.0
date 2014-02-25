@@ -1,50 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:34489 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753007AbaBLWi2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 17:38:28 -0500
-Date: Wed, 12 Feb 2014 22:38:17 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: David Howells <dhowells@redhat.com>, Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Al Viro <viro@zeniv.linux.org.uk>
-Subject: [PATCH] hostap: fix "hostap: proc: Use remove_proc_subtree()"
-Message-ID: <20140212223817.GS26684@n2100.arm.linux.org.uk> (sfid-20140212_233831_459918_AC5E01F5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:63112 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753900AbaBYOY0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 09:24:26 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v6 4/5] cfg80211: Add an option to hint indoor operation
+Date: Tue, 25 Feb 2014 16:26:00 +0200
+Message-Id: <1393338360-1028-1-git-send-email-ilan.peer@intel.com> (sfid-20140225_152443_686257_C9E4718B)
+In-Reply-To: <1393139583-7249-5-git-send-email-ilan.peer@intel.com>
+References: <1393139583-7249-5-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove_proc_subtree() doesn't work here as local->ddev has already
-been removed, and NULLed out.  Use proc_remove() instead.
+Add the option to hint the wireless core that it is operating in an indoor
+environment.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
-I would include an oops, however the machine I discovered this on has
-a page 0 populated - so the symptoms are multiple 'wlan0' entries in
-/proc/net/hostap.  This is probably a candidate for stable too.
+ include/uapi/linux/nl80211.h |    3 ++
+ net/wireless/nl80211.c       |   18 +++++-------
+ net/wireless/reg.c           |   63 +++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h           |    6 ++++
+ 4 files changed, 78 insertions(+), 12 deletions(-)
 
- drivers/net/wireless/hostap/hostap_proc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
-index aa7ad3a7a69b..4e5c0f8c9496 100644
---- a/drivers/net/wireless/hostap/hostap_proc.c
-+++ b/drivers/net/wireless/hostap/hostap_proc.c
-@@ -496,7 +496,7 @@ void hostap_init_proc(local_info_t *local)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 061f8d4..42710e5 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2583,10 +2583,13 @@ enum nl80211_dfs_regions {
+  *	present has been registered with the wireless core that
+  *	has listed NL80211_FEATURE_CELL_BASE_REG_HINTS as a
+  *	supported feature.
++ * @NL80211_USER_REG_HINT_INDOOR: a user sent an hint indicating that the
++ *	platform is operating in an indoor environment.
+  */
+ enum nl80211_user_reg_hint_type {
+ 	NL80211_USER_REG_HINT_USER	= 0,
+ 	NL80211_USER_REG_HINT_CELL_BASE = 1,
++	NL80211_USER_REG_HINT_INDOOR    = 2,
+ };
  
- void hostap_remove_proc(local_info_t *local)
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2270d9b..50826a9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4659,7 +4659,6 @@ static int parse_reg_rule(struct nlattr *tb[],
+ 
+ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
  {
--	remove_proc_subtree(local->ddev->name, hostap_proc);
-+	proc_remove(local->proc);
+-	int r;
+ 	char *data = NULL;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 
+@@ -4672,11 +4671,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (unlikely(!rcu_access_pointer(cfg80211_regdomain)))
+ 		return -EINPROGRESS;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
+-
+-	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+-
+ 	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
+ 		user_reg_hint_type =
+ 		  nla_get_u32(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
+@@ -4686,14 +4680,16 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	switch (user_reg_hint_type) {
+ 	case NL80211_USER_REG_HINT_USER:
+ 	case NL80211_USER_REG_HINT_CELL_BASE:
+-		break;
++		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
++			return -EINVAL;
++
++		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
++		return regulatory_hint_user(data, user_reg_hint_type);
++	case NL80211_USER_REG_HINT_INDOOR:
++		return regulatory_hint_indoor_user();
+ 	default:
+ 		return -EINVAL;
+ 	}
+-
+-	r = regulatory_hint_user(data, user_reg_hint_type);
+-
+-	return r;
  }
  
+ static int nl80211_get_mesh_config(struct sk_buff *skb,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 85aa847..8c9d25a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -65,11 +65,26 @@
+ #define REG_DBG_PRINT(args...)
+ #endif
  
-
++/**
++ * enum reg_request_treatment - regulatory request treatment
++ *
++ * @REG_REQ_OK: continue processing the regulatory request
++ * @REG_REQ_IGNORE: ignore the regulatory request
++ * @REG_REQ_INTERSECT: the regulatory domain resulting from this request should
++ *	be intersected with the current one.
++ * @REG_REQ_ALREADY_SET: the regulatory request will not change the current
++ *	regulatory settings, and no further processing is required.
++ * @REG_REQ_USER_HINT_HANDLED: a non alpha2  user hint was handled and no
++ *	further processing is required, i.e., not need to update last_request
++ *	etc. This should be used for user hints that do not provide an alpha2
++ *	but some other type of regulatory hint, i.e., indoor operation.
++ */
+ enum reg_request_treatment {
+ 	REG_REQ_OK,
+ 	REG_REQ_IGNORE,
+ 	REG_REQ_INTERSECT,
+ 	REG_REQ_ALREADY_SET,
++	REG_REQ_USER_HINT_HANDLED,
+ };
+ 
+ static struct regulatory_request core_request_world = {
+@@ -110,6 +125,14 @@ const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+  */
+ static int reg_num_devs_support_basehint;
+ 
++/*
++ * State variable indicating if the platform on which the devices
++ * are attached is operating in an indoor environment. The state variable
++ * is relevant for all registered devices.
++ * (protected by RTNL)
++ */
++static bool reg_is_indoor;
++
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ {
+ 	return rtnl_dereference(cfg80211_regdomain);
+@@ -1104,6 +1127,13 @@ static bool reg_request_cell_base(struct regulatory_request *request)
+ 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
+ }
+ 
++static bool reg_request_indoor(struct regulatory_request *request)
++{
++	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
++		return false;
++	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
++}
++
+ bool reg_last_request_cell_base(void)
+ {
+ 	return reg_request_cell_base(get_last_request());
+@@ -1546,6 +1576,11 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ {
+ 	struct regulatory_request *lr = get_last_request();
+ 
++	if (reg_request_indoor(user_request)) {
++		reg_is_indoor = true;
++		return REG_REQ_USER_HINT_HANDLED;
++	}
++
+ 	if (reg_request_cell_base(user_request))
+ 		return reg_ignore_cell_hint(user_request);
+ 
+@@ -1593,7 +1628,8 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 
+ 	treatment = __reg_process_hint_user(user_request);
+ 	if (treatment == REG_REQ_IGNORE ||
+-	    treatment == REG_REQ_ALREADY_SET) {
++	    treatment == REG_REQ_ALREADY_SET ||
++	    treatment == REG_REQ_USER_HINT_HANDLED) {
+ 		kfree(user_request);
+ 		return treatment;
+ 	}
+@@ -1654,6 +1690,7 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 	case REG_REQ_OK:
+ 		break;
+ 	case REG_REQ_IGNORE:
++	case REG_REQ_USER_HINT_HANDLED:
+ 		kfree(driver_request);
+ 		return treatment;
+ 	case REG_REQ_INTERSECT:
+@@ -1753,6 +1790,7 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
+ 	case REG_REQ_OK:
+ 		break;
+ 	case REG_REQ_IGNORE:
++	case REG_REQ_USER_HINT_HANDLED:
+ 		/* fall through */
+ 	case REG_REQ_ALREADY_SET:
+ 		kfree(country_ie_request);
+@@ -1945,6 +1983,22 @@ int regulatory_hint_user(const char *alpha2,
+ 	return 0;
+ }
+ 
++int regulatory_hint_indoor_user(void)
++{
++	struct regulatory_request *request;
++
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = WIPHY_IDX_INVALID;
++	request->initiator = NL80211_REGDOM_SET_BY_USER;
++	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
++	queue_regulatory_request(request);
++
++	return 0;
++}
++
+ /* Driver hints */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+@@ -2112,6 +2166,8 @@ static void restore_regulatory_settings(bool reset_user)
+ 
+ 	ASSERT_RTNL();
+ 
++	reg_is_indoor = false;
++
+ 	reset_regdomains(true, &world_regdom);
+ 	restore_alpha2(alpha2, reset_user);
+ 
+@@ -2626,6 +2682,11 @@ int cfg80211_get_unii(int freq)
+ 	return -EINVAL;
+ }
+ 
++bool regulatory_indoor_allowed(void)
++{
++	return reg_is_indoor;
++}
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 9c11e72..a4ed27a 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -25,6 +25,7 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
++int regulatory_hint_indoor_user(void);
+ 
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env);
+ void wiphy_regulatory_register(struct wiphy *wiphy);
+@@ -117,4 +118,9 @@ void regulatory_hint_disconnect(void);
+  */
+ int cfg80211_get_unii(int freq);
+ 
++/**
++ * regulatory_indoor_allowed - is indoor operation allowed
++ */
++bool regulatory_indoor_allowed(void);
++
+ #endif  /* __NET_WIRELESS_REG_H */
 -- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+1.7.10.4
+
