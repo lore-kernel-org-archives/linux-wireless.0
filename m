@@ -1,79 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:50881 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751628AbaBJIua (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 03:50:30 -0500
-Date: Mon, 10 Feb 2014 10:50:27 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Calvin Owens <jcalvinowens@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ieee80211: Print human-readable disassoc/deauth reason
- codes
-Message-ID: <20140210085027.GA3549@w1.fi> (sfid-20140210_095034_275108_4DA254C8)
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:35456 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751164AbaBYMWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 07:22:44 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv2 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
+Date: Tue, 25 Feb 2014 14:22:25 +0200
+Message-Id: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140225_132723_136225_353D4239)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 07:44:48PM -0600, Calvin Owens wrote:
-> Create a function to return a descriptive string for each reason code,
-> and print that instead of the numeric value in the kernel log. These
-> codes are easily found on popular search engines, but one is generally
-> not able to access the internet when dealing with wireless connectivity
-> issues.
+Changes since v1:
+- Removed the gpio entries from arch/arm/mach-tegra/board-paz00.c
 
-I don't personally see need for this, but if others find it helpful, I'm
-not that strongly against either (even though this would really belong
-to user space), as long as it does not do this:
+Hi,
 
-> + * ieee80211_get_reason_code_string - Get human readable reason code
-> + *
-> + * This function returns a string describing the @reason_code.
-> + *
-> + * @reason_code: Reason code we want a human readable string for
-> + *
-> + * Return: Human readable reason string, or "(INVALID)"
+I was waiting for the DT support from Chen-Yu before sending these,
+but decided it makes no difference when I send them. I'm dropping the
+con ID in the second patch because Dan noticed the warning, but of
+course it will mean the "gpios" property can be used with DT.
 
-That "(INVALID)" is not helpful. It is just hiding the "unknown" value.
-Printing out the actual reason code is much more valuable than making
-this "human readable" in this way.
+The two last patches just add ACPI IDs for some new Baytrail based
+boards.
 
-> +const char *ieee80211_get_reason_code_string(u16 reason_code)
-> +{
-> +	if (reason_code <= 24)
-> +		return reason_code_strings[reason_code];
-> +	else if (reason_code >= 32 && reason_code <= 39)
-> +		return reason_code_strings[reason_code - 7];
-> +	else if (reason_code == 45)
-> +		return reason_code_strings[33];
-> +	else if (reason_code >= 52 && reason_code <= 66)
-> +		return reason_code_strings[reason_code - 18];
-> +	else
-> +		return "(INVALID)";
-> +}
 
-This is hiding a large number of recently added reason codes.. For most
-of the "human readable" strings in the reason_code_strings array, I
-would end up having to find the full explanation from the standard
-anyway, so I would like to be able to find this easily (and seeing the
-real value of the reason code field would be the easiest way).
+Heikki Krogerus (5):
+  ARM: tegra: remove obsolete gpio entries
+  net: rfkill: gpio: remove unused and obsolete platform parameters
+  net: rfkill: gpio: remove gpio names
+  net: rfkill: gpio: add ACPI ID for GPS module on Lenove Miix2
+  net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> @@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
-> -	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
-> -		   bssid, reason_code);
-> +	sdata_info(sdata, "deauthenticated from %pM (reason: %s)\n",
-> +		   bssid, ieee80211_get_reason_code_string(reason_code));
-
-Please don't do this unless ieee80211_get_reason_code_string() includes
-the actual reason code number for every possible case, i.e., just leave
-%u print of reason_code here even if the string is added.
+ arch/arm/mach-tegra/board-paz00.c |  4 +---
+ include/linux/rfkill-gpio.h       | 10 ----------
+ net/rfkill/rfkill-gpio.c          | 40 +++++++++------------------------------
+ 3 files changed, 10 insertions(+), 44 deletions(-)
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.9.0.rc3
+
