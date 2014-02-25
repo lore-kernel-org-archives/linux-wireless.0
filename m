@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:54738 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbaBZHlo (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:43546 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbaBYLcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 02:41:44 -0500
-Date: Wed, 26 Feb 2014 08:41:39 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <681715589.20140226084139@eikelenboom.it> (sfid-20140226_084153_845945_539593D6)
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] cfg80211: respin reprocessing pending requests
-In-Reply-To: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 25 Feb 2014 06:32:32 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hi5so4178261wib.3
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 03:32:31 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] mac80211: don't downgrade VHT20 to HT20
+Date: Tue, 25 Feb 2014 12:27:08 +0100
+Message-Id: <1393327628-1078-1-git-send-email-michal.kazior@tieto.com> (sfid-20140225_123235_732272_03ECE807)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The check led to VHT-capable devices being unable
+to pair in VHT20 and were instead paired in HT20.
 
-Wednesday, February 26, 2014, 2:09:39 AM, you wrote:
+This improves throughput for VHT20 pairing.
 
-> Here's a respin. There are no code changes, I just adjusted the
-> commit logs as that's all the feedback I got from them, and on
-> the last patch I just don't think a timer is best. If a timer
-> is desired let me know how much time you want to set it for,
-> I just don't see how that's any better.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+The check was originally introduced in:
 
-> The commit log on the other ones should help let people make
-> decisions if the implications of not merging this, I'll let
-> folks make the call about whether or not some of these belong
-> to stable, I personally don't think so -- but some others may
-> disagree.
+e1a0c6b3a4b27ed5f21291d0bbee2167ec201ef5
+(mac80211: stop toggling IEEE80211_HT_CAP_SUP_WIDTH_20_40)
 
-I tested the original series and these fixed my problem and i did not
-notice any regressions. Since there are no code changes:
+Was it really necessary to introduce this check?
 
-Tested-By: Sander Eikelenboom <linux@eikelenboom.it>
 
-Thanks Luis !
-Hopefully it is going somewhere now after so many months.
+ net/mac80211/vht.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index e9e36a2..21c7e5b 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -129,10 +129,6 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 		return;
+ 
+-	/* A VHT STA must support 40 MHz */
+-	if (!(sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40))
+-		return;
 -
-Sander
-
-> Luis R. Rodriguez (3):
->   cfg80211: allow reprocessing of pending requests
->   cfg80211: fix processing world regdomain when non modular
->   cfg80211: processing regulatory requests on netdev notifier
-
->  net/wireless/reg.c | 16 +++++++++-------
->  net/wireless/reg.h |  1 +
->  2 files changed, 10 insertions(+), 7 deletions(-)
-
+ 	vht_cap->vht_supported = true;
+ 
+ 	own_cap = sband->vht_cap;
+-- 
+1.8.5.3
 
