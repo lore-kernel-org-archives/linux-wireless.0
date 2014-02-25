@@ -1,230 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9636 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755188AbaBUAvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 19:51:11 -0500
-Date: Fri, 21 Feb 2014 01:50:59 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "Mark A. Greer" <mgreer@animalcreek.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2
- Tag Support
-Message-ID: <20140221005059.GS18868@zurbaran> (sfid-20140221_015119_792489_77466075)
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44801 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558AbaBYTaq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Feb 2014 14:30:46 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/14] brcmfmac: fix use of skb control buffer in SDIO driver part
+Date: Tue, 25 Feb 2014 20:30:27 +0100
+Message-ID: <1393356639-19169-4-git-send-email-arend@broadcom.com> (sfid-20140225_203058_386881_942E9C06)
+In-Reply-To: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mark,
+The SDIO driver has a 16-bit field defined in the skbuff control buffer.
+However, it is accessed as a u32 overwriting other control info. Another
+issue is that the field is not initialized for networking packets, but
+the control buffer content is unspecified as other networking layers can
+use it.
 
-Code looks quite nice, especially since this looks like a fairly complex
-driver. And the initial coments are quite useful, I appreciate that.
-I have a few comments/questions though:
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-
-> + * been received and there isn't an error).  The delay is 3 ms since delays
-> + * over 2 ms have been observed during testing.
-Would you say this timeout depend on the SPI bus bandwidth ?
-
-
-> +#define TRF7970A_QUIRK_IRQ_STATUS_READ_ERRATA	BIT(0)
-Are there actually any TRF970 devices that do not need this quirk ?
-
-
-> +static void trf7970a_drain_fifo(struct trf7970a *trf, u8 status)
-> +{
-> +	struct sk_buff *skb = trf->rx_skb;
-> +	int ret;
-> +	u8 fifo_bytes;
-> +
-> +	if (status & TRF7970A_IRQ_STATUS_ERROR) {
-> +		trf7970a_abort_and_send_err(trf, -EIO);
-> +		return;
-> +	}
-> +
-> +	ret = trf7970a_read(trf, TRF7970A_FIFO_STATUS, &fifo_bytes);
-> +	if (ret) {
-> +		trf7970a_abort_and_send_err(trf, ret);
-> +		return;
-> +	}
-> +
-> +	dev_dbg(trf->dev, "fifo_bytes: 0x%x\n", fifo_bytes);
-> +
-> +	if (!fifo_bytes)
-> +		goto no_rx_data;
-> +
-> +	if (fifo_bytes & TRF7970A_FIFO_STATUS_OVERFLOW) {
-> +		dev_err(trf->dev, "%s - fifo overflow: 0x%x\n", __func__,
-> +				fifo_bytes);
-> +		trf7970a_abort_and_send_err(trf, -EIO);
-> +		return;
-> +	}
-> +
-> +	if (fifo_bytes > skb_tailroom(skb)) {
-> +		skb = skb_copy_expand(skb, skb_headroom(skb),
-> +				max_t(int, fifo_bytes,
-> +					TRF7970A_RX_SKB_ALLOC_SIZE),
-> +				GFP_KERNEL);
-So there could be more pending bytes in the FIFO than you can accomodate
-in your rx_skb ? Could we avoid that by allocating rx_skb to match the
-FIFO size ?
-
-
-> +static void trf7970a_timeout_work_handler(struct work_struct *work)
-> +{
-> +	struct trf7970a *trf = container_of(work, struct trf7970a,
-> +			timeout_work.work);
-> +
-> +	dev_dbg(trf->dev, "TIMEOUT - state: %d, ignore_timeout: %d\n",
-> +			trf->state, trf->ignore_timeout);
-> +
-> +	mutex_lock(&trf->lock);
-> +
-> +	if (trf->ignore_timeout)
-> +		trf->ignore_timeout = false;
-> +	else if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
-> +		trf7970a_send_upstream(trf); /* No more rx data so send up */
-> +	else
-> +		trf7970a_abort_and_send_err(trf, -ETIMEDOUT);
-> +
-> +	mutex_unlock(&trf->lock);
-> +}
-> +
-> +/* ----------------------------------------------------------------- */
-Nitpick: I suppose you're separating the internal logic from the digital
-ops here ? Please add one comment line for that.
-
-
-> +static int trf7970a_in_send_cmd(struct nfc_digital_dev *ddev,
-> +		struct sk_buff *skb, u16 timeout,
-> +		nfc_digital_cmd_complete_t cb, void *arg)
-> +{
-> +	struct trf7970a *trf = nfc_digital_get_drvdata(ddev);
-> +	char *prefix;
-> +	unsigned int len;
-> +	int ret;
-> +
-> +	dev_dbg(trf->dev, "New request - state: %d, timeout: %d ms, len: %d\n",
-> +			trf->state, timeout, skb->len);
-> +
-> +	if (skb->len > TRF7970A_TX_MAX)
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&trf->lock);
-> +
-> +	if ((trf->state != TRF7970A_ST_IDLE) &&
-> +			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
-> +		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
-> +				trf->state);
-> +		ret = -EIO;
-> +		goto out_err;
-> +	}
-> +
-> +	trf->rx_skb = nfc_alloc_recv_skb(TRF7970A_RX_SKB_ALLOC_SIZE,
-> +			GFP_KERNEL);
-> +	if (!trf->rx_skb) {
-> +		dev_dbg(trf->dev, "Can't alloc rx_skb\n");
-> +		ret = -ENOMEM;
-> +		goto out_err;
-> +	}
-> +
-> +	if (trf->state == TRF7970A_ST_IDLE_RX_BLOCKED) {
-> +		ret = trf7970a_cmd(trf, TRF7970A_CMD_ENABLE_RX);
-> +		if (ret)
-> +			goto out_err;
-> +
-> +		trf->state = TRF7970A_ST_IDLE;
-> +	}
-> +
-> +	ret = trf7970a_per_cmd_config(trf, skb);
-> +	if (ret)
-> +		goto out_err;
-> +
-> +	trf->ddev = ddev;
-> +	trf->tx_skb = skb;
-As you're going to carry this guy around and may need it from e.g. your
-threaded interrupt handler, shouldn't you take a reference (skb_get) on it ?
-I'm concerned by the fact that you could see your tx_skb disappear from
-abort_cmd and get an IRQ before your state is set to IDLE.
-Hmm, I guess that's protected by the mutex and so when you get an abort
-from the digital stack you reset the state to IDLE and no one should try
-to touch tx_skb after you release the mutex. Is that what you had in
-mind ?
-
-
-> +static int trf7970a_probe(struct spi_device *spi)
-> +{
-> +	struct device_node *np = spi->dev.of_node;
-> +	const struct spi_device_id *id = spi_get_device_id(spi);
-> +	struct trf7970a *trf;
-> +	int ret;
-> +
-> +	if (!np) {
-> +		dev_err(&spi->dev, "No Device Tree entry\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	trf = devm_kzalloc(&spi->dev, sizeof(*trf), GFP_KERNEL);
-> +	if (!trf)
-> +		return -ENOMEM;
-> +
-> +	trf->state = TRF7970A_ST_OFF;
-> +	trf->dev = &spi->dev;
-> +	trf->spi = spi;
-> +	trf->quirks = id->driver_data;
-> +	trf->initialized = false;
-> +
-> +	spi->mode = SPI_MODE_1;
-> +	spi->bits_per_word = 8;
-> +
-> +	/* Get the optional Slave Select GPIO used for SPI with SS mode */
-> +	trf->ss_gpio = of_get_named_gpio(np, "ti,ss-gpio", 0);
-> +	if (trf->ss_gpio >= 0) {
-> +		ret = devm_gpio_request_one(trf->dev, trf->ss_gpio,
-> +				GPIOF_DIR_OUT | GPIOF_INIT_LOW, "SS");
-> +		if (ret) {
-> +			dev_err(trf->dev, "Can't request SS GPIO: %d\n", ret);
-> +			return ret;
-> +		}
-> +	} else {
-> +		dev_info(trf->dev, "Using SPI without SS mode\n");
-> +	}
-> +
-> +	/* There are two enable pins - both must be present */
-> +	trf->en_gpio = of_get_named_gpio(np, "ti,enable-gpios", 0);
-> +	if (trf->en_gpio < 0) {
-> +		dev_err(trf->dev, "No EN GPIO property\n");
-> +		return ret;
-You probably want to return trf->en_gpio or otherwise the devm code
-won't release your managed resources.
-
-
-> +	}
-> +
-> +	ret = devm_gpio_request_one(trf->dev, trf->en_gpio,
-> +			GPIOF_DIR_OUT | GPIOF_INIT_LOW, "EN");
-> +	if (ret) {
-> +		dev_err(trf->dev, "Can't request EN GPIO: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	trf->en2_gpio = of_get_named_gpio(np, "ti,enable-gpios", 1);
-> +	if (trf->en2_gpio < 0) {
-> +		dev_err(trf->dev, "No EN2 GPIO property\n");
-> +		return ret;
-Ditto.
-
-Cheers,
-Samuel.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 631d5dc..fa4ec69 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2112,7 +2112,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+ 		memcpy(pkt_pad->data,
+ 		       pkt->data + pkt->len - tail_chop,
+ 		       tail_chop);
+-		*(u32 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
++		*(u16 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
+ 		skb_trim(pkt, pkt->len - tail_chop);
+ 		__skb_queue_after(pktq, pkt, pkt_pad);
+ 	} else {
+@@ -2159,7 +2159,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
+ 		 * already properly aligned and does not
+ 		 * need an sdpcm header.
+ 		 */
+-		if (*(u32 *)(pkt_next->cb) & ALIGN_SKB_FLAG)
++		if (*(u16 *)(pkt_next->cb) & ALIGN_SKB_FLAG)
+ 			continue;
+ 
+ 		/* align packet data pointer */
+@@ -2223,11 +2223,11 @@ brcmf_sdio_txpkt_postp(struct brcmf_sdio *bus, struct sk_buff_head *pktq)
+ 	u8 *hdr;
+ 	u32 dat_offset;
+ 	u16 tail_pad;
+-	u32 dummy_flags, chop_len;
++	u16 dummy_flags, chop_len;
+ 	struct sk_buff *pkt_next, *tmp, *pkt_prev;
+ 
+ 	skb_queue_walk_safe(pktq, pkt_next, tmp) {
+-		dummy_flags = *(u32 *)(pkt_next->cb);
++		dummy_flags = *(u16 *)(pkt_next->cb);
+ 		if (dummy_flags & ALIGN_SKB_FLAG) {
+ 			chop_len = dummy_flags & ALIGN_SKB_CHOP_LEN_MASK;
+ 			if (chop_len) {
+@@ -2709,6 +2709,8 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 
+ 	/* Priority based enq */
+ 	spin_lock_irqsave(&bus->txqlock, flags);
++	/* reset bus_flags in packet cb */
++	*(u16 *)(pkt->cb) = 0;
+ 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
+ 		skb_pull(pkt, bus->tx_hdrlen);
+ 		brcmf_err("out of bus->txq !!!\n");
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.10.4
+
