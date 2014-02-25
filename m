@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbaBCNl5 (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:61819 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbaBYNLW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 08:41:57 -0500
-Message-ID: <1391434913.4488.24.camel@jlt4.sipsolutions.net> (sfid-20140203_144205_347547_0B1629BE)
-Subject: Re: [RFC 2/2] cfg80211: move channel switch logic to cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Feb 2014 14:41:53 +0100
-In-Reply-To: <1391421529-6067-3-git-send-email-michal.kazior@tieto.com> (sfid-20140203_110356_335827_0A67B036)
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-3-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140203_110356_335827_0A67B036)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Feb 2014 08:11:22 -0500
+Received: by mail-bk0-f54.google.com with SMTP id 6so217585bkj.41
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 05:11:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1393330210.4170.1.camel@jlt4.sipsolutions.net>
+References: <1393327628-1078-1-git-send-email-michal.kazior@tieto.com>
+	<1393330040.4170.0.camel@jlt4.sipsolutions.net>
+	<1393330210.4170.1.camel@jlt4.sipsolutions.net>
+Date: Tue, 25 Feb 2014 14:11:20 +0100
+Message-ID: <CA+BoTQnvSxOCxV4UwUmi2_if8NQWWJCht=urAewBZAiEJdHpZA@mail.gmail.com> (sfid-20140225_141125_579061_058B4156)
+Subject: Re: [PATCH] mac80211: don't downgrade VHT20 to HT20
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
-> This introduces the following benefits:
->  * cfg80211 is now aware of channel switching
->    (although more work still needs to be done wrt
->     interface combinations & multi-interface CSA)
->  * fixes some channel switching failcases by
->    disconnecting offending interfaces
->  * STA CSA no longer modifies BSS channel from
->    within mac80211
+On 25 February 2014 13:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-02-25 at 13:07 +0100, Johannes Berg wrote:
+>> On Tue, 2014-02-25 at 12:27 +0100, Michal Kazior wrote:
+>> > The check led to VHT-capable devices being unable
+>> > to pair in VHT20 and were instead paired in HT20.
+>>
+>> ??
+>>
+>> 802.11ac says:
+>> ---
+>> A VHT STA shall support the following features:
+>> [...]
+>> — 20 MHz, 40 MHz, and 80 MHz channel widths
+>> [...]
+>> ---
+>>
+>> so how can you have a device that's "VHT-capable" but doesn't support 40
+>> MHz?
+>
+> And also:
+>
+> A VHT STA shall set the Supported Channel Width Set subfield in its HT
+> Capabilities element HT Capabilities Info field to 1, indicating that
+> both 20 MHz operation and 40 MHz operation are supported.
+>
+> (10.39.1)
 
-That's nice.
+The spec also defines VHT BSS operating channel width is derived from
+HT Operation Element: STA Channel Width field (Table 10-19) and 20 MHz
+is not forbidden for AP/mesh. hostapd seems to go in line with this
+and allows VHT20 and VHT40.
 
-> This aims to make the following possible later:
->  * defer channel switching decision to userspace
->    (if desired so),
+Without my patch (i.e. with the 20/40 check left intact):
 
-That's probably not needed, it can disconnect after the CSA event (that
-should be sent when the CSA is first received)
+* If a station connects to VHT20 BSS, hostapd tries to add a VHT20
+station, but mac80211 downgrades it to HT20,
+* If mac80211 station connects to a VHT20 BSS it gets downgraded to HT20 too.
 
->  * inform userspace what interfaces will be
->    possibly disconnected by a channel switch,
+This means mac80211 is unable to setup VHT20 pairing properly even
+though VHT20 BSS is defined in the spec.
 
-Huh? Not sure I get that part, why would userspace ever be notified
-about something that *will* happen? Either the interface disconnects
-when the CSA is received, or it just switches and userspace gets a "CSA
-will happen" event?
+My take is 10.39.1 means VHT STA AssocReq must contain
+IEEE80211_HT_CAP_SUP_WIDTH_20_
+40. I suppose AP (hostapd) should deny STA association in that case.
 
->  * disconnect non-complying interfaces that were
->    sharing a channel that is being abandoned by
->    channel switching interface(s),
+I'm not really sure how IBSS fits here though.
 
-Hmm, that sounds a bit the wrong way around? Shouldn't the CSA not be
-possible (userspace CSA) or cause the switching interface to disconnect,
-rather than *others*??
 
-> - * @channel_switch: initiate channel-switch procedure (with CSA)
-> + * @ch_switch_start: initiate channel-switch procedure (with CSA). This should
-> + *	prompt the driver to perform preparation work (start some timers,
-> + *	include CS IEs in beacons, etc) but don't do an actual channel switch.
-> + *	Once driver has completed all preparations and is ready for the actual
-> + *	switch (after CSA counter is completed) it must call
-> + *	cfg80211_ch_switch_complete(wdev). After that ch_switch_finalize() MAY
-> + *	be called, but it doesn't necessarily happen immediately as cfg80211
-> + *	may need to synchronize with other interfaces. If channel switch is
-> + *	cancelled for some reason ch_switch_finalize() is not called and driver
-> + *	should free up resources/cleanup state in interface disconnection flow.
-> + * @ch_switch_finalize: finalize channel-switch procedure, i.e. perform the
-> + *	actual switch.
-
-I don't like this at all. This totally assumes that every driver behaves
-like mac80211, which clearly is not the case. The split between
-"starting" and "finalizing" it should not be part of the API.
-
->  /**
-> + * enum cfg80211_chsw_state - interface channel switch state
-> + *
-> + * @CHSW_STATE_NONE: channel switch is not active
-> + * @CHSW_STATE_REQUESTED: channel switch has been requested but not processed
-> + * @CHSW_STATE_STARTED: channel switch has been processed and accepted
-> + * @CHSW_STATE_COMPLETED: channel switch has been scheduled for finalization
-> + * @CHSW_STATE_SYNCING: interface is ready for channel to be re-programmed in
-> + *	driver. Interface may remain in this state until some additional
-> + *	requirements are met, i.e. wait until other channel switch requests on other
-> + *	interfaces are synching as well.
-> + */
-
-This therefore doesn't belong into cfg80211, at least not all of it.
-
-[snip rest that seemed pointless to look at now]
-
-johannes
-
+Michał
