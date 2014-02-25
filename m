@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:38851 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaB0XDW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54662 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbaBYP2M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 18:03:22 -0500
-Message-ID: <1393542195.26794.50.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140228_000330_935209_1031648C)
-Subject: Re: How to best consolidate list of skbs (msdu) for receive?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 27 Feb 2014 15:03:15 -0800
-In-Reply-To: <530FBE51.8040905@candelatech.com>
-References: <530F85AE.8060002@candelatech.com>
-	   <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>
-	  <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>
-	  <530FB348.2070701@candelatech.com>
-	 <1393540305.26794.47.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <530FBE51.8040905@candelatech.com>
+	Tue, 25 Feb 2014 10:28:12 -0500
+Message-ID: <1393342083.4170.16.camel@jlt4.sipsolutions.net> (sfid-20140225_162816_929920_EB641B3C)
+Subject: Re: [PATCH 2/2] cfg80211: regulatory, allow user to set world
+ regdomain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	linville@tuxdriver.com
+Date: Tue, 25 Feb 2014 16:28:03 +0100
+In-Reply-To: <1392364441-4640-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140214_085422_293607_23F25481)
+References: <1392364441-4640-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1392364441-4640-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140214_085422_293607_23F25481)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 14:38 -0800, Ben Greear wrote:
+On Fri, 2014-02-14 at 08:54 +0100, Janusz Dziedzic wrote:
+> Allow to set world regulatory domain in case of user
+> request (iw reg set 00).
 
-> Based on the code above, do you think skb_try_coalesce() is
-> the best option for this logic?
+Applied both, I took the first one for 3.14 still.
 
-Yep, if you do not know how are built the skb in the chain, I would say
-using skb_try_coalesce() seems the proper way.
-
-We use it for example in tcp input path.
-
-Take also a look at tipc_link_recv_fragment()
-
+johannes
 
