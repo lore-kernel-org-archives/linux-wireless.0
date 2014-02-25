@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:51258 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaB0VVz (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:53984 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752072AbaBYXA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 16:21:55 -0500
-Message-ID: <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140227_222203_822180_68C342AA)
-Subject: Re: How to best consolidate list of skbs (msdu) for receive?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 27 Feb 2014 13:21:53 -0800
-In-Reply-To: <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>
-References: <530F85AE.8060002@candelatech.com>
-	 <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Feb 2014 18:00:28 -0500
+Message-ID: <530D2087.1020407@wwwdotorg.org> (sfid-20140226_000049_748039_C54474BB)
+Date: Tue, 25 Feb 2014 16:00:23 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+CC: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCHv2 1/5] ARM: tegra: remove obsolete gpio entries
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> <1393330950-7283-2-git-send-email-heikki.krogerus@linux.intel.com>
+In-Reply-To: <1393330950-7283-2-git-send-email-heikki.krogerus@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 12:37 -0800, Florian Fainelli wrote:
-> 2014-02-27 10:36 GMT-08:00 Ben Greear <greearb@candelatech.com>:
-> > In ath10k, it can receive msdu (in rx raw mode, at least).  These show up
-> > as a list of skb.  Currently they are just dropped as un-handled, and I
-> > need to fix this.
-> >
-> > I think I need to consolidate this list into a single skb in order to pass
-> > it up the stack.
-> >
-> > What is the preferred way to go about doing this?
-> >
-> > It seems I could just expand the head skb (pskb_expand_head) and copy the data from the others
-> > onto the end of the head skb, but maybe there is a more efficient way to go about
-> > doing this?
-> 
-> Some Ethernet drivers you would in general get multiple RX fragments
-> for large frames, with the first fragment containing the headers, and
-> then buffers of a few KiB, it is the driver responsibility to
-> reassemble this as a large SKB with multiple fragments (grep for
-> skb_fill_page_desc), would that work in your case?
+On 02/25/2014 05:22 AM, Heikki Krogerus wrote:
+> After moving to description based gpio interface in
+> rfkill-gpio, the gpio numbers are not used any more.
 
-Also skb_try_coalesce() might feet the need, if all you have are a list
-of skb, rather than an array of page fragments
+Acked-by: Stephen Warren <swarren@nvidia.com>
 
+This shouldn't cause any conflicts since I really don't anticipate
+changing board-paz00.c in this kernel cycle other than this patch.
 
+If you want though, I can prepare a branch and signed tag in the Tegra
+tree, containing this patch, and you can merge it. I'm fine either way.
