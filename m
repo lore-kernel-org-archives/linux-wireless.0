@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:35234 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbaB0O4N (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61351 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbaBZLeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:56:13 -0500
+	Wed, 26 Feb 2014 06:34:14 -0500
+Message-ID: <530DD131.50205@broadcom.com> (sfid-20140226_123422_936614_4818375E)
+Date: Wed, 26 Feb 2014 12:34:09 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1393512787.4648.1.camel@jlt4.sipsolutions.net>
-References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
-	<1393512434-1325-3-git-send-email-dh.herrmann@gmail.com>
-	<1393512787.4648.1.camel@jlt4.sipsolutions.net>
-Date: Thu, 27 Feb 2014 15:56:13 +0100
-Message-ID: <CANq1E4RNbtbdVhC2PgyZMGN_duScbmCOGeMxAYiKLL-8H=EWSA@mail.gmail.com> (sfid-20140227_155634_009584_0A460E5F)
-Subject: Re: [PATCH 2/4] mac80211: set NET_NAME_USER for user-space created ifs
-From: David Herrmann <dh.herrmann@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	Tom Gundersen <teg@jklm.no>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
+ device
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>				 <1393356639-19169-2-git-send-email-arend@broadcom.com>				 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>			 <530DAECD.8010405@broadcom.com>		 <1393406278.4133.4.camel@jlt4.sipsolutions.net>		 <530DB3BA.20106@broadcom.com>	 <1393407473.4133.5.camel@jlt4.sipsolutions.net>	 <530DC56E.9040202@broadcom.com> <1393413044.4133.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1393413044.4133.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On 02/26/2014 12:10 PM, Johannes Berg wrote:
+> On Wed, 2014-02-26 at 11:43 +0100, Arend van Spriel wrote:
+> 
+>> Actually, this was not the reason for the doing the msleep(). The
+>> problem was that wpa_supplicant received RTM_DELLINK, before getting the
+>> NL08211_DISCONNECT. This resulted in RTM_DELLINK, immediately followed
+>> by RTM_ADDLINK, followed by NL80211_DISCONNECT.
+> 
+> I'm not sure this isn't still possible? I don't know when DELLINK is
+> sent.
 
-On Thu, Feb 27, 2014 at 3:53 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Given the premise of your patches,
->
->> +++ b/net/mac80211/iface.c
->> @@ -1620,6 +1620,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
->>                                       + IEEE80211_ENCRYPT_HEADROOM;
->>               ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
->>
->> +             ndev->name_assign_type = NET_NAME_USER;
->
-> this is wrong because we call this in main.c with a "wlan%d" argument
-> for the name, which gets expanded.
+Given the behaviour I would say before the netdev notifier, which may be
+considered wrong. It depends whether the notifier was intended for the
+kind of thing that cfg80211 is doing, ie. send a netlink event to
+user-space?
 
-Whoops, yeah, same issue as with ath6kl where I fixed it with a
-separate "name_assign_type" argument. I will do the same here for v2.
-
-Thanks
-David
+Gr. AvS
