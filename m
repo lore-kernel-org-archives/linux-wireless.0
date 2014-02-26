@@ -1,58 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35815 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753053AbaBSM0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 07:26:18 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/2] mac80211: protect skb_queue_len(&ps->bc_buf) by lock
-Date: Wed, 19 Feb 2014 13:28:36 +0100
-Message-Id: <1392812916-13656-2-git-send-email-sgruszka@redhat.com> (sfid-20140219_132640_116619_301F3112)
-In-Reply-To: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
-References: <1392812916-13656-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:48101 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbaBZUiI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Feb 2014 15:38:08 -0500
+Received: by mail-pd0-f182.google.com with SMTP id g10so368779pdj.27
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 12:38:08 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v3] cfg80211: processing regulatory requests on netdev notifier
+Date: Wed, 26 Feb 2014 12:38:00 -0800
+Message-Id: <1393447080-9783-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140226_213813_457661_517EEE15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar change as on current patch "mac80211: fix calling
-ieee80211_free_txskb with NULL skb", but for multicast queue. Patch does
-not prevent crash, as dev_kfree_skb() checks against NULL skb, but it
-help to prevent not necessary frame drop, when bc_buf queue was
-partially flushed and no longer exceeds AP_MAX_BC_BUFFER .
+This adds a trigger to review any pending regulatory
+requests whenever an 802.11 device interface is brought
+down or up. We use this as an opportunistic trigger
+for checking the regulatory work queues as otherwise
+they they're only checked upon an initial regulatory
+request or when beacon hints are found.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This opportunistic mechanism can be used to trigger
+kicking the queues regulatory queues at any time from
+userspace without having to change the regulatory state.
+
+A timer just waiting upon init is not that appropriate
+as when it should be triggered will depend on systems,
+a much better approach is to use and add opportunistic
+triggers. The interface coming up is typically a good
+indicator that filesystems have been mounted since
+firmware is required for some devices.
+
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/mac80211/tx.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ net/wireless/core.c | 2 ++
+ net/wireless/reg.c  | 5 +++++
+ net/wireless/reg.h  | 1 +
+ 3 files changed, 8 insertions(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 85b9b8e..78bca8a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -387,6 +387,8 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 	struct ps_data *ps;
-+	struct sk_buff *old_skb = NULL;
-+	unsigned long flags;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 276cf93..7110631 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -812,6 +812,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+ 		break;
+ 	case NETDEV_REGISTER:
++		reg_process_pending_work();
+ 		/*
+ 		 * NB: cannot take rdev->mtx here because this may be
+ 		 * called within code protected by it when interfaces
+@@ -874,6 +875,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		wake_up(&rdev->dev_wait);
+ 		break;
+ 	case NETDEV_UP:
++		reg_process_pending_work();
+ 		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
+ 		wdev_lock(wdev);
+ 		switch (wdev->iftype) {
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 7203b74..b358856 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -192,6 +192,11 @@ static DECLARE_WORK(reg_work, reg_todo);
+ static void reg_timeout_work(struct work_struct *work);
+ static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
  
- 	/*
- 	 * broadcast/multicast frame
-@@ -432,6 +434,13 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 		purge_old_ps_buffers(tx->local);
++void reg_process_pending_work(void)
++{
++	schedule_work(&reg_work);
++}
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 6,
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 37c180d..51912b3 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -37,6 +37,7 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 				   const struct ieee80211_reg_rule *rule);
  
- 	if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER) {
-+		spin_lock_irqsave(&ps->bc_buf.lock, flags);
-+		/* queue could be modified, recheck length with lock taken */
-+		if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER)
-+			old_skb = __skb_dequeue(&ps->bc_buf);
-+		spin_unlock_irqrestore(&ps->bc_buf.lock, flags);
-+	}
-+	if (old_skb) {
- 		ps_dbg(tx->sdata,
- 		       "BC TX buffer full - dropping the oldest frame\n");
- 		dev_kfree_skb(skb_dequeue(&ps->bc_buf));
+ bool reg_last_request_cell_base(void);
++void reg_process_pending_work(void);
+ 
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
 -- 
-1.7.11.7
+1.8.5.3
 
