@@ -1,53 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:45563 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640AbaB1JHJ convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:39977 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100AbaBZLKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 04:07:09 -0500
-Received: by mail-ea0-f179.google.com with SMTP id q10so2464295ead.24
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 01:07:08 -0800 (PST)
+	Wed, 26 Feb 2014 06:10:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <877g8fd32c.fsf@kamboji.qca.qualcomm.com>
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
-	<1393485587-16879-6-git-send-email-michal.kazior@tieto.com>
-	<877g8fd32c.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Feb 2014 10:07:08 +0100
-Message-ID: <CA+BoTQk9z+Qp3+2QV0iBCaUkNzX=qkY_JKnzvinwyAKd6V6GdQ@mail.gmail.com> (sfid-20140228_100717_290435_17D38AFC)
-Subject: Re: [PATCH v3 5/8] ath10k: batch htt tx/rx completions
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21261.52075.233979.642924@gargle.gargle.HOWL> (sfid-20140226_121021_042993_1E395BF0)
+Date: Wed, 26 Feb 2014 16:39:31 +0530
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 0/7] ath9k|ath9k_htc: remove code dups
+In-Reply-To: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
+References: <1393336136-31069-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 10:00, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> HTT Rx endpoint processes both frame rx
->> indications and frame tx completion indications.
->>
->> Those completions typically come in batches and
->> may be mixed so it makes sense to defer processing
->> hoping to get a bunch of them and take advantage
->> of hot caches.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> +void ath10k_htt_txrx_compl_task(unsigned long ptr)
->> +{
->> +     struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
->> +     struct htt_resp *resp;
->> +     struct sk_buff *skb;
->
-> I think this can be a static function. Is it ok if I change this patch
-> with the diff below?
+Oleksij Rempel wrote:
+> ath9k code moved to common-init.c and then reused in ath9k_htc.
+> 
+> Oleksij Rempel (7):
+>   ath9k: move ath9k_init_channels_rates to common-init
+>   ath9k_htc: use ath9k_cmn_init_channels_rates
+>   ath9k: move setup_ht_cap to common-init
+>   ath9k_htc: use ath9k_cmn_setup_ht_cap
+>   ath9k-common: set maxstream=1 for ar9271
+>   ath9k: move ath9k_reload_chainmask_settings to common
+>   ath9k_htc: use ath9k_cmn_reload_chainmask
 
-I don't really mind.
+This series looks good.
 
-
-Michał
+Sujith
