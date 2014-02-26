@@ -1,73 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:58130 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbaBRBKi (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:62909 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732AbaBZLkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 20:10:38 -0500
-Received: by mail-ea0-f170.google.com with SMTP id g15so5779627eak.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 17:10:37 -0800 (PST)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	liuhq11@mails.tsinghua.edu.cn,
-	andrea merello <andrea.merello@gmail.com>
-Subject: [PATCH 3/7] rtl818x: check for pci_map_single() success when initializing RX ring
-Date: Tue, 18 Feb 2014 02:10:42 +0100
-Message-Id: <1392685846-10116-4-git-send-email-andrea.merello@gmail.com> (sfid-20140218_021043_051927_A2BBACFF)
-In-Reply-To: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
+	Wed, 26 Feb 2014 06:40:06 -0500
+Received: by mail-ea0-f173.google.com with SMTP id n15so834615ead.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 03:40:05 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/8] ath10k: remove is_aborted from skb_cb
+Date: Wed, 26 Feb 2014 12:34:19 +0100
+Message-Id: <1393414465-3666-3-git-send-email-michal.kazior@tieto.com> (sfid-20140226_124010_695758_36F522F0)
+In-Reply-To: <1393414465-3666-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+ <1393414465-3666-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: andrea merello <andrea.merello@gmail.com>
+The flag wasn't used anymore. No need to keep it.
 
-During initialization a number of RX skbs are allocated and mapped
-for DMA.
-Currently if pci_map_single() fails, it will result in passing to the
-HW a wrong DMA address (to write to!).
-
-This patch detects this condition, eventually it tries to get a more
-luky skb, and if it finally fails to get things right, it makes the
-driver not to initialize, avoiding at least dangerous DMAs.
-
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h |  1 -
+ drivers/net/wireless/ath/ath10k/pci.c  | 20 --------------------
+ 2 files changed, 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index bf59ff9..848ea59 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -458,6 +458,7 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
- 	struct rtl8180_rx_desc *entry;
-+	int dma_map_fail_count = 0;
- 	int i;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 082fa77..7cf022d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -62,7 +62,6 @@ struct ath10k;
  
- 	priv->rx_ring = pci_alloc_consistent(priv->pdev,
-@@ -483,6 +484,19 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 		mapping = (dma_addr_t *)skb->cb;
- 		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
- 					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
-+
-+		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
-+			kfree_skb(skb);
-+			if (dma_map_fail_count++ > 32) {
-+				wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
-+				return -ENOMEM;
-+			}
-+
-+			i--;
-+			continue;
-+		}
-+
-+
- 		entry->rx_buf = cpu_to_le32(*mapping);
- 		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
- 					   MAX_RX_SIZE);
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+-	bool is_aborted;
+ 	u8 vdev_id;
+ 
+ 	struct {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 34f0910..d973975 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -63,7 +63,6 @@ static int ath10k_pci_post_rx(struct ath10k *ar);
+ static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
+ 					     int num);
+ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
+-static void ath10k_pci_stop_ce(struct ath10k *ar);
+ static int ath10k_pci_cold_reset(struct ath10k *ar);
+ static int ath10k_pci_warm_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+@@ -993,22 +992,6 @@ static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ 		tasklet_kill(&ar_pci->pipe_info[i].intr);
+ }
+ 
+-static void ath10k_pci_stop_ce(struct ath10k *ar)
+-{
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_compl *compl;
+-	struct sk_buff *skb;
+-
+-	/* Mark pending completions as aborted, so that upper layers free up
+-	 * their associated resources */
+-	spin_lock_bh(&ar_pci->compl_lock);
+-	list_for_each_entry(compl, &ar_pci->compl_process, list) {
+-		skb = compl->skb;
+-		ATH10K_SKB_CB(skb)->is_aborted = true;
+-	}
+-	spin_unlock_bh(&ar_pci->compl_lock);
+-}
+-
+ static void ath10k_pci_cleanup_ce(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -1339,7 +1322,6 @@ err_stop:
+ 	ath10k_ce_disable_interrupts(ar);
+ 	ath10k_pci_free_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+-	ath10k_pci_stop_ce(ar);
+ 	ath10k_pci_process_ce(ar);
+ err_free_compl:
+ 	ath10k_pci_cleanup_ce(ar);
+@@ -1424,7 +1406,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 			continue;
+ 		}
+ 
+-		ATH10K_SKB_CB(netbuf)->is_aborted = true;
+ 		ar_pci->msg_callbacks_current.tx_completion(ar,
+ 							    netbuf,
+ 							    id);
+@@ -1482,7 +1463,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 
+ 	ath10k_pci_free_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+-	ath10k_pci_stop_ce(ar);
+ 
+ 	ret = ath10k_pci_request_early_irq(ar);
+ 	if (ret)
 -- 
-1.8.3.2
+1.8.5.3
 
