@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63057 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbaBMTNk (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3576 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbaBZRaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 14:13:40 -0500
+	Wed, 26 Feb 2014 12:30:19 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: implement drv_get_tsf for ibss merging
-References: <1392197844-1223-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Thu, 13 Feb 2014 21:13:35 +0200
-In-Reply-To: <1392197844-1223-1-git-send-email-yeohchunyeow@gmail.com>
-	(Chun-Yeow Yeoh's message of "Wed, 12 Feb 2014 17:37:24 +0800")
-Message-ID: <87r4767rmo.fsf@kamboji.qca.qualcomm.com> (sfid-20140213_201344_234246_7DB47ED1)
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: improve rx path when play with attention flags
+References: <1393312414-9404-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CA+BoTQkgFVgWGJTTLOJ2tiqqaJ=0O7JvGAMDWc8JHt0rJP92UA@mail.gmail.com>
+Date: Wed, 26 Feb 2014 19:29:57 +0200
+In-Reply-To: <CA+BoTQkgFVgWGJTTLOJ2tiqqaJ=0O7JvGAMDWc8JHt0rJP92UA@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 25 Feb 2014 08:24:49 +0100")
+Message-ID: <871typlr3e.fsf@kamboji.qca.qualcomm.com> (sfid-20140226_183024_517324_C03A01FA)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Implement the get TSF by simply returning 0 so that IBSS
-> merging is happening. Otherwise, IBSS nodes that have similar
-> SSID naming won't merge. This is simply fooling the mac80211
-> that the TSF in the received beacon is higher than the local TSF.
+> On 25 February 2014 08:13, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+>> Currently when we check attention flags we do __le32_to_cpu()
+>> four times for each packet. This could have performance
+>> impact for BIG endian platforms. This patch improve this
+>> little bit.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+
+[...]
+
+>> @@ -929,6 +873,9 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+>>                         struct sk_buff *msdu_head, *msdu_tail;
+>>                         enum htt_rx_mpdu_status status;
+>>                         int msdu_chaining;
+>> +                       struct htt_rx_desc *rxd;
+>> +                       u32 att_flags;
+>> +
 >
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> No need for an empty line I suppose? I would also prefer `attention`
+> instead of `att_flags`, but no big deal.
 
-Yeah, this extremely ugly but don't really know any better way to handle
-this now.
+Yeah, attention is better.
 
-> +static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-> +{
-> +	struct ath10k *ar = hw->priv;
-> +	u64 tsf;
-> +
-> +	mutex_lock(&ar->conf_mutex);
-> +	/* FIXME: Return 0 for time being. Need to figure out whether FW has
-> +	 * the API to fetch 64-bit TSF
-> +	 */
-> +	tsf = 0;
-> +	mutex_unlock(&ar->conf_mutex);
-> +
-> +	return tsf;
-> +}
-
-But why do you need to take conf_mutex? Isn't this enough:
-
-+static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-+{
-+       /*
-+        * FIXME: Return 0 for time being. Need to figure out whether FW
-+        * has the API to fetch 64-bit TSF
-+        */
-+
-+       return 0;
-+}
+And also the variable declarations should be in the beginning of
+function. Apparently I have been sloppy missed that here.
 
 -- 
 Kalle Valo
