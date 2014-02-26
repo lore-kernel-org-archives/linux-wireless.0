@@ -1,58 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:54415 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbaBQJhw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58175 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904AbaBZLKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 04:37:52 -0500
-Received: by mail-ee0-f47.google.com with SMTP id d49so6909785eek.20
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2014 01:37:51 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC/RFT 0/7] ath10k: performance improvements
-Date: Mon, 17 Feb 2014 10:32:36 +0100
-Message-Id: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com> (sfid-20140217_103801_401313_22873888)
+	Wed, 26 Feb 2014 06:10:54 -0500
+Message-ID: <1393413044.4133.6.camel@jlt4.sipsolutions.net> (sfid-20140226_121057_555440_242A153B)
+Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the
+ network device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Feb 2014 12:10:44 +0100
+In-Reply-To: <530DC56E.9040202@broadcom.com>
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
+				 <1393356639-19169-2-git-send-email-arend@broadcom.com>
+				 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>
+			 <530DAECD.8010405@broadcom.com>
+		 <1393406278.4133.4.camel@jlt4.sipsolutions.net>
+		 <530DB3BA.20106@broadcom.com>
+	 <1393407473.4133.5.camel@jlt4.sipsolutions.net>
+	 <530DC56E.9040202@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2014-02-26 at 11:43 +0100, Arend van Spriel wrote:
 
-These patches aim at reducing host CPU load and
-thus improve performance on low-end systems.
+> Actually, this was not the reason for the doing the msleep(). The
+> problem was that wpa_supplicant received RTM_DELLINK, before getting the
+> NL08211_DISCONNECT. This resulted in RTM_DELLINK, immediately followed
+> by RTM_ADDLINK, followed by NL80211_DISCONNECT.
 
-In my setup I get a relative improvement of
-100mbps for both UDP Tx and Rx.
+I'm not sure this isn't still possible? I don't know when DELLINK is
+sent.
 
-               Tx ----->
-laptop:eth---eth:AP135:ath10k---ath10k:laptop
-               <----- Rx
-
-
-Michal Kazior (7):
-  ath10k: remove DMA mapping wrappers
-  ath10k: remove is_aborted from skb_cb
-  ath10k: replace send_head() with tx_sg()
-  ath10k: bypass htc for htt tx path
-  ath10k: batch htt tx/rx completions
-  ath10k: remove pci completion list
-  ath10k: minimize coherent dma accesses
-
- drivers/net/wireless/ath/ath10k/ce.c     |  16 +-
- drivers/net/wireless/ath/ath10k/ce.h     |   9 +-
- drivers/net/wireless/ath/ath10k/core.h   |  33 +--
- drivers/net/wireless/ath/ath10k/hif.h    |  25 +-
- drivers/net/wireless/ath/ath10k/htc.c    |  25 +-
- drivers/net/wireless/ath/ath10k/htt.h    |  16 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c | 152 +++++++-----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 207 ++++++++--------
- drivers/net/wireless/ath/ath10k/mac.c    |   4 +-
- drivers/net/wireless/ath/ath10k/pci.c    | 389 +++++++------------------------
- drivers/net/wireless/ath/ath10k/pci.h    |  28 ---
- drivers/net/wireless/ath/ath10k/txrx.c   |  15 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |  17 +-
- 13 files changed, 382 insertions(+), 554 deletions(-)
-
--- 
-1.8.5.3
+johannes
 
