@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:63383 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbaBSAKR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 19:10:17 -0500
-Received: by mail-pb0-f53.google.com with SMTP id md12so17438770pbc.12
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 16:10:16 -0800 (PST)
-Date: Tue, 18 Feb 2014 16:10:12 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH v3 5/6] cfg80211: Enable GO operation on indoor channels
-Message-ID: <20140219001010.GE14296@garbanzo.do-not-panic.com> (sfid-20140219_011022_260640_5D0F8D25)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <1390818118-27261-6-git-send-email-ilan.peer@intel.com>
+Received: from ring0.de ([5.45.105.125]:53033 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753916AbaBZTok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Feb 2014 14:44:40 -0500
+Date: Wed, 26 Feb 2014 20:44:36 +0100
+From: Sebastian Reichel <sre@ring0.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
+Message-ID: <20140226194436.GA20992@earth.universe> (sfid-20140226_204450_235937_B935E2CE)
+References: <20140125000929.GD25488@atomide.com>
+ <1392419156-14394-1-git-send-email-sre@debian.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390818118-27261-6-git-send-email-ilan.peer@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
+In-Reply-To: <1392419156-14394-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 12:21:57PM +0200, Ilan Peer wrote:
-> Allow GO operation on a channel marked with IEEE80211_CHAN_INDOOR_ONLY
-> iff there is a user hint indicating that the platform is operating in
-> an indoor environment, i.e., the platform is a printer or media center
-> device.
-> 
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-> ---
->  net/wireless/chan.c |    6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index 87a9d0e..4ae3cd0 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -611,14 +611,20 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
->   * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
->   * associated to an AP on the same channel or on the same UNII band
->   * (assuming that the AP is an authorized master).
-> + * In addition allow the GO to operate on a channel on which indoor operation is
-> + * allowed, iff we are currently operating in an indoor environment.
->   */
->  static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
->  					struct ieee80211_channel *chan)
->  {
->  	struct wireless_dev *wdev_iter;
-> +	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
->  
->  	ASSERT_RTNL();
->  
-> +	if (regulatory_ir_allowed(wiphy, chan))
-> +		return true;
-> +
->  	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
->  		return false;
 
-Looks good.
+--azLHFNyN32YCQGCU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+Hi John,
+
+On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
+> The following patchset adds device tree support to the spi variant of the
+> wl1251 driver, which is used in the Nokia N900. Tony requested, that you
+> take the whole series even if that may introduce merge conflicts:
+>=20
+> > Sebastian, please resend the whole series to John and feel free to add =
+my
+> > acks.  It's best that John picks them all up, otherwise we'll have the =
+same
+> > issue for v3.15. It seems that we should have just taken the merge conf=
+lict
+> > rather than going back and forth with this.
+
+ping! Is there still anything wrong with this patchset?
+
+-- Sebastian
+
+--azLHFNyN32YCQGCU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJTDkQkAAoJENju1/PIO/qaZgQP/0LzrICLIlaEVYR/oBosc3Y8
+QYr8Il7OEgVAB0IR1OEKmAraIGPFJWf8RhSU903MRg6CtkbSbkU0QqvqyU8Fqiyj
+BSbj/LF2+ymyYvDJr7kv+jL9UEhGjQdFzVobiNc4KRQjd2JvsCp4L8l7O/b8d8qH
+8t4g9kLXlseXwm0rkc9KZU2ol106Ix+M6xv3H2ab2dhY1VBXjfDlGcs4OBWCHJD+
+oPzwoe9E4kazYEiJtbAVwd0TsN6rtDdd1mRxWGJ5Q8upobIRwmvuHg/YwhdHlfo9
+4wJJ3pVKRE08KiJA1q1GsgPZIdDcnuIE5mmGNcQtGeK8I/clw2H3KVf2UxZQgqUc
+p5wrU+PaDZm4nvZzwvkj5y5k/NRF4byjqBHXZwSW+D4XW0b2nFcAKNXhR6RyxIci
+JOD1CQpCO6HQw5z7+e5ADfi5x3ZK9FaNlQqGJIRFivSra/gGSlDiV/OIi6VenUJh
+vc+ZwEFYkls4EIiL20VE6lOD+/Zr5zvA8R4jL7d5b5tSNxOeotsV471evaVSHfTD
+haJPpJHRbQCNScnNo53SiC8heu3IaX3LRI4vc93PeFz0qpVLXMoZ4WCYn8mflgMF
+6IvVZDFB3+8jzx7T+BejHzTzeyRB45vzGcULQfouLw/4qSa8GaptevB0K2TYOKH0
+YXzMGjZpvFVKUPqr1dxo
+=OIv4
+-----END PGP SIGNATURE-----
+
+--azLHFNyN32YCQGCU--
