@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47532 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbaBQNug (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:62821 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbaBZPKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 08:50:36 -0500
-Message-ID: <1392645030.5202.8.camel@jlt4.sipsolutions.net> (sfid-20140217_145039_445753_6A7FE2AD)
-Subject: Re: [RFC 3/4] mac80211: Add OCB (IEEE 802.11p) mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de
-Date: Mon, 17 Feb 2014 14:50:30 +0100
-In-Reply-To: <1392643374-3545-4-git-send-email-lisovy@gmail.com> (sfid-20140217_142317_011139_BFFA1C2F)
-References: <1392643374-3545-1-git-send-email-lisovy@gmail.com>
-	 <1392643374-3545-4-git-send-email-lisovy@gmail.com>
-	 (sfid-20140217_142317_011139_BFFA1C2F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Feb 2014 10:10:03 -0500
+Received: by mail-we0-f170.google.com with SMTP id w62so1773269wes.15
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 07:10:02 -0800 (PST)
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+To: ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH] ath9k : ath_max_famelen
+Date: Wed, 26 Feb 2014 16:09:14 +0100
+Message-Id: <1393427354-29314-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20140226_161013_998990_97877601)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-17 at 14:22 +0100, Rostislav Lisovy wrote:
-> Signed-off-by: Rostislav Lisovy <lisovy@gmail.com>
+According to 802.11n-2012 standard in paragraph PPDU Fromat(20.3.2) HT-mixed
+format  Hearder PPDU contains : L_STF, L_LTF, L_SIG, HT_SIG, HT_STF, HT_LTF that
+for why it's a time(us) and not a bytes unit
 
-No description, lots of FIXMEs, lots of // comments, again a mashup of
-cfg80211 and mac80211 changes ... I'll just stop looking right now.
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 312314c..544186e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1040,11 +1040,11 @@ static int ath_max_framelen(int usec, int mcs, bool ht40, bool sgi)
+ 	int symbols, bits;
+ 	int bytes = 0;
+ 
++	usec -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
+ 	symbols = sgi ? TIME_SYMBOLS_HALFGI(usec) : TIME_SYMBOLS(usec);
+ 	bits = symbols * bits_per_symbol[mcs % 8][ht40] * streams;
+ 	bits -= OFDM_PLCP_BITS;
+ 	bytes = bits / 8;
+-	bytes -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
+ 	if (bytes > 65532)
+ 		bytes = 65532;
+ 
+-- 
+1.7.10.4
 
