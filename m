@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4208 "EHLO mga02.intel.com"
+Received: from mout.gmx.net ([212.227.15.19]:50711 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218AbaBKLre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 06:47:34 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>
-Subject: [PATCH] mac80211: fix IE buffer len
-Date: Tue, 11 Feb 2014 13:45:41 +0200
-Message-Id: <1392119141-27279-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140211_124737_971041_969091B2)
+	id S1750799AbaBZJEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Feb 2014 04:04:13 -0500
+Received: from ultralex.lan ([93.218.100.117]) by mail.gmx.com (mrgmx102) with
+ ESMTPSA (Nemesis) id 0MWQSM-1Wlm9Q2H5G-00XfUo for
+ <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 10:04:10 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linville@tuxdriver.com, sujith@msujith.org,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 2/3] ath9k_htc: remove unused variable sleepduration
+Date: Wed, 26 Feb 2014 10:03:44 +0100
+Message-Id: <1393405425-16371-3-git-send-email-linux@rempel-privat.de> (sfid-20140226_100454_217561_92E7B6FF)
+In-Reply-To: <1393405425-16371-1-git-send-email-linux@rempel-privat.de>
+References: <1393405425-16371-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+sleepduration is always = intval.
 
-Remove size of SSID IE from the IE buffer in scan and
-sched scan, since this IE isn't added to this buffer.
-
-Change-Id: Ic381cd50566529907c3a37f6aaa02d9132fd99da
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-on: https://gerrit.rds.intel.com/30710
-Tested-by: IWL Jenkins
-Reviewed-by: EliadX Peller <eliad@wizery.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/mac80211/scan.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 22 +++++++---------------
+ 1 file changed, 7 insertions(+), 15 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 88c8161..b211e41 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -472,9 +472,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 	if (local->ops->hw_scan) {
- 		u8 *ies;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 8b57577..a00ddb9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -69,7 +69,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_beacon_state bs;
+ 	enum ath9k_int imask = 0;
+-	int dtimperiod, dtimcount, sleepduration;
++	int dtimperiod, dtimcount;
+ 	int bmiss_timeout;
+ 	u32 nexttbtt = 0, intval, tsftu;
+ 	__be32 htc_imask = 0;
+@@ -94,10 +94,6 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	if (dtimcount >= dtimperiod)	/* NB: sanity check */
+ 		dtimcount = 0;
  
--		local->hw_scan_ies_bufsize = 2 + IEEE80211_MAX_SSID_LEN +
--					     local->scan_ies_len +
--					     req->ie_len;
-+		local->hw_scan_ies_bufsize = local->scan_ies_len + req->ie_len;
- 		local->hw_scan_req = kmalloc(
- 				sizeof(*local->hw_scan_req) +
- 				req->n_channels * sizeof(req->channels[0]) +
-@@ -979,8 +977,7 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	struct cfg80211_chan_def chandef;
- 	int ret, i, iebufsz;
+-	sleepduration = intval;
+-	if (sleepduration <= 0)
+-		sleepduration = intval;
+-
+ 	/*
+ 	 * Pull nexttbtt forward to reflect the current
+ 	 * TSF and calculate dtim state for the result.
+@@ -128,15 +124,11 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	 * need calculate based	on the beacon interval.  Note that we clamp the
+ 	 * result to at most 15 beacons.
+ 	 */
+-	if (sleepduration > intval) {
+-		bs.bs_bmissthreshold = ATH_DEFAULT_BMISS_LIMIT / 2;
+-	} else {
+-		bs.bs_bmissthreshold = DIV_ROUND_UP(bmiss_timeout, intval);
+-		if (bs.bs_bmissthreshold > 15)
+-			bs.bs_bmissthreshold = 15;
+-		else if (bs.bs_bmissthreshold <= 0)
+-			bs.bs_bmissthreshold = 1;
+-	}
++	bs.bs_bmissthreshold = DIV_ROUND_UP(bmiss_timeout, intval);
++	if (bs.bs_bmissthreshold > 15)
++		bs.bs_bmissthreshold = 15;
++	else if (bs.bs_bmissthreshold <= 0)
++		bs.bs_bmissthreshold = 1;
  
--	iebufsz = 2 + IEEE80211_MAX_SSID_LEN +
--		  local->scan_ies_len + req->ie_len;
-+	iebufsz = local->scan_ies_len + req->ie_len;
+ 	/*
+ 	 * Calculate sleep duration. The configuration is given in ms.
+@@ -148,7 +140,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	 */
  
- 	lockdep_assert_held(&local->mtx);
+ 	bs.bs_sleepduration = TU_TO_USEC(roundup(IEEE80211_MS_TO_TU(100),
+-						 sleepduration));
++						 intval));
+ 	if (bs.bs_sleepduration > bs.bs_dtimperiod)
+ 		bs.bs_sleepduration = bs.bs_dtimperiod;
  
 -- 
-1.8.3.2
+1.9.0
 
