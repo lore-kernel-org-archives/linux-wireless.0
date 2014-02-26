@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:43060 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752202AbaBINtv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 08:49:51 -0500
-Date: Sun, 9 Feb 2014 15:49:49 +0200
-From: Petko Manolov <petkan@nucleusys.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi crash with 3.13
-Message-ID: <20140209134949.GD8352@localhost> (sfid-20140209_144954_916476_3F1C0EF4)
-References: <0BA3FCBA62E2DC44AF3030971E174FB303D56D70@HASMSX103.ger.corp.intel.com>
- <20140123123125.GA3424@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D57045@HASMSX103.ger.corp.intel.com>
- <20140123200045.GA4064@localhost>
- <52E17698.9070607@gmail.com>
- <20140123202142.GC4064@localhost>
- <20140207214054.GB7167@localhost>
- <52F67313.1030706@gmail.com>
- <20140209132653.GA8352@localhost>
- <0BA3FCBA62E2DC44AF3030971E174FB303D645E3@HASMSX103.ger.corp.intel.com>
+Received: from c.mail.sonic.net ([64.142.111.80]:53000 "EHLO c.mail.sonic.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750772AbaBZHSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Feb 2014 02:18:18 -0500
+Received: from [192.168.1.123] (108-251-50-201.lightspeed.frokca.sbcglobal.net [108.251.50.201])
+	(authenticated bits=0)
+	by c.mail.sonic.net (8.14.4/8.14.4) with ESMTP id s1Q76N5E010550
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Feb 2014 23:06:23 -0800
+Message-ID: <530D926F.1080800@sonic.net> (sfid-20140226_081821_543621_0E9BC532)
+Date: Tue, 25 Feb 2014 23:06:23 -0800
+From: Marco Walther <marco@sonic.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D645E3@HASMSX103.ger.corp.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: USB Wifi adapter recommendation for long range link?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-02-09 13:31:14, Grumbach, Emmanuel wrote:
-> 
-> Nope - band A works very well - but just like all the vendors, Intel has several SKUs and capabilities differ between the SKUs.
+[ I'm currently not subscribed to this list, so please kindly include me 
+in replies! ]
 
-Got it.  I'll keep an old kernel + firmware around just in case i ever need 5GHz on my Yoga 2 Pro. :)
+I'm trying to find a good USB Wifi adapter for a [mobile;-)] long range 
+point to point link for an ARM based Linux board. Long range in my 
+application would preferably be > 30km;-)
 
-> As a maintainer / communist / peace lover / whatever I was not chosen to be part of the pricing discussions at Intel...
+I was almost buying the the Ubiquity SR71-USB, it seemed to be the best 
+fit I could find. But then I found, that the Linux driver (carl9170) 
+still lists the missing long range support:-( So now I'm somewhat lost:-(
 
-I totally understand your viewpoint, which in this case is (i think) the same as mine.  Have fun, dude, and thanks.
+That's why I would like to ask for advise;-) My requirements:
 
+* Long range support, preferably > 30km with antenna[s]
+* Linux on ARM, no ndis or other x86-only stuff
+* preferably small/light
+* USB
+* still buy-able;-)
+* 802.11g would probably be fast enough
 
-		Petko
+So who can help me;-)
+
+Thanks in advance,
+-- Marco
+
