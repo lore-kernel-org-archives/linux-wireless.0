@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:52071 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182AbaBEKw1 (ORCPT
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:58461 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbaBZSm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 05:52:27 -0500
+	Wed, 26 Feb 2014 13:42:27 -0500
+Received: from smtp02.msg.oleane.net (smtp02.mail.priv [172.17.20.111])
+	by smtp-out05.msg.oleane.net with ESMTP id s1QHA3nb031597
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 18:10:03 +0100
+Received: from RD9 ([195.6.104.67]) (authenticated)
+	by smtp02.msg.oleane.net (MSA) with ESMTP id s1QGnNRv004534
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 17:49:24 +0100
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
+Subject: mac80211: double processing of probe response frames ?
+Date: Wed, 26 Feb 2014 17:49:30 +0100
+Message-ID: <000c01cf3312$b8131540$28393fc0$@acksys.fr> (sfid-20140226_194231_040116_EB122CE8)
 MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <52F17257.8020303@lwfinger.net>
-References: <52ee2ee736e00_2c3211fc86c5851f@209.249.196.67.mail>
- <20140202160512.GA4946@redhat.com> <201402021807.37772.s.L-H@gmx.de>
- <52EFCC66.9020304@lwfinger.net> <20140203201228.GE26722@mwanda>
- <CA+55aFyHZfw9rtZQJ9i2p7MQAVX4iM0QCdzRZzaivD2nRDHeLQ@mail.gmail.com>
- <CAN8YU5PJWqnaBN_oaZ-yZjV-s9oCkKPa4ebk-kNbhPSgpd3_wQ@mail.gmail.com>
- <20140204092836.GG26776@mwanda> <CAN8YU5PfJ2ijHzghJ-FJPYJeFwTfoGN-qpJ5R5ctYp3R1p13hA@mail.gmail.com>
- <52F12A10.3020600@lwfinger.net> <CAN8YU5PzKE-6Y_651hSwwx1p2i682qi3TYibL5Bu0rBFOJv4cw@mail.gmail.com>
- <52F17257.8020303@lwfinger.net>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Wed, 5 Feb 2014 11:52:06 +0100
-Message-ID: <CAN8YU5NBSMVJTs=Y8YS7iLv-a8bwhD00OfY42zq6t=8HmZF0hw@mail.gmail.com> (sfid-20140205_115244_019770_8298C6B5)
-Subject: Re: rtl8821ae.
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Dave Jones <davej@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux Driver Project <devel@linuxdriverproject.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Somehow I missed this patch. Do you know if John Linville picked it up?
->
+Hi all,
 
-AFAIK no..
+I am using mac80211 and ath9k.
+I put a debug trace in the net/wireless/scan.c, in
+cfg80211_inform_bss_frame().
+I exercise scanning with wpa_supplicant and I monitor the air with
+wireshark/airpcapN.
+Each time a probe response frame is received, I can see that
+cfg80211_inform_bss_frame() is called *twice.*
 
-> I'm not sure if the ANAPARAM3 register could handle a 16-bit write on an
-> RTL8187B. To be cautious, I wrote and have tested the attached patch using a
-> union. The patch includes a fix for an undefined symbol
-> (RTL818X_TX_CONF_HW_SEQNUM). With this patch my RTL8187SE and RTL8187B
-> devices both work.
+I wonder if this is really needed ? Is it possible to remove one of the
+calls ?
 
-Excellent, thank you !
+AFAICT, mac80211/scan.c/ieee80211_bss_info_update() is called along two
+paths,
+1) in mac80211/rx.c, from __ieee80211_rx_handle_packet() and
+ieee80211_scan_rx() 
+2) in mac80211/mlme.c, from the work queue calling
+ieee80211_sta_rx_queued_mgmt()
+    => ieee80211_rx_mgmt_probe_resp() => ieee80211_rx_bss_info()
 
+Maybe part of the call to ieee80211_scan_rx() could be delayed and merged
+later when ieee80211_rx_mgmt_probe_resp() is called ? Any comments ?
 
-> Larry
->
+I am using compat-wireless-2013-04-16.
+
