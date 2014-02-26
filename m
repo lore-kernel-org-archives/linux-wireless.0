@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:53671 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbaBRWTU (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18840 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbaBZKoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 17:19:20 -0500
-Received: by mail-la0-f52.google.com with SMTP id c6so12579182lan.39
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 14:19:18 -0800 (PST)
+	Wed, 26 Feb 2014 05:44:04 -0500
+Message-ID: <530DC56E.9040202@broadcom.com> (sfid-20140226_114408_494654_78FCE077)
+Date: Wed, 26 Feb 2014 11:43:58 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UjVQzHjutTy=0URcTvbxYKbC-3drhiouhYMzrhPT16Tg@mail.gmail.com>
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A033377C1A@HASMSX106.ger.corp.intel.com> <CAB=NE6UjVQzHjutTy=0URcTvbxYKbC-3drhiouhYMzrhPT16Tg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 18 Feb 2014 14:18:58 -0800
-Message-ID: <CAB=NE6WBD_sWLOZa0woZG9Xd5B9WV3qLBTXkp2EMS0CR7nqhCQ@mail.gmail.com> (sfid-20140218_231926_734526_47C6057E)
-Subject: Re: [PATCH v3 0/6] Enable additional channels for use
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the network
+ device
+References: <1393356639-19169-1-git-send-email-arend@broadcom.com>			 <1393356639-19169-2-git-send-email-arend@broadcom.com>			 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>		 <530DAECD.8010405@broadcom.com>	 <1393406278.4133.4.camel@jlt4.sipsolutions.net>	 <530DB3BA.20106@broadcom.com> <1393407473.4133.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1393407473.4133.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 2:17 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Sun, Feb 9, 2014 at 8:06 AM, Peer, Ilan <ilan.peer@intel.com> wrote:
->> Did you get a chance to look at this patch set?
->
-> Looking at them now.
+On 02/26/2014 10:37 AM, Johannes Berg wrote:
+> On Wed, 2014-02-26 at 10:28 +0100, Arend van Spriel wrote:
+> 
+>>> Yes. Can't we just flush the work at some strategic place?
+>>>
+>>> Actually you're not talking about the "disconnect_work" (which is
+>>> related to regulatory) but the "event_work" so I was confused here for a
+>>> second.
+>>>
+>>> What was the warning? cfg80211 already calls
+>>> cfg80211_process_wdev_events() from within the REMOVE netdev notifier,
+>>> so that *shouldn't* have happened.
+>>
+>> I guess that means some wdev event is missing? It was the
+>> WARN_ON(current->bss) that fired.
+> 
+> Hmm, that's odd, the process_wdev_events() call is right before that, so
+> I don't see how that could have happened?
 
-Please CC me on future patches you'd like me to review as well, it'll
-help digging them up.
+Ok. The warning probably happened in earlier kernel, because our module
+exit was buggy. I fixed that a while ago and I just verified I don't see
+it without this patch. Sorry for bringing that diversion up.
 
-  Luis
+Actually, this was not the reason for the doing the msleep(). The
+problem was that wpa_supplicant received RTM_DELLINK, before getting the
+NL08211_DISCONNECT. This resulted in RTM_DELLINK, immediately followed
+by RTM_ADDLINK, followed by NL80211_DISCONNECT.
+
+Gr. AvS
