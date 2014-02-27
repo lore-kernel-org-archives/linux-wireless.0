@@ -1,54 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54560 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829AbaBYPFv (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57443 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbaB0VvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Feb 2014 10:05:51 -0500
-Message-ID: <1393340740.4170.5.camel@jlt4.sipsolutions.net> (sfid-20140225_160554_666436_15E5F332)
-Subject: Re: [PATCH v1 1/6] mac80211: move flag IEEE80211_TX_CTL_ASSIGN_SEQ
- into info->control.flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Date: Tue, 25 Feb 2014 16:05:40 +0100
-In-Reply-To: <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de>
-References: <1393164527-13800-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1393164527-13800-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1393244624.4190.8.camel@jlt4.sipsolutions.net>
-	 <23FA0097-F436-4FD7-B076-44EB35CDE9FF@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 16:51:06 -0500
+Message-ID: <530FB348.2070701@candelatech.com> (sfid-20140227_225116_038417_B9E638E1)
+Date: Thu, 27 Feb 2014 13:51:04 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: How to best consolidate list of skbs (msdu) for receive?
+References: <530F85AE.8060002@candelatech.com>  <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com> <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>
+In-Reply-To: <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-25 at 14:31 +0100, Thomas Hühn wrote:
-
-> > I'm not convinced this patch is correct, so you need to convince me.
-> > What happens to software-retry frames? They probably *shouldn't* get a
-> > new seqno, but if the driver doesn't modify the SKB (say because
-> > hardware/firmware assigns it) then this is certainly not right.
+On 02/27/2014 01:21 PM, Eric Dumazet wrote:
+> On Thu, 2014-02-27 at 12:37 -0800, Florian Fainelli wrote:
+>> 2014-02-27 10:36 GMT-08:00 Ben Greear <greearb@candelatech.com>:
+>>> In ath10k, it can receive msdu (in rx raw mode, at least).  These show up
+>>> as a list of skb.  Currently they are just dropped as un-handled, and I
+>>> need to fix this.
+>>>
+>>> I think I need to consolidate this list into a single skb in order to pass
+>>> it up the stack.
+>>>
+>>> What is the preferred way to go about doing this?
+>>>
+>>> It seems I could just expand the head skb (pskb_expand_head) and copy the data from the others
+>>> onto the end of the head skb, but maybe there is a more efficient way to go about
+>>> doing this?
+>>
+>> Some Ethernet drivers you would in general get multiple RX fragments
+>> for large frames, with the first fragment containing the headers, and
+>> then buffers of a few KiB, it is the driver responsibility to
+>> reassemble this as a large SKB with multiple fragments (grep for
+>> skb_fill_page_desc), would that work in your case?
 > 
-> As far as I can see, software-retry frames get in status.c the flag
-> IEEE80211_TX_INTFL_RETRANSMISSION
-> assigned (in function ieee80211_handle_filtered_frame). And this flag
-> prevents in function
-> invoke_tx_handlers() the call of ieee80211_tx_h_sequence(), so there
-> is not new seqno assigned in case of a software-retry within tx.c.
+> Also skb_try_coalesce() might feet the need, if all you have are a list
+> of skb, rather than an array of page fragments
 
-Right, but if IEEE80211_TX_CTL_ASSIGN was set then it also isn't
-cleared.
+Thanks for the hints...I'll go look at this.
 
-> But in case of a software retry there is info->control set to zero.
-> After I would move IEEE80211_TX_CTL_ASSIGN_SEQ into
-> info->control.flags this flag is zero.
-> Hence also drivers do not assign a new sequence number.
+That said, the code below appears to work, even if it is
+not as efficient as it might be?
 
-But now the frame might not have *any* sequence number assigned at all,
-if e.g. the firmware assigns sequence numbers and they're not written
-back to the frame. Thus I think you're losing the entire sequence number
-assignment in this case.
+			if (msdu_chaining) {
+				struct sk_buff *next = msdu_head->next;
+				struct sk_buff *to_free = next;
+				int space;
+				static int do_once = 1;
+				msdu_head->next = NULL;
 
-johannes
+				if (unlikely(do_once)) {
+					ath10k_warn("htt rx msdu_chaining detected %d\n",
+						    msdu_chaining);
+					do_once = 0;
+				}
+
+				while (next) {
+					space = next->len - skb_tailroom(msdu_head);
+
+					if ((space > 0) &&
+					    (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
+						/* TODO:  bump some rx-oom error stat */
+						goto outside_continue;
+					}
+					skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
+								  next->len);
+					next = next->next;
+				}
+
+				/* If here, we have consolidated skb.  Free the
+				 * fragments and pass the main skb on up the
+				 * stack.
+				 */
+				ath10k_htt_rx_free_msdu_chain(to_free);
+				goto have_good_msdu;
+
+			outside_continue:
+				/* put it back together so we can free the
+				 * whole list at once.
+				 */
+				msdu_head->next = to_free;
+				ath10k_htt_rx_free_msdu_chain(msdu_head);
+				continue;
+			}
+
+
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
