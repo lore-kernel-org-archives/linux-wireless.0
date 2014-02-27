@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58552 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469AbaBXUAP (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35534 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbaB0R6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:00:15 -0500
-Date: Mon, 24 Feb 2014 14:49:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-02-20
-Message-ID: <20140224194932.GE24810@tuxdriver.com> (sfid-20140224_210033_905225_D1AD3FFB)
-References: <20140220203005.GF3657@tuxdriver.com>
- <20140220.172922.864207706999214682.davem@davemloft.net>
- <53068E22.5050003@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <53068E22.5050003@lwfinger.net>
+	Thu, 27 Feb 2014 12:58:09 -0500
+Message-ID: <1393523885.4648.12.camel@jlt4.sipsolutions.net> (sfid-20140227_185813_646736_1C81C834)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Nelson <tim.l.nelson@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 27 Feb 2014 18:58:05 +0100
+In-Reply-To: <1393523695.4648.11.camel@jlt4.sipsolutions.net> (sfid-20140227_185501_959792_F40EE445)
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	 <1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	 <CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	 <1393517627.4648.4.camel@jlt4.sipsolutions.net>
+	 <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+	 <CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
+	 <1393519119.4648.7.camel@jlt4.sipsolutions.net>
+	 <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
+	 <1393519539.4648.10.camel@jlt4.sipsolutions.net>
+	 <CAOAOC6aWWh3y8b-iRsouxFV+d9oKSpL4hkeVyJ6sarGEVzyOdg@mail.gmail.com>
+	 <CAOAOC6bzV8yZfOPRj1zCa0ONQ8VQ=vwBug6jga6LgzEADdk=Ww@mail.gmail.com>
+	 (sfid-20140227_184955_785023_7183652A) <1393523695.4648.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20140227_185501_959792_F40EE445)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 05:22:10PM -0600, Larry Finger wrote:
-> On 02/20/2014 04:29 PM, David Miller wrote:
-> >From: "John W. Linville" <linville@tuxdriver.com>
-> >Date: Thu, 20 Feb 2014 15:30:05 -0500
-> >
-> >>Please pull this batch of wireless updates intended for the 3.15
-> >>stream!
-> >>
-> >>For the mac80211 bits, Johannes says:
-> >>
-> >>"We have some cleanups and minor fixes as well as userspace API
-> >>improvements from a lot of people, extended VHT support for radiotap
-> >>from Emmanuel, CSA improvements from Andrei, Luca and Michal. I've also
-> >>included my work on hwsim to make dynamic registration of radios
-> >>possible."
-> >>
-> >>Along with that, we get the usual round of updates to ath9k,
-> >>brcmfmac, mwifiex, wcn36xx, and the ti drivers -- nothing particularly
-> >>noteworthy, mostly just random updates and refactoring.
-> >>
-> >>Also included is a pull of the wireless tree, intended to resolve
-> >>some potential merge issues.
-> >>
-> >>Please let me know if there are problems!
-> >
-> >Pulled, but please address this:
-> >
-> >drivers/staging/rtl8821ae/rtl8821ae/trx.c: In function ‘rtl8821ae_rx_query_desc’:
-> >drivers/staging/rtl8821ae/rtl8821ae/trx.c:619:3: warning: passing argument 1 of ‘ieee80211_is_robust_mgmt_frame’ from incompatible pointer type [enabled by default]
-> >
-> >I was going to do the easy transformation to the "_" prefixed variant
-> >but noticed that this code doesn't validate the skb length, which is
-> >precisely the reason why this routine now takes an skb.
+On Thu, 2014-02-27 at 18:54 +0100, Johannes Berg wrote:
+> On Thu, 2014-02-27 at 12:49 -0500, Tim Nelson wrote:
+> > Feb 27 12:44:41 nix-tn kernel: [ 1733.272390] wlan0: AP VHT
+> > information is invalid, disable VHT
 > 
-> David,
-> 
-> That staging driver is expected to be deleted in a commit to be
-> submitted in about one week. The new one will be in the regular
-> wireless tree. The staging version was submitted so that there would
-> be a driver in 3.14.
-> 
-> I was surprised to see this patch in John's list. It should have
-> gone through GregKH. In fact, has has been suppressing all cleanups
-> because the better one will be available soon.
-> 
-> I suggest that you drop this one now. I will, however, check the new
-> source to make sure that the skb length is checked.
-> 
-> Thanks,
-> 
-> Larry
+> That's a clue :)
 
-I'll be reverting that patch in wireless-next -- I goofed by merging
-a staging patch in the first place.
+iw event -t -f would help
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+easier for me would be
+
+iw wlan0 interface add moni0 type monitor flags none
+ip link set moni0 up
+tcpdump -i moni0 -s 0 -w /tmp/assoc.pcap
+
+and then compress/send me that file after such a failed 11ac
+association. If you want send it privately.
+
+johannes
+
