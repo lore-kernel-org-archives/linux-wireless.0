@@ -1,110 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:53650 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaBCU6p (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14431 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753439AbaB0OV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:58:45 -0500
-Received: by mail-ee0-f44.google.com with SMTP id c13so3936586eek.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:58:45 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/62] iwlwifi: mvm: BT Coex - set low latency vif as primary
-Date: Mon,  3 Feb 2014 22:57:26 +0200
-Message-Id: <1391461088-8082-20-git-send-email-egrumbach@gmail.com> (sfid-20140203_220010_079529_6D6A7CDC)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Thu, 27 Feb 2014 09:21:29 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 01/16] wil6210: Tx management frame
+Date: Thu, 27 Feb 2014 16:20:40 +0200
+Message-ID: <1393510855-17566-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152141_415349_9B322A99)
+In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Implement management frame passing. In order to receive frame on the other
+side, remain_on_channel() should be implemented as well
 
-If a vif is in low latency mode, it should be in primary
-channel.
-Also tell BT Coex about the change when a vif enters or
-exits low latency mode.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c |   29 +++++++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/utils.c   |    3 +++
- 2 files changed, 27 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 72 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      | 32 +++++++++++++
+ 3 files changed, 105 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-index b1a572e..d38c4ae 100644
---- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-@@ -542,6 +542,7 @@ struct iwl_bt_iterator_data {
- 	bool reduced_tx_power;
- 	struct ieee80211_chanctx_conf *primary;
- 	struct ieee80211_chanctx_conf *secondary;
-+	bool primary_ll;
- };
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 5b34076..204c7c8 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -352,6 +352,40 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
+ 	return rc;
+ }
  
- static inline
-@@ -590,7 +591,14 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		return;
- 	}
- 
--	/* SoftAP / GO will always be primary */
-+	/* low latency is always primary */
-+	if (iwl_mvm_vif_low_latency(mvmvif)) {
-+		data->primary_ll = true;
++static int wil_cfg80211_mgmt_tx(struct wiphy *wiphy,
++				struct wireless_dev *wdev,
++				struct cfg80211_mgmt_tx_params *params,
++				u64 *cookie)
++{
++	const u8 *buf = params->buf;
++	size_t len = params->len;
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	int rc;
++	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
++	struct wmi_sw_tx_req_cmd *cmd;
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_sw_tx_complete_event evt;
++	} __packed evt;
 +
-+		data->secondary = data->primary;
-+		data->primary = chanctx_conf;
++	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
++	cmd->len = cpu_to_le16(len);
++	memcpy(cmd->payload, buf, len);
++
++	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, cmd, sizeof(*cmd) + len,
++		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
++	if (rc == 0)
++		rc = evt.evt.status;
++
++	kfree(cmd);
++
++	return rc;
++}
++
+ static int wil_cfg80211_set_channel(struct wiphy *wiphy,
+ 				    struct cfg80211_chan_def *chandef)
+ {
+@@ -402,6 +436,41 @@ static int wil_cfg80211_set_default_key(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int wil_remain_on_channel(struct wiphy *wiphy,
++				 struct wireless_dev *wdev,
++				 struct ieee80211_channel *chan,
++				 unsigned int duration,
++				 u64 *cookie)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	int rc;
++
++	/* TODO: handle duration */
++	wil_info(wil, "%s(%d, %d ms)\n", __func__, chan->center_freq, duration);
++
++	rc = wmi_set_channel(wil, chan->hw_value);
++	if (rc)
++		return rc;
++
++	rc = wmi_rxon(wil, true);
++
++	return rc;
++}
++
++static int wil_cancel_remain_on_channel(struct wiphy *wiphy,
++					struct wireless_dev *wdev,
++					u64 cookie)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	int rc;
++
++	wil_info(wil, "%s()\n", __func__);
++
++	rc = wmi_rxon(wil, false);
++
++	return rc;
++}
++
+ static int wil_fix_bcon(struct wil6210_priv *wil,
+ 			struct cfg80211_beacon_data *bcon)
+ {
+@@ -510,6 +579,9 @@ static struct cfg80211_ops wil_cfg80211_ops = {
+ 	.disconnect = wil_cfg80211_disconnect,
+ 	.change_virtual_intf = wil_cfg80211_change_iface,
+ 	.get_station = wil_cfg80211_get_station,
++	.remain_on_channel = wil_remain_on_channel,
++	.cancel_remain_on_channel = wil_cancel_remain_on_channel,
++	.mgmt_tx = wil_cfg80211_mgmt_tx,
+ 	.set_monitor_channel = wil_cfg80211_set_channel,
+ 	.add_key = wil_cfg80211_add_key,
+ 	.del_key = wil_cfg80211_del_key,
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 1f91eaf..0d7fba4 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -357,6 +357,7 @@ int wmi_echo(struct wil6210_priv *wil);
+ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie);
+ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring);
+ int wmi_p2p_cfg(struct wil6210_priv *wil, int channel);
++int wmi_rxon(struct wil6210_priv *wil, bool on);
+ int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_m, u32 *t_r);
+ 
+ int wil6210_init_irq(struct wil6210_priv *wil, int irq);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 063963e..d65da55 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -893,6 +893,38 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+ 	return rc;
+ }
+ 
++/**
++ * wmi_rxon - turn radio on/off
++ * @on:		turn on if true, off otherwise
++ *
++ * Only switch radio. Channel should be set separately.
++ * No timeout for rxon - radio turned on forever unless some other call
++ * turns it off
++ */
++int wmi_rxon(struct wil6210_priv *wil, bool on)
++{
++	int rc;
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_listen_started_event evt;
++	} __packed reply;
++
++	wil_info(wil, "%s(%s)\n", __func__, on ? "on" : "off");
++
++	if (on) {
++		rc = wmi_call(wil, WMI_START_LISTEN_CMDID, NULL, 0,
++			      WMI_LISTEN_STARTED_EVENTID,
++			      &reply, sizeof(reply), 100);
++		if ((rc == 0) && (reply.evt.status != WMI_FW_STATUS_SUCCESS))
++			rc = -EINVAL;
++	} else {
++		rc = wmi_call(wil, WMI_DISCOVERY_STOP_CMDID, NULL, 0,
++			      WMI_DISCOVERY_STOPPED_EVENTID, NULL, 0, 20);
 +	}
 +
- 	if (vif->type == NL80211_IFTYPE_AP) {
- 		if (!mvmvif->ap_ibss_active)
- 			return;
-@@ -601,9 +609,17 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		if (chanctx_conf == data->primary)
- 			return;
- 
--		/* downgrade the current primary no matter what its type is */
--		data->secondary = data->primary;
--		data->primary = chanctx_conf;
-+		if (!data->primary_ll) {
-+			/*
-+			 * downgrade the current primary no matter what its
-+			 * type is.
-+			 */
-+			data->secondary = data->primary;
-+			data->primary = chanctx_conf;
-+		} else {
-+			/* there is low latency vif - we will be secondary */
-+			data->secondary = chanctx_conf;
-+		}
- 		return;
- 	}
- 
-@@ -613,7 +629,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (!vif->bss_conf.assoc)
- 		return;
- 
--	/* STA / P2P Client, try to be primary if first vif */
-+	/*
-+	 * STA / P2P Client, try to be primary if first vif. If we are in low
-+	 * latency mode, we are already in primary and just don't do much
-+	 */
- 	if (!data->primary || data->primary == chanctx_conf)
- 		data->primary = chanctx_conf;
- 	else if (!data->secondary)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index 790da1b..c7ee2f3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -550,5 +550,8 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	res = iwl_mvm_update_quotas(mvm, NULL);
- 	if (res)
- 		return res;
++	return rc;
++}
 +
-+	iwl_mvm_bt_coex_vif_change(mvm);
-+
- 	return iwl_mvm_power_update_mode(mvm, vif);
- }
+ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ {
+ 	struct wireless_dev *wdev = wil->wdev;
 -- 
-1.7.9.5
+1.8.3.2
 
