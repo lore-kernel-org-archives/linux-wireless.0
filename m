@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58954 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751993AbaB1Uwh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 15:52:37 -0500
-Message-ID: <5310F70E.5030501@openwrt.org> (sfid-20140228_215242_020938_5E16B4BB)
-Date: Fri, 28 Feb 2014 21:52:30 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	c_manoha@qca.qualcomm.com
-Subject: Re: [PATCH 1/2] ath9k_hw: toggle weak signal detection in AP mode
- on older chipsets
-References: <1393610545-68025-1-git-send-email-nbd@openwrt.org> <21264.55526.187330.480735@gargle.gargle.HOWL>
-In-Reply-To: <21264.55526.187330.480735@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-we0-f170.google.com ([74.125.82.170]:39434 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751747AbaB0XHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Feb 2014 18:07:15 -0500
+Received: by mail-we0-f170.google.com with SMTP id w61so1324782wes.29
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:14 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/7] staging: vt6656: Remove unused variable bEventAvailable.
+Date: Thu, 27 Feb 2014 23:06:12 +0000
+Message-Id: <1393542375-13110-4-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000724_405952_9A1757AD)
+In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-02-28 19:43, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> -	if (ah->opmode != NL80211_IFTYPE_AP &&
->> -	    aniState->ofdmWeakSigDetect != weak_sig) {
->> -		ath9k_hw_ani_control(ah,
->> -				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
->> -				     entry_ofdm->ofdm_weak_signal_on);
->> -	}
->> +	else if (AR_SREV_9300_20_OR_LATER(ah) &&
->> +		 ah->opmode != NL80211_IFTYPE_STATION)
->> +		weak_sig = true;
->> +
->> +	if (aniState->ofdmWeakSigDetect != weak_sig)
->> +		ath9k_hw_ani_control(ah, ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
->> +				     weak_sig);
-> 
-> Any reason why this has been changed to disregard the WS-DET parameter from
-> ofdm_level_table[] ?
-It doesn't disregard it - weak_sig is initialized to the value of that
-parameter. Comparing aniState->ofdmWeakSigDetect against weak_sig, but
-then passing entry_ofdm->ofdm_weak_signal_on is buggy.
+Flips from true to false but does nothing.
 
-- Felix
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   | 1 -
+ drivers/staging/vt6656/main_usb.c | 1 -
+ drivers/staging/vt6656/usbpipe.c  | 1 -
+ 3 files changed, 3 deletions(-)
+
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 72bcafb..1124aa4 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -417,7 +417,6 @@ struct vnt_private {
+ 
+ 	/* Variables to track resources for the Interrupt In Pipe */
+ 	struct vnt_interrupt_buffer int_buf;
+-	int bEventAvailable;
+ 
+ 	/* default config from file by user setting */
+ 	DEFAULT_CONFIG config_file;
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 7783050..e1d90c5 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -998,7 +998,6 @@ static int  device_open(struct net_device *dev)
+     pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+ 
+     pDevice->bIsRxWorkItemQueued = true;
+-    pDevice->bEventAvailable = false;
+ 
+    pDevice->bWPADEVUp = false;
+      pDevice->bwextstep0 = false;
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 0a3aeec..5ce583e 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -376,7 +376,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+ 			"IntUSBIoCompleteControl STATUS = %d\n", status);
+ 	} else {
+-		priv->bEventAvailable = true;
+ 		INTnsProcessData(priv);
+ 	}
+ 
+-- 
+1.9.0
+
