@@ -1,92 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10483 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750851AbaBRXmG (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:34455 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaB0HZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 18:42:06 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, <stable@vger.kernel.org>
-Subject: [PATCH 3.14 3/3] mwifiex: fix cmd and Tx data timeout issue for PCIe cards
-Date: Tue, 18 Feb 2014 15:41:56 -0800
-Message-ID: <1392766916-10734-3-git-send-email-bzhao@marvell.com> (sfid-20140219_004215_800104_30E8238F)
-In-Reply-To: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
-References: <1392766916-10734-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 27 Feb 2014 02:25:03 -0500
+Received: by mail-ea0-f177.google.com with SMTP id h10so1529762eak.36
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 23:25:00 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 2/8] ath10k: remove is_aborted from skb_cb
+Date: Thu, 27 Feb 2014 08:19:41 +0100
+Message-Id: <1393485587-16879-3-git-send-email-michal.kazior@tieto.com> (sfid-20140227_082512_294161_3AD8F3C8)
+In-Reply-To: <1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+ <1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The flag wasn't used anymore. No need to keep it.
 
-We are sending sleep confirm done interrupt in the middle of
-sleep handshake. There is a corner case when Tx done interrupt
-is received from firmware during sleep handshake due to which
-host and firmware power states go out of sync causing cmd and
-Tx data timeout problem.
-
-Hence sleep confirm done interrupt is sent at the end of sleep
-handshake to fix the problem.
-
-Cc: <stable@vger.kernel.org> # 3.10+
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c | 28 +++++++++++-----------------
- 1 file changed, 11 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |  1 -
+ drivers/net/wireless/ath/ath10k/pci.c  | 20 --------------------
+ 2 files changed, 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 7936dfa..31d8a9d 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1535,6 +1535,14 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 		if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
- 			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
- 							   skb->len);
-+			mwifiex_pcie_enable_host_int(adapter);
-+			if (mwifiex_write_reg(adapter,
-+					      PCIE_CPU_INT_EVENT,
-+					      CPU_INTR_SLEEP_CFM_DONE)) {
-+				dev_warn(adapter->dev,
-+					 "Write register failed\n");
-+				return -1;
-+			}
- 			while (reg->sleep_cookie && (count++ < 10) &&
- 			       mwifiex_pcie_ok_to_access_hw(adapter))
- 				usleep_range(50, 60);
-@@ -1981,23 +1989,9 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- 		adapter->int_status |= pcie_ireg;
- 		spin_unlock_irqrestore(&adapter->int_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 082fa77..7cf022d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -62,7 +62,6 @@ struct ath10k;
  
--		if (pcie_ireg & HOST_INTR_CMD_DONE) {
--			if ((adapter->ps_state == PS_STATE_SLEEP_CFM) ||
--			    (adapter->ps_state == PS_STATE_SLEEP)) {
--				mwifiex_pcie_enable_host_int(adapter);
--				if (mwifiex_write_reg(adapter,
--						      PCIE_CPU_INT_EVENT,
--						      CPU_INTR_SLEEP_CFM_DONE)
--						      ) {
--					dev_warn(adapter->dev,
--						 "Write register failed\n");
--					return;
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+-	bool is_aborted;
+ 	u8 vdev_id;
+ 
+ 	struct {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 34f0910..d973975 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -63,7 +63,6 @@ static int ath10k_pci_post_rx(struct ath10k *ar);
+ static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
+ 					     int num);
+ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
+-static void ath10k_pci_stop_ce(struct ath10k *ar);
+ static int ath10k_pci_cold_reset(struct ath10k *ar);
+ static int ath10k_pci_warm_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+@@ -993,22 +992,6 @@ static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ 		tasklet_kill(&ar_pci->pipe_info[i].intr);
+ }
+ 
+-static void ath10k_pci_stop_ce(struct ath10k *ar)
+-{
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_compl *compl;
+-	struct sk_buff *skb;
 -
--				}
--			}
--		} else if (!adapter->pps_uapsd_mode &&
--			   adapter->ps_state == PS_STATE_SLEEP &&
--			   mwifiex_pcie_ok_to_access_hw(adapter)) {
-+		if (!adapter->pps_uapsd_mode &&
-+		    adapter->ps_state == PS_STATE_SLEEP &&
-+		    mwifiex_pcie_ok_to_access_hw(adapter)) {
- 				/* Potentially for PCIe we could get other
- 				 * interrupts like shared. Don't change power
- 				 * state until cookie is set */
+-	/* Mark pending completions as aborted, so that upper layers free up
+-	 * their associated resources */
+-	spin_lock_bh(&ar_pci->compl_lock);
+-	list_for_each_entry(compl, &ar_pci->compl_process, list) {
+-		skb = compl->skb;
+-		ATH10K_SKB_CB(skb)->is_aborted = true;
+-	}
+-	spin_unlock_bh(&ar_pci->compl_lock);
+-}
+-
+ static void ath10k_pci_cleanup_ce(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -1339,7 +1322,6 @@ err_stop:
+ 	ath10k_ce_disable_interrupts(ar);
+ 	ath10k_pci_free_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+-	ath10k_pci_stop_ce(ar);
+ 	ath10k_pci_process_ce(ar);
+ err_free_compl:
+ 	ath10k_pci_cleanup_ce(ar);
+@@ -1424,7 +1406,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 			continue;
+ 		}
+ 
+-		ATH10K_SKB_CB(netbuf)->is_aborted = true;
+ 		ar_pci->msg_callbacks_current.tx_completion(ar,
+ 							    netbuf,
+ 							    id);
+@@ -1482,7 +1463,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 
+ 	ath10k_pci_free_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+-	ath10k_pci_stop_ce(ar);
+ 
+ 	ret = ath10k_pci_request_early_irq(ar);
+ 	if (ret)
 -- 
-1.8.2.3
+1.8.5.3
 
