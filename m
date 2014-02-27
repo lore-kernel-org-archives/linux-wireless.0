@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:37262 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbaBWMyh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Feb 2014 07:54:37 -0500
-Received: by mail-ob0-f176.google.com with SMTP id wo20so215483obc.35
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Feb 2014 04:54:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
-References: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
-Date: Sun, 23 Feb 2014 20:54:37 +0800
-Message-ID: <CAKH5=Lu4EP9bx+nHtvGRgho7RKCV3n43VaweR0VnoHB1rAPvjw@mail.gmail.com> (sfid-20140223_135507_139219_4E111062)
-Subject: Re: insmod: cannot insert `wl_high.ko': Success (17): Success ??
-From: Naughtboy <skylvlinux@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:29650 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752097AbaB0LWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Feb 2014 06:22:35 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv3 4/5] net: rfkill: gpio: add ACPI ID for GPS module on Lenovo Miix2
+Date: Thu, 27 Feb 2014 13:22:29 +0200
+Message-Id: <1393500149-13526-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140227_122558_285038_62A92298)
+In-Reply-To: <20140227105520.GB17298@xps8300>
+References: <20140227105520.GB17298@xps8300>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-any big boy can guidiance me !!
+On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
 
-2014-02-20 19:19 GMT+08:00 Naughtboy <skylvlinux@gmail.com>:
-> i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
-> ,but here is some erros .....
->
-> filename:       wl_high.ko
-> license:        Proprietary
-> alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
-> depends:        bcm_usbshim
-> vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
-> parm:           oneonly:int
-> parm:           piomode:int
-> parm:           instance_base:int
-> parm:           nompc:int
-> parm:           name:string
-> parm:           nvram_path:string
->
-> # insmod bcm_usbshim.ko    ----ok
-> but  insmod wl_high.ko occur error  .....    as the follow ..
->
-> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
-> insmod: cannot insert `wl_high.ko': Success (17): Success
-> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
-> insmod: cannot insert `wl_high.ko': Success (17): Success
->
->
->
->
-> any bigman  can do me a gudiance
->
-> thank you
-> --Naughtboy
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index ad5e354..ec38884 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -158,6 +158,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
++	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
+ 
+-- 
+1.9.0
+
