@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:40101 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292AbaBSW7I (ORCPT
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:40467 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765AbaB0Qm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 17:59:08 -0500
-Received: by mail-wi0-f172.google.com with SMTP id e4so5275088wiv.17
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 14:59:07 -0800 (PST)
-Message-ID: <53053735.9020305@gmail.com> (sfid-20140219_235913_186029_0DACAE95)
-Date: Wed, 19 Feb 2014 22:59:01 +0000
-From: Malcolm Priestley <tvboxspy@gmail.com>
+	Thu, 27 Feb 2014 11:42:59 -0500
+Received: by mail-ve0-f171.google.com with SMTP id cz12so162423veb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 08:42:58 -0800 (PST)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] staging: vt6656: Remove typedef enum _CONTEXT_TYPE
-References: <1392846993.20211.15.camel@canaries64-MCP7A>	 <1392848134.24844.16.camel@joe-AO722> <5305304B.5050004@gmail.com> <1392849119.24844.17.camel@joe-AO722>
-In-Reply-To: <1392849119.24844.17.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
+	<CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+	<CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
+	<1393519119.4648.7.camel@jlt4.sipsolutions.net>
+	<CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
+Date: Thu, 27 Feb 2014 11:42:58 -0500
+Message-ID: <CAOAOC6Y7Ym_eN0T6NGsLtnYQGGhn=2UbuD63+MQx1W=Li-vO+A@mail.gmail.com> (sfid-20140227_174311_168599_6657E66A)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Tim Nelson <tim.l.nelson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/02/14 22:31, Joe Perches wrote:
-> On Wed, 2014-02-19 at 22:29 +0000, Malcolm Priestley wrote:
->> On 19/02/14 22:15, Joe Perches wrote:
->>> On Wed, 2014-02-19 at 21:56 +0000, Malcolm Priestley wrote:
->>>> Replace with enum
->>>> assign as u8 type.
->>> []
->>>> diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
->>> []
->>>> @@ -180,7 +180,7 @@ struct vnt_usb_send_context {
->>>>    	struct sk_buff *pPacket;
->>>>    	struct urb *pUrb;
->>>>    	unsigned int uBufLen;
->>>> -	CONTEXT_TYPE Type;
->>>> +	u8 type;
+two 2.4-GHz/5-GHz dual-band radios, with integrated dual-band
+inverted-F antennas
+
+It has 2! btw ;)
+
+On Thu, Feb 27, 2014 at 11:41 AM, Tim Nelson <tim.l.nelson@gmail.com> wrote:
+> [    9.299536] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
+> Wireless AC 7260, REV=0x144
+>
+> On Thu, Feb 27, 2014 at 11:38 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2014-02-27 at 11:29 -0500, Tim Nelson wrote:
+>>> As an example, I have screenshot what you see from the controller:
 >>>
->>> This doesn't really save any space in the struct.
->>> You might move it immediately before or after bBoolInUse.
+>>> http://i.imgur.com/tEd701u.jpg
 >>>
->>>>    	struct ethhdr sEthHeader;
->>>>    	void *Next;
->>>>    	bool bBoolInUse;
->>>
->>>
->> No, but there are dead members in the structure that need removing.
+>>> These are clients actually associating with the AC radio inside the AP.
 >>
->> sEthHeader and Next are dead
->
-> Then it'll all work out well in the end...
->
-Oh sorry sEthHeader isn't dead, but will go dead in the future under 
-mac80211.
-
-I'll do a patch to reorder the structure.
-
+>> So that doesn't really mean anything about the *radio* you're connecting
+>> to. The (probably single!) radio in the AP is simply capable of 11ac,
+>> which means it can also deal with 11n. There aren't two radios for that.
+>>
+>> What 7260 device do you have, btw? There are 11n-only versions of it,
+>> can you give me the PCI ID and/or check kernel messages (dmesg)? Or just
+>> paste the "iw list" output somewhere.
+>>
+>> johannes
+>>
