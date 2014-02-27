@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:40551 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751360AbaBIN0p (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47557 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753424AbaB0OV0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 08:26:45 -0500
-Message-ID: <1391952396.25202.60.camel@deadeye.wl.decadent.org.uk> (sfid-20140209_142652_654377_243DDC76)
-Subject: Re: [PATCH] rtlwifi: Add firmware for rtl8192ee
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sun, 09 Feb 2014 13:26:36 +0000
-In-Reply-To: <1390944643-7388-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1390944643-7388-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-SfBZPxk058wGrnkrJJ7s"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 09:21:26 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 03/16] wil6210: [DEBUG] Improve Vring printing
+Date: Thu, 27 Feb 2014 16:20:42 +0200
+Message-ID: <1393510855-17566-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152136_312750_5DD3974B)
+In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Print '_' for the 'idle' descriptors - this makes vring representation more visible.
+Also, for the Tx side, differentiate descriptors having associated skb's - print ones
+with skb as 'H' and without as 'h'. Good to represent scattered frames.
 
---=-SfBZPxk058wGrnkrJJ7s
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-On Tue, 2014-01-28 at 15:30 -0600, Larry Finger wrote:
-> This firmware is for a driver for the Realtek RTL8192EE PCI WIFI device.
-> It came from a tarball from Realtek named
-> rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013.=
-tar.gz
-> and is allowed to be distributed under the LICENCE.rtlwifi_firmware.txt l=
-icense.
->=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  WHENCE                  |   9 +++++++++
->  rtlwifi/rtl8192eefw.bin | Bin 0 -> 32754 bytes
->  2 files changed, 9 insertions(+)
->  create mode 100644 rtlwifi/rtl8192eefw.bin
-[...]
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 74bb427..6fdab1a 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -30,7 +30,8 @@ static u32 dbg_vring_index; /* 25 for Rx, 0..24 for Tx */
+ #define WIL_DBG_VRING_INDEX_RX (WIL6210_MAX_TX_RINGS + 1)
+ 
+ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+-			    const char *name, struct vring *vring)
++			    const char *name, struct vring *vring,
++			    char _s, char _h)
+ {
+ 	void __iomem *x = wmi_addr(wil, vring->hwtail);
+ 
+@@ -52,8 +53,8 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+ 			volatile struct vring_tx_desc *d = &vring->va[i].tx;
+ 			if ((i % 64) == 0 && (i != 0))
+ 				seq_printf(s, "\n");
+-			seq_printf(s, "%s", (d->dma.status & BIT(0)) ?
+-					"S" : (vring->ctx[i].skb ? "H" : "h"));
++			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
++					_s : (vring->ctx[i].skb ? _h : 'h'));
+ 		}
+ 		seq_printf(s, "\n");
+ 	}
+@@ -65,14 +66,14 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
+ 	uint i;
+ 	struct wil6210_priv *wil = s->private;
+ 
+-	wil_print_vring(s, wil, "rx", &wil->vring_rx);
++	wil_print_vring(s, wil, "rx", &wil->vring_rx, 'S', '_');
+ 
+ 	for (i = 0; i < ARRAY_SIZE(wil->vring_tx); i++) {
+ 		struct vring *vring = &(wil->vring_tx[i]);
+ 		if (vring->va) {
+ 			char name[10];
+ 			snprintf(name, sizeof(name), "tx_%2d", i);
+-			wil_print_vring(s, wil, name, vring);
++			wil_print_vring(s, wil, name, vring, '_', 'H');
+ 		}
+ 	}
+ 
+-- 
+1.8.3.2
 
-Applied, thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-If at first you don't succeed, you're doing about average.
-
---=-SfBZPxk058wGrnkrJJ7s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAUveCDOe/yOyVhhEJAQrudBAAmddgS9nbTNowtkCua9MCas9xJ2yFnsFt
-u/KVxSeZsq6h3Gtc44YNd1PKnK//qvDuWkzOfugDgICrshalwm7P5bk323P6Cl5n
-E6m+7p99KXmwPl3RYFS95o6u5LaQYMiIigXfoUkr2GeWZVVU9vuEXLaTdGrSektg
-rHI/dIZIxCz/pbU+U0vNVoe+36ReKfeXw19vNjAe5N6IhtFw/273diDf59Ar2v47
-bOrRsrxMcsmNBAvmRBA/Njscl6hD6PvIp3/19044He4AbTvb983VW9LS/PTfjYAG
-b6ek4/V0NeQHFFkaapBMhXanNvgpBn9CyYrIUS9riPpCZuJYV/+OHJVpURMKhwDL
-D07oxePRiXF8VTLxvpD7LQtT8dKX/xV3vMDEPhMyApSFpMNlytRLYLZ2/sZilopT
-gufpGY3bjHj8Fl2Ga7TlzsTsQEdLBWGV+v3PLru1UMN0fB5kOCW8w3aZajc+R+VJ
-QRTsEVt18Y3Lt3vpmlHgpvAIng/OiG5Gn0kBHQ8Q8Vy2cIsqASa50Ckm7e3PSdEU
-JEKpbIkMxYdVxc2vKZi8CEXYHS/LC7w36wUsfv1P9dKT1Dc5S7iGeakhPiEDh3VL
-h04D63ViB4YoWvXnYsW5jWL5MrvGAOTjQZR+wT5qhr7URZJB+w2CIG9gV96tph2G
-rg+39hJu72w=
-=Q998
------END PGP SIGNATURE-----
-
---=-SfBZPxk058wGrnkrJJ7s--
