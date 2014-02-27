@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:63214 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:45641 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758AbaBKH5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Feb 2014 02:57:39 -0500
-Received: from [192.168.1.221] ([93.218.106.218]) by mail.gmx.com (mrgmx101)
- with ESMTPSA (Nemesis) id 0M4ScS-1VGcDW0Q60-00yl7t for
- <linux-wireless@vger.kernel.org>; Tue, 11 Feb 2014 08:57:38 +0100
-Message-ID: <52F9D7EB.1080309@rempel-privat.de> (sfid-20140211_085742_379522_945DC446)
-Date: Tue, 11 Feb 2014 08:57:31 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	id S1751125AbaB0RDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Feb 2014 12:03:43 -0500
+Message-ID: <1393520708.9637.16.camel@dcbw.local> (sfid-20140227_180346_723305_A2FA7579)
+Subject: Re: [PATCH 3.14.0-rc4 v2 8/10] rsi: USB functionality
+From: Dan Williams <dcbw@redhat.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Fariya Fathima <fariya.f@redpinesignals.com>,
 	linux-wireless@vger.kernel.org
-CC: Oleksij Rempel <linux@rempel-privat.de>
-Subject: Re: [PATCH v2 00/13] eliminate some ath9k_htc code
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="SsESVXm3Vs5sAWEIrrsxLCDADBeNJspVN"
+Date: Thu, 27 Feb 2014 11:05:08 -0600
+In-Reply-To: <1393482626.13669.5.camel@dubbel>
+References: <1845351523-16314@mail.redpinesignals.com>
+	 <1393437326.23587.5.camel@dcbw.local> <1393482626.13669.5.camel@dubbel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---SsESVXm3Vs5sAWEIrrsxLCDADBeNJspVN
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2014-02-27 at 08:30 +0200, Luca Coelho wrote:
+> On Wed, 2014-02-26 at 11:55 -0600, Dan Williams wrote:
+> > On Wed, 2014-02-26 at 17:11 +0530, Fariya Fathima wrote:
+> > > Hello Dan,
+> > > 
+> > > Thanks for your valuable feedback. We have already started working on your comments. However, I was just thinking whether I should re-submit the patches (based on your comments) or wait for day or two for more feedback from Johannes and others. What do your suggest?
+> > 
+> > Waiting a couple days for more feedback from Johannes and others would
+> > not hurt.
+> 
+> Sometimes people that are really busy wait for a "clean" submission (ie.
+> one where there are no pending comments) before they start reviewing it,
+> so they don't stumble into things that were already spotted by others.
+> I prefer a faster turnaround of new versions of the patches (though
+> don't look at me as a best example of doing this :P).
 
-Hello all,
+Fariya, if you don't hear anything from anyone else by the end of the
+week, just respin the patches and repost to the list.
 
-what is about this change set? Should i resend it.
+Dan
 
-Am 04.02.2014 10:27, schrieb Oleksij Rempel:
-> This patch set moves most common RX code from ath9k/recv.c to
-> common.c without any additional changes and reworks ath9k_htc RX code=20
-> to make use of new common functions.
-> Since ath9k_htc part was more intrusive I made tests in STA and AP mode=
-s. No noticeable regressions was introduced.=20
-> Last patch is important for debugging FW crashes.
->=20
-> Oleksij Rempel (13):
->   ath: add last_rssi to ath_common
->   ath9k: move ath9k_process_rssi to common.c
->   ath9k: move ath9k_process_rate to common.c
->   ath9k: move ath9k_rx_accept to common.c
->   ath9k_htc: add rx header converter to make it usable by ath9k
->   ath9k_htc: use ath9k_cmn_process_rssi
->   ath9k_htc: use ath9k_cmn_process_rate
->   ath9k_htc: use ath9k_cmn_rx_accept
->   ath9k_htc: sync rx_status-> related code with ath9k
->   ath9k: move ath9k_rx_skb_postprocess to common.c
->   ath9k_htc: use ath9k_cmn_rx_skb_postprocess
->   ath9k_htc: remove useless memcpy
->   ath9k_htc: catch fw panic pattern
->=20
->  drivers/net/wireless/ath/ath.h                |   2 +
->  drivers/net/wireless/ath/ath9k/ath9k.h        |   1 -
->  drivers/net/wireless/ath/ath9k/common.c       | 244 ++++++++++++++++++=
-+++++
->  drivers/net/wireless/ath/ath9k/common.h       |  19 ++
->  drivers/net/wireless/ath/ath9k/htc.h          |   1 -
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   1 +
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   1 +
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 176 ++++++-----------
->  drivers/net/wireless/ath/ath9k/htc_hst.c      |  36 ++++
->  drivers/net/wireless/ath/ath9k/htc_hst.h      |  12 ++
->  drivers/net/wireless/ath/ath9k/init.c         |   2 +-
->  drivers/net/wireless/ath/ath9k/mac.h          |   9 +-
->  drivers/net/wireless/ath/ath9k/main.c         |   2 +-
->  drivers/net/wireless/ath/ath9k/recv.c         | 266 ++----------------=
---------
->  14 files changed, 386 insertions(+), 386 deletions(-)
->=20
-
-
---=20
-Regards,
-Oleksij
-
-
---SsESVXm3Vs5sAWEIrrsxLCDADBeNJspVN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlL51/AACgkQHwImuRkmbWmcjwD/fWuMZ6vxLV76IZYzgr//dbBu
-uex4kJ7Ge+6WfopTKqQBAJaq72u5OkIVt51Iqbuf698yPT7b4PFEzxmeR54RTmFh
-=CNkG
------END PGP SIGNATURE-----
-
---SsESVXm3Vs5sAWEIrrsxLCDADBeNJspVN--
