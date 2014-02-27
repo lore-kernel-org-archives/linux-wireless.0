@@ -1,170 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:62492 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbaBKBZw (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34966 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbaB0Ol0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 20:25:52 -0500
-Date: Mon, 10 Feb 2014 19:25:23 -0600
-From: Calvin Owens <jcalvinowens@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jcalvinowens@gmail.com
-Subject: [PATCH v2] ieee80211: Print human-readable disassoc/deauth reason
- codes
-Message-ID: <20140211012523.GA2739@gmail.com> (sfid-20140211_022557_536733_9EB2512A)
-References: <1391651088-31785-1-git-send-email-jcalvinowens@gmail.com>
- <1391661863.30094.56.camel@joe-AO722>
- <1392030546.4128.11.camel@jlt4.sipsolutions.net>
- <1392050359.2507.10.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1392050359.2507.10.camel@joe-AO722>
+	Thu, 27 Feb 2014 09:41:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
+Date: Thu, 27 Feb 2014 16:41:20 +0200
+Message-Id: <1393512081-31453-4-git-send-email-luca@coelho.fi> (sfid-20140227_154132_186346_75CAF80A)
+In-Reply-To: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a function to return a descriptive string for each reason code,
-and print that instead of the numeric value in the kernel log. These
-codes are easily found on popular search engines, but one is generally
-not able to access the internet when dealing with wireless connectivity
-issues.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Changes since v1: Refactored array of strings into switch statement,
-print numeric code in addition to string.
+With single-channel drivers, we need to be able to change a running
+chanctx if we want to use chanctx reservation.  Not all drivers may be
+able to do this, so add a flag that indicates support for it.
 
-Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
+Changing a running chanctx can also be used as an optimization in
+multi-channel drivers when the context needs to be reserved for future
+usage.
+
+Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
+reserved so nobody else can use it (since we know it's going to
+change).  In the future, we may allow several vifs to use the same
+reservation as long as they plan to use the chanctx on the same
+future channel.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/net/mac80211.h | 10 +++++++++
- net/mac80211/main.c    | 55 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mlme.c    | 12 +++++------
- 3 files changed, 71 insertions(+), 6 deletions(-)
+ include/net/mac80211.h     |  7 ++++++
+ net/mac80211/chan.c        | 61 ++++++++++++++++++++++++++++++++++++++++------
+ net/mac80211/ieee80211_i.h |  7 +++++-
+ 3 files changed, 67 insertions(+), 8 deletions(-)
 
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f4ab2fb..d18acfe 100644
+index 86faa41..54c9ce7 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -2971,6 +2971,16 @@ struct ieee80211_ops {
+@@ -1553,6 +1553,12 @@ struct ieee80211_tx_control {
+  *	for a single active channel while using channel contexts. When support
+  *	is not enabled the default action is to disconnect when getting the
+  *	CSA frame.
++ *
++ * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
++ * 	channel context on-the-fly.  This is needed for channel switch
++ * 	on single-channel hardware.  It can also be used as an
++ * 	optimization in certain channel switch cases with
++ * 	multi-channel.
   */
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops);
-+/**
-+ * ieee80211_get_reason_code_string - Get human readable reason code
-+ *
-+ * This function returns a string describing the @reason_code.
-+ *
-+ * @reason_code: Reason code
-+ *
-+ * Return: Human readable reason string, or "<INVALID>"
-+ */
-+const char *ieee80211_get_reason_code_string(u16 reason_code);
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1584,6 +1590,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
+ 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
++	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
+ };
  
  /**
-  * ieee80211_register_hw - Register hardware device
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d767cfb..3c52a81 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -743,6 +743,61 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- 	return 0;
- }
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index bd42d17..564a495 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -177,6 +177,13 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		const struct cfg80211_chan_def *compat;
  
-+const char *ieee80211_get_reason_code_string(u16 reason_code)
-+{
-+	enum ieee80211_reasoncode r = reason_code;
-+	switch(r) {
-+	case WLAN_REASON_UNSPECIFIED: return "UNSPECIFIED";
-+	case WLAN_REASON_PREV_AUTH_NOT_VALID: return "PREV_AUTH_NOT_VALID";
-+	case WLAN_REASON_DEAUTH_LEAVING: return "DEAUTH_LEAVING";
-+	case WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY: return "DISASSOC_DUE_TO_INACTIVITY";
-+	case WLAN_REASON_DISASSOC_AP_BUSY: return "DISASSOC_AP_BUSY";
-+	case WLAN_REASON_CLASS2_FRAME_FROM_NONAUTH_STA: return "CLASS2_FRAME_FROM_NONAUTH_STA";
-+	case WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA: return "CLASS3_FRAME_FROM_NONASSOC_STA";
-+	case WLAN_REASON_DISASSOC_STA_HAS_LEFT: return "DISASSOC_STA_HAS_LEFT";
-+	case WLAN_REASON_STA_REQ_ASSOC_WITHOUT_AUTH: return "STA_REQ_ASSOC_WITHOUT_AUTH";
-+	case WLAN_REASON_DISASSOC_BAD_POWER: return "DISASSOC_BAD_POWER";
-+	case WLAN_REASON_DISASSOC_BAD_SUPP_CHAN: return "DISASSOC_BAD_SUPP_CHAN";
-+	case WLAN_REASON_INVALID_IE: return "INVALID_IE";
-+	case WLAN_REASON_MIC_FAILURE: return "MIC_FAILURE";
-+	case WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT: return "4WAY_HANDSHAKE_TIMEOUT";
-+	case WLAN_REASON_GROUP_KEY_HANDSHAKE_TIMEOUT: return "GROUP_KEY_HANDSHAKE_TIMEOUT";
-+	case WLAN_REASON_IE_DIFFERENT: return "IE_DIFFERENT";
-+	case WLAN_REASON_INVALID_GROUP_CIPHER: return "INVALID_GROUP_CIPHER";
-+	case WLAN_REASON_INVALID_PAIRWISE_CIPHER: return "INVALID_PAIRWISE_CIPHER";
-+	case WLAN_REASON_INVALID_AKMP: return "INVALID_AKMP";
-+	case WLAN_REASON_UNSUPP_RSN_VERSION: return "UNSUPP_RSN_VERSION";
-+	case WLAN_REASON_INVALID_RSN_IE_CAP: return "INVALID_RSN_IE_CAP";
-+	case WLAN_REASON_IEEE8021X_FAILED: return "IEEE8021X_FAILED";
-+	case WLAN_REASON_CIPHER_SUITE_REJECTED: return "CIPHER_SUITE_REJECTED";
-+	case WLAN_REASON_DISASSOC_UNSPECIFIED_QOS: return "DISASSOC_UNSPECIFIED_QOS";
-+	case WLAN_REASON_DISASSOC_QAP_NO_BANDWIDTH: return "DISASSOC_QAP_NO_BANDWIDTH";
-+	case WLAN_REASON_DISASSOC_LOW_ACK: return "DISASSOC_LOW_ACK";
-+	case WLAN_REASON_DISASSOC_QAP_EXCEED_TXOP: return "DISASSOC_QAP_EXCEED_TXOP";
-+	case WLAN_REASON_QSTA_LEAVE_QBSS: return "QSTA_LEAVE_QBSS";
-+	case WLAN_REASON_QSTA_NOT_USE: return "QSTA_NOT_USE";
-+	case WLAN_REASON_QSTA_REQUIRE_SETUP: return "QSTA_REQUIRE_SETUP";
-+	case WLAN_REASON_QSTA_TIMEOUT: return "QSTA_TIMEOUT";
-+	case WLAN_REASON_QSTA_CIPHER_NOT_SUPP: return "QSTA_CIPHER_NOT_SUPP";
-+	case WLAN_REASON_MESH_PEER_CANCELED: return "MESH_PEER_CANCELED";
-+	case WLAN_REASON_MESH_MAX_PEERS: return "MESH_MAX_PEERS";
-+	case WLAN_REASON_MESH_CONFIG: return "MESH_CONFIG";
-+	case WLAN_REASON_MESH_CLOSE: return "MESH_CLOSE";
-+	case WLAN_REASON_MESH_MAX_RETRIES: return "MESH_MAX_RETRIES";
-+	case WLAN_REASON_MESH_CONFIRM_TIMEOUT: return "MESH_CONFIRM_TIMEOUT";
-+	case WLAN_REASON_MESH_INVALID_GTK: return "MESH_INVALID_GTK";
-+	case WLAN_REASON_MESH_INCONSISTENT_PARAM: return "MESH_INCONSISTENT_PARAM";
-+	case WLAN_REASON_MESH_INVALID_SECURITY: return "MESH_INVALID_SECURITY";
-+	case WLAN_REASON_MESH_PATH_ERROR: return "MESH_PATH_ERROR";
-+	case WLAN_REASON_MESH_PATH_NOFORWARD: return "MESH_PATH_NOFORWARD";
-+	case WLAN_REASON_MESH_PATH_DEST_UNREACHABLE: return "MESH_PATH_DEST_UNREACHABLE";
-+	case WLAN_REASON_MAC_EXISTS_IN_MBSS: return "MAC_EXISTS_IN_MBSS";
-+	case WLAN_REASON_MESH_CHAN_REGULATORY: return "MESH_CHAN_REGULATORY";
-+	case WLAN_REASON_MESH_CHAN: return "MESH_CHAN";
-+	default: return "<INVALID>";
-+	}
-+}
++		/* We don't support chanctx reservation for multiple
++		 * vifs yet, so don't allow reserved chanctxs to be
++		 * reused.
++		 */
++		if (ctx->mode == IEEE80211_CHANCTX_RESERVED)
++			continue;
 +
- int ieee80211_register_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fc1d824..5dec202 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2231,8 +2231,8 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+ 			continue;
  
- 	reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+@@ -622,7 +629,9 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(!sdata->reserved_chanctx))
+ 		return -EINVAL;
  
--	sdata_info(sdata, "deauthenticated from %pM (Reason: %u)\n",
--		   bssid, reason_code);
-+	sdata_info(sdata, "deauthenticated from %pM (Reason: %u=%s)\n",
-+		   bssid, reason_code, ieee80211_get_reason_code_string(reason_code));
+-	if (--sdata->reserved_chanctx->refcount == 0)
++	if (sdata->reserved_chanctx->mode == IEEE80211_CHANCTX_RESERVED)
++		sdata->reserved_chanctx->mode = sdata->reserved_mode;
++	else if (--sdata->reserved_chanctx->refcount == 0)
+ 		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
  
- 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 	sdata->reserved_chanctx = NULL;
+@@ -652,19 +661,42 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	/* try to find another context with the chandef we want */
+ 	new_ctx = ieee80211_find_chanctx(local, chandef,
+ 					 IEEE80211_CHANCTX_SHARED);
+-	if (!new_ctx) {
+-		/* create a new context */
++	if (new_ctx) {
++		/* reserve the existing compatible context */
++		sdata->reserved_chanctx = new_ctx;
++		new_ctx->refcount++;
++	} else if (curr_ctx->refcount == 1 &&
++		   (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
++		/* TODO: when implementing support for multiple
++		 * interfaces switching at the same time, we may want
++		 * other vifs to reserve it as well, as long as
++		 * they're planning to switch to the same channel.  In
++		 * that case, we probably have to save the future
++		 * chandef and the reserved_mode in the context
++		 * itself.
++		 */
++		sdata->reserved_mode = curr_ctx->mode;
++
++		/* We're the only user of the current context, mark it
++		 * as reserved, so nobody tries to use it until we
++		 * finish the channel switch.  This is an optimization
++		 * to prevent waste of contexts when the number is
++		 * limited.
++		 */
++		curr_ctx->mode = IEEE80211_CHANCTX_RESERVED;
++		sdata->reserved_chanctx = curr_ctx;
++	} else {
++		/* create a new context and reserve it */
+ 		new_ctx = ieee80211_new_chanctx(local, chandef,
+ 						IEEE80211_CHANCTX_SHARED);
+ 		if (IS_ERR(new_ctx)) {
+ 			ret = PTR_ERR(new_ctx);
+ 			goto out;
+ 		}
+-	}
++		sdata->reserved_chanctx = new_ctx;
  
-@@ -4301,8 +4301,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	bool report_frame = false;
+-	/* reserve the new or existing context */
+-	sdata->reserved_chanctx = new_ctx;
+-	new_ctx->refcount++;
++		new_ctx->refcount++;
++	}
  
- 	sdata_info(sdata,
--		   "deauthenticating from %pM by local choice (reason=%d)\n",
--		   req->bssid, req->reason_code);
-+		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
-+		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
+ 	sdata->csa_chandef = *chandef;
+ out:
+@@ -702,6 +734,21 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
  
- 	if (ifmgd->auth_data) {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
-@@ -4348,8 +4348,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 		return -ENOLINK;
+ 	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
  
- 	sdata_info(sdata,
--		   "disassociating from %pM by local choice (reason=%d)\n",
--		   req->bss->bssid, req->reason_code);
-+		   "disassociating from %pM by local choice (Reason: %u=%s)\n",
-+		   req->bss->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
++	if (old_ctx == ctx) {
++		WARN_ON(!ctx->mode != IEEE80211_CHANCTX_RESERVED);
++
++		/* This is our own context, just change it */
++		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
++						     &local_changed);
++		if (ret)
++			goto out;
++
++		ctx->mode = sdata->reserved_mode;
++
++		*changed = local_changed;
++		goto out;
++	}
++
+ 	ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 998fbbb..5015bc1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -681,10 +681,14 @@ enum ieee80211_sdata_state_bits {
+  * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
+  *	only by a single interface. This can be used for example for
+  *	non-fixed channel IBSS.
++ * @IEEE80211_CHANCTX_RESERVED: the channel context is reserved for
++ * 	future change and cannot be used by other interfaces until the
++ * 	reservation is taken into use.
+  */
+ enum ieee80211_chanctx_mode {
+ 	IEEE80211_CHANCTX_SHARED,
+-	IEEE80211_CHANCTX_EXCLUSIVE
++	IEEE80211_CHANCTX_EXCLUSIVE,
++	IEEE80211_CHANCTX_RESERVED
+ };
  
- 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
+ struct ieee80211_chanctx {
+@@ -757,6 +761,7 @@ struct ieee80211_sub_if_data {
+ 	struct cfg80211_chan_def csa_chandef;
+ 
+ 	struct ieee80211_chanctx *reserved_chanctx;
++	enum ieee80211_chanctx_mode reserved_mode;
+ 
+ 	/* used to reconfigure hardware SM PS */
+ 	struct work_struct recalc_smps;
 -- 
 1.8.5.3
 
