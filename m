@@ -1,134 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64737 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751424AbaBHAbE (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:41774 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbaB0NVv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:31:04 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 23/30] mwifiex: tdls related handling for data packets addressed to TDLS peer
-Date: Fri, 7 Feb 2014 16:30:36 -0800
-Message-ID: <1391819442-21239-4-git-send-email-bzhao@marvell.com> (sfid-20140208_020009_342600_0F56434D)
-In-Reply-To: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
-References: <1391819442-21239-1-git-send-email-bzhao@marvell.com>
+	Thu, 27 Feb 2014 08:21:51 -0500
+Received: by mail-pa0-f44.google.com with SMTP id bj1so2504360pad.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 05:21:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1393376982-28276-4-git-send-email-mcgrof@do-not-panic.com>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com> <1393376982-28276-4-git-send-email-mcgrof@do-not-panic.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 27 Feb 2014 15:21:35 +0200
+Message-ID: <CA+XVXffSTA__zwYDzzyHB2B1mLZaL0sXT8prmUvdb-w_QA4_pg@mail.gmail.com> (sfid-20140227_142154_726704_ADC5A7FE)
+Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux@eikelenboom.it
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Wed, Feb 26, 2014 at 3:09 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> This adds a trigger to review any pending regulatory
+> requests whenever an 802.11 device interface is brought
+> down or up. We use this as an opportunistic trigger
+> for checking the regulatory work queues as otherwise
+> they they're only checked upon an initial regulatory
+> request or when beacon hints are found.
+>
+> This opportunistic mechanism can be used to trigger
+> kicking the queues regulatory queues at any time from
+> userspace without having to change the regulatory state.
+>
+> A timer just waiting upon init is not that appropriate
+> as when it should be triggered will depend on systems,
+> a much better approach is to use and add opportunistic
+> triggers. The interface coming up is typically a good
+> indicator that filesystems have been mounted since
+> firmware is required for some devices.
+>
+> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> ---
+>  net/wireless/reg.h | 1 +
+>  1 file changed, 1 insertion(+)
 
-1. If data packet is addressed to TDLS peer for which link is
-established, mark these packets with TDLS flag so that FW can
-send them on direct link instead of sending via AP.
-2. If data packet is addressed to TDLS peer and TDLS setup is
-underway, move these packets to TDLS queue.
-3. If this packet is TDLS setup packet, do not block it.
+Seems the actual patch is missing?
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h |  1 +
- drivers/net/wireless/mwifiex/tdls.c | 11 ++++++++++
- drivers/net/wireless/mwifiex/wmm.c  | 42 +++++++++++++++++++++++++++++++------
- 3 files changed, 48 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 138929e..19c60b2 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1213,6 +1213,7 @@ int mwifiex_send_tdls_action_frame(struct mwifiex_private *priv,
- void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
- 				       u8 *buf, int len);
- int mwifiex_tdls_oper(struct mwifiex_private *priv, u8 *peer, u8 action);
-+int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
-index 3198739..7ef3593 100644
---- a/drivers/net/wireless/mwifiex/tdls.c
-+++ b/drivers/net/wireless/mwifiex/tdls.c
-@@ -782,3 +782,14 @@ int mwifiex_tdls_oper(struct mwifiex_private *priv, u8 *peer, u8 action)
- 	}
- 	return 0;
- }
-+
-+int mwifiex_get_tdls_link_status(struct mwifiex_private *priv, u8 *mac)
-+{
-+	struct mwifiex_sta_node *sta_ptr;
-+
-+	sta_ptr = mwifiex_get_sta_entry(priv, mac);
-+	if (sta_ptr)
-+		return sta_ptr->tdls_status;
-+
-+	return TDLS_NOT_SETUP;
-+}
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index e9f7628..63496ed 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -631,6 +631,21 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	u8 ra[ETH_ALEN], tid_down;
- 	unsigned long flags;
-+	struct list_head list_head;
-+	int tdls_status = TDLS_NOT_SETUP;
-+	struct ethhdr *eth_hdr = (struct ethhdr *)skb->data;
-+	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
-+
-+	memcpy(ra, eth_hdr->h_dest, ETH_ALEN);
-+
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA &&
-+	    ISSUPP_TDLS_ENABLED(adapter->fw_cap_info)) {
-+		if (ntohs(eth_hdr->h_proto) == ETH_P_TDLS)
-+			dev_dbg(adapter->dev,
-+				"TDLS setup packet for %pM. Don't block\n", ra);
-+		else
-+			tdls_status = mwifiex_get_tdls_link_status(priv, ra);
-+	}
- 
- 	if (!priv->media_connected && !mwifiex_is_skb_mgmt_frame(skb)) {
- 		dev_dbg(adapter->dev, "data: drop packet in disconnect\n");
-@@ -649,12 +664,27 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 	   have only 1 raptr for a tid in case of infra */
- 	if (!mwifiex_queuing_ra_based(priv) &&
- 	    !mwifiex_is_skb_mgmt_frame(skb)) {
--		if (!list_empty(&priv->wmm.tid_tbl_ptr[tid_down].ra_list))
--			ra_list = list_first_entry(
--				&priv->wmm.tid_tbl_ptr[tid_down].ra_list,
--				struct mwifiex_ra_list_tbl, list);
--		else
--			ra_list = NULL;
-+		switch (tdls_status) {
-+		case TDLS_SETUP_COMPLETE:
-+			ra_list = mwifiex_wmm_get_queue_raptr(priv, tid_down,
-+							      ra);
-+			tx_info->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
-+			break;
-+		case TDLS_SETUP_INPROGRESS:
-+			skb_queue_tail(&priv->tdls_txq, skb);
-+			spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
-+					       flags);
-+			return;
-+		default:
-+			list_head = priv->wmm.tid_tbl_ptr[tid_down].ra_list;
-+			if (!list_empty(&list_head))
-+				ra_list = list_first_entry(
-+					&list_head, struct mwifiex_ra_list_tbl,
-+					list);
-+			else
-+				ra_list = NULL;
-+			break;
-+		}
- 	} else {
- 		memcpy(ra, skb->data, ETH_ALEN);
- 		if (ra[0] & 0x01 || mwifiex_is_skb_mgmt_frame(skb))
--- 
-1.8.2.3
-
+Arik
