@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58417 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbaBZMWU (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:38764 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbaB0Or3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Feb 2014 07:22:20 -0500
-Message-ID: <1393417325.4133.8.camel@jlt4.sipsolutions.net> (sfid-20140226_132227_464254_B337838A)
-Subject: Re: [PATCH 01/14] brcmfmac: add delay before unregistering the
- network device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org
-Date: Wed, 26 Feb 2014 13:22:05 +0100
-In-Reply-To: <530DDB91.3070807@broadcom.com>
-References: <1393356639-19169-1-git-send-email-arend@broadcom.com>
-						 <1393356639-19169-2-git-send-email-arend@broadcom.com>
-						 (sfid-20140225_203048_842452_A39499B6) <1393358376.4170.22.camel@jlt4.sipsolutions.net>
-					 <530DAECD.8010405@broadcom.com>
-				 <1393406278.4133.4.camel@jlt4.sipsolutions.net>
-				 <530DB3BA.20106@broadcom.com>
-			 <1393407473.4133.5.camel@jlt4.sipsolutions.net>
-			 <530DC56E.9040202@broadcom.com>
-		 <1393413044.4133.6.camel@jlt4.sipsolutions.net>
-		 <530DD131.50205@broadcom.com>
-	 <1393415288.4133.7.camel@jlt4.sipsolutions.net>
-	 <530DDB91.3070807@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 09:47:29 -0500
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/4] mac80211: set NET_NAME_USER for user-space created ifs
+Date: Thu, 27 Feb 2014 15:47:12 +0100
+Message-Id: <1393512434-1325-3-git-send-email-dh.herrmann@gmail.com> (sfid-20140227_154844_921310_B406E62F)
+In-Reply-To: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
+References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-26 at 13:18 +0100, Arend van Spriel wrote:
+The nl80211 interface allows creating new netdevs from user-space. The
+name is *always* provided by user-space, so we should set NET_NAME_USER to
+provide that information via sysfs.
 
-> Feeling sad :-( but thanks for checking. Clearly need to look into this
-> some more. John, can you please drop this one.
+This allows udev to not rename dynamically created wifi devices (like wifi
+P2P devices).
 
-I think you probably still want to drop the other sleep?
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+---
+ net/mac80211/iface.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ce1c443..35561bd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1620,6 +1620,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 					+ IEEE80211_ENCRYPT_HEADROOM;
+ 		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+ 
++		ndev->name_assign_type = NET_NAME_USER;
+ 		ret = dev_alloc_name(ndev, ndev->name);
+ 		if (ret < 0) {
+ 			free_netdev(ndev);
+-- 
+1.9.0
 
