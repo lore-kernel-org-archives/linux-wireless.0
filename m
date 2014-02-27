@@ -1,156 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:55055 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753396AbaBLTFI (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:32935 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbaB0JPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:05:08 -0500
-Received: by mail-we0-f170.google.com with SMTP id w62so6489307wes.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:05 -0800 (PST)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 6/9] wcn36xx: Add support for 3680
-Date: Wed, 12 Feb 2014 19:04:45 +0000
-Message-Id: <1392231888-2191-6-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200523_979738_5526AFAD)
-In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
-References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+	Thu, 27 Feb 2014 04:15:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v7 5/5] cfg80211/mac80211: move more combination checks to mac80211
+Date: Thu, 27 Feb 2014 11:14:57 +0200
+Message-Id: <1393492497-29500-6-git-send-email-luca@coelho.fi> (sfid-20140227_101535_958193_C12C3D30)
+In-Reply-To: <1393492497-29500-1-git-send-email-luca@coelho.fi>
+References: <1393492497-29500-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-3680 has a few registers on other addresses.
+Get rid of the cfg80211_can_add_interface() and
+cfg80211_can_change_interface() functions by moving that functionality
+to mac80211.  With this patch all interface combination checks are now
+out of cfg80211 (except for the channel switch case which will be
+addressed in a future commit).
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Additionally, modify the ieee80211_check_combinations() function so
+that an undefined chandef can be passed, in order to use it before a
+channel is defined.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c     | 10 +++++++++-
- drivers/net/wireless/ath/wcn36xx/dxe.h     |  4 ++--
- drivers/net/wireless/ath/wcn36xx/main.c    | 28 +++++++++++++++++++++-------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  4 ++++
- 4 files changed, 36 insertions(+), 10 deletions(-)
+ net/mac80211/cfg.c     |  9 +++++++++
+ net/mac80211/iface.c   |  6 +++++-
+ net/mac80211/util.c    | 10 +++++++---
+ net/wireless/core.c    | 11 +++--------
+ net/wireless/core.h    | 22 ----------------------
+ net/wireless/nl80211.c |  5 ++---
+ net/wireless/util.c    |  5 -----
+ 7 files changed, 26 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index ee25786..73f12f1 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -44,6 +44,14 @@ static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
- 	writel(data, wcn->mmio + addr);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 033b489..8d5a58a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -109,6 +109,15 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ static int ieee80211_start_p2p_device(struct wiphy *wiphy,
+ 				      struct wireless_dev *wdev)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
+ 	return ieee80211_do_open(wdev, true);
  }
  
-+#define wcn36xx_dxe_write_register_x(wcn, reg, reg_data)		 \
-+do {									 \
-+	if (wcn->chip_version == WCN36XX_CHIP_3680)			 \
-+		wcn36xx_dxe_write_register(wcn, reg ## _3680, reg_data); \
-+	else								 \
-+		wcn36xx_dxe_write_register(wcn, reg ## _3660, reg_data); \
-+} while (0)								 \
-+
- static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index be198f4..4c55481 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -250,6 +250,7 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
  {
- 	*data = readl(wcn->mmio + addr);
-@@ -680,7 +688,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_sub_if_data *nsdata;
++	int ret;
  
- 	/* Setting interrupt path */
- 	reg_data = WCN36XX_DXE_CCU_INT;
--	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CCU_INT, reg_data);
-+	wcn36xx_dxe_write_register_x(wcn, WCN36XX_DXE_REG_CCU_INT, reg_data);
+ 	ASSERT_RTNL();
  
- 	/***************************************/
- 	/* Init descriptors for TX LOW channel */
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-index c88562f..35ee7e9 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-@@ -28,11 +28,11 @@ H2H_TEST_RX_TX = DMA2
- */
- 
- /* DXE registers */
--#define WCN36XX_DXE_MEM_BASE			0x03000000
- #define WCN36XX_DXE_MEM_REG			0x202000
- 
- #define WCN36XX_DXE_CCU_INT			0xA0011
--#define WCN36XX_DXE_REG_CCU_INT			0x200b10
-+#define WCN36XX_DXE_REG_CCU_INT_3660		0x200b10
-+#define WCN36XX_DXE_REG_CCU_INT_3680		0x2050dc
- 
- /* TODO This must calculated properly but not hardcoded */
- #define WCN36XX_DXE_CTRL_TX_L			0x328a44
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 95fd5c6..dca21ee 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -221,6 +221,17 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
+@@ -300,7 +301,10 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 		}
  	}
+ 
+-	return 0;
++	mutex_lock(&local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
  }
  
-+static void wcn36xx_detect_chip_version(struct wcn36xx *wcn)
-+{
-+	if (get_feat_caps(wcn->fw_feat_caps, DOT11AC)) {
-+		wcn36xx_info("Chip is 3680\n");
-+		wcn->chip_version = WCN36XX_CHIP_3680;
-+	} else {
-+		wcn36xx_info("Chip is 3660\n");
-+		wcn->chip_version = WCN36XX_CHIP_3660;
-+	}
-+}
-+
- static int wcn36xx_start(struct ieee80211_hw *hw)
- {
- 	struct wcn36xx *wcn = hw->priv;
-@@ -267,6 +278,16 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
- 		goto out_free_smd_buf;
- 	}
+ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3972b64..955b043 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2812,7 +2812,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_iftype iftype = sdata->wdev.iftype;
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_chanctx *ctx;
+-	int num_different_channels = 1;
++	int num_different_channels = 0;
+ 	int total = 1;
  
-+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
-+		ret = wcn36xx_smd_feature_caps_exchange(wcn);
-+		if (ret)
-+			wcn36xx_warn("Exchange feature caps failed\n");
-+		else
-+			wcn36xx_feat_caps_info(wcn);
-+	}
-+
-+	wcn36xx_detect_chip_version(wcn);
-+
- 	/* DMA channel initialization */
- 	ret = wcn36xx_dxe_init(wcn);
- 	if (ret) {
-@@ -276,13 +297,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
+ 	lockdep_assert_held(&local->chanctx_mtx);
+@@ -2820,9 +2820,13 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
  
- 	wcn36xx_debugfs_init(wcn);
+-	if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
++	if (WARN_ON(chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
++		    !chandef->chan))
+ 		return -EINVAL;
  
--	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
--		ret = wcn36xx_smd_feature_caps_exchange(wcn);
++	if (chandef)
++		num_different_channels = 1;
++
+ 	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+ 		return -EINVAL;
+ 
+@@ -2845,7 +2849,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 			num_different_channels++;
+ 			continue;
+ 		}
+-		if ((chanmode == IEEE80211_CHANCTX_SHARED) &&
++		if (chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
+ 		    cfg80211_chandef_compatible(chandef,
+ 						&ctx->conf.def))
+ 			continue;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 276cf93..7fca03e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -396,10 +396,7 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 		for (j = 0; j < c->n_limits; j++) {
+ 			u16 types = c->limits[j].types;
+ 
+-			/*
+-			 * interface types shouldn't overlap, this is
+-			 * used in cfg80211_can_change_interface()
+-			 */
++			/* interface types shouldn't overlap */
+ 			if (WARN_ON(types & all_iftypes))
+ 				return -EINVAL;
+ 			all_iftypes |= types;
+@@ -798,7 +795,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev;
+-	int ret;
+ 
+ 	if (!wdev)
+ 		return NOTIFY_DONE;
+@@ -961,9 +957,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+ 			return notifier_from_errno(-EOPNOTSUPP);
+-		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
 -		if (ret)
--			wcn36xx_warn("Exchange feature caps failed\n");
--		else
--			wcn36xx_feat_caps_info(wcn);
--	}
- 	INIT_LIST_HEAD(&wcn->vif_list);
- 	return 0;
+-			return notifier_from_errno(ret);
++		if (rfkill_blocked(rdev->rfkill))
++			return notifier_from_errno(-ERFKILL);
+ 		break;
+ 	}
  
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 0c5413f..b4dc85b 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -178,6 +178,7 @@ struct wcn36xx {
- 	u8			fw_minor;
- 	u8			fw_major;
- 	u32			fw_feat_caps[WCN36XX_HAL_CAPS_SIZE];
-+	u32			chip_version;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 4a930ef..53f1996 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -406,28 +406,6 @@ unsigned int
+ cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
+ 			      const struct cfg80211_chan_def *chandef);
  
- 	/* extra byte for the NULL termination */
- 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
-@@ -225,6 +226,9 @@ struct wcn36xx {
+-static inline int
+-cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-			      struct wireless_dev *wdev,
+-			      enum nl80211_iftype iftype)
+-{
+-	/* TODO: For this function, we'll probably need to keep some
+-	 * kind of interface combination check in cfg80211...
+-	 */
+-	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+-					    CHAN_MODE_UNDEFINED, 0);
+-}
+-
+-static inline int
+-cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+-			   enum nl80211_iftype iftype)
+-{
+-	if (rfkill_blocked(rdev->rfkill))
+-		return -ERFKILL;
+-
+-	return cfg80211_can_change_interface(rdev, NULL, iftype);
+-}
+-
+ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
+ {
+ 	unsigned long end = jiffies;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07253bf..5465e0e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8957,9 +8957,8 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	if (wdev->p2p_started)
+ 		return 0;
  
- };
+-	err = cfg80211_can_add_interface(rdev, wdev->iftype);
+-	if (err)
+-		return err;
++	if (rfkill_blocked(rdev->rfkill))
++		return -ERFKILL;
  
-+#define WCN36XX_CHIP_3660	0
-+#define WCN36XX_CHIP_3680	1
-+
- static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
- 					 u8 major,
- 					 u8 minor,
+ 	err = rdev_start_p2p_device(rdev, wdev);
+ 	if (err)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b2498e3..378038d30 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -873,11 +873,6 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		return -EBUSY;
+ 
+ 	if (ntype != otype && netif_running(dev)) {
+-		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+-						    ntype);
+-		if (err)
+-			return err;
+-
+ 		dev->ieee80211_ptr->use_4addr = false;
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 		wdev_lock(dev->ieee80211_ptr);
 -- 
-1.8.3.2
+1.8.5.3
 
