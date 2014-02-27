@@ -1,167 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47516 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbaBQNt2 (ORCPT
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:35468 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812AbaB0Q3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 08:49:28 -0500
-Message-ID: <1392644957.5202.7.camel@jlt4.sipsolutions.net> (sfid-20140217_144931_966553_CB12E8EA)
-Subject: Re: [RFC 1/4] mac80211: Allow 5/10 MHz channel setting (for OCB)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de
-Date: Mon, 17 Feb 2014 14:49:17 +0100
-In-Reply-To: <1392643374-3545-2-git-send-email-lisovy@gmail.com> (sfid-20140217_142311_364138_9794E9CF)
-References: <1392643374-3545-1-git-send-email-lisovy@gmail.com>
-	 <1392643374-3545-2-git-send-email-lisovy@gmail.com>
-	 (sfid-20140217_142311_364138_9794E9CF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 11:29:49 -0500
+Received: by mail-ve0-f172.google.com with SMTP id jx11so4063265veb.31
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 08:29:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
+	<CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+Date: Thu, 27 Feb 2014 11:29:48 -0500
+Message-ID: <CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com> (sfid-20140227_172952_536266_36A3667C)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Tim Nelson <tim.l.nelson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-02-17 at 14:22 +0100, Rostislav Lisovy wrote:
-> Signed-off-by: Rostislav Lisovy <lisovy@gmail.com>
+As an example, I have screenshot what you see from the controller:
 
-Err, some text is definitely needed.
+http://i.imgur.com/tEd701u.jpg
 
-> ---
->  include/net/cfg80211.h       |  19 ++++++-
->  include/net/mac80211.h       |   4 +-
->  include/uapi/linux/nl80211.h |  17 ++++++-
->  net/wireless/chan.c          |   8 +++
->  net/wireless/core.c          |   3 --
->  net/wireless/nl80211.c       |  14 ++++++
->  net/wireless/reg.c           | 115 ++++++++++++++++++++++++++++++++++++++-----
->  7 files changed, 161 insertions(+), 19 deletions(-)
+These are clients actually associating with the AC radio inside the AP.
 
-This is mostly a cfg80211 patch - please remove the non-cfg80211 parts
-from this one and label it appropriately.
-
-> + * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
-> + *     on this channel.
-> + * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-> + *     on this channel.
-> + * @IEEE80211_CHAN_OCB_ONLY: only OCB is allowed on this channel.
-
-That's not very clear - does no-20 also imply no-higher-than-20? Also,
-why no flag for 5MHz? Maybe there should be flags for _5MHZ_ONLY,
-_10MHZ_ONLY and _OCB_ONLY?
-
-> +++ b/include/net/mac80211.h
-> @@ -517,6 +517,8 @@ enum mac80211_tx_info_flags {
->   */
->  enum mac80211_tx_control_flags {
->  	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
-> +	IEEE80211_TX_CTL_10MHZ			= BIT(1),
-> +	IEEE80211_TX_CTL_5MHZ			= BIT(2),
->  };
-
-This doesn't belong here.
- 
-> @@ -4516,7 +4518,7 @@ conf_is_ht40(struct ieee80211_conf *conf)
->  static inline bool
->  conf_is_ht(struct ieee80211_conf *conf)
->  {
-> -	return conf->chandef.width != NL80211_CHAN_WIDTH_20_NOHT;
-> +	return conf_is_ht20(conf) || conf_is_ht40(conf);
->  }
-
-This also doesn't, but is also wrong - consider VHT.
-
-> +++ b/net/wireless/core.c
-> @@ -451,9 +451,6 @@ int wiphy_register(struct wiphy *wiphy)
->  	int i;
->  	u16 ifmodes = wiphy->interface_modes;
->  
-> -	/* support for 5/10 MHz is broken due to nl80211 API mess - disable */
-> -	wiphy->flags &= ~WIPHY_FLAG_SUPPORTS_5_10_MHZ;
-
-Err, what tree are you basing your code on? Consider updating it.
-
-Besides, that wouldn't even belong into this patch anyway.
-
-> +++ b/net/wireless/nl80211.c
-> @@ -570,6 +570,16 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
->  	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
->  	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_IBSS))
->  		goto nla_put_failure;
-> +	if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
-> +	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
-> +		goto nla_put_failure;
-> +	if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
-> +	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
-> +		goto nla_put_failure;
-> +
-> +	if ((chan->flags & IEEE80211_CHAN_OCB_ONLY) &&
-> +	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_OCB_ONLY))
-> +		goto nla_put_failure;
-
-This has to depend on the split format here, otherwise we overrun the
-buffer used by older userspace tools. Also, such channels should be
-removed from the nl80211 advertisement for userspace that can't cope
-with non-split information.
-
-> +		if (band_rule_found && bw_fits) {
-> +			u32 allowed_bw = regd->reg_rules[i].freq_range.max_bandwidth_khz;
-> +			if (desired_bw_khz > allowed_bw) {
-> +				return ERR_PTR(-ENOENT);
-> +			} else {
-> +				return rr;
-> +			}
-> +		}
-
-code style
- 
->  const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
-> -					       u32 center_freq)
-> +					       u32 center_freq,
-> +					       u32 desired_bw_khz)
-
->  EXPORT_SYMBOL(freq_reg_info);
-
-This function is exported but you haven't updated any of its users ...
-
-> +	do {
-> +		reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq), desired_bw_khz);
-> +		if ((IS_ERR(reg_rule)) && ((u32)reg_rule == -ENOENT)) {
-> +			bw_flags |= IEEE80211_CHAN_NO_20MHZ;
-> +		} else {
-> +			break;
-> +		}
-> +
-> +		/* check for 10 MHz BW */
-> +		desired_bw_khz = MHZ_TO_KHZ(10);
-> +		reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq), desired_bw_khz);
-> +		if ((IS_ERR(reg_rule)) && ((u32)reg_rule == -ENOENT)) {
-> +			bw_flags |= IEEE80211_CHAN_NO_10MHZ;
-> +		} else {
-> +			break;
-> +		}
-> +
-> +		/* check for 5 MHz BW */
-> +		desired_bw_khz = MHZ_TO_KHZ(5);
-> +		reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq), desired_bw_khz);
-> +		if ((IS_ERR(reg_rule)) && ((u32)reg_rule == -ENOENT)) {
-> +
-> +		} else {
-> +			break;
-> +		}
-> +	} while (0);
-
-That is one of the ugliest code constructs I've ever seen. You should
-rewrite it.
-
-> +#if 0
-
-Umm.
-
-Might have mentioned that in your 0/4 that you want help on specific
-things :)
-
-[I haven't even really reviewed the regulatory code]
-
-johannes
-
+On Thu, Feb 27, 2014 at 11:27 AM, Tim Nelson <tim.l.nelson@gmail.com> wrote:
+> On a Cisco 5508 controller with a lightweight AP, you can see the
+> protocol the radio the client connects to.  If they are in fact AC
+> capable, you will see them connect to the AC radio inside the AP
+> through the controller.  While I see this with many devices, it never
+> happens under linux.  The AP has multiple radios in it.
+>
+> On Thu, Feb 27, 2014 at 11:13 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2014-02-27 at 11:10 -0500, Tim Nelson wrote:
+>>> Although it is a similar setup, no.  I am able to connect on ALL
+>>> radios but the AC radio's on the 3702's.  I encounter no bugs, no loss
+>>> of connection.  However, I NEVER connect to the AC radio on the AP.  I
+>>> know it works due to my Nexus 5 connecting to the AC radio
+>>> immediately.  If the 3702 saw that my adapter was AC capable, it would
+>>> use the AC radio and not the A/N.  Also, every other device with
+>>> wireless AC connects fine without issue, even the same laptop on it's
+>>> Windows 8 partition.
+>>
+>> All of this doesn't make a lot of sense to me. What do you even mean by
+>> "AC radio" in this context? Is there a separate SSID? BSSID? something
+>> else?
+>>
+>>> If it is AC capable, how do I get it to connect to the AC radio's on
+>>> the AP?  It is entirely possible it is something Cisco/Linux related
+>>> with how they communicate as well.
+>>
+>> I don't see how the AP would be able to choose where the client
+>> connects, without maybe some CCX stuff that Linux doesn't have.
+>>
+>> johannes
+>>
