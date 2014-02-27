@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0001.hostedemail.com ([216.40.44.1]:58695 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751562AbaBLLtr (ORCPT
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:50469 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbaB0Q1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 06:49:47 -0500
-Message-ID: <1392205783.1868.5.camel@joe-AO722> (sfid-20140212_124955_781565_FB84C7F9)
-Subject: Re: [net-next 3/3] cfg80211: add MPLS and 802.21 classification
-From: Joe Perches <joe@perches.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-	linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de
-Date: Wed, 12 Feb 2014 03:49:43 -0800
-In-Reply-To: <1392202386-8826-4-git-send-email-sw@simonwunderlich.de>
-References: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
-	 <1392202386-8826-4-git-send-email-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 11:27:52 -0500
+Received: by mail-ve0-f170.google.com with SMTP id pa12so2511383veb.29
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 08:27:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1393517627.4648.4.camel@jlt4.sipsolutions.net>
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
+Date: Thu, 27 Feb 2014 11:27:51 -0500
+Message-ID: <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com> (sfid-20140227_172758_539503_410B0D67)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Tim Nelson <tim.l.nelson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-02-12 at 11:53 +0100, Simon Wunderlich wrote:
-> MPLS labels may contain traffic control information, which should be
-> evaluated and used by the wireless subsystem if present.
+On a Cisco 5508 controller with a lightweight AP, you can see the
+protocol the radio the client connects to.  If they are in fact AC
+capable, you will see them connect to the AC radio inside the AP
+through the controller.  While I see this with many devices, it never
+happens under linux.  The AP has multiple radios in it.
 
-trivial notes:
-
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-[]
-> @@ -11,6 +11,7 @@
->  #include <net/ip.h>
->  #include <net/dsfield.h>
->  #include <linux/if_vlan.h>
-> +#include <uapi/linux/mpls.h>
-
-Please try not to #include uapi files.
-
-> @@ -710,6 +711,29 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
->  			return vlan_priority;
->  	}
->  
-> +	if (skb_headlen(skb) >= sizeof(struct ethhdr)) {
-> +		struct ethhdr *eh = (struct ethhdr *) skb->data;
-> +		struct mpls_label_stack mpls_tmp, *mpls;
-> +
-> +		switch (eh->h_proto) {
-> +		case __constant_htons(ETH_P_MPLS_UC):
-> +		case __constant_htons(ETH_P_MPLS_MC):
-
-__constant_ isn't necessary for these labels.
-
->  	switch (skb->protocol) {
->  	case htons(ETH_P_IP):
->  		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-
-like this, just case htons(ETH_<FOO>) is enough.
-
-
+On Thu, Feb 27, 2014 at 11:13 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-27 at 11:10 -0500, Tim Nelson wrote:
+>> Although it is a similar setup, no.  I am able to connect on ALL
+>> radios but the AC radio's on the 3702's.  I encounter no bugs, no loss
+>> of connection.  However, I NEVER connect to the AC radio on the AP.  I
+>> know it works due to my Nexus 5 connecting to the AC radio
+>> immediately.  If the 3702 saw that my adapter was AC capable, it would
+>> use the AC radio and not the A/N.  Also, every other device with
+>> wireless AC connects fine without issue, even the same laptop on it's
+>> Windows 8 partition.
+>
+> All of this doesn't make a lot of sense to me. What do you even mean by
+> "AC radio" in this context? Is there a separate SSID? BSSID? something
+> else?
+>
+>> If it is AC capable, how do I get it to connect to the AC radio's on
+>> the AP?  It is entirely possible it is something Cisco/Linux related
+>> with how they communicate as well.
+>
+> I don't see how the AP would be able to choose where the client
+> connects, without maybe some CCX stuff that Linux doesn't have.
+>
+> johannes
+>
