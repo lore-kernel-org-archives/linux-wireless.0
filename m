@@ -1,75 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:44522 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbaBLLCV (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:63989 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbaB0RVC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 06:02:21 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next 3/3] cfg80211: add MPLS and 802.21 classification
-Date: Wed, 12 Feb 2014 11:53:06 +0100
-Message-Id: <1392202386-8826-4-git-send-email-sw@simonwunderlich.de> (sfid-20140212_120225_324389_23DD0EB9)
-In-Reply-To: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
-References: <1392202386-8826-1-git-send-email-sw@simonwunderlich.de>
+	Thu, 27 Feb 2014 12:21:02 -0500
+Received: by mail-la0-f48.google.com with SMTP id gf5so1873480lab.21
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 09:21:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+XVXffSTA__zwYDzzyHB2B1mLZaL0sXT8prmUvdb-w_QA4_pg@mail.gmail.com>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+ <1393376982-28276-4-git-send-email-mcgrof@do-not-panic.com> <CA+XVXffSTA__zwYDzzyHB2B1mLZaL0sXT8prmUvdb-w_QA4_pg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 27 Feb 2014 09:20:40 -0800
+Message-ID: <CAB=NE6Wv3aKsc_zWk_1qGnzezPtdHKWpTRUPE8Wf2+Jwbbo-2Q@mail.gmail.com> (sfid-20140227_182107_017052_BD20F2B5)
+Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MPLS labels may contain traffic control information, which should be
-evaluated and used by the wireless subsystem if present.
+On Thu, Feb 27, 2014 at 5:21 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> Seems the actual patch is missing?
 
-Also check for IEEE 802.21 which is always network control traffic.
+Yeah sorry I sent out a v3.
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- net/wireless/util.c |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d39c371..98e3b11 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -11,6 +11,7 @@
- #include <net/ip.h>
- #include <net/dsfield.h>
- #include <linux/if_vlan.h>
-+#include <uapi/linux/mpls.h>
- #include "core.h"
- #include "rdev-ops.h"
- 
-@@ -710,6 +711,29 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
- 			return vlan_priority;
- 	}
- 
-+	if (skb_headlen(skb) >= sizeof(struct ethhdr)) {
-+		struct ethhdr *eh = (struct ethhdr *) skb->data;
-+		struct mpls_label_stack mpls_tmp, *mpls;
-+
-+		switch (eh->h_proto) {
-+		case __constant_htons(ETH_P_MPLS_UC):
-+		case __constant_htons(ETH_P_MPLS_MC):
-+			/* MPLS */
-+			mpls = skb_header_pointer(skb, sizeof(*eh),
-+						  sizeof(*mpls), &mpls_tmp);
-+			if (!mpls)
-+				break;
-+
-+			return (ntohl(mpls->entry) & MPLS_LS_TC_MASK)
-+				>> MPLS_LS_TC_SHIFT;
-+		case __constant_htons(ETH_P_80221):
-+			/* 802.21 is always network control traffic */
-+			return 7;
-+		default:
-+			break;
-+		}
-+	}
-+
- 	switch (skb->protocol) {
- 	case htons(ETH_P_IP):
- 		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
--- 
-1.7.10.4
-
+ Luis
