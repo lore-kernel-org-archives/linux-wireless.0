@@ -1,81 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-banded.atl.sa.earthlink.net ([209.86.89.70]:36925 "EHLO
-	elasmtp-banded.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750748AbaBHGfU (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:45579 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbaB0OrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Feb 2014 01:35:20 -0500
-Date: Sat, 8 Feb 2014 01:22:25 -0500
-From: Bill Fink <billfink@mindspring.com>
-To: Marek Belisko <marek@goldelico.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	rob@landley.net, linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net, grant.likely@linaro.org, neilb@suse.de,
-	hns@goldelico.com, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] net: rfkill-regulator: Add devicetree support.
-Message-Id: <20140208012225.d7a311c7.billfink@mindspring.com> (sfid-20140208_073549_348516_99DF0AC5)
-In-Reply-To: <1391802529-29861-1-git-send-email-marek@goldelico.com>
-References: <1391802529-29861-1-git-send-email-marek@goldelico.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 27 Feb 2014 09:47:25 -0500
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH 0/4] Provide netdev naming-policy via sysfs
+Date: Thu, 27 Feb 2014 15:47:10 +0100
+Message-Id: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com> (sfid-20140227_154952_984833_A291DFB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri,  7 Feb 2014, Marek Belisko wrote:
+Hi
 
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> Signed-off-by: Marek Belisko <marek@goldelico.com>
-> ---
-> Based on Neil's patch and extend for documentation and bindings include.
-> 
->  .../bindings/net/rfkill/rfkill-relugator.txt       | 28 ++++++++++++++++
+This series implements a new sysfs attribute for netdevs called
+"name_assign_type". It provides an integer that describes where an interface
+name comes from. See Patch #1 for a description of this attribute. It is
+modelled after the existing "addr_assign_type" attribute.
 
-                                  ^^^^^^^^^
-                                  Typo in file name.
+The main use-case is to allow udev to skip applying reliable ifnames to virtual
+devices. For instance, if wifi-P2P devices are created, wpas already provides a
+suitable naming-policy and udev shouldn't touch these devices. Same is true for
+other virtual devices.
+The idea is that if a device-name was provided by user-space, we should always
+prefer fixing this naming-policy instead of making udev rename the device. For
+kernel provided names that's hardly possible, though. Providing the
+naming-policy source via sysfs is thus a simple way to see whether renames are
+needed.
 
-					-Bill
+Additionally, this field allows to detect whether a netdev has been manually
+renamed, which is quite useful for debugging and during crash-recovery.
 
+Thanks
+David
 
+David Herrmann (4):
+  net: add name_assign_type netdev attribute
+  mac80211: set NET_NAME_USER for user-space created ifs
+  ath6kl: set NET_NAME_USER for P2P ifs
+  brcmfmac: set NET_NAME_USER for P2P ifs
 
->  include/dt-bindings/net/rfkill-regulator.h         | 23 +++++++++++++
->  net/rfkill/rfkill-regulator.c                      | 38 ++++++++++++++++++++++
->  3 files changed, 89 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
->  create mode 100644 include/dt-bindings/net/rfkill-regulator.h
-> 
-> diff --git a/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
-> new file mode 100644
-> index 0000000..cdb7dd7
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/rfkill/rfkill-relugator.txt
-> @@ -0,0 +1,28 @@
-> +Regulator consumer for rfkill devices
-> +
-> +Required properties:
-> +- compatible   : Must be "rfkill-regulator".
-> +- label  : Name of rfkill device.
-> +- type  : Type of rfkill device.
-> +
-> +Possible values (defined in include/dt-bindings/net/rfkill-regulator.h):
-> +	RFKILL_TYPE_ALL
-> +	RFKILL_TYPE_WLAN
-> +	RFKILL_TYPE_BLUETOOTH
-> +	RFKILL_TYPE_UWB
-> +	RFKILL_TYPE_WIMAX
-> +	RFKILL_TYPE_WWAN
-> +	RFKILL_TYPE_GPS
-> +	RFKILL_TYPE_FM
-> +	RFKILL_TYPE_NFC
-> +
-> +- vrfkill-supply - regulator device.
-> +
-> +Example:
-> +	gps-rfkill {
-> +		compatible = "rfkill-regulator";
-> +		label = "GPS";
-> +		type = <RFKILL_TYPE_GPS>;
-> +		vrfkill-supply = <&reg>;
-> +	};
-> +
+ drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
+ drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
+ drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+ include/linux/netdevice.h                     | 6 ++++++
+ net/core/dev.c                                | 7 +++++++
+ net/core/net-sysfs.c                          | 2 ++
+ net/core/rtnetlink.c                          | 2 ++
+ net/mac80211/iface.c                          | 1 +
+ 9 files changed, 26 insertions(+), 3 deletions(-)
+
+-- 
+1.9.0
+
