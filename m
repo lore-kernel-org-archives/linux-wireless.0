@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:64078 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbaB0NgX (ORCPT
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:34373 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397AbaB0Ql0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 08:36:23 -0500
-Received: by mail-we0-f169.google.com with SMTP id t61so2918299wes.14
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 05:36:21 -0800 (PST)
-From: Sylvain Roger Rieuner <sylvain.roger.rieunier@gmail.com>
-To: ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	nbd@openwrt.org,
-	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-Subject: [PATCH] ath9k: fix invalid max frame length
-Date: Thu, 27 Feb 2014 14:36:06 +0100
-Message-Id: <1393508166-25152-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20140227_143631_416698_89953B84)
+	Thu, 27 Feb 2014 11:41:26 -0500
+Received: by mail-vc0-f173.google.com with SMTP id ld13so2758004vcb.32
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 08:41:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1393519119.4648.7.camel@jlt4.sipsolutions.net>
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
+	<CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+	<CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
+	<1393519119.4648.7.camel@jlt4.sipsolutions.net>
+Date: Thu, 27 Feb 2014 11:41:25 -0500
+Message-ID: <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com> (sfid-20140227_174134_120421_CB4284A4)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Tim Nelson <tim.l.nelson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+[    9.299536] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
+Wireless AC 7260, REV=0x144
 
-According to 802.11n-2012 standard in paragraph PPDU Fromat(20.3.2) HT-mixed
-format  Hearder PPDU contains : L_STF, L_LTF, L_SIG, HT_SIG, HT_STF, HT_LTF
-they are symbols in the preamble, there are in time unit(us) that's for why
-it can't be computed in bytes
-
-Signed-off-by: Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 312314c..544186e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1040,11 +1040,11 @@ static int ath_max_framelen(int usec, int mcs, bool ht40, bool sgi)
- 	int symbols, bits;
- 	int bytes = 0;
- 
-+	usec -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
- 	symbols = sgi ? TIME_SYMBOLS_HALFGI(usec) : TIME_SYMBOLS(usec);
- 	bits = symbols * bits_per_symbol[mcs % 8][ht40] * streams;
- 	bits -= OFDM_PLCP_BITS;
- 	bytes = bits / 8;
--	bytes -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
- 	if (bytes > 65532)
- 		bytes = 65532;
- 
--- 
-1.7.10.4
-
+On Thu, Feb 27, 2014 at 11:38 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-27 at 11:29 -0500, Tim Nelson wrote:
+>> As an example, I have screenshot what you see from the controller:
+>>
+>> http://i.imgur.com/tEd701u.jpg
+>>
+>> These are clients actually associating with the AC radio inside the AP.
+>
+> So that doesn't really mean anything about the *radio* you're connecting
+> to. The (probably single!) radio in the AP is simply capable of 11ac,
+> which means it can also deal with 11n. There aren't two radios for that.
+>
+> What 7260 device do you have, btw? There are 11n-only versions of it,
+> can you give me the PCI ID and/or check kernel messages (dmesg)? Or just
+> paste the "iw list" output somewhere.
+>
+> johannes
+>
