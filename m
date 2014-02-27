@@ -1,137 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:33466 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756764AbaBFUit (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34960 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbaB0Ol1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 15:38:49 -0500
-Message-ID: <52F3F2D7.4020102@lwfinger.net> (sfid-20140206_213915_895094_0EDD1DFF)
-Date: Thu, 06 Feb 2014 14:38:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Olivier Langlois <olivier@trillion01.com>, linville@tuxdriver.com,
-	chaoming_li@realsil.com.cn
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH 1/2] rtlwifi: rtl8192ce: Fix too long disable of IRQs
-References: <1391235070-23180-1-git-send-email-olivier@trillion01.com>
-In-Reply-To: <1391235070-23180-1-git-send-email-olivier@trillion01.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 27 Feb 2014 09:41:27 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [RFC v2 2/4] mac80211: implement chanctx reservation
+Date: Thu, 27 Feb 2014 16:41:19 +0200
+Message-Id: <1393512081-31453-3-git-send-email-luca@coelho.fi> (sfid-20140227_154132_785420_6188F0B2)
+In-Reply-To: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2014 12:11 AM, Olivier Langlois wrote:
-> rtl8192ce is disabling for too long the local interrupts during hw initiatialisation when performing scans
->
-> The observable symptoms in dmesg can be:
->
-> - underruns from ALSA playback
-> - clock freezes (tstamps do not change for several dmesg entries until irqs are finaly reenabled):
->
-> [  250.817669] rtlwifi:rtl_op_config():<0-0-0> 0x100
-> [  250.817685] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-1-0> IPS Set eRf nic enable
-> [  250.817732] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.817796] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.817910] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818024] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818139] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818253] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818367] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:18051d59:11
-> [  250.818472] rtl8192ce:_rtl92ce_init_mac():<0-1-0> reg0xec:98053f15:10
-> [  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
-> [  250.818472] rtl8192c_common:rtl92c_download_fw():<0-1-0> Firmware Version(49), Signature(0x88c1),Size(32)
-> [  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
-> [  250.818472] rtl8192ce:rtl92ce_enable_hw_security_config():<0-1-0> The SECR-value cc
-> [  250.818472] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-1-0> Schedule TxPowerTracking direct call!!
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> rtl92c_dm_txpower_tracking_callback_thermalmeter
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial pathA ele_d reg0xc80 = 0x40000000, ofdm_index=0xc
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Initial reg0xa24 = 0x90e1317, cck_index=0xc, ch14 0
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> Readback Thermal Meter = 0xe pre thermal meter 0xf eeprom_thermalmeter 0xf delta 0x1 delta_lck 0x0 delta_iqk 0x0
-> [  250.818472] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-1-0> <===
-> [  250.818472] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-1-0> pMgntInfo->txpower_tracking = 1
-> [  250.818472] rtl8192ce:rtl92ce_led_control():<0-1-0> ledaction 3
-> [  250.818472] rtl8192ce:rtl92ce_sw_led_on():<0-1-0> LedAddr:4E ledpin=1
-> [  250.818472] rtlwifi:rtl_ips_nic_on():<0-1-0> before spin_unlock_irqrestore
-> [  251.154656] PCM: Lost interrupts? [Q]-0 (stream=0, delta=15903, new_hw_ptr=293408, old_hw_ptr=277505)
->
-> The exact code flow that causes that is:
->
-> 1. wpa_supplicant send a start_scan request to the nl80211 driver
-> 2. mac80211 module call rtl_op_config with IEEE80211_CONF_CHANGE_IDLE
-> 3.   rtl_ips_nic_on is called which disable local irqs
-> 4.     rtl92c_phy_set_rf_power_state() is called
-> 5.       rtl_ps_enable_nic() is called and hw_init()is executed and then the interrupts on the device are enabled
->
-> A good solution could be to refactor the code to avoid calling rtl92ce_hw_init() with the irqs disabled
-> but a quick and dirty solution that has proven to work is
-> to reenable the irqs during the function rtl92ce_hw_init().
->
-> I think that it is safe doing so since the device interrupt will only be enabled after the init function succeed.
->
-> Signed-off-by: Olivier Langlois <olivier@trillion01.com>
-> Cc: Stable <stable@vger.kernel.org>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+In order to support channel switch with multiple vifs and multiple
+contexts, we implement a concept of channel context reservation.  This
+allows us to reserve a channel context to be used later.
 
-Larry
+The reservation functionality is not tied directly to channel switch
+and may be used in other situations (eg. reserving a channel context
+during IBSS join).
 
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 18 ++++++++++++++++--
->   1 file changed, 16 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> index a82b30a..2eb0b38 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -937,14 +937,26 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
->   	bool is92c;
->   	int err;
->   	u8 tmp_u1b;
-> +	unsigned long flags;
->
->   	rtlpci->being_init_adapter = true;
-> +
-> +	/* Since this function can take a very long time (up to 350 ms)
-> +	 * and can be called with irqs disabled, reenable the irqs
-> +	 * to let the other devices continue being serviced.
-> +	 *
-> +	 * It is safe doing so since our own interrupts will only be enabled
-> +	 * in a subsequent step.
-> +	 */
-> +	local_save_flags(flags);
-> +	local_irq_enable();
-> +
->   	rtlpriv->intf_ops->disable_aspm(hw);
->   	rtstatus = _rtl92ce_init_mac(hw);
->   	if (!rtstatus) {
->   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
->   		err = 1;
-> -		return err;
-> +		goto exit;
->   	}
->
->   	err = rtl92c_download_fw(hw);
-> @@ -952,7 +964,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
->   		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
->   			 "Failed to download FW. Init HW without FW now..\n");
->   		err = 1;
-> -		return err;
-> +		goto exit;
->   	}
->
->   	rtlhal->last_hmeboxnum = 0;
-> @@ -1032,6 +1044,8 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
->   	}
->   	rtl92c_dm_init(hw);
-> +exit:
-> +	local_irq_restore(flags);
->   	rtlpci->being_init_adapter = false;
->   	return err;
->   }
->
+When reserving the context, the following algorithm is used:
+
+1) try to find an existing context that matches our future chandef and
+   reserve it if it exists;
+2) otherwise, check if we're the only vif in the current context, in
+   which case we can just change our current context.  To prevent
+   other vifs from joining this context in the meantime, we mark it as
+   exclusive.  This is an optimization to avoid using extra contexts
+   when not necessary and requires the driver to support changing a
+   context on-the-fly;
+3) if we're not the only vif in the current context, create a new
+   context and reserve it;
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In RFC v2:
+
+   * reformulated the patch to make channel reservation generic and
+     not only for channel switch, as we may find other uses for it in
+     the future;
+   * added ieee80211_vif_unreserve_chanctx();
+   * removed reservation of the current chanctx from this patch;
+   * added a stop_queue_reason for chanctx reservation;
+   * added a few TODOs according to Michal's comments to be handled in
+     future patch series;
+   * set sdata->csa_chandef to the received chandef in all cases (it
+     was only happening in the alone-in-the-vif case;
+---
+ net/mac80211/chan.c        | 139 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  11 ++++
+ 2 files changed, 150 insertions(+)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index a27c6ec..bd42d17 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -419,6 +419,9 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
++	if (sdata->reserved_chanctx)
++		ieee80211_vif_unreserve_chanctx(sdata);
++
+ 	ieee80211_unassign_vif_chanctx(sdata, ctx);
+ 	if (ctx->refcount == 0)
+ 		ieee80211_free_chanctx(local, ctx);
+@@ -611,6 +614,142 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
++int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
++{
++
++	lockdep_assert_held(&sdata->local->chanctx_mtx);
++
++	if (WARN_ON(!sdata->reserved_chanctx))
++		return -EINVAL;
++
++	if (--sdata->reserved_chanctx->refcount == 0)
++		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
++
++	sdata->reserved_chanctx = NULL;
++
++	return 0;
++}
++
++int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
++				  const struct cfg80211_chan_def *chandef)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *new_ctx, *curr_ctx;
++	int ret = 0;
++
++	mutex_lock(&local->chanctx_mtx);
++
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	/* try to find another context with the chandef we want */
++	new_ctx = ieee80211_find_chanctx(local, chandef,
++					 IEEE80211_CHANCTX_SHARED);
++	if (!new_ctx) {
++		/* create a new context */
++		new_ctx = ieee80211_new_chanctx(local, chandef,
++						IEEE80211_CHANCTX_SHARED);
++		if (IS_ERR(new_ctx)) {
++			ret = PTR_ERR(new_ctx);
++			goto out;
++		}
++	}
++
++	/* reserve the new or existing context */
++	sdata->reserved_chanctx = new_ctx;
++	new_ctx->refcount++;
++
++	sdata->csa_chandef = *chandef;
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
++int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
++				       u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx *ctx;
++	struct ieee80211_chanctx *old_ctx;
++	struct ieee80211_chanctx_conf *conf;
++	int ret, local_changed = *changed;
++
++	/* TODO: need to recheck if the chandef is usable etc.? */
++
++	lockdep_assert_held(&local->mtx);
++
++	mutex_lock(&local->chanctx_mtx);
++
++	ctx = sdata->reserved_chanctx;
++	if (WARN_ON(!ctx)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ieee80211_stop_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
++
++	ieee80211_unassign_vif_chanctx(sdata, old_ctx);
++	if (old_ctx->refcount == 0)
++		ieee80211_free_chanctx(local, old_ctx);
++
++	/* TODO: we're assuming that the bandwidth of the context
++	 * changes here, but in fact, it will only change if the
++	 * combination of the channels used in this context change.
++	 * We should set this flag according to what happens when
++	 * ieee80211_recalc_chanctx_chantype() is called.  Maybe the
++	 * nicest thing to do would be to change that function so that
++	 * it returns changed flags (which will be either 0 or
++	 * BSS_CHANGED_BANDWIDTH).
++	 */
++
++	if (sdata->vif.bss_conf.chandef.width != ctx->conf.def.width)
++		local_changed |= BSS_CHANGED_BANDWIDTH;
++
++	sdata->vif.bss_conf.chandef = ctx->conf.def;
++
++	/* unref our reservation before assigning */
++	ctx->refcount--;
++	sdata->reserved_chanctx = NULL;
++	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
++	if (ret) {
++		/* if assign fails refcount stays the same */
++		if (ctx->refcount == 0)
++			ieee80211_free_chanctx(local, ctx);
++		goto out;
++	}
++
++	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
++
++	*changed = local_changed;
++
++	ieee80211_recalc_chanctx_chantype(local, ctx);
++	ieee80211_recalc_smps_chanctx(local, ctx);
++	ieee80211_recalc_radar_chanctx(local, ctx);
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
+ int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 				   const struct cfg80211_chan_def *chandef,
+ 				   u32 *changed)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8603dfb..998fbbb 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -756,6 +756,8 @@ struct ieee80211_sub_if_data {
+ 	bool csa_radar_required;
+ 	struct cfg80211_chan_def csa_chandef;
+ 
++	struct ieee80211_chanctx *reserved_chanctx;
++
+ 	/* used to reconfigure hardware SM PS */
+ 	struct work_struct recalc_smps;
+ 
+@@ -899,6 +901,7 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+ 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
+ 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
++	IEEE80211_QUEUE_STOP_REASON_CHANCTX,
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+@@ -1776,6 +1779,14 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 			  const struct cfg80211_chan_def *chandef,
+ 			  enum ieee80211_chanctx_mode mode);
+ int __must_check
++ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
++			      const struct cfg80211_chan_def *chandef);
++int __must_check
++ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
++				   u32 *changed);
++int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata);
++
++int __must_check
+ ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 			       const struct cfg80211_chan_def *chandef,
+ 			       u32 *changed);
+-- 
+1.8.5.3
 
