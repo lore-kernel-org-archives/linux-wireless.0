@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:32850 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbaBMJ5H (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:46203 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbaB0FOy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 04:57:07 -0500
-Subject: [PATCH 3/3] ath10k: release conf_mutex if vdev_start() fails
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 13 Feb 2014 11:57:05 +0200
-Message-ID: <20140213095704.13999.57028.stgit@potku.adurom.net> (sfid-20140213_105732_817877_CF0B33E9)
-In-Reply-To: <20140213095652.13999.63855.stgit@potku.adurom.net>
-References: <20140213095652.13999.63855.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 27 Feb 2014 00:14:54 -0500
+Received: by mail-pa0-f46.google.com with SMTP id rd3so1983301pab.5
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 21:14:54 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: add missing update on rx status VHT flag
+Date: Thu, 27 Feb 2014 13:14:14 +0800
+Message-Id: <1393478054-19367-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140227_061500_082206_9A8EE0EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I modified Michal's commit c930f744bdb0 ("ath10k: implement channel switching") to return
-when vdev_start() fails, but forgot to release conf_mutex.
+Add missing update on the rx status vht flag of the last
+data packet. Otherwise, cfg80211_calculate_bitrate_vht
+may not consider the channel width resulting in wrong
+calculation of the received bitrate.
 
-Found by coccinelle:
-
->> drivers/net/wireless/ath/ath10k/mac.c:2745:5-11: preceding lock on line 2663
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/rx.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a57dc20..5d3c758 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2770,7 +2770,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				if (ret) {
- 					ath10k_warn("failed to start vdev: %d\n",
- 						    ret);
--					return;
-+					goto exit;
- 				}
- 
- 				arvif->is_started = true;
-@@ -2851,6 +2851,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 			ath10k_bss_assoc(hw, vif, info);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 58e4b70..f3719e6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1238,6 +1238,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 		if (ieee80211_is_data(hdr->frame_control)) {
+ 			sta->last_rx_rate_idx = status->rate_idx;
+ 			sta->last_rx_rate_flag = status->flag;
++			sta->last_rx_rate_vht_flag = status->vht_flag;
+ 			sta->last_rx_rate_vht_nss = status->vht_nss;
+ 		}
  	}
- 
-+exit:
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
+-- 
+1.7.9.5
 
