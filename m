@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35315 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbaB0Qpn (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34949 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbaB0OlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 11:45:43 -0500
-Message-ID: <1393519539.4648.10.camel@jlt4.sipsolutions.net> (sfid-20140227_174546_434455_5994B45C)
-Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Nelson <tim.l.nelson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Feb 2014 17:45:39 +0100
-In-Reply-To: <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com> (sfid-20140227_174126_861535_50372780)
-References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
-	 <1393517094.4648.3.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
-	 <1393517627.4648.4.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
-	 <CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
-	 <1393519119.4648.7.camel@jlt4.sipsolutions.net>
-	 <CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
-	 (sfid-20140227_174126_861535_50372780)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 09:41:25 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [RFC v2 0/4] mac802111: channel context reservation (was: multi-vif/multi-channel CSA implementation)
+Date: Thu, 27 Feb 2014 16:41:17 +0200
+Message-Id: <1393512081-31453-1-git-send-email-luca@coelho.fi> (sfid-20140227_154139_149351_40E5B438)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-27 at 11:41 -0500, Tim Nelson wrote:
-> [    9.299536] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
-> Wireless AC 7260, REV=0x144
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Hm ok that should support it. Maybe it's always connecting to the 2.4
-GHz one for some reason? That seems unlikely but still possible...
+Hi,
 
-Maybe you could get more dmesg data about the AP it selected, and the
-wpa_supplicant log.
+I have changed my strategy slightly.  Instead of trying to get all the
+CSA stuff done at once, I'm sending this patchset to add the concept
+of channel reservation.
 
-johannes
+The last patch "mac80211: add usage of CS channel reservation for STA"
+should be looked at as a proof of concept for the channel context
+reservation feature. ;)
+
+This series is based on top of mac80211-next/master, without including
+my combination check changes.  When the combination check patchset
+gets applied, I can either send the "merge" of the two features as a
+separate patchset or I can modify this patchset accordingly (though I
+prefer the former, so I can do things in small steps ;).
+
+Please review and let me know what you think.  The changes from my
+first RFC are inlined in the commit message of the 2/4 patch.
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (4):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: implement chanctx reservation
+  mac80211: allow reservation of a running chanctx
+  mac80211: add usage of CS channel reservation for STA
+
+ include/net/mac80211.h     |   7 ++
+ net/mac80211/chan.c        | 228 +++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/ieee80211_i.h |  18 +++-
+ net/mac80211/mlme.c        |  70 ++++++--------
+ 4 files changed, 264 insertions(+), 59 deletions(-)
+
+-- 
+1.8.5.3
 
