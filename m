@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54673 "EHLO mga11.intel.com"
+Received: from mout.gmx.net ([212.227.17.20]:52653 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174AbaBMHKl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Feb 2014 02:10:41 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: pull request: iwlwifi-next 2014-02-03
-Date: Thu, 13 Feb 2014 07:10:05 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D66EDF@HASMSX103.ger.corp.intel.com> (sfid-20140213_081049_573030_4C8E1C2D)
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
- <20140212202700.GF22203@tuxdriver.com>
-In-Reply-To: <20140212202700.GF22203@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1753173AbaB0QH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Feb 2014 11:07:29 -0500
+Received: from Workstation4.fritz.box ([109.91.85.119]) by mail.gmx.com
+ (mrgmx101) with ESMTPSA (Nemesis) id 0MZPer-1WX1bW1wh3-00LCXS for
+ <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 17:07:27 +0100
+From: xypron.glpk@gmx.de
+To: Larry.Finger@lwfinger.net
+Cc: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	felipensp@gmail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH] Remove redundant if clause
+Date: Thu, 27 Feb 2014 17:06:58 +0100
+Message-Id: <1393517218-11043-1-git-send-email-xypron.glpk@gmx.de> (sfid-20140227_170818_005557_49841A52)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
-> > git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
-> > for-john
-> >
-> > for you to fetch changes up to
-> 8e305d171ab58dbd79ad8e13d93db2237fde5749:
-> >
-> >   iwlwifi: mvm: remove duplicate assignment to ap_ibss_active
-> > (2014-02-03 22:43:53 +0200)
-> 
-> Pulling now...
-> 
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
 
-Apparently, you pulled master branch instead of for-john branch. Not a big deal for me, you just saved me a bit of work :)
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+index 92d38ab..78a81c1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+@@ -52,7 +52,7 @@ static void _rtl92s_get_powerbase(struct ieee80211_hw *hw, u8 *p_pwrlevel,
+ 	/* We only care about the path A for legacy. */
+ 	if (rtlefuse->eeprom_version < 2) {
+ 		pwrbase0 = pwrlevel[0] + (rtlefuse->legacy_httxpowerdiff & 0xf);
+-	} else if (rtlefuse->eeprom_version >= 2) {
++	} else {
+ 		legacy_pwrdiff = rtlefuse->txpwr_legacyhtdiff
+ 						[RF90_PATH_A][chnl - 1];
+ 
+-- 
+1.7.10.4
 
