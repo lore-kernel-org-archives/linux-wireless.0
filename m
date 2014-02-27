@@ -1,1370 +1,479 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:61282 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbaBETza (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47557 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753423AbaB0OVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 14:55:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 05/16] rtlwifi: rtl8723ae: rtl8723-common: Create new driver for common code
-Date: Wed,  5 Feb 2014 13:54:49 -0600
-Message-Id: <1391630100-13504-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140205_205850_636148_490089B6)
-In-Reply-To: <1391630100-13504-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1391630100-13504-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 27 Feb 2014 09:21:30 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 05/16] wil6210: Block ACK
+Date: Thu, 27 Feb 2014 16:20:44 +0200
+Message-ID: <1393510855-17566-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_152137_118856_D8FFEF89)
+In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The drivers for RTL8723AE and RTL8723BE have some code in common.
-This commit creates a driver for this code that will be shared, and
-copies those common routines from rtl8723ae's phy code.
+When running multiple connections, hardware can't do BACK reordering
+and it should be done on the host.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Model after mac80211's implementation. Drop RCU for now;
+to be re-added when BACK will be stabilized
+
+BACK handshaking is not implemented yet in the hardware,
+pretend it was done to support the way FW operating
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/Kconfig               |   6 +
- drivers/net/wireless/rtlwifi/Makefile              |   1 +
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   |   7 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 482 ++-------------------
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  21 -
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |   5 +-
- drivers/net/wireless/rtlwifi/rtl8723com/Makefile   |   7 +
- drivers/net/wireless/rtlwifi/rtl8723com/main.c     |  33 ++
- .../net/wireless/rtlwifi/rtl8723com/phy_common.c   | 434 +++++++++++++++++++
- .../net/wireless/rtlwifi/rtl8723com/phy_common.h   |  28 +-
- 10 files changed, 555 insertions(+), 469 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/main.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c
+ drivers/net/wireless/ath/wil6210/Makefile     |   1 +
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  25 +++-
+ drivers/net/wireless/ath/wil6210/main.c       |  12 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 177 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c       |   6 +-
+ drivers/net/wireless/ath/wil6210/txrx.h       |   7 +
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  47 +++++++
+ drivers/net/wireless/ath/wil6210/wmi.c        |  22 +++-
+ 8 files changed, 290 insertions(+), 7 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/rx_reorder.c
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index 29c6ce5..9251e0d 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -48,6 +48,7 @@ config RTL8723AE
- 	depends on PCI
- 	select RTLWIFI
- 	select RTLWIFI_PCI
-+	select RTL8723_COMMON
- 	select RTLBTCOEXIST
- 	---help---
- 	This is the driver for Realtek RTL8723AE 802.11n PCIe
-@@ -102,6 +103,11 @@ config RTL8192C_COMMON
- 	depends on RTL8192CE || RTL8192CU
- 	default y
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 990dd42a..c7a3465 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -9,6 +9,7 @@ wil6210-y += wmi.o
+ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
+ wil6210-y += debug.o
++wil6210-y += rx_reorder.o
+ wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
  
-+config RTL8723_COMMON
-+	tristate
-+	depends on RTL8723AE
-+	default y
-+
- config RTLBTCOEXIST
- 	tristate
- 	depends on RTL8723AE
-diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
-index f354c5f..d97d1b9 100644
---- a/drivers/net/wireless/rtlwifi/Makefile
-+++ b/drivers/net/wireless/rtlwifi/Makefile
-@@ -26,5 +26,6 @@ obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
- obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
- obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
- obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
-+obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
- 
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-index 68c2834..8b64b1c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-@@ -30,6 +30,7 @@
- #include "hal_btc.h"
- #include "../pci.h"
- #include "phy.h"
-+#include "../rtl8723com/phy_common.h"
- #include "fw.h"
- #include "reg.h"
- #include "def.h"
-@@ -391,13 +392,13 @@ static void rtl8723ae_dm_bt_set_sw_full_time_dac_swing(struct ieee80211_hw *hw,
- 	if (sw_dac_swing_on) {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
- 			 "[BTCoex], SwDacSwing = 0x%x\n", sw_dac_swing_lvl);
--		rtl8723ae_phy_set_bb_reg(hw, 0x880, 0xff000000,
--					 sw_dac_swing_lvl);
-+		rtl8723_phy_set_bb_reg(hw, 0x880, 0xff000000,
-+				       sw_dac_swing_lvl);
- 		rtlpcipriv->bt_coexist.sw_coexist_all_off = false;
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_TRACE,
- 			 "[BTCoex], SwDacSwing Off!\n");
--		rtl8723ae_phy_set_bb_reg(hw, 0x880, 0xff000000, 0xc0);
-+		rtl8723_phy_set_bb_reg(hw, 0x880, 0xff000000, 0xc0);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-index 5d318a8..4f8189d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-@@ -36,6 +36,7 @@
- #include "rf.h"
- #include "dm.h"
- #include "table.h"
-+#include "../rtl8723com/phy_common.h"
- 
- /* static forward definitions */
- static u32 _phy_fw_rf_serial_read(struct ieee80211_hw *hw,
-@@ -43,72 +44,17 @@ static u32 _phy_fw_rf_serial_read(struct ieee80211_hw *hw,
- static void _phy_fw_rf_serial_write(struct ieee80211_hw *hw,
- 				    enum radio_path rfpath,
- 				    u32 offset, u32 data);
--static u32 _phy_rf_serial_read(struct ieee80211_hw *hw,
--			       enum radio_path rfpath, u32 offset);
--static void _phy_rf_serial_write(struct ieee80211_hw *hw,
--				 enum radio_path rfpath, u32 offset, u32 data);
--static u32 _phy_calculate_bit_shift(u32 bitmask);
- static bool _phy_bb8192c_config_parafile(struct ieee80211_hw *hw);
- static bool _phy_cfg_mac_w_header(struct ieee80211_hw *hw);
- static bool _phy_cfg_bb_w_header(struct ieee80211_hw *hw, u8 configtype);
- static bool _phy_cfg_bb_w_pgheader(struct ieee80211_hw *hw, u8 configtype);
--static void _phy_init_bb_rf_reg_def(struct ieee80211_hw *hw);
--static bool _phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
--				      u32 cmdtableidx, u32 cmdtablesz,
--				      enum swchnlcmd_id cmdid,
--				      u32 para1, u32 para2,
--				      u32 msdelay);
- static bool _phy_sw_chnl_step_by_step(struct ieee80211_hw *hw, u8 channel,
- 				      u8 *stage, u8 *step, u32 *delay);
- static u8 _phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
- 				enum wireless_mode wirelessmode,
- 				long power_indbm);
--static long _phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
--				  enum wireless_mode wirelessmode, u8 txpwridx);
- static void rtl8723ae_phy_set_io(struct ieee80211_hw *hw);
- 
--u32 rtl8723ae_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
--			       u32 bitmask)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 returnvalue, originalvalue, bitshift;
--
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x)\n", regaddr, bitmask);
--	originalvalue = rtl_read_dword(rtlpriv, regaddr);
--	bitshift = _phy_calculate_bit_shift(bitmask);
--	returnvalue = (originalvalue & bitmask) >> bitshift;
--
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "BBR MASK=0x%x Addr[0x%x]=0x%x\n", bitmask, regaddr,
--		 originalvalue);
--
--	return returnvalue;
--}
--
--void rtl8723ae_phy_set_bb_reg(struct ieee80211_hw *hw,
--			      u32 regaddr, u32 bitmask, u32 data)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 originalvalue, bitshift;
--
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x), data(%#x)\n", regaddr,
--		 bitmask, data);
--
--	if (bitmask != MASKDWORD) {
--		originalvalue = rtl_read_dword(rtlpriv, regaddr);
--		bitshift = _phy_calculate_bit_shift(bitmask);
--		data = ((originalvalue & (~bitmask)) | (data << bitshift));
--	}
--
--	rtl_write_dword(rtlpriv, regaddr, data);
--
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
--		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
--		 regaddr, bitmask, data);
--}
--
- u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw,
- 			       enum radio_path rfpath, u32 regaddr, u32 bitmask)
- {
-@@ -124,11 +70,11 @@ u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw,
- 	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
- 
- 	if (rtlphy->rf_mode != RF_OP_BY_FW)
--		original_value = _phy_rf_serial_read(hw, rfpath, regaddr);
-+		original_value = rtl8723_phy_rf_serial_read(hw, rfpath, regaddr);
- 	else
- 		original_value = _phy_fw_rf_serial_read(hw, rfpath, regaddr);
- 
--	bitshift = _phy_calculate_bit_shift(bitmask);
-+	bitshift = rtl8723_phy_calculate_bit_shift(bitmask);
- 	readback_value = (original_value & bitmask) >> bitshift;
- 
- 	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-@@ -157,19 +103,19 @@ void rtl8723ae_phy_set_rf_reg(struct ieee80211_hw *hw,
- 
- 	if (rtlphy->rf_mode != RF_OP_BY_FW) {
- 		if (bitmask != RFREG_OFFSET_MASK) {
--			original_value = _phy_rf_serial_read(hw, rfpath,
--							     regaddr);
--			bitshift = _phy_calculate_bit_shift(bitmask);
-+			original_value = rtl8723_phy_rf_serial_read(hw, rfpath,
-+								    regaddr);
-+			bitshift = rtl8723_phy_calculate_bit_shift(bitmask);
- 			data = ((original_value & (~bitmask)) |
- 			       (data << bitshift));
- 		}
- 
--		_phy_rf_serial_write(hw, rfpath, regaddr, data);
-+		rtl8723_phy_rf_serial_write(hw, rfpath, regaddr, data);
- 	} else {
- 		if (bitmask != RFREG_OFFSET_MASK) {
- 			original_value = _phy_fw_rf_serial_read(hw, rfpath,
- 								regaddr);
--			bitshift = _phy_calculate_bit_shift(bitmask);
-+			bitshift = rtl8723_phy_calculate_bit_shift(bitmask);
- 			data = ((original_value & (~bitmask)) |
- 			       (data << bitshift));
- 		}
-@@ -197,87 +143,6 @@ static void _phy_fw_rf_serial_write(struct ieee80211_hw *hw,
- 	RT_ASSERT(false, "deprecated!\n");
- }
- 
--static u32 _phy_rf_serial_read(struct ieee80211_hw *hw,
--			       enum radio_path rfpath, u32 offset)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
--	u32 newoffset;
--	u32 tmplong, tmplong2;
--	u8 rfpi_enable = 0;
--	u32 retvalue;
--
--	offset &= 0x3f;
--	newoffset = offset;
--	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
--		return 0xFFFFFFFF;
--	}
--	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
--	if (rfpath == RF90_PATH_A)
--		tmplong2 = tmplong;
--	else
--		tmplong2 = rtl_get_bbreg(hw, pphyreg->rfhssi_para2, MASKDWORD);
--	tmplong2 = (tmplong2 & (~BLSSIREADADDRESS)) |
--	    (newoffset << 23) | BLSSIREADEDGE;
--	rtl_set_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD,
--		      tmplong & (~BLSSIREADEDGE));
--	mdelay(1);
--	rtl_set_bbreg(hw, pphyreg->rfhssi_para2, MASKDWORD, tmplong2);
--	mdelay(1);
--	rtl_set_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD,
--		      tmplong | BLSSIREADEDGE);
--	mdelay(1);
--	if (rfpath == RF90_PATH_A)
--		rfpi_enable = (u8) rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER1,
--						 BIT(8));
--	else if (rfpath == RF90_PATH_B)
--		rfpi_enable = (u8) rtl_get_bbreg(hw, RFPGA0_XB_HSSIPARAMETER1,
--						 BIT(8));
--	if (rfpi_enable)
--		retvalue = rtl_get_bbreg(hw, pphyreg->rf_rbpi,
--					 BLSSIREADBACKDATA);
--	else
--		retvalue = rtl_get_bbreg(hw, pphyreg->rf_rb,
--					 BLSSIREADBACKDATA);
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "RFR-%d Addr[0x%x]=0x%x\n",
--		 rfpath, pphyreg->rf_rb, retvalue);
--	return retvalue;
--}
--
--static void _phy_rf_serial_write(struct ieee80211_hw *hw,
--				 enum radio_path rfpath, u32 offset, u32 data)
--{
--	u32 data_and_addr;
--	u32 newoffset;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
--
--	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
--		return;
--	}
--	offset &= 0x3f;
--	newoffset = offset;
--	data_and_addr = ((newoffset << 20) | (data & 0x000fffff)) & 0x0fffffff;
--	rtl_set_bbreg(hw, pphyreg->rf3wire_offset, MASKDWORD, data_and_addr);
--	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, "RFW-%d Addr[0x%x]=0x%x\n",
--		 rfpath, pphyreg->rf3wire_offset, data_and_addr);
--}
--
--static u32 _phy_calculate_bit_shift(u32 bitmask)
--{
--	u32 i;
--
--	for (i = 0; i <= 31; i++) {
--		if (((bitmask >> i) & 0x1) == 1)
--			break;
--	}
--	return i;
--}
--
- static void _rtl8723ae_phy_bb_config_1t(struct ieee80211_hw *hw)
- {
- 	rtl_set_bbreg(hw, RFPGA0_TXINFO, 0x3, 0x2);
-@@ -307,7 +172,7 @@ bool rtl8723ae_phy_bb_config(struct ieee80211_hw *hw)
- 	u8 tmpu1b;
- 	u8 reg_hwparafile = 1;
- 
--	_phy_init_bb_rf_reg_def(hw);
-+	rtl8723_phy_init_bb_rf_reg_def(hw);
- 
- 	/* 1. 0x28[1] = 1 */
- 	tmpu1b = rtl_read_byte(rtlpriv, REG_AFE_PLL_CTRL);
-@@ -690,92 +555,6 @@ void rtl8723ae_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
- 		 ROFDM0_RXDETECTOR3, rtlphy->framesync);
- }
- 
--static void _phy_init_bb_rf_reg_def(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfintfs = RFPGA0_XAB_RFINTERFACESW;
--	rtlphy->phyreg_def[RF90_PATH_B].rfintfs = RFPGA0_XAB_RFINTERFACESW;
--	rtlphy->phyreg_def[RF90_PATH_C].rfintfs = RFPGA0_XCD_RFINTERFACESW;
--	rtlphy->phyreg_def[RF90_PATH_D].rfintfs = RFPGA0_XCD_RFINTERFACESW;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfintfi = RFPGA0_XAB_RFINTERFACERB;
--	rtlphy->phyreg_def[RF90_PATH_B].rfintfi = RFPGA0_XAB_RFINTERFACERB;
--	rtlphy->phyreg_def[RF90_PATH_C].rfintfi = RFPGA0_XCD_RFINTERFACERB;
--	rtlphy->phyreg_def[RF90_PATH_D].rfintfi = RFPGA0_XCD_RFINTERFACERB;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfintfo = RFPGA0_XA_RFINTERFACEOE;
--	rtlphy->phyreg_def[RF90_PATH_B].rfintfo = RFPGA0_XB_RFINTERFACEOE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfintfe = RFPGA0_XA_RFINTERFACEOE;
--	rtlphy->phyreg_def[RF90_PATH_B].rfintfe = RFPGA0_XB_RFINTERFACEOE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rf3wire_offset =
--			    RFPGA0_XA_LSSIPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_B].rf3wire_offset =
--			    RFPGA0_XB_LSSIPARAMETER;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = rFPGA0_XAB_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = rFPGA0_XAB_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = rFPGA0_XCD_RFPARAMETER;
--	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = rFPGA0_XCD_RFPARAMETER;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rftxgain_stage = RFPGA0_TXGAINSTAGE;
--	rtlphy->phyreg_def[RF90_PATH_B].rftxgain_stage = RFPGA0_TXGAINSTAGE;
--	rtlphy->phyreg_def[RF90_PATH_C].rftxgain_stage = RFPGA0_TXGAINSTAGE;
--	rtlphy->phyreg_def[RF90_PATH_D].rftxgain_stage = RFPGA0_TXGAINSTAGE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para1 = RFPGA0_XA_HSSIPARAMETER1;
--	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para1 = RFPGA0_XB_HSSIPARAMETER1;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para2 = RFPGA0_XA_HSSIPARAMETER2;
--	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para2 = RFPGA0_XB_HSSIPARAMETER2;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfsw_ctrl = RFPGA0_XAB_SWITCHCONTROL;
--	rtlphy->phyreg_def[RF90_PATH_B].rfsw_ctrl = RFPGA0_XAB_SWITCHCONTROL;
--	rtlphy->phyreg_def[RF90_PATH_C].rfsw_ctrl = RFPGA0_XCD_SWITCHCONTROL;
--	rtlphy->phyreg_def[RF90_PATH_D].rfsw_ctrl = RFPGA0_XCD_SWITCHCONTROL;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control1 = ROFDM0_XAAGCCORE1;
--	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control1 = ROFDM0_XBAGCCORE1;
--	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control1 = ROFDM0_XCAGCCORE1;
--	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control1 = ROFDM0_XDAGCCORE1;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control2 = ROFDM0_XAAGCCORE2;
--	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control2 = ROFDM0_XBAGCCORE2;
--	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control2 = ROFDM0_XCAGCCORE2;
--	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control2 = ROFDM0_XDAGCCORE2;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfrxiq_imbal = ROFDM0_XARXIQIMBALANCE;
--	rtlphy->phyreg_def[RF90_PATH_B].rfrxiq_imbal = ROFDM0_XBRXIQIMBALANCE;
--	rtlphy->phyreg_def[RF90_PATH_C].rfrxiq_imbal = ROFDM0_XCRXIQIMBANLANCE;
--	rtlphy->phyreg_def[RF90_PATH_D].rfrxiq_imbal = ROFDM0_XDRXIQIMBALANCE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rfrx_afe = ROFDM0_XARXAFE;
--	rtlphy->phyreg_def[RF90_PATH_B].rfrx_afe = ROFDM0_XBRXAFE;
--	rtlphy->phyreg_def[RF90_PATH_C].rfrx_afe = ROFDM0_XCRXAFE;
--	rtlphy->phyreg_def[RF90_PATH_D].rfrx_afe = ROFDM0_XDRXAFE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rftxiq_imbal = ROFDM0_XATXIQIMBALANCE;
--	rtlphy->phyreg_def[RF90_PATH_B].rftxiq_imbal = ROFDM0_XBTXIQIMBALANCE;
--	rtlphy->phyreg_def[RF90_PATH_C].rftxiq_imbal = ROFDM0_XCTXIQIMBALANCE;
--	rtlphy->phyreg_def[RF90_PATH_D].rftxiq_imbal = ROFDM0_XDTXIQIMBALANCE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rftx_afe = ROFDM0_XATXAFE;
--	rtlphy->phyreg_def[RF90_PATH_B].rftx_afe = ROFDM0_XBTXAFE;
--	rtlphy->phyreg_def[RF90_PATH_C].rftx_afe = ROFDM0_XCTXAFE;
--	rtlphy->phyreg_def[RF90_PATH_D].rftx_afe = ROFDM0_XDTXAFE;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rf_rb = RFPGA0_XA_LSSIREADBACK;
--	rtlphy->phyreg_def[RF90_PATH_B].rf_rb = RFPGA0_XB_LSSIREADBACK;
--	rtlphy->phyreg_def[RF90_PATH_C].rf_rb = RFPGA0_XC_LSSIREADBACK;
--	rtlphy->phyreg_def[RF90_PATH_D].rf_rb = RFPGA0_XD_LSSIREADBACK;
--
--	rtlphy->phyreg_def[RF90_PATH_A].rf_rbpi = TRANSCEIVEA_HSPI_READBACK;
--	rtlphy->phyreg_def[RF90_PATH_B].rf_rbpi = TRANSCEIVEB_HSPI_READBACK;
--}
--
- void rtl8723ae_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -785,17 +564,17 @@ void rtl8723ae_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
- 	long txpwr_dbm;
- 
- 	txpwr_level = rtlphy->cur_cck_txpwridx;
--	txpwr_dbm = _phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_B, txpwr_level);
-+	txpwr_dbm = rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_B, txpwr_level);
- 	txpwr_level = rtlphy->cur_ofdm24g_txpwridx +
- 	    rtlefuse->legacy_ht_txpowerdiff;
--	if (_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G, txpwr_level) > txpwr_dbm)
--		txpwr_dbm = _phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G,
-+	if (rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G, txpwr_level) > txpwr_dbm)
-+		txpwr_dbm = rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G,
- 						  txpwr_level);
- 	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
--	if (_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G, txpwr_level) >
-+	if (rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G, txpwr_level) >
- 	    txpwr_dbm)
--		txpwr_dbm = _phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
--						  txpwr_level);
-+		txpwr_dbm = rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
-+							 txpwr_level);
- 	*powerlevel = txpwr_dbm;
- }
- 
-@@ -912,28 +691,6 @@ static u8 _phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
- 	return txpwridx;
- }
- 
--static long _phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
--				  enum wireless_mode wirelessmode, u8 txpwridx)
--{
--	long offset;
--	long pwrout_dbm;
--
--	switch (wirelessmode) {
--	case WIRELESS_MODE_B:
--		offset = -7;
--		break;
--	case WIRELESS_MODE_G:
--	case WIRELESS_MODE_N_24G:
--		offset = -8;
--		break;
--	default:
--		offset = -8;
--		break;
--	}
--	pwrout_dbm = txpwridx / 2 + offset;
--	return pwrout_dbm;
--}
--
- void rtl8723ae_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -1117,26 +874,26 @@ static bool _phy_sw_chnl_step_by_step(struct ieee80211_hw *hw, u8 channel,
- 	u8 num_total_rfpath = rtlphy->num_total_rfpath;
- 
- 	precommoncmdcnt = 0;
--	_phy_set_sw_chnl_cmdarray(precommoncmd, precommoncmdcnt++,
--				  MAX_PRECMD_CNT, CMDID_SET_TXPOWEROWER_LEVEL,
--				  0, 0, 0);
--	_phy_set_sw_chnl_cmdarray(precommoncmd, precommoncmdcnt++,
--				  MAX_PRECMD_CNT, CMDID_END, 0, 0, 0);
-+	rtl8723_phy_set_sw_chnl_cmdarray(precommoncmd, precommoncmdcnt++,
-+					 MAX_PRECMD_CNT, CMDID_SET_TXPOWEROWER_LEVEL,
-+					 0, 0, 0);
-+	rtl8723_phy_set_sw_chnl_cmdarray(precommoncmd, precommoncmdcnt++,
-+					 MAX_PRECMD_CNT, CMDID_END, 0, 0, 0);
- 	postcommoncmdcnt = 0;
- 
--	_phy_set_sw_chnl_cmdarray(postcommoncmd, postcommoncmdcnt++,
--				  MAX_POSTCMD_CNT, CMDID_END, 0, 0, 0);
-+	rtl8723_phy_set_sw_chnl_cmdarray(postcommoncmd, postcommoncmdcnt++,
-+					 MAX_POSTCMD_CNT, CMDID_END, 0, 0, 0);
- 	rfdependcmdcnt = 0;
- 
- 	RT_ASSERT((channel >= 1 && channel <= 14),
- 		  "illegal channel for Zebra: %d\n", channel);
- 
--	_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
--				  MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
-+	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
-+					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
- 				  RF_CHNLBW, channel, 10);
- 
--	_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
--				  MAX_RFDEPENDCMD_CNT, CMDID_END, 0, 0, 0);
-+	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
-+					 MAX_RFDEPENDCMD_CNT, CMDID_END, 0, 0, 0);
- 
- 	do {
- 		switch (*stage) {
-@@ -1204,29 +961,6 @@ static bool _phy_sw_chnl_step_by_step(struct ieee80211_hw *hw, u8 channel,
- 	return false;
- }
- 
--static bool _phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
--				      u32 cmdtableidx, u32 cmdtablesz,
--				      enum swchnlcmd_id cmdid, u32 para1,
--				      u32 para2, u32 msdelay)
--{
--	struct swchnlcmd *pcmd;
--
--	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
--		return false;
--	}
--
--	if (cmdtableidx >= cmdtablesz)
--		return false;
--
--	pcmd = cmdtable + cmdtableidx;
--	pcmd->cmdid = cmdid;
--	pcmd->para1 = para1;
--	pcmd->para2 = para2;
--	pcmd->msdelay = msdelay;
--	return true;
--}
--
- static u8 _rtl8723ae_phy_path_a_iqk(struct ieee80211_hw *hw, bool config_pathb)
- {
- 	u32 reg_eac, reg_e94, reg_e9c, reg_ea4;
-@@ -1297,136 +1031,6 @@ static u8 _rtl8723ae_phy_path_b_iqk(struct ieee80211_hw *hw)
- 	return result;
- }
- 
--static void phy_path_a_fill_iqk_matrix(struct ieee80211_hw *hw, bool iqk_ok,
--				       long result[][8], u8 final_candidate,
--				       bool btxonly)
--{
--	u32 oldval_0, x, tx0_a, reg;
--	long y, tx0_c;
--
--	if (final_candidate == 0xFF) {
--		return;
--	} else if (iqk_ok) {
--		oldval_0 = (rtl_get_bbreg(hw, ROFDM0_XATXIQIMBALANCE,
--					  MASKDWORD) >> 22) & 0x3FF;
--		x = result[final_candidate][0];
--		if ((x & 0x00000200) != 0)
--			x = x | 0xFFFFFC00;
--		tx0_a = (x * oldval_0) >> 8;
--		rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE, 0x3FF, tx0_a);
--		rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(31),
--			      ((x * oldval_0 >> 7) & 0x1));
--		y = result[final_candidate][1];
--		if ((y & 0x00000200) != 0)
--			y = y | 0xFFFFFC00;
--		tx0_c = (y * oldval_0) >> 8;
--		rtl_set_bbreg(hw, ROFDM0_XCTXAFE, 0xF0000000,
--			      ((tx0_c & 0x3C0) >> 6));
--		rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE, 0x003F0000,
--			      (tx0_c & 0x3F));
--		rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(29),
--			      ((y * oldval_0 >> 7) & 0x1));
--		if (btxonly)
--			return;
--		reg = result[final_candidate][2];
--		rtl_set_bbreg(hw, ROFDM0_XARXIQIMBALANCE, 0x3FF, reg);
--		reg = result[final_candidate][3] & 0x3F;
--		rtl_set_bbreg(hw, ROFDM0_XARXIQIMBALANCE, 0xFC00, reg);
--		reg = (result[final_candidate][3] >> 6) & 0xF;
--		rtl_set_bbreg(hw, 0xca0, 0xF0000000, reg);
--	}
--}
--
--static void phy_save_adda_regs(struct ieee80211_hw *hw,
--					       u32 *addareg, u32 *addabackup,
--					       u32 registernum)
--{
--	u32 i;
--
--	for (i = 0; i < registernum; i++)
--		addabackup[i] = rtl_get_bbreg(hw, addareg[i], MASKDWORD);
--}
--
--static void phy_save_mac_regs(struct ieee80211_hw *hw, u32 *macreg,
--			      u32 *macbackup)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 i;
--
--	for (i = 0; i < (IQK_MAC_REG_NUM - 1); i++)
--		macbackup[i] = rtl_read_byte(rtlpriv, macreg[i]);
--	macbackup[i] = rtl_read_dword(rtlpriv, macreg[i]);
--}
--
--static void phy_reload_adda_regs(struct ieee80211_hw *hw, u32 *addareg,
--				 u32 *addabackup, u32 regiesternum)
--{
--	u32 i;
--
--	for (i = 0; i < regiesternum; i++)
--		rtl_set_bbreg(hw, addareg[i], MASKDWORD, addabackup[i]);
--}
--
--static void phy_reload_mac_regs(struct ieee80211_hw *hw, u32 *macreg,
--				u32 *macbackup)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 i;
--
--	for (i = 0; i < (IQK_MAC_REG_NUM - 1); i++)
--		rtl_write_byte(rtlpriv, macreg[i], (u8) macbackup[i]);
--	rtl_write_dword(rtlpriv, macreg[i], macbackup[i]);
--}
--
--static void _rtl8723ae_phy_path_adda_on(struct ieee80211_hw *hw,
--					u32 *addareg, bool is_patha_on,
--					bool is2t)
--{
--	u32 pathOn;
--	u32 i;
--
--	pathOn = is_patha_on ? 0x04db25a4 : 0x0b1b25a4;
--	if (false == is2t) {
--		pathOn = 0x0bdb25a0;
--		rtl_set_bbreg(hw, addareg[0], MASKDWORD, 0x0b1b25a0);
--	} else {
--		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathOn);
--	}
--
--	for (i = 1; i < IQK_ADDA_REG_NUM; i++)
--		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathOn);
--}
--
--static void _rtl8723ae_phy_mac_setting_calibration(struct ieee80211_hw *hw,
--						   u32 *macreg, u32 *macbackup)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 i = 0;
--
--	rtl_write_byte(rtlpriv, macreg[i], 0x3F);
--
--	for (i = 1; i < (IQK_MAC_REG_NUM - 1); i++)
--		rtl_write_byte(rtlpriv, macreg[i],
--			       (u8) (macbackup[i] & (~BIT(3))));
--	rtl_write_byte(rtlpriv, macreg[i], (u8) (macbackup[i] & (~BIT(5))));
--}
--
--static void _rtl8723ae_phy_path_a_standby(struct ieee80211_hw *hw)
--{
--	rtl_set_bbreg(hw, 0xe28, MASKDWORD, 0x0);
--	rtl_set_bbreg(hw, 0x840, MASKDWORD, 0x00010000);
--	rtl_set_bbreg(hw, 0xe28, MASKDWORD, 0x80800000);
--}
--
--static void _rtl8723ae_phy_pi_mode_switch(struct ieee80211_hw *hw, bool pi_mode)
--{
--	u32 mode;
--
--	mode = pi_mode ? 0x01000100 : 0x01000000;
--	rtl_set_bbreg(hw, 0x820, MASKDWORD, mode);
--	rtl_set_bbreg(hw, 0x828, MASKDWORD, mode);
--}
--
- static bool phy_simularity_comp(struct ieee80211_hw *hw, long result[][8],
- 				u8 c1, u8 c2)
- {
-@@ -1498,10 +1102,12 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 	const u32 retrycount = 2;
- 
- 	if (t == 0) {
--		phy_save_adda_regs(hw, adda_reg, rtlphy->adda_backup, 16);
--		phy_save_mac_regs(hw, iqk_mac_reg, rtlphy->iqk_mac_backup);
-+		rtl8723_save_adda_registers(hw, adda_reg, rtlphy->adda_backup,
-+					    16);
-+		rtl8723_phy_save_mac_registers(hw, iqk_mac_reg,
-+					       rtlphy->iqk_mac_backup);
- 	}
--	_rtl8723ae_phy_path_adda_on(hw, adda_reg, true, is2t);
-+	rtl8723_phy_path_adda_on(hw, adda_reg, true, is2t);
- 	if (t == 0) {
- 		rtlphy->rfpi_enable = (u8) rtl_get_bbreg(hw,
- 						 RFPGA0_XA_HSSIPARAMETER1,
-@@ -1509,7 +1115,7 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 	}
- 
- 	if (!rtlphy->rfpi_enable)
--		_rtl8723ae_phy_pi_mode_switch(hw, true);
-+		rtl8723_phy_pi_mode_switch(hw, true);
- 	if (t == 0) {
- 		rtlphy->reg_c04 = rtl_get_bbreg(hw, 0xc04, MASKDWORD);
- 		rtlphy->reg_c08 = rtl_get_bbreg(hw, 0xc08, MASKDWORD);
-@@ -1522,7 +1128,7 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 		rtl_set_bbreg(hw, 0x840, MASKDWORD, 0x00010000);
- 		rtl_set_bbreg(hw, 0x844, MASKDWORD, 0x00010000);
- 	}
--	_rtl8723ae_phy_mac_setting_calibration(hw, iqk_mac_reg,
-+	rtl8723_phy_mac_setting_calibration(hw, iqk_mac_reg,
- 					    rtlphy->iqk_mac_backup);
- 	rtl_set_bbreg(hw, 0xb68, MASKDWORD, 0x00080000);
- 	if (is2t)
-@@ -1552,8 +1158,8 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 	}
- 
- 	if (is2t) {
--		_rtl8723ae_phy_path_a_standby(hw);
--		_rtl8723ae_phy_path_adda_on(hw, adda_reg, false, is2t);
-+		rtl8723_phy_path_a_standby(hw);
-+		rtl8723_phy_path_adda_on(hw, adda_reg, false, is2t);
- 		for (i = 0; i < retrycount; i++) {
- 			pathb_ok = _rtl8723ae_phy_path_b_iqk(hw);
- 			if (pathb_ok == 0x03) {
-@@ -1588,9 +1194,11 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 		rtl_set_bbreg(hw, 0x844, MASKDWORD, 0x00032ed3);
- 	if (t != 0) {
- 		if (!rtlphy->rfpi_enable)
--			_rtl8723ae_phy_pi_mode_switch(hw, false);
--		phy_reload_adda_regs(hw, adda_reg, rtlphy->adda_backup, 16);
--		phy_reload_mac_regs(hw, iqk_mac_reg, rtlphy->iqk_mac_backup);
-+			rtl8723_phy_pi_mode_switch(hw, false);
-+		rtl8723_phy_reload_adda_registers(hw, adda_reg,
-+						  rtlphy->adda_backup, 16);
-+		rtl8723_phy_reload_mac_registers(hw, iqk_mac_reg,
-+						 rtlphy->iqk_mac_backup);
- 	}
- }
- 
-@@ -1691,7 +1299,8 @@ void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery)
- 	};
- 
- 	if (recovery) {
--		phy_reload_adda_regs(hw, iqk_bb_reg, rtlphy->iqk_bb_backup, 10);
-+		rtl8723_phy_reload_adda_registers(hw, iqk_bb_reg,
-+						  rtlphy->iqk_bb_backup, 10);
- 		return;
- 	}
- 	if (start_conttx || singletone)
-@@ -1756,9 +1365,10 @@ void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery)
- 		rtlphy->reg_e9c = rtlphy->reg_ebc = 0x0;
- 	}
- 	if (reg_e94 != 0) /*&&(reg_ea4 != 0) */
--		phy_path_a_fill_iqk_matrix(hw, patha_ok, result,
--					   final_candidate, (reg_ea4 == 0));
--	phy_save_adda_regs(hw, iqk_bb_reg, rtlphy->iqk_bb_backup, 10);
-+		rtl8723_phy_path_a_fill_iqk_matrix(hw, patha_ok, result,
-+						   final_candidate,
-+						   (reg_ea4 == 0));
-+	rtl8723_save_adda_registers(hw, iqk_bb_reg, rtlphy->iqk_bb_backup, 10);
- }
- 
- void rtl8723ae_phy_lc_calibrate(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
-index 007ebdb..cd43139 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
-@@ -76,23 +76,6 @@
- 
- #define RTL92C_MAX_PATH_NUM			2
- 
--enum swchnlcmd_id {
--	CMDID_END,
--	CMDID_SET_TXPOWEROWER_LEVEL,
--	CMDID_BBREGWRITE10,
--	CMDID_WRITEPORT_ULONG,
--	CMDID_WRITEPORT_USHORT,
--	CMDID_WRITEPORT_UCHAR,
--	CMDID_RF_WRITEREG,
--};
--
--struct swchnlcmd {
--	enum swchnlcmd_id cmdid;
--	u32 para1;
--	u32 para2;
--	u32 msdelay;
--};
--
- enum hw90_block_e {
- 	HW90_BLOCK_MAC = 0,
- 	HW90_BLOCK_PHY0 = 1,
-@@ -183,10 +166,6 @@ struct tx_power_struct {
- 	u32 mcs_original_offset[4][16];
+ # for tracing framework to find trace.h
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index f12aa0b..729e774 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -598,11 +598,24 @@ static const struct file_operations fops_temp = {
  };
  
--u32 rtl8723ae_phy_query_bb_reg(struct ieee80211_hw *hw,
--			       u32 regaddr, u32 bitmask);
--void rtl8723ae_phy_set_bb_reg(struct ieee80211_hw *hw,
--			      u32 regaddr, u32 bitmask, u32 data);
- u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw,
- 			       enum radio_path rfpath, u32 regaddr,
- 			       u32 bitmask);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-index 62b204f..0b97c9a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
-@@ -37,6 +37,7 @@
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-+#include "../rtl8723com/phy_common.h"
- #include "dm.h"
- #include "hw.h"
- #include "sw.h"
-@@ -231,8 +232,8 @@ static struct rtl_hal_ops rtl8723ae_hal_ops = {
- 	.set_key = rtl8723ae_set_key,
- 	.init_sw_leds = rtl8723ae_init_sw_leds,
- 	.allow_all_destaddr = rtl8723ae_allow_all_destaddr,
--	.get_bbreg = rtl8723ae_phy_query_bb_reg,
--	.set_bbreg = rtl8723ae_phy_set_bb_reg,
-+	.get_bbreg = rtl8723_phy_query_bb_reg,
-+	.set_bbreg = rtl8723_phy_set_bb_reg,
- 	.get_rfreg = rtl8723ae_phy_query_rf_reg,
- 	.set_rfreg = rtl8723ae_phy_set_rf_reg,
- 	.c2h_command_handle = rtl_8723e_c2h_command_handle,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/Makefile b/drivers/net/wireless/rtlwifi/rtl8723com/Makefile
-new file mode 100644
-index 0000000..00673c6
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/Makefile
-@@ -0,0 +1,7 @@
-+rtl8723-common-objs :=		\
-+		main.o		\
-+		phy_common.o
-+
-+obj-$(CONFIG_RTL8723_COMMON) += rtl8723-common.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/main.c b/drivers/net/wireless/rtlwifi/rtl8723com/main.c
-new file mode 100644
-index 0000000..9014a94
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/main.c
-@@ -0,0 +1,33 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2014  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "../wifi.h"
-+#include <linux/module.h>
-+
-+
-+MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
-+MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Realtek RTL8723AE/RTL8723BE 802.11n PCI wireless common routines");
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c
-new file mode 100644
-index 0000000..d73b659
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.c
-@@ -0,0 +1,434 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2014  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "../wifi.h"
-+#include "phy_common.h"
-+#include "../rtl8723ae/reg.h"
-+#include <linux/module.h>
-+
-+/* These routines are common to RTL8723AE and RTL8723bE */
-+
-+u32 rtl8723_phy_query_bb_reg(struct ieee80211_hw *hw,
-+			     u32 regaddr, u32 bitmask)
+ /*---------Station matrix------------*/
++static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
 +{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 returnvalue, originalvalue, bitshift;
-+
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "regaddr(%#x), bitmask(%#x)\n", regaddr, bitmask);
-+	originalvalue = rtl_read_dword(rtlpriv, regaddr);
-+	bitshift = rtl8723_phy_calculate_bit_shift(bitmask);
-+	returnvalue = (originalvalue & bitmask) >> bitshift;
-+
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "BBR MASK = 0x%x Addr[0x%x]= 0x%x\n",
-+		  bitmask, regaddr, originalvalue);
-+
-+	return returnvalue;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_query_bb_reg);
-+
-+void rtl8723_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
-+			      u32 bitmask, u32 data)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 originalvalue, bitshift;
-+
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
-+		  regaddr, bitmask, data);
-+
-+	if (bitmask != MASKDWORD) {
-+		originalvalue = rtl_read_dword(rtlpriv, regaddr);
-+		bitshift = rtl8723_phy_calculate_bit_shift(bitmask);
-+		data = ((originalvalue & (~bitmask)) | (data << bitshift));
++	int i;
++	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
++	seq_printf(s, "0x%03x [", r->head_seq_num);
++	for (i = 0; i < r->buf_size; i++) {
++		if (i == index)
++			seq_printf(s, "%c", r->reorder_buf[i] ? 'O' : '|');
++		else
++			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
 +	}
-+
-+	rtl_write_dword(rtlpriv, regaddr, data);
-+
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "regaddr(%#x), bitmask(%#x), data(%#x)\n",
-+		  regaddr, bitmask, data);
++	seq_puts(s, "]\n");
 +}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_set_bb_reg);
-+
-+u32 rtl8723_phy_calculate_bit_shift(u32 bitmask)
-+{
-+	u32 i;
-+
-+	for (i = 0; i <= 31; i++) {
-+		if (((bitmask >> i) & 0x1) == 1)
-+			break;
-+	}
-+	return i;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_calculate_bit_shift);
-+
-+u32 rtl8723_phy_rf_serial_read(struct ieee80211_hw *hw,
-+			       enum radio_path rfpath, u32 offset)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
-+	u32 newoffset;
-+	u32 tmplong, tmplong2;
-+	u8 rfpi_enable = 0;
-+	u32 retvalue;
-+
-+	offset &= 0xff;
-+	newoffset = offset;
-+	if (RT_CANNOT_IO(hw)) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
-+		return 0xFFFFFFFF;
-+	}
-+	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
-+	if (rfpath == RF90_PATH_A)
-+		tmplong2 = tmplong;
-+	else
-+		tmplong2 = rtl_get_bbreg(hw, pphyreg->rfhssi_para2, MASKDWORD);
-+	tmplong2 = (tmplong2 & (~BLSSIREADADDRESS)) |
-+		   (newoffset << 23) | BLSSIREADEDGE;
-+	rtl_set_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD,
-+		      tmplong & (~BLSSIREADEDGE));
-+	mdelay(1);
-+	rtl_set_bbreg(hw, pphyreg->rfhssi_para2, MASKDWORD, tmplong2);
-+	mdelay(2);
-+	if (rfpath == RF90_PATH_A)
-+		rfpi_enable = (u8) rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER1,
-+						 BIT(8));
-+	else if (rfpath == RF90_PATH_B)
-+		rfpi_enable = (u8) rtl_get_bbreg(hw, RFPGA0_XB_HSSIPARAMETER1,
-+						 BIT(8));
-+	if (rfpi_enable)
-+		retvalue = rtl_get_bbreg(hw, pphyreg->rf_rbpi,
-+					 BLSSIREADBACKDATA);
-+	else
-+		retvalue = rtl_get_bbreg(hw, pphyreg->rf_rb,
-+					 BLSSIREADBACKDATA);
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "RFR-%d Addr[0x%x]= 0x%x\n",
-+		  rfpath, pphyreg->rf_rb, retvalue);
-+	return retvalue;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_rf_serial_read);
-+
-+void rtl8723_phy_rf_serial_write(struct ieee80211_hw *hw,
-+				 enum radio_path rfpath,
-+				 u32 offset, u32 data)
-+{
-+	u32 data_and_addr;
-+	u32 newoffset;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
-+
-+	if (RT_CANNOT_IO(hw)) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
-+		return;
-+	}
-+	offset &= 0xff;
-+	newoffset = offset;
-+	data_and_addr = ((newoffset << 20) | (data & 0x000fffff)) & 0x0fffffff;
-+	rtl_set_bbreg(hw, pphyreg->rf3wire_offset, MASKDWORD, data_and_addr);
-+	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
-+		 "RFW-%d Addr[0x%x]= 0x%x\n", rfpath,
-+		   pphyreg->rf3wire_offset, data_and_addr);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_rf_serial_write);
-+
-+long rtl8723_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
-+				  enum wireless_mode wirelessmode,
-+				  u8 txpwridx)
-+{
-+	long offset;
-+	long pwrout_dbm;
-+
-+	switch (wirelessmode) {
-+	case WIRELESS_MODE_B:
-+		offset = -7;
-+		break;
-+	case WIRELESS_MODE_G:
-+	case WIRELESS_MODE_N_24G:
-+	default:
-+		offset = -8;
-+		break;
-+	}
-+	pwrout_dbm = txpwridx / 2 + offset;
-+	return pwrout_dbm;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_txpwr_idx_to_dbm);
-+
-+void rtl8723_phy_init_bb_rf_reg_def(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfintfs = RFPGA0_XAB_RFINTERFACESW;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfintfs = RFPGA0_XAB_RFINTERFACESW;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfintfs = RFPGA0_XCD_RFINTERFACESW;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfintfs = RFPGA0_XCD_RFINTERFACESW;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfintfi = RFPGA0_XAB_RFINTERFACERB;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfintfi = RFPGA0_XAB_RFINTERFACERB;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfintfi = RFPGA0_XCD_RFINTERFACERB;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfintfi = RFPGA0_XCD_RFINTERFACERB;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfintfo = RFPGA0_XA_RFINTERFACEOE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfintfo = RFPGA0_XB_RFINTERFACEOE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfintfe = RFPGA0_XA_RFINTERFACEOE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfintfe = RFPGA0_XB_RFINTERFACEOE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rf3wire_offset =
-+			    RFPGA0_XA_LSSIPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_B].rf3wire_offset =
-+			    RFPGA0_XB_LSSIPARAMETER;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rflssi_select = rFPGA0_XAB_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_B].rflssi_select = rFPGA0_XAB_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_C].rflssi_select = rFPGA0_XCD_RFPARAMETER;
-+	rtlphy->phyreg_def[RF90_PATH_D].rflssi_select = rFPGA0_XCD_RFPARAMETER;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-+	rtlphy->phyreg_def[RF90_PATH_C].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-+	rtlphy->phyreg_def[RF90_PATH_D].rftxgain_stage = RFPGA0_TXGAINSTAGE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para1 = RFPGA0_XA_HSSIPARAMETER1;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para1 = RFPGA0_XB_HSSIPARAMETER1;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfhssi_para2 = RFPGA0_XA_HSSIPARAMETER2;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfhssi_para2 = RFPGA0_XB_HSSIPARAMETER2;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfsw_ctrl = RFPGA0_XAB_SWITCHCONTROL;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfsw_ctrl = RFPGA0_XAB_SWITCHCONTROL;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfsw_ctrl = RFPGA0_XCD_SWITCHCONTROL;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfsw_ctrl = RFPGA0_XCD_SWITCHCONTROL;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control1 = ROFDM0_XAAGCCORE1;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control1 = ROFDM0_XBAGCCORE1;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control1 = ROFDM0_XCAGCCORE1;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control1 = ROFDM0_XDAGCCORE1;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfagc_control2 = ROFDM0_XAAGCCORE2;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfagc_control2 = ROFDM0_XBAGCCORE2;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfagc_control2 = ROFDM0_XCAGCCORE2;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfagc_control2 = ROFDM0_XDAGCCORE2;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfrxiq_imbal = ROFDM0_XARXIQIMBALANCE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfrxiq_imbal = ROFDM0_XBRXIQIMBALANCE;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfrxiq_imbal = ROFDM0_XCRXIQIMBANLANCE;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfrxiq_imbal = ROFDM0_XDRXIQIMBALANCE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rfrx_afe = ROFDM0_XARXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rfrx_afe = ROFDM0_XBRXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_C].rfrx_afe = ROFDM0_XCRXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_D].rfrx_afe = ROFDM0_XDRXAFE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rftxiq_imbal = ROFDM0_XATXIQIMBALANCE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rftxiq_imbal = ROFDM0_XBTXIQIMBALANCE;
-+	rtlphy->phyreg_def[RF90_PATH_C].rftxiq_imbal = ROFDM0_XCTXIQIMBALANCE;
-+	rtlphy->phyreg_def[RF90_PATH_D].rftxiq_imbal = ROFDM0_XDTXIQIMBALANCE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rftx_afe = ROFDM0_XATXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_B].rftx_afe = ROFDM0_XBTXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_C].rftx_afe = ROFDM0_XCTXAFE;
-+	rtlphy->phyreg_def[RF90_PATH_D].rftx_afe = ROFDM0_XDTXAFE;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rf_rb = RFPGA0_XA_LSSIREADBACK;
-+	rtlphy->phyreg_def[RF90_PATH_B].rf_rb = RFPGA0_XB_LSSIREADBACK;
-+	rtlphy->phyreg_def[RF90_PATH_C].rf_rb = RFPGA0_XC_LSSIREADBACK;
-+	rtlphy->phyreg_def[RF90_PATH_D].rf_rb = RFPGA0_XD_LSSIREADBACK;
-+
-+	rtlphy->phyreg_def[RF90_PATH_A].rf_rbpi = TRANSCEIVEA_HSPI_READBACK;
-+	rtlphy->phyreg_def[RF90_PATH_B].rf_rbpi = TRANSCEIVEB_HSPI_READBACK;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_init_bb_rf_reg_def);
-+
-+bool rtl8723_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
-+				      u32 cmdtableidx,
-+				      u32 cmdtablesz,
-+				      enum swchnlcmd_id cmdid,
-+				      u32 para1, u32 para2,
-+				      u32 msdelay)
-+{
-+	struct swchnlcmd *pcmd;
-+
-+	if (cmdtable == NULL) {
-+		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-+		return false;
-+	}
-+
-+	if (cmdtableidx >= cmdtablesz)
-+		return false;
-+
-+	pcmd = cmdtable + cmdtableidx;
-+	pcmd->cmdid = cmdid;
-+	pcmd->para1 = para1;
-+	pcmd->para2 = para2;
-+	pcmd->msdelay = msdelay;
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_set_sw_chnl_cmdarray);
-+
-+void rtl8723_phy_path_a_fill_iqk_matrix(struct ieee80211_hw *hw,
-+					bool iqk_ok,
-+					long result[][8],
-+					u8 final_candidate,
-+					bool btxonly)
-+{
-+	u32 oldval_0, x, tx0_a, reg;
-+	long y, tx0_c;
-+
-+	if (final_candidate == 0xFF) {
-+		return;
-+	} else if (iqk_ok) {
-+		oldval_0 = (rtl_get_bbreg(hw, ROFDM0_XATXIQIMBALANCE,
-+					  MASKDWORD) >> 22) & 0x3FF;
-+		x = result[final_candidate][0];
-+		if ((x & 0x00000200) != 0)
-+			x = x | 0xFFFFFC00;
-+		tx0_a = (x * oldval_0) >> 8;
-+		rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE, 0x3FF, tx0_a);
-+		rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(31),
-+			      ((x * oldval_0 >> 7) & 0x1));
-+		y = result[final_candidate][1];
-+		if ((y & 0x00000200) != 0)
-+			y = y | 0xFFFFFC00;
-+		tx0_c = (y * oldval_0) >> 8;
-+		rtl_set_bbreg(hw, ROFDM0_XCTXAFE, 0xF0000000,
-+			      ((tx0_c & 0x3C0) >> 6));
-+		rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE, 0x003F0000,
-+			      (tx0_c & 0x3F));
-+		rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(29),
-+			      ((y * oldval_0 >> 7) & 0x1));
-+		if (btxonly)
-+			return;
-+		reg = result[final_candidate][2];
-+		rtl_set_bbreg(hw, ROFDM0_XARXIQIMBALANCE, 0x3FF, reg);
-+		reg = result[final_candidate][3] & 0x3F;
-+		rtl_set_bbreg(hw, ROFDM0_XARXIQIMBALANCE, 0xFC00, reg);
-+		reg = (result[final_candidate][3] >> 6) & 0xF;
-+		rtl_set_bbreg(hw, 0xca0, 0xF0000000, reg);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_path_a_fill_iqk_matrix);
-+
-+void rtl8723_save_adda_registers(struct ieee80211_hw *hw, u32 *addareg,
-+				 u32 *addabackup, u32 registernum)
-+{
-+	u32 i;
-+
-+	for (i = 0; i < registernum; i++)
-+		addabackup[i] = rtl_get_bbreg(hw, addareg[i], MASKDWORD);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_save_adda_registers);
-+
-+void rtl8723_phy_save_mac_registers(struct ieee80211_hw *hw,
-+				    u32 *macreg, u32 *macbackup)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 i;
-+
-+	for (i = 0; i < (IQK_MAC_REG_NUM - 1); i++)
-+		macbackup[i] = rtl_read_byte(rtlpriv, macreg[i]);
-+	macbackup[i] = rtl_read_dword(rtlpriv, macreg[i]);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_save_mac_registers);
-+
-+void rtl8723_phy_reload_adda_registers(struct ieee80211_hw *hw,
-+				       u32 *addareg, u32 *addabackup,
-+				       u32 regiesternum)
-+{
-+	u32 i;
-+
-+	for (i = 0; i < regiesternum; i++)
-+		rtl_set_bbreg(hw, addareg[i], MASKDWORD, addabackup[i]);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_reload_adda_registers);
-+
-+void rtl8723_phy_reload_mac_registers(struct ieee80211_hw *hw,
-+				      u32 *macreg, u32 *macbackup)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 i;
-+
-+	for (i = 0; i < (IQK_MAC_REG_NUM - 1); i++)
-+		rtl_write_byte(rtlpriv, macreg[i], (u8) macbackup[i]);
-+	rtl_write_dword(rtlpriv, macreg[i], macbackup[i]);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_reload_mac_registers);
-+
-+void rtl8723_phy_path_adda_on(struct ieee80211_hw *hw, u32 *addareg,
-+			      bool is_patha_on, bool is2t)
-+{
-+	u32 pathon;
-+	u32 i;
-+
-+	pathon = is_patha_on ? 0x04db25a4 : 0x0b1b25a4;
-+	if (!is2t) {
-+		pathon = 0x0bdb25a0;
-+		rtl_set_bbreg(hw, addareg[0], MASKDWORD, 0x0b1b25a0);
-+	} else {
-+		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathon);
-+	}
-+
-+	for (i = 1; i < IQK_ADDA_REG_NUM; i++)
-+		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathon);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_path_adda_on);
-+
-+void rtl8723_phy_mac_setting_calibration(struct ieee80211_hw *hw,
-+					 u32 *macreg, u32 *macbackup)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 i = 0;
-+
-+	rtl_write_byte(rtlpriv, macreg[i], 0x3F);
-+
-+	for (i = 1; i < (IQK_MAC_REG_NUM - 1); i++)
-+		rtl_write_byte(rtlpriv, macreg[i],
-+			       (u8) (macbackup[i] & (~BIT(3))));
-+	rtl_write_byte(rtlpriv, macreg[i], (u8) (macbackup[i] & (~BIT(5))));
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_mac_setting_calibration);
-+
-+void rtl8723_phy_path_a_standby(struct ieee80211_hw *hw)
-+{
-+	rtl_set_bbreg(hw, 0xe28, MASKDWORD, 0x0);
-+	rtl_set_bbreg(hw, 0x840, MASKDWORD, 0x00010000);
-+	rtl_set_bbreg(hw, 0xe28, MASKDWORD, 0x80800000);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_path_a_standby);
-+
-+void rtl8723_phy_pi_mode_switch(struct ieee80211_hw *hw, bool pi_mode)
-+{
-+	u32 mode;
-+
-+	mode = pi_mode ? 0x01000100 : 0x01000000;
-+	rtl_set_bbreg(hw, 0x820, MASKDWORD, mode);
-+	rtl_set_bbreg(hw, 0x828, MASKDWORD, mode);
-+}
-+EXPORT_SYMBOL_GPL(rtl8723_phy_pi_mode_switch);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h b/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h
-index 8f451d0..83b891a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723com/phy_common.h
-@@ -26,6 +26,25 @@
- #ifndef __PHY_COMMON__
- #define __PHY_COMMON__
  
-+#define RT_CANNOT_IO(hw)			false
+ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+-	int i;
++	int i, tid;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
+ 		struct wil_sta_info *p = &wil->sta[i];
+@@ -619,6 +632,16 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 			break;
+ 		}
+ 		seq_printf(s, "[%d] %pM %s\n", i, p->addr, status);
 +
-+enum swchnlcmd_id {
-+	CMDID_END,
-+	CMDID_SET_TXPOWEROWER_LEVEL,
-+	CMDID_BBREGWRITE10,
-+	CMDID_WRITEPORT_ULONG,
-+	CMDID_WRITEPORT_USHORT,
-+	CMDID_WRITEPORT_UCHAR,
-+	CMDID_RF_WRITEREG,
++		if (p->status == wil_sta_connected) {
++			for (tid = 0; tid < WIL_STA_TID_NUM; tid++) {
++				struct wil_tid_ampdu_rx *r = p->tid_rx[tid];
++				if (r) {
++					seq_printf(s, "[%2d] ", tid);
++					wil_print_rxtid(s, r);
++				}
++			}
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index f68481d..38906f1 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -18,6 +18,7 @@
+ #include <linux/if_arp.h>
+ 
+ #include "wil6210.h"
++#include "txrx.h"
+ 
+ /*
+  * Due to a hardware issue,
+@@ -54,11 +55,20 @@ void wil_memcpy_toio_32(volatile void __iomem *dst, const void *src,
+ 
+ static void _wil6210_disconnect(struct wil6210_priv *wil, void *bssid)
+ {
+-	uint i;
++	uint i, cid;
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 
++	for (cid = 0; cid < WIL6210_MAX_CID; cid++) {
++		struct wil_sta_info *sta = &wil->sta[cid];
++		for (i = 0; i < WIL_STA_TID_NUM; i++) {
++			struct wil_tid_ampdu_rx *r = sta->tid_rx[i];
++			sta->tid_rx[i] = NULL;
++			wil_tid_ampdu_rx_free(wil, r);
++		}
++	}
++
+ 	wil_link_off(wil);
+ 	if (test_bit(wil_status_fwconnected, &wil->status)) {
+ 		clear_bit(wil_status_fwconnected, &wil->status);
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+new file mode 100644
+index 0000000..d04629f
+--- /dev/null
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -0,0 +1,177 @@
++#include "wil6210.h"
++#include "txrx.h"
++
++#define SEQ_MODULO 0x1000
++#define SEQ_MASK   0xfff
++
++static inline int seq_less(u16 sq1, u16 sq2)
++{
++	return ((sq1 - sq2) & SEQ_MASK) > (SEQ_MODULO >> 1);
++}
++
++static inline u16 seq_inc(u16 sq)
++{
++	return (sq + 1) & SEQ_MASK;
++}
++
++static inline u16 seq_sub(u16 sq1, u16 sq2)
++{
++	return (sq1 - sq2) & SEQ_MASK;
++}
++
++static inline int reorder_index(struct wil_tid_ampdu_rx *r, u16 seq)
++{
++	return seq_sub(seq, r->ssn) % r->buf_size;
++}
++
++static void wil_release_reorder_frame(struct wil6210_priv *wil,
++				      struct wil_tid_ampdu_rx *r,
++				      int index)
++{
++	struct net_device *ndev = wil_to_ndev(wil);
++	struct sk_buff *skb = r->reorder_buf[index];
++
++	if (!skb)
++		goto no_frame;
++
++	/* release the frame from the reorder ring buffer */
++	r->stored_mpdu_num--;
++	r->reorder_buf[index] = NULL;
++	wil_netif_rx_any(skb, ndev);
++
++no_frame:
++	r->head_seq_num = seq_inc(r->head_seq_num);
++}
++
++static void wil_release_reorder_frames(struct wil6210_priv *wil,
++				       struct wil_tid_ampdu_rx *r,
++				       u16 hseq)
++{
++	int index;
++
++	while (seq_less(r->head_seq_num, hseq)) {
++		index = reorder_index(r, r->head_seq_num);
++		wil_release_reorder_frame(wil, r, index);
++	}
++}
++
++static void wil_reorder_release(struct wil6210_priv *wil,
++				struct wil_tid_ampdu_rx *r)
++{
++	int index = reorder_index(r, r->head_seq_num);
++
++	while (r->reorder_buf[index]) {
++		wil_release_reorder_frame(wil, r, index);
++		index = reorder_index(r, r->head_seq_num);
++	}
++}
++
++void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
++{
++	struct net_device *ndev = wil_to_ndev(wil);
++	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
++	int tid = wil_rxdesc_tid(d);
++	int cid = wil_rxdesc_cid(d);
++	int mid = wil_rxdesc_mid(d);
++	u16 seq = wil_rxdesc_seq(d);
++	struct wil_sta_info *sta = &wil->sta[cid];
++	struct wil_tid_ampdu_rx *r = sta->tid_rx[tid];
++	u16 hseq;
++	int index;
++
++	wil_dbg_txrx(wil, "MID %d CID %d TID %d Seq 0x%03x\n",
++		     mid, cid, tid, seq);
++
++	if (!r) {
++		wil_netif_rx_any(skb, ndev);
++		return;
++	}
++
++	hseq = r->head_seq_num;
++
++	spin_lock(&r->reorder_lock);
++
++	/* frame with out of date sequence number */
++	if (seq_less(seq, r->head_seq_num)) {
++		dev_kfree_skb(skb);
++		goto out;
++	}
++
++	/*
++	 * If frame the sequence number exceeds our buffering window
++	 * size release some previous frames to make room for this one.
++	 */
++	if (!seq_less(seq, r->head_seq_num + r->buf_size)) {
++		hseq = seq_inc(seq_sub(seq, r->buf_size));
++		/* release stored frames up to new head to stack */
++		wil_release_reorder_frames(wil, r, hseq);
++	}
++
++	/* Now the new frame is always in the range of the reordering buffer */
++
++	index = reorder_index(r, seq);
++
++	/* check if we already stored this frame */
++	if (r->reorder_buf[index]) {
++		dev_kfree_skb(skb);
++		goto out;
++	}
++
++	/*
++	 * If the current MPDU is in the right order and nothing else
++	 * is stored we can process it directly, no need to buffer it.
++	 * If it is first but there's something stored, we may be able
++	 * to release frames after this one.
++	 */
++	if (seq == r->head_seq_num && r->stored_mpdu_num == 0) {
++		r->head_seq_num = seq_inc(r->head_seq_num);
++		wil_netif_rx_any(skb, ndev);
++		goto out;
++	}
++
++	/* put the frame in the reordering buffer */
++	r->reorder_buf[index] = skb;
++	r->reorder_time[index] = jiffies;
++	r->stored_mpdu_num++;
++	wil_reorder_release(wil, r);
++
++out:
++	spin_unlock(&r->reorder_lock);
++}
++
++struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
++						int size, u16 ssn)
++{
++	struct wil_tid_ampdu_rx *r = kzalloc(sizeof(*r), GFP_KERNEL);
++	if (!r)
++		return NULL;
++
++	r->reorder_buf =
++		kcalloc(size, sizeof(struct sk_buff *), GFP_KERNEL);
++	r->reorder_time =
++		kcalloc(size, sizeof(unsigned long), GFP_KERNEL);
++	if (!r->reorder_buf || !r->reorder_time) {
++		kfree(r->reorder_buf);
++		kfree(r->reorder_time);
++		kfree(r);
++		return NULL;
++	}
++
++	spin_lock_init(&r->reorder_lock);
++	r->ssn = ssn;
++	r->head_seq_num = ssn;
++	r->buf_size = size;
++	r->stored_mpdu_num = 0;
++	return r;
++}
++
++void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
++			   struct wil_tid_ampdu_rx *r)
++{
++	if (!r)
++		return;
++	wil_release_reorder_frames(wil, r, r->head_seq_num + r->buf_size);
++	kfree(r->reorder_buf);
++	kfree(r->reorder_time);
++	kfree(r);
++}
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index eb60023..48d9715 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -472,7 +472,7 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
+  * Pass Rx packet to the netif. Update statistics.
+  * Called in softirq context (NAPI poll).
+  */
+-static void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
++void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
+ {
+ 	int rc;
+ 	unsigned int len = skb->len;
+@@ -515,12 +515,12 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
+ 			skb->ip_summed = CHECKSUM_UNNECESSARY;
+ 			skb->pkt_type = PACKET_OTHERHOST;
+ 			skb->protocol = htons(ETH_P_802_2);
+-
++			wil_netif_rx_any(skb, ndev);
+ 		} else {
+ 			skb->protocol = eth_type_trans(skb, ndev);
++			wil_rx_reorder(wil, skb);
+ 		}
+ 
+-		wil_netif_rx_any(skb, ndev);
+ 	}
+ 	wil_rx_refill(wil, v->size);
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index b382827..bc5706a 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -436,4 +436,11 @@ static inline struct vring_rx_desc *wil_skb_rxdesc(struct sk_buff *skb)
+ 	return (void *)skb->cb;
+ }
+ 
++void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev);
++void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb);
++struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
++						int size, u16 ssn);
++void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
++			   struct wil_tid_ampdu_rx *r);
++
+ #endif /* WIL6210_TXRX_H */
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 38df203..304b990 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -215,6 +215,46 @@ enum { /* for wil6210_priv.status */
+ 
+ struct pci_dev;
+ 
++/**
++ * struct tid_ampdu_rx - TID aggregation information (Rx).
++ *
++ * @reorder_buf: buffer to reorder incoming aggregated MPDUs
++ * @reorder_time: jiffies when skb was added
++ * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
++ * @reorder_timer: releases expired frames from the reorder buffer.
++ * @last_rx: jiffies of last rx activity
++ * @head_seq_num: head sequence number in reordering buffer.
++ * @stored_mpdu_num: number of MPDUs in reordering buffer
++ * @ssn: Starting Sequence Number expected to be aggregated.
++ * @buf_size: buffer size for incoming A-MPDUs
++ * @timeout: reset timer value (in TUs).
++ * @dialog_token: dialog token for aggregation session
++ * @rcu_head: RCU head used for freeing this struct
++ * @reorder_lock: serializes access to reorder buffer, see below.
++ *
++ * This structure's lifetime is managed by RCU, assignments to
++ * the array holding it must hold the aggregation mutex.
++ *
++ * The @reorder_lock is used to protect the members of this
++ * struct, except for @timeout, @buf_size and @dialog_token,
++ * which are constant across the lifetime of the struct (the
++ * dialog token being used only for debugging).
++ */
++struct wil_tid_ampdu_rx {
++	spinlock_t reorder_lock; /* see above */
++	struct sk_buff **reorder_buf;
++	unsigned long *reorder_time;
++	struct timer_list session_timer;
++	struct timer_list reorder_timer;
++	unsigned long last_rx;
++	u16 head_seq_num;
++	u16 stored_mpdu_num;
++	u16 ssn;
++	u16 buf_size;
++	u16 timeout;
++	u8 dialog_token;
 +};
 +
-+struct swchnlcmd {
-+	enum swchnlcmd_id cmdid;
-+	u32 para1;
-+	u32 para2;
-+	u32 msdelay;
-+};
+ struct wil6210_stats {
+ 	u64 tsf;
+ 	u32 snr;
+@@ -231,6 +271,9 @@ enum wil_sta_status {
+ 	wil_sta_conn_pending = 1,
+ 	wil_sta_connected = 2,
+ };
 +
- u32 rtl8723_phy_query_bb_reg(struct ieee80211_hw *hw,
- 			     u32 regaddr, u32 bitmask);
- void rtl8723_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
-@@ -36,11 +55,6 @@ u32 rtl8723_phy_rf_serial_read(struct ieee80211_hw *hw,
- void rtl8723_phy_rf_serial_write(struct ieee80211_hw *hw,
- 				 enum radio_path rfpath,
- 				 u32 offset, u32 data);
--u32 rtl8723_phy_query_bb_reg(struct ieee80211_hw *hw,
--			     u32 regaddr, u32 bitmask);
--u32 rtl8723_phy_calculate_bit_shift(u32 bitmask);
--void rtl8723_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
--			    u32 bitmask, u32 data);
- long rtl8723_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
- 				  enum wireless_mode wirelessmode,
- 				  u8 txpwridx);
-@@ -58,8 +72,8 @@ void rtl8723_phy_path_a_fill_iqk_matrix(struct ieee80211_hw *hw,
- 					bool btxonly);
- void rtl8723_save_adda_registers(struct ieee80211_hw *hw, u32 *addareg,
- 				 u32 *addabackup, u32 registernum);
--static void rtl8723_phy_save_mac_registers(struct ieee80211_hw *hw,
--					   u32 *macreg, u32 *macbackup);
-+void rtl8723_phy_save_mac_registers(struct ieee80211_hw *hw,
-+				    u32 *macreg, u32 *macbackup);
- void rtl8723_phy_reload_adda_registers(struct ieee80211_hw *hw,
- 				       u32 *addareg, u32 *addabackup,
- 				       u32 regiesternum);
++#define WIL_STA_TID_NUM (16)
++
+ /**
+  * struct wil_sta_info - data for peer
+  *
+@@ -242,6 +285,10 @@ enum wil_sta_status {
+ struct wil_sta_info {
+ 	u8 addr[ETH_ALEN];
+ 	enum wil_sta_status status;
++	/* Rx BACK */
++	struct wil_tid_ampdu_rx *tid_rx[WIL_STA_TID_NUM];
++	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(WIL_STA_TID_NUM)];
++	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(WIL_STA_TID_NUM)];
+ };
+ 
+ struct wil6210_priv {
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 2d60290..dfbc239 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -563,10 +563,27 @@ static void wmi_evt_ba_status(struct wil6210_priv *wil, int id, void *d,
+ 			      int len)
+ {
+ 	struct wmi_vring_ba_status_event *evt = d;
++	uint cid, i;
+ 
+ 	wil_dbg_wmi(wil, "BACK[%d] %s {%d} timeout %d\n",
+-		    evt->ringid, evt->status ? "N/A" : "OK", evt->agg_wsize,
+-		    __le16_to_cpu(evt->ba_timeout));
++		    evt->ringid, evt->status == WMI_BA_AGREED ? "OK" : "N/A",
++		    evt->agg_wsize, __le16_to_cpu(evt->ba_timeout));
++	for (cid = 0; cid < WIL6210_MAX_CID; cid++) {
++		struct wil_sta_info *sta = &wil->sta[cid];
++
++		if (sta->status == wil_sta_unused)
++			continue;
++		wil_dbg_wmi(wil, "Init BACK for CID %d %pM\n", cid, sta->addr);
++		for (i = 0; i < WIL_STA_TID_NUM; i++) {
++			struct wil_tid_ampdu_rx *r = sta->tid_rx[i];
++			sta->tid_rx[i] = NULL;
++			wil_tid_ampdu_rx_free(wil, r);
++			if ((evt->status == WMI_BA_AGREED) && evt->agg_wsize)
++				sta->tid_rx[i] = wil_tid_ampdu_rx_alloc(wil,
++							evt->agg_wsize, 0);
++		}
++	}
++
+ }
+ 
+ static const struct {
+@@ -949,6 +966,7 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 		},
+ 		.mid = 0, /* TODO - what is it? */
+ 		.decap_trans_type = WMI_DECAP_TYPE_802_3,
++		.reorder_type = WMI_RX_SW_REORDER,
+ 	};
+ 	struct {
+ 		struct wil6210_mbox_hdr_wmi wmi;
 -- 
-1.8.4
+1.8.3.2
 
