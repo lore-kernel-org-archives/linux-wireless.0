@@ -1,104 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24238 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422AbaBTR4F (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:47677 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbaB0IaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 12:56:05 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH] brcmfmac: fix txglomming scatter-gather packet transfers
-Date: Thu, 20 Feb 2014 18:55:55 +0100
-Message-ID: <1392918955-4488-1-git-send-email-arend@broadcom.com> (sfid-20140220_185610_505315_6D649475)
+	Thu, 27 Feb 2014 03:30:22 -0500
+Received: by mail-we0-f175.google.com with SMTP id q59so2573792wes.20
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 00:30:20 -0800 (PST)
+Message-ID: <530EF796.4030400@gmail.com> (sfid-20140227_093026_317813_860CF2C1)
+Date: Thu, 27 Feb 2014 10:30:14 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: pull request: iwlwifi 2014-02-27
+References: <530EE0EA.5030105@gmail.com> <530EE2B9.4020708@gmail.com>
+In-Reply-To: <530EE2B9.4020708@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver concatenates multiple packets in one MMC transfer. For
-scatter-gather to work the total length need to be multiple of 512
-bytes. A pre-allocated buffer was used to add padding to accomplish
-that. However, the length was not properly set and it was freed after
-the first transfer causing a crash.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
 
-This patch is intended for 3.14 fixing a kernel crash. The patch applies
-to the master branc of the wireless repository.
 
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+On 02/27/2014 09:01 AM, Emmanuel Grumbach wrote:
+>=20
+>=20
+> On 02/27/2014 08:53 AM, Emmanuel Grumbach wrote:
+>> Hi John,
+>>
+>> I have two fixes for 3.14.
+>> Johannes fixes a long standing bug in the AMPDU status reporting.
+>> Max fixes the listen time which was way too long and causes trouble to=
+ several APs.
+>>
+>> Please pull - thanks
+>>
+>>   emmanuel
+>>
+>> The following changes since commit ec6f678c74dbdb06a6a775bbb00f1d26c17=
+c404b:
+>>
+>>   iwlwifi: dvm: clear IWL_STA_UCODE_INPROGRESS when assoc fails (2014-=
+02-20 19:16:27 +0200)
+>>
+>> are available in the git repository at:
+>>
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.=
+git master
+>>
+>> for you to fetch changes up to d8105a24fce48b7b016e868923000871f4196e6=
+3:
+>>
+>=20
+> Made a minor change in the commit message of one of the patches - new H=
+EAD:082e29cb547474aa19c028d75d81bc5d873774f4.
+>=20
+>=20
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 3e99189..119ee6e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -457,7 +457,6 @@ struct brcmf_sdio {
- 
- 	u8 tx_hdrlen;		/* sdio bus header length for tx packet */
- 	bool txglom;		/* host tx glomming enable flag */
--	struct sk_buff *txglom_sgpad;	/* scatter-gather padding buffer */
- 	u16 head_align;		/* buffer pointer alignment */
- 	u16 sgentry_align;	/* scatter-gather buffer alignment */
- };
-@@ -1944,9 +1943,8 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
- 	if (lastfrm && chain_pad)
- 		tail_pad += blksize - chain_pad;
- 	if (skb_tailroom(pkt) < tail_pad && pkt->len > blksize) {
--		pkt_pad = bus->txglom_sgpad;
--		if (pkt_pad == NULL)
--			  brcmu_pkt_buf_get_skb(tail_pad + tail_chop);
-+		pkt_pad = brcmu_pkt_buf_get_skb(tail_pad + tail_chop +
-+						bus->head_align);
- 		if (pkt_pad == NULL)
- 			return -ENOMEM;
- 		ret = brcmf_sdio_txpkt_hdalign(bus, pkt_pad);
-@@ -1957,6 +1955,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
- 		       tail_chop);
- 		*(u32 *)(pkt_pad->cb) = ALIGN_SKB_FLAG + tail_chop;
- 		skb_trim(pkt, pkt->len - tail_chop);
-+		skb_trim(pkt_pad, tail_pad + tail_chop);
- 		__skb_queue_after(pktq, pkt, pkt_pad);
- 	} else {
- 		ntail = pkt->data_len + tail_pad -
-@@ -2011,7 +2010,7 @@ brcmf_sdio_txpkt_prep(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 			return ret;
- 		head_pad = (u16)ret;
- 		if (head_pad)
--			memset(pkt_next->data, 0, head_pad + bus->tx_hdrlen);
-+			memset(pkt_next->data + bus->tx_hdrlen, 0, head_pad);
- 
- 		total_len += pkt_next->len;
- 
-@@ -3486,10 +3485,6 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
- 		bus->txglom = false;
- 		value = 1;
- 		pad_size = bus->sdiodev->func[2]->cur_blksize << 1;
--		bus->txglom_sgpad = brcmu_pkt_buf_get_skb(pad_size);
--		if (!bus->txglom_sgpad)
--			brcmf_err("allocating txglom padding skb failed, reduced performance\n");
--
- 		err = brcmf_iovar_data_set(bus->sdiodev->dev, "bus:rxglom",
- 					   &value, sizeof(u32));
- 		if (err < 0) {
-@@ -4053,7 +4048,6 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 			brcmf_sdio_chip_detach(&bus->ci);
- 		}
- 
--		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
- 		kfree(bus->rxbuf);
- 		kfree(bus->hdrbuf);
- 		kfree(bus);
--- 
-1.7.10.4
+yet another one - new HEAD: 143582c6847cb285b361804c613127c25de60ca4
 
+
+--4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTDveZAAoJEC0Llv5uNjIBOkEQAIBQF2nl9ixiq9jeE8B8sE7P
+m9T1CzfbaHYmzir1tT3HafRBqGDrirdf38pT5S9CWFnvFjF0oVLNlE7jR0VHA48Y
+/mNspCw2qyI4apYWnROxEN73QNKgFAD5GZFW1nGW2vURG2x+HQ2PV/m9VEnRLV/B
+TS//1ZgiAwx2WcYowvjEHzv9w22Ktn4apDo+LXqvKmnNYY6eBmu7yI9SI0eA2B9u
+49iKZugDixYCNiyYRVzYdDaRvIMPfGC0S7onT2M3Sfckn+kj7luPAEqqLKb80yVu
+6kxIJWNJk5VqDtk8fekKvSqDlkI8auu1HxseuNvqseD6Azh+IGXW3tJMribMIMpl
+7gW75wbndTu0TPELawdMriS5PAYkjcMxxoi8jPd7lvUODBlvcl7CuoztncsCNn+S
+5kvZtPFAZLxcP6TpprDA3dr6Q6+VGn4IVSeCKDxA9fqT9FgjqzU9EmL6aiDn6SFj
+h0U9NiIjeyU0I+OZljZt2tTdHP64OReGwv6CPU8pNVAFY0azh71b3NenWNV0s/RQ
+12ew5glYO4m0F926IKCMeqg6wk0pgCu9Pj/450OXy+8QXRZgdJ6q/7kxJcuZKzUk
+lVlR8pSWvGiMh74GZ2eivbEAQE7g7NGvr0ZBmBdzaOZxyD+vZj1rKaJKI2NoEHRQ
+X+TAluPBYO5z2ke7gh3V
+=zxoZ
+-----END PGP SIGNATURE-----
+
+--4lssSBbnIeIc4qlE3bDUmWDJcw4VTGxhG--
