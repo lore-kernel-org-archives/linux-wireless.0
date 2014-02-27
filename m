@@ -1,61 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:46733 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541AbaBCU7h (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:32887 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbaB0JPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:37 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so3967850eaj.26
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:36 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 27 Feb 2014 04:15:04 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 50/62] iwlwifi: fix potential buffer overrun in fw name
-Date: Mon,  3 Feb 2014 22:57:56 +0200
-Message-Id: <1391461088-8082-50-git-send-email-egrumbach@gmail.com> (sfid-20140203_220008_385390_74F66A7E)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v7 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Date: Thu, 27 Feb 2014 11:14:53 +0200
+Message-Id: <1393492497-29500-2-git-send-email-luca@coelho.fi> (sfid-20140227_101600_979474_E0516D42)
+In-Reply-To: <1393492497-29500-1-git-send-email-luca@coelho.fi>
+References: <1393492497-29500-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Fix a potential buffer overrun when creating the fw name
-in drv->firmware_name by setting a maximal length to the
-char array copied to it.
-The maximal length is also updated to 32 rather than 25 to
-keep both 32bit and 64bit alignment without requiring
-padding to the struct it is in.
+Separate the code that counts the interface types and channels from
+the code that check the interface combinations.  The new function that
+checks for combinations is exported so it can be called by the
+drivers.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is done in preparation for moving the interface combinations
+checks out of cfg80211.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+In v4:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index c372816..b3bc30b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -128,7 +128,7 @@ struct iwl_drv {
- 	const struct iwl_cfg *cfg;
+   * rebased on top of slightly modified applied patches
+   * removed the parenthesis from the comment (not needed for docbook)
+   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
+
+In v7:
+
+   * removed redundant arguments (num_interfaces and used_iftypes)
+     from cfg80211_check_combinations();
+---
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  22 +++++++
+ net/wireless/util.c              | 128 ++++++++++++++++++++++-----------------
+ 3 files changed, 95 insertions(+), 56 deletions(-)
+
+diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
+index 044b764..d9b9416 100644
+--- a/Documentation/DocBook/80211.tmpl
++++ b/Documentation/DocBook/80211.tmpl
+@@ -100,6 +100,7 @@
+ !Finclude/net/cfg80211.h wdev_priv
+ !Finclude/net/cfg80211.h ieee80211_iface_limit
+ !Finclude/net/cfg80211.h ieee80211_iface_combination
++!Finclude/net/cfg80211.h cfg80211_check_combinations
+       </chapter>
+       <chapter>
+       <title>Actions and configuration</title>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ff3af16..768fcc0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4682,6 +4682,28 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
  
- 	int fw_index;                   /* firmware we're trying to load */
--	char firmware_name[25];         /* name of firmware file to load */
-+	char firmware_name[32];         /* name of firmware file to load */
++/**
++ * cfg80211_check_combinations - check interface combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ *
++ * This function can be called by the driver to check whether a
++ * combination of interfaces and their types are allowed according to
++ * the interface combinations.
++ */
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES]);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
- 	struct completion request_firmware_complete;
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index dadc934..7ecc0ef 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1253,6 +1253,75 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
  
-@@ -237,7 +237,8 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- 		return -ENOENT;
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int i, j, iftype;
++	int num_interfaces = 0;
++	u32 used_iftypes = 0;
++
++	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++		num_interfaces += iftype_num[iftype];
++		if (iftype_num[iftype] > 0)
++			used_iftypes |= BIT(iftype);
++	}
++
++	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
++
++		c = &wiphy->iface_combinations[i];
++
++		if (num_interfaces > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
++		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
++				 GFP_KERNEL);
++		if (!limits)
++			return -ENOMEM;
++
++		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++			if (wiphy->software_iftypes & BIT(iftype))
++				continue;
++			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
++				if (!(limits[j].types & BIT(iftype)))
++					continue;
++				if (limits[j].max < iftype_num[iftype])
++					goto cont;
++				limits[j].max -= iftype_num[iftype];
++			}
++		}
++
++		if (radar_detect && !(c->radar_detect_widths & radar_detect))
++			goto cont;
++
++		/* Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/* This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
++		kfree(limits);
++		return 0;
++ cont:
++		kfree(limits);
++	}
++
++	return -EBUSY;
++}
++EXPORT_SYMBOL(cfg80211_check_combinations);
++
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+ 				 enum nl80211_iftype iftype,
+@@ -1261,7 +1330,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 u8 radar_detect)
+ {
+ 	struct wireless_dev *wdev_iter;
+-	u32 used_iftypes = BIT(iftype);
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_channel
+ 			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
+@@ -1269,7 +1337,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	int i, j;
++	int i;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1354,65 +1422,13 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 
+ 		num[wdev_iter->iftype]++;
+ 		total++;
+-		used_iftypes |= BIT(wdev_iter->iftype);
  	}
  
--	sprintf(drv->firmware_name, "%s%s%s", name_pre, tag, ".ucode");
-+	snprintf(drv->firmware_name, sizeof(drv->firmware_name), "%s%s.ucode",
-+		 name_pre, tag);
+ 	if (total == 1 && !radar_detect)
+ 		return 0;
  
- 	IWL_DEBUG_INFO(drv, "attempting to load firmware %s'%s'\n",
- 		       (drv->fw_index == UCODE_EXPERIMENTAL_INDEX)
+-	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+-		const struct ieee80211_iface_combination *c;
+-		struct ieee80211_iface_limit *limits;
+-		u32 all_iftypes = 0;
+-
+-		c = &rdev->wiphy.iface_combinations[i];
+-
+-		if (total > c->max_interfaces)
+-			continue;
+-		if (num_different_channels > c->num_different_channels)
+-			continue;
+-
+-		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+-				 GFP_KERNEL);
+-		if (!limits)
+-			return -ENOMEM;
+-
+-		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-				continue;
+-			for (j = 0; j < c->n_limits; j++) {
+-				all_iftypes |= limits[j].types;
+-				if (!(limits[j].types & BIT(iftype)))
+-					continue;
+-				if (limits[j].max < num[iftype])
+-					goto cont;
+-				limits[j].max -= num[iftype];
+-			}
+-		}
+-
+-		if (radar_detect && !(c->radar_detect_widths & radar_detect))
+-			goto cont;
+-
+-		/*
+-		 * Finally check that all iftypes that we're currently
+-		 * using are actually part of this combination. If they
+-		 * aren't then we can't use this combination and have
+-		 * to continue to the next.
+-		 */
+-		if ((all_iftypes & used_iftypes) != used_iftypes)
+-			goto cont;
+-
+-		/*
+-		 * This combination covered all interface types and
+-		 * supported the requested numbers, so we're good.
+-		 */
+-		kfree(limits);
+-		return 0;
+- cont:
+-		kfree(limits);
+-	}
+-
+-	return -EBUSY;
++	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
++					   radar_detect, num);
+ }
+ 
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
 -- 
-1.7.9.5
+1.8.5.3
 
