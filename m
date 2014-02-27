@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:49294 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412AbaBSSIg (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:44669 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbaB0Wbr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Feb 2014 13:08:36 -0500
-Received: by mail-la0-f43.google.com with SMTP id pv20so556115lab.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2014 10:08:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UOT2s84ApFuBbZyjZfGNywV1WeZqHJ6eMtRHzY=15RYA@mail.gmail.com>
-References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
- <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com>
- <1389108924.4645.14.camel@jlt4.sipsolutions.net> <CAB=NE6UOT2s84ApFuBbZyjZfGNywV1WeZqHJ6eMtRHzY=15RYA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 19 Feb 2014 10:08:14 -0800
-Message-ID: <CAB=NE6Wb0cY=6pmEMvEhLY_CxRjojfTQjAE9sPQh4WWHtbi=QQ@mail.gmail.com> (sfid-20140219_190840_061183_027F9E07)
-Subject: Re: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Feb 2014 17:31:47 -0500
+Message-ID: <1393540305.26794.47.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140227_233158_273862_CB414BE7)
+Subject: Re: How to best consolidate list of skbs (msdu) for receive?
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Thu, 27 Feb 2014 14:31:45 -0800
+In-Reply-To: <530FB348.2070701@candelatech.com>
+References: <530F85AE.8060002@candelatech.com>
+	  <CAGVrzcajmuGQRi84WqWrxyUK2+xG1+b7EMTwRk4WpsDnp0B7qQ@mail.gmail.com>
+	 <1393536113.26794.41.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <530FB348.2070701@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 5:24 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, Jan 7, 2014 at 7:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Thu, 2013-12-19 at 12:53 -0800, Luis R. Rodriguez wrote:
->>> This adds a trigger to review any pending regulatory
->>> requests whenever an 802.11 device interface is brought
->>> down or up. We use this as an opportunistic trigger
->>> for checking the regulatory work queues as otherwise
->>> they they're only checked upon an initial regulatory
->>> request or when beacon hints are found.
->>>
->>> This opportunistic mechanism can be used to trigger
->>> kicking the queues regulatory queues at any time from
->>> userspace without having to change the regulatory state.
->>
->> I don't like this. Can't we just have a self-contained timeout on the
->> userspace request instead?
->
-> Sure I'll add this and send a v2 series.
+On Thu, 2014-02-27 at 13:51 -0800, Ben Greear wrote:
 
-Come to think of it -- I am not a fan of the timer. What time do we
-set for it? What is reasonable? This is what made me instead want to
-use the notifier hooks. You shouldn't be able to bring up an interface
-without firmware so hence the hook there, the other one upon register
-was just another opportunistic one.
+> That said, the code below appears to work, even if it is
+> not as efficient as it might be?
+> 
+> 			if (msdu_chaining) {
+> 				struct sk_buff *next = msdu_head->next;
+> 				struct sk_buff *to_free = next;
+> 				int space;
+> 				static int do_once = 1;
+> 				msdu_head->next = NULL;
+> 
+> 				if (unlikely(do_once)) {
+> 					ath10k_warn("htt rx msdu_chaining detected %d\n",
+> 						    msdu_chaining);
+> 					do_once = 0;
+> 				}
+> 
+> 				while (next) {
+> 					space = next->len - skb_tailroom(msdu_head);
+> 
+> 					if ((space > 0) &&
+> 					    (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
+> 						/* TODO:  bump some rx-oom error stat */
+> 						goto outside_continue;
+> 					}
+> 					skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
+> 								  next->len);
+> 					next = next->next;
+> 				}
 
-Please consider this and if you still think a timer is best let me
-know what the timer value should be :D
+Yep, this is very inefficient , you might copy data very often in
+pskb_expand_head(), then in skb_copy_from_linear_data()
 
-  Luis
+Also, if total length is big, you end up doing high order allocations,
+since you generate a linear skb. This might fail under memory pressure.
+
+What is the maximal skb->len of resulting skb ?
+
+
