@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34949 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbaB0OlZ (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:51513 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914AbaB0XHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 09:41:25 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [RFC v2 0/4] mac802111: channel context reservation (was: multi-vif/multi-channel CSA implementation)
-Date: Thu, 27 Feb 2014 16:41:17 +0200
-Message-Id: <1393512081-31453-1-git-send-email-luca@coelho.fi> (sfid-20140227_154139_149351_40E5B438)
+	Thu, 27 Feb 2014 18:07:24 -0500
+Received: by mail-wg0-f42.google.com with SMTP id x13so3451198wgg.13
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 15:07:23 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 7/7] staging: vt6656: s_nsBulkOutIoCompleteWrite Remove variable status.
+Date: Thu, 27 Feb 2014 23:06:15 +0000
+Message-Id: <1393542375-13110-7-git-send-email-tvboxspy@gmail.com> (sfid-20140228_000734_922691_6B7FB2DC)
+In-Reply-To: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
+References: <1393542375-13110-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Remove status and move debug messages to switch statement.
 
-Hi,
+Remove duplicate second debug message.
 
-I have changed my strategy slightly.  Instead of trying to get all the
-CSA stuff done at once, I'm sending this patchset to add the concept
-of channel reservation.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c | 24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-The last patch "mac80211: add usage of CS channel reservation for STA"
-should be looked at as a proof of concept for the channel context
-reservation feature. ;)
-
-This series is based on top of mac80211-next/master, without including
-my combination check changes.  When the combination check patchset
-gets applied, I can either send the "merge" of the two features as a
-separate patchset or I can modify this patchset accordingly (though I
-prefer the former, so I can do things in small steps ;).
-
-Please review and let me know what you think.  The changes from my
-first RFC are inlined in the commit message of the 2/4 patch.
-
---
-Cheers,
-Luca.
-
-Luciano Coelho (4):
-  mac80211: split ieee80211_vif_change_channel in two
-  mac80211: implement chanctx reservation
-  mac80211: allow reservation of a running chanctx
-  mac80211: add usage of CS channel reservation for STA
-
- include/net/mac80211.h     |   7 ++
- net/mac80211/chan.c        | 228 +++++++++++++++++++++++++++++++++++++++++----
- net/mac80211/ieee80211_i.h |  18 +++-
- net/mac80211/mlme.c        |  70 ++++++--------
- 4 files changed, 264 insertions(+), 59 deletions(-)
-
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 57efb7f..a4a4bf2 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -584,38 +584,29 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 	struct vnt_usb_send_context *context = urb->context;
+ 	struct vnt_private *priv = context->pDevice;
+ 	u8 context_type = context->type;
+-	int status;
+ 
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->s_nsBulkOutIoCompleteWrite\n");
+ 
+ 	switch (urb->status) {
+ 	case 0:
+-	case -ETIMEDOUT:
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++			"Write %d bytes\n", context->uBufLen);
+ 		break;
+ 	case -ECONNRESET:
+ 	case -ENOENT:
+ 	case -ESHUTDOWN:
+ 		context->bBoolInUse = false;
+ 		return;
++	case -ETIMEDOUT:
+ 	default:
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				"BULK Out failed %d\n", urb->status);
+ 		break;
+ 	}
+ 
+ 	if (!netif_device_present(priv->dev))
+ 		return;
+ 
+-
+-	status = urb->status;
+-
+-	if (status == STATUS_SUCCESS) {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-			"Write %d bytes\n", context->uBufLen);
+-	} else {
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"BULK Out failed %d\n", status);
+-	}
+-
+-
+ 	if (CONTEXT_DATA_PACKET == context_type) {
+ 		if (context->pPacket != NULL) {
+ 			dev_kfree_skb_irq(context->pPacket);
+@@ -625,11 +616,6 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+ 		}
+ 
+ 		priv->dev->trans_start = jiffies;
+-
+-		if (status != STATUS_SUCCESS) {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+-				"Send USB error! [%08xh]\n", status);
+-		}
+ 	}
+ 
+ 	if (priv->bLinkPass == true) {
 -- 
-1.8.5.3
+1.9.0
 
