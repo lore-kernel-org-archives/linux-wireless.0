@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:55552 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050AbaB1Utm (ORCPT
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:55922 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114AbaB0RVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 15:49:42 -0500
-Message-ID: <5310F663.8070607@lwfinger.net> (sfid-20140228_215241_428591_2FA5D723)
-Date: Fri, 28 Feb 2014 14:49:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 27 Feb 2014 12:21:34 -0500
+Received: by mail-ve0-f170.google.com with SMTP id pa12so2562172veb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 09:21:33 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 00/16 V2] Add new driver for RTL8723BE
-References: <1393089433-28270-1-git-send-email-Larry.Finger@lwfinger.net> <20140228193241.GJ30876@tuxdriver.com>
-In-Reply-To: <20140228193241.GJ30876@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1393519539.4648.10.camel@jlt4.sipsolutions.net>
+References: <CAOAOC6a96e5MrEOVY=KXirhUU-rJRv2hgz5B0so9SkWYMpoDfw@mail.gmail.com>
+	<1393517094.4648.3.camel@jlt4.sipsolutions.net>
+	<CAOAOC6agHr6mVB2jcUx1qHWnBJZyOw0=KP0Wp5BVhrvJgRhmQg@mail.gmail.com>
+	<1393517627.4648.4.camel@jlt4.sipsolutions.net>
+	<CAOAOC6ZhnB=LrJWvG07tOK=b_wWAFO74YdhXWZPxrVCk8=425A@mail.gmail.com>
+	<CAOAOC6aoz43LdXBTcRHWqPMvQAVKsH6z4yNqe_hEpT7zouo+Ew@mail.gmail.com>
+	<1393519119.4648.7.camel@jlt4.sipsolutions.net>
+	<CAOAOC6Z5J8_-ZKVukxfz+_K402E5sjhTdBvf3TzsWUDgwqw0Zw@mail.gmail.com>
+	<1393519539.4648.10.camel@jlt4.sipsolutions.net>
+Date: Thu, 27 Feb 2014 12:21:33 -0500
+Message-ID: <CAOAOC6aWWh3y8b-iRsouxFV+d9oKSpL4hkeVyJ6sarGEVzyOdg@mail.gmail.com> (sfid-20140227_182136_879964_5BE552C8)
+Subject: Re: pci-half-mini 7260 Wireless AC support 3.13
+From: Tim Nelson <tim.l.nelson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2014 01:32 PM, John W. Linville wrote:
-> With these patches applied, I get this build failure:
+I see nothing at all in my dmesg when I connect to it.  As well,
+running Ubuntu, I do not have a wpa_supplicant.log.
+
+It's not that it errors at all, in fact it works quite well.  The
+problem lies with the fact it's not actually doing AC.  Although it is
+doing very well with N.
+
+On Thu, Feb 27, 2014 at 11:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-02-27 at 11:41 -0500, Tim Nelson wrote:
+>> [    9.299536] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
+>> Wireless AC 7260, REV=0x144
 >
->    LD      drivers/net/wireless/rtlwifi/rtl8723com/built-in.o
->    LD      drivers/net/wireless/rtlwifi/built-in.o
-> drivers/net/wireless/rtlwifi/rtl8723be/built-in.o: In function `rtl_hal_pwrseqcmdparsing':
-> (.text+0x100a9): multiple definition of `rtl_hal_pwrseqcmdparsing'
-> drivers/net/wireless/rtlwifi/rtl8723ae/built-in.o:(.text+0x159ad): first defined here
-> drivers/net/wireless/rtlwifi/rtl8723be/built-in.o: In function `rtl92c_phy_ap_calibrate':
-> (.text+0xfa0b): multiple definition of `rtl92c_phy_ap_calibrate'
-> drivers/net/wireless/rtlwifi/rtl8192c/built-in.o:(.text+0x62df): first defined here
-> make[2]: *** [drivers/net/wireless/rtlwifi/built-in.o] Error 1
-> make[1]: *** [drivers/net/wireless/rtlwifi] Error 2
-> make: *** [drivers/net/wireless/] Error 2
-
-Oh shoot!
-
-I thought I had the problems fixed. Let me pull a new copy of wireless-testing 
-and fix the problem.
-
-Larry
-
-
+> Hm ok that should support it. Maybe it's always connecting to the 2.4
+> GHz one for some reason? That seems unlikely but still possible...
+>
+> Maybe you could get more dmesg data about the AP it selected, and the
+> wpa_supplicant log.
+>
+> johannes
+>
