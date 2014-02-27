@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbaBTJyA (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17631 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753454AbaB0OVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:54:00 -0500
-Message-ID: <1392890037.5073.18.camel@jlt4.sipsolutions.net> (sfid-20140220_105407_665561_81B48ECD)
-Subject: Re: [PATCH] cfg80211: Pass TDLS peer capability information in
- tdls_mgmt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, c_ppotte@qti.qualcomm.com,
-	djindal@qti.qualcomm.com
-Date: Thu, 20 Feb 2014 10:53:57 +0100
-In-Reply-To: <20140220094952.GA6290@jouni.qca.qualcomm.com>
-References: <1392822952-17690-1-git-send-email-usdutt@qti.qualcomm.com>
-	 <1392889161.5073.15.camel@jlt4.sipsolutions.net>
-	 <20140220094952.GA6290@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 09:21:45 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 12/16] wil6210: Fill vring2cid_tid table early
+Date: Thu, 27 Feb 2014 16:20:51 +0200
+Message-ID: <1393510855-17566-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_154709_241121_AAB36E6B)
+In-Reply-To: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 11:49 +0200, Jouni Malinen wrote:
-> On Thu, Feb 20, 2014 at 10:39:21AM +0100, Johannes Berg wrote:
-> > Generally, the patch looks fine, but I think you need to modify mac80211
-> > as well, and the mwifiex patch doesn't apply to my mac80211-next tree.
-> 
-> How do you want to handle mwifiex then? That function is in
-> wireless-testing.git and if the cfg80211 API change goes through
-> mac80211-next that does not have mwifiex change, I'd assume the build
-> will break once that gets merged into wireless-testing (or whatever is
-> the first tree getting changes from both)?
+Need to fill translation table before calling WMI with WMI_VRING_CFG_CMDID
+since firmware may generate events during this call; and events need translation
+table filled to be properly dispatched
 
-Hmm, dunno. I could merge wireless-next into mac80211-next, if that
-helps?
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index baced1b..9b4388b 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -610,6 +610,9 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
+ 	if (rc)
+ 		goto out;
+ 
++	wil->vring2cid_tid[id][0] = cid;
++	wil->vring2cid_tid[id][1] = tid;
++
+ 	cmd.vring_cfg.tx_sw_ring.ring_mem_base = cpu_to_le64(vring->pa);
+ 
+ 	rc = wmi_call(wil, WMI_VRING_CFG_CMDID, &cmd, sizeof(cmd),
+@@ -625,9 +628,6 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
+ 	}
+ 	vring->hwtail = le32_to_cpu(reply.cmd.tx_vring_tail_ptr);
+ 
+-	wil->vring2cid_tid[id][0] = cid;
+-	wil->vring2cid_tid[id][1] = tid;
+-
+ 	return 0;
+  out_free:
+ 	wil_vring_free(wil, vring, 1);
+-- 
+1.8.3.2
 
