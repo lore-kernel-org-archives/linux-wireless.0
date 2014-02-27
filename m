@@ -1,185 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:62414 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbaBISsc (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:34872 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155AbaB0PQD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Feb 2014 13:48:32 -0500
-From: Richard Weinberger <richard@nod.at>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org (open list:ATHEROS ATH5K WIR...),
-	ath5k-devel@lists.ath5k.org (open list:ATHEROS ATH5K WIR...),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Cc: Richard Weinberger <richard@nod.at>
-Subject: [PATCH 09/28] Remove ATHEROS_AR231X
-Date: Sun,  9 Feb 2014 19:47:47 +0100
-Message-Id: <1391971686-9517-10-git-send-email-richard@nod.at> (sfid-20140209_195448_225592_A90CD8AA)
-In-Reply-To: <1391971686-9517-1-git-send-email-richard@nod.at>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
+	Thu, 27 Feb 2014 10:16:03 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so1939947eak.29
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 07:16:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1393512081-31453-3-git-send-email-luca@coelho.fi>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+	<1393512081-31453-3-git-send-email-luca@coelho.fi>
+Date: Thu, 27 Feb 2014 16:16:02 +0100
+Message-ID: <CA+BoTQkKCXvWPMPmFCbhXdfq4k4oOd2iiZwqWcbTu0EOT_0wbg@mail.gmail.com> (sfid-20140227_161608_343359_555BAAFC)
+Subject: Re: [RFC v2 2/4] mac80211: implement chanctx reservation
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The symbol is an orphan, get rid of it.
+On 27 February 2014 15:41, Luca Coelho <luca@coelho.fi> wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+>
+> In order to support channel switch with multiple vifs and multiple
+> contexts, we implement a concept of channel context reservation.  This
+> allows us to reserve a channel context to be used later.
+>
+> The reservation functionality is not tied directly to channel switch
+> and may be used in other situations (eg. reserving a channel context
+> during IBSS join).
+>
+> When reserving the context, the following algorithm is used:
+>
+> 1) try to find an existing context that matches our future chandef and
+>    reserve it if it exists;
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
- drivers/net/wireless/ath/ath5k/ath5k.h | 28 ----------------------------
- drivers/net/wireless/ath/ath5k/base.c  | 14 --------------
- drivers/net/wireless/ath/ath5k/led.c   |  7 -------
- 4 files changed, 5 insertions(+), 54 deletions(-)
+> 2) otherwise, check if we're the only vif in the current context, in
+>    which case we can just change our current context.  To prevent
+>    other vifs from joining this context in the meantime, we mark it as
+>    exclusive.  This is an optimization to avoid using extra contexts
+>    when not necessary and requires the driver to support changing a
+>    context on-the-fly;
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index c9f81a3..3bc0d57 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,13 +1,13 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
--	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	depends on PCI && MAC80211
- 	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
- 	select AVERAGE
--	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
--	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
-+	select ATH5K_AHB if !PCI
-+	select ATH5K_PCI if PCI
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -54,14 +54,14 @@ config ATH5K_TRACER
- 
- config ATH5K_AHB
- 	bool "Atheros 5xxx AHB bus support"
--	depends on (ATHEROS_AR231X && !PCI)
-+	depends on !PCI
- 	---help---
- 	  This adds support for WiSoC type chipsets of the 5xxx Atheros
- 	  family.
- 
- config ATH5K_PCI
- 	bool "Atheros 5xxx PCI bus support"
--	depends on (!ATHEROS_AR231X && PCI)
-+	depends on PCI
- 	---help---
- 	  This adds support for PCI type chipsets of the 5xxx Atheros
- 	  family.
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 74bd54d..5f2843c 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1646,32 +1646,6 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
- 	return &(ath5k_hw_common(ah)->regulatory);
- }
- 
--#ifdef CONFIG_ATHEROS_AR231X
--#define AR5K_AR2315_PCI_BASE	((void __iomem *)0xb0100000)
--
--static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
--{
--	/* On AR2315 and AR2317 the PCI clock domain registers
--	 * are outside of the WMAC register space */
--	if (unlikely((reg >= 0x4000) && (reg < 0x5000) &&
--	    (ah->ah_mac_srev >= AR5K_SREV_AR2315_R6)))
--		return AR5K_AR2315_PCI_BASE + reg;
--
--	return ah->iobase + reg;
--}
--
--static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
--{
--	return ioread32(ath5k_ahb_reg(ah, reg));
--}
--
--static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
--{
--	iowrite32(val, ath5k_ahb_reg(ah, reg));
--}
--
--#else
--
- static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
- {
- 	return ioread32(ah->iobase + reg);
-@@ -1682,8 +1656,6 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- 	iowrite32(val, ah->iobase + reg);
- }
- 
--#endif
--
- static inline enum ath_bus_type ath5k_get_bus_type(struct ath5k_hw *ah)
- {
- 	return ath5k_hw_common(ah)->bus_ops->ath_bus_type;
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index ef35da8..d43e546 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -99,15 +99,6 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
- 
- /* Known SREVs */
- static const struct ath5k_srev_name srev_names[] = {
--#ifdef CONFIG_ATHEROS_AR231X
--	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
--	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
--	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
--	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R6 },
--	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R7 },
--	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R1 },
--	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R2 },
--#else
- 	{ "5210",	AR5K_VERSION_MAC,	AR5K_SREV_AR5210 },
- 	{ "5311",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311 },
- 	{ "5311A",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311A },
-@@ -126,7 +117,6 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5418",	AR5K_VERSION_MAC,	AR5K_SREV_AR5418 },
- 	{ "2425",	AR5K_VERSION_MAC,	AR5K_SREV_AR2425 },
- 	{ "2417",	AR5K_VERSION_MAC,	AR5K_SREV_AR2417 },
--#endif
- 	{ "xxxxx",	AR5K_VERSION_MAC,	AR5K_SREV_UNKNOWN },
- 	{ "5110",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5110 },
- 	{ "5111",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5111 },
-@@ -142,10 +132,6 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
- 	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
- 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
--#ifdef CONFIG_ATHEROS_AR231X
--	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
--	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
--#endif
- 	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
- };
- 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index f77ef36..c36a98f 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -162,20 +162,13 @@ int ath5k_init_leds(struct ath5k_hw *ah)
- {
- 	int ret = 0;
- 	struct ieee80211_hw *hw = ah->hw;
--#ifndef CONFIG_ATHEROS_AR231X
--	struct pci_dev *pdev = ah->pdev;
--#endif
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
- 	const struct pci_device_id *match;
- 
- 	if (!ah->pdev)
- 		return 0;
- 
--#ifdef CONFIG_ATHEROS_AR231X
--	match = NULL;
--#else
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
--#endif
- 	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, ah->status);
- 		ah->led_pin = ATH_PIN(match->driver_data);
--- 
-1.8.4.2
+This commit part is out of date (you've moved this into a separate patch).
 
+
+> @@ -611,6 +614,142 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+>         return ret;
+>  }
+>
+> +int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+> +{
+> +
+> +       lockdep_assert_held(&sdata->local->chanctx_mtx);
+
+Empty line :-)
+
+
+> +       if (sdata->vif.bss_conf.chandef.width != ctx->conf.def.width)
+> +               local_changed |= BSS_CHANGED_BANDWIDTH;
+> +
+> +       sdata->vif.bss_conf.chandef = ctx->conf.def;
+
+I think you should be simply using sdata->csa_chandef here. What's the
+point of setting the csa_chandef during reservation otherwise?
+
+csa_chandef should probably be renamed to reserved_chandef for consistency.
+
+
+> +
+> +       /* unref our reservation before assigning */
+> +       ctx->refcount--;
+> +       sdata->reserved_chanctx = NULL;
+> +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
+> +       if (ret) {
+> +               /* if assign fails refcount stays the same */
+> +               if (ctx->refcount == 0)
+> +                       ieee80211_free_chanctx(local, ctx);
+> +               goto out;
+> +       }
+> +
+> +       ieee80211_wake_queues_by_reason(&sdata->local->hw,
+> +                                       IEEE80211_MAX_QUEUE_MAP,
+> +                                       IEEE80211_QUEUE_STOP_REASON_CHANCTX);
+
+If you fail to assign chanctx you don't wake queues back. Is this intended?
+
+
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 8603dfb..998fbbb 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -756,6 +756,8 @@ struct ieee80211_sub_if_data {
+>         bool csa_radar_required;
+>         struct cfg80211_chan_def csa_chandef;
+>
+> +       struct ieee80211_chanctx *reserved_chanctx;
+> +
+
+It's a good idea to document this is protected by chanctx_mtx (and not
+wdev.mtx).
+
+
+Michał
