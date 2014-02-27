@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60141 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399AbaBTJmv (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:64078 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbaB0NgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 04:42:51 -0500
-Message-ID: <1392889368.5073.17.camel@jlt4.sipsolutions.net> (sfid-20140220_104256_666518_C373168B)
-Subject: Re: [PATCH 3.14] mac80211: fix AP powersave TX vs. wakeup race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 20 Feb 2014 10:42:48 +0100
-In-Reply-To: <20140220094057.GE23439@redhat.com>
-References: <1392886365-31206-1-git-send-email-johannes@sipsolutions.net>
-	 <20140220092154.GD23439@redhat.com>
-	 <1392888468.5073.11.camel@jlt4.sipsolutions.net>
-	 <20140220094057.GE23439@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Feb 2014 08:36:23 -0500
+Received: by mail-we0-f169.google.com with SMTP id t61so2918299wes.14
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 05:36:21 -0800 (PST)
+From: Sylvain Roger Rieuner <sylvain.roger.rieunier@gmail.com>
+To: ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	nbd@openwrt.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH] ath9k: fix invalid max frame length
+Date: Thu, 27 Feb 2014 14:36:06 +0100
+Message-Id: <1393508166-25152-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20140227_143631_416698_89953B84)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-02-20 at 10:40 +0100, Stanislaw Gruszka wrote:
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
 
-> > This area is a bit confusing, but I don't think WLAN_STA_PS_STA will be
-> > clear until after WLAN_STA_PS_DRIVER is?
-> 
-> Hmm, actually looks like we call ps_deliver_wakeup() with WLAN_STA_PS_STA
-> flag currently cleared.
-> 
-> tatic void sta_unblock(struct work_struct *wk)
-> {
->         if (!test_sta_flag(sta, WLAN_STA_PS_STA)) {
->                 local_bh_disable();
->                 ieee80211_sta_ps_deliver_wakeup(sta);
->                 local_bh_enable();
-> 
-> so on TX we should rather check WLAN_STA_PS_DRIVER flag .
+According to 802.11n-2012 standard in paragraph PPDU Fromat(20.3.2) HT-mixed
+format  Hearder PPDU contains : L_STF, L_LTF, L_SIG, HT_SIG, HT_STF, HT_LTF
+they are symbols in the preamble, there are in time unit(us) that's for why
+it can't be computed in bytes
 
-But that flag may never be set if the driver doesn't support/use it
-(which means it's racy, but anyway), so we need to check both.
+Signed-off-by: Sylvain ROGER RIEUNIER <sylvain.roger.rieunier@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Now I'm confused though. It seems the intent here was to clear the
-WLAN_STA_PS_STA flag in something like sta_ps_end() in the RX path, but
-we don't do that. I'm not sure how it works now, but I know from testing
-that it does ;-)
-
-Do you think the v2 patch is fine?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 312314c..544186e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1040,11 +1040,11 @@ static int ath_max_framelen(int usec, int mcs, bool ht40, bool sgi)
+ 	int symbols, bits;
+ 	int bytes = 0;
+ 
++	usec -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
+ 	symbols = sgi ? TIME_SYMBOLS_HALFGI(usec) : TIME_SYMBOLS(usec);
+ 	bits = symbols * bits_per_symbol[mcs % 8][ht40] * streams;
+ 	bits -= OFDM_PLCP_BITS;
+ 	bytes = bits / 8;
+-	bytes -= L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
+ 	if (bytes > 65532)
+ 		bytes = 65532;
+ 
+-- 
+1.7.10.4
 
