@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:50755 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753565AbaBCU7y (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22902 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393AbaB0LiR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 15:59:54 -0500
-Received: by mail-ee0-f50.google.com with SMTP id d17so3855014eek.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2014 12:59:53 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 57/62] iwlwifi: mvm: don't look at power commmand to decide if power is enabled
-Date: Mon,  3 Feb 2014 22:58:03 +0200
-Message-Id: <1391461088-8082-57-git-send-email-egrumbach@gmail.com> (sfid-20140203_220007_034338_50163A91)
-In-Reply-To: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
-References: <CANUX_P2BFLVRL-DFsTWA56zLJsRcn_dZhVdCChaQs2ZLWiBv3g@mail.gmail.com>
+	Thu, 27 Feb 2014 06:38:17 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: set the mactime of ieee80211_rx_status
+References: <1392197866-1261-1-git-send-email-yeohchunyeow@gmail.com>
+	<877g8rxgyf.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj9870+z+2yxjO7F69bGv3XzKNmi+ddyF41WSnv2aR98kjrw@mail.gmail.com>
+Date: Thu, 27 Feb 2014 13:38:11 +0200
+In-Reply-To: <CAEFj9870+z+2yxjO7F69bGv3XzKNmi+ddyF41WSnv2aR98kjrw@mail.gmail.com>
+	(Yeoh Chun-Yeow's message of "Thu, 20 Feb 2014 10:47:45 +0800")
+Message-ID: <87ob1sg50c.fsf@kamboji.qca.qualcomm.com> (sfid-20140227_123821_448154_C1282733)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/power.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>> Why? Where do you need tsf exactly? And what bug are you actually fixing
+>> here?
+>
+> There are two type of configuration modes that require local TSF, IBSS
+> and mesh for operation and also monitor mode.
+>
+> For IBSS, it is use for merging of BSSID (mac address) with same SSID
+> name, but currently this is taking care by the following "ugly" patch.
+> http://lists.infradead.org/pipermail/ath10k/2014-February/001159.html
+>
+> Mesh mode needs this for more accurate synchronization purpose.
+>
+> Besides, the monitor mode requires this to add extra piece of
+> information in radiotap header for local TSF.
+>
+>> Do we get some regressions because of proving only a 32 bit TSF? Which
+>> one is better, provide a 32-bit TSF or not at all?
+>
+> 32-bit is not good. It could cause problem when inter-operate with
+> other non-ath10k drivers with 64-bit local TSF.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index f9ddd79..20bc376 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -423,6 +423,7 @@ static int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
- 	int ret;
- 	bool ba_enable;
- 	struct iwl_mac_power_cmd cmd = {};
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
- 	if (vif->type != NL80211_IFTYPE_STATION)
- 		return 0;
-@@ -439,8 +440,9 @@ static int iwl_mvm_power_mac_update_mode(struct iwl_mvm *mvm,
- 	if (ret)
- 		return ret;
- 
--	ba_enable = !!(cmd.flags &
--		       cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK));
-+	ba_enable = !(iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM ||
-+		      mvm->ps_prevented || mvm->bound_vif_cnt > 1 ||
-+		      !vif->bss_conf.ps || iwl_mvm_vif_low_latency(mvmvif));
- 
- 	return iwl_mvm_update_beacon_abort(mvm, vif, ba_enable);
- }
+Yeah, I understand that. But my question is will we create regressions
+if I apply this patch which provides only 32-bit TSF? I guess not as we
+haven't provided TSF at all before, but I would like to be sure.
+
+> The better is that we can get the 64-bit local TSF. providing high TSF
+> and low TSF as found in "struct wmi_comb_phyerr_rx_hd". Is this
+> possible with current FW?
+
+I'm not familiar with the firmware so I sent a question to the firmware
+team about this.
+
 -- 
-1.7.9.5
-
+Kalle Valo
