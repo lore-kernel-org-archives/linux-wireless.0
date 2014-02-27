@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:51000 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbaB1MX0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16357 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbaB0OaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 07:23:26 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v3 1/3] mac80211: split ieee80211_vif_change_channel in two
-Date: Fri, 28 Feb 2014 14:23:18 +0200
-Message-Id: <1393590200-25309-2-git-send-email-luca@coelho.fi> (sfid-20140228_132330_110706_2886D930)
-In-Reply-To: <1393590200-25309-1-git-send-email-luca@coelho.fi>
-References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
+	Thu, 27 Feb 2014 09:30:19 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 00/16] wil6210: various patches
+Date: Thu, 27 Feb 2014 16:20:39 +0200
+Message-ID: <1393510855-17566-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140227_153022_970729_C6D14976)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Most of the patches are related to support for multiple connections.
 
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
+Other includes:
+- Tx management frame
+- Provide signal strength indication
+- use ether_addr_equal
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+Vladimir Kondratiev (16):
+  wil6210: Tx management frame
+  wil6210: [DEBUG] allow to query Rx and all Tx VRING descriptors
+  wil6210: [DEBUG] Improve Vring printing
+  wil6210: multiple connect - initial support
+  wil6210: Block ACK
+  wil6210: Find free vring for Tx
+  wil6210: broadcast Tx
+  wil6210: fix BACK status processing
+  wil6210: dump_station initial support
+  wil6210: per-connection statistics
+  wil6210: disconnect only requested peer
+  wil6210: Fill vring2cid_tid table early
+  wil6210: Provide signal strength indication
+  wil6210: use ether_addr_equal
+  wil6210: single station disconnect
+  wil6210: do not reorder groupcast Rx
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 42c6592..a27c6ec 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
- 
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
- 
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
-+	return 0;
-+}
-+
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
+ drivers/net/wireless/ath/wil6210/Makefile     |   1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c   | 202 +++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 119 +++++++++++++--
+ drivers/net/wireless/ath/wil6210/main.c       | 119 ++++++++++++---
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 177 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c       | 125 ++++++++++++++--
+ drivers/net/wireless/ath/wil6210/txrx.h       |   7 +
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  82 ++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.c        | 116 +++++++++++++--
+ 9 files changed, 874 insertions(+), 74 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/rx_reorder.c
+
 -- 
-1.8.5.3
+1.8.3.2
 
