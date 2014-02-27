@@ -1,79 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42663 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843AbaBRSFg (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34953 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaB0Ol0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 13:05:36 -0500
-Received: by mail-pb0-f46.google.com with SMTP id um1so16923197pbc.5
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2014 10:05:36 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <20140218093135.GJ26776@mwanda>
-References: <1392685846-10116-1-git-send-email-andrea.merello@gmail.com>
- <1392685846-10116-4-git-send-email-andrea.merello@gmail.com> <20140218093135.GJ26776@mwanda>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Tue, 18 Feb 2014 19:05:16 +0100
-Message-ID: <CAN8YU5N=_-9hVZc+6sW5xrwmybQ_aTLAMFODzyuGk0g97OV6Gg@mail.gmail.com> (sfid-20140218_190542_394409_EA5A4053)
-Subject: Re: [PATCH 3/7] rtl818x: check for pci_map_single() success when
- initializing RX ring
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	Huqiu Liu <liuhq11@mails.tsinghua.edu.cn>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 Feb 2014 09:41:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [RFC v2 1/4] mac80211: split ieee80211_vif_change_channel in two
+Date: Thu, 27 Feb 2014 16:41:18 +0200
+Message-Id: <1393512081-31453-2-git-send-email-luca@coelho.fi> (sfid-20140227_154136_647978_92E12C36)
+In-Reply-To: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-Honestly I'm not so expert in deep on this subject me too (and I would
-like to learn more me too).
-I have not a detailed example right now, but consider that this is
-arch dependent thing, and we should think to wide plethora of archs..
-even future ones...
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-AFAIK on x86 the dma error checking function will do nothing (this
-arch uses nommu_dma_ops function pointers collection for implementing
-those kind of DMA operations, and that structure does not even assigns
-the dma error checking function pointer), but on other archs it may do
-something.
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-Maybe in some cases for example a bounce-buffer may be needed (give a
-look to /lib/swiotlb.c), and I suppose it can't be guaranteed it can
-be successfully allocated.
-Looking at the kernel source it seems that, for example, ARM64 may need this.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-And, if I understood code right (and my flu does not help), it seems
-that even on x64 arch, if our board is the "sta2x11" (that I doesn't
-know what exactly is) then the dma operations are changed to the ones
-in swiotlb.c ...
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 42c6592..a27c6ec 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
++}
++
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
+-- 
+1.8.5.3
 
-If someone more expert on that topic can give us better or more
-complete explanation, I will appreciate it very much (in true I wrote
-this mail with the purpose of trying to trigger some of them :) )
-
-Andrea
-
-On Tue, Feb 18, 2014 at 10:31 AM, Dan Carpenter
-<dan.carpenter@oracle.com> wrote:
-> On Tue, Feb 18, 2014 at 02:10:42AM +0100, Andrea Merello wrote:
->> From: andrea merello <andrea.merello@gmail.com>
->>
->> During initialization a number of RX skbs are allocated and mapped
->> for DMA.
->> Currently if pci_map_single() fails, it will result in passing to the
->> HW a wrong DMA address (to write to!).
->>
->> This patch detects this condition, eventually it tries to get a more
->> luky skb, and if it finally fails to get things right, it makes the
->> driver not to initialize, avoiding at least dangerous DMAs.
->>
->
-> In normal life then why would pci_map_single() fail even once?  (I am
-> a newbie with this code so it is an honest question and not a rhetorical
-> one).
->
-> regards,
-> dan carpenter
->
