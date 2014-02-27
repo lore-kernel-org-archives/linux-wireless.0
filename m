@@ -1,109 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56492 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750868AbaBHAXl (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:58003 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbaB0HZB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 19:23:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 05/30] mwifiex: change beacon parameter structure
-Date: Fri, 7 Feb 2014 16:23:34 -0800
-Message-ID: <1391819017-20995-1-git-send-email-bzhao@marvell.com> (sfid-20140208_012345_160614_9C1331D1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 27 Feb 2014 02:25:01 -0500
+Received: by mail-ea0-f182.google.com with SMTP id b10so596285eae.41
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2014 23:24:58 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 0/8] ath10k: performance improvements
+Date: Thu, 27 Feb 2014 08:19:39 +0100
+Message-Id: <1393485587-16879-1-git-send-email-michal.kazior@tieto.com> (sfid-20140227_082509_327824_6BC13BA4)
+In-Reply-To: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi,
 
-'mwifiex_bcn_param' structure contains five parameters which
-are present in beacon buffer in case of legacy scan.
+These patches aim at reducing host CPU load and
+thus improve performance on low-end systems.
 
-'rssi' field won't be there in this buffer for extended scan.
-Hence 'bssid' and 'rssi' are removed from the structure and it is
-renamed as 'mwifiex_fixed_bcn_param' so that we can have common
-parsing logic later for both.
+In my setup I get a relative improvement of
+100mbps for both UDP Tx and Rx.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   |  4 +---
- drivers/net/wireless/mwifiex/scan.c | 25 +++++++++++++++----------
- 2 files changed, 16 insertions(+), 13 deletions(-)
+               Tx ----->
+laptop:eth---eth:AP135:ath10k---ath10k:laptop
+               <----- Rx
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index d8014c8..9b26790 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -1047,9 +1047,7 @@ struct host_cmd_ds_rf_ant_siso {
- 	__le16 ant_mode;
- };
- 
--struct mwifiex_bcn_param {
--	u8 bssid[ETH_ALEN];
--	u8 rssi;
-+struct mwifiex_fixed_bcn_param {
- 	__le64 timestamp;
- 	__le16 beacon_period;
- 	__le16 cap_info_bitmap;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 0a8a26e..b0be830 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1689,7 +1689,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		u16 cap_info_bitmap;
- 		u8 *current_ptr;
- 		u64 timestamp;
--		struct mwifiex_bcn_param *bcn_param;
-+		struct mwifiex_fixed_bcn_param *bcn_param;
- 		struct mwifiex_bss_priv *bss_priv;
- 
- 		if (bytes_left >= sizeof(beacon_size)) {
-@@ -1716,25 +1716,30 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 
- 		curr_bcn_bytes = beacon_size;
- 
--		/*
--		 * First 5 fields are bssid, RSSI, time stamp, beacon interval,
--		 *   and capability information
-+		/* First 5 fields are bssid, RSSI(for legacy scan only),
-+		 * time stamp, beacon interval, and capability information
- 		 */
--		if (curr_bcn_bytes < sizeof(struct mwifiex_bcn_param)) {
-+		if (curr_bcn_bytes < ETH_ALEN + sizeof(u8) +
-+		    sizeof(struct mwifiex_fixed_bcn_param)) {
- 			dev_err(adapter->dev,
- 				"InterpretIE: not enough bytes left\n");
- 			continue;
- 		}
--		bcn_param = (struct mwifiex_bcn_param *)current_ptr;
--		current_ptr += sizeof(*bcn_param);
--		curr_bcn_bytes -= sizeof(*bcn_param);
- 
--		memcpy(bssid, bcn_param->bssid, ETH_ALEN);
-+		memcpy(bssid, current_ptr, ETH_ALEN);
-+		current_ptr += ETH_ALEN;
-+		curr_bcn_bytes -= ETH_ALEN;
- 
--		rssi = (s32) bcn_param->rssi;
-+		rssi = (s32) *(u8 *)current_ptr;
- 		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
-+		current_ptr += sizeof(u8);
-+		curr_bcn_bytes -= sizeof(u8);
- 		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%d\n", rssi);
- 
-+		bcn_param = (struct mwifiex_fixed_bcn_param *)current_ptr;
-+		current_ptr += sizeof(*bcn_param);
-+		curr_bcn_bytes -= sizeof(*bcn_param);
-+
- 		timestamp = le64_to_cpu(bcn_param->timestamp);
- 		beacon_period = le16_to_cpu(bcn_param->beacon_period);
- 
+
+v2:
+ * improve comments/commit messages
+ * fix unbalanced locking
+ * fix var naming (s/err/ret)
+ * fix sparse/checkpatch/buildbot warnings
+ * remove code that didn't belong here
+ * split batch tx/rx into 2 patches
+   (+ath10k: reduce htt tx/rx spinlock overhead)
+
+v3:
+ * just a resend (due to my mail-server issues the
+   other day not all of the v2 patches had been
+   sent out)
+
+Michal Kazior (8):
+  ath10k: remove DMA mapping wrappers
+  ath10k: remove is_aborted from skb_cb
+  ath10k: replace send_head() with tx_sg()
+  ath10k: bypass htc for htt tx path
+  ath10k: batch htt tx/rx completions
+  ath10k: reduce htt tx/rx spinlock overhead
+  ath10k: remove pci completion list
+  ath10k: minimize coherent dma accesses
+
+ drivers/net/wireless/ath/ath10k/ce.c     |  16 +-
+ drivers/net/wireless/ath/ath10k/ce.h     |   9 +-
+ drivers/net/wireless/ath/ath10k/core.h   |  33 +--
+ drivers/net/wireless/ath/ath10k/hif.h    |  25 +-
+ drivers/net/wireless/ath/ath10k/htc.c    |  25 +-
+ drivers/net/wireless/ath/ath10k/htt.h    |  17 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 147 ++++++++----
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 205 ++++++++--------
+ drivers/net/wireless/ath/ath10k/mac.c    |   4 +-
+ drivers/net/wireless/ath/ath10k/pci.c    | 389 +++++++------------------------
+ drivers/net/wireless/ath/ath10k/pci.h    |  28 ---
+ drivers/net/wireless/ath/ath10k/txrx.c   |  15 +-
+ drivers/net/wireless/ath/ath10k/wmi.c    |  17 +-
+ 13 files changed, 379 insertions(+), 551 deletions(-)
+
 -- 
-1.8.2.3
+1.8.5.3
 
