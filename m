@@ -1,644 +1,1123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41706 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867AbaBTUaP (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:39888 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbaB1VRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 15:30:15 -0500
-Date: Thu, 20 Feb 2014 15:30:05 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next 2014-02-20
-Message-ID: <20140220203005.GF3657@tuxdriver.com> (sfid-20140220_213030_340498_DB9CE4D1)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
+	Fri, 28 Feb 2014 16:17:17 -0500
+Received: by mail-ob0-f171.google.com with SMTP id vb8so4488842obc.16
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 13:17:16 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 09/16 V3] rtlwifi: rtl8723be: Add files for new driver - part 2
+Date: Fri, 28 Feb 2014 15:16:51 -0600
+Message-Id: <1393622218-1455-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140228_221845_447469_657D1913)
+In-Reply-To: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---nFreZHaLTZJo0R7j
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Dave,
-
-Please pull this batch of wireless updates intended for the 3.15
-stream!
-
-For the mac80211 bits, Johannes says:
-
-"We have some cleanups and minor fixes as well as userspace API
-improvements from a lot of people, extended VHT support for radiotap
-=66rom Emmanuel, CSA improvements from Andrei, Luca and Michal. I've also
-included my work on hwsim to make dynamic registration of radios
-possible."
-
-Along with that, we get the usual round of updates to ath9k,
-brcmfmac, mwifiex, wcn36xx, and the ti drivers -- nothing particularly
-noteworthy, mostly just random updates and refactoring.
-
-Also included is a pull of the wireless tree, intended to resolve
-some potential merge issues.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c  | 628 +++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.h  | 248 +++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/led.c | 153 +++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/led.h |  35 ++
+ 4 files changed, 1064 insertions(+)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/led.h
 
-The following changes since commit 010d3c3989706d800ae72253773fa6537cc9f74c:
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+new file mode 100644
+index 0000000..0f3522d
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+@@ -0,0 +1,628 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2014  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
++#include "reg.h"
++#include "def.h"
++#include "fw.h"
++#include "../rtl8723com/fw_common.h"
++
++static bool _rtl8723be_check_fw_read_last_h2c(struct ieee80211_hw *hw,
++					      u8 boxnum)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 val_hmetfr;
++	bool result = false;
++
++	val_hmetfr = rtl_read_byte(rtlpriv, REG_HMETFR);
++	if (((val_hmetfr >> boxnum) & BIT(0)) == 0)
++		result = true;
++	return result;
++}
++
++static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
++					u32 cmd_len, u8 *p_cmdbuffer)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u8 boxnum;
++	u16 box_reg = 0, box_extreg = 0;
++	u8 u1b_tmp;
++	bool isfw_read = false;
++	u8 buf_index = 0;
++	bool bwrite_sucess = false;
++	u8 wait_h2c_limit = 100;
++	u8 wait_writeh2c_limit = 100;
++	u8 boxcontent[4], boxextcontent[4];
++	u32 h2c_waitcounter = 0;
++	unsigned long flag;
++	u8 idx;
++
++	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, "come in\n");
++
++	while (true) {
++		spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
++		if (rtlhal->h2c_setinprogress) {
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 "H2C set in progress! Wait to set.."
++				 "element_id(%d).\n", element_id);
++
++			while (rtlhal->h2c_setinprogress) {
++				spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock,
++						       flag);
++				h2c_waitcounter++;
++				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++					 "Wait 100 us (%d times)...\n",
++					 h2c_waitcounter);
++				udelay(100);
++
++				if (h2c_waitcounter > 1000)
++					return;
++				spin_lock_irqsave(&rtlpriv->locks.h2c_lock,
++						  flag);
++			}
++			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
++		} else {
++			rtlhal->h2c_setinprogress = true;
++			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
++			break;
++		}
++	}
++	while (!bwrite_sucess) {
++		wait_writeh2c_limit--;
++		if (wait_writeh2c_limit == 0) {
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 "Write H2C fail because no trigger "
++				 "for FW INT!\n");
++			break;
++		}
++		boxnum = rtlhal->last_hmeboxnum;
++		switch (boxnum) {
++		case 0:
++			box_reg = REG_HMEBOX_0;
++			box_extreg = REG_HMEBOX_EXT_0;
++			break;
++		case 1:
++			box_reg = REG_HMEBOX_1;
++			box_extreg = REG_HMEBOX_EXT_1;
++			break;
++		case 2:
++			box_reg = REG_HMEBOX_2;
++			box_extreg = REG_HMEBOX_EXT_2;
++			break;
++		case 3:
++			box_reg = REG_HMEBOX_3;
++			box_extreg = REG_HMEBOX_EXT_3;
++			break;
++		default:
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 "switch case not processed\n");
++			break;
++		}
++		isfw_read = _rtl8723be_check_fw_read_last_h2c(hw, boxnum);
++		while (!isfw_read) {
++			wait_h2c_limit--;
++			if (wait_h2c_limit == 0) {
++				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++					 "Wating too long for FW read "
++					 "clear HMEBox(%d)!\n", boxnum);
++				break;
++			}
++			udelay(10);
++
++			isfw_read = _rtl8723be_check_fw_read_last_h2c(hw,
++								boxnum);
++			u1b_tmp = rtl_read_byte(rtlpriv, 0x130);
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 "Wating for FW read clear HMEBox(%d)!!! 0x130 = %2x\n",
++				 boxnum, u1b_tmp);
++		}
++		if (!isfw_read) {
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 "Write H2C register BOX[%d] fail!!!!! "
++				 "Fw do not read.\n", boxnum);
++			break;
++		}
++		memset(boxcontent, 0, sizeof(boxcontent));
++		memset(boxextcontent, 0, sizeof(boxextcontent));
++		boxcontent[0] = element_id;
++		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++			 "Write element_id box_reg(%4x) = %2x\n",
++			 box_reg, element_id);
++
++		switch (cmd_len) {
++		case 1:
++		case 2:
++		case 3:
++			/*boxcontent[0] &= ~(BIT(7));*/
++			memcpy((u8 *)(boxcontent) + 1,
++			       p_cmdbuffer + buf_index, cmd_len);
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		case 4:
++		case 5:
++		case 6:
++		case 7:
++			/*boxcontent[0] |= (BIT(7));*/
++			memcpy((u8 *)(boxextcontent),
++			       p_cmdbuffer + buf_index+3, cmd_len-3);
++			memcpy((u8 *)(boxcontent) + 1,
++			       p_cmdbuffer + buf_index, 3);
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_extreg + idx,
++					       boxextcontent[idx]);
++			}
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		default:
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 "switch case not process\n");
++			break;
++		}
++		bwrite_sucess = true;
++
++		rtlhal->last_hmeboxnum = boxnum + 1;
++		if (rtlhal->last_hmeboxnum == 4)
++			rtlhal->last_hmeboxnum = 0;
++
++		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++			 "pHalData->last_hmeboxnum  = %d\n",
++			 rtlhal->last_hmeboxnum);
++	}
++	if (!rtlpriv) {
++		pr_err("rtlpriv bad\n");
++		return;
++	}
++	if (!rtlhal) {
++		pr_err("rtlhal bad\n");
++		return;
++	}
++	spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
++	rtlhal->h2c_setinprogress = false;
++	spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
++
++	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, "go out\n");
++}
++
++void rtl8723be_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
++			    u32 cmd_len, u8 *p_cmdbuffer)
++{
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u32 tmp_cmdbuf[2];
++
++	if (!rtlhal->fw_ready) {
++		RT_ASSERT(false,
++			  "return H2C cmd because of Fw download fail!!!\n");
++		return;
++	}
++	memset(tmp_cmdbuf, 0, 8);
++	memcpy(tmp_cmdbuf, p_cmdbuffer, cmd_len);
++	_rtl8723be_fill_h2c_command(hw, element_id, cmd_len,
++				    (u8 *)&tmp_cmdbuf);
++	return;
++}
++
++void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 u1_h2c_set_pwrmode[H2C_8723BE_PWEMODE_LENGTH] = { 0 };
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++	u8 rlbm, power_state = 0;
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
++
++	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
++	rlbm = 0;/*YJ, temp, 120316. FW now not support RLBM = 2.*/
++	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
++	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
++					 (rtlpriv->mac80211.p2p) ?
++					 ppsc->smart_ps : 1);
++	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
++					       ppsc->reg_max_lps_awakeintvl);
++	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
++	if (mode == FW_PS_ACTIVE_MODE)
++		power_state |= FW_PWR_STATE_ACTIVE;
++	else
++		power_state |= FW_PWR_STATE_RF_OFF;
++	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
++
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
++		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
++		      u1_h2c_set_pwrmode, H2C_8723BE_PWEMODE_LENGTH);
++	rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_SETPWRMODE,
++			       H2C_8723BE_PWEMODE_LENGTH,
++			       u1_h2c_set_pwrmode);
++}
++
++static bool _rtl8723be_cmd_send_packet(struct ieee80211_hw *hw,
++				       struct sk_buff *skb)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	struct rtl8192_tx_ring *ring;
++	struct rtl_tx_desc *pdesc;
++	struct sk_buff *pskb = NULL;
++	u8 own;
++	unsigned long flags;
++
++	ring = &rtlpci->tx_ring[BEACON_QUEUE];
++
++	pskb = __skb_dequeue(&ring->queue);
++	if (pskb)
++		kfree_skb(pskb);
++
++	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
++
++	pdesc = &ring->desc[0];
++	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *)pdesc, true, HW_DESC_OWN);
++
++	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *)pdesc, 1, 1, skb);
++
++	__skb_queue_tail(&ring->queue, skb);
++
++	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
++
++	rtlpriv->cfg->ops->tx_polling(hw, BEACON_QUEUE);
++
++	return true;
++}
++#define BEACON_PG		0 /* ->1 */
++#define PSPOLL_PG		2
++#define NULL_PG			3
++#define PROBERSP_PG		4 /* ->5 */
++
++#define TOTAL_RESERVED_PKT_LEN	768
++
++static u8 reserved_page_packet[TOTAL_RESERVED_PKT_LEN] = {
++	/* page 0 beacon */
++	0x80, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
++	0xFF, 0xFF, 0x00, 0xE0, 0x4C, 0x02, 0xB1, 0x78,
++	0xEC, 0x1A, 0x59, 0x0B, 0xAD, 0xD4, 0x20, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x64, 0x00, 0x10, 0x04, 0x00, 0x05, 0x54, 0x65,
++	0x73, 0x74, 0x32, 0x01, 0x08, 0x82, 0x84, 0x0B,
++	0x16, 0x24, 0x30, 0x48, 0x6C, 0x03, 0x01, 0x06,
++	0x06, 0x02, 0x00, 0x00, 0x2A, 0x01, 0x02, 0x32,
++	0x04, 0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C,
++	0x09, 0x03, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x3D, 0x00, 0xDD, 0x07, 0x00, 0xE0, 0x4C,
++	0x02, 0x02, 0x00, 0x00, 0xDD, 0x18, 0x00, 0x50,
++	0xF2, 0x01, 0x01, 0x00, 0x00, 0x50, 0xF2, 0x04,
++	0x01, 0x00, 0x00, 0x50, 0xF2, 0x04, 0x01, 0x00,
++
++	/* page 1 beacon */
++	0x00, 0x50, 0xF2, 0x02, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x10, 0x00, 0x28, 0x8C, 0x00, 0x12, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x81, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 2  ps-poll */
++	0xA4, 0x10, 0x01, 0xC0, 0xEC, 0x1A, 0x59, 0x0B,
++	0xAD, 0xD4, 0x00, 0xE0, 0x4C, 0x02, 0xB1, 0x78,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x18, 0x00, 0x28, 0x8C, 0x00, 0x12, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 3  null */
++	0x48, 0x01, 0x00, 0x00, 0xEC, 0x1A, 0x59, 0x0B,
++	0xAD, 0xD4, 0x00, 0xE0, 0x4C, 0x02, 0xB1, 0x78,
++	0xEC, 0x1A, 0x59, 0x0B, 0xAD, 0xD4, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x72, 0x00, 0x28, 0x8C, 0x00, 0x12, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 4  probe_resp */
++	0x50, 0x00, 0x00, 0x00, 0x00, 0x40, 0x10, 0x10,
++	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
++	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x00, 0x00,
++	0x9E, 0x46, 0x15, 0x32, 0x27, 0xF2, 0x2D, 0x00,
++	0x64, 0x00, 0x00, 0x04, 0x00, 0x0C, 0x6C, 0x69,
++	0x6E, 0x6B, 0x73, 0x79, 0x73, 0x5F, 0x77, 0x6C,
++	0x61, 0x6E, 0x01, 0x04, 0x82, 0x84, 0x8B, 0x96,
++	0x03, 0x01, 0x01, 0x06, 0x02, 0x00, 0x00, 0x2A,
++	0x01, 0x00, 0x32, 0x08, 0x24, 0x30, 0x48, 0x6C,
++	0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C, 0x18,
++	0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x3D, 0x00, 0xDD, 0x06, 0x00, 0xE0, 0x4C, 0x02,
++	0x01, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 5  probe_resp */
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++};
++
++void rtl8723be_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
++				  bool dl_finished)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct sk_buff *skb = NULL;
++
++	u32 totalpacketlen;
++	bool rtstatus;
++	u8 u1rsvdpageloc[5] = { 0 };
++	bool dlok = false;
++
++	u8 *beacon;
++	u8 *p_pspoll;
++	u8 *nullfunc;
++	u8 *p_probersp;
++	/*---------------------------------------------------------
++	 *			(1) beacon
++	 *---------------------------------------------------------
++	 */
++	beacon = &reserved_page_packet[BEACON_PG * 128];
++	SET_80211_HDR_ADDRESS2(beacon, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(beacon, mac->bssid);
++
++	/*-------------------------------------------------------
++	 *			(2) ps-poll
++	 *-------------------------------------------------------
++	 */
++	p_pspoll = &reserved_page_packet[PSPOLL_PG * 128];
++	SET_80211_PS_POLL_AID(p_pspoll, (mac->assoc_id | 0xc000));
++	SET_80211_PS_POLL_BSSID(p_pspoll, mac->bssid);
++	SET_80211_PS_POLL_TA(p_pspoll, mac->mac_addr);
++
++	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1rsvdpageloc, PSPOLL_PG);
++
++	/*--------------------------------------------------------
++	 *			(3) null data
++	 *--------------------------------------------------------
++	 */
++	nullfunc = &reserved_page_packet[NULL_PG * 128];
++	SET_80211_HDR_ADDRESS1(nullfunc, mac->bssid);
++	SET_80211_HDR_ADDRESS2(nullfunc, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(nullfunc, mac->bssid);
++
++	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1rsvdpageloc, NULL_PG);
++
++	/*---------------------------------------------------------
++	 *			(4) probe response
++	 *---------------------------------------------------------
++	 */
++	p_probersp = &reserved_page_packet[PROBERSP_PG * 128];
++	SET_80211_HDR_ADDRESS1(p_probersp, mac->bssid);
++	SET_80211_HDR_ADDRESS2(p_probersp, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(p_probersp, mac->bssid);
++
++	SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(u1rsvdpageloc, PROBERSP_PG);
++
++	totalpacketlen = TOTAL_RESERVED_PKT_LEN;
++
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_LOUD,
++		      "rtl8723be_set_fw_rsvdpagepkt(): "
++		      "HW_VAR_SET_TX_CMD: ALL\n",
++		      &reserved_page_packet[0], totalpacketlen);
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
++		      "rtl8723be_set_fw_rsvdpagepkt(): "
++		      "HW_VAR_SET_TX_CMD: ALL\n", u1rsvdpageloc, 3);
++
++
++	skb = dev_alloc_skb(totalpacketlen);
++	memcpy((u8 *)skb_put(skb, totalpacketlen),
++	       &reserved_page_packet, totalpacketlen);
++
++	rtstatus = _rtl8723be_cmd_send_packet(hw, skb);
++
++	if (rtstatus)
++		dlok = true;
++
++	if (dlok) {
++		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
++			 "Set RSVD page location to Fw.\n");
++		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG, "H2C_RSVDPAGE:\n",
++			      u1rsvdpageloc, 3);
++		rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_RSVDPAGE,
++				       sizeof(u1rsvdpageloc), u1rsvdpageloc);
++	} else {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 "Set RSVD page location to Fw FAIL!!!!!!.\n");
++	}
++}
++
++/*Should check FW support p2p or not.*/
++static void rtl8723be_set_p2p_ctw_period_cmd(struct ieee80211_hw *hw,
++					     u8 ctwindow)
++{
++	u8 u1_ctwindow_period[1] = {ctwindow};
++
++	rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_P2P_PS_CTW_CMD, 1,
++			       u1_ctwindow_period);
++}
++
++void rtl8723be_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw,
++				      u8 p2p_ps_state)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *rtlps = rtl_psc(rtl_priv(hw));
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_p2p_ps_info *p2pinfo = &(rtlps->p2p_ps_info);
++	struct p2p_ps_offload_t *p2p_ps_offload = &rtlhal->p2p_ps_offload;
++	u8 i;
++	u16 ctwindow;
++	u32 start_time, tsf_low;
++
++	switch (p2p_ps_state) {
++	case P2P_PS_DISABLE:
++		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_DISABLE\n");
++		memset(p2p_ps_offload, 0, sizeof(struct p2p_ps_offload_t));
++		break;
++	case P2P_PS_ENABLE:
++		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_ENABLE\n");
++		/* update CTWindow value. */
++		if (p2pinfo->ctwindow > 0) {
++			p2p_ps_offload->ctwindow_en = 1;
++			ctwindow = p2pinfo->ctwindow;
++			rtl8723be_set_p2p_ctw_period_cmd(hw, ctwindow);
++		}
++		/* hw only support 2 set of NoA */
++		for (i = 0; i < p2pinfo->noa_num; i++) {
++			/* To control the register setting
++			 * for which NOA
++			 */
++			rtl_write_byte(rtlpriv, 0x5cf, (i << 4));
++			if (i == 0)
++				p2p_ps_offload->noa0_en = 1;
++			else
++				p2p_ps_offload->noa1_en = 1;
++
++			/* config P2P NoA Descriptor Register */
++			rtl_write_dword(rtlpriv, 0x5E0,
++					p2pinfo->noa_duration[i]);
++			rtl_write_dword(rtlpriv, 0x5E4,
++					p2pinfo->noa_interval[i]);
++
++			/*Get Current TSF value */
++			tsf_low = rtl_read_dword(rtlpriv, REG_TSFTR);
++
++			start_time = p2pinfo->noa_start_time[i];
++			if (p2pinfo->noa_count_type[i] != 1) {
++				while (start_time <= (tsf_low + (50 * 1024))) {
++					start_time += p2pinfo->noa_interval[i];
++					if (p2pinfo->noa_count_type[i] != 255)
++						p2pinfo->noa_count_type[i]--;
++				}
++			}
++			rtl_write_dword(rtlpriv, 0x5E8, start_time);
++			rtl_write_dword(rtlpriv, 0x5EC,
++					p2pinfo->noa_count_type[i]);
++		}
++		if ((p2pinfo->opp_ps == 1) ||
++		    (p2pinfo->noa_num > 0)) {
++			/* rst p2p circuit */
++			rtl_write_byte(rtlpriv, REG_DUAL_TSF_RST, BIT(4));
++
++			p2p_ps_offload->offload_en = 1;
++
++			if (P2P_ROLE_GO == rtlpriv->mac80211.p2p) {
++				p2p_ps_offload->role = 1;
++				p2p_ps_offload->allstasleep = 0;
++			} else {
++				p2p_ps_offload->role = 0;
++			}
++			p2p_ps_offload->discovery = 0;
++		}
++		break;
++	case P2P_PS_SCAN:
++		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_SCAN\n");
++		p2p_ps_offload->discovery = 1;
++		break;
++	case P2P_PS_SCAN_DONE:
++		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_SCAN_DONE\n");
++		p2p_ps_offload->discovery = 0;
++		p2pinfo->p2p_ps_state = P2P_PS_ENABLE;
++		break;
++	default:
++		break;
++	}
++	rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_P2P_PS_OFFLOAD, 1,
++			       (u8 *)p2p_ps_offload);
++}
++
++void rtl8723be_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
++{
++	u8 u1_joinbssrpt_parm[1] = { 0 };
++
++	SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(u1_joinbssrpt_parm, mstatus);
++
++	rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_JOINBSSRPT, 1,
++			       u1_joinbssrpt_parm);
++}
++
++void rtl8723be_set_fw_ap_off_load_cmd(struct ieee80211_hw *hw,
++				      u8 ap_offload_enable)
++{
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	u8 u1_apoffload_parm[H2C_8723BE_AP_OFFLOAD_LENGTH] = { 0 };
++
++	SET_H2CCMD_AP_OFFLOAD_ON(u1_apoffload_parm, ap_offload_enable);
++	SET_H2CCMD_AP_OFFLOAD_HIDDEN(u1_apoffload_parm, mac->hiddenssid);
++	SET_H2CCMD_AP_OFFLOAD_DENYANY(u1_apoffload_parm, 0);
++
++	rtl8723be_fill_h2c_cmd(hw, H2C_8723BE_AP_OFFLOAD,
++			       H2C_8723BE_AP_OFFLOAD_LENGTH, u1_apoffload_parm);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/fw.h b/drivers/net/wireless/rtlwifi/rtl8723be/fw.h
+new file mode 100644
+index 0000000..31eec28
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/fw.h
+@@ -0,0 +1,248 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2014  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL8723BE__FW__H__
++#define __RTL8723BE__FW__H__
++
++#define FW_8192C_SIZE				0x8000
++#define FW_8192C_START_ADDRESS			0x1000
++#define FW_8192C_END_ADDRESS			0x5FFF
++#define FW_8192C_PAGE_SIZE			4096
++#define FW_8192C_POLLING_DELAY			5
++#define FW_8192C_POLLING_TIMEOUT_COUNT		6000
++
++#define IS_FW_HEADER_EXIST(_pfwhdr)	\
++	((_pfwhdr->signature&0xFFF0) == 0x5300)
++#define USE_OLD_WOWLAN_DEBUG_FW			0
++
++#define H2C_8723BE_RSVDPAGE_LOC_LEN		5
++#define H2C_8723BE_PWEMODE_LENGTH		5
++#define H2C_8723BE_JOINBSSRPT_LENGTH		1
++#define H2C_8723BE_AP_OFFLOAD_LENGTH		3
++#define H2C_8723BE_WOWLAN_LENGTH		3
++#define H2C_8723BE_KEEP_ALIVE_CTRL_LENGTH	3
++#if (USE_OLD_WOWLAN_DEBUG_FW == 0)
++#define H2C_8723BE_REMOTE_WAKE_CTRL_LEN		1
++#else
++#define H2C_8723BE_REMOTE_WAKE_CTRL_LEN		3
++#endif
++#define H2C_8723BE_AOAC_GLOBAL_INFO_LEN		2
++#define H2C_8723BE_AOAC_RSVDPAGE_LOC_LEN	7
++
++
++/* Fw PS state for RPWM.
++*BIT[2:0] = HW state
++*BIT[3] = Protocol PS state, 1: register active state , 0: register sleep state
++*BIT[4] = sub-state
++*/
++#define	FW_PS_GO_ON		BIT(0)
++#define	FW_PS_TX_NULL		BIT(1)
++#define	FW_PS_RF_ON		BIT(2)
++#define	FW_PS_REGISTER_ACTIVE	BIT(3)
++
++#define	FW_PS_DPS		BIT(0)
++#define	FW_PS_LCLK		(FW_PS_DPS)
++#define	FW_PS_RF_OFF		BIT(1)
++#define	FW_PS_ALL_ON		BIT(2)
++#define	FW_PS_ST_ACTIVE	BIT(3)
++#define	FW_PS_ISR_ENABLE	BIT(4)
++#define	FW_PS_IMR_ENABLE	BIT(5)
++
++
++#define	FW_PS_ACK		BIT(6)
++#define	FW_PS_TOGGLE		BIT(7)
++
++ /* 88E RPWM value*/
++ /* BIT[0] = 1: 32k, 0: 40M*/
++#define	FW_PS_CLOCK_OFF		BIT(0)		/* 32k*/
++#define	FW_PS_CLOCK_ON		0		/*40M*/
++
++#define	FW_PS_STATE_MASK	(0x0F)
++#define	FW_PS_STATE_HW_MASK	(0x07)
++/*ISR_ENABLE, IMR_ENABLE, and PS mode should be inherited.*/
++#define	FW_PS_STATE_INT_MASK	(0x3F)
++
++#define	FW_PS_STATE(x)	(FW_PS_STATE_MASK & (x))
++#define	FW_PS_STATE_HW(x)	(FW_PS_STATE_HW_MASK & (x))
++#define	FW_PS_STATE_INT(x)	(FW_PS_STATE_INT_MASK & (x))
++#define	FW_PS_ISR_VAL(x)	((x) & 0x70)
++#define	FW_PS_IMR_MASK(x)	((x) & 0xDF)
++#define	FW_PS_KEEP_IMR(x)	((x) & 0x20)
++
++
++#define	FW_PS_STATE_S0		(FW_PS_DPS)
++#define	FW_PS_STATE_S1		(FW_PS_LCLK)
++#define	FW_PS_STATE_S2		(FW_PS_RF_OFF)
++#define	FW_PS_STATE_S3		(FW_PS_ALL_ON)
++#define	FW_PS_STATE_S4		((FW_PS_ST_ACTIVE) | (FW_PS_ALL_ON))
++
++/* ((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))*/
++#define	FW_PS_STATE_ALL_ON_88E	(FW_PS_CLOCK_ON)
++/* (FW_PS_RF_ON)*/
++#define	FW_PS_STATE_RF_ON_88E	(FW_PS_CLOCK_ON)
++/* 0x0*/
++#define	FW_PS_STATE_RF_OFF_88E	(FW_PS_CLOCK_ON)
++/* (FW_PS_STATE_RF_OFF)*/
++#define	FW_PS_STATE_RF_OFF_LOW_PWR_88E	(FW_PS_CLOCK_OFF)
++
++#define	FW_PS_STATE_ALL_ON_92C	(FW_PS_STATE_S4)
++#define	FW_PS_STATE_RF_ON_92C		(FW_PS_STATE_S3)
++#define	FW_PS_STATE_RF_OFF_92C	(FW_PS_STATE_S2)
++#define	FW_PS_STATE_RF_OFF_LOW_PWR_92C	(FW_PS_STATE_S1)
++
++
++/* For 88E H2C PwrMode Cmd ID 5.*/
++#define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
++#define	FW_PWR_STATE_RF_OFF	0
++
++#define	FW_PS_IS_ACK(x)	((x) & FW_PS_ACK)
++#define	FW_PS_IS_CLK_ON(x)	((x) & (FW_PS_RF_OFF | FW_PS_ALL_ON))
++#define	FW_PS_IS_RF_ON(x)	((x) & (FW_PS_ALL_ON))
++#define	FW_PS_IS_ACTIVE(x)	((x) & (FW_PS_ST_ACTIVE))
++#define	FW_PS_IS_CPWM_INT(x)	((x) & 0x40)
++
++#define	FW_CLR_PS_STATE(x)	((x) = ((x) & (0xF0)))
++
++#define	IS_IN_LOW_POWER_STATE_88E(fwpsstate)		\
++			(FW_PS_STATE(fwpsstate) == FW_PS_CLOCK_OFF)
++
++#define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
++#define	FW_PWR_STATE_RF_OFF	0
++
++#define pagenum_128(_len)	(u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
++
++#define SET_88E_H2CCMD_WOWLAN_FUNC_ENABLE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_PATTERN_MATCH_ENABLE(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 1, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_MAGIC_PKT_ENABLE(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 2, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_UNICAST_PKT_ENABLE(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 3, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_ALL_PKT_DROP(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 4, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_GPIO_ACTIVE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 5, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_REKEY_WAKE_UP(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 6, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_DISCONNECT_WAKE_UP(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 7, 1, __val)
++#define SET_88E_H2CCMD_WOWLAN_GPIONUM(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_88E_H2CCMD_WOWLAN_GPIO_DURATION(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++
++
++#define SET_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_RLBM(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 4, __val)
++#define SET_H2CCMD_PWRMODE_PARM_SMART_PS(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 4, 4, __val)
++#define SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+3, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+4, 0, 8, __val)
++#define GET_88E_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd)			\
++	LE_BITS_TO_1BYTE(__ph2ccmd, 0, 8)
++
++#define SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++
++/* AP_OFFLOAD */
++#define SET_H2CCMD_AP_OFFLOAD_ON(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_AP_OFFLOAD_HIDDEN(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_H2CCMD_AP_OFFLOAD_DENYANY(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++#define SET_H2CCMD_AP_OFFLOAD_WAKEUP_EVT_RPT(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+3, 0, 8, __val)
++
++/* Keep Alive Control*/
++#define SET_88E_H2CCMD_KEEP_ALIVE_ENABLE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 1, __val)
++#define SET_88E_H2CCMD_KEEP_ALIVE_ACCPEPT_USER_DEFINED(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 1, 1, __val)
++#define SET_88E_H2CCMD_KEEP_ALIVE_PERIOD(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++
++/*REMOTE_WAKE_CTRL */
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_EN(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 1, __val)
++#if (USE_OLD_WOWLAN_DEBUG_FW == 0)
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_ARP_OFFLOAD_EN(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 1, 1, __val)
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_NDP_OFFLOAD_EN(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 2, 1, __val)
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_GTK_OFFLOAD_EN(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 3, 1, __val)
++#else
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_PAIRWISE_ENC_ALG(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_GROUP_ENC_ALG(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++#endif
++
++/* GTK_OFFLOAD */
++#define SET_88E_H2CCMD_AOAC_GLOBAL_INFO_PAIRWISE_ENC_ALG(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_88E_H2CCMD_AOAC_GLOBAL_INFO_GROUP_ENC_ALG(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++
++/* AOAC_RSVDPAGE_LOC */
++#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_REM_WAKE_CTRL_INFO(__ph2ccmd, __val)\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd), 0, 8, __val)
++#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_NEIGHBOR_ADV(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_RSP(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+3, 0, 8, __val)
++#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_INFO(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+4, 0, 8, __val)
++
++void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
++void rtl8723be_set_fw_ap_off_load_cmd(struct ieee80211_hw *hw,
++				      u8 ap_offload_enable);
++void rtl8723be_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
++			    u32 cmd_len, u8 *p_cmdbuffer);
++void rtl8723be_firmware_selfreset(struct ieee80211_hw *hw);
++void rtl8723be_set_fw_rsvdpagepkt(struct ieee80211_hw *hw,
++				  bool dl_finished);
++void rtl8723be_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
++int rtl8723be_download_fw(struct ieee80211_hw *hw,
++			  bool buse_wake_on_wlan_fw);
++void rtl8723be_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw,
++				      u8 p2p_ps_state);
++
++#endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/led.c b/drivers/net/wireless/rtlwifi/rtl8723be/led.c
+new file mode 100644
+index 0000000..cb931a3
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/led.c
+@@ -0,0 +1,153 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2014  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "../wifi.h"
++#include "../pci.h"
++#include "reg.h"
++#include "led.h"
++
++static void _rtl8723be_init_led(struct ieee80211_hw *hw,  struct rtl_led *pled,
++				enum rtl_led_pin ledpin)
++{
++	pled->hw = hw;
++	pled->ledpin = ledpin;
++	pled->ledon = false;
++}
++
++void rtl8723be_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	u8 ledcfg;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 "LedAddr:%X ledpin =%d\n", REG_LEDCFG2, pled->ledpin);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++		ledcfg &= ~BIT(6);
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5));
++		break;
++	case LED_PIN_LED1:
++		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG1);
++		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "switch case not process\n");
++		break;
++	}
++	pled->ledon = true;
++}
++
++void rtl8723be_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	u8 ledcfg;
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 "LedAddr:%X ledpin =%d\n", REG_LEDCFG2, pled->ledpin);
++
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg &= 0xf0;
++		if (pcipriv->ledctl.led_opendrain) {
++			ledcfg &= 0x90; /* Set to software control. */
++			rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg|BIT(3)));
++			ledcfg = rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG);
++			ledcfg &= 0xFE;
++			rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, ledcfg);
++		} else {
++			ledcfg &= ~BIT(6);
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(3) | BIT(5)));
++		}
++		break;
++	case LED_PIN_LED1:
++		ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG1);
++		ledcfg &= 0x10; /* Set to software control. */
++		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg|BIT(3));
++
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "switch case not processed\n");
++		break;
++	}
++	pled->ledon = false;
++}
++
++void rtl8723be_init_sw_leds(struct ieee80211_hw *hw)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	_rtl8723be_init_led(hw, &(pcipriv->ledctl.sw_led0), LED_PIN_LED0);
++	_rtl8723be_init_led(hw, &(pcipriv->ledctl.sw_led1), LED_PIN_LED1);
++}
++
++static void _rtl8723be_sw_led_control(struct ieee80211_hw *hw,
++				      enum led_ctl_mode ledaction)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_led *pled0 = &(pcipriv->ledctl.sw_led0);
++	switch (ledaction) {
++	case LED_CTL_POWER_ON:
++	case LED_CTL_LINK:
++	case LED_CTL_NO_LINK:
++		rtl8723be_sw_led_on(hw, pled0);
++		break;
++	case LED_CTL_POWER_OFF:
++		rtl8723be_sw_led_off(hw, pled0);
++		break;
++	default:
++		break;
++	}
++}
++
++void rtl8723be_led_control(struct ieee80211_hw *hw,
++			   enum led_ctl_mode ledaction)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
++	    (ledaction == LED_CTL_TX ||
++	     ledaction == LED_CTL_RX ||
++	     ledaction == LED_CTL_SITE_SURVEY ||
++	     ledaction == LED_CTL_LINK ||
++	     ledaction == LED_CTL_NO_LINK ||
++	     ledaction == LED_CTL_START_TO_LINK ||
++	     ledaction == LED_CTL_POWER_ON)) {
++		return;
++	}
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, "ledaction %d,\n", ledaction);
++	_rtl8723be_sw_led_control(hw, ledaction);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/led.h b/drivers/net/wireless/rtlwifi/rtl8723be/led.h
+new file mode 100644
+index 0000000..c57de37
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/led.h
+@@ -0,0 +1,35 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2014  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL8723BE_LED_H__
++#define __RTL8723BE_LED_H__
++
++void rtl8723be_init_sw_leds(struct ieee80211_hw *hw);
++void rtl8723be_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl8723be_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl8723be_led_control(struct ieee80211_hw *hw,
++			   enum led_ctl_mode ledaction);
++
++#endif
+-- 
+1.8.4.5
 
-  bonding: fix bond_arp_rcv() race of curr_active_slave (2014-02-20 13:20:5=
-5 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
-for-davem
-
-for you to fetch changes up to 88daf80dcca19ff995cc263592426f734a9702f3:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless-next into for-davem (2014-02-20 15:02:02 -0500)
-
-----------------------------------------------------------------
-
-Aaron Durbin (2):
-      mwifiex: balance dma map/unmap sizes
-      mwifiex: don't leak DMA command skbuffs
-
-Amitkumar Karwar (7):
-      mwifiex: change beacon parameter structure
-      mwifiex: separate out response buffer parsing code
-      mwifiex: separate out next scan command queueing logic
-      mwifiex: implement extended scan feature
-      mwifiex: update beamforming capability field for HT
-      mwifiex: advertise correct beamforming information for VHT
-      mwifiex: cleanup in mwifiex_fill_cap_info()
-
-Andrei Otcheretianski (1):
-      mac80211_hwsim: add channel switch support
-
-Antonio Quartulli (1):
-      cfg80211: fix channel configuration in IBSS join
-
-Ard Biesheuvel (1):
-      mac80211: drop unused param 'encrypted' from ccmp_special_blocks()
-
-Arend van Spriel (7):
-      brcmfmac: move SDIO specific functions
-      brcmfmac: rename sdio_chip.[ch]
-      brcmfmac: make chip related functions host interface independent
-      brcmfmac: remove TRACE level debug message from brcmf_sdio_bus_sleep()
-      brcmfmac: remove unintended error logging
-      brcmfmac: get chip core information from the device
-      brcmfmac: CR4 takes precedence over CM3 in brcmf_chip_enter_download()
-
-Ariej Marjieh (3):
-      iwlwifi: mvm: remove upper limit for error log base pointer
-      iwlwifi: 8000: add 11n only SKU of 8000 devices
-      iwlwifi: change number of PAPD groups in PHY DB
-
-Arik Nemtsov (7):
-      iwlwifi: add very first D0i3 support
-      iwlwifi: mvm: add D0i3 ref/unref for scan
-      wlcore: cancel Tx watchdog on suspend and rearm on first Tx after
-      wlcore: AP: don't start mac80211 PS on non-peer HLIDs
-      wlcore: wl18xx: allow CCK rates for AP mode
-      wlcore: decrease warning verbosity during recovery
-      wlcore: add support for STA CSA with chan contexts
-
-Avinash Patil (17):
-      mwifiex: handle AMPDU supported check for AP interface
-      mwifiex: make tos_to_tid_inv part of mwifiex_private structure
-      mwifiex: move station list functions to common code
-      mwifiex: add tdls_mgmt handler support
-      mwifiex: parse TDLS action frames during RX
-      mwifiex: add cfg80211 tdls_oper handler support
-      mwifiex: add cfg80211 add_station handler support
-      mwifiex: add cfg80211 change_station handler support
-      mwifiex: provision for holding and restoring packets during TDLS setup
-      mwifiex: tdls related handling for data packets addressed to TDLS peer
-      mwifiex: AMPDU support for TDLS link
-      mwifiex: pass ieee80211_vht_cap to mwifiex_fill_vht_cap_tlv
-      mwifiex: add VHT support for TDLS
-      mwifiex: separate BA params for TDLS link if 11ac is supported
-      mwifiex: disable all TDLS link during disconnection
-      mwifiex: parse API version from FW
-      mwifiex: add key material v2 support
-
-Barak Bercovitz (2):
-      wlcore: block read/writes to FW during ELP
-      wlcore: don't stop sched_scan on interface removal
-
-Bing Zhao (4):
-      mwifiex: make use of IEEE80211_VHT_MCS_NOT_SUPPORTED
-      mwifiex: make 11ac mcs rate tables global and const
-      mwifiex: improve readability in 11ac mcsmap to maxrate conversion
-      mwifiex: remove unsupported code in 11ac
-
-Chun-Yeow Yeoh (1):
-      mac80211: fix the increment of mesh precedence value
-
-Daniel Kim (2):
-      brcmfmac: enable firmware console logging functionality
-      brcmfmac: correct setting of WEP broadcast/unicast keys
-
-David Spinadel (2):
-      iwlwifi: mvm: don't stop sched scan in restart
-      iwlwifi: mvm: notify scan completed even if no fw_restart
-
-Eliad Peller (24):
-      iwlwifi: mvm: add basic bcast filtering implementation
-      iwlwifi: mvm: add predefined broadcast filter configuration
-      iwlwifi: mvm: add dest ip to bcast filter configuration
-      iwlwifi: mvm: add bcast_filtering debugfs entries
-      iwlwifi: add D0i3 references boiler plate
-      iwlwifi: add enter/exit D0i3 ops
-      iwlwifi: mvm: add D0i3 power configurations
-      iwlwifi: mvm: configure vifs upon D0i3 entry/exit
-      iwlwifi: mvm: allow transport sleep when FW is operational
-      iwlwifi: mvm: add D0i3 ref/unref for ROC commands
-      iwlwifi: mvm: add D0i3 ref/unref when ap, ibss or p2p_cli vifs are ru=
-nning
-      iwlwifi: mvm: add d0i3_refs debugfs file
-      iwlwifi: mvm: configure WOWLAN_CONFIGURATION on D0i3 entry
-      iwlwifi: mvm: get status on D0i3 exit
-      iwlwifi: mvm: add debugfs hook to take an mvm ref
-      iwlwifi: mvm: reserve sta_id 0 to station
-      wlcore/wl12xx/wl18xx: simplify fw_status handling
-      wlcore/wl12xx/wl18xx: configure num_links per-hw
-      wlcore/wl12xx/wl18xx: configure max_stations per-hw
-      wlcore/wl12xx/wl18xx: configure iface_combinations per-hw
-      wl18xx: move to new firmware (wl18xx-fw-3.bin)
-      wlcore: don't handle unsetting of default wep key
-      wlcore: consider multiple APs when checking active_link_count
-      wlcore: enable beacon filtering only after receiving a beacon
-
-Emmanuel Grumbach (24):
-      iwlwifi: 7000: warn about old firmware
-      iwlwifi: remove obsolete TODO
-      iwlwifi: mvm: provide helper to fetch the iwl_mvm_sta from sta_id
-      iwlwifi: mvm: check ARRAY_SIZE(mvm->fw_id_to_mac_id) =3D IWL_MVM_STAT=
-ION_COUNT
-      iwlwifi: pcie: fix unused variable gcc warning
-      iwlwifi: mvm: BT Coex - set low latency vif as primary
-      iwlwifi: mvm: BT Coex - change SMPS settings in AP mode
-      iwlwifi: mvm: change the format of the SRAM dump
-      iwlwifi: mvm: allow to force reduced tx power from debugfs
-      iwlwifi: mvm: add vif type in debugfs output
-      iwlwifi: fix kerneldoc format
-      iwlwifi: mvm: BT Coex - fix SYNC2SCO flags
-      iwlwifi: mvm: remove duplicate assignment to ap_ibss_active
-      iwlwifi: mvm: clean up in power code
-      iwlwifi: mvm: don't look at power commmand to decide if power is enab=
-led
-      iwlwifi: mvm: don't send the beacon filtering command from iterator
-      iwlwifi: mvm: store latest power command for debugfs read
-      iwlwifi: mvm: remove support for legacy power API
-      iwlwifi: mvm: remove iwl_mvm_power_mac_disable
-      iwlwifi: mvm: refactor power code
-      mac80211: remove unused radiotap vendor fields in ieee80211_rx_status
-      mac80211: move VHT related RX_FLAG to another variable
-      mac80211: propagate STBC / LDPC flags to radiotap
-      iwlwifi: mvm: fix typo in WARNING in rs.c
-
-Eran Harary (8):
-      iwlwifi: Add 8000 HW family support
-      iwlwifi: mvm: support NVM sections for family 8000
-      iwlwifi: pcie: disable APMG configurations for family 8000
-      iwlwifi: pcie: change CSR reset in family 8000
-      iwlwifi: pcie: Disable L0S exit timer for 8000 HW family
-      iwlwifi: pcie: fix secure section / dual cpu firmware loading
-      iwlwifi: mvm: support multiple firmware sections
-      iwlwifi: mvm: support alive notification api version2
-
-Eyal Shapira (1):
-      mac80211: advertise BF STS according to AP support
-
-Franky Lin (1):
-      brcmfmac: add owner info to sdio_driver structure
-
-Geert Uytterhoeven (1):
-      ath9k: Fix uninitialized variable in ath9k_has_tx_pending()
-
-Hante Meuleman (4):
-      brcmfmac: expand sta info to report dtim and beacon period.
-      brcmfmac: fix sdio sending of large buffers.
-      brcmfmac: simplify sdio code download routine.
-      brcmfmac: on sdio remove first detach bus then stop worker.
-
-Ido Yariv (3):
-      iwlwifi: pcie: retrieve and parse ACPI power limitations
-      iwlwifi: mvm: handle platform PCIe power limitation
-      iwlwifi: 7265: add power limit/tx backoff translation table
-
-Igal Chernobelsky (1):
-      wlcore: send EAPOL frames with voice priority
-
-Ilan Peer (5):
-      iwlwifi: mvm: add the quota remainder to a data binding
-      iwlwifi: mvm: fix quota allocation
-      cfg80211: fix few minor issues in reg_process_hint()
-      mac80211: Fix ROC duration =3D=3D 0 handling
-      iwlwifi: mvm: modify the tsf_id master/slave logic
-
-Janusz Dziedzic (4):
-      nl80211: add Guard Interval support for set_bitrate_mask
-      cfg80211: set preset_chandef after channel switch
-      cfg80211: add helper reg_get_regdomain() function
-      cfg80211: regulatory introduce maximum bandwidth calculation
-
-Johannes Berg (32):
-      iwlwifi: mvm: implement AP/GO uAPSD support
-      iwlwifi: pcie: make FH debugfs file code easier to understand
-      iwlwifi: mvm: add low-latency framework
-      iwlwifi: mvm: disable powersave in low-latency
-      iwlwifi: mvm: reserve bandwidth for low-latency interface
-      iwlwifi: mvm: limit non-low-latency binding scheduling duration
-      iwlwifi: rs: use const u16 for throughput tables
-      iwlwifi: mvm: remove unneeded calculations
-      iwlwifi: mvm: abort scheduled scan on scan request
-      iwlwifi: mvm: clean up iwl_mvm_bss_info_changed_ap_ibss
-      cfg80211: make connect ie param const
-      nl80211: check channel switch validity better
-      mac80211: mesh: remove mesh_id check
-      mac80211: use sdata mesh_id_len instead of wdev's
-      mac80211: fix agg_status debugfs file write
-      mac80211: make rate control ops const
-      mac80211: make cfg80211 ops and privid const
-      nl80211: make netlink attribute policies const
-      cfg80211: make device_type const
-      mac80211_hwsim: make netlink policy const
-      mac80211: minstrel_ht: sample_table can be __read_mostly
-      mac80211: remove module handling from rate control ops
-      mac80211_hwsim: make P2P-Device support optional
-      nl80211: check nla_parse() return values
-      mac80211: add length check in ieee80211_is_robust_mgmt_frame()
-      nl80211: send event when AP operation is stopped
-      nl80211: fix scheduled scan RSSI matchset attribute confusion
-      mac80211: remove set but unused variables
-      mac80211: fix bufferable MMPDU RX handling
-      wireless: sort and extend element ID list
-      mac80211: order IEs in probe request correctly
-      mac80211: order IEs in association request correctly
-
-John W. Linville (4):
-      Merge git://git.kernel.org/.../iwlwifi/iwlwifi-next
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
-ext into for-davem
-
-Jouni Malinen (3):
-      cfg80211: Allow BSS hint to be provided for connect
-      cfg80211: Advertise maximum associated STAs in AP mode
-      cfg80211: Clean up connect params and channel fetching
-
-Karl Beldan (1):
-      mac80211: send {ADD,DEL}BA on AC_VO like other mgmt frames, as per sp=
-ec
-
-Liad Kaufman (1):
-      iwlwifi: fix potential buffer overrun in fw name
-
-Luciano Coelho (4):
-      mac80211: refactor ieee80211_mesh_process_chanswitch()
-      mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_assign_bea=
-con()
-      mac80211: only set CSA beacon when at least one beacon must be transm=
-itted
-      mac80211: ibss: remove unnecessary call to release channel
-
-Marek Kwaczynski (1):
-      mac80211: update opmode when adding new station
-
-Masaki TAGAWA (1):
-      ath9k_htc: Add device ID for Buffalo WLI-UV-AG300P
-
-Michal Kazior (7):
-      mac80211: batch CSA bss info notification
-      mac80211: fix possible memory leak on AP CSA failure
-      mac80211: move csa_active setting in STA CSA
-      mac80211: fix sdata->radar_required locking
-      mac80211: add missing CSA locking
-      cfg80211: consider existing DFS interfaces
-      ath9k: prepare for multi-interface CSA support
-
-Nadim Zubidat (1):
-      wlcore: memset wl->rx_filter_enabled to zero after recovery
-
-Oleksij Rempel (13):
-      ath: add last_rssi to ath_common
-      ath9k: move ath9k_process_rssi to common.c
-      ath9k: move ath9k_process_rate to common.c
-      ath9k: move ath9k_rx_accept to common.c
-      ath9k_htc: add rx header converter to make it usable by ath9k
-      ath9k_htc: use ath9k_cmn_process_rssi
-      ath9k_htc: use ath9k_cmn_process_rate
-      ath9k_htc: use ath9k_cmn_rx_accept
-      ath9k_htc: sync rx_status-> related code with ath9k
-      ath9k: move ath9k_rx_skb_postprocess to common.c
-      ath9k_htc: use ath9k_cmn_rx_skb_postprocess
-      ath9k_htc: remove useless memcpy
-      ath9k_htc: catch fw panic pattern
-
-Pontus Fuchs (9):
-      wcn36xx: Fix copy paste error hal_exit_bmps -> hal_keep_alive
-      wcn36xx: Improve feature caps exchange
-      wcn36xx: Wait longer for SMD commands to complete
-      wcn36xx: Cache nv to avoid request_firmware on resume path
-      wcn36xx: Print FW capabilities
-      wcn36xx: Add support for 3680
-      wcn36xx: Rename wcn36xx_vif.ucast_dpu_signature to self_ucast_dpu_sign
-      wcn36xx: Track dpu signature per sta
-      wcn36xx: Update dtim period before starting BSS
-
-Shaibal Dutta (2):
-      net: wireless: move regulatory timeout work to power efficient workqu=
-eue
-      net: rfkill: move poll work to power efficient workqueue
-
-Simon Wunderlich (1):
-      mac80211: send ibss probe responses with noack flag
-
-Stanislaw Gruszka (1):
-      rt2x00: move frequent messages to debug level
-
-Stephen Rothwell (1):
-      Staging: rtl8812ae: remove modules field of rate_control_ops
-
-Sujith Manoharan (9):
-      ath9k: Remove unnecessary check
-      ath9k: Remove ath9k rate control
-      ath9k: Fix IQ cal post processing for SoC
-      ath9k: Check explicitly for IQ calibration
-      ath9k: Rename ar9003_hw_tx_iqcal_load_avg_2_passes
-      ath9k: Fix magnitude/phase calculation
-      ath9k: Modify IQ calibration for AR955x
-      ath9k: Expand the IQ coefficient array
-      ath9k: Calculate IQ-CAL median
-
-Yaniv Machani (1):
-      wlcore: increase timeout to 5000 msecs
-
-ZHAO Gang (1):
-      b43: use kernel api to replace b43 specific helper function
-
-andrea merello (2):
-      mac80211: add check on hw->max_signal value on ieee80211_register_hw
-      rtl818x: change misleading names for few register bit definitions
-
- drivers/net/wireless/ath/ath.h                     |    2 +
- drivers/net/wireless/ath/ath10k/txrx.c             |    4 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |   27 +-
- drivers/net/wireless/ath/ath9k/Kconfig             |   12 -
- drivers/net/wireless/ath/ath9k/Makefile            |    1 -
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      |  235 ++-
- drivers/net/wireless/ath/ath9k/ath9k.h             |   11 +-
- drivers/net/wireless/ath/ath9k/beacon.c            |   29 +-
- drivers/net/wireless/ath/ath9k/common.c            |  244 ++++
- drivers/net/wireless/ath/ath9k/common.h            |   19 +
- drivers/net/wireless/ath/ath9k/debug.h             |    1 -
- drivers/net/wireless/ath/ath9k/dfs_debug.h         |    2 +
- drivers/net/wireless/ath/ath9k/hif_usb.c           |    2 +
- drivers/net/wireless/ath/ath9k/htc.h               |    1 -
- drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |  176 +--
- drivers/net/wireless/ath/ath9k/htc_hst.c           |   36 +
- drivers/net/wireless/ath/ath9k/htc_hst.h           |   12 +
- drivers/net/wireless/ath/ath9k/hw.c                |    1 -
- drivers/net/wireless/ath/ath9k/init.c              |   16 +-
- drivers/net/wireless/ath/ath9k/mac.h               |    9 +-
- drivers/net/wireless/ath/ath9k/main.c              |   16 +-
- drivers/net/wireless/ath/ath9k/rc.c                | 1495 ----------------=
-----
- drivers/net/wireless/ath/ath9k/rc.h                |  248 ----
- drivers/net/wireless/ath/ath9k/recv.c              |  266 +---
- drivers/net/wireless/ath/ath9k/xmit.c              |    2 +-
- drivers/net/wireless/ath/wcn36xx/dxe.c             |   10 +-
- drivers/net/wireless/ath/wcn36xx/dxe.h             |    4 +-
- drivers/net/wireless/ath/wcn36xx/hal.h             |    4 +-
- drivers/net/wireless/ath/wcn36xx/main.c            |   72 +-
- drivers/net/wireless/ath/wcn36xx/smd.c             |   64 +-
- drivers/net/wireless/ath/wcn36xx/smd.h             |    5 +-
- drivers/net/wireless/ath/wcn36xx/txrx.c            |    7 +-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h         |   10 +-
- drivers/net/wireless/b43/main.h                    |   35 -
- drivers/net/wireless/b43/xmit.c                    |   12 +-
- drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    4 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    8 +-
- drivers/net/wireless/brcm80211/brcmfmac/chip.c     | 1029 ++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/chip.h     |   91 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  536 ++++---
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |    5 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |    2 +-
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  972 -------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |  231 ---
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   89 ++
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   83 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    3 +-
- drivers/net/wireless/iwlegacy/3945-rs.c            |    3 +-
- drivers/net/wireless/iwlegacy/4965-rs.c            |    3 +-
- drivers/net/wireless/iwlwifi/Kconfig               |   14 +
- drivers/net/wireless/iwlwifi/Makefile              |    2 +-
- drivers/net/wireless/iwlwifi/dvm/rs.c              |   23 +-
- drivers/net/wireless/iwlwifi/dvm/rs.h              |    2 +-
- drivers/net/wireless/iwlwifi/iwl-7000.c            |   23 +-
- drivers/net/wireless/iwlwifi/iwl-8000.c            |  132 ++
- drivers/net/wireless/iwlwifi/iwl-config.h          |   18 +
- drivers/net/wireless/iwlwifi/iwl-csr.h             |   32 -
- drivers/net/wireless/iwlwifi/iwl-debug.h           |    2 +
- drivers/net/wireless/iwlwifi/iwl-drv.c             |    5 +-
- drivers/net/wireless/iwlwifi/iwl-fw.h              |    7 +-
- drivers/net/wireless/iwlwifi/iwl-io.c              |   15 +
- drivers/net/wireless/iwlwifi/iwl-io.h              |    2 +
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-op-mode.h         |   24 +-
- drivers/net/wireless/iwlwifi/iwl-phy-db.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h            |   46 +
- drivers/net/wireless/iwlwifi/iwl-trans.h           |   38 +
- drivers/net/wireless/iwlwifi/mvm/Makefile          |    2 +-
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c         |  138 +-
- drivers/net/wireless/iwlwifi/mvm/constants.h       |    4 +
- drivers/net/wireless/iwlwifi/mvm/d3.c              |   31 +-
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c     |  112 +-
- drivers/net/wireless/iwlwifi/mvm/debugfs.c         |  285 +++-
- drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h  |   17 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h       |    6 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h    |   33 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h      |   31 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api.h          |  128 +-
- drivers/net/wireless/iwlwifi/mvm/fw.c              |   67 +-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c        |   76 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  476 ++++++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h             |  168 ++-
- drivers/net/wireless/iwlwifi/mvm/nvm.c             |   34 +-
- drivers/net/wireless/iwlwifi/mvm/ops.c             |  257 +++-
- drivers/net/wireless/iwlwifi/mvm/power.c           |  385 +++--
- drivers/net/wireless/iwlwifi/mvm/power_legacy.c    |  319 -----
- drivers/net/wireless/iwlwifi/mvm/quota.c           |  119 +-
- drivers/net/wireless/iwlwifi/mvm/rs.c              |   29 +-
- drivers/net/wireless/iwlwifi/mvm/rs.h              |    2 +-
- drivers/net/wireless/iwlwifi/mvm/rx.c              |   12 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c            |   15 +-
- drivers/net/wireless/iwlwifi/mvm/sta.c             |  203 ++-
- drivers/net/wireless/iwlwifi/mvm/sta.h             |   62 +-
- drivers/net/wireless/iwlwifi/mvm/time-event.c      |    2 +
- drivers/net/wireless/iwlwifi/mvm/tt.c              |    7 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c              |   23 +
- drivers/net/wireless/iwlwifi/mvm/utils.c           |   99 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c            |   82 ++
- drivers/net/wireless/iwlwifi/pcie/rx.c             |    3 +-
- drivers/net/wireless/iwlwifi/pcie/trans.c          |  267 ++--
- drivers/net/wireless/iwlwifi/pcie/tx.c             |    5 +-
- drivers/net/wireless/libertas/cfg.c                |    3 +-
- drivers/net/wireless/mac80211_hwsim.c              |   90 +-
- drivers/net/wireless/mac80211_hwsim.h              |    2 +
- drivers/net/wireless/mwifiex/11ac.c                |  192 ++-
- drivers/net/wireless/mwifiex/11ac.h                |    2 +
- drivers/net/wireless/mwifiex/11n.c                 |   51 +-
- drivers/net/wireless/mwifiex/11n.h                 |   44 +-
- drivers/net/wireless/mwifiex/11n_rxreorder.c       |   27 +-
- drivers/net/wireless/mwifiex/Makefile              |    1 +
- drivers/net/wireless/mwifiex/cfg80211.c            |  184 ++-
- drivers/net/wireless/mwifiex/cfp.c                 |  203 ++-
- drivers/net/wireless/mwifiex/cmdevt.c              |   54 +-
- drivers/net/wireless/mwifiex/decl.h                |   23 +
- drivers/net/wireless/mwifiex/fw.h                  |  181 ++-
- drivers/net/wireless/mwifiex/init.c                |    5 +
- drivers/net/wireless/mwifiex/ioctl.h               |   22 +-
- drivers/net/wireless/mwifiex/join.c                |   14 +-
- drivers/net/wireless/mwifiex/main.h                |   90 +-
- drivers/net/wireless/mwifiex/pcie.c                |  138 +-
- drivers/net/wireless/mwifiex/scan.c                |  598 +++++---
- drivers/net/wireless/mwifiex/sta_cmd.c             |  373 ++++-
- drivers/net/wireless/mwifiex/sta_cmdresp.c         |  112 +-
- drivers/net/wireless/mwifiex/sta_event.c           |   12 +
- drivers/net/wireless/mwifiex/sta_ioctl.c           |   40 +-
- drivers/net/wireless/mwifiex/sta_rx.c              |   13 +-
- drivers/net/wireless/mwifiex/sta_tx.c              |    3 +
- drivers/net/wireless/mwifiex/tdls.c                | 1044 ++++++++++++++
- drivers/net/wireless/mwifiex/uap_event.c           |  118 --
- drivers/net/wireless/mwifiex/util.c                |  114 ++
- drivers/net/wireless/mwifiex/util.h                |   20 +-
- drivers/net/wireless/mwifiex/wmm.c                 |   96 +-
- drivers/net/wireless/mwifiex/wmm.h                 |   18 +
- drivers/net/wireless/rndis_wlan.c                  |    4 +-
- drivers/net/wireless/rt2x00/rt2800usb.c            |   10 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |    8 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |   14 +-
- drivers/net/wireless/rtl818x/rtl818x.h             |   10 +-
- drivers/net/wireless/rtlwifi/rc.c                  |    3 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |    2 +-
- drivers/net/wireless/ti/wl12xx/main.c              |   67 +-
- drivers/net/wireless/ti/wl12xx/wl12xx.h            |   53 +
- drivers/net/wireless/ti/wl18xx/main.c              |   85 +-
- drivers/net/wireless/ti/wl18xx/tx.c                |    4 +-
- drivers/net/wireless/ti/wl18xx/wl18xx.h            |   62 +-
- drivers/net/wireless/ti/wlcore/acx.c               |    7 +-
- drivers/net/wireless/ti/wlcore/acx.h               |    6 +-
- drivers/net/wireless/ti/wlcore/cmd.c               |   24 +-
- drivers/net/wireless/ti/wlcore/cmd.h               |    9 +-
- drivers/net/wireless/ti/wlcore/event.c             |    4 +-
- drivers/net/wireless/ti/wlcore/hw_ops.h            |    9 +
- drivers/net/wireless/ti/wlcore/init.c              |    6 +-
- drivers/net/wireless/ti/wlcore/io.h                |    8 +-
- drivers/net/wireless/ti/wlcore/main.c              |  192 +--
- drivers/net/wireless/ti/wlcore/ps.c                |    6 +-
- drivers/net/wireless/ti/wlcore/rx.c                |   19 +-
- drivers/net/wireless/ti/wlcore/rx.h                |    2 +-
- drivers/net/wireless/ti/wlcore/tx.c                |   45 +-
- drivers/net/wireless/ti/wlcore/tx.h                |    1 +
- drivers/net/wireless/ti/wlcore/wlcore.h            |   27 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h          |   86 +-
- drivers/staging/rtl8821ae/rc.c                     |    1 -
- include/linux/ieee80211.h                          |  199 ++-
- include/net/cfg80211.h                             |   43 +-
- include/net/ieee80211_radiotap.h                   |    4 +
- include/net/mac80211.h                             |   52 +-
- include/uapi/linux/nl80211.h                       |   52 +-
- net/mac80211/agg-tx.c                              |    2 +-
- net/mac80211/cfg.c                                 |  198 ++-
- net/mac80211/cfg.h                                 |    2 +-
- net/mac80211/chan.c                                |    2 +
- net/mac80211/debugfs_sta.c                         |    2 +-
- net/mac80211/ht.c                                  |    2 +-
- net/mac80211/ibss.c                                |   28 +-
- net/mac80211/ieee80211_i.h                         |   14 +-
- net/mac80211/iface.c                               |    2 +
- net/mac80211/main.c                                |    9 +-
- net/mac80211/mesh.c                                |   96 +-
- net/mac80211/mlme.c                                |   41 +-
- net/mac80211/rate.c                                |   46 +-
- net/mac80211/rate.h                                |    2 +-
- net/mac80211/rc80211_minstrel.c                    |    2 +-
- net/mac80211/rc80211_minstrel.h                    |    2 +-
- net/mac80211/rc80211_minstrel_ht.c                 |    7 +-
- net/mac80211/rc80211_pid_algo.c                    |    2 +-
- net/mac80211/rx.c                                  |  101 +-
- net/mac80211/sta_info.h                            |    2 +
- net/mac80211/status.c                              |    3 +-
- net/mac80211/tx.c                                  |   33 +-
- net/mac80211/util.c                                |   42 +-
- net/mac80211/vht.c                                 |   26 +-
- net/mac80211/wpa.c                                 |    9 +-
- net/rfkill/core.c                                  |    9 +-
- net/wireless/ap.c                                  |    3 +-
- net/wireless/chan.c                                |   23 +-
- net/wireless/core.c                                |    2 +-
- net/wireless/core.h                                |    7 +-
- net/wireless/ibss.c                                |   19 +-
- net/wireless/mesh.c                                |    6 +-
- net/wireless/mlme.c                                |    2 +-
- net/wireless/nl80211.c                             |  229 ++-
- net/wireless/nl80211.h                             |    2 +
- net/wireless/reg.c                                 |  188 ++-
- net/wireless/reg.h                                 |    2 +
- net/wireless/trace.h                               |   23 +-
- net/wireless/util.c                                |    5 +-
- 211 files changed, 9921 insertions(+), 6336 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/ath9k/rc.c
- delete mode 100644 drivers/net/wireless/ath/ath9k/rc.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/chip.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/chip.h
- delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
- delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-8000.c
- delete mode 100644 drivers/net/wireless/iwlwifi/mvm/power_legacy.c
- create mode 100644 drivers/net/wireless/mwifiex/tdls.c
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---nFreZHaLTZJo0R7j
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTBmXNAAoJEJctW/TcYTgGukAP/imiWkDoYCtH8pRRsqfUtupz
-ImijfboPVuooFS7HLum6dnSxqk2cuOBwTBm3L4m4Bd6hGBob2RVmK/5ZWdXXGsHg
-ARGQvSioPtnoOLzWdqGQ/8GZTPrk4cKayvOkxbdpVEqe9AOaLF4ThKSrw2R4o6vi
-Wh0iYcGHmW4yL52Kpu5RAL6LJ5SOswT0o9SasYwwBDiceG3EzcM7TLqhRi96KxAc
-5Ta32BxWMYaAlcoB86j863BVoMQuzibczW/7Wu1nCUTsE1Suthct1CXGD+T2xTzc
-Sbaf89ZGR1ILc6VDfQWpb7cDXhEjZxexAv7gZ3voScVPJ0LIISS7og6CGoG71U9U
-6PWTRM3phvHINb3lXV2HayV/wpTlortspVXpqaBZKBPnyDoQwjZNaMHVJVMf4BQx
-gJidE4gx0MTtJX5Vok3Czt6V7kzPJg77Bm4ObjS3Da5da9CDwqewgxlghVa3u/Bo
-wfhpSBtWMtMNfuq2j6m/Mmp1Sjail1xTM2Y4I43UMKH0i6gCKp8yjk8+BoRLKz/z
-k/NRHzPySvOQy5jSlWe4nDqHp6UsGCweWbMQHRXR++QFuE7sjxYh4SSqWmWlJHya
-tnTRrGDDHL0lSV/16qIDZLpgimXbOQcL5b4ObakYW+t4SZY+hd36JyBG5oKR/25O
-nfKHMh7emxftOWI/yMdq
-=noui
------END PGP SIGNATURE-----
-
---nFreZHaLTZJo0R7j--
