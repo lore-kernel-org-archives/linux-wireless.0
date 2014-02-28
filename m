@@ -1,92 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:44123 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbaBDLuD (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:55130 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbaB1VRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:50:03 -0500
-Message-ID: <1391514600.26522.93.camel@porter.coelho.fi> (sfid-20140204_125007_334254_6B29EAF3)
-Subject: Re: [RFC 1/2] mac80211: merge STA CSA code
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 04 Feb 2014 13:50:00 +0200
-In-Reply-To: <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
-References: <1391421529-6067-1-git-send-email-michal.kazior@tieto.com>
-	 <1391421529-6067-2-git-send-email-michal.kazior@tieto.com>
-	 <1391504990.26522.34.camel@porter.coelho.fi>
-	 <CA+BoTQkdorOFytjLYHC9OhxH1w=sNTTPRF7b2cSAWy8OCeBQ0A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 28 Feb 2014 16:17:24 -0500
+Received: by mail-oa0-f52.google.com with SMTP id l6so2569407oag.39
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 13:17:24 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 16/16 V3] rtlwifi: rtl8723be: Turn on building of new driver
+Date: Fri, 28 Feb 2014 15:16:58 -0600
+Message-Id: <1393622218-1455-17-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140228_221842_742638_0B6825F5)
+In-Reply-To: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1393622218-1455-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-02-04 at 12:29 +0100, Michal Kazior wrote:
-> On 4 February 2014 10:09, Luca Coelho <luca@coelho.fi> wrote:
-> > On Mon, 2014-02-03 at 10:58 +0100, Michal Kazior wrote:
-> >> +void ieee80211_csa_disconnect(struct ieee80211_sub_if_data *sdata)
-> >> +{
-> >> +     struct ieee80211_local *local = sdata->local;
-> >> +     struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> >> +
-> >> +     switch (sdata->vif.type) {
-> >> +     case NL80211_IFTYPE_STATION:
-> >> +     case NL80211_IFTYPE_P2P_CLIENT:
-> >> +             ieee80211_queue_work(&local->hw,
-> >> +                                  &ifmgd->csa_connection_drop_work);
-> >> +             break;
-> >> +     default:
-> >> +             /* XXX: other iftypes should be halted too */
-> >
-> > Good point.  This case would suck, but we need to do something because
-> > the stations will think that we're on the different channel at this
-> > point.  But maybe instead the userspace should be notified instead of
-> > halting here? It could retry with a count 0, for example.
-> 
-> Ideally cfg80211 should be the one stopping interfaces. This way you'd
-> get AP stopped event (recently done by Johannes) and userspace can do
-> something about (e.g. re-start APs from scratch).
+All code for the new driver was previously committed and it is now
+possible to build the new driver.
 
-Yeah, this is a tricky case and the best we can do is probably just stop
-the interface.
+This commit also modifies this new driver for the changed API for
+ieee80211_is_robust_mgmt_frame().
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/Kconfig            | 19 ++++++++++++++++---
+ drivers/net/wireless/rtlwifi/Makefile           |  1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/Makefile | 20 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c    |  2 +-
+ 4 files changed, 38 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723be/Makefile
 
-> >> -int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-> >> -                          struct cfg80211_csa_settings *params)
-> >> +int __ieee80211_channel_switch(struct ieee80211_sub_if_data *sdata,
-> >> +                            struct cfg80211_csa_settings *params)
-> >
-> > Why did you have to split this function? All cases where you call
-> > __ieee80211_channel_switch() you lock->call->unlock anyway.
-> 
-> It was shorter. The function does a bunch of return's so I'd have to
-> do err+goto. Since it asserts sdata lock is held I decided to assert
-> chanctx_mtx is held as well and lock the thing from call sites.
-
-Fair enough.
-
-
-> >> @@ -998,6 +944,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-> >>       if (res)
-> >>               return;
-> >>
-> >> +     /* FIXME: This check should be moved to cfg80211 */
-> >
-> > This is not really related to this patch.
-> >
-> >
-> >>       if (!cfg80211_chandef_usable(local->hw.wiphy, &csa_ie.chandef,
-> >>                                    IEEE80211_CHAN_DISABLED)) {
-> >>               sdata_info(sdata,
-> 
-> Ideally mac80211 shouldn't be the one checking that - it should be
-> cfg80211, shouldn't it?
-
-Yes, but this patch doesn't change anything regarding this.  In any
-case, it's an informative FIXME, so I guess it can go together with any
-patch (it would be silly to have a separate patch just to add the
-FIXME).  So, fine by me. :)
-
---
-Luca.
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index 9251e0d..bf3cf12 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -5,7 +5,7 @@ menuconfig RTL_CARDS
+ 	---help---
+ 	  This option will enable support for the Realtek mac80211-based
+ 	  wireless drivers. Drivers rtl8192ce, rtl8192cu, rtl8192se, rtl8192de,
+-	  rtl8723ae, and rtl8188ae share some common code.
++	  rtl8723ae, rtl8723be, and rtl8188ae share some common code.
+ 
+ if RTL_CARDS
+ 
+@@ -56,6 +56,19 @@ config RTL8723AE
+ 
+ 	If you choose to build it as a module, it will be called rtl8723ae
+ 
++config RTL8723BE
++	tristate "Realtek RTL8723BE PCIe Wireless Network Adapter"
++	depends on PCI
++	select RTLWIFI
++	select RTLWIFI_PCI
++	select RTL8723_COMMON
++	select RTLBTCOEXIST
++	---help---
++	This is the driver for Realtek RTL8723BE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8723be
++
+ config RTL8188EE
+ 	tristate "Realtek RTL8188EE Wireless Network Adapter"
+ 	depends on PCI
+@@ -105,12 +118,12 @@ config RTL8192C_COMMON
+ 
+ config RTL8723_COMMON
+ 	tristate
+-	depends on RTL8723AE
++	depends on RTL8723AE || RTL8723BE
+ 	default y
+ 
+ config RTLBTCOEXIST
+ 	tristate
+-	depends on RTL8723AE
++	depends on RTL8723AE || RTL8723BE
+ 	default y
+ 
+ endif
+diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+index d97d1b9..bba36a0 100644
+--- a/drivers/net/wireless/rtlwifi/Makefile
++++ b/drivers/net/wireless/rtlwifi/Makefile
+@@ -24,6 +24,7 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
+ obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
+ obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
+ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
++obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
+ obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
+ obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/Makefile b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+new file mode 100644
+index 0000000..4a75aab
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/Makefile
+@@ -0,0 +1,20 @@
++obj-m := rtl8723be.o
++
++
++rtl8723be-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		phy.o		\
++		pwrseq.o	\
++		pwrseqcmd.o	\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o		\
++
++
++obj-$(CONFIG_RTL8723BE) += rtl8723be.o
++
++ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+index d84adb3..7779531 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+@@ -602,7 +602,7 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
+ 			return false;
+ 		}
+ 
+-		if ((ieee80211_is_robust_mgmt_frame(hdr)) &&
++		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
+ 		    (ieee80211_has_protected(hdr->frame_control)))
+ 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
+ 		else
+-- 
+1.8.4.5
 
