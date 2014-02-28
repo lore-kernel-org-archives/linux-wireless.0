@@ -1,76 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:43521 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbaBLTFI (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63280 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751157AbaB1Dfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:05:08 -0500
-Received: by mail-we0-f176.google.com with SMTP id q58so6299916wes.21
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2014 11:05:07 -0800 (PST)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 7/9] wcn36xx: Rename wcn36xx_vif.ucast_dpu_signature to self_ucast_dpu_sign
-Date: Wed, 12 Feb 2014 19:04:46 +0000
-Message-Id: <1392231888-2191-7-git-send-email-k.eugene.e@gmail.com> (sfid-20140212_200520_572839_37CE1CEA)
-In-Reply-To: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
-References: <1392231888-2191-1-git-send-email-k.eugene.e@gmail.com>
+	Thu, 27 Feb 2014 22:35:39 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Tim Shepard <shep@alum.mit.edu>,
+	Avery Pennarun <apenwarr@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/9] mwifiex: abort scan while cancelling pending command
+Date: Thu, 27 Feb 2014 19:35:15 -0800
+Message-ID: <1393558517-887-1-git-send-email-bzhao@marvell.com> (sfid-20140228_043542_756921_01481988)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-This is more line with the names of the other members
+mwifiex_cancel_pending_ioctl() and
+mwifiex_cancel_all_pending_cmd() are called in command timeout
+and driver unload paths respectively.
+If scan operation is in progress, we should abort it smoothly.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Reported-by: Tim Shepard <shep@alum.mit.edu>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 2 +-
- drivers/net/wireless/ath/wcn36xx/txrx.c    | 2 +-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c | 38 ++++++++++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ae36409..c7da55c 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1121,7 +1121,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 64e708b..58cf3a9 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -966,7 +966,9 @@ void
+ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ {
+ 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node;
+-	unsigned long flags;
++	unsigned long flags, cmd_flags;
++	struct mwifiex_private *priv;
++	int i;
+ 
+ 	/* Cancel current cmd */
+ 	if ((adapter->curr_cmd) && (adapter->curr_cmd->wait_q_enabled)) {
+@@ -1006,9 +1008,21 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
  	}
+ 	spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
  
--	priv_vif->ucast_dpu_signature = params->ucast_dpu_signature;
-+	priv_vif->self_ucast_dpu_sign = params->ucast_dpu_signature;
- 
- 	return 0;
+-	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+-	adapter->scan_processing = false;
+-	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
++	if (adapter->scan_processing) {
++		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
++		adapter->scan_processing = false;
++		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
++		for (i = 0; i < adapter->priv_num; i++) {
++			priv = adapter->priv[i];
++			if (!priv)
++				continue;
++			if (priv->scan_request) {
++				dev_dbg(adapter->dev, "info: aborting scan\n");
++				cfg80211_scan_done(priv->scan_request, 1);
++				priv->scan_request = NULL;
++			}
++		}
++	}
  }
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index b2b60e3..2dbed20 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -147,7 +147,7 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
- 		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
+ 
+ /*
+@@ -1027,7 +1041,8 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node = NULL;
+ 	unsigned long cmd_flags;
+ 	unsigned long scan_pending_q_flags;
+-	bool cancel_scan_cmd = false;
++	struct mwifiex_private *priv;
++	int i;
+ 
+ 	if ((adapter->curr_cmd) &&
+ 	    (adapter->curr_cmd->wait_q_enabled)) {
+@@ -1053,15 +1068,24 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+ 		spin_lock_irqsave(&adapter->scan_pending_q_lock,
+ 				  scan_pending_q_flags);
+-		cancel_scan_cmd = true;
  	}
+ 	spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+ 			       scan_pending_q_flags);
  
--	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
-+	bd->dpu_sign = __vif_priv->self_ucast_dpu_sign;
- 
- 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
- 	   (sta_priv && !sta_priv->is_data_encrypted))
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index b4dc85b..6447105 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -125,10 +125,10 @@ struct wcn36xx_vif {
- 	enum wcn36xx_power_state pw_state;
- 
- 	u8 bss_index;
--	u8 ucast_dpu_signature;
- 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
- 	u8 self_sta_index;
- 	u8 self_dpu_desc_index;
-+	u8 self_ucast_dpu_sign;
- };
- 
- /**
+-	if (cancel_scan_cmd) {
++	if (adapter->scan_processing) {
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+ 		adapter->scan_processing = false;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
++		for (i = 0; i < adapter->priv_num; i++) {
++			priv = adapter->priv[i];
++			if (!priv)
++				continue;
++			if (priv->scan_request) {
++				dev_dbg(adapter->dev, "info: aborting scan\n");
++				cfg80211_scan_done(priv->scan_request, 1);
++				priv->scan_request = NULL;
++			}
++		}
+ 	}
+ 	adapter->cmd_wait_q.status = -1;
+ }
 -- 
-1.8.3.2
+1.8.2.3
 
