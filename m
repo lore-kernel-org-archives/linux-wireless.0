@@ -1,185 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:54212 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753542AbaBDJ2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Feb 2014 04:28:50 -0500
-Received: from ultralex.lan ([93.196.93.204]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0M2ts6-1VLP2F2cwo-00sgDm for
- <linux-wireless@vger.kernel.org>; Tue, 04 Feb 2014 10:28:49 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 10/13] ath9k: move ath9k_rx_skb_postprocess to common.c
-Date: Tue,  4 Feb 2014 10:27:47 +0100
-Message-Id: <1391506070-8636-11-git-send-email-linux@rempel-privat.de> (sfid-20140204_102856_748062_1382EC5E)
-In-Reply-To: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
-References: <1391506070-8636-1-git-send-email-linux@rempel-privat.de>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12624 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751157AbaB1Df1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Feb 2014 22:35:27 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 6/9] mwifiex: block further commands after timeout
+Date: Thu, 27 Feb 2014 19:35:15 -0800
+Message-ID: <1393558518-921-1-git-send-email-bzhao@marvell.com> (sfid-20140228_043530_938571_E7884DD8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and rename it to ath9k_cmn_rx_skb_postprocess. We will use it
-on ath9k_htc.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+This patch adds a check in command preparation routine.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/common.c | 52 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |  5 +++
- drivers/net/wireless/ath/ath9k/recv.c   | 55 ++-------------------------------
- 3 files changed, 59 insertions(+), 53 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 5c0d949..c6dd7f1 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -115,6 +115,58 @@ bool ath9k_cmn_rx_accept(struct ath_common *common,
- }
- EXPORT_SYMBOL(ath9k_cmn_rx_accept);
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 0958764..83195d9 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -514,6 +514,11 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		return -1;
+ 	}
  
-+void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
-+				  struct sk_buff *skb,
-+				  struct ath_rx_status *rx_stats,
-+				  struct ieee80211_rx_status *rxs,
-+				  bool decrypt_error)
-+{
-+	struct ath_hw *ah = common->ah;
-+	struct ieee80211_hdr *hdr;
-+	int hdrlen, padpos, padsize;
-+	u8 keyix;
-+	__le16 fc;
-+
-+	/* see if any padding is done by the hw and remove it */
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+	fc = hdr->frame_control;
-+	padpos = ieee80211_hdrlen(fc);
-+
-+	/* The MAC header is padded to have 32-bit boundary if the
-+	 * packet payload is non-zero. The general calculation for
-+	 * padsize would take into account odd header lengths:
-+	 * padsize = (4 - padpos % 4) % 4; However, since only
-+	 * even-length headers are used, padding can only be 0 or 2
-+	 * bytes and we can optimize this a bit. In addition, we must
-+	 * not try to remove padding from short control frames that do
-+	 * not have payload. */
-+	padsize = padpos & 3;
-+	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
-+		memmove(skb->data + padsize, skb->data, padpos);
-+		skb_pull(skb, padsize);
++	if (adapter->num_cmd_timeout) {
++		dev_err(adapter->dev, "PREP_CMD: FW is in bad state\n");
++		return -1;
 +	}
 +
-+	keyix = rx_stats->rs_keyix;
-+
-+	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
-+	    ieee80211_has_protected(fc)) {
-+		rxs->flag |= RX_FLAG_DECRYPTED;
-+	} else if (ieee80211_has_protected(fc)
-+		   && !decrypt_error && skb->len >= hdrlen + 4) {
-+		keyix = skb->data[hdrlen + 3] >> 6;
-+
-+		if (test_bit(keyix, common->keymap))
-+			rxs->flag |= RX_FLAG_DECRYPTED;
-+	}
-+	if (ah->sw_mgmt_crypto &&
-+	    (rxs->flag & RX_FLAG_DECRYPTED) &&
-+	    ieee80211_is_mgmt(fc))
-+		/* Use software decrypt for management frames. */
-+		rxs->flag &= ~RX_FLAG_DECRYPTED;
-+}
-+EXPORT_SYMBOL(ath9k_cmn_rx_skb_postprocess);
-+
- int ath9k_cmn_process_rate(struct ath_common *common,
- 			   struct ieee80211_hw *hw,
- 			   struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index c59d3f5..38b5609 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -48,6 +48,11 @@ bool ath9k_cmn_rx_accept(struct ath_common *common,
- 			 struct ath_rx_status *rx_stats,
- 			 bool *decrypt_error,
- 			 unsigned int rxfilter);
-+void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
-+				  struct sk_buff *skb,
-+				  struct ath_rx_status *rx_stats,
-+				  struct ieee80211_rx_status *rxs,
-+				  bool decrypt_error);
- int ath9k_cmn_process_rate(struct ath_common *common,
- 			   struct ieee80211_hw *hw,
- 			   struct ath_rx_status *rx_stats,
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 4dedbc2..076dae1 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -901,57 +901,6 @@ exit:
- 	return ret;
- }
- 
--static void ath9k_rx_skb_postprocess(struct ath_common *common,
--				     struct sk_buff *skb,
--				     struct ath_rx_status *rx_stats,
--				     struct ieee80211_rx_status *rxs,
--				     bool decrypt_error)
--{
--	struct ath_hw *ah = common->ah;
--	struct ieee80211_hdr *hdr;
--	int hdrlen, padpos, padsize;
--	u8 keyix;
--	__le16 fc;
--
--	/* see if any padding is done by the hw and remove it */
--	hdr = (struct ieee80211_hdr *) skb->data;
--	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--	fc = hdr->frame_control;
--	padpos = ieee80211_hdrlen(fc);
--
--	/* The MAC header is padded to have 32-bit boundary if the
--	 * packet payload is non-zero. The general calculation for
--	 * padsize would take into account odd header lengths:
--	 * padsize = (4 - padpos % 4) % 4; However, since only
--	 * even-length headers are used, padding can only be 0 or 2
--	 * bytes and we can optimize this a bit. In addition, we must
--	 * not try to remove padding from short control frames that do
--	 * not have payload. */
--	padsize = padpos & 3;
--	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
--		memmove(skb->data + padsize, skb->data, padpos);
--		skb_pull(skb, padsize);
--	}
--
--	keyix = rx_stats->rs_keyix;
--
--	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
--	    ieee80211_has_protected(fc)) {
--		rxs->flag |= RX_FLAG_DECRYPTED;
--	} else if (ieee80211_has_protected(fc)
--		   && !decrypt_error && skb->len >= hdrlen + 4) {
--		keyix = skb->data[hdrlen + 3] >> 6;
--
--		if (test_bit(keyix, common->keymap))
--			rxs->flag |= RX_FLAG_DECRYPTED;
--	}
--	if (ah->sw_mgmt_crypto &&
--	    (rxs->flag & RX_FLAG_DECRYPTED) &&
--	    ieee80211_is_mgmt(fc))
--		/* Use software decrypt for management frames. */
--		rxs->flag &= ~RX_FLAG_DECRYPTED;
--}
--
- /*
-  * Run the LNA combining algorithm only in these cases:
-  *
-@@ -1101,8 +1050,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			skb_pull(skb, ah->caps.rx_status_len);
- 
- 		if (!rs.rs_more)
--			ath9k_rx_skb_postprocess(common, hdr_skb, &rs,
--						 rxs, decrypt_error);
-+			ath9k_cmn_rx_skb_postprocess(common, hdr_skb, &rs,
-+						     rxs, decrypt_error);
- 
- 		if (rs.rs_more) {
- 			RX_STAT_INC(rx_frags);
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_RESET) {
+ 		if (cmd_no != HostCmd_CMD_FUNC_INIT) {
+ 			dev_err(adapter->dev, "PREP_CMD: FW in reset state\n");
 -- 
-1.9.rc1
+1.8.2.3
 
