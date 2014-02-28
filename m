@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58909 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752049AbaBBTUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Feb 2014 14:20:54 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Subject: RE: [PATCH v3 3/6] cfg80211: Enable GO operation on additional
- channels
-Date: Sun, 2 Feb 2014 19:20:50 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333705C1@HASMSX106.ger.corp.intel.com> (sfid-20140202_202121_268515_FCB85703)
-References: <1390818118-27261-1-git-send-email-ilan.peer@intel.com>
-	 <1390818118-27261-4-git-send-email-ilan.peer@intel.com>
-	 (sfid-20140127_112147_514798_01405A03)
- <1391177479.4141.23.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1391177479.4141.23.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:46534 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbaB1PMB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Feb 2014 10:12:01 -0500
+Received: by mail-ea0-f169.google.com with SMTP id d10so2802952eaj.28
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:12:00 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 2/3] mac80211: add max channel calculation utility function
+Date: Fri, 28 Feb 2014 16:06:46 +0100
+Message-Id: <1393600007-28766-3-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161207_706143_671D0DC9)
+In-Reply-To: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
+References: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsIA0KDQo+ID4gSXQgaXMgYXNzdW1lZCB0aGF0IHN1Y2ggcmVzdHJpY3Rpb25z
-IGFyZSBlbmZvcmNlZCBieSB1c2VyIHNwYWNlLg0KPiA+IEZ1cnRoZXJtb3JlLCBpdCBpcyBhc3N1
-bWVkLCB0aGF0IGlmIHRoZSBjb25kaXRpb25zIHRoYXQgYWxsb3dlZCBmb3INCj4gPiB0aGUgb3Bl
-cmF0aW9uIG9mIHRoZSBHTyBvbiBzdWNoIGEgY2hhbm5lbCBjaGFuZ2UsIGkuZS4sIHRoZSBzdGF0
-aW9uDQo+ID4gaW50ZXJmYWNlIGRpc2Nvbm5lY3RlZCBmcm9tIHRoZSBBUCwgaXQgaXMgdGhlIHJl
-c3BvbnNpYmlsaXR5IG9mIHVzZXINCj4gPiBzcGFjZSB0byBldmFjdWF0ZSB0aGUgR08gZnJvbSB0
-aGUgY2hhbm5lbC4NCj4gDQo+IEZvciB0aGUgbGF0dGVyIGhlcmUsIGRvbid0IHdlIG5lZWQgc29t
-ZSBzb3J0IG9mIGZsYWcgd2l0aCB1c2Vyc3BhY2Ugc2F5aW5nDQo+ICJ0cnVzdCBtZSwgSSBrbm93
-IHdoYXQgSSdtIGRvaW5nIj8gT3IgcHV0IGFub3RoZXIgd2F5IC0gaG93IGRvZXMgdGhpcyBub3QN
-Cj4gbWFrZSB1cyBicmVhayBjb21wbGlhbmNlIHdoZW4gcnVubmluZyB3aXRoIG9sZCB2ZXJzaW9u
-cyBvZg0KPiB3cGFfc3VwcGxpY2FudD8NCj4gDQoNCkkgZG8gbm90IHRoaW5rIHRoYXQgdGhpcyB3
-aWxsIGJlIG5lZWRlZCwgYXMgY3VycmVudCB3cGFfc3VwcGxpY2FudCBsb2dpYyBpcyBub3QgYXdh
-cmUgb2YgdGhlIEdPX0NPTkNVUlJFTlQgYW5kIElORE9PUl9PTkxZIGZsYWdzIChsZWF2aW5nIHRo
-ZW0gaWdub3JlZCkgYW5kIGRvZXMgbm90IGFsbG93IGluc3RhbnRpYXRpbmcgYW4gQVAvR08gb24g
-Y2hhbm5lbHMgbWFya2VkIHdpdGggTk9fSVIuIEluIGFkZGl0aW9uIGFzIHRoaXMgZmVhdHVyZSBt
-dXN0IGJlIGVuYWJsZWQgdW5kZXIgQ09ORklHX09OVVMsIEkgZXhwZWN0IHRoYXQgd2hvZXZlciB1
-c2VzIGl0IHVzZXMga25vdyB3aGF0J3MgaXMgZG9pbmcuDQoNClN1Y2ggbG9naWMgbWlnaHQgYmUg
-bmVlZGVkIGlmIGtlcm5lbCBlbmZvcmNlcyByZWd1bGF0b3J5IGNvbXBsaWFuY2UgYWZ0ZXIgdGhl
-IEdPX0NPTkNVUlJFTlQgcmVsYXhhdGlvbiBjb25kaXRpb25zIGFyZSBubyBsb25nZXIgbWV0IChz
-dGF0aW9uIGludGVyZmFjZSBsZWF2ZXMgdGhlIGNoYW5uZWwpLCB3aGVyZSBpZiBzdWNoIGEgY2Fz
-ZSBpcyB0cnVlLCBpdCB3b3VsZCBiZSBhcHByb3ByaWF0ZSB0byBhZGQgYW4gaW5kaWNhdGlvbiB0
-byB0aGUga2VybmVsIHRlbGxpbmcgaXQgdGhhdCB1c2VyIHNwYWNlIGtub3dzIHdoYXQgaXQncyBk
-b2luZywgc28gdGhlIGtlcm5lbCB3aWxsIG5vdCBkbyBhbnkgcXVpZXNjaW5nIGxvZ2ljIChzaW1p
-bGFyIHRvIHdoYXQgTHVpcyBzdWdnZXN0ZWQpLg0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQoNCg0K
-DQo=
+The utility function has no uses yet. It is aimed
+at future chanctx reservation management and
+channel switching.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/util.c        | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d3ebe7f..508eecf 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1814,6 +1814,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
++int ieee80211_max_num_channels(struct ieee80211_local *local);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 955b043..7233102 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2877,3 +2877,46 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 					   num_different_channels,
+ 					   radar_detect, num);
+ }
++
++static void
++ieee80211_iter_max_chans(const struct ieee80211_iface_combination *c,
++			 void *data)
++{
++	u32 *max_num_different_channels = data;
++
++	*max_num_different_channels = max(*max_num_different_channels,
++					  c->num_different_channels);
++}
++
++int ieee80211_max_num_channels(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	int num[NUM_NL80211_IFTYPES] = {};
++	struct ieee80211_chanctx *ctx;
++	int num_different_channels = 0;
++	u8 radar_detect = 0;
++	u32 max_num_different_channels = 1;
++	int err;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		num_different_channels++;
++
++		if (ctx->conf.radar_enabled)
++			radar_detect |= BIT(ctx->conf.def.width);
++	}
++
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		num[sdata->wdev.iftype]++;
++	}
++
++	err = cfg80211_iter_combinations(local->hw.wiphy,
++					 num_different_channels, radar_detect,
++					 num, ieee80211_iter_max_chans,
++					 &max_num_different_channels);
++	if (err < 0)
++		return err;
++
++	return max_num_different_channels;
++}
+-- 
+1.8.5.3
+
