@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58775 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbaBXUPO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:15:14 -0500
-Date: Mon, 24 Feb 2014 15:05:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-02-21
-Message-ID: <20140224200510.GH24810@tuxdriver.com> (sfid-20140224_211540_626559_1DF75C6B)
-References: <20140222024745.GE1417@joana>
+Received: from nbd.name ([46.4.11.11]:59271 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752006AbaB1UyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Feb 2014 15:54:13 -0500
+Message-ID: <5310F773.3000405@openwrt.org> (sfid-20140228_215424_694886_4DB821AB)
+Date: Fri, 28 Feb 2014 21:54:11 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140222024745.GE1417@joana>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/2] ath9k_hw: tweak noise immunity thresholds for older
+ chipsets
+References: <1393610545-68025-1-git-send-email-nbd@openwrt.org>	<1393610545-68025-2-git-send-email-nbd@openwrt.org> <21264.56017.114049.511221@gargle.gargle.HOWL>
+In-Reply-To: <21264.56017.114049.511221@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 11:47:45PM -0300, Gustavo Padovan wrote:
-> Hi John,
+On 2014-02-28 19:52, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> Older chipsets are more sensitive to high PHY error counts, and the
+>> current noise immunity thresholds were based on tests run at QCA with
+>> newer chipsets.
+>> 
+>> This patch brings back the values from the old ANI implementation for
+>> old chipsets, and it also disables weak signal detection on an earlier
+>> noise immunity level, to improve overall radio stability on affected
+>> devices.
 > 
-> This is our first pull request for 3.15, the main feature here is the addition of
-> the privacy feature for low energy devices. Other than that we have a bunch of small
-> improvements, fixes, and clean ups all over the tree.
-> 
-> Please pull or let me know of any concerns you may have. Thanks.
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit e57f1734d87aa0e9a00905ed08888f0c62f56227:
-> 
->   mwifiex: add key material v2 support (2014-02-12 15:36:26 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to 668b7b19820b0801c425d31cc27fd6f499050e5c:
-> 
->   Bluetooth: Fix iterating wrong list in hci_remove_irk() (2014-02-21 11:07:46 -0300)
+> Which devices ?
+Reproduced on AR913x, suspected on AR928x, probably other affected
+devices as well.
 
-Pulling now...
+> Since the old values were used in the old ANI implementation, I am not sure
+> how just retrofitting them into the new ANI algorithm can improve things...
+Semantically, the values are compatible. The algorithm is similar enough
+that this works just fine. The patch has gone through some testing that
+showed a visible stability improvement.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- Felix
