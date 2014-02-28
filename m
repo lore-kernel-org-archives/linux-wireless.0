@@ -1,122 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp130.uni-oldenburg.de ([134.106.141.130]:49476 "EHLO
-	smtp130.uni-oldenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaBQRFr (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:51010 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbaB1MX0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 12:05:47 -0500
-Message-ID: <53023E51.90202@Uni-Oldenburg.DE> (sfid-20140217_180551_234247_4B66834B)
-Date: Mon, 17 Feb 2014 17:52:33 +0100
-From: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>
-MIME-Version: 1.0
-To: Samuel Ortiz <sameo@linux.intel.com>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-	frankyl@broadcom.com
-Subject: Re: brcmfmac NVRAM files
-References: <20140217150640.GJ18868@zurbaran> <20140217163315.GA22010@zurbaran>
-In-Reply-To: <20140217163315.GA22010@zurbaran>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms060106030108090804030206"
+	Fri, 28 Feb 2014 07:23:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v3 3/3] mac80211: allow reservation of a running chanctx
+Date: Fri, 28 Feb 2014 14:23:20 +0200
+Message-Id: <1393590200-25309-4-git-send-email-luca@coelho.fi> (sfid-20140228_132334_753669_C7AB0191)
+In-Reply-To: <1393590200-25309-1-git-send-email-luca@coelho.fi>
+References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
---------------ms060106030108090804030206
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
+With single-channel drivers, we need to be able to change a running
+chanctx if we want to use chanctx reservation.  Not all drivers may be
+able to do this, so add a flag that indicates support for it.
 
-Am 17.02.2014 17:33, schrieb Samuel Ortiz:
-> On Mon, Feb 17, 2014 at 04:06:40PM +0100, Samuel Ortiz wrote:
->> Hi Arend,
->>
->> I'm trying to use a 43241 SDIO chip here, and it fails asking for the
->> .txt file (brcmfmac43241b4-sdio.txt). This seems to be an NVRAM map
->> file, but I could not find either a template on linux-firmware or any
->> kind of documentation about it.
->>
->> How do distro handle that ? Are they expected to build their own, or i=
-s
->> it completely OEM pecific ?
-> Adding Franky to the Cc list.
->
-> Cheers,
-> Samuel.
->
-Hi Samuel,
-I had the same proble with a wandboard here and I guess it's a bug. In=20
-/lib/firmware/brcm are all reqired *.bin files, but no *.txt file. On=20
-www.wandboard.or I found a SDK-Kit with brcmfmac4329-sdio.txt, copied=20
-the file and then the wlan was running.
-The *.txt are simply forgotten to copy to the firmware directory.
-No idea how to fix this.
+Changing a running chanctx can also be used as an optimization in
+multi-channel drivers when the context needs to be reserved for future
+usage.
 
-Bernd
+Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
+reserved so nobody else can use it (since we know it's going to
+change).  In the future, we may allow several vifs to use the same
+reservation as long as they plan to use the chanctx on the same
+future channel.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In v3:
 
---------------ms060106030108090804030206
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+   * reworded the TODO, slightly;
+---
+ include/net/mac80211.h     |  7 ++++++
+ net/mac80211/chan.c        | 61 ++++++++++++++++++++++++++++++++++++++++------
+ net/mac80211/ieee80211_i.h |  7 +++++-
+ 3 files changed, 67 insertions(+), 8 deletions(-)
 
-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
-BDBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzL2dzcGVy
-c29uYWxzaWduMWcyLmNybDBVBggrBgEFBQcBAQRJMEcwRQYIKwYBBQUHMAKGOWh0dHA6Ly9z
-ZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMWcyLmNydDAdBgNV
-HQ4EFgQUo6v6aPpk9tm4GPs+owgUjzzuzuEwHwYDVR0jBBgwFoAU7KyYzCdyk89WMs0jx52N
-RYX0IgMwDQYJKoZIhvcNAQEFBQADggEBAFRYw1pQE69c8Q+siLv/z5rkwEYmtvDFEHPKzZXF
-mNU7ZHD4PvA8QPXeMvyDJnwOztUce3YkwpszDehNhZX6pu9WsnOwjPBdvvTvm9oVJHFIwZmU
-fjvC6I1D/Z0s4QU/2WorrElbQl/AR7hnK3PhLQxcHjSyskRaB7CGoBnPqhjWzZ4s3sedMlpG
-NWbDQrlKhz1BSaW0K9tSQgv76hXTgNJn5W4CgtDy7uQz93NetWOusWP+w1PQ2VetDeES9xuF
-UgD/r+y0ct8Tzs6tJIWpY8+IQiaFRLrrvUqCF+oqQS1JQOY8H/MX9YX9CZKm01ZW9RJAFZK9
-4h0ODdPV4XOJn60xggNSMIIDTgIBATBoMFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
-YWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAxIENBIC0g
-RzICEGZgT+TGYtW+XJFIVmQFPNswCQYFKw4DAhoFAKCCAb8wGAYJKoZIhvcNAQkDMQsGCSqG
-SIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTQwMjE3MTY1MjMzWjAjBgkqhkiG9w0BCQQxFgQU
-93CegviJnMxZhJbL92S05DYbuDEwbAYJKoZIhvcNAQkPMV8wXTALBglghkgBZQMEASowCwYJ
-YIZIAWUDBAECMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAH
-BgUrDgMCBzANBggqhkiG9w0DAgIBKDB3BgkrBgEEAYI3EAQxajBoMFQxCzAJBgNVBAYTAkJF
-MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIFBlcnNv
-bmFsU2lnbiAxIENBIC0gRzICEGZgT+TGYtW+XJFIVmQFPNsweQYLKoZIhvcNAQkQAgsxaqBo
-MFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFH
-bG9iYWxTaWduIFBlcnNvbmFsU2lnbiAxIENBIC0gRzICEGZgT+TGYtW+XJFIVmQFPNswDQYJ
-KoZIhvcNAQEBBQAEggEAgCv7qByUsZHttQ/eArDpRcqtOmvXRB1V2WUs8JBTFugGRuDuFufp
-ZRVo/MGaPhgFNPXB5nNx3VCyOlnFCvmzkwixgYqGCi8YchIoc3hH5vbEtW2FHoIB5o7MOq83
-yywsG1QRVldTmBnysBw/QO7pqe5TuKecDOdT6Ya537o76C4Bqf2LP3Kt8basWWtSEbrdo3+J
-cMyR6zKhCCzvejlhhcmtIBP/lZ9yVF7u5BDTeyuqmMWIVNwtEcsRd+9/kwP7bFbDSz6FvSJe
-FOSxO/VvtkjefLbw70yHMM0weCuHPyeDJTxK4Q1WhCprNmWeEs9Mwt5yoNcsSInV2EWoBApM
-hwAAAAAAAA==
---------------ms060106030108090804030206--
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 86faa41..54c9ce7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1553,6 +1553,12 @@ struct ieee80211_tx_control {
+  *	for a single active channel while using channel contexts. When support
+  *	is not enabled the default action is to disconnect when getting the
+  *	CSA frame.
++ *
++ * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
++ * 	channel context on-the-fly.  This is needed for channel switch
++ * 	on single-channel hardware.  It can also be used as an
++ * 	optimization in certain channel switch cases with
++ * 	multi-channel.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1584,6 +1590,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
+ 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
++	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
+ };
+ 
+ /**
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 9897c2e..1aec5ac 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -177,6 +177,13 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		const struct cfg80211_chan_def *compat;
+ 
++		/* We don't support chanctx reservation for multiple
++		 * vifs yet, so don't allow reserved chanctxs to be
++		 * reused.
++		 */
++		if (ctx->mode == IEEE80211_CHANCTX_RESERVED)
++			continue;
++
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+ 			continue;
+ 
+@@ -621,7 +628,9 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(!sdata->reserved_chanctx))
+ 		return -EINVAL;
+ 
+-	if (--sdata->reserved_chanctx->refcount == 0)
++	if (sdata->reserved_chanctx->mode == IEEE80211_CHANCTX_RESERVED)
++		sdata->reserved_chanctx->mode = sdata->reserved_mode;
++	else if (--sdata->reserved_chanctx->refcount == 0)
+ 		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
+ 
+ 	sdata->reserved_chanctx = NULL;
+@@ -651,19 +660,42 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	/* try to find another context with the chandef we want */
+ 	new_ctx = ieee80211_find_chanctx(local, chandef,
+ 					 IEEE80211_CHANCTX_SHARED);
+-	if (!new_ctx) {
+-		/* create a new context */
++	if (new_ctx) {
++		/* reserve the existing compatible context */
++		sdata->reserved_chanctx = new_ctx;
++		new_ctx->refcount++;
++	} else if (curr_ctx->refcount == 1 &&
++		   (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
++		/* TODO: when implementing support for multiple
++		 * interfaces switching at the same time, we may want
++		 * other vifs to reserve it as well, as long as
++		 * they're planning to switch to the same channel.  In
++		 * that case, we probably have to save the
++		 * reserved_chandef and the reserved_mode elements in
++		 * the context as well.
++		 */
++		sdata->reserved_mode = curr_ctx->mode;
++
++		/* We're the only user of the current context, mark it
++		 * as reserved, so nobody tries to use it until we
++		 * finish the channel switch.  This is an optimization
++		 * to prevent waste of contexts when the number is
++		 * limited.
++		 */
++		curr_ctx->mode = IEEE80211_CHANCTX_RESERVED;
++		sdata->reserved_chanctx = curr_ctx;
++	} else {
++		/* create a new context and reserve it */
+ 		new_ctx = ieee80211_new_chanctx(local, chandef,
+ 						IEEE80211_CHANCTX_SHARED);
+ 		if (IS_ERR(new_ctx)) {
+ 			ret = PTR_ERR(new_ctx);
+ 			goto out;
+ 		}
+-	}
++		sdata->reserved_chanctx = new_ctx;
+ 
+-	/* reserve the new or existing context */
+-	sdata->reserved_chanctx = new_ctx;
+-	new_ctx->refcount++;
++		new_ctx->refcount++;
++	}
+ 
+ 	sdata->reserved_chandef = *chandef;
+ out:
+@@ -701,6 +733,21 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 
+ 	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
++	if (old_ctx == ctx) {
++		WARN_ON(!ctx->mode != IEEE80211_CHANCTX_RESERVED);
++
++		/* This is our own context, just change it */
++		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
++						     &local_changed);
++		if (ret)
++			goto out;
++
++		ctx->mode = sdata->reserved_mode;
++
++		*changed = local_changed;
++		goto out;
++	}
++
+ 	ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 58b6477..56f1981 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -681,10 +681,14 @@ enum ieee80211_sdata_state_bits {
+  * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
+  *	only by a single interface. This can be used for example for
+  *	non-fixed channel IBSS.
++ * @IEEE80211_CHANCTX_RESERVED: the channel context is reserved for
++ * 	future change and cannot be used by other interfaces until the
++ * 	reservation is taken into use.
+  */
+ enum ieee80211_chanctx_mode {
+ 	IEEE80211_CHANCTX_SHARED,
+-	IEEE80211_CHANCTX_EXCLUSIVE
++	IEEE80211_CHANCTX_EXCLUSIVE,
++	IEEE80211_CHANCTX_RESERVED
+ };
+ 
+ struct ieee80211_chanctx {
+@@ -759,6 +763,7 @@ struct ieee80211_sub_if_data {
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+ 	struct cfg80211_chan_def reserved_chandef;
++	enum ieee80211_chanctx_mode reserved_mode;
+ 
+ 	/* used to reconfigure hardware SM PS */
+ 	struct work_struct recalc_smps;
+-- 
+1.8.5.3
+
