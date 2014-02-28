@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:33438 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754612AbaBUBVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 20:21:38 -0500
-Date: Thu, 20 Feb 2014 19:20:14 -0600
-From: Felipe Balbi <balbi@ti.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-CC: "Mark A. Greer" <mgreer@animalcreek.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	<linux-wireless@vger.kernel.org>, <linux-nfc@ml01.01.org>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2
- Tag Support
-Message-ID: <20140221011955.GC19336@saruman.home> (sfid-20140221_022143_124171_715E883D)
-Reply-To: <balbi@ti.com>
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
- <20140221005059.GS18868@zurbaran>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="brEuL7wsLY8+TuWz"
-In-Reply-To: <20140221005059.GS18868@zurbaran>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:54876 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907AbaB1M3z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Feb 2014 07:29:55 -0500
+Message-ID: <1393590591.13669.36.camel@dubbel> (sfid-20140228_133025_677846_10B31CB3)
+Subject: Re: [PATCH v4 0/8] wilink: add device tree support
+From: Luca Coelho <luca@coelho.fi>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>, mturquette@linaro.org,
+	mark.rutland@arm.com, balbi@ti.com, grant.likely@linaro.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-doc@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	nm@ti.com, martinez.javier@gmail.com
+Date: Fri, 28 Feb 2014 14:29:51 +0200
+In-Reply-To: <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+	 <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---brEuL7wsLY8+TuWz
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Fri, 2014-02-28 at 08:26 +0100, Yegor Yefremov wrote:
+> On Tue, Jul 30, 2013 at 3:04 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > Hi,
+> >
+> > This patch series adds device tree support to the wlcore_sdio driver,
+> > which is used by WiLink6, WiLink7 and WiLink8.
+> >
+> > The first patches do some clean-up to make the data needed in the
+> > wilink device tree node smaller.  The remaining patches implement the
+> > actual device tree node parsing in wlcore_sdio.
+> >
+> > Regarding the XTAL clock issues, for now we don't support XTAL mode
+> > with DT, but I have sent a proposal for a small change in the clock
+> > framework to support this, but it's still under discussions [1].
+> >
+> > The DTS file changes will be sent separately, since they need to go
+> > via different trees.
+> >
+> > A new version of the bindings documentation has been sent [2] and, if
+> > no more comments are given to it, I'll apply it via my tree.
+> >
+> > [1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
+> > [2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
+> >
+> > Changes in v4:
+> >
+> > * Rebased on top of 3.11-rc3 (eg. no more changes on the board files
+> >   that were removed);
+> >
+> > * Use the new irq_get_trigger_type() instead of
+> >   irqd_get_trigger_type() (thanks Javier);
+> >
+> > * Added some missing const's (thanks Felipe);
+> >
+> > * Reverted Tony's workaround to get WiLink to work on Panda while DT
+> >   was not supported yet.
+> >
+> >
+> > Please review.
+> 
+> What is the state of the series? Who is now responsible for the
+> patches? What issues were still not handled?
 
-Hi,
+There were some comments about this series (or more precisely, the one
+that added the bindings documentation[1]).  Unfortunately, I have left
+TI since and have no time to handle them.  Feel free to pick it up and
+continue from there.
 
-On Fri, Feb 21, 2014 at 01:50:59AM +0100, Samuel Ortiz wrote:
-> > +#define TRF7970A_QUIRK_IRQ_STATUS_READ_ERRATA	BIT(0)
-> Are there actually any TRF970 devices that do not need this quirk ?
+[1] https://lkml.org/lkml/2013/7/30/712
 
-in the oven ;-)
+--
+Cheers,
+Luca.
 
---=20
-balbi
-
---brEuL7wsLY8+TuWz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTBqnOAAoJEIaOsuA1yqREDakP+gISIGOrOTXn/8FGkLmoMAic
-NKYddiwynGB2eZRTR4LSBH0GzZ0LAV1xP4LF8qoFqYImcycqKX5P1hLWkb1mG45x
-V715me8v7Bl6hTjyhA/VrUaTvm1n5JwfXhoS+vDHXSN8heMKKZpbS01B4BGOS9bE
-Bdnp35RWNNap1c9mn4pyhYop1hZ10zrx8TXx/zdTRZcH4Y+HBbIXAtQnC0/chvx/
-meGfJqEyP35/JViHfg1QVx4L4skQgccnV3KAxgYgyygiTTx1RtKApxJw6MjpCSxY
-jkEGHnLfNGXNdt14Y0tEJ1YZObbzD17r4E0fTow6vLapL5app11rkUNQaHV4jhRW
-fUjeiE2oviZ8oqdm8oBiyj+YSxQBi+AyyNUlL8y7wfrV5xtlF2A0SG13WFkqiE8h
-Mdq97NBzsNthMg7DsHOoFdHsqnJ3BMLHcFv35CU2RcKRs4SkIunDzmY+g76+DXau
-jtc8JnZ4L+jzw+QGQYaJlGX3Ozy4nrl9s8kzdYmtmm0YYt0VPCvX3jyP4E6avgqi
-hpqqEnuRhb1/NO18ztzjCSeC9kn6myU99EmWbQ30NmUQ+w1glvxqQ+QNk6q/GEVQ
-L6as8i/Rq9k/tK4thdz4SgKK3tFehLv2m2kl9yJuQdPI2K8Rrjmp+fNHXYkAZTSj
-PlDlNuyw1+JLlyO/Pfn5
-=pRcA
------END PGP SIGNATURE-----
-
---brEuL7wsLY8+TuWz--
