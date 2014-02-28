@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54649 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727AbaBFQ4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 11:56:07 -0500
-Message-ID: <52F3BEA6.1080502@openwrt.org> (sfid-20140206_175612_751651_97E1A5AC)
-Date: Thu, 06 Feb 2014 17:56:06 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:45563 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbaB1JHJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Feb 2014 04:07:09 -0500
+Received: by mail-ea0-f179.google.com with SMTP id q10so2464295ead.24
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 01:07:08 -0800 (PST)
 MIME-Version: 1.0
-To: voncken <cedric.voncken@acksys.fr>, linux-wireless@vger.kernel.org
-Subject: Re: ATH9K software retry
-References: <773DB8A82AB6A046AE0195C68612A3190173371A@sbs2003.acksys.local> <52F39F41.2010300@openwrt.org> <009301cf2359$e35f0330$aa1d0990$@acksys.fr>
-In-Reply-To: <009301cf2359$e35f0330$aa1d0990$@acksys.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <877g8fd32c.fsf@kamboji.qca.qualcomm.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	<1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
+	<1393485587-16879-6-git-send-email-michal.kazior@tieto.com>
+	<877g8fd32c.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 28 Feb 2014 10:07:08 +0100
+Message-ID: <CA+BoTQk9z+Qp3+2QV0iBCaUkNzX=qkY_JKnzvinwyAKd6V6GdQ@mail.gmail.com> (sfid-20140228_100717_290435_17D38AFC)
+Subject: Re: [PATCH v3 5/8] ath10k: batch htt tx/rx completions
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-02-06 17:38, voncken wrote:
->> -----Message d'origine-----
->> De : Felix Fietkau [mailto:nbd@openwrt.org]
->> EnvoyÈ : jeudi 6 fÈvrier 2014 15:42
->> ¿ : Cedric VONCKEN; linux-wireless@vger.kernel.org
->> Objet : Re: ATH9K software retry
->> 
->> On 2014-02-06 14:06, Cedric VONCKEN wrote:
->> > In xmit.c the function ath_tx_complete_aggr test if the fi->retries <
->> > ATH_MAX_SW_RETRIES.
->> >
->> > If this condition is true, ATH9K handle software retry.
->> >
->> > Minstrel set in the frame one or more rates, for each rate minstrel
->> > set a retries count. I think is sufficient.
->> >
->> > Why ATH9K need to manage the software retries?
->> The retries configured for minstrel_ht are used for hardware retries of
-> single
->> frames and full A-MPDU transmissions. Software retries are used for
->> individual subframes that are sent as part of A-MPDUs.
->> This is required, because failed subframes are frequent with higher MCS
-> rates
->> and A-MPDU.
->> 
-> Is it possible to only applied software retrying for A-MPDU frame with more
-> one frame?
-> If I correctly understood the code, the function ath_tx_count_frames return
-> the number of frame in the A-MPDU. If nframes == 1 we don't use the software
-> retry.
-Software retry should be applied to any frame that is part of a BlockAck
-session, because any failed frame that is not retried requires the
-sender to notify the receiver with a BlockAckRequest, which is
-expensive. I would suggest keeping the current behavior, unless you have
-a good reason to change it and understand the implications.
+On 28 February 2014 10:00, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> HTT Rx endpoint processes both frame rx
+>> indications and frame tx completion indications.
+>>
+>> Those completions typically come in batches and
+>> may be mixed so it makes sense to defer processing
+>> hoping to get a bunch of them and take advantage
+>> of hot caches.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> [...]
+>
+>> +void ath10k_htt_txrx_compl_task(unsigned long ptr)
+>> +{
+>> +     struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+>> +     struct htt_resp *resp;
+>> +     struct sk_buff *skb;
+>
+> I think this can be a static function. Is it ok if I change this patch
+> with the diff below?
 
-- Felix
+I don't really mind.
+
+
+Micha≈Ç
