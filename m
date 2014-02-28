@@ -1,157 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:49724 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750728AbaBGFAp (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:51000 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbaB1MX0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Feb 2014 00:00:45 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 7/7] ath9k: Calculate IQ-CAL median
-Date: Fri,  7 Feb 2014 10:29:55 +0530
-Message-Id: <1391749195-24381-8-git-send-email-sujith@msujith.org> (sfid-20140207_060056_954654_0769E9EF)
-In-Reply-To: <1391749195-24381-1-git-send-email-sujith@msujith.org>
-References: <1391749195-24381-1-git-send-email-sujith@msujith.org>
+	Fri, 28 Feb 2014 07:23:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v3 1/3] mac80211: split ieee80211_vif_change_channel in two
+Date: Fri, 28 Feb 2014 14:23:18 +0200
+Message-Id: <1393590200-25309-2-git-send-email-luca@coelho.fi> (sfid-20140228_132330_110706_2886D930)
+In-Reply-To: <1393590200-25309-1-git-send-email-luca@coelho.fi>
+References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This patch adds a routine to calculate the median IQ correction
-values for AR955x, which is used for outlier detection.
-The normal method which is used for all other chips is
-bypassed for AR955x.
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 91 +++++++++++++++++++++++----
- 1 file changed, 79 insertions(+), 12 deletions(-)
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 6f2a994..8bd4474 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -923,15 +923,22 @@ static void ar9003_hw_tx_iq_cal_outlier_detection(struct ath_hw *ah,
- 		if (nmeasurement > MAX_MEASUREMENT)
- 			nmeasurement = MAX_MEASUREMENT;
- 
--		/* detect outlier only if nmeasurement > 1 */
--		if (nmeasurement > 1) {
--			/* Detect magnitude outlier */
--			ar9003_hw_detect_outlier(coeff->mag_coeff[i],
--					nmeasurement, MAX_MAG_DELTA);
--
--			/* Detect phase outlier */
--			ar9003_hw_detect_outlier(coeff->phs_coeff[i],
--					nmeasurement, MAX_PHS_DELTA);
-+		/*
-+		 * Skip normal outlier detection for AR9550.
-+		 */
-+		if (!AR_SREV_9550(ah)) {
-+			/* detect outlier only if nmeasurement > 1 */
-+			if (nmeasurement > 1) {
-+				/* Detect magnitude outlier */
-+				ar9003_hw_detect_outlier(coeff->mag_coeff[i],
-+							 nmeasurement,
-+							 MAX_MAG_DELTA);
-+
-+				/* Detect phase outlier */
-+				ar9003_hw_detect_outlier(coeff->phs_coeff[i],
-+							 nmeasurement,
-+							 MAX_PHS_DELTA);
-+			}
- 		}
- 
- 		for (im = 0; im < nmeasurement; im++) {
-@@ -996,6 +1003,60 @@ static bool ar9003_hw_tx_iq_cal_run(struct ath_hw *ah)
- 	return true;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 42c6592..a27c6ec 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
  }
  
-+static void __ar955x_tx_iq_cal_sort(struct ath_hw *ah,
-+				    struct coeff *coeff,
-+				    int i, int nmeasurement)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int im, ix, iy, temp;
-+
-+	for (im = 0; im < nmeasurement; im++) {
-+		for (ix = 0; ix < MAXIQCAL - 1; ix++) {
-+			for (iy = ix + 1; iy <= MAXIQCAL - 1; iy++) {
-+				if (coeff->mag_coeff[i][im][iy] <
-+				    coeff->mag_coeff[i][im][ix]) {
-+					temp = coeff->mag_coeff[i][im][ix];
-+					coeff->mag_coeff[i][im][ix] =
-+						coeff->mag_coeff[i][im][iy];
-+					coeff->mag_coeff[i][im][iy] = temp;
-+				}
-+				if (coeff->phs_coeff[i][im][iy] <
-+				    coeff->phs_coeff[i][im][ix]) {
-+					temp = coeff->phs_coeff[i][im][ix];
-+					coeff->phs_coeff[i][im][ix] =
-+						coeff->phs_coeff[i][im][iy];
-+					coeff->phs_coeff[i][im][iy] = temp;
-+				}
-+			}
-+		}
-+		coeff->mag_coeff[i][im][0] = coeff->mag_coeff[i][im][MAXIQCAL / 2];
-+		coeff->phs_coeff[i][im][0] = coeff->phs_coeff[i][im][MAXIQCAL / 2];
-+
-+		ath_dbg(common, CALIBRATE,
-+			"IQCAL: Median [ch%d][gain%d]: mag = %d phase = %d\n",
-+			i, im,
-+			coeff->mag_coeff[i][im][0],
-+			coeff->phs_coeff[i][im][0]);
-+	}
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
 +}
 +
-+static bool ar955x_tx_iq_cal_median(struct ath_hw *ah,
-+				    struct coeff *coeff,
-+				    int iqcal_idx,
-+				    int nmeasurement)
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
 +{
-+	int i;
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
 +
-+	if ((iqcal_idx + 1) != MAXIQCAL)
-+		return false;
++	lockdep_assert_held(&local->mtx);
 +
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		__ar955x_tx_iq_cal_sort(ah, coeff, i, nmeasurement);
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
 +	}
 +
-+	return true;
-+}
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
 +
- static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah,
- 					  int iqcal_idx,
- 					  bool is_reusable)
-@@ -1011,10 +1072,11 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah,
- 		AR_PHY_CHAN_INFO_TAB_1,
- 		AR_PHY_CHAN_INFO_TAB_2,
- 	};
--	struct coeff coeff;
-+	static struct coeff coeff;
- 	s32 iq_res[6];
- 	int i, im, j;
--	int nmeasurement;
-+	int nmeasurement = 0;
-+	bool outlier_detect = true;
- 
- 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (!(ah->txchainmask & (1 << i)))
-@@ -1083,7 +1145,12 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah,
- 				coeff.phs_coeff[i][im][iqcal_idx] -= 128;
- 		}
- 	}
--	ar9003_hw_tx_iq_cal_outlier_detection(ah, &coeff, is_reusable);
-+
-+	if (AR_SREV_9550(ah))
-+		outlier_detect = ar955x_tx_iq_cal_median(ah, &coeff,
-+							 iqcal_idx, nmeasurement);
-+	if (outlier_detect)
-+		ar9003_hw_tx_iq_cal_outlier_detection(ah, &coeff, is_reusable);
- 
- 	return;
- 
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
 -- 
 1.8.5.3
 
