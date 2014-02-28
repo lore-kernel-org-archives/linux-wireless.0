@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:59457 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751305AbaBENkM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33016 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbaB1SpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Feb 2014 08:40:12 -0500
-Date: Wed, 5 Feb 2014 13:39:56 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Joe Perches <joe@perches.com>
-Cc: Holger Schurig <holgerschurig@gmail.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Fix build error on ARM
-Message-ID: <20140205133956.GQ26684@n2100.arm.linux.org.uk> (sfid-20140205_144017_637573_B836FDE2)
-References: <1391483274-20331-1-git-send-email-sujith@msujith.org> <1391483274-20331-2-git-send-email-sujith@msujith.org> <1391484878.2538.11.camel@joe-AO722> <21232.24855.201543.400943@gargle.gargle.HOWL> <CAOpc7mFQZ3efZda0cC28BLATqRDJ99BRNu=ezQq8wa+dyFyOvA@mail.gmail.com> <1391531796.2538.21.camel@joe-AO722> <20140205115035.GO26684@n2100.arm.linux.org.uk> <1391603566.2538.63.camel@joe-AO722> <20140205124127.GP26684@n2100.arm.linux.org.uk> <1391605494.2538.68.camel@joe-AO722>
+	Fri, 28 Feb 2014 13:45:14 -0500
+Date: Fri, 28 Feb 2014 13:43:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-02-28
+Message-ID: <20140228184352.GH30876@tuxdriver.com> (sfid-20140228_194519_299908_1930D4A5)
+References: <1393595772.4133.6.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391605494.2538.68.camel@joe-AO722>
+In-Reply-To: <1393595772.4133.6.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 05:04:54AM -0800, Joe Perches wrote:
-> On Wed, 2014-02-05 at 12:41 +0000, Russell King - ARM Linux wrote:
-> > On Wed, Feb 05, 2014 at 04:32:46AM -0800, Joe Perches wrote:
-> > > Apparently, people just convert stupidly large udelay()s
-> > > to mdelay and not be bothered.
-> > 
-> > And that's the correct answer.  Having udelay(10000) rather than mdelay(10)
-> > is a sign that they weren't paying that much attention when writing the
-> > code.
+On Fri, Feb 28, 2014 at 02:56:12PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Not really.
+> It's getting later in the rc cycle, and the pull requests are getting
+> smaller, but we still have some fixes...
 > 
-> Look at the code that brought this up in the first place.
+> This time I have a fix to get out of an 'infinite error state' in case
+> regulatory domain updates failed and two fixes for VHT associations: one
+> to not disconnect immediately when the AP uses more bandwidth than the
+> new regdomain would allow after a change due to association country
+> information getting used, and one for an issue in the code where
+> mac80211 doesn't correctly ignore a reserved field and then uses an HT
+> instead of VHT association.
 > 
-> On Tue, 2014-02-04 at 08:37 +0530, Sujith Manoharan wrote:
-> > From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> > 
-> > Use mdelay instead of udelay to fix this error:
-> > 
-> > ERROR: "__bad_udelay" [drivers/net/wireless/ath/ath9k/ath9k_hw.ko] undefined!
-> []
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> []
-> > @@ -1316,7 +1316,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
-> >  	if (AR_SREV_9300_20_OR_LATER(ah))
-> >  		udelay(50);
-> >  	else if (AR_SREV_9100(ah))
-> > -		udelay(10000);
-> > +		mdelay(10);
-> >  	else
-> >  		udelay(100);
-> >  
-> > 
-> > >     if (AR_SREV_9300_20_OR_LATER(ah))
-> > >             udelay(50);
-> > >     else if (AR_SREV_9100(ah))
-> > > -           udelay(10000);
-> > > +           mdelay(10);
-> > >     else
-> > >             udelay(100);
+> Please let me know if there's any problem.
 > 
-> One chip needs a larger delay than the others.
+> johannes
 > 
-> It's not so much not paying attention as not
-> knowing ARM is broken for large udelay().
+> The following changes since commit e3685e03b40f5ec7926d9a75bf63467fc4071df9:
+> 
+>   mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to cb664981607a6b5b3d670ad57bbda893b2528d96:
+> 
+>   mac80211: fix association to 20/40 MHz VHT networks (2014-02-27 20:53:01 +0100)
 
-And now read my suggestion about how to avoid the "not knowing" problem. :)
+Pulling now...
 
 -- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
