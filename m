@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8416 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbaBXLrV (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:37438 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbaB1PMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Feb 2014 06:47:21 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT 3/7] ath10k: replace send_head() with tx_sg()
-References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
-	<1392629563-31046-4-git-send-email-michal.kazior@tieto.com>
-	<87y517xo7j.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQm3werwtNrWVLBFxN5QOvLxucu0crDXdAJJj4X0gSnXrw@mail.gmail.com>
-	<87txbvxk1t.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQn+8RUbmASLrrFwZqSRgWkLpy1Z3icy3Mp9VMPGHtQrEg@mail.gmail.com>
-Date: Mon, 24 Feb 2014 13:46:20 +0200
-In-Reply-To: <CA+BoTQn+8RUbmASLrrFwZqSRgWkLpy1Z3icy3Mp9VMPGHtQrEg@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 20 Feb 2014 07:43:00 +0100")
-Message-ID: <87wqgku41f.fsf@kamboji.qca.qualcomm.com> (sfid-20140224_124726_431369_587FDED9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 28 Feb 2014 10:12:00 -0500
+Received: by mail-ea0-f169.google.com with SMTP id d10so2754903eaj.14
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:11:58 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/3] cfg80211/mac80211: multi-vif csa preparation
+Date: Fri, 28 Feb 2014 16:06:44 +0100
+Message-Id: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161204_629248_E833CE5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> On 19 February 2014 15:18, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> It doesn't really make any sense to keep it there anyway because
->>> sg_item is used as means to pass a complex function argument to
->>> sg_tx().
->>
->> If we used skbs we would just give a list/queue of them and no need to
->> have any extra structs.
->
-> Managing skbs would incur extra overhead. Skbs are also less flexible
-> and probably unnecessary (at least at this point).
+These are some of the changes I think are
+necessary for getting multi-vif and multi-chan
+channel switching working.
 
-As a rule of thumb we should avoid reinventing things on our own and use
-Linux infrastructure as much possible. There are a lot of benefits from
-using sk_buffs.
+This is based on Luca's interface combination
+patchset v7.
 
-> Think about the qos workaround removal - you have to submit htt tx
-> descriptor frame prefetch in 2 parts instead of 1 (to make it appear
-> to FW as there's no QoS field). With skbs you have to allocate another
-> skb, copy part of MSDU into it... aaand you've just traded a single
-> memmove() for dev_alloc_skb(), skb_put() and a memcpy().
+This is taken from my local prototype. However
+since Luca's patchsets are still under review
+there's nothing more sane I can provide now ;-)
 
-I'm missing a lot of details here (and I can't check from code right
-now), but are you saying that skb allocation is too slow? In that case
-we should fix the skb allocation instead of working it around in ath10k.
+The patch #3 depends on my cfg80211_leave() fix.
 
-But this is all hand waving for the future, not really something I see a
-problem with this patchset.
+
+Michal Kazior (3):
+  cfg80211: allow drivers to iterate over matching combinations
+  mac80211: add max channel calculation utility function
+  cfg80211: export interface stopping function
+
+ include/net/cfg80211.h     | 41 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/util.c        | 43 ++++++++++++++++++++++++++++++++++++++++
+ net/wireless/core.c        | 36 +++++++++++++++++++++++++++++++---
+ net/wireless/core.h        |  3 +++
+ net/wireless/trace.h       | 15 ++++++++++++++
+ net/wireless/util.c        | 49 +++++++++++++++++++++++++++++++++++++++-------
+ 7 files changed, 178 insertions(+), 10 deletions(-)
 
 -- 
-Kalle Valo
+1.8.5.3
+
