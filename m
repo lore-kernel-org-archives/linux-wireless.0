@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38339 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750815AbaBJGs6 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:55476 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbaB1Swh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Feb 2014 01:48:58 -0500
-Message-ID: <52F87608.808@candelatech.com> (sfid-20140210_074928_265299_B686B50A)
-Date: Sun, 09 Feb 2014 22:47:36 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 28 Feb 2014 13:52:37 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Zhao Hongjiang <zhaohongjiang@huawei.com>,
-	johannes@sipsolutions.net
-CC: linux-wireless@vger.kernel.org, zhousiyi@huawei.com
-Subject: Re: Get multiple ip addresses by dhcp for wireless card
-References: <52F84DFD.4030602@huawei.com>
-In-Reply-To: <52F84DFD.4030602@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21264.56017.114049.511221@gargle.gargle.HOWL> (sfid-20140228_195241_145849_D665CC5C)
+Date: Sat, 1 Mar 2014 00:22:01 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/2] ath9k_hw: tweak noise immunity thresholds for older chipsets
+In-Reply-To: <1393610545-68025-2-git-send-email-nbd@openwrt.org>
+References: <1393610545-68025-1-git-send-email-nbd@openwrt.org>
+	<1393610545-68025-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2014 07:56 PM, Zhao Hongjiang wrote:
-> Hello,
->
-> Is it possible for one station to get multiple ip addresses from AP/Wireless
-> router by dhcp? I had tried to add one or more virtual interface for
-> phy0 (wlan0, wlan1, wlan2,etc), but only wlan0 can get ip address from AP.
-> the following is the steps:
->
-> /bin/wpa_supplicant -ddd -iwlan0 -Dnl80211 -c/wifi/wpa_supplicant.conf -B
-> /bin/wpa_cli -i wlan0 -p /wlan0
->> add_network
->> set_network 0 ssid "APabc"
->> set_network 0 psk "1111111"
->> enable_network 0
->
-> iw wlan0 interface add wlan1 type station 4addr on
-> ip link set wlan1 up
-> dhcpcd -ABKL wlan0 #works, can get ip
-> dhcpcd -ABKL wlan1 #cannot work
+Felix Fietkau wrote:
+> Older chipsets are more sensitive to high PHY error counts, and the
+> current noise immunity thresholds were based on tests run at QCA with
+> newer chipsets.
+> 
+> This patch brings back the values from the old ANI implementation for
+> old chipsets, and it also disables weak signal detection on an earlier
+> noise immunity level, to improve overall radio stability on affected
+> devices.
 
-Virtual stations work just fine for me, though I don't use that '4addr' thing.
-...maybe sniff your wlan1 and see if it is sending
-out proper DHCP requests (and they are being received by the AP)?
+Which devices ?
 
-You have to create a new supplicant config for each virtual station,
-or run a unique supplicant instance for each station.
+Since the old values were used in the old ANI implementation, I am not sure
+how just retrofitting them into the new ANI algorithm can improve things...
 
-To do any useful traffic, between stations, you will have to be careful
-about setting up routing rules and use special binding commands for your
-traffic types.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Sujith
