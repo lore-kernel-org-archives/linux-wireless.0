@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:40979 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282AbaBUXgl (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:50997 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbaB1MXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Feb 2014 18:36:41 -0500
-Received: by mail-la0-f43.google.com with SMTP id pv20so2923579lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Feb 2014 15:36:40 -0800 (PST)
+	Fri, 28 Feb 2014 07:23:25 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v3 0/3] mac802111: channel context reservation
+Date: Fri, 28 Feb 2014 14:23:17 +0200
+Message-Id: <1393590200-25309-1-git-send-email-luca@coelho.fi> (sfid-20140228_132329_316176_52D37688)
 MIME-Version: 1.0
-In-Reply-To: <1392896671-4288-2-git-send-email-ilan.peer@intel.com>
-References: <1392896671-4288-1-git-send-email-ilan.peer@intel.com> <1392896671-4288-2-git-send-email-ilan.peer@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 21 Feb 2014 15:36:20 -0800
-Message-ID: <CAB=NE6X4a5QWhFHXtp2KSvMTo2U8f2=NhX0o-pG3Kb7Rpxqj=A@mail.gmail.com> (sfid-20140222_003645_641372_AE76561E)
-Subject: Re: [PATCH v5 1/5] cfg80211: Add indoor only and GO concurrent
- channel attributes
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David Spinadel <david.spinadel@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 3:44 AM, Ilan Peer <ilan.peer@intel.com> wrote:
-> From: David Spinadel <david.spinadel@intel.com>
->
-> The FCC are clarifying some soft configuration requirements,
-> which among other include the following:
->
-> 1. Indoor operation, where a device can use channels requiring indoor
->    operation, subject to that it can guarantee indoor operation,
->    i.e., the device is connected to AC Power or the device is under
->    the control of a local master that is acting as an AP and is
->    connected to AC Power.
-> 2. Concurrent GO operation, where devices may instantiate a P2P GO
->    while they are under the guidance of an authorized master. For example,
->    on a channel on which a BSS is connected to an authorized master, i.e.,
->    with DFS and radar detection capability in the UNII band.
->
-> See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
->
-> Add support for advertising Indoor-only and GO-Concurrent channel
-> properties.
->
-> Signed-off-by: David Spinadel <david.spinadel@intel.com>
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Hi,
 
-  Luis
+In v3:
+
+   * promoted to PATCH ;)
+   * applied comments by Michał (see inlined in the patches);
+   * removed the "add usage of CS channel reservation for STA" patch,
+     since it's independent and is not ready;
+
+This series is based on top of mac80211-next/master, without including
+my combination check changes.  When the combination check patchset
+gets applied, I can either send the "merge" of the two features as a
+separate patchset or I can modify this patchset accordingly (though I
+prefer the former, so I can do things in small steps ;).
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (3):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: implement chanctx reservation
+  mac80211: allow reservation of a running chanctx
+
+ include/net/mac80211.h     |   7 ++
+ net/mac80211/chan.c        | 227 +++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/ieee80211_i.h |  20 +++-
+ 3 files changed, 236 insertions(+), 18 deletions(-)
+
+-- 
+1.8.5.3
+
