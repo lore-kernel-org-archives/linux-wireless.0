@@ -1,60 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32951 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752663AbaBTLIs convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39208 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbaB1N4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Feb 2014 06:08:48 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v4 3/5] cfg80211: Enable GO operation on additional
- channels
-Date: Thu, 20 Feb 2014 11:08:32 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0333844C0@HASMSX106.ger.corp.intel.com> (sfid-20140220_120900_504560_AD9F75CD)
-References: <1392824377-18254-1-git-send-email-ilan.peer@intel.com>
- <1392824377-18254-4-git-send-email-ilan.peer@intel.com>
- <20140219162410.GK14296@garbanzo.do-not-panic.com>
-In-Reply-To: <20140219162410.GK14296@garbanzo.do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 28 Feb 2014 08:56:24 -0500
+Message-ID: <1393595772.4133.6.camel@jlt4.sipsolutions.net> (sfid-20140228_145627_719895_31C08EDD)
+Subject: pull-request: mac80211 2014-02-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 28 Feb 2014 14:56:12 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-yNVD3f1FHSN+lZZMkfyz"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-yNVD3f1FHSN+lZZMkfyz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
-> Rodriguez
-> Sent: Wednesday, February 19, 2014 18:24
-> To: Peer, Ilan
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH v4 3/5] cfg80211: Enable GO operation on additional
-> channels
-> 
-> On Wed, Feb 19, 2014 at 05:39:35PM +0200, Ilan Peer wrote:
-> > Allow GO operation on a channel marked with
-> > IEEE80211_CHAN_GO_CONCURRENT iff there is an active station interface
-> > that is associated to an AP operating on the same channel in the 2 GHz
-> > band or the same UNII band (in the 5 GHz band). This relaxation is not
-> > allowed if the channel is marked with IEEE80211_CHAN_RADAR.
-> >
-> > Note that this is a permissive approach to the FCC definitions, that
-> > require a clear assessment that the device operating the AP is an
-> > authorized master, i.e., with radar detection and DFS capabilities.
-> 
-> Come to think of it, do we want to make this an FCC specific thing only? If so
-> then the dfs_region could be checked prior to enablement.
+John,
 
-The direction is set by the FCC but other regulatory bodies take similar approach. For example see page 27 in this ETSI standard where the same frequency ranges are mentioned (without specifically calling them UNII) and the same concept of channel bundles is defined for testing.
+It's getting later in the rc cycle, and the pull requests are getting
+smaller, but we still have some fixes...
 
-http://www.etsi.org/deliver/etsi_en/301800_301899/301893/01.07.01_60/en_301893v010701p.pdf
+This time I have a fix to get out of an 'infinite error state' in case
+regulatory domain updates failed and two fixes for VHT associations: one
+to not disconnect immediately when the AP uses more bandwidth than the
+new regdomain would allow after a change due to association country
+information getting used, and one for an issue in the code where
+mac80211 doesn't correctly ignore a reserved field and then uses an HT
+instead of VHT association.
 
-> If the premise is that we'd trust to be associated to a non-GO type AP, that is
-> a real AP, then we could likely consider a requirement that this real AP would
-> be using a country IE as well. Please consider this.
+Please let me know if there's any problem.
 
-Not sure that is needed. As I mentioned earlier it is the responsibility of user space to verify that this is not a GO, so it does not really make a difference if it tests for the P2P IEs or the country IE.
+johannes
 
-Regards,
+The following changes since commit e3685e03b40f5ec7926d9a75bf63467fc4071df9=
+:
 
-Ilan.
+  mac80211: fix station wakeup powersave race (2014-02-20 11:54:09 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to cb664981607a6b5b3d670ad57bbda893b2528d96:
+
+  mac80211: fix association to 20/40 MHz VHT networks (2014-02-27 20:53:01 =
++0100)
+
+----------------------------------------------------------------
+Janusz Dziedzic (1):
+      cfg80211: regulatory: reset regdomain in case of error
+
+Johannes Berg (2):
+      mac80211: don't validate unchanged AP bandwidth while tracking
+      mac80211: fix association to 20/40 MHz VHT networks
+
+ net/mac80211/mlme.c | 23 +++++++++++++++++++++++
+ net/wireless/reg.c  | 10 +++++++++-
+ 2 files changed, 32 insertions(+), 1 deletion(-)
+
+
+--=-yNVD3f1FHSN+lZZMkfyz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJTEJV8AAoJEDBSmw7B7bqrTK0QANNnS/Zsn5YxsAnjs+gYlqBn
+hCv9aQVBoeOFgQwiFwmGLIrFXezrqIxdSFYsiIGHvSv6/UBG+dDhF8C9Y4ioZ8h6
+8Tks7a053hPaGYO4B6A41HNkygCQNJ4ICE8I4LPq1mcKIhznwK4FI/RQ8PuncW8u
+clzRcvIHHnbbOrqY5uM367M/mivvh7DNDqSc8nx6EQ2lR1fb3JQQhJAKjqOpawYq
+4JOC7Mt+/BBOVDGcWJMV2tqiDHimU93x8N1QGv9pi/RXmTyIGAtLLxbDZ2I3CWDO
+RNAKx9kbZb/0FevHnCTSgdQYRFv9dXB8T3LwlApSmYU/17E5Fo+j5aRMX1te3rdP
+VVlHCdncxQ6N0J+UCTpxbU+654rKgvwk1mX2O7RHZovym79vZI5rP4t85KJEAhZ+
++HyPfK2N/htgAFs5unA4jZEh8nO4YyoDaricdfoUyvjC3jQgZxPcWpY00ToU3NWq
+u2jeYM+VxybZF48Hb9NhobqDgJ62Phil06kjT4eJZFycsTuf2VHmEsdm8mDzrw9P
+rHZDGtmA4Eyz8iwD7cg7zagLNiSSocYEB783FxOmoNJsiy8zu2ZGQjoCLv+6oNP5
+DgNZdl2LKSOtjJ8GQRNUM3LVtR9E2tYtWzs0AlwZ2UBePJR1T0fMCh/CLNSJFZ66
+2TldYz1KASx45hyrCRCY
+=TAxj
+-----END PGP SIGNATURE-----
+
+--=-yNVD3f1FHSN+lZZMkfyz--
+
