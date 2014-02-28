@@ -1,130 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:41216 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757250AbaCDOGA convert rfc822-to-8bit (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:23010 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751682AbaB1XRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 09:06:00 -0500
-Received: by mail-bk0-f49.google.com with SMTP id my13so223138bkb.22
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 06:05:59 -0800 (PST)
+	Fri, 28 Feb 2014 18:17:37 -0500
+Date: Sat, 1 Mar 2014 02:17:09 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kbuild@01.org
+Subject: re: ath9k: reduce baseband hang detection false positive rate
+Message-ID: <20140228231709.GC22115@elgon.mountain> (sfid-20140301_001741_187000_D0E450C9)
 MIME-Version: 1.0
-In-Reply-To: <1393937548-7482-14-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1393937548-7482-14-git-send-email-janusz.dziedzic@tieto.com>
-Date: Tue, 4 Mar 2014 15:05:58 +0100
-Message-ID: <CA+BoTQ=+LajufXev1x6ZVDxzdc0v0Kf98gow-_ZzHoditwOtFA@mail.gmail.com> (sfid-20140304_150606_467838_124DE691)
-Subject: Re: [RFC 13/14] ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2014 13:52, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_rx.c |   22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 555aecf..e300a74 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -310,7 +310,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
->
->         if (htt->rx_confused) {
->                 ath10k_warn("htt is confused. refusing rx\n");
-> -               return 0;
-> +               return -1;
->         }
+Hello Felix Fietkau,
 
-Add a comment before function definition, please:
+The patch d31a36a6d87f: "ath9k: reduce baseband hang detection false
+positive rate" from Feb 24, 2014, leads to the following static
+checker warning:
 
-/* return: <0 fatal error, >=0 success, >0 number of chained msdus */
+	drivers/net/wireless/ath/ath9k/hw.c:1563 ath9k_hw_check_alive()
+	info: ignoring unreachable code.
 
-(this includes return-value logic Ben's unchaining patch added..)
+drivers/net/wireless/ath/ath9k/hw.c
+  1545          do {
+  1546                  reg = REG_READ(ah, AR_OBS_BUS_1);
+  1547                  if (reg != last_val)
+  1548                          return true;
+  1549  
+  1550                  last_val = reg;
+  1551                  if ((reg & 0x7E7FFFEF) == 0x00702400)
+  1552                          continue;
+  1553  
+  1554                  switch (reg & 0x7E000B00) {
+  1555                  case 0x1E000000:
+  1556                  case 0x52000B00:
+  1557                  case 0x18000B00:
+  1558                          continue;
+  1559                  default:
+  1560                          return true;
+  1561                  }
+  1562  
+  1563                  udelay(1);
+                        ^^^^^^^^^
+We never hit this recently added delay.
 
+  1564          } while (count-- > 0);
 
->
->         msdu = *head_msdu = ath10k_htt_rx_netbuf_pop(htt);
-> @@ -442,6 +442,9 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
->         }
->         *tail_msdu = msdu;
->
-> +       if (*head_msdu == NULL)
-> +               msdu_chaining = -1;
-> +
->         /*
->          * Don't refill the ring yet.
->          *
-> @@ -1089,11 +1092,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
->                                         enum htt_rx_mpdu_status status,
->                                         bool channel_set)
->  {
-> -       if (!head) {
-> -               ath10k_warn("htt rx no data!\n");
-> -               return false;
-> -       }
-> -
->         if (head->len == 0) {
->                 ath10k_dbg(ATH10K_DBG_HTT,
->                            "htt rx dropping due to zero-len\n");
-> @@ -1209,8 +1207,14 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->                                                          &msdu_head,
->                                                          &msdu_tail);
->
-> +                       if (msdu_chaining == -1) {
-
-if (msdu_chaining < 0)
-
-I think having `ret` makes more sense here now.
-
-
-> +                               ath10k_warn("htt rx no data!\n");
-
-"failed to pop amsdu from htt rx ring: %d", ret
-
-
-> +                               ath10k_htt_rx_free_msdu_chain(msdu_head);
-> +                               continue;
-> +                       }
-> +
->                         if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
-> -                                                        !!msdu_chaining,
-> +                                                        msdu_chaining > 0,
->                                                          status,
->                                                          channel_set)) {
->                                 ath10k_htt_rx_free_msdu_chain(msdu_head);
-> @@ -1280,12 +1284,12 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
->
->         ath10k_dbg(ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
->
-> -       if (!msdu_head) {
-> +       if (msdu_chaining == -1) {
-
-ret < 0
-
-
->                 ath10k_warn("htt rx frag no data\n");
-
-"failed to .. : %d", ret
-
-
->                 return;
->         }
->
-> -       if (msdu_chaining || msdu_head != msdu_tail) {
-> +       if (msdu_chaining > 0 || msdu_head != msdu_tail) {
->                 ath10k_warn("aggregation with fragmentation?!\n");
->                 ath10k_htt_rx_free_msdu_chain(msdu_head);
->                 return;
-
-Actually the 2 checks above can be squashed:
-
-if (ret) {
-  ath10k_warn("failed to pop amsdu from htt rx for fragmented rx: %d", ret)
-
-
-
-Michał
+regards,
+dan carpenter
