@@ -1,35 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36966 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbaBCKwU (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:42555 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbaB1OMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Feb 2014 05:52:20 -0500
-Message-ID: <1391424732.4488.4.camel@jlt4.sipsolutions.net> (sfid-20140203_115223_694753_9E04CB22)
-Subject: Re: [PATCH] [iw] Make the build system automake based
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cristian =?ISO-8859-1?Q?Rodr=EDguez?= <crrodriguez@opensuse.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Feb 2014 11:52:12 +0100
-In-Reply-To: <1391319050-100614-1-git-send-email-crrodriguez@opensuse.org>
-References: <1391319050-100614-1-git-send-email-crrodriguez@opensuse.org>
+	Fri, 28 Feb 2014 09:12:13 -0500
+Message-ID: <1393596728.13669.48.camel@dubbel> (sfid-20140228_151240_854024_6C7DB5AB)
+Subject: Re: [PATCH v4 0/8] wilink: add device tree support
+From: Luca Coelho <luca@coelho.fi>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>, mturquette@linaro.org,
+	mark.rutland@arm.com, balbi@ti.com, grant.likely@linaro.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-doc@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	nm@ti.com, martinez.javier@gmail.com
+Date: Fri, 28 Feb 2014 16:12:08 +0200
+In-Reply-To: <1393590591.13669.36.camel@dubbel>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+	 <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com>
+	 <1393590591.13669.36.camel@dubbel>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-02-02 at 05:30 +0000, Cristian Rodríguez wrote:
-> Simply run autoreconf -fiv to use.
+On Fri, 2014-02-28 at 14:29 +0200, Luca Coelho wrote:
+> On Fri, 2014-02-28 at 08:26 +0100, Yegor Yefremov wrote:
+> > On Tue, Jul 30, 2013 at 3:04 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > > Hi,
+> > >
+> > > This patch series adds device tree support to the wlcore_sdio driver,
+> > > which is used by WiLink6, WiLink7 and WiLink8.
+> > >
+> > > The first patches do some clean-up to make the data needed in the
+> > > wilink device tree node smaller.  The remaining patches implement the
+> > > actual device tree node parsing in wlcore_sdio.
+> > >
+> > > Regarding the XTAL clock issues, for now we don't support XTAL mode
+> > > with DT, but I have sent a proposal for a small change in the clock
+> > > framework to support this, but it's still under discussions [1].
+> > >
+> > > The DTS file changes will be sent separately, since they need to go
+> > > via different trees.
+> > >
+> > > A new version of the bindings documentation has been sent [2] and, if
+> > > no more comments are given to it, I'll apply it via my tree.
+> > >
+> > > [1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
+> > > [2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
+> > >
+> > > Changes in v4:
+> > >
+> > > * Rebased on top of 3.11-rc3 (eg. no more changes on the board files
+> > >   that were removed);
+> > >
+> > > * Use the new irq_get_trigger_type() instead of
+> > >   irqd_get_trigger_type() (thanks Javier);
+> > >
+> > > * Added some missing const's (thanks Felipe);
+> > >
+> > > * Reverted Tony's workaround to get WiLink to work on Panda while DT
+> > >   was not supported yet.
+> > >
+> > >
+> > > Please review.
+> > 
+> > What is the state of the series? Who is now responsible for the
+> > patches? What issues were still not handled?
+> 
+> There were some comments about this series (or more precisely, the one
+> that added the bindings documentation[1]).  Unfortunately, I have left
+> TI since and have no time to handle them.  Feel free to pick it up and
+> continue from there.
+> 
+> [1] https://lkml.org/lkml/2013/7/30/712
 
-Funny, but no. There's no "simply" in auto*shit.
+There's also this thread, which I'm not sure has been resolved:
 
-> Should make libnl selection easier and in particular make
-> distribution packagers significantly less grumpy as "hand written"
-> makefiles are a permanent maintenance burden.
+http://thread.gmane.org/gmane.linux.kernel/1520752
 
-Too bad for them. Feel free to suggest other improvements, but I'm not
-switching to auto*shit. I *might* be open to switching to something like
-cmake, although I think it's pretty much overkill.
-
-johannes
-
+--
+Luca.
 
