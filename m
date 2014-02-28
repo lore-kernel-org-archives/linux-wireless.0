@@ -1,115 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755806AbaBFJBA (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:58463 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbaB1MRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Feb 2014 04:01:00 -0500
-Message-ID: <1391677237.12789.12.camel@jlt4.sipsolutions.net> (sfid-20140206_100108_734283_0A45EBD7)
-Subject: pull-request: mac80211 2014-02-06
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 06 Feb 2014 10:00:37 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-br/F9yKMfyaAEKFx78ms"
+	Fri, 28 Feb 2014 07:17:24 -0500
+Message-ID: <1393589841.13669.32.camel@dubbel> (sfid-20140228_131733_504191_127F557F)
+Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Fri, 28 Feb 2014 14:17:21 +0200
+In-Reply-To: <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
+	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2014-02-27 at 16:29 +0100, Michal Kazior wrote:
+> On 27 February 2014 15:41, Luca Coelho <luca@coelho.fi> wrote:
+> > From: Luciano Coelho <luciano.coelho@intel.com>
+> >
+> > With single-channel drivers, we need to be able to change a running
+> > chanctx if we want to use chanctx reservation.  Not all drivers may be
+> > able to do this, so add a flag that indicates support for it.
+> >
+> > Changing a running chanctx can also be used as an optimization in
+> > multi-channel drivers when the context needs to be reserved for future
+> > usage.
+> 
+> I think this can be generalized (not necessarily in this very patch).
+> Since you've moved combination checks into mac80211 you can easily
+> check how many channels you can have with current iftype setup. This
+> means you can know beforehand if you can create a new chanctx or have
+> to attempt a chanctx channel switch.
 
---=-br/F9yKMfyaAEKFx78ms
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi John,
-
-First round of fixes ...
-
-This is just a collection of small fixes, the commit logs explain the
-details. The only thing that isn't strictly a fix is the 5/10 MHz
-enabling, I had forgotten this and there's little point in waiting
-longer. The patch simply removes the force-disable code that I put in
-when there was a problem with the userspace API (that has long been
-fixed.)
-
-Please pull.
-
-johannes
-
-
-
-The following changes since commit 53d8ab29f8f6d67e37857b68189b38fa3d87dd8e=
-:
-
-  Merge branch 'for-3.14/drivers' of git://git.kernel.dk/linux-block (2014-=
-01-30 11:40:10 -0800)
-
-are available in the git repository at:
+That's the idea.  I'm keeping both series separate, but when they get
+applied, I will use the combinations check for chanctx reservation.
 
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> > Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
+> > reserved so nobody else can use it (since we know it's going to
+> > change).  In the future, we may allow several vifs to use the same
+> > reservation as long as they plan to use the chanctx on the same
+> > future channel.
+> 
+> I don't really think you need a separate mode for that.
+> 
+> Since reserved_chanctx is protected by chanctx_mtx you can safely
+> iterate over interfaces and check if any vif is reserving the same
+> chanctx it is assigned to.
 
-for you to fetch changes up to fab57a6cc227468ca9e6a4c7ff8d3b10727785ee:
-
-  mac80211: fix virtual monitor interface iteration (2014-02-06 09:55:22 +0=
-100)
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      mac80211: move roc cookie assignment earlier
-
-Emmanuel Grumbach (2):
-      mac80211: avoid deadlock revealed by lockdep
-      mac80211: release the channel in error path in start_ap
-
-Johannes Berg (5):
-      cfg80211: re-enable 5/10 MHz support
-      cfg80211: fix scan done race
-      cfg80211: send scan results from work queue
-      mac80211: fix fragmentation code, particularly for encryption
-      mac80211: fix virtual monitor interface iteration
-
-Pontus Fuchs (1):
-      nl80211: Reset split_start when netlink skb is exhausted
-
-Sujith Manoharan (1):
-      mac80211: Fix IBSS disconnect
-
- net/mac80211/cfg.c     | 44 +++++++++++++++++++++++---------------------
- net/mac80211/ht.c      |  4 +++-
- net/mac80211/ibss.c    |  5 +----
- net/mac80211/iface.c   | 27 +++++++++++++++++++--------
- net/mac80211/tx.c      |  2 +-
- net/wireless/core.c    | 17 ++++++++++-------
- net/wireless/core.h    |  4 +++-
- net/wireless/nl80211.c | 32 ++++++++++++--------------------
- net/wireless/nl80211.h |  8 ++++----
- net/wireless/scan.c    | 40 +++++++++++++++++++++++++---------------
- net/wireless/sme.c     |  2 +-
- 11 files changed, 102 insertions(+), 83 deletions(-)
+I think it's much simpler to keep this new mode.  Reserved channel
+contexts are almost like exclusive contexts (as I was doing in my first
+RFC), but not exactly the same, since they can be used for other
+reservations.
 
 
---=-br/F9yKMfyaAEKFx78ms
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+> > @@ -622,7 +629,9 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+> >         if (WARN_ON(!sdata->reserved_chanctx))
+> >                 return -EINVAL;
+> >
+> > -       if (--sdata->reserved_chanctx->refcount == 0)
+> > +       if (sdata->reserved_chanctx->mode == IEEE80211_CHANCTX_RESERVED)
+> > +               sdata->reserved_chanctx->mode = sdata->reserved_mode;
+> > +       else if (--sdata->reserved_chanctx->refcount == 0)
+> >                 ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
+> >
+> >         sdata->reserved_chanctx = NULL;
+> > @@ -652,19 +661,42 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+> >         /* try to find another context with the chandef we want */
+> >         new_ctx = ieee80211_find_chanctx(local, chandef,
+> >                                          IEEE80211_CHANCTX_SHARED);
+> > -       if (!new_ctx) {
+> > -               /* create a new context */
+> > +       if (new_ctx) {
+> > +               /* reserve the existing compatible context */
+> > +               sdata->reserved_chanctx = new_ctx;
+> > +               new_ctx->refcount++;
+> > +       } else if (curr_ctx->refcount == 1 &&
+> > +                  (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
+> > +               /* TODO: when implementing support for multiple
+> > +                * interfaces switching at the same time, we may want
+> > +                * other vifs to reserve it as well, as long as
+> > +                * they're planning to switch to the same channel.  In
+> > +                * that case, we probably have to save the future
+> > +                * chandef and the reserved_mode in the context
+> > +                * itself.
+> > +                */
+> 
+> We already save the future chandef (csa_chandef). reserved_mode is not
+> necessary as per my comment above. Again, if you guarantee csa_chandef
+> to be set under chanctx_mtx you can safely iterate over interfaces and
+> calculate compat chandef.
 
------BEGIN PGP SIGNATURE-----
+But the calculated "compat chandef" is not exactly what was required in
+the first place.  In sdata->u.bss_conf.chandef we need to have the
+chandef we want for *this* vif.  We need this to recalculate the
+combined chandef if, for instance, another vif leaves our chanctx.
 
-iQIcBAABCAAGBQJS8081AAoJEDBSmw7B7bqrAYMQALkCbqimV7YkEeTPrL4nu601
-GrAgRGsgyg6ZcQH5NppJ3kv8YMb7COUySK2ATb/zjeviT4u43r0ocoswjERQeWkZ
-6tPnJa9FRkK+RW3afVtee93I5jHnSkNm9zuaSGNQvFhWGfucw4L9wXo/fNAPDxy6
-DMPsruxUfF4PvDizMfbzXcntB0r5MAl/tiEu/R41HZoFauWxKVjnPVQM63Fiz2fF
-V+ic8m9jNOjQZVHidG8qBDJ02plEyuAihYK6c1PK4FCLXSEd+UTdqXts79ojgnVD
-7uHEPn7arPHRxkSKZ6O2eNZlpsz1qEZ8Hv8dMAJgvj+Gxiy+IoStDNd58XjXeKV6
-FaWhRg8lRuw/bstuNeo+1enPy803PbT6gdYNDedkA6HP0zmrI3MHeRHwd8LqxnDv
-lu0zaOfdmBqd/vF7d+sJjyyPMz1u++WyD4Y0jQTUtKHlSNigVJ+ujDRUDOpxl9EM
-0S3zMLBRw9MnFFcZ7TKIqOknchOYppY8BSynq1YHR7ewUCEu2gMCJTzhpxGoo/Lq
-YLgIfbThKD77EKmymZg7GXuPB14exwPs3GQOqBToGNobL5ZizfbwiM4ATXjwf0uw
-d0EuRYx3YaEEI1c6e2QXw5M1tQ77bC6CdU3vohVaR1mvgsW0J9om43zOumbyVncI
-lMAot4kND8pPsGZsxBjj
-=p9p7
------END PGP SIGNATURE-----
+I think we should keep saving the reserved_chandef in sdata (the one
+that was requested when making the reservation) and also save the future
+chandef as a compat combination of all the reservations for that
+chanctx.
 
---=-br/F9yKMfyaAEKFx78ms--
+You're right that we already have the future chandef.  I just added it
+as "reserved_chandef" in the previous patch. ;) I'll reword this.
+
+Thanks a lot for your reviews and comments!
+
+--
+Cheers,
+Luca.
 
