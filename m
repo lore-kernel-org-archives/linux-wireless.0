@@ -1,259 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:32887 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752021AbaB0JPE (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:33560 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752499AbaB1PMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Feb 2014 04:15:04 -0500
-From: Luca Coelho <luca@coelho.fi>
+	Fri, 28 Feb 2014 10:12:03 -0500
+Received: by mail-ee0-f42.google.com with SMTP id d17so2329859eek.15
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:12:01 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v7 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
-Date: Thu, 27 Feb 2014 11:14:53 +0200
-Message-Id: <1393492497-29500-2-git-send-email-luca@coelho.fi> (sfid-20140227_101600_979474_E0516D42)
-In-Reply-To: <1393492497-29500-1-git-send-email-luca@coelho.fi>
-References: <1393492497-29500-1-git-send-email-luca@coelho.fi>
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 3/3] cfg80211: export interface stopping function
+Date: Fri, 28 Feb 2014 16:06:47 +0100
+Message-Id: <1393600007-28766-4-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161210_684820_D5628619)
+In-Reply-To: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
+References: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+This exports a new cfg80211_stop_iface() function.
 
-Separate the code that counts the interface types and channels from
-the code that check the interface combinations.  The new function that
-checks for combinations is exported so it can be called by the
-drivers.
+This is intended for driver internal interface
+combination management and channel switching. This
+is probably most useful for AP or provide a
+unified way to stopping interface operation from a
+driver.
 
-This is done in preparation for moving the interface combinations
-checks out of cfg80211.
+Due to locking issues (it re-enters driver) the
+call is asynchronous and uses cfg80211 even
+list/worker.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-In v4:
+ include/net/cfg80211.h | 14 ++++++++++++++
+ net/wireless/core.c    | 36 +++++++++++++++++++++++++++++++++---
+ net/wireless/core.h    |  3 +++
+ net/wireless/trace.h   | 15 +++++++++++++++
+ net/wireless/util.c    |  5 +++++
+ 5 files changed, 70 insertions(+), 3 deletions(-)
 
-   * rebased on top of slightly modified applied patches
-   * removed the parenthesis from the comment (not needed for docbook)
-   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
-
-In v7:
-
-   * removed redundant arguments (num_interfaces and used_iftypes)
-     from cfg80211_check_combinations();
----
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  22 +++++++
- net/wireless/util.c              | 128 ++++++++++++++++++++++-----------------
- 3 files changed, 95 insertions(+), 56 deletions(-)
-
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 044b764..d9b9416 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -100,6 +100,7 @@
- !Finclude/net/cfg80211.h wdev_priv
- !Finclude/net/cfg80211.h ieee80211_iface_limit
- !Finclude/net/cfg80211.h ieee80211_iface_combination
-+!Finclude/net/cfg80211.h cfg80211_check_combinations
-       </chapter>
-       <chapter>
-       <title>Actions and configuration</title>
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ff3af16..768fcc0 100644
+index f3411c9..15376c0 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4682,6 +4682,28 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
-  */
- unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
+@@ -4732,6 +4732,20 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 					    void *data),
+ 			       void *data);
  
 +/**
-+ * cfg80211_check_combinations - check interface combinations
++ * cfg80211_stop_iface - stop operation on given interface
 + *
 + * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
++ * @wdev: wireless device
 + *
-+ * This function can be called by the driver to check whether a
-+ * combination of interfaces and their types are allowed according to
-+ * the interface combinations.
++ * Cease operation of the given interface as if the interface was brought down.
++ * This stops beaconing or disconnects for a BSS.
++ *
++ * This doesn't need any locks and is asynchronous. This is intended for
++ * channel switching and internal driver interface combination management.
 + */
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES]);
++void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev);
 +
  /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
  /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index dadc934..7ecc0ef 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1253,6 +1253,75 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index afd0f08..b2f064f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -748,14 +748,14 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
  }
  
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int i, j, iftype;
-+	int num_interfaces = 0;
-+	u32 used_iftypes = 0;
-+
-+	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+		num_interfaces += iftype_num[iftype];
-+		if (iftype_num[iftype] > 0)
-+			used_iftypes |= BIT(iftype);
-+	}
-+
-+	for (i = 0; i < wiphy->n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		struct ieee80211_iface_limit *limits;
-+		u32 all_iftypes = 0;
-+
-+		c = &wiphy->iface_combinations[i];
-+
-+		if (num_interfaces > c->max_interfaces)
-+			continue;
-+		if (num_different_channels > c->num_different_channels)
-+			continue;
-+
-+		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
-+				 GFP_KERNEL);
-+		if (!limits)
-+			return -ENOMEM;
-+
-+		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+			if (wiphy->software_iftypes & BIT(iftype))
-+				continue;
-+			for (j = 0; j < c->n_limits; j++) {
-+				all_iftypes |= limits[j].types;
-+				if (!(limits[j].types & BIT(iftype)))
-+					continue;
-+				if (limits[j].max < iftype_num[iftype])
-+					goto cont;
-+				limits[j].max -= iftype_num[iftype];
-+			}
-+		}
-+
-+		if (radar_detect && !(c->radar_detect_widths & radar_detect))
-+			goto cont;
-+
-+		/* Finally check that all iftypes that we're currently
-+		 * using are actually part of this combination. If they
-+		 * aren't then we can't use this combination and have
-+		 * to continue to the next.
-+		 */
-+		if ((all_iftypes & used_iftypes) != used_iftypes)
-+			goto cont;
-+
-+		/* This combination covered all interface types and
-+		 * supported the requested numbers, so we're good.
-+		 */
-+		kfree(limits);
-+		return 0;
-+ cont:
-+		kfree(limits);
-+	}
-+
-+	return -EBUSY;
-+}
-+EXPORT_SYMBOL(cfg80211_check_combinations);
-+
- int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 struct wireless_dev *wdev,
- 				 enum nl80211_iftype iftype,
-@@ -1261,7 +1330,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 u8 radar_detect)
+-void cfg80211_leave(struct cfg80211_registered_device *rdev,
+-		    struct wireless_dev *wdev)
++void __cfg80211_leave(struct cfg80211_registered_device *rdev,
++		      struct wireless_dev *wdev)
  {
- 	struct wireless_dev *wdev_iter;
--	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
- 	struct ieee80211_channel
- 			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
-@@ -1269,7 +1337,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
- 	int total = 1;
--	int i, j;
-+	int i;
+ 	struct net_device *dev = wdev->netdev;
  
  	ASSERT_RTNL();
++	ASSERT_WDEV_LOCK(wdev);
  
-@@ -1354,65 +1422,13 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 
- 		num[wdev_iter->iftype]++;
- 		total++;
--		used_iftypes |= BIT(wdev_iter->iftype);
+-	wdev_lock(wdev);
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 		__cfg80211_leave_ibss(rdev, dev, true);
+@@ -786,9 +786,39 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
  	}
  
- 	if (total == 1 && !radar_detect)
- 		return 0;
- 
--	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
--		const struct ieee80211_iface_combination *c;
--		struct ieee80211_iface_limit *limits;
--		u32 all_iftypes = 0;
--
--		c = &rdev->wiphy.iface_combinations[i];
--
--		if (total > c->max_interfaces)
--			continue;
--		if (num_different_channels > c->num_different_channels)
--			continue;
--
--		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
--				 GFP_KERNEL);
--		if (!limits)
--			return -ENOMEM;
--
--		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
--			if (rdev->wiphy.software_iftypes & BIT(iftype))
--				continue;
--			for (j = 0; j < c->n_limits; j++) {
--				all_iftypes |= limits[j].types;
--				if (!(limits[j].types & BIT(iftype)))
--					continue;
--				if (limits[j].max < num[iftype])
--					goto cont;
--				limits[j].max -= num[iftype];
--			}
--		}
--
--		if (radar_detect && !(c->radar_detect_widths & radar_detect))
--			goto cont;
--
--		/*
--		 * Finally check that all iftypes that we're currently
--		 * using are actually part of this combination. If they
--		 * aren't then we can't use this combination and have
--		 * to continue to the next.
--		 */
--		if ((all_iftypes & used_iftypes) != used_iftypes)
--			goto cont;
--
--		/*
--		 * This combination covered all interface types and
--		 * supported the requested numbers, so we're good.
--		 */
--		kfree(limits);
--		return 0;
-- cont:
--		kfree(limits);
--	}
--
--	return -EBUSY;
-+	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
-+					   radar_detect, num);
+ 	wdev->beacon_interval = 0;
++}
++
++void cfg80211_leave(struct cfg80211_registered_device *rdev,
++		    struct wireless_dev *wdev)
++{
++	ASSERT_RTNL();
++
++	wdev_lock(wdev);
++	__cfg80211_leave(rdev, wdev);
+ 	wdev_unlock(wdev);
  }
  
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
++void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct cfg80211_event *ev;
++	unsigned long flags;
++
++	trace_cfg80211_stop_iface(wiphy, wdev);
++
++	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
++	if (!ev)
++		return;
++
++	ev->type = EVENT_STOPPED;
++
++	spin_lock_irqsave(&wdev->event_lock, flags);
++	list_add_tail(&ev->list, &wdev->event_list);
++	spin_unlock_irqrestore(&wdev->event_lock, flags);
++	queue_work(cfg80211_wq, &rdev->event_work);
++}
++EXPORT_SYMBOL(cfg80211_stop_iface);
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state, void *ptr)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 78e6847..402a653 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -182,6 +182,7 @@ enum cfg80211_event_type {
+ 	EVENT_ROAMED,
+ 	EVENT_DISCONNECTED,
+ 	EVENT_IBSS_JOINED,
++	EVENT_STOPPED,
+ };
+ 
+ struct cfg80211_event {
+@@ -439,6 +440,8 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num);
+ 
++void __cfg80211_leave(struct cfg80211_registered_device *rdev,
++		      struct wireless_dev *wdev);
+ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		    struct wireless_dev *wdev);
+ 
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index aabccf1..24acf96 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2615,6 +2615,21 @@ TRACE_EVENT(cfg80211_ft_event,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(target_ap))
+ );
+ 
++TRACE_EVENT(cfg80211_stop_iface,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT,
++		  WIPHY_PR_ARG, WDEV_PR_ARG)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 486b604..2236c08 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -789,6 +789,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 	unsigned long flags;
+ 	const u8 *bssid = NULL;
+ 
++	ASSERT_RTNL();
++
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	while (!list_empty(&wdev->event_list)) {
+ 		ev = list_first_entry(&wdev->event_list,
+@@ -823,6 +825,9 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid,
+ 					       ev->ij.channel);
+ 			break;
++		case EVENT_STOPPED:
++			__cfg80211_leave(wiphy_to_dev(wdev->wiphy), wdev);
++			break;
+ 		}
+ 		wdev_unlock(wdev);
+ 
 -- 
 1.8.5.3
 
