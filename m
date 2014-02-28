@@ -1,141 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:62180 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaB1PMA (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:50907 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751224AbaB1Jyd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 10:12:00 -0500
-Received: by mail-ea0-f174.google.com with SMTP id h14so2667586eaj.5
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:11:59 -0800 (PST)
+	Fri, 28 Feb 2014 04:54:33 -0500
+Received: by mail-ea0-f169.google.com with SMTP id d10so2518306eaj.14
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 01:54:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87txbjbn7s.fsf@kamboji.qca.qualcomm.com>
+References: <1392629563-31046-1-git-send-email-michal.kazior@tieto.com>
+	<1393485587-16879-1-git-send-email-michal.kazior@tieto.com>
+	<1393485587-16879-5-git-send-email-michal.kazior@tieto.com>
+	<8738j3d2t2.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQn8GTu3A4LdRGtpJeVr0SnaApTwnNZAoZ8=3Vj5qF+W=g@mail.gmail.com>
+	<87txbjbn7s.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 28 Feb 2014 10:54:31 +0100
+Message-ID: <CA+BoTQkgxNL9tkxR=b2Qif5+6Z_cFQOc2uL5QD5scd=Nx1y50g@mail.gmail.com> (sfid-20140228_105443_370325_4380078F)
+Subject: Re: [PATCH v3 4/8] ath10k: bypass htc for htt tx path
 From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 1/3] cfg80211: allow drivers to iterate over matching combinations
-Date: Fri, 28 Feb 2014 16:06:45 +0100
-Message-Id: <1393600007-28766-2-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161213_228134_1FB31B54)
-In-Reply-To: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
-References: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch splits cfg80211_check_combinations()
-into an iterator function and a simple iteration
-user.
+On 28 February 2014 10:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 28 February 2014 10:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>>
+>>>> --- a/drivers/net/wireless/ath/ath10k/htc.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/htc.c
+>>>> @@ -202,10 +202,8 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
+>>>>       struct ath10k_htc *htc = &ar->htc;
+>>>>       struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+>>>>
+>>>> -     if (!skb) {
+>>>> -             ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
+>>>> +     if (WARN_ON(!skb))
+>>>>               return 0;
+>>>> -     }
+>>>
+>>> WARN_ON() is a bit dangerous here as it might cause excessive spamming.
+>>> Why did you want to change this? I think either ath10k_warn() or
+>>> WARN_ON_ONCE() would be safer, but not sure which one to use.
+>>
 
-This makes it possible for drivers to asses how
-many channels can use given iftype setup. This in
-turn can be used for future
-multi-interface/multi-channel channel switching.
+[...]
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
- net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 64 insertions(+), 7 deletions(-)
+>> Perhaps WARN_ON() is a bit over the top here, but since this is now
+>> more of a logic issue rather than runtime issue I decided to change it
+>> from ath10k_warn to WARN_ON(). It's probably still a good idea to make
+>> it _ONCE generally, although if you actually get skbuff it's already
+>> too late or it should be screaming loudly because someone must've
+>> changed the code in an incorrect/incomplete way.
+>
+> So I change it to WARN_ON_ONCE(), ok?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 23a72e2..f3411c9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4705,6 +4705,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- 				const u8 radar_detect,
- 				const int iftype_num[NUM_NL80211_IFTYPES]);
- 
-+/**
-+ * cfg80211_iter_combinations - iterate over matching combinations
-+ *
-+ * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
-+ * @iter: function to call for each matching combination
-+ * @data: pointer to pass to iter function
-+ *
-+ * This function can be called by the driver to check what possible
-+ * combinations it fits in at a given moment, e.g. for channel switching
-+ * purposes.
-+ */
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 378038d30..486b604 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1248,10 +1248,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
--int cfg80211_check_combinations(struct wiphy *wiphy,
--				const int num_different_channels,
--				const u8 radar_detect,
--				const int iftype_num[NUM_NL80211_IFTYPES])
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data)
- {
- 	int i, j, iftype;
- 	int num_interfaces = 0;
-@@ -1307,13 +1310,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- 		/* This combination covered all interface types and
- 		 * supported the requested numbers, so we're good.
- 		 */
--		kfree(limits);
--		return 0;
-+
-+		(*iter)(c, data);
-  cont:
- 		kfree(limits);
- 	}
- 
--	return -EBUSY;
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_iter_combinations);
-+
-+static void
-+cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
-+			  void *data)
-+{
-+	int *num = data;
-+	(*num)++;
-+}
-+
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int err, num = 0;
-+
-+	err = cfg80211_iter_combinations(wiphy, num_different_channels,
-+					 radar_detect, iftype_num,
-+					 cfg80211_iter_sum_ifcombs, &num);
-+	if (err)
-+		return err;
-+	if (num == 0)
-+		return -EBUSY;
-+
-+	return 0;
- }
- EXPORT_SYMBOL(cfg80211_check_combinations);
- 
--- 
-1.8.5.3
+Sure. Thanks!
 
+
+Michał
