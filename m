@@ -1,149 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:46374 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751534AbaBVUga (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:62180 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbaB1PMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Feb 2014 15:36:30 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 4/6] mac80211: move flag IEEE80211_TX_CTL_MORE_FRAMES into info->control.flags
-Date: Sat, 22 Feb 2014 21:36:18 +0100
-Message-Id: <1393101380-1646-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140222_213658_857529_E55FD903)
-In-Reply-To: <1393101380-1646-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1393101380-1646-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Fri, 28 Feb 2014 10:12:00 -0500
+Received: by mail-ea0-f174.google.com with SMTP id h14so2667586eaj.5
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 07:11:59 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/3] cfg80211: allow drivers to iterate over matching combinations
+Date: Fri, 28 Feb 2014 16:06:45 +0100
+Message-Id: <1393600007-28766-2-git-send-email-michal.kazior@tieto.com> (sfid-20140228_161213_228134_1FB31B54)
+In-Reply-To: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
+References: <1393600007-28766-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag IEEE80211_TX_CTL_MORE_FRAMES is only used within the tx path while
-ieee80211_tx_info->control is valid. Therefore this patch moves this flag
-from info->flags structure into the info->control.flags and renames it to
-IEEE80211_TX_CTRL_MORE_FRAMES.
+The patch splits cfg80211_check_combinations()
+into an iterator function and a simple iteration
+user.
 
-Signed-off-by: Alexander Couzens <lynxis@fe80.eu>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+This makes it possible for drivers to asses how
+many channels can use given iftype setup. This in
+turn can be used for future
+multi-interface/multi-channel channel switching.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- include/net/mac80211.h                    |   41 +++++++++++++++--------------
- net/mac80211/tx.c                         |    2 +-
- 3 files changed, 23 insertions(+), 22 deletions(-)
+ include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
+ net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 64 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index bed86cc..076d44a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -473,7 +473,7 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Check if more frames (!= fragments) are pending
- 	 */
--	if (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)
-+	if (tx_info->control.flags & IEEE80211_TX_CTRL_MORE_FRAMES)
- 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 23a72e2..f3411c9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4705,6 +4705,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 				const u8 radar_detect,
+ 				const int iftype_num[NUM_NL80211_IFTYPES]);
  
- 	/*
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 84b9c34..5112a61 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -413,10 +413,6 @@ struct ieee80211_bss_conf {
-  *	used to indicate that a frame was already retried due to PS
-  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
-  *	used to indicate frame should not be encrypted
-- * @IEEE80211_TX_CTL_MORE_FRAMES: More frames will be passed to the
-- *	transmit function after the current frame, this can be used
-- *	by drivers to kick the DMA queue only if unset or when the
-- *	queue gets full.
-  * @IEEE80211_TX_INTFL_RETRANSMISSION: This frame is being retransmitted
-  *	after TX status because the destination was asleep, it must not
-  *	be modified again (no seqno assignment, crypto, etc.)
-@@ -472,22 +468,21 @@ enum mac80211_tx_info_flags {
- 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(12),
- 	IEEE80211_TX_INTFL_RETRIED		= BIT(13),
- 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(14),
--	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(15),
--	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(16),
--	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(17),
--	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(18),
--	IEEE80211_TX_CTL_LDPC			= BIT(19),
--	IEEE80211_TX_CTL_STBC			= BIT(20) | BIT(21),
--	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(22),
--	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(23),
--	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(24),
--	IEEE80211_TX_STATUS_EOSP		= BIT(25),
--	IEEE80211_TX_CTL_USE_MINRATE		= BIT(26),
--	IEEE80211_TX_CTL_DONTFRAG		= BIT(27),
--	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(28),
-+	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(15),
-+	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(16),
-+	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(17),
-+	IEEE80211_TX_CTL_LDPC			= BIT(18),
-+	IEEE80211_TX_CTL_STBC			= BIT(19) | BIT(20),
-+	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(21),
-+	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(22),
-+	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(23),
-+	IEEE80211_TX_STATUS_EOSP		= BIT(24),
-+	IEEE80211_TX_CTL_USE_MINRATE		= BIT(25),
-+	IEEE80211_TX_CTL_DONTFRAG		= BIT(26),
-+	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(27),
- };
- 
--#define IEEE80211_TX_CTL_STBC_SHIFT		20
-+#define IEEE80211_TX_CTL_STBC_SHIFT		19
- 
- /**
-  * enum mac80211_tx_control_flags - flags to describe transmit control
-@@ -507,6 +502,11 @@ enum mac80211_tx_info_flags {
-  *	802.11-2007 7.1.3.4.1 paragraph 3. This flag will always be set for
-  *	beacons and always be clear for frames without a sequence number field.
-  *
-+ * @IEEE80211_TX_CTRL_MORE_FRAMES: More frames will be passed to the
-+ *	transmit function after the current frame, this can be used
-+ *	by drivers to kick the DMA queue only if unset or when the
-+ *	queue gets full.
++/**
++ * cfg80211_iter_combinations - iterate over matching combinations
 + *
-  * These flags are used in tx_info->control.flags.
-  */
- enum mac80211_tx_control_flags {
-@@ -514,6 +514,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_ASSIGN_SEQ		= BIT(1),
- 	IEEE80211_TX_CTRL_FIRST_FRAGMENT        = BIT(3),
- 	IEEE80211_TX_CTRL_NO_PS_BUFFER          = BIT(4),
-+	IEEE80211_TX_CTRL_MORE_FRAMES           = BIT(5),
- };
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ * @iter: function to call for each matching combination
++ * @data: pointer to pass to iter function
++ *
++ * This function can be called by the driver to check what possible
++ * combinations it fits in at a given moment, e.g. for channel switching
++ * purposes.
++ */
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
- /*
-@@ -526,7 +527,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
- 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_STBC |	      \
--	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC)
-+	IEEE80211_TX_CTL_LDPC)
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 378038d30..486b604 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1248,10 +1248,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
  
- /*
-  * This definition is used to clear all temporary flags, which are only used
-@@ -534,7 +535,7 @@ enum mac80211_tx_control_flags {
-  * info->control.flags is used.
-  */
- #define IEEE80211_TX_TEMPORARY_CTRL_FLAGS (IEEE80211_TX_CTL_FIRST_FRAGMENT |  \
--	IEEE80211_TX_CTRL_NO_PS_BUFFER)
-+	IEEE80211_TX_CTRL_NO_PS_BUFFER | IEEE80211_TX_CTRL_MORE_FRAMES)
+-int cfg80211_check_combinations(struct wiphy *wiphy,
+-				const int num_different_channels,
+-				const u8 radar_detect,
+-				const int iftype_num[NUM_NL80211_IFTYPES])
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data)
+ {
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+@@ -1307,13 +1310,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 		/* This combination covered all interface types and
+ 		 * supported the requested numbers, so we're good.
+ 		 */
+-		kfree(limits);
+-		return 0;
++
++		(*iter)(c, data);
+  cont:
+ 		kfree(limits);
+ 	}
  
- /**
-  * enum mac80211_rate_control_flags - per-rate flags set by the
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 316b8d3..740eedd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -861,7 +861,7 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
- 		info->control.flags &= ~(IEEE80211_TX_CTRL_FIRST_FRAGMENT);
+-	return -EBUSY;
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_iter_combinations);
++
++static void
++cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
++			  void *data)
++{
++	int *num = data;
++	(*num)++;
++}
++
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int err, num = 0;
++
++	err = cfg80211_iter_combinations(wiphy, num_different_channels,
++					 radar_detect, iftype_num,
++					 cfg80211_iter_sum_ifcombs, &num);
++	if (err)
++		return err;
++	if (num == 0)
++		return -EBUSY;
++
++	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_check_combinations);
  
- 		if (rem)
--			info->flags |= IEEE80211_TX_CTL_MORE_FRAMES;
-+			info->control.flags |= IEEE80211_TX_CTRL_MORE_FRAMES;
- 
- 		skb_copy_queue_mapping(tmp, skb);
- 		tmp->priority = skb->priority;
 -- 
-1.7.9.5
+1.8.5.3
 
