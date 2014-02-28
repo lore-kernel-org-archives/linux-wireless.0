@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:64169 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbaC1UwO (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:64603 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439AbaCAAAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 16:52:14 -0400
-Received: by mail-yk0-f174.google.com with SMTP id 20so4178707yks.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 13:52:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140328.145410.1817326821928803131.davem@davemloft.net>
-References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com> <20140328.145410.1817326821928803131.davem@davemloft.net>
-From: Tom Gundersen <teg@jklm.no>
-Date: Fri, 28 Mar 2014 21:51:53 +0100
-Message-ID: <CAG-2HqVJPrTWXtuvDkU6MvfNj0MXfNuBMmdoKWtSd5kToZ3mMQ@mail.gmail.com> (sfid-20140328_215225_817592_BCD0646A)
-Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
-To: David Miller <davem@davemloft.net>
-Cc: David Herrmann <dh.herrmann@gmail.com>,
-	netdev <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 28 Feb 2014 19:00:10 -0500
+Received: by mail-we0-f172.google.com with SMTP id u56so1148041wes.3
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 16:00:09 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 9/9] staging: vt6656: Remove unused tasklets tasklet_struct CmdWorkItem and EventWorkItem are not used.
+Date: Fri, 28 Feb 2014 23:58:39 +0000
+Message-Id: <1393631919-16182-9-git-send-email-tvboxspy@gmail.com> (sfid-20140301_010019_231160_5776CBDA)
+In-Reply-To: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
+References: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 7:54 PM, David Miller <davem@davemloft.net> wrote:
-> From: David Herrmann <dh.herrmann@gmail.com>
-> Date: Wed, 26 Mar 2014 14:05:13 +0100
->
->> The main use-case is to allow udev to skip applying reliable ifnames to virtual
->> devices. For instance, if wifi-P2P devices are created, wpas already provides a
->> suitable naming-policy and udev shouldn't touch these devices. Same is true for
->> other virtual devices.
->
-> This makes no sense at all.
->
-> If udev should avoid applying names to wifi-P2P devices, that policy can
-> be instituted completely inside of udev.  There is no need whatsoever
-> for kernel support.
->
-> udev can look at the device type, and policies can be defined that key
-> off of that device type, entirely in userspace.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h   | 2 --
+ drivers/staging/vt6656/main_usb.c | 4 ----
+ 2 files changed, 6 deletions(-)
 
-Doing this in userspace sounds really wrong and fragile.
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index a9784ff..e2abe3d 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -355,8 +355,6 @@ struct vnt_private {
+ 
+ 	OPTIONS sOpts;
+ 
+-	struct tasklet_struct CmdWorkItem;
+-	struct tasklet_struct EventWorkItem;
+ 	struct work_struct read_work_item;
+ 	struct work_struct rx_mng_work_item;
+ 
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 0475a20..7dd885f 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1005,8 +1005,6 @@ static int  device_open(struct net_device *dev)
+ 
+     vMgrObjectInit(pDevice);
+ 
+-    tasklet_init(&pDevice->EventWorkItem, (void *)INTvWorkItem, (unsigned long)pDevice);
+-
+ 	schedule_delayed_work(&pDevice->second_callback_work, HZ);
+ 
+ 	pDevice->int_interval = 100;  /* max 100 microframes */
+@@ -1108,8 +1106,6 @@ static int device_close(struct net_device *dev)
+ 	cancel_work_sync(&pDevice->rx_mng_work_item);
+ 	cancel_work_sync(&pDevice->read_work_item);
+ 
+-    tasklet_kill(&pDevice->EventWorkItem);
+-
+    pDevice->bRoaming = false;
+    pDevice->bIsRoaming = false;
+    pDevice->bEnableRoaming = false;
+-- 
+1.9.0
 
-In the case of wifi-P2P we could make it work, but for every type of
-device that is added to the kernel which is named from userspace, we
-would have to play catch-up in udev (and even after we do, new kernels
-on old userspace will never work in the expected way).
-
-Moreover, there are of course cases where knowing the type of device
-is not sufficient. Take 'ip link add type bridge' vs. 'ip link add dev
-bride5 type bridge'. They may both create a new bridge called
-'bride5'. In the first case, we may reasonably want a policy in udev
-to rename the device to something better, but in the second case we
-probably want to leave it alone.
-
->From userspace there is no way (that I know of) to determine if the
-name of a given device was picked by the kernel (i.e., more or less
-randomly) or by the userspace process that created it (i.e., probably
-for a good reason, so we should not touch it).
-
-Also the problems with third-party processes renaming devices which
-David outlined is a real problem that we run into in practice. We
-could of course dream up mechanisms for these processes to communicate
-to udev that they already renamed the device (and we have), but people
-will keep getting this wrong, so asking the kernel for this
-information just makes so much more sense.
-
-These patches seem to solve all the problems with network interface
-renaming really nicely once and for all, so would be a real shame if
-they don't go in.
-
-Cheers,
-
-Tom
