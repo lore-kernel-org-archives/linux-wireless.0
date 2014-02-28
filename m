@@ -1,46 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37005 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753970AbaBQToL (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:62576 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467AbaB1HvL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Feb 2014 14:44:11 -0500
-Message-ID: <53026685.7040303@candelatech.com> (sfid-20140217_204416_011999_287CAF80)
-Date: Mon, 17 Feb 2014 11:44:05 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 28 Feb 2014 02:51:11 -0500
+Received: by mail-ee0-f50.google.com with SMTP id c13so47823eek.9
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Feb 2014 23:51:10 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Question on how encryption keys are supposed to be handled.
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1393550452-1302-1-git-send-email-greearb@candelatech.com>
+References: <1393550452-1302-1-git-send-email-greearb@candelatech.com>
+Date: Fri, 28 Feb 2014 08:51:10 +0100
+Message-ID: <CA+BoTQnCjkgr3V4bzXW8GHJDmGRHqg6x8An__vFW5bxdub=uyw@mail.gmail.com> (sfid-20140228_085134_158356_4A93F542)
+Subject: Re: [PATCH v2] ath10k: support msdu chaining.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 28 February 2014 02:20,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Consolidate the list of msdu skbs into the msdu-head skb, delete the
+> rest of the skbs, pass the msdu-head skb on up the stack as normal.
+>
+> Tested with high-speed TCP and UDP traffic on modified firmware that
+> supports raw-rx.
 
-I've been debugging an issue where my ath10k firmware is running out of key
-objects to allocate.  This could be a simple issue in the firmware, but first I
-wanted to try to figure out how things are supposed to work.
+As for an umodified firmware I expect ath10k will just re-assemble
+corrupted frames just to have them dropped by mac80211. It might be
+worth checking:
 
-What I see in my firmware is that near time of association it allocates
-4 keys.  Two of them are multicast, and one of the multicast is index 0,
-the second is index 1.
+ if (chaining && fcs_error)
+    drop();
 
-Then, some time later (probably on rekey), another multicast is added at index 2.
+..to avoid processing junk and flushing d-cache (this matters for less
+powerful host systems).
 
-After that, key space is exhausted so I see errors in the kernel logs about adding
-broadcast keys failing.
 
-TCP and UDP traffic continues to flow, but I am not testing multicast traffic,
-so maybe that would be failing.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>
+> v2:  Add note about skb_try_coalesce, though I am not sure it will
+>      work or not.
+>      Only grow skb once, which should save on some memory (re)allocation
+>      and copying when we have more than one chained skb.
+>
+>  drivers/net/wireless/ath/ath10k/htt_rx.c | 60 +++++++++++++++++++++++++++++---
+>  1 file changed, 56 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index 9f3def7..a5070a9 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -401,6 +401,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+>                 msdu_len = MS(__le32_to_cpu(rx_desc->msdu_start.info0),
+>                               RX_MSDU_START_INFO0_MSDU_LENGTH);
+>                 msdu_chained = rx_desc->frag_info.ring2_more_count;
+> +               msdu_chaining = msdu_chained;
+>
+>                 if (msdu_len_invalid)
+>                         msdu_len = 0;
+> @@ -428,7 +429,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+>
+>                         msdu->next = next;
+>                         msdu = next;
+> -                       msdu_chaining = 1;
+>                 }
+>
+>                 last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
+> @@ -1008,14 +1008,66 @@ continue_on:
+>                                 continue;
+>                         }
+>
+> -                       /* FIXME: we do not support chaining yet.
+> -                        * this needs investigation */
+>                         if (msdu_chaining) {
+> -                               ath10k_warn("htt rx msdu_chaining is true\n");
+> +                               struct sk_buff *next = msdu_head->next;
+> +                               struct sk_buff *to_free = next;
+> +                               static int do_once = 1;
+> +                               int space;
+> +                               int total_len = 0;
+> +
+> +                               /* TODO:  Might could optimize this by using
+> +                                * skb_try_coalesce or similar method to]
+> +                                * decrease copying.
+> +                                */
 
-So, question is:  Is it expected that the mcast keys keep being added at increasing
-key indexes?  If so, what is the maximum index allowed?
+It'd be great if we could use kernel-provided function to merge skbs
+instead of rolling out our own ;-)
 
-Is this something primarily controlled at the supplicant level?
 
-Thanks,
-Ben
+> +
+> +                               msdu_head->next = NULL;
+> +
+> +                               if (unlikely(do_once)) {
+> +                                       ath10k_warn("htt rx msdu_chaining detected %d\n",
+> +                                                   msdu_chaining);
+> +                                       do_once = 0;
+> +                               }
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I don't really like this do_once thing. I wouldn't even bother with a
+warning, since, well, chaining parsing is implemented. This should be
+a simple debug print if anything.
 
+
+> +
+> +                               /* Allocate total length all at once. */
+> +                               while (next) {
+> +                                       total_len += next->len;
+> +                                       next = next->next;
+> +                               }
+> +
+> +                               space = total_len - skb_tailroom(msdu_head);
+> +                               if ((space > 0) &&
+> +                                   (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
+> +                                       /* TODO:  bump some rx-oom error stat */
+> +                                       goto outside_continue;
+> +                               }
+> +
+> +                               /* Walk list again, copying contents into
+> +                                * msdu_head
+> +                                */
+> +                               next = to_free;
+> +                               while (next) {
+> +                                       skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
+> +                                                                 next->len);
+> +                                       next = next->next;
+> +                               }
+> +
+> +                               /* If here, we have consolidated skb.  Free the
+> +                                * fragments and pass the main skb on up the
+> +                                * stack.
+> +                                */
+> +                               ath10k_htt_rx_free_msdu_chain(to_free);
+> +                               goto have_good_msdu;
+> +
+> +                       outside_continue:
+> +                               /* put it back together so we can free the
+> +                                * whole list at once.
+> +                                */
+> +                               msdu_head->next = to_free;
+>                                 ath10k_htt_rx_free_msdu_chain(msdu_head);
+>                                 continue;
+>                         }
+>
+> +               have_good_msdu:
+>                         info.skb     = msdu_head;
+>                         info.fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
+>                         info.mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
+
+If anything, please, make it into a separate function. The rx handler
+is already huge and it needs shrinking down, not expanding it more.
+
+
+Michał
