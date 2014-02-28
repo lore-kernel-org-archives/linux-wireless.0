@@ -1,52 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f195.google.com ([209.85.192.195]:48209 "EHLO
-	mail-pd0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbaBRLeX (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:54750 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbaB1H1I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Feb 2014 06:34:23 -0500
-From: avi.kp.137@gmail.com
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Avinash kumar <avi.kp.137@gmail.com>
-Subject: [PATCH 6/6] drivers:net:wireless:airo.c:checkpatch.pl cleanup
-Date: Tue, 18 Feb 2014 17:04:10 +0530
-Message-Id: <5303453d.82e6440a.29fb.6ba4@mx.google.com> (sfid-20140218_123426_281443_C7046774)
+	Fri, 28 Feb 2014 02:27:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <1375189476-21557-1-git-send-email-coelho@ti.com>
+References: <1375189476-21557-1-git-send-email-coelho@ti.com>
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Fri, 28 Feb 2014 08:26:46 +0100
+Message-ID: <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com> (sfid-20140228_082730_147138_42AA486E)
+Subject: Re: [PATCH v4 0/8] wilink: add device tree support
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
+	"Nori, Sekhar" <nsekhar@ti.com>, luca@coelho.fi,
+	mturquette@linaro.org, mark.rutland@arm.com, balbi@ti.com,
+	grant.likely@linaro.org, rob.herring@calxeda.com,
+	devicetree-discuss@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	nm@ti.com, martinez.javier@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash kumar <avi.kp.137@gmail.com>
+On Tue, Jul 30, 2013 at 3:04 PM, Luciano Coelho <coelho@ti.com> wrote:
+> Hi,
+>
+> This patch series adds device tree support to the wlcore_sdio driver,
+> which is used by WiLink6, WiLink7 and WiLink8.
+>
+> The first patches do some clean-up to make the data needed in the
+> wilink device tree node smaller.  The remaining patches implement the
+> actual device tree node parsing in wlcore_sdio.
+>
+> Regarding the XTAL clock issues, for now we don't support XTAL mode
+> with DT, but I have sent a proposal for a small change in the clock
+> framework to support this, but it's still under discussions [1].
+>
+> The DTS file changes will be sent separately, since they need to go
+> via different trees.
+>
+> A new version of the bindings documentation has been sent [2] and, if
+> no more comments are given to it, I'll apply it via my tree.
+>
+> [1] http://news.gmane.org/find-root.php?message_id=1372971912-10877-1-git-send-email-coelho@ti.com
+> [2] http://news.gmane.org/find-root.php?message_id=1375109728-5931-1-git-send-email-coelho@ti.com
+>
+> Changes in v4:
+>
+> * Rebased on top of 3.11-rc3 (eg. no more changes on the board files
+>   that were removed);
+>
+> * Use the new irq_get_trigger_type() instead of
+>   irqd_get_trigger_type() (thanks Javier);
+>
+> * Added some missing const's (thanks Felipe);
+>
+> * Reverted Tony's workaround to get WiLink to work on Panda while DT
+>   was not supported yet.
+>
+>
+> Please review.
 
-removed following warnings-
-drivers/net/wireless/airo.c:39: WARNING: Use #include <linux/io.h> instead of <asm/io.h>
-drivers/net/wireless/airo.c:48: WARNING: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+What is the state of the series? Who is now responsible for the
+patches? What issues were still not handled?
 
-Signed-off-by: Avinash Kumar <avi.kp.137@gmail.com>
----
- drivers/net/wireless/airo.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Yegor
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index edf4b57..79c4a76 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -36,7 +36,7 @@
- #include <linux/bitops.h>
- #include <linux/scatterlist.h>
- #include <linux/crypto.h>
--#include <asm/io.h>
-+#include <linux/io.h>
- #include <asm/unaligned.h>
- 
- #include <linux/netdevice.h>
-@@ -45,7 +45,7 @@
- #include <linux/if_arp.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
--#include <asm/uaccess.h>
-+#include <linux/uaccess.h>
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
--- 
-1.7.9.5
-
+> Luciano Coelho (8):
+>   wl1251: split wl251 platform data to a separate structure
+>   wlcore: set irq_flags in the board files instead of hiding behind a
+>     quirk
+>   wlcore: remove pwr_in_suspend from platform data
+>   wl12xx: use frequency instead of enumerations for pdata clocks
+>   wlcore: add initial device tree support to the sdio module
+>   wlcore: sdio: add wilink clock providers
+>   wlcore: sdio: get clocks from device tree
+>   wlcore/wl12xx: check if we got correct clock data from DT
+>
+>  arch/arm/mach-davinci/board-da850-evm.c        |  11 ++-
+>  arch/arm/mach-omap2/board-omap3evm.c           |  22 ++++-
+>  arch/arm/mach-omap2/board-omap3pandora.c       |   4 +-
+>  arch/arm/mach-omap2/board-rx51-peripherals.c   |   2 +-
+>  arch/arm/mach-omap2/board-zoom-peripherals.c   |  33 +++++++-
+>  arch/arm/mach-omap2/devices.c                  |  39 ---------
+>  drivers/net/wireless/ti/wilink_platform_data.c |  37 ++++++--
+>  drivers/net/wireless/ti/wl1251/sdio.c          |  12 +--
+>  drivers/net/wireless/ti/wl1251/spi.c           |   2 +-
+>  drivers/net/wireless/ti/wl12xx/main.c          |  78 +++++++++++++++--
+>  drivers/net/wireless/ti/wl12xx/wl12xx.h        |  28 +++++++
+>  drivers/net/wireless/ti/wlcore/debugfs.c       |   2 +-
+>  drivers/net/wireless/ti/wlcore/main.c          |  20 ++---
+>  drivers/net/wireless/ti/wlcore/sdio.c          | 112 +++++++++++++++++++++++--
+>  drivers/net/wireless/ti/wlcore/wlcore.h        |   5 +-
+>  drivers/net/wireless/ti/wlcore/wlcore_i.h      |   1 +
+>  include/linux/wl12xx.h                         |  52 +++++-------
+>  17 files changed, 340 insertions(+), 120 deletions(-)
+>
+> --
+> 1.8.3.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
