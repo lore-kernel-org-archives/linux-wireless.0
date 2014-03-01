@@ -1,135 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56481 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755585AbaC0SaO (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:44585 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbaCAG0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 14:30:14 -0400
-Date: Thu, 27 Mar 2014 14:15:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Adam Lee <adam.lee@canonical.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	stable@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH v2] rtlwifi: add MSI interrupts support
-Message-ID: <20140327181513.GF31168@tuxdriver.com> (sfid-20140327_193024_960279_F35A6A40)
-References: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
- <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
+	Sat, 1 Mar 2014 01:26:39 -0500
+Received: by mail-pa0-f51.google.com with SMTP id kq14so1705851pab.10
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 22:26:39 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless: Kconfig: add missing dependency
+Date: Sat,  1 Mar 2014 14:26:29 +0800
+Message-Id: <761de703220ff26c7deddbcc7dc081e91c9e77c6.1393654723.git.gamerh2o@gmail.com> (sfid-20140301_072707_081682_A5E77194)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm confused -- is "rtlwifi: rtl8188ee: enable MSI interrupts support"
-still wanted/needed?
+Previous driver changes to airo, atmel, wl3501_cs, and usb_zd1201 need
+to include <net/cfg80211.h>, which depends on CFG80211, so add the
+missing dependency.
 
-John
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ drivers/net/wireless/Kconfig | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-On Tue, Mar 25, 2014 at 10:48:52AM +0800, Adam Lee wrote:
-> Add MSI interrupts support, enable it when msi_support flag is true,
-> also could fallback to pin-based interrupts mode if MSI mode fails.
-> 
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
-> Cc: <stable@vger.kernel.org> [3.10+]
-> ---
->  drivers/net/wireless/rtlwifi/pci.c | 65 ++++++++++++++++++++++++++++++++++++--
->  1 file changed, 63 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index f26f4ff..155d010 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1853,6 +1853,65 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
->  	return true;
->  }
->  
-> +static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-> +
-> +	ret = pci_enable_msi(rtlpci->pdev);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	if (ret < 0) {
-> +		pci_disable_msi(rtlpci->pdev);
-> +		return ret;
-> +	}
-> +
-> +	rtlpci->using_msi = true;
-> +
-> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-> +		 "MSI Interrupt Mode!\n");
-> +	return 0;
-> +}
-> +
-> +static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-> +
-> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	rtlpci->using_msi = false;
-> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-> +		 "Pin-based Interrupt Mode!\n");
-> +	return 0;
-> +}
-> +
-> +static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-> +
-> +	if (rtlpci->msi_support) {
-> +		ret = rtl_pci_intr_mode_msi(hw);
-> +		if (ret < 0)
-> +			ret = rtl_pci_intr_mode_legacy(hw);
-> +	} else {
-> +		ret = rtl_pci_intr_mode_legacy(hw);
-> +	}
-> +	return ret;
-> +}
-> +
->  int rtl_pci_probe(struct pci_dev *pdev,
->  			    const struct pci_device_id *id)
->  {
-> @@ -1995,8 +2054,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
->  	}
->  
->  	rtlpci = rtl_pcidev(pcipriv);
-> -	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> -			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	err = rtl_pci_intr_mode_decide(hw);
->  	if (err) {
->  		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
->  			 "%s: failed to register IRQ handler\n",
-> @@ -2064,6 +2122,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
->  		rtlpci->irq_alloc = 0;
->  	}
->  
-> +	if (rtlpci->using_msi)
-> +		pci_disable_msi(rtlpci->pdev);
-> +
->  	list_del(&rtlpriv->list);
->  	if (rtlpriv->io.pci_mem_start != 0) {
->  		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
-> -- 
-> 1.9.1
-> 
-> 
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 200020e..d1fab43 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -53,7 +53,7 @@ config LIBERTAS_THINFIRM_USB
+ 
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+-	depends on ISA_DMA_API && (PCI || BROKEN)
++	depends on CFG80211 && ISA_DMA_API && (PCI || BROKEN)
+ 	select WIRELESS_EXT
+ 	select CRYPTO
+ 	select WEXT_SPY
+@@ -73,7 +73,7 @@ config AIRO
+ 
+ config ATMEL
+       tristate "Atmel at76c50x chipset  802.11b support"
+-      depends on (PCI || PCMCIA)
++      depends on CFG80211 && (PCI || PCMCIA)
+       select WIRELESS_EXT
+       select WEXT_PRIV
+       select FW_LOADER
+@@ -138,7 +138,7 @@ config AIRO_CS
+ 
+ config PCMCIA_WL3501
+ 	tristate "Planet WL3501 PCMCIA cards"
+-	depends on PCMCIA
++	depends on CFG80211 && PCMCIA
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
+ 	help
+@@ -168,7 +168,7 @@ config PRISM54
+ 
+ config USB_ZD1201
+ 	tristate "USB ZD1201 based Wireless device support"
+-	depends on USB
++	depends on CFG80211 && USB
+ 	select WIRELESS_EXT
+ 	select WEXT_PRIV
+ 	select FW_LOADER
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
