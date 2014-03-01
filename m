@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51607 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757060AbaCSIc4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:32:56 -0400
-Received: by mail-ob0-f174.google.com with SMTP id wo20so7892507obc.33
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:32:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-4-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
-Date: Wed, 19 Mar 2014 09:32:55 +0100
-Message-ID: <CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com> (sfid-20140319_093301_466636_80B26534)
-Subject: Re: [RFC 03/21] mac80211: add max channel calculation utility function
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.17.22]:49923 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753296AbaCAUQi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:16:38 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 03/23] ath9k_htc: move beaconq to struct htc_beacon
+Date: Sat,  1 Mar 2014 21:15:46 +0100
+Message-Id: <1393704966-13985-4-git-send-email-linux@rempel-privat.de> (sfid-20140301_211643_226139_1B9CB88E)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 March 2014 17:17, Eliad Peller <eliad@wizery.com> wrote:
-> hi,
->
-> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> The utility function has no uses yet. It is aimed
->> at future chanctx reservation management and
->> channel switching.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
-> [...]
->
->> +int ieee80211_max_num_channels(struct ieee80211_local *local)
->> +{
->> +       struct ieee80211_sub_if_data *sdata;
->> +       int num[NUM_NL80211_IFTYPES] = {};
->> +       struct ieee80211_chanctx *ctx;
->> +       int num_different_channels = 0;
->> +       u8 radar_detect = 0;
->> +       u32 max_num_different_channels = 1;
->> +       int err;
->> +
->> +       lockdep_assert_held(&local->chanctx_mtx);
->> +
->> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
->> +               num_different_channels++;
->> +
-> this doesn't seem correct - i think we can have multiple channel
-> contexts with the same channel (e.g. due to exclusive mode)?
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            | 2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 8 ++++----
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   | 4 ++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-Hmm, does it even make sense to consider chanctx mode here?
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index ed41db5..69022b0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -409,6 +409,7 @@ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ struct htc_beacon {
+ 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
+ 	u32 bmisscnt;
++	u32 beaconq;
+ };
+ 
+ struct ath_btcoex {
+@@ -512,7 +513,6 @@ struct ath9k_htc_priv {
+ 	struct work_struct led_work;
+ #endif
+ 
+-	int beaconq;
+ 	int cabq;
+ 	int hwq_map[IEEE80211_NUM_ACS];
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 8929050..09ad141 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -26,7 +26,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ 	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
+ 	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
+ 
+-	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
++	ath9k_hw_get_txq_props(ah, priv->beacon.beaconq, &qi);
+ 
+ 	if (priv->ah->opmode == NL80211_IFTYPE_AP ||
+ 	    priv->ah->opmode == NL80211_IFTYPE_MESH_POINT) {
+@@ -54,11 +54,11 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ 
+ 	}
+ 
+-	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
++	if (!ath9k_hw_set_txq_props(ah, priv->beacon.beaconq, &qi)) {
+ 		ath_err(ath9k_hw_common(ah),
+-			"Unable to update beacon queue %u!\n", priv->beaconq);
++			"Unable to update beacon queue %u!\n", priv->beacon.beaconq);
+ 	} else {
+-		ath9k_hw_resettxqueue(ah, priv->beaconq);
++		ath9k_hw_resettxqueue(ah, priv->beacon.beaconq);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index b8a0220..6eb19b8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -405,8 +405,8 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
+ 	for (i = 0; i < ARRAY_SIZE(priv->hwq_map); i++)
+ 		priv->hwq_map[i] = -1;
+ 
+-	priv->beaconq = ath9k_hw_beaconq_setup(priv->ah);
+-	if (priv->beaconq == -1) {
++	priv->beacon.beaconq = ath9k_hw_beaconq_setup(priv->ah);
++	if (priv->beacon.beaconq == -1) {
+ 		ath_err(common, "Unable to setup BEACON xmit queue\n");
+ 		goto err;
+ 	}
+-- 
+1.9.0
 
-
-Michał
