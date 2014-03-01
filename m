@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:33522 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898AbaCZT5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 15:57:34 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so2101025eei.28
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:57:33 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 03/20] rtl8180: add rtl8187se fields to TX descriptor
-Date: Wed, 26 Mar 2014 20:58:43 +0100
-Message-Id: <1395863923-4427-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205741_884642_5ECF3BCC)
+Received: from mout.gmx.net ([212.227.15.18]:62458 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753373AbaCAURR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:17:17 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 11/23] ath9k|ath9k_htc: move IEEE80211_MS_TO_TU to common
+Date: Sat,  1 Mar 2014 21:15:54 +0100
+Message-Id: <1393704966-13985-12-git-send-email-linux@rempel-privat.de> (sfid-20140301_214709_271894_8389E089)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch modifies the TX descriptor struct so it can work also
-for rtl8187se.
-Some reserved field is now meaningful, and where needed union is
-used.
-
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/rtl818x/rtl8180/rtl8180.h | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  | 1 -
+ drivers/net/wireless/ath/ath9k/common.h | 2 ++
+ drivers/net/wireless/ath/ath9k/htc.h    | 1 -
+ 3 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-index e7127f3..47a084c 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-+++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-@@ -34,13 +34,25 @@ struct rtl8180_tx_desc {
- 	__le16 rts_duration;
- 	__le16 plcp_len;
- 	__le32 tx_buf;
--	__le32 frame_len;
-+	union{
-+		__le32 frame_len;
-+		struct {
-+			__le16 frame_len_se;
-+			__le16 frame_duration;
-+		} __packed;
-+	} __packed;
- 	__le32 next_tx_desc;
- 	u8 cw;
- 	u8 retry_limit;
- 	u8 agc;
- 	u8 flags2;
--	u32 reserved[2];
-+	/* rsvd for 8180/8185.
-+	 * valid for 8187se but we dont use it
-+	 */
-+	u32 reserved;
-+	/* all rsvd for 8180/8185 */
-+	__le16 flags3;
-+	__le16 frag_qsize;
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index aa4f144..44d7449 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -403,7 +403,6 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+ #define	ATH_BCBUF               	8
+ #define ATH_DEFAULT_BINTVAL     	100 /* TU */
+ #define ATH_DEFAULT_BMISS_LIMIT 	10
+-#define IEEE80211_MS_TO_TU(x)           (((x) * 1000) / 1024)
  
- struct rtl8180_rx_desc {
+ #define TSF_TO_TU(_h,_l) \
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 26aafb3..8deed82 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -44,6 +44,8 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++#define IEEE80211_MS_TO_TU(x)   (((x) * 1000) / 1024)
++
+ struct ath_beacon_config {
+ 	int beacon_interval;
+ 	u16 dtim_period;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 124dfed..dab1f0c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -39,7 +39,6 @@
+ #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
+ 
+ #define ATH_DEFAULT_BMISS_LIMIT 10
+-#define IEEE80211_MS_TO_TU(x)   (((x) * 1000) / 1024)
+ #define TSF_TO_TU(_h, _l) \
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+ 
 -- 
-1.8.3.2
+1.9.0
 
