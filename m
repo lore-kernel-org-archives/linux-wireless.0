@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:53083 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbaCJXxR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 19:53:17 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH NEXT] rtlwifi: rtl8723be: Fix array dimension problems
-Date: Mon, 10 Mar 2014 18:53:10 -0500
-Message-Id: <1394495590-2351-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140311_005348_930874_C97868E0)
+Received: from mout.gmx.net ([212.227.15.18]:64810 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753340AbaCAURB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:17:01 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 08/23] ath9k: remove unused bc_tstamp
+Date: Sat,  1 Mar 2014 21:15:51 +0100
+Message-Id: <1393704966-13985-9-git-send-email-linux@rempel-privat.de> (sfid-20140301_211710_000760_4B3B4D1C)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit a619d1abe20c leads to the following static checker warning:
-
-drivers/net/wireless/rtlwifi/rtl8723be/phy.c:667 _rtl8723be_store_tx_power_by_rate()
-error: buffer overflow 'rtlphy->tx_power_by_rate_offset[band]' 4 <= 5
-
-This warning arises because the code is testing the indices for the wrong maximum
-values. In addition, the tests merely putput a warning, and then procedes to
-corrupt memory. With this change, any such invalid memory access is avoided.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/rtlwifi/rtl8723be/phy.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-index cadae9b..1575ef9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-@@ -629,18 +629,22 @@ static void _rtl8723be_store_tx_power_by_rate(struct ieee80211_hw *hw,
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	u8 rate_section = _rtl8723be_get_rate_section_index(regaddr);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7f87f33..d8dddce 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -417,7 +417,6 @@ struct ath_beacon {
  
--	if (band != BAND_ON_2_4G && band != BAND_ON_5G)
-+	if (band != BAND_ON_2_4G && band != BAND_ON_5G) {
- 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
- 			 "Invalid Band %d\n", band);
-+		return;
-+	}
- 
--	if (rfpath > MAX_RF_PATH)
-+	if (rfpath > TX_PWR_BY_RATE_NUM_RF) {
- 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
- 			 "Invalid RfPath %d\n", rfpath);
--
--	if (txnum > MAX_RF_PATH)
-+		return;
-+	}
-+	if (txnum > TX_PWR_BY_RATE_NUM_RF) {
- 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
- 			 "Invalid TxNum %d\n", txnum);
--
-+		return;
-+	}
- 	rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section] =
- 									data;
- }
+ 	u32 beaconq;
+ 	u32 bmisscnt;
+-	u32 bc_tstamp;
+ 	struct ieee80211_vif *bslot[ATH_BCBUF];
+ 	int slottime;
+ 	int slotupdate;
 -- 
-1.8.4.5
+1.9.0
 
