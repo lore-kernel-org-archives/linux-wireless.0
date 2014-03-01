@@ -1,79 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5536 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933498AbaCQNfQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:35:16 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 19/21] wil6210: target reset flow update
-Date: Mon, 17 Mar 2014 15:34:23 +0200
-Message-ID: <1395063265-6522-20-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143539_154841_BC8E8271)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.15]:55943 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753296AbaCAUQl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:16:41 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 02/23] ath9k_htc: use common ath_beacon_config
+Date: Sat,  1 Mar 2014 21:15:45 +0100
+Message-Id: <1393704966-13985-3-git-send-email-linux@rempel-privat.de> (sfid-20140301_211645_423807_6FB476FA)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'real' indication for hardware state.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 11 ++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h |  3 ++-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            | 10 +++----
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 40 ++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  2 +-
+ 3 files changed, 25 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 351925b..c782e25 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -269,7 +269,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
- static void wil_target_reset(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 3baf9ce..ed41db5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -406,12 +406,9 @@ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ #define DEFAULT_SWBA_RESPONSE 40 /* in TUs */
+ #define MIN_SWBA_RESPONSE     10 /* in TUs */
+ 
+-struct htc_beacon_config {
++struct htc_beacon {
+ 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
+-	u16 beacon_interval;
+-	u16 dtim_period;
+-	u16 bmiss_timeout;
+-	u32 bmiss_cnt;
++	u32 bmisscnt;
+ };
+ 
+ struct ath_btcoex {
+@@ -489,7 +486,8 @@ struct ath9k_htc_priv {
+ 	struct ath9k_hw_cal_data caldata;
+ 
+ 	spinlock_t beacon_lock;
+-	struct htc_beacon_config cur_beacon_conf;
++	struct ath_beacon_config cur_beacon_conf;
++	struct htc_beacon beacon;
+ 
+ 	struct ath9k_htc_rx rx;
+ 	struct ath9k_htc_tx tx;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index a00ddb9..8929050 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -64,7 +64,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ 
+ 
+ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+-					struct htc_beacon_config *bss_conf)
++					struct ath_beacon_config *bss_conf)
  {
- 	int delay = 0;
--	u32 baud_rate;
-+	u32 hw_state;
- 	u32 rev_id;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_beacon_state bs;
+@@ -162,7 +162,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ }
  
- 	wil_dbg_misc(wil, "Resetting...\n");
-@@ -312,15 +312,16 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
+-				       struct htc_beacon_config *bss_conf)
++				       struct ath_beacon_config *bss_conf)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	enum ath9k_int imask = 0;
+@@ -211,13 +211,13 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
+ 
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
+-	priv->cur_beacon_conf.bmiss_cnt = 0;
++	priv->beacon.bmisscnt = 0;
+ 	htc_imask = cpu_to_be32(imask);
+ 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
+ }
+ 
+ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+-					  struct htc_beacon_config *bss_conf)
++					  struct ath_beacon_config *bss_conf)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	enum ath9k_int imask = 0;
+@@ -257,7 +257,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ 
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
+-	priv->cur_beacon_conf.bmiss_cnt = 0;
++	priv->beacon.bmisscnt = 0;
+ 	htc_imask = cpu_to_be32(imask);
+ 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
+ }
+@@ -279,7 +279,7 @@ static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
+ 
+ 	spin_lock_bh(&priv->beacon_lock);
+ 
+-	vif = priv->cur_beacon_conf.bslot[slot];
++	vif = priv->beacon.bslot[slot];
+ 
+ 	skb = ieee80211_get_buffered_bc(priv->hw, vif);
+ 
+@@ -340,7 +340,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 
+ 	spin_lock_bh(&priv->beacon_lock);
+ 
+-	vif = priv->cur_beacon_conf.bslot[slot];
++	vif = priv->beacon.bslot[slot];
+ 	avp = (struct ath9k_htc_vif *)vif->drv_priv;
+ 
+ 	if (unlikely(test_bit(OP_SCANNING, &priv->op_flags))) {
+@@ -423,8 +423,8 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv,
+ 	int slot;
+ 
+ 	if (swba->beacon_pending != 0) {
+-		priv->cur_beacon_conf.bmiss_cnt++;
+-		if (priv->cur_beacon_conf.bmiss_cnt > BSTUCK_THRESHOLD) {
++		priv->beacon.bmisscnt++;
++		if (priv->beacon.bmisscnt > BSTUCK_THRESHOLD) {
+ 			ath_dbg(common, BSTUCK, "Beacon stuck, HW reset\n");
+ 			ieee80211_queue_work(priv->hw,
+ 					     &priv->fatal_work);
+@@ -432,16 +432,16 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv,
+ 		return;
  	}
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
  
--	/* wait until device ready. Use baud rate */
-+	/* wait until device ready */
- 	do {
- 		msleep(1);
--		baud_rate = R(RGF_USER_SERIAL_BAUD_RATE);
-+		hw_state = R(RGF_USER_HW_MACHINE_STATE);
- 		if (delay++ > 100) {
--			wil_err(wil, "Reset not completed\n");
-+			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
-+				hw_state);
- 			return;
+-	if (priv->cur_beacon_conf.bmiss_cnt) {
++	if (priv->beacon.bmisscnt) {
+ 		ath_dbg(common, BSTUCK,
+ 			"Resuming beacon xmit after %u misses\n",
+-			priv->cur_beacon_conf.bmiss_cnt);
+-		priv->cur_beacon_conf.bmiss_cnt = 0;
++			priv->beacon.bmisscnt);
++		priv->beacon.bmisscnt = 0;
+ 	}
+ 
+ 	slot = ath9k_htc_choose_bslot(priv, swba);
+ 	spin_lock_bh(&priv->beacon_lock);
+-	if (priv->cur_beacon_conf.bslot[slot] == NULL) {
++	if (priv->beacon.bslot[slot] == NULL) {
+ 		spin_unlock_bh(&priv->beacon_lock);
+ 		return;
+ 	}
+@@ -460,13 +460,13 @@ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 
+ 	spin_lock_bh(&priv->beacon_lock);
+ 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++) {
+-		if (priv->cur_beacon_conf.bslot[i] == NULL) {
++		if (priv->beacon.bslot[i] == NULL) {
+ 			avp->bslot = i;
+ 			break;
  		}
--	} while (baud_rate != 0x15e);
-+	} while (hw_state != HW_MACHINE_BOOT_DONE);
+ 	}
  
- 	if (rev_id == 2)
- 		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(8));
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 80573f7..fb1006b 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -74,7 +74,8 @@ struct RGF_ICR {
- } __packed;
+-	priv->cur_beacon_conf.bslot[avp->bslot] = vif;
++	priv->beacon.bslot[avp->bslot] = vif;
+ 	spin_unlock_bh(&priv->beacon_lock);
  
- /* registers - FW addresses */
--#define RGF_USER_SERIAL_BAUD_RATE	(0x880050)
-+#define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
-+	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
- #define RGF_USER_MAC_CPU_0		(0x8801fc)
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
+ 	ath_dbg(common, CONFIG, "Added interface at beacon slot: %d\n",
+@@ -480,7 +480,7 @@ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
+ 
+ 	spin_lock_bh(&priv->beacon_lock);
+-	priv->cur_beacon_conf.bslot[avp->bslot] = NULL;
++	priv->beacon.bslot[avp->bslot] = NULL;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 
+ 	ath_dbg(common, CONFIG, "Removed interface at beacon slot: %d\n",
+@@ -496,7 +496,7 @@ void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
+-	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
+ 	u64 tsfadjust;
+ 
+ 	if (avp->bslot == 0)
+@@ -528,7 +528,7 @@ static bool ath9k_htc_check_beacon_config(struct ath9k_htc_priv *priv,
+ 					  struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	bool beacon_configured;
+ 
+@@ -583,7 +583,7 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *) vif->drv_priv;
+ 
+@@ -619,7 +619,7 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
+ 
+ 	switch (priv->ah->opmode) {
+ 	case NL80211_IFTYPE_STATION:
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index b22fb64..b8a0220 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -520,7 +520,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 		goto err_queues;
+ 
+ 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++)
+-		priv->cur_beacon_conf.bslot[i] = NULL;
++		priv->beacon.bslot[i] = NULL;
+ 
+ 	ath9k_cmn_init_channels_rates(common);
+ 	ath9k_cmn_init_crypto(ah);
 -- 
-1.8.3.2
+1.9.0
 
