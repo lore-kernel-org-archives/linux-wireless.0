@@ -1,155 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:46570 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842AbaCUJeU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 05:34:20 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so1576630eek.24
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:34:19 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 1/2] ath10k: introduce rx_status htt template
-Date: Fri, 21 Mar 2014 10:33:56 +0100
-Message-Id: <1395394437-4048-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103426_508715_6DDD3F05)
+Received: from mout.gmx.net ([212.227.17.21]:52908 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753201AbaCAUQh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:16:37 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 00/23] ath9k|ath9k_htc: move dups to common-beacon
+Date: Sat,  1 Mar 2014 21:15:43 +0100
+Message-Id: <1393704966-13985-1-git-send-email-linux@rempel-privat.de> (sfid-20140301_211641_524191_F187745D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce rx_status htt template instead of
-stack version.
+Next patch set. It removes only easy duplicats of beacon code. Other parts of
+need deeper rework to make it compatible with ath9k.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
-Base on:
-ath10k: finally kill htt_rx_info
+Oleksij Rempel (23):
+  ath9k: move struct ath_beacon_config to common
+  ath9k_htc: use common ath_beacon_config
+  ath9k_htc: move beaconq to struct htc_beacon
+  ath9k_htc: use ath_beacon_conf.enable_beacon
+  ath9k: move sc_flags to ath_common
+  ath9k_htc: use common->op_flags
+  ath9k_htc: add ATH_OP_PRIM_STA_VIF
+  ath9k: remove unused bc_tstamp
+  ath9k_htc: sync beacon slot code with ath9k
+  ath9k: remove unused beacon_qi
+  ath9k|ath9k_htc: move IEEE80211_MS_TO_TU to common
+  ath9k-common: add nexttbtt and intval to ath_beacon_config
+  ath9k: move ath9k_beacon_config_sta to common-beacon
+  ath9k_htc: use ath9k_cmn_beacon_config_sta
+  ath9k: move ath9k_beacon_config_adhoc to common
+  ath9k_htc: add ath9k_htc_beacon_init (but not use it)
+  ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_ap
+  ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_adhoc
+  ath9k_htc: use ath9k_cmn_beacon_config_adhoc
+  ath9k: move ath9k_beacon_config_ap common
+  ath9k: remove unused ath9k_get_next_tbtt
+  ath9k_htc: use ath9k_cmn_beacon_config_ap
+  ath9k_htc: move DEFAULT_SWBA_RESPONSE check to ath9k_htc_beacon_init
 
- drivers/net/wireless/ath/ath10k/htt.h    |    3 +++
- drivers/net/wireless/ath/ath10k/htt_rx.c |   36 +++++++++++++++---------------
- 2 files changed, 21 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath.h                  |  10 +
+ drivers/net/wireless/ath/ath9k/Makefile         |   3 +-
+ drivers/net/wireless/ath/ath9k/ahb.c            |   7 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h          |  22 ---
+ drivers/net/wireless/ath/ath9k/beacon.c         | 165 ++--------------
+ drivers/net/wireless/ath/ath9k/common-beacon.c  | 180 +++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common-beacon.h  |  26 +++
+ drivers/net/wireless/ath/ath9k/common.h         |  14 ++
+ drivers/net/wireless/ath/ath9k/debug.c          |   2 +-
+ drivers/net/wireless/ath/ath9k/htc.h            |  25 +--
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 252 ++++++------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  10 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  53 +++--
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   3 +-
+ drivers/net/wireless/ath/ath9k/link.c           |  16 +-
+ drivers/net/wireless/ath/ath9k/main.c           |  45 +++--
+ drivers/net/wireless/ath/ath9k/mci.c            |   2 +-
+ drivers/net/wireless/ath/ath9k/pci.c            |   8 +-
+ drivers/net/wireless/ath/ath9k/xmit.c           |   9 +-
+ 19 files changed, 413 insertions(+), 439 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-beacon.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/common-beacon.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 2d669c0..645a563 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1273,6 +1273,9 @@ struct ath10k_htt {
- 	struct tasklet_struct txrx_compl_task;
- 	struct sk_buff_head tx_compl_q;
- 	struct sk_buff_head rx_compl_q;
-+
-+	/* rx_status template */
-+	struct ieee80211_rx_status rx_status;
- };
- 
- #define RX_HTT_HDR_STATUS_LEN 64
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 1bb3c5e..4f1cc67 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1139,7 +1139,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				  struct htt_rx_indication *rx)
- {
--	struct ieee80211_rx_status rx_status;
-+	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
- 	struct htt_rx_desc *rxd;
- 	enum htt_rx_mpdu_status status;
-@@ -1154,7 +1154,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
--	memset(&rx_status, 0, sizeof(rx_status));
-+	memset(rx_status, 0, sizeof(*rx_status));
- 
- 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
- 	fw_desc = (u8 *)&rx->fw_desc;
-@@ -1164,23 +1164,23 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
- 	/* Fill this once, while this is per-ppdu */
--	rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
--	rx_status.signal += rx->ppdu.combined_rssi;
-+	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-+	rx_status->signal += rx->ppdu.combined_rssi;
- 
- 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
- 		/* TSF available only in 32-bit */
--		rx_status.mactime = __le32_to_cpu(rx->ppdu.tsf) & 0xffffffff;
--		rx_status.flag |= RX_FLAG_MACTIME_END;
-+		rx_status->mactime = __le32_to_cpu(rx->ppdu.tsf) & 0xffffffff;
-+		rx_status->flag |= RX_FLAG_MACTIME_END;
- 	}
- 
--	channel_set = ath10k_htt_rx_h_channel(htt->ar, &rx_status);
-+	channel_set = ath10k_htt_rx_h_channel(htt->ar, rx_status);
- 
- 	if (channel_set) {
--		ath10k_htt_rx_h_rates(htt->ar, rx_status.band,
-+		ath10k_htt_rx_h_rates(htt->ar, rx_status->band,
- 				      rx->ppdu.info0,
- 				      __le32_to_cpu(rx->ppdu.info1),
- 				      __le32_to_cpu(rx->ppdu.info2),
--				      &rx_status);
-+				      rx_status);
- 	}
- 
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
-@@ -1229,21 +1229,21 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			}
- 
- 			if (attention & RX_ATTENTION_FLAGS_FCS_ERR)
--				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-+				rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
- 			else
--				rx_status.flag &= ~RX_FLAG_FAILED_FCS_CRC;
-+				rx_status->flag &= ~RX_FLAG_FAILED_FCS_CRC;
- 
- 			if (attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR)
--				rx_status.flag |= RX_FLAG_MMIC_ERROR;
-+				rx_status->flag |= RX_FLAG_MMIC_ERROR;
- 			else
--				rx_status.flag &= ~RX_FLAG_MMIC_ERROR;
-+				rx_status->flag &= ~RX_FLAG_MMIC_ERROR;
- 
- 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
- 
- 			if (ath10k_htt_rx_hdr_is_amsdu(hdr))
--				ath10k_htt_rx_amsdu(htt, &rx_status, msdu_head);
-+				ath10k_htt_rx_amsdu(htt, rx_status, msdu_head);
- 			else
--				ath10k_htt_rx_msdu(htt, &rx_status, msdu_head);
-+				ath10k_htt_rx_msdu(htt, rx_status, msdu_head);
- 		}
- 	}
- 
-@@ -1257,7 +1257,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	enum htt_rx_mpdu_encrypt_type enctype;
- 	struct htt_rx_desc *rxd;
- 	enum rx_msdu_decap_format fmt;
--	struct ieee80211_rx_status rx_status = {};
-+	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct ieee80211_hdr *hdr;
- 	int ret;
- 	bool tkip_mic_err;
-@@ -1305,7 +1305,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
- 		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
--	ath10k_htt_rx_h_protected(htt, &rx_status, msdu_head, enctype);
-+	ath10k_htt_rx_h_protected(htt, rx_status, msdu_head, enctype);
- 	msdu_head->ip_summed = ath10k_htt_rx_get_csum_state(msdu_head);
- 
- 	if (tkip_mic_err)
-@@ -1350,7 +1350,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt rx frag mpdu: ",
- 			msdu_head->data, msdu_head->len);
--	ath10k_process_rx(htt->ar, &rx_status, msdu_head);
-+	ath10k_process_rx(htt->ar, rx_status, msdu_head);
- 
- end:
- 	if (fw_desc_len > 0) {
 -- 
-1.7.9.5
+1.9.0
 
