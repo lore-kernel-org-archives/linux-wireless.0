@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:39669 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398AbaCYIpW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 04:45:22 -0400
-Received: by mail-ob0-f175.google.com with SMTP id uy5so159162obc.20
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:45:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-Date: Tue, 25 Mar 2014 09:45:22 +0100
-Message-ID: <CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com> (sfid-20140325_094542_766085_75CF9A68)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.19]:58083 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753296AbaCAUQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:16:44 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 01/23] ath9k: move struct ath_beacon_config to common
+Date: Sat,  1 Mar 2014 21:15:44 +0100
+Message-Id: <1393704966-13985-2-git-send-email-linux@rempel-privat.de> (sfid-20140301_211648_461287_7573044E)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2014 09:33, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Michal
->
->> I suppose there's a limit how much peer entries firmware is able to
->> pack up into a single event. The second event you handle here is still
->> going to have some sort of a limit and you'll end up dropping results
->> again. The same probably goes with vdev stats (which aren't handled
->> yet, but hey).
->
-> vdev stats is not supported by firmware 999.999.0.636, am I right?
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  | 9 ---------
+ drivers/net/wireless/ath/ath9k/common.h | 9 +++++++++
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-True, but once it is supported then it will most likely need the same
-treatment as peer stats.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f995c37..b54bcae 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -408,15 +408,6 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+ #define TSF_TO_TU(_h,_l) \
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+ 
+-struct ath_beacon_config {
+-	int beacon_interval;
+-	u16 dtim_period;
+-	u16 bmiss_timeout;
+-	u8 dtim_count;
+-	bool enable_beacon;
+-	bool ibss_creator;
+-};
+-
+ struct ath_beacon {
+ 	enum {
+ 		OK,		/* no change needed */
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 4c449e3..26aafb3 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -44,6 +44,15 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	(((x) + ((mul)/2)) / (mul))
+ 
++struct ath_beacon_config {
++	int beacon_interval;
++	u16 dtim_period;
++	u16 bmiss_timeout;
++	u8 dtim_count;
++	bool enable_beacon;
++	bool ibss_creator;
++};
++
+ bool ath9k_cmn_rx_accept(struct ath_common *common,
+ 			 struct ieee80211_hdr *hdr,
+ 			 struct ieee80211_rx_status *rxs,
+-- 
+1.9.0
 
-
-> BTW, I also saw that the same happen to latest AP firmware whenever
-> the peer stats is more than 1. But since the first peer stats is self
-> stats, so it is ok to overwrite it.
-
-I disagree. Why do you think it is okay to overwrite self peer stats?
-
-Btw. 10.1 firmware has more pdev stats which breaks parsing of peer entries...
-
-
-Michał
