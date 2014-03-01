@@ -1,115 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37123 "EHLO mga01.intel.com"
+Received: from mout.gmx.net ([212.227.15.15]:58529 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752880AbaCMNdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 09:33:52 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v9 1/4] mac80211: split ieee80211_vif_change_channel in two
-Date: Thu, 13 Mar 2014 15:33:38 +0200
-Message-Id: <1394717621-5608-2-git-send-email-luciano.coelho@intel.com> (sfid-20140313_143355_834284_282994D9)
-In-Reply-To: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
-References: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
+	id S1753299AbaCAURB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:17:01 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 09/23] ath9k_htc: sync beacon slot code with ath9k
+Date: Sat,  1 Mar 2014 21:15:52 +0100
+Message-Id: <1393704966-13985-10-git-send-email-linux@rempel-privat.de> (sfid-20140301_211707_064474_103E4A32)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
+we will need it for common-beacon
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |  8 ++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 19 +++++++++++++++----
+ 3 files changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index fdbb932..ef77703 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 707c5b4..124dfed 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -407,9 +407,17 @@ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ #define MIN_SWBA_RESPONSE     10 /* in TUs */
  
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
+ struct htc_beacon {
++	enum {
++		OK,		/* no change needed */
++		UPDATE,		/* update pending */
++		COMMIT		/* beacon sent, commit change */
++	} updateslot;		/* slot time update fsm */
++
+ 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
+ 	u32 bmisscnt;
+ 	u32 beaconq;
++	int slottime;
++	int slotupdate;
+ };
  
--	lockdep_assert_held(&local->mtx);
+ struct ath_btcoex {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 4b3b4dd..8a3bd5f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -520,6 +520,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 
+ 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++)
+ 		priv->beacon.bslot[i] = NULL;
++	priv->beacon.slottime = ATH9K_SLOT_TIME_9;
+ 
+ 	ath9k_cmn_init_channels_rates(common);
+ 	ath9k_cmn_init_crypto(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index b82a7c4..f46cd02 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1500,6 +1500,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	int slottime;
+ 
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+@@ -1575,11 +1576,21 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+ 		if (bss_conf->use_short_slot)
+-			ah->slottime = 9;
++			slottime = 9;
+ 		else
+-			ah->slottime = 20;
 -
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
+-		ath9k_hw_init_global_settings(ah);
++			slottime = 20;
++		if (vif->type == NL80211_IFTYPE_AP) {
++			/*
++			 * Defer update, so that connected stations can adjust
++			 * their settings at the same time.
++			 * See beacon.c for more details
++			 */
++			priv->beacon.slottime = slottime;
++			priv->beacon.updateslot = UPDATE;
++		} else {
++			ah->slottime = slottime;
++			ath9k_hw_init_global_settings(ah);
++		}
+ 	}
  
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
-+	return 0;
-+}
-+
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
+ 	if (changed & BSS_CHANGED_HT)
 -- 
 1.9.0
 
