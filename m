@@ -1,44 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:40567 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753456AbaCGNiQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 08:38:16 -0500
-Received: by mail-ea0-f173.google.com with SMTP id r15so2299519ead.18
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 05:38:15 -0800 (PST)
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de
-Subject: [RFC PATCH 8/8] mac80211: Update conf_is_ht() to work properly with 5/10MHz channels
-Date: Fri,  7 Mar 2014 14:37:55 +0100
-Message-Id: <1394199475-5208-9-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143825_741051_79D0E395)
-In-Reply-To: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+Received: from mout.gmx.net ([212.227.15.19]:59124 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753344AbaCAURo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:17:44 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 18/23] ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_adhoc
+Date: Sat,  1 Mar 2014 21:16:01 +0100
+Message-Id: <1393704966-13985-19-git-send-email-linux@rempel-privat.de> (sfid-20140301_214710_306857_ADCEC050)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- include/net/mac80211.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 31 ++++++++++---------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f4ab2fb..f56e45b 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4585,7 +4585,9 @@ conf_is_ht40(struct ieee80211_conf *conf)
- static inline bool
- conf_is_ht(struct ieee80211_conf *conf)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index b23231f..8123715 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -152,16 +152,13 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
+ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ 					  struct ath_beacon_config *bss_conf)
  {
--	return conf->chandef.width != NL80211_CHAN_WIDTH_20_NOHT;
-+	return (conf->chandef.width != NL80211_CHAN_WIDTH_5) &&
-+		(conf->chandef.width != NL80211_CHAN_WIDTH_10) &&
-+		(conf->chandef.width != NL80211_CHAN_WIDTH_20_NOHT);
+-	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	enum ath9k_int imask = 0;
+-	u32 nexttbtt, intval, tsftu;
+-	__be32 htc_imask = 0;
+-	int ret __attribute__ ((unused));
+-	u8 cmd_rsp;
++	struct ath_hw *ah = priv->ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 tsftu;
+ 	u64 tsf;
+ 
+-	intval = bss_conf->beacon_interval;
+-	nexttbtt = intval;
++	bss_conf->intval = bss_conf->beacon_interval;
++	bss_conf->nexttbtt = bss_conf->intval;
+ 
+ 	/*
+ 	 * Pull nexttbtt forward to reflect the current TSF.
+@@ -169,30 +166,26 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ 	tsf = ath9k_hw_gettsf64(priv->ah);
+ 	tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
+ 	do {
+-		nexttbtt += intval;
+-	} while (nexttbtt < tsftu);
++		bss_conf->nexttbtt += bss_conf->intval;
++	} while (bss_conf->nexttbtt < tsftu);
+ 
+ 	/*
+ 	 * Only one IBSS interfce is allowed.
+ 	 */
+-	if (intval > DEFAULT_SWBA_RESPONSE)
++	if (bss_conf->intval > DEFAULT_SWBA_RESPONSE)
+ 		priv->ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
+ 	else
+ 		priv->ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
+ 
+ 	if (bss_conf->enable_beacon)
+-		imask |= ATH9K_INT_SWBA;
++		ah->imask = ATH9K_INT_SWBA;
+ 
+ 	ath_dbg(common, CONFIG,
+ 		"IBSS Beacon config, intval: %d, nexttbtt: %u, resp_time: %d, imask: 0x%x\n",
+-		bss_conf->beacon_interval, nexttbtt,
+-		priv->ah->config.sw_beacon_response_time, imask);
++		bss_conf->beacon_interval, bss_conf->nexttbtt,
++		priv->ah->config.sw_beacon_response_time, ah->imask);
+ 
+-	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+-	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
+-	priv->beacon.bmisscnt = 0;
+-	htc_imask = cpu_to_be32(imask);
+-	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
++	ath9k_htc_beacon_init(priv, bss_conf, bss_conf->ibss_creator);
  }
  
- static inline enum nl80211_iftype
+ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
 -- 
-1.8.5.1
+1.9.0
 
