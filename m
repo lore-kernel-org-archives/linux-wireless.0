@@ -1,82 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45364 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933495AbaCQNfO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:35:14 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 18/21] wil6210: use GRO
-Date: Mon, 17 Mar 2014 15:34:22 +0200
-Message-ID: <1395063265-6522-19-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143522_831318_08A0258E)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.18]:57793 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753335AbaCAURL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Mar 2014 15:17:11 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, sujith@msujith.org,
+	linville@tuxdriver.com
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 10/23] ath9k: remove unused beacon_qi
+Date: Sat,  1 Mar 2014 21:15:53 +0100
+Message-Id: <1393704966-13985-11-git-send-email-linux@rempel-privat.de> (sfid-20140301_214710_065993_6C1B2BB1)
+In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GRO is easy to enable when already using NAPI framework,
-and it improves CPU utilisation. Enable it by default.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/wil6210/netdev.c |  2 +-
- drivers/net/wireless/ath/wil6210/txrx.c   | 14 +++++++-------
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 5991802..fdcaeb8 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -128,7 +128,7 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
- 	ndev->netdev_ops = &wil_netdev_ops;
- 	ndev->ieee80211_ptr = wdev;
- 	ndev->hw_features = NETIF_F_HW_CSUM | NETIF_F_RXCSUM |
--			    NETIF_F_SG;
-+			    NETIF_F_SG | NETIF_F_GRO;
- 	ndev->features |= ndev->hw_features;
- 	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
- 	wdev->netdev = ndev;
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 97d036ad..cfd36cc 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -488,7 +488,7 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
-  */
- void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- {
--	int rc;
-+	gro_result_t rc;
- 	struct wil6210_priv *wil = ndev_to_wil(ndev);
- 	unsigned int len = skb->len;
- 	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
-@@ -497,17 +497,17 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 
- 	skb_orphan(skb);
- 
--	rc = netif_receive_skb(skb);
-+	rc = napi_gro_receive(&wil->napi_rx, skb);
- 
--	if (likely(rc == NET_RX_SUCCESS)) {
-+	if (unlikely(rc == GRO_DROP)) {
-+		ndev->stats.rx_dropped++;
-+		stats->rx_dropped++;
-+		wil_dbg_txrx(wil, "Rx drop %d bytes\n", len);
-+	} else {
- 		ndev->stats.rx_packets++;
- 		stats->rx_packets++;
- 		ndev->stats.rx_bytes += len;
- 		stats->rx_bytes += len;
--
--	} else {
--		ndev->stats.rx_dropped++;
--		stats->rx_dropped++;
- 	}
- }
- 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d8dddce..aa4f144 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -420,7 +420,6 @@ struct ath_beacon {
+ 	struct ieee80211_vif *bslot[ATH_BCBUF];
+ 	int slottime;
+ 	int slotupdate;
+-	struct ath9k_tx_queue_info beacon_qi;
+ 	struct ath_descdma bdma;
+ 	struct ath_txq *cabq;
+ 	struct list_head bbuf;
 -- 
-1.8.3.2
+1.9.0
 
