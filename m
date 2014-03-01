@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:57009 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbaCHDCh (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:60530 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbaCAOT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 22:02:37 -0500
-Received: by mail-pd0-f177.google.com with SMTP id g10so4806376pdj.36
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 19:02:37 -0800 (PST)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: make __cfg80211_join_ibss() static
-Date: Sat,  8 Mar 2014 11:01:24 +0800
-Message-Id: <0962cca52541e7067f7c001046fd6d36e7a76640.1394247591.git.gamerh2o@gmail.com> (sfid-20140308_040300_375074_18D0DBEF)
+	Sat, 1 Mar 2014 09:19:26 -0500
+Received: by mail-ea0-f175.google.com with SMTP id d10so202514eaj.6
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Mar 2014 06:19:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAG-2HqWahCVvDLPwoMo7O4kam+W0o7BQGm4cRBvc9=X_p0fF7Q@mail.gmail.com>
+References: <1393512434-1325-1-git-send-email-dh.herrmann@gmail.com> <CAG-2HqWahCVvDLPwoMo7O4kam+W0o7BQGm4cRBvc9=X_p0fF7Q@mail.gmail.com>
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 1 Mar 2014 15:19:03 +0100
+Message-ID: <CAG-2HqVQRTdA5NvjirR35qLbAkDUB1dN6oAvU2CLs4dnFS42Nw@mail.gmail.com> (sfid-20140301_152014_036517_B782DB3F)
+Subject: Re: [PATCH 0/4] Provide netdev naming-policy via sysfs
+To: David Herrmann <dh.herrmann@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	Johannes berg <johannes@sipsolutions.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function __cfg80211_join_ibss() is only used in net/wireless/ibss.c,
-so make it static.
+On Thu, Feb 27, 2014 at 4:47 PM, Tom Gundersen <teg@jklm.no> wrote:
+> On Thu, Feb 27, 2014 at 3:47 PM, David Herrmann <dh.herrmann@gmail.com> wrote:
+>> This series implements a new sysfs attribute for netdevs called
+>> "name_assign_type". It provides an integer that describes where an interface
+>> name comes from. See Patch #1 for a description of this attribute. It is
+>> modelled after the existing "addr_assign_type" attribute.
+>>
+>> The main use-case is to allow udev to skip applying reliable ifnames to virtual
+>> devices. For instance, if wifi-P2P devices are created, wpas already provides a
+>> suitable naming-policy and udev shouldn't touch these devices. Same is true for
+>> other virtual devices.
+>> The idea is that if a device-name was provided by user-space, we should always
+>> prefer fixing this naming-policy instead of making udev rename the device. For
+>> kernel provided names that's hardly possible, though. Providing the
+>> naming-policy source via sysfs is thus a simple way to see whether renames are
+>> needed.
+>>
+>> Additionally, this field allows to detect whether a netdev has been manually
+>> renamed, which is quite useful for debugging and during crash-recovery.
+>
+> Moreover, it would be useful for udev to reliably know if some other
+> userspace process already renamed a device, so we know not to touch
+> it. This can easily happen for instance if some renaming happens in
+> the initrd or from script called from udev rules.
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/wireless/core.h | 4 ----
- net/wireless/ibss.c | 8 ++++----
- 2 files changed, 4 insertions(+), 8 deletions(-)
+Incidentally, just after writing this email I ran into precisely this
+problem due to buggy udev rules in a third-party package. The result
+was that the upstream NIC naming rules were unable to detect that a
+given NIC had already been renamed and ended up renaming them a second
+time (hence wrecking havoc).
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 4068300..766aabc 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -246,10 +246,6 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-                       unsigned long age_secs);
- 
- /* IBSS */
--int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
--			 struct net_device *dev,
--			 struct cfg80211_ibss_params *params,
--			 struct cfg80211_cached_keys *connkeys);
- int cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev,
- 		       struct cfg80211_ibss_params *params,
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 349db9d..a6b5bda 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -82,10 +82,10 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
- }
- EXPORT_SYMBOL(cfg80211_ibss_joined);
- 
--int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
--			 struct net_device *dev,
--			 struct cfg80211_ibss_params *params,
--			 struct cfg80211_cached_keys *connkeys)
-+static int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev,
-+				struct cfg80211_ibss_params *params,
-+				struct cfg80211_cached_keys *connkeys)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct ieee80211_channel *check_chan;
--- 
-1.8.5.3
+The problem was easy enough to fix, but with these patches we would be
+able to avoid the issue altogether, so I'm looking forward to fixing
+up udev to using this interface.
 
+> Acked-by: Tom Gundersen <teg@jklm.no>
