@@ -1,28 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933380AbaCSOFv (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:40196 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752771AbaCAMwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:05:51 -0400
-Message-ID: <1395237948.4142.14.camel@jlt4.sipsolutions.net> (sfid-20140319_150554_281139_239A108C)
-Subject: Re: [PATCH] cfg80211: make __cfg80211_join_ibss() static
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Mar 2014 15:05:48 +0100
-In-Reply-To: <0962cca52541e7067f7c001046fd6d36e7a76640.1394247591.git.gamerh2o@gmail.com> (sfid-20140308_040240_141364_6DE279B4)
-References: <0962cca52541e7067f7c001046fd6d36e7a76640.1394247591.git.gamerh2o@gmail.com>
-	 (sfid-20140308_040240_141364_6DE279B4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 1 Mar 2014 07:52:43 -0500
+From: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+To: <linville@tuxdriver.com>
+Cc: will.deacon@arm.com, pali.rohar@gmail.com, pavel@ucw.cz,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Subject: [PATCH] wl1251: use skb_trim to make skb shorter
+Date: Sat,  1 Mar 2014 14:52:06 +0200
+Message-Id: <1393678326-23535-1-git-send-email-ivo.g.dimitrov.75@gmail.com> (sfid-20140301_135304_502316_53879C5F)
+In-Reply-To: <20140225105756.GB22279@mudshark.cambridge.arm.com>
+References: <20140225105756.GB22279@mudshark.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-03-08 at 11:01 +0800, Zhao, Gang wrote:
-> Function __cfg80211_join_ibss() is only used in net/wireless/ibss.c,
-> so make it static.
+the current code is directly setting skb->len, which is not correct and
+brings problems with HAVE_EFFICIENT_UNALIGNED_ACCESS enabled in config
 
-Applied.
+Signed-off-by: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
+index 123c4bb..cde0eaf 100644
+--- a/drivers/net/wireless/ti/wl1251/rx.c
++++ b/drivers/net/wireless/ti/wl1251/rx.c
+@@ -180,7 +180,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
+ 
+ 	/* The actual length doesn't include the target's alignment */
+-	skb->len = desc->length  - PLCP_HEADER_LENGTH;
++	skb_trim(skb, desc->length - PLCP_HEADER_LENGTH);
+ 
+ 	fc = (u16 *)skb->data;
+ 
+-- 
+1.7.9.5
 
