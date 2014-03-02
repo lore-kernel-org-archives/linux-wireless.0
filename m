@@ -1,108 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:59016 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbaCAUR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:56 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 20/23] ath9k: move ath9k_beacon_config_ap common
-Date: Sat,  1 Mar 2014 21:16:03 +0100
-Message-Id: <1393704966-13985-21-git-send-email-linux@rempel-privat.de> (sfid-20140301_214709_643562_1F29BA65)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45839 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978AbaCBJVX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Mar 2014 04:21:23 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 1/2] wil6210: fix buffer overflow in wil_txdesc_debugfs_show()
+Date: Sun, 2 Mar 2014 11:20:50 +0200
+Message-ID: <1393752051-7611-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140302_102504_419664_BD16E219)
+In-Reply-To: <1393752051-7611-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1393752051-7611-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/beacon.c        | 21 ++-----------------
- drivers/net/wireless/ath/ath9k/common-beacon.c | 29 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-beacon.h |  3 +++
- 3 files changed, 34 insertions(+), 19 deletions(-)
+Wrong index comparison logic, found by smatch:
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 01322a4..e188743 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -483,26 +483,9 @@ static void ath9k_beacon_config_ap(struct ath_softc *sc,
- 				   struct ath_beacon_config *conf)
+drivers/net/wireless/ath/wil6210/debugfs.c:402 wil_txdesc_debugfs_show() warn: buffer overflow 'wil->vring_tx' 24 <= 24
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 729e774..1d09a4b 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -26,8 +26,7 @@
+ /* Nasty hack. Better have per device instances */
+ static u32 mem_addr;
+ static u32 dbg_txdesc_index;
+-static u32 dbg_vring_index; /* 25 for Rx, 0..24 for Tx */
+-#define WIL_DBG_VRING_INDEX_RX (WIL6210_MAX_TX_RINGS + 1)
++static u32 dbg_vring_index; /* 24+ for Rx, 0..23 for Tx */
+ 
+ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+ 			    const char *name, struct vring *vring,
+@@ -404,13 +403,14 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
  {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 nexttbtt, intval;
--
--	/* NB: the beacon interval is kept internally in TU's */
--	intval = TU_TO_USEC(conf->beacon_interval);
--	intval /= ATH_BCBUF;
--	nexttbtt = ath9k_get_next_tbtt(sc, ath9k_hw_gettsf64(ah),
--				       conf->beacon_interval);
--
--	if (conf->enable_beacon)
--		ah->imask |= ATH9K_INT_SWBA;
--	else
--		ah->imask &= ~ATH9K_INT_SWBA;
--
--	ath_dbg(common, BEACON,
--		"AP (%s) nexttbtt: %u intval: %u conf_intval: %u\n",
--		(conf->enable_beacon) ? "Enable" : "Disable",
--		nexttbtt, intval, conf->beacon_interval);
+ 	struct wil6210_priv *wil = s->private;
+ 	struct vring *vring;
+-	if (dbg_vring_index <= WIL6210_MAX_TX_RINGS)
++	bool tx = (dbg_vring_index < WIL6210_MAX_TX_RINGS);
++	if (tx)
+ 		vring = &(wil->vring_tx[dbg_vring_index]);
+ 	else
+ 		vring = &wil->vring_rx;
  
--	ath9k_beacon_init(sc, nexttbtt, intval, false);
-+	ath9k_cmn_beacon_config_ap(ah, conf, ATH_BCBUF);
-+	ath9k_beacon_init(sc, conf->nexttbtt, conf->intval, false);
- }
+ 	if (!vring->va) {
+-		if (dbg_vring_index <= WIL6210_MAX_TX_RINGS)
++		if (tx)
+ 			seq_printf(s, "No Tx[%2d] VRING\n", dbg_vring_index);
+ 		else
+ 			seq_puts(s, "No Rx VRING\n");
+@@ -426,7 +426,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+ 		volatile u32 *u = (volatile u32 *)d;
+ 		struct sk_buff *skb = vring->ctx[dbg_txdesc_index].skb;
  
- static void ath9k_beacon_config_sta(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.c b/drivers/net/wireless/ath/ath9k/common-beacon.c
-index 45bc899..775d1d2 100644
---- a/drivers/net/wireless/ath/ath9k/common-beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/common-beacon.c
-@@ -149,3 +149,32 @@ void ath9k_cmn_beacon_config_adhoc(struct ath_hw *ah,
- 		conf->nexttbtt, conf->intval, conf->beacon_interval);
- }
- EXPORT_SYMBOL(ath9k_cmn_beacon_config_adhoc);
-+
-+/*
-+ * For multi-bss ap support beacons are either staggered evenly over N slots or
-+ * burst together.  For the former arrange for the SWBA to be delivered for each
-+ * slot. Slots that are not occupied will generate nothing.
-+ */
-+void ath9k_cmn_beacon_config_ap(struct ath_hw *ah,
-+				struct ath_beacon_config *conf,
-+				unsigned int bc_buf)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	/* NB: the beacon interval is kept internally in TU's */
-+	conf->intval = TU_TO_USEC(conf->beacon_interval);
-+	conf->intval /= bc_buf;
-+	conf->nexttbtt = ath9k_get_next_tbtt(ah, ath9k_hw_gettsf64(ah),
-+				       conf->beacon_interval);
-+
-+	if (conf->enable_beacon)
-+		ah->imask |= ATH9K_INT_SWBA;
-+	else
-+		ah->imask &= ~ATH9K_INT_SWBA;
-+
-+	ath_dbg(common, BEACON,
-+		"AP (%s) nexttbtt: %u intval: %u conf_intval: %u\n",
-+		(conf->enable_beacon) ? "Enable" : "Disable",
-+		conf->nexttbtt, conf->intval, conf->beacon_interval);
-+}
-+EXPORT_SYMBOL(ath9k_cmn_beacon_config_ap);
-diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.h b/drivers/net/wireless/ath/ath9k/common-beacon.h
-index d8e7c0d..3665d27 100644
---- a/drivers/net/wireless/ath/ath9k/common-beacon.h
-+++ b/drivers/net/wireless/ath/ath9k/common-beacon.h
-@@ -21,3 +21,6 @@ int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
- 				struct ath9k_beacon_state *bs);
- void ath9k_cmn_beacon_config_adhoc(struct ath_hw *ah,
- 				   struct ath_beacon_config *conf);
-+void ath9k_cmn_beacon_config_ap(struct ath_hw *ah,
-+				struct ath_beacon_config *conf,
-+				unsigned int bc_buf);
+-		if (dbg_vring_index <= WIL6210_MAX_TX_RINGS)
++		if (tx)
+ 			seq_printf(s, "Tx[%2d][%3d] = {\n", dbg_vring_index,
+ 				   dbg_txdesc_index);
+ 		else
+@@ -461,7 +461,7 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+ 		}
+ 		seq_printf(s, "}\n");
+ 	} else {
+-		if (dbg_vring_index <= WIL6210_MAX_TX_RINGS)
++		if (tx)
+ 			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
+ 				   dbg_vring_index, dbg_txdesc_index,
+ 				   vring->size);
 -- 
-1.9.0
+1.8.3.2
 
