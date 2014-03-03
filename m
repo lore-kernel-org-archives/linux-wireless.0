@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:38282 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753791AbaCRPwj (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:57373 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754044AbaCCNHQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 11:52:39 -0400
-Received: by mail-ie0-f173.google.com with SMTP id rl12so7370139iec.4
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 08:52:39 -0700 (PDT)
+	Mon, 3 Mar 2014 08:07:16 -0500
+Received: by mail-ea0-f172.google.com with SMTP id l9so4416764eaj.17
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 05:07:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 18 Mar 2014 17:52:39 +0200
-Message-ID: <CAB3XZEfb4Vh29-f-vkRY8--UUyN5cHR_nKy+AW_dVFWGXpE25A@mail.gmail.com> (sfid-20140318_165243_774259_E80147BE)
-Subject: Re: [RFC 00/21] cfg80211/mac80211: multi-vif csa
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1393851336.10039.1.camel@jlt4.sipsolutions.net>
+References: <1393599480-27908-1-git-send-email-michal.kazior@tieto.com>
+	<1393851336.10039.1.camel@jlt4.sipsolutions.net>
+Date: Mon, 3 Mar 2014 14:07:14 +0100
+Message-ID: <CA+BoTQk96KiL11N6X_8vx8S380vyaLMu0hU0P=dDUV4_fjw5fw@mail.gmail.com> (sfid-20140303_140721_532042_0D9FF4C8)
+Subject: Re: [PATCH] cfg80211: fix cfg80211_leave() locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+On 3 March 2014 13:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-02-28 at 15:58 +0100, Michal Kazior wrote:
+>> The beacon_interval was set unprotected by
+>> wdev.mtx. This could possibly lead to inconsistent
+>> cfg80211 states.
+>
+> Why not just this patch? The beacon_interval is already set to 0 in
+> stop_ap(), and is irrelevant for the other modes.
+>
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 010892b81a06..a3bf18d11609 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -788,8 +788,6 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+>         default:
+>                 break;
+>         }
+> -
+> -       wdev->beacon_interval = 0;
+>  }
+>
+>  static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>
+>
+> johannes
 
-On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> I'm aware this is rather huge. I'm hoping I can
-> get some early feedback before all other patches
-> I'm depending on are finally merged into
-> mac80211-next.
->
-> Considering current dependency hell of all related
-> the patchsets I'm duplicating some of my patches
-> I've posted on the mailing list here. Hopefully
-> this is sane enough for reviewing purposes.
->
-> The patchset alone is based on:
->  * mac80211-next/master
->  * VLAN chanctx copy refactor
->  * Luca's intf combination patches
->  * Luca's chanctx reservation patches
->
-it could be nice to have some unified branch somewhere with all these
-patchsets. :)
-(i tried doing it locally, but encountered merging errors)
+Good point. I was focused on locking changes (for my other patch) and
+noticed the beacon_interval being unprotected and didn't look more
+into it. Should I respin or are you going to apply your patch
+yourself? Either way is fine with me.
 
-Eliad.
+
+Michał
