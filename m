@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43562 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095AbaCNKjc (ORCPT
+Received: from p3plsmtpa11-09.prod.phx3.secureserver.net ([68.178.252.110]:56621
+	"EHLO p3plsmtpa11-09.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751780AbaCCSLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 06:39:32 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <marek.puzyniak@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
-References: <20140313082431.10798.10888.stgit@potku.adurom.net>
-Date: Fri, 14 Mar 2014 12:39:26 +0200
-In-Reply-To: <20140313082431.10798.10888.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Thu, 13 Mar 2014 10:24:31 +0200")
-Message-ID: <87bnx983oh.fsf@kamboji.qca.qualcomm.com> (sfid-20140314_113946_540866_E7052D46)
+	Mon, 3 Mar 2014 13:11:14 -0500
+Date: Mon, 3 Mar 2014 11:11:12 -0700
+From: "Mark A. Greer" <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type
+ 2 Tag Support
+Message-ID: <20140303181112.GA32605@animalcreek.com> (sfid-20140303_191118_684342_D64192E2)
+References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
+ <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
+ <20140221005059.GS18868@zurbaran>
+ <20140226215309.GA21867@animalcreek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140226215309.GA21867@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marek,
+On Wed, Feb 26, 2014 at 02:53:09PM -0700, Mark A. Greer wrote:
+> On Fri, Feb 21, 2014 at 01:50:59AM +0100, Samuel Ortiz wrote:
+> > Hi Mark,
+> 
+> Hi Samuel - thanks for the feedback.
+> 
+> > Code looks quite nice, especially since this looks like a fairly complex
+> > driver. And the initial coments are quite useful, I appreciate that.
+> > I have a few comments/questions though:
+> > 
+> > 
+> > > + * been received and there isn't an error).  The delay is 3 ms since delays
+> > > + * over 2 ms have been observed during testing.
+> > Would you say this timeout depend on the SPI bus bandwidth ?
+> 
+> It'll be one of the factors but the tag's response characteristics are
+> a big factor too.  I can bump it up a bit more if you prefer or do you
+> want me to somehow calculate it from the SPI bitrate?
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> From: Marek Puzyniak <marek.puzyniak@tieto.com>
->
-> Command WMI_FORCE_FW_HANG_CMDID is not supported in firmware 10.1.
-> In order to have firmware crash simulation functionality also
-> in firmware 10.1 driver can force firmware crash by performing not allowed
-> operation. Driver can deliberately crash firmware when setting vdev param for
-> vdev id out of range.  This patch introduces two keywords to simulate_fw_crash:
->
-> 'soft' which will cause firmware crash that is recoverable
->        by warm firmware reset but supported only in main firmware.
-> 'hard' which will cause firmware crash recoverable by cold
->        firmware reset, this option works for both firmwares.
->
-> Commands to trigger firmware soft/hard crash:
->
-> echo 'soft' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
-> echo 'hard' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
->
-> kvalo: use strncmp(), remove '\n' before checking the command and
-> document how buf is null terminated
->
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-can you please review my changes and check if they are ok?
-
--- 
-Kalle Valo
+Ping.
