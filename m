@@ -1,50 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6598 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100AbaCYGwT (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:57027 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924AbaCCNmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 02:52:19 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
-References: <20140313082431.10798.10888.stgit@potku.adurom.net>
-	<87pplih81g.fsf@kamboji.qca.qualcomm.com>
-	<20140321143737.GA5140@mwanda>
-Date: Tue, 25 Mar 2014 08:52:14 +0200
-In-Reply-To: <20140321143737.GA5140@mwanda> (Dan Carpenter's message of "Fri,
-	21 Mar 2014 17:37:38 +0300")
-Message-ID: <8738i64voh.fsf@kamboji.qca.qualcomm.com> (sfid-20140325_075223_655712_05BD9891)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 3 Mar 2014 08:42:09 -0500
+Message-ID: <1393854126.13669.112.camel@dubbel> (sfid-20140303_144213_857056_6766FA83)
+Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Mon, 03 Mar 2014 15:42:06 +0200
+In-Reply-To: <CA+BoTQ=QOexS1YyGOP9_Pt+EawArBPrBCncw2PZEL8B=t7PkQA@mail.gmail.com>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
+	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
+	 <1393589841.13669.32.camel@dubbel>
+	 <CA+BoTQmaF+johnB5ia+ez5dFKYPWWwk7E=482Q3hzLv=YvZAvQ@mail.gmail.com>
+	 <1393594886.13669.47.camel@dubbel>
+	 <CA+BoTQkafvtCDU5LkDcyVonO2T=koaBCWABzSQmnDOXJh=AvDA@mail.gmail.com>
+	 <1393597923.13669.65.camel@dubbel>
+	 <CA+BoTQk=YLd+bur3HkJ5jwrT-EYKMF8+nzJSX+bJP_psesuE5g@mail.gmail.com>
+	 <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
+	 <1393840630.13669.82.camel@dubbel>
+	 <CA+BoTQ=TL6my5F7RCME08ZgGw6dGGmyqmn4W-LB7WyVD7VPUOQ@mail.gmail.com>
+	 <1393850234.13669.98.camel@dubbel>
+	 <CA+BoTQ=QOexS1YyGOP9_Pt+EawArBPrBCncw2PZEL8B=t7PkQA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+On Mon, 2014-03-03 at 14:26 +0100, Michal Kazior wrote:
+> On 3 March 2014 13:37, Luca Coelho <luca@coelho.fi> wrote:
+> > On Mon, 2014-03-03 at 11:38 +0100, Michal Kazior wrote:
+> >> On 3 March 2014 10:57, Luca Coelho <luca@coelho.fi> wrote:
+> >> > Using the reservation:
+> >> >
+> >> > 1. unassign the vif from the old chanctx (old.refcount == 1,
+> >> > new.refcount == 1);
+> >> > 2. we decrease the refcount of the new chanctx (new.refcount == 0,
+> >> > old.refcount == 0);
+> >> > 3. if (old.refcount == 0) means we were the only user, change channel;
+> >> > 4. we assign ourselves to the new chanctx (new.refcount == 1 again);
+> >>
+> >> I didn't really consider unassigning vif from chanctx like that (since
+> >> the original single-channel channel non-chanctx hw doesn't do that).
+> >> If you assume it is safe to unassign the vif then the logic seems
+> >> plausible. I like it.
+> >
+> > I think in theory it should be okay.  I don't know if any driver does
+> > something funny with it, though.
+> >
+> > For drivers that don't implement the unassign_vif_chanctx op (like
+> > non-chanctx drivers), it should not be a problem.
+> >
+> > I think I could probably get rid of the
+> > IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag I was going to introduce as
+> > well.
+> 
+> We could actually get rid of the CHANNEL_CHANGED for chanctx
+> altogether. All it takes is "wait until refcount drops to 0, free
+> chanctx, create new chanctx, start assigning vifs that had
+> chanctx_reserved set". This would probably be seamless for non-chanctx
+> drivers too.
 
->> drivers/net/wireless/ath/ath10k/debug.c:500 ath10k_write_simulate_fw_crash() error: strncmp() '"hard"' too small (5 vs 32)
->> drivers/net/wireless/ath/ath10k/debug.c:497 ath10k_write_simulate_fw_crash() error: strncmp() '"soft"' too small (5 vs 32)
->> 
->> I wanted to use strncmp() instead of strcmp(), but I'm not sure what to
->> do here. In my opinion it's guaranteed that the string "hard" is null
->> terminated, so it shouldn't matter even if strlen("soft") (5) is less
->> than sizeof(buf) (32), right? Or am I missing something here?
->> 
->
-> I am on vacation until next week.  I didn't think these particular
-> emails went out automatically.
+Yes.
 
-Actually that's true. Fengguang's bot sends me a build report after
-every build and I saw these warnings in that report.
 
-> Anyway, I have changed this in the latest smatch but it will take some
-> months for the kbuild bot to update.
->
-> http://repo.or.cz/w/smatch.git/commitdiff/f10f27a7612c5b1e69b5d9080a0194d012beb6aa
->
-> I'll take a closer look next week.
+> >> > If more vifs came and are changing the chanctx at the same time, it will
+> >> > be fine too because the channel will only change when the last reserver
+> >> > uses the reservation.
+> >> >
+> >> > Does this make sense?
+> >>
+> >> Does the following match your idea of multi-vif reservation with the
+> >> refcount idea?
+> >>
+> >> [2 vifs on chanctx->refcount==2]
+> >> * vif1 reserve (refcount==3)
+> >> * vif2 reserve (refcount==4)
+> >> * vif1 use reservation: (refcount==3)
+> >>   * stop queues
+> >>   * unassign vif (refcount==2)
+> >>   * since refcount!=0 do nothing more
+> >> * vif3 use reservation: (refcount==1)
+> >>   * unassign vif (refcount==0)
+> >>   * since refcount==0 do:
+> >>     * chanctx channel change
+> >>     * vif1 assign (refcount==1)
+> >>     * vif2 assign (refcount==2)
+> >>     * wake queues
+> >
+> > Right, this is a good idea (better than what I wrote in my previous
+> > reply).  I just need to iterate all the vifs and assign the ones with
+> > matching reserved_chanctx (and no assigned chanctx) to this chanctx when
+> > refcount reaches 0.
+> 
+> Yes. In theory you can even handle cases where ctx->refcount is still
+> >0 if you have multi-channel hw. Consider the following:
+> 
+> hw: 2 channels max
+> ctx1 (chan 1): vif1
+> ctx2 (chan 2): vif2 vif3
+> 
+> * vif2 wants to switch to chan 3, but can't create new chanctx so use
+> current one for "in place" hoping vif3 will also switch soon enough
+> * vif1 decides it wants to follow vif2 to chan 3
+> * vif3 doesn't want to do anything
+> * vif1 and vif2 both call use_reserved (order doesn't matter if you
+> perform checks properly)
+> * ctx1 should be freed now since vif1 has been unassigned
+> * ctx2->refcount > 0, but num_chanctx < max_num_chanctx, so create new
+> ctx1 for chan3
+> * assign vif1 and vif2 to ctx1 on chan 3
+> 
+> (this would depend on my ieee80211_max_num_channels() patch)
 
-Thanks!
+Sounds good! But where do the channel combinations come in here? I think
+instead of just checking for max_num_channels we should do a full
+combination check.
 
--- 
-Kalle Valo
+
+> >> Additionally you'd have to check after each "use reservation": if all
+> >> vifs with matching reserved_chanctx have no assigned chanctx but the
+> >> reserved_chanctx->refcount > 0, then disconnect all vifs with the
+> >> matching reserved_chanctx.
+> >
+> > I'm not sure I understood this part.  I think that when refcount reaches
+> > 0 I should disconnect the ones that are still using this chanctx, right?
+> > All the ones that wanted to switch together, will have already done so
+> > (since the refcount reached 0).  If there's any remaining vif in the
+> > chanctx we want to change, disconnect them.
+> 
+> There are two approaches here:
+>  a) first use_reservation implies actual channel change
+>  b) last use_reservation implies actual channel change
+> 
+> You probably keep model (a) in mind, while I use (b).
+
+Actually I was thinking about (b) as well.
+
+My question here is how do we discern vifs that are still in the channel
+but didn't want to change (and thus we should disconnect)? We can't rely
+on refcount.
+
+
+> I prefer (b) for a couple of reasons:
+>  * it also allows to retain the current behavior easily: if you have
+> many vifs use a chanctx and some of them want to CSA, then disconnect
+> those who want CSA
+>  * it should be more resilient to timing because you wait on the
+> channel until last vif is "done"
+>  * you can re-create chanctx and remove chanctx "channel change"
+
+I agree, as long as we make sure they are in sync (ie. want to switch at
+the same time) when handling the channel switch request.
+
+--
+Luca.
+
