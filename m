@@ -1,93 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:44037 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757745AbaCEOcc (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51300 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881AbaCCNTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 09:32:32 -0500
-Received: by mail-ea0-f170.google.com with SMTP id g15so1080520eak.29
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2014 06:32:31 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Mon, 3 Mar 2014 08:19:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/4] mac80211: disconnect iface if CSA unexpectedly fails
-Date: Wed,  5 Mar 2014 15:27:03 +0100
-Message-Id: <1394029623-21894-5-git-send-email-michal.kazior@tieto.com> (sfid-20140305_153243_275543_76C442A4)
-In-Reply-To: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
-References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.14] cfg80211: remove racy beacon_interval assignment
+Date: Mon,  3 Mar 2014 14:19:08 +0100
+Message-Id: <1393852748-31855-1-git-send-email-johannes@sipsolutions.net> (sfid-20140303_141916_513023_57616596)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to leave a cripled
-interface running.
+From: Johannes Berg <johannes.berg@intel.com>
 
-As a side effect this will unblock tx queues with
-CSA reason immediately after failure instead of
-until after userspace requests interface to stop.
+In case of AP mode, the beacon interval is already reset to
+zero inside cfg80211_stop_ap(), and in the other modes it
+isn't relevant. Remove the assignment to remove a potential
+race since the assignment isn't properly locked.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reported-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ net/wireless/core.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4654823..e174cc3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3091,7 +3091,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 010892b81a06..a3bf18d11609 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -788,8 +788,6 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 	default:
+ 		break;
+ 	}
+-
+-	wdev->beacon_interval = 0;
  }
  
--static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
-@@ -3103,7 +3103,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	if (WARN_ON(err < 0))
--		return;
-+		return err;
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3114,10 +3114,12 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
- 	if (err)
--		return;
-+		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-+
-+	return 0;
- }
- 
- void ieee80211_csa_finalize_work(struct work_struct *work)
-@@ -3126,6 +3128,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     csa_finalize_work);
- 	struct ieee80211_local *local = sdata->local;
-+	int err;
- 
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
-@@ -3137,7 +3140,13 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	if (!ieee80211_sdata_running(sdata))
- 		goto unlock;
- 
--	ieee80211_csa_finalize(sdata);
-+	err = ieee80211_csa_finalize(sdata);
-+	if (err) {
-+		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
-+		cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev);
-+		goto unlock;
-+	}
-+
- 	ieee80211_recalc_csa_block_tx(local);
- 
- unlock:
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
 -- 
 1.8.5.3
 
