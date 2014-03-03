@@ -1,69 +1,661 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60604 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750829AbaCFRi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 12:38:59 -0500
-Message-ID: <1394127643.10175.13.camel@dcbw.local> (sfid-20140306_183904_319172_CB56B7EA)
-Subject: Re: rtlwifi (rtl8192ce) consistently reports EBUSY error, but
- scanning works
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Thierry Moreau <thierry.moreau@connotech.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 06 Mar 2014 11:40:43 -0600
-In-Reply-To: <53189AF9.9030707@lwfinger.net>
-References: <5316C602.8020504@connotech.com> <5316CE44.5060905@lwfinger.net>
-	 <5317506B.1080305@connotech.com> <53175368.50009@lwfinger.net>
-	 <531777F8.5060506@connotech.com> <53189AF9.9030707@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.redpinesignals.com ([203.196.161.92]:35358 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbaCCISe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2014 03:18:34 -0500
+Received: from [192.168.40.2] ([192.168.40.2])
+	(authenticated user fariya.f@redpinesignals.com)
+	by mail.redpinesignals.com
+	for linux-wireless@vger.kernel.org;
+	Mon, 3 Mar 2014 13:48:30 +0530
+Message-ID: <53143A80.5010907@redpinesignals.com> (sfid-20140303_091846_012550_AEC79CCE)
+Date: Mon, 03 Mar 2014 13:47:04 +0530
+From: Fariya Fatima <fariya.f@redpinesignals.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.14.0-rc5 v3 3/10] rsi: Adding core and main files
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-03-06 at 09:57 -0600, Larry Finger wrote:
-> On 03/05/2014 01:16 PM, Thierry Moreau wrote:
-> > On 03/05/14 16:40, Larry Finger wrote:
-> >>
-> >> Please give me the exact set of commands you use to get this problem. If
-> >> possible, capture the console output. As I am currently running
-> >> long-term tests of the latest version of rtl8192ce using an RTL8188CE
-> >> (10ec:8176), it will be a perfect time to test.
-> >>
-> >
-> > Here is the command script, and the console log
-> > (....sh 2>&1 | tee ....log)
-> >
-> > Is it possible that the Shuttle system be arranged with a digital output
-> > enabling/inhibiting the Realtek wifi interface active participation in wifi
-> > protocol?
-> >
-> > I did ask Shuttle tech support, but in any event I don't want to induce you to
-> > troubleshoot a specific system.
-> 
-> The problem is not specific to the Shuttle - I can reproduce it on my HP laptop. 
-> Furthermore, it affects other mac80211-based drivers. The EBUSY return comes out 
-> of mac80211/cfg80211/nl80211 code.
+From: Fariya Fatima
 
-I deleted the earlier bits of this thread after skimming it, but IIRC
-we're talking about scanning here right?  If there's already a scan
-in-progress, then the stack can often return EBUSY.
+This patch adds the files which contain functionality related
+to initialization, queuing and de-queuing of packets to be 
+sent to the device, sending and receiving packets from the
+device and OS interface operations.
 
-For example, from both cfg80211_wext_siwscan() and
-nl80211_trigger_scan(), used by 'iwlist' and 'iw' respectively:
+Signed-off-by: Fariya Fatima <fariya.f@redpinesignals.com>
+---
 
-	if (rdev->scan_req) {
-		err = -EBUSY;
-		goto out;
-	}
+ rsi_91x_core.c |  345 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ rsi_91x_main.c |  271 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 616 insertions(+)
 
-Scans do not get canceled just because another random scan request comes
-in.  Whatever userspace there is needs to wait for a scan completion
-event and then request it's new scan.  There are also stack internal
-scans that happen from time to time that may cause a user-requested scan
-to return EBUSY.
+diff -rupN linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_core.c linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_core.c
+--- linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_core.c	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_core.c	2014-03-04 08:02:27.667397612 +0545
+@@ -0,0 +1,345 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "rsi_mgmt.h"
++#include "rsi_common.h"
++
++/**
++ * This function determines the queue with the min weight.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @return q_num: Corresponding queue number.
++ */
++static u8 rsi_determine_min_weight_queue(struct rsi_common *common)
++{
++	struct wmm_qinfo *tx_qinfo = common->tx_qinfo;
++	u32 q_len = 0;
++	u8 ii = 0;
++
++	for (ii = 0; ii < NUM_EDCA_QUEUES; ii++) {
++		q_len = skb_queue_len(&common->tx_queue[ii]);
++		if ((tx_qinfo[ii].pkt_contended) && q_len) {
++			common->min_weight = tx_qinfo[ii].weight;
++			break;
++		}
++	}
++	return ii;
++}
++
++/**
++ * This function recalculates the weights corresponding to each queue.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @return recontend_queue bool variable
++ */
++static bool rsi_recalculate_weights(struct rsi_common *common)
++{
++	struct wmm_qinfo *tx_qinfo = common->tx_qinfo;
++	bool recontend_queue = false;
++	u8 ii = 0;
++	u32 q_len = 0;
++
++	for (ii = 0; ii < NUM_EDCA_QUEUES; ii++) {
++		q_len = skb_queue_len(&common->tx_queue[ii]);
++		/* Check for the need of contention */
++		if (q_len) {
++			if (tx_qinfo[ii].pkt_contended) {
++				tx_qinfo[ii].weight =
++				((tx_qinfo[ii].weight > common->min_weight) ?
++				 tx_qinfo[ii].weight - common->min_weight : 0);
++			} else {
++				tx_qinfo[ii].pkt_contended = 1;
++				tx_qinfo[ii].weight = tx_qinfo[ii].wme_params;
++				recontend_queue = true;
++			}
++		} else { /* No packets so no contention */
++			tx_qinfo[ii].weight = 0;
++			tx_qinfo[ii].pkt_contended = 0;
++		}
++	}
++
++	return recontend_queue;
++}
++
++/**
++ * This function determines the queue from which packet
++ * has to be dequeued.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @return q_num: Corresponding queue number on success.
++ */
++static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
++{
++	bool recontend_queue = false;
++	u32 q_len = 0;
++	u8 q_num = INVALID_QUEUE;
++	u8 ii, min = 0;
++
++	if (skb_queue_len(&common->tx_queue[MGMT_SOFT_Q])) {
++		if (!common->mgmt_q_block)
++			q_num = MGMT_SOFT_Q;
++		return q_num;
++	}
++
++	if (common->pkt_cnt != 0) {
++		--common->pkt_cnt;
++		return common->selected_qnum;
++	}
++
++get_queue_num:
++	q_num = 0;
++	recontend_queue = false;
++
++	q_num = rsi_determine_min_weight_queue(common);
++	q_len = skb_queue_len(&common->tx_queue[ii]);
++	ii = q_num;
++
++	/* Selecting the queue with least back off */
++	for (; ii < NUM_EDCA_QUEUES; ii++) {
++		if (((common->tx_qinfo[ii].pkt_contended) &&
++		     (common->tx_qinfo[ii].weight < min)) && q_len) {
++			min = common->tx_qinfo[ii].weight;
++			q_num = ii;
++		}
++	}
++
++	common->tx_qinfo[q_num].pkt_contended = 0;
++	/* Adjust the back off values for all queues again */
++	recontend_queue = rsi_recalculate_weights(common);
++
++	q_len = skb_queue_len(&common->tx_queue[q_num]);
++	if (!q_len) {
++		/* If any queues are freshly contended and the selected queue
++		 * doesn't have any packets
++		 * then get the queue number again with fresh values
++		 */
++		if (recontend_queue)
++			goto get_queue_num;
++
++		q_num = INVALID_QUEUE;
++		return q_num;
++	}
++
++	common->selected_qnum = q_num;
++	q_len = skb_queue_len(&common->tx_queue[q_num]);
++
++	switch (common->selected_qnum) {
++	case VO_Q:
++		if (q_len > MAX_CONTINUOUS_VO_PKTS)
++			common->pkt_cnt = (MAX_CONTINUOUS_VO_PKTS - 1);
++		else
++			common->pkt_cnt = --q_len;
++		break;
++
++	case VI_Q:
++		if (q_len > MAX_CONTINUOUS_VI_PKTS)
++			common->pkt_cnt = (MAX_CONTINUOUS_VI_PKTS - 1);
++		else
++			common->pkt_cnt = --q_len;
++
++		break;
++
++	default:
++		common->pkt_cnt = 0;
++		break;
++	}
++
++	return q_num;
++}
++
++/**
++ * This functions enqueues the packet to the queue specified
++ * by the queue number.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  skb Pointer to the socket buffer structure.
++ * @return None.
++ */
++static void rsi_core_queue_pkt(struct rsi_common *common,
++			       struct sk_buff *skb)
++{
++	u8 q_num = skb->priority;
++	if (q_num >= NUM_SOFT_QUEUES) {
++		rsi_dbg(ERR_ZONE, "%s: Invalid Queue Number: q_num = %d\n",
++			__func__, q_num);
++		dev_kfree_skb(skb);
++		return;
++	}
++
++	skb_queue_tail(&common->tx_queue[q_num], skb);
++	return;
++}
++
++/**
++ * This functions dequeues the packet from the queue specified by
++ * the queue number.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  q_num Queue number.
++ * @return Pointer to sk_buff structure.
++ */
++static struct sk_buff *rsi_core_dequeue_pkt(struct rsi_common *common,
++					    u8 q_num)
++{
++	if (q_num >= NUM_SOFT_QUEUES) {
++		rsi_dbg(ERR_ZONE, "%s: Invalid Queue Number: q_num = %d\n",
++			__func__, q_num);
++		return NULL;
++	}
++
++	return skb_dequeue(&common->tx_queue[q_num]);
++}
++
++/**
++ * This function is used to determine the wmm queue based on the backoff
++ * procedure. Data packets are dequeued from the selected hal queue and
++ * sent to the below layers.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @return None.
++ */
++void rsi_core_qos_processor(struct rsi_common *common)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct sk_buff *skb;
++	unsigned long tstamp_1, tstamp_2;
++	u8 q_num;
++	int status;
++
++	tstamp_1 = jiffies;
++	while (1) {
++		q_num = rsi_core_determine_hal_queue(common);
++		rsi_dbg(DATA_TX_ZONE,
++			"%s: Queue number = %d\n", __func__, q_num);
++
++		if (q_num == INVALID_QUEUE) {
++			rsi_dbg(DATA_TX_ZONE, "%s: No More Pkt\n", __func__);
++			break;
++		}
++
++		mutex_lock(&common->tx_rxlock);
++
++		status = adapter->check_hw_queue_status(adapter, q_num);
++		if ((status <= 0)) {
++			mutex_unlock(&common->tx_rxlock);
++			break;
++		}
++
++		if ((q_num < MGMT_SOFT_Q) &&
++		    ((skb_queue_len(&common->tx_queue[q_num])) <=
++		      MIN_DATA_QUEUE_WATER_MARK)) {
++			if (ieee80211_queue_stopped(adapter->hw, WME_AC(q_num)))
++				ieee80211_wake_queue(adapter->hw,
++						     WME_AC(q_num));
++		}
++
++		skb = rsi_core_dequeue_pkt(common, q_num);
++		if (skb == NULL) {
++			mutex_unlock(&common->tx_rxlock);
++			break;
++		}
++
++		if (q_num == MGMT_SOFT_Q)
++			status = rsi_send_mgmt_pkt(common, skb);
++		else
++			status = rsi_send_data_pkt(common, skb);
++
++		if (status) {
++			mutex_unlock(&common->tx_rxlock);
++			break;
++		}
++
++		common->tx_stats.total_tx_pkt_send[q_num]++;
++
++		tstamp_2 = jiffies;
++		mutex_unlock(&common->tx_rxlock);
++
++		if (tstamp_2 > tstamp_1 + (300 * HZ / 1000))
++			schedule();
++	}
++	return;
++}
++
++/**
++ * This function transmits the packets received from mac80211.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  skb Pointer to the socket buffer structure.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_tx_info *info;
++	struct skb_info *tx_params;
++	u8 q_num, frame_type, tid = 0;
++	u16 fc = 0;
++
++	if ((!skb) || (!skb->len)) {
++		rsi_dbg(ERR_ZONE, "%s: Null skb/zero Length packet\n",
++			__func__);
++		goto xmit_fail;
++	}
++	info = IEEE80211_SKB_CB(skb);
++	tx_params = (struct skb_info *)info->driver_data;
++
++	if (common->fsm_state != FSM_MAC_INIT_DONE) {
++		rsi_dbg(ERR_ZONE, "%s: FSM state not open\n", __func__);
++		goto xmit_fail;
++	}
++
++	frame_type = (skb->data[0] & 0x0f);
++	fc = *((u16 *)&skb->data[MAC_80211_HDR_FRAME_CONTROL]);
++
++	if ((frame_type == IEEE80211_MGMT_FRAME) ||
++	    (frame_type == IEEE80211_CTL_FRAME)) {
++		q_num = MGMT_SOFT_Q;
++		skb->priority = q_num;
++	} else {
++		if (fc & IEEE80211_STYPE_QOS_DATA) {
++			tid = (skb->data[24] & IEEE80211_QOS_TID);
++			pr_info("going in qos_data check\n");
++			skb->priority = TID_TO_WME_AC(tid);
++		} else {
++			tid = IEEE80211_NONQOS_TID;
++			skb->priority = BE_Q;
++		}
++		q_num = skb->priority;
++		tx_params->tid = tid;
++		tx_params->sta_id = 0;
++	}
++
++	if ((q_num != MGMT_SOFT_Q) &&
++	    ((skb_queue_len(&common->tx_queue[q_num]) + 1) >=
++	     DATA_QUEUE_WATER_MARK)) {
++		if (!ieee80211_queue_stopped(adapter->hw, WME_AC(q_num)))
++			ieee80211_stop_queue(adapter->hw, WME_AC(q_num));
++		rsi_set_event(&common->tx_thread.event);
++		goto xmit_fail;
++	}
++
++	rsi_core_queue_pkt(common, skb);
++	rsi_dbg(DATA_TX_ZONE, "%s: ===> Scheduling TX thead <===\n", __func__);
++	rsi_set_event(&common->tx_thread.event);
++
++	return 0;
++
++xmit_fail:
++	rsi_dbg(ERR_ZONE, "%s: Failed to queue packet\n", __func__);
++	if (skb)
++		dev_kfree_skb(skb);
++	return -1;
++}
+diff -rupN linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_main.c linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_main.c
+--- linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_main.c	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_main.c	2014-03-04 08:01:57.109779635 +0545
+@@ -0,0 +1,271 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/module.h>
++#include <linux/firmware.h>
++#include "rsi_mgmt.h"
++#include "rsi_common.h"
++
++u32 rsi_zone_enabled = /* INFO_ZONE |
++			INIT_ZONE |
++			MGMT_TX_ZONE |
++			MGMT_RX_ZONE |
++			DATA_TX_ZONE |
++			DATA_RX_ZONE |
++			FSM_ZONE |
++			ISR_ZONE | */
++			ERR_ZONE |
++			0;
++EXPORT_SYMBOL_GPL(rsi_zone_enabled);
++
++/**
++ * This function prepares the skb.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  buffer Pointer to the packet data.
++ * @param  pkt_len Length of the packet.
++ * @param  extended_desc Extended descriptor.
++ * @return Successfully skb.
++ */
++static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
++				       u8 *buffer,
++				       u32 pkt_len,
++				       u8 extended_desc)
++{
++	struct ieee80211_tx_info *info;
++	struct skb_info *rx_params;
++	struct sk_buff *skb = NULL;
++	u8 payload_offset;
++
++	if (!pkt_len) {
++		rsi_dbg(ERR_ZONE, "%s: Dummy pkt has come in\n", __func__);
++		BUG_ON(1);
++	}
++
++	if (pkt_len > (RSI_RCV_BUFFER_LEN * 4)) {
++		rsi_dbg(ERR_ZONE, "%s: Pkt size > max rx buf size %d\n",
++			__func__, pkt_len);
++		pkt_len = RSI_RCV_BUFFER_LEN * 4;
++	}
++
++	pkt_len -= extended_desc;
++	skb = dev_alloc_skb(pkt_len + FRAME_DESC_SZ);
++	if (skb == NULL)
++		return NULL;
++
++	payload_offset = (extended_desc + FRAME_DESC_SZ);
++	skb_put(skb, pkt_len);
++	memcpy((skb->data), (buffer + payload_offset), skb->len);
++
++	info = IEEE80211_SKB_CB(skb);
++	rx_params = (struct skb_info *)info->driver_data;
++	rx_params->rssi = rsi_get_rssi(buffer);
++	rx_params->channel = rsi_get_connected_channel(common->priv);
++
++	return skb;
++}
++
++/**
++ * This function reads frames from the card.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @param  rcv_pkt_len Received pkt length. In case of USB it is 0.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
++{
++	u8 *frame_desc = NULL, extended_desc = 0;
++	u32 index, length = 0, queueno = 0;
++	u16 actual_length = 0, offset;
++	struct sk_buff *skb = NULL;
++
++	index = 0;
++	do {
++		frame_desc = &common->rx_data_pkt[index];
++		actual_length = *(u16 *)&frame_desc[0];
++		offset = *(u16 *)&frame_desc[2];
++
++		queueno = rsi_get_queueno(frame_desc, offset);
++		length = rsi_get_length(frame_desc, offset);
++		extended_desc = rsi_get_extended_desc(frame_desc, offset);
++
++		switch (queueno) {
++		case RSI_WIFI_DATA_Q:
++			skb = rsi_prepare_skb(common,
++					      (frame_desc + offset),
++					      length,
++					      extended_desc);
++			if (skb == NULL)
++				goto fail;
++
++			rsi_indicate_pkt_to_os(common, skb);
++			break;
++
++		case RSI_WIFI_MGMT_Q:
++			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
++			break;
++
++		default:
++			rsi_dbg(ERR_ZONE, "%s: pkt from invalid queue: %d\n",
++				__func__,   queueno);
++			goto fail;
++		}
++
++		index  += actual_length;
++		rcv_pkt_len -= actual_length;
++	} while (rcv_pkt_len > 0);
++
++	return 0;
++fail:
++	return -1;
++}
++EXPORT_SYMBOL_GPL(rsi_read_pkt);
++
++/**
++ * This function is a kernel thread to send the packets to the device.
++ *
++ * @param  common Pointer to the driver private structure.
++ * @return None.
++ */
++static void rsi_tx_scheduler_thread(struct rsi_common *common)
++{
++	struct rsi_hw *adapter = common->priv;
++	u32 timeout = EVENT_WAIT_FOREVER;
++
++	do {
++		if (adapter->determine_event_timeout)
++			timeout = adapter->determine_event_timeout(adapter);
++		rsi_wait_event(&common->tx_thread.event, timeout);
++		rsi_reset_event(&common->tx_thread.event);
++
++		if (common->init_done)
++			rsi_core_qos_processor(common);
++	} while (atomic_read(&common->tx_thread.thread_done) == 0);
++	complete_and_exit(&common->tx_thread.completion, 0);
++}
++
++/**
++ * This function initializes os interface operations.
++ *
++ * @param void.
++ * @return Pointer to the adapter structure on success, NULL on failure .
++ */
++struct rsi_hw *rsi_init_os_intf_ops(void)
++{
++	struct rsi_hw *adapter = NULL;
++	struct rsi_common *common = NULL;
++	u8 ii = 0;
++
++	adapter = kzalloc(sizeof(*adapter), GFP_KERNEL);
++	if (!adapter)
++		return NULL;
++
++	adapter->priv = kzalloc(sizeof(*common), GFP_KERNEL);
++	if (adapter->priv == NULL) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of memory\n",
++			__func__);
++		kfree(adapter);
++		return NULL;
++	} else {
++		common = adapter->priv;
++		common->priv = adapter;
++	}
++
++	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
++		skb_queue_head_init(&common->tx_queue[ii]);
++
++	rsi_init_event(&common->tx_thread.event);
++	mutex_init(&common->mutex);
++	mutex_init(&common->tx_rxlock);
++
++	if (rsi_create_kthread(common,
++			       &common->tx_thread,
++			       rsi_tx_scheduler_thread,
++			       "Tx-Thread")) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to init tx thrd\n", __func__);
++		goto err;
++	}
++
++	common->init_done = true;
++	return adapter;
++
++err:
++	kfree(common);
++	kfree(adapter);
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(rsi_init_os_intf_ops);
++
++/**
++ * This function de-intializes os interface operations.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @return None.
++ */
++void rsi_deinit_os_intf_ops(struct rsi_hw *adapter)
++{
++	struct rsi_common *common = adapter->priv;
++	u8 ii;
++
++	rsi_dbg(INFO_ZONE, "%s: Performing deinit os ops\n", __func__);
++
++	rsi_kill_thread(&common->tx_thread);
++
++	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
++		skb_queue_purge(&common->tx_queue[ii]);
++
++	common->init_done = false;
++
++	kfree(common);
++	kfree(adapter->rsi_dev);
++	kfree(adapter);
++	return;
++}
++EXPORT_SYMBOL_GPL(rsi_deinit_os_intf_ops);
++
++/**
++ * This function is invoked when the module is loaded into the kernel.
++ * It registers the client driver.
++ *
++ * @param  Void.
++ * @return 0 on success, -1 on failure.
++ */
++static int rsi_91x_hal_module_init(void)
++{
++	rsi_dbg(INIT_ZONE, "%s: Module init called\n", __func__);
++	return 0;
++}
++
++/**
++ * This function is called at the time of removing/unloading the module.
++ * It unregisters the client driver.
++ *
++ * @param  Void.
++ * @return None.
++ */
++static void rsi_91x_hal_module_exit(void)
++{
++	rsi_dbg(INIT_ZONE, "%s: Module exit called\n", __func__);
++	return;
++}
++
++module_init(rsi_91x_hal_module_init);
++module_exit(rsi_91x_hal_module_exit);
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("Station driver for RSI 91x devices");
++MODULE_SUPPORTED_DEVICE("RSI-91x");
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL");
 
-(NM hands this all off to wpa_supplicant, which itself handles the EBUSY
-by waiting a bit and then requesting another scan.)
-
-Dan
 
