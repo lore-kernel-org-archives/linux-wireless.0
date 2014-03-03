@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:55245 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090AbaCFP5t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 10:57:49 -0500
-Received: by mail-ob0-f172.google.com with SMTP id wm4so2727151obc.17
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 07:57:49 -0800 (PST)
-Message-ID: <53189AF9.9030707@lwfinger.net> (sfid-20140306_165754_630176_1E54BC72)
-Date: Thu, 06 Mar 2014 09:57:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Thierry Moreau <thierry.moreau@connotech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi (rtl8192ce) consistently reports EBUSY error, but scanning
- works
-References: <5316C602.8020504@connotech.com> <5316CE44.5060905@lwfinger.net> <5317506B.1080305@connotech.com> <53175368.50009@lwfinger.net> <531777F8.5060506@connotech.com>
-In-Reply-To: <531777F8.5060506@connotech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:7761 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754425AbaCCLjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2014 06:39:39 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Stable <stable@vger.kernel.org>,
+	Eliad Peller <eliadx.peller@intel.com>
+Subject: [PATCH] mac80211: consider virtual mon when calculating min_def
+Date: Mon,  3 Mar 2014 13:37:14 +0200
+Message-Id: <1393846634-21264-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140303_124152_467955_33842E2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/2014 01:16 PM, Thierry Moreau wrote:
-> On 03/05/14 16:40, Larry Finger wrote:
->>
->> Please give me the exact set of commands you use to get this problem. If
->> possible, capture the console output. As I am currently running
->> long-term tests of the latest version of rtl8192ce using an RTL8188CE
->> (10ec:8176), it will be a perfect time to test.
->>
->
-> Here is the command script, and the console log
-> (....sh 2>&1 | tee ....log)
->
-> Is it possible that the Shuttle system be arranged with a digital output
-> enabling/inhibiting the Realtek wifi interface active participation in wifi
-> protocol?
->
-> I did ask Shuttle tech support, but in any event I don't want to induce you to
-> troubleshoot a specific system.
+From: Eliad Peller <eliad@wizery.com>
 
-The problem is not specific to the Shuttle - I can reproduce it on my HP laptop. 
-Furthermore, it affects other mac80211-based drivers. The EBUSY return comes out 
-of mac80211/cfg80211/nl80211 code.
+When calculating the current max bw required for
+a channel context, we didn't consider the virtual
+monitor interface, resulting in its channel context
+being narrower than configured.
 
-I have no idea why that particular set of commands fails to be able to set the 
-channel. Both NetworkManager and the openSUSE ifup sequence work OK. Your system 
-can set channels using the scan mechanism.
+Fixes: 21f659bf1f93 ("mac80211: add min required channel definition field")
+Cc: Stable <stable@vger.kernel.org>  [3.12+]
+Reported-by: Ido Yariv <idox.yariv@intel.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+---
+ net/mac80211/chan.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-If you want to track it down, you will need to put printk statements at every 
-place that the net/wireless code sets EBUSY to see which one triggers. Perhaps 
-that will expose any bug there, or in your script.
-
-Larry
-
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 42c6592..bd1fd8e 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -100,6 +100,12 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		}
+ 		max_bw = max(max_bw, width);
+ 	}
++
++	/* use the configured bandwidth in case of monitor interface */
++	sdata = rcu_dereference(local->monitor_sdata);
++	if (sdata && rcu_access_pointer(sdata->vif.chanctx_conf) == conf)
++		max_bw = max(max_bw, conf->def.width);
++
+ 	rcu_read_unlock();
+ 
+ 	return max_bw;
+-- 
+1.8.3.2
 
