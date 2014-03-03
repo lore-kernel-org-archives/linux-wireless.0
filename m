@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:45628 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbaCIB6Z (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:52063 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbaCCMqo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 20:58:25 -0500
-Received: by mail-pd0-f170.google.com with SMTP id v10so5648026pde.29
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2014 17:58:24 -0800 (PST)
-Message-ID: <531BCABD.6030000@converseincode.com> (sfid-20140309_025924_625842_317F6482)
-Date: Sat, 08 Mar 2014 17:58:21 -0800
-From: Behan Webster <behanw@converseincode.com>
+	Mon, 3 Mar 2014 07:46:44 -0500
+Received: by mail-ee0-f52.google.com with SMTP id e49so718545eek.11
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 04:46:43 -0800 (PST)
 MIME-Version: 1.0
-To: Sergei Antonov <saproj@gmail.com>, pageexec@freemail.hu
-CC: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	=?UTF-8?B?SmFuLVNpbW9uIE3DtmxsZXI=?= <dl9pf@gmx.de>,
-	=?UTF-8?B?Vmluw61jaQ==?= =?UTF-8?B?dXMgVGludGk=?=
-	<viniciustinti@gmail.com>, Mark Charlebois <charlebm@gmail.com>
-Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>	<1394241960-1764-1-git-send-email-behanw@converseincode.com>	<CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com>	<531B934C.31666.37555A14@pageexec.freemail.hu> <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
-In-Reply-To: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1393590200-25309-3-git-send-email-luca@coelho.fi>
+References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
+	<1393590200-25309-3-git-send-email-luca@coelho.fi>
+Date: Mon, 3 Mar 2014 13:46:42 +0100
+Message-ID: <CA+BoTQm+X5F+fni+1+t7x773r3LYuT77yhxzwKWEWyJK-BA6Eg@mail.gmail.com> (sfid-20140303_134704_692300_823F0322)
+Subject: Re: [PATCH v3 2/3] mac80211: implement chanctx reservation
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/14 15:00, Sergei Antonov wrote:
-> On 8 March 2014 23:01, PaX Team <pageexec@freemail.hu> wrote:
->> On 8 Mar 2014 at 21:29, Sergei Antonov wrote:
->>
->>>> -       memset(&aead_req, 0, sizeof(aead_req));
->>>> +       char aead_req_data[sizeof(struct aead_request) +
->>>> +                               crypto_aead_reqsize(tfm) +
->>>> +                               CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
->>                                                       ^^^^^^^^^^^^^^^^^^^^
->> wouldn't the underlined attribute ensure the required alignment?
-> Yes. Sorry, I overlooked it.
->
-> I would remove unneeded CRYPTO_MINALIGN and get the alignment from the
-> target structure:
->          char aead_req_data[sizeof(struct aead_request) +
->                             crypto_aead_reqsize(tfm)]
->                  __attribute__((__aligned__(__alignof__(struct aead_request))));
-Even better. Will resubmit.
+On 28 February 2014 13:23, Luca Coelho <luca@coelho.fi> wrote:
 
-Behan
+[...]
 
--- 
-Behan Webster
-behanw@converseincode.com
+> +int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+> +                                 const struct cfg80211_chan_def *chandef)
+> +{
+> +       struct ieee80211_local *local = sdata->local;
+> +       struct ieee80211_chanctx_conf *conf;
+> +       struct ieee80211_chanctx *new_ctx, *curr_ctx;
+> +       int ret = 0;
+> +
+> +       mutex_lock(&local->chanctx_mtx);
+> +
+> +       conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+> +                                        lockdep_is_held(&local->chanctx_mtx));
+> +       if (!conf) {
+> +               ret = -EINVAL;
+> +               goto out;
+> +       }
+> +
+> +       curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+> +
+> +       /* try to find another context with the chandef we want */
+> +       new_ctx = ieee80211_find_chanctx(local, chandef,
+> +                                        IEEE80211_CHANCTX_SHARED);
 
+I find one thing puzzling -- why is ieee80211_find_chanctx() calling
+ieee80211_change_chanctx()? I don't think it makes sense. I can't
+understand why chanctx has two chandefs (isn't min_def enough
+already?).
+
+
+> +       /* TODO: we're assuming that the bandwidth of the context
+> +        * changes here, but in fact, it will only change if the
+> +        * combination of the channels used in this context change.
+> +        * We should set this flag according to what happens when
+> +        * ieee80211_recalc_chanctx_chantype() is called.  Maybe the
+> +        * nicest thing to do would be to change that function so that
+> +        * it returns changed flags (which will be either 0 or
+> +        * BSS_CHANGED_BANDWIDTH).
+> +        */
+
+I don't understand this. Either I'm missing something here or we had a
+misunderstanding earlier. It doesn't matter what chanctx width we end
+up with. What's important is the BSS width here and it's readily
+available to check & use.
+
+
+> +
+> +       if (sdata->vif.bss_conf.chandef.width != ctx->conf.def.width)
+> +               local_changed |= BSS_CHANGED_BANDWIDTH;
+
+This should use sdata->reserved_chandef.width instead of
+ctx->conf.def.width, shouldn't it?
+
+
+Michał
