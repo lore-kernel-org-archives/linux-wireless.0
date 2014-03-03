@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39191 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754457AbaC0QBR (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:45328 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598AbaCCQX0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 12:01:17 -0400
-Date: Thu, 27 Mar 2014 19:01:05 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Fariya Fatima <fariyaf@gmail.com>, kbuild@01.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [kbuild-all] [wireless-next:master 316/316]
- drivers/net/wireless/rsi/rsi_91x_debugfs.c:296 rsi_init_dbgfs() error:
- potential null dereference 'dev_dbgfs'. (kzalloc returns null)
-Message-ID: <20140327160105.GU7045@mwanda> (sfid-20140327_170129_627214_73FAEA59)
-References: <53275729.QHDAYltTUiN7HGNZ%fengguang.wu@intel.com>
- <20140327154507.GA27177@mwanda>
+	Mon, 3 Mar 2014 11:23:26 -0500
+Received: by mail-ee0-f54.google.com with SMTP id d49so900442eek.13
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 08:23:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140327154507.GA27177@mwanda>
+In-Reply-To: <20140303154327.1290.67278.stgit@potku.adurom.net>
+References: <20140303154327.1290.67278.stgit@potku.adurom.net>
+Date: Mon, 3 Mar 2014 17:23:24 +0100
+Message-ID: <CA+BoTQmQndikH5uPDwBpstp9KmcD3tmHSGP5NpEreYEOtRm0sw@mail.gmail.com> (sfid-20140303_172332_721364_B3AB0D1A)
+Subject: Re: [PATCH] ath10k: unify warning messages in mac.c
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 27, 2014 at 06:45:07PM +0300, Dan Carpenter wrote:
-> > drivers/net/wireless/rsi/rsi_91x_usb.c:289 rsi_usb_write_register_multiple() warn: '__min2' 4096 can't fit into 255 'transfer'
+On 3 March 2014 16:43, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Currently there are different styles used for warning messages, unify them to
+> look similar.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
 
-The code for this one is:
+[...]
 
-	transfer = min_t(int, count, 4096);
+This still seems inconsistent. I also don't like the capital letters
+(even for abbreviations) in these kind of messages, but that's just my
+OCD..
 
-It's complaining because "tranfers" is u8, but the cast to int always
-makes me worry negative values.  In this case, count is not user
-controlled so it's safe.  But that's a common security problem you
-should be aware of.  It's better to cast it to an unsigned value.
+I think we should agree on one of the two approaches:
 
-regards,
-dan carpenter
+a) start with a verb:
 
+"failed to add peer %pM on vdev %i: %d"
+"failed to initialize dfs pattern detector"
+"timed out while waiting for scan completion"
+
+b) start with a noun:
+
+"peer %pM on vdev %i could not be added: %d"
+"dfs pattern detector could not initialize"
+"scan timed out"
+
+These are still mixed.
+
+We could probably also limit the set of verbs, e.g. replace "could
+not" with "failed to" as it's practically the same thing (assuming we
+pick (a)).
+
+But then again, feel free to ignore my OCD :-)
+
+
+Michał
