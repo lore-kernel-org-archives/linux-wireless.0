@@ -1,47 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:50256 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235AbaCEX0Q (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:47975 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753760AbaCCH7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 18:26:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 1/3] rtlwifi: rtl8192ce: Handle unused switch case
-Date: Wed,  5 Mar 2014 17:25:59 -0600
-Message-Id: <1394061961-11682-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140306_002636_907128_50AB202A)
-In-Reply-To: <1394061961-11682-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1394061961-11682-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 3 Mar 2014 02:59:00 -0500
+Received: by mail-ob0-f177.google.com with SMTP id wo20so4052247obc.8
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2014 23:59:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
+References: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
+Date: Mon, 3 Mar 2014 15:59:00 +0800
+Message-ID: <CAKH5=LuaHTG40hMy3f-A9UcmCxkRxnfBvoYBzRbL5zfBAKmRJw@mail.gmail.com> (sfid-20140303_085904_997279_8D0C4247)
+Subject: Re: insmod: cannot insert `wl_high.ko': Success (17): Success ??
+From: Naughtboy <skylvlinux@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch prevents log spamming by adding a case for a previously
-unhandled case.
+yes  today i kwon it the reason  by accident
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+# insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+insmod: cannot insert `wl_high.ko': Success (17): Success
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index c6a3820..4ae51d5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -542,9 +542,11 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 						(u8 *)(&fw_current_inps));
- 			}
- 		break; }
-+	case HW_VAR_KEEP_ALIVE:
-+		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %d not processed\n", variable);
- 		break;
- 	}
- }
--- 
-1.8.4.5
 
+some reason caused by  wl.ko  (which  has arealdy insmod in the kernel )
+so  after  i just  rmmod wl.ko  ,insomd wl_high.ko it just ok !!!!
+so  i  change the bcm43236 code  to generate the diffrent moduels name
+  ,just slove it , thank you  erenoyone  !!
+
+
+# insmod bcm_usbshim.ko
+# insmod wl_high.ko
+bcm_rpc_up: waiting to be connected
+bcm_rpc_buf_recv_mgn_high: Reason: 0 Dongle Version: 0x571623e
+bcm_rpc_buf_recv_mgn_high: Connected!
+eth5: Broadcom BCMa8e4 802.11 Wireless Controller 5.113.98.62
+usbcore: registered new interface driver dbus_usbdev
+
+# lsmod
+Module                  Size  Used by
+wl_high 1350048 0 - Live 0xc045c000 (P)
+bcm_usbshim 2048 1 wl_high, Live 0xc0070000
+wl 1807408 0 - Live 0xc02a1000 (P)
+pktflow 41056 0 - Live 0xc0064000 (PF)
+
+
+
+
+
+
+--Naughtboy
+
+
+
+2014-02-20 19:19 GMT+08:00 Naughtboy <skylvlinux@gmail.com>:
+> i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
+> ,but here is some erros .....
+>
+> filename:       wl_high.ko
+> license:        Proprietary
+> alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
+> alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
+> depends:        bcm_usbshim
+> vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
+> parm:           oneonly:int
+> parm:           piomode:int
+> parm:           instance_base:int
+> parm:           nompc:int
+> parm:           name:string
+> parm:           nvram_path:string
+>
+> # insmod bcm_usbshim.ko    ----ok
+> but  insmod wl_high.ko occur error  .....    as the follow ..
+>
+> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+> insmod: cannot insert `wl_high.ko': Success (17): Success
+> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
+> insmod: cannot insert `wl_high.ko': Success (17): Success
+>
+>
+>
+>
+> any bigman  can do me a gudiance
+>
+> thank you
+> --Naughtboy
