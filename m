@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:45589 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752245AbaCaLp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:45:28 -0400
-Message-ID: <1396266320.6794.6.camel@dubbel> (sfid-20140331_134531_719164_BBA596C5)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Mon, 31 Mar 2014 14:45:20 +0300
-In-Reply-To: <1396259841-6359-5-git-send-email-michal.kazior@tieto.com>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:55353 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755073AbaCCVnI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2014 16:43:08 -0500
+Date: Mon, 03 Mar 2014 16:43:06 -0500 (EST)
+Message-Id: <20140303.164306.910146738456793917.davem@davemloft.net> (sfid-20140303_224318_091279_EF489315)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless 2014-03-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140303194432.GD26300@tuxdriver.com>
+References: <20140303194432.GD26300@tuxdriver.com>
 Mime-Version: 1.0
-Subject: Re: [PATCH v3 4/4] mac80211: disconnect iface if CSA unexpectedly
- fails
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
-> It doesn't make much sense to leave a cripled
-> interface running.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 3 Mar 2014 14:44:32 -0500
+
+> Please pull this batch of fixes intended for the 3.14 stream...
 > 
-> As a side effect this will unblock tx queues with
-> CSA reason immediately after failure instead of
-> until after userspace requests interface to stop.
+> For the mac80211 bits, Johannes says:
 > 
-> This also gives userspace an opportunity to
-> indirectly see CSA failure.
+> "This time I have a fix to get out of an 'infinite error state' in case
+> regulatory domain updates failed and two fixes for VHT associations: one
+> to not disconnect immediately when the AP uses more bandwidth than the
+> new regdomain would allow after a change due to association country
+> information getting used, and one for an issue in the code where
+> mac80211 doesn't correctly ignore a reserved field and then uses an HT
+> instead of VHT association."
 > 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
+> For the iwlwifi bits, Emmanuel says:
+> 
+> "Johannes fixes a long standing bug in the AMPDU status reporting.
+> Max fixes the listen time which was way too long and causes trouble
+> to several APs."
+> 
+> Along with those, Bing Zhao marks the mwifiex_usb driver as _not_
+> supporting USB autosuspend after a number of problems with that have
+> been reported.
+> 
+> Please let me know if there are problems!
 
-[...]
-
-> @@ -3100,7 +3100,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->  	sdata->radar_required = sdata->csa_radar_required;
->  	err = ieee80211_vif_change_channel(sdata, &changed);
->  	if (WARN_ON(err < 0))
-> -		return;
-> +		return err;
-
-Didn't we agree to remove the WARN_ON() from here?
-
---
-Luca.
-
+Pulled, thanks John.
