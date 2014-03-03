@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:60575 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756193AbaCSJGe (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:55443 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbaCCJ5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 05:06:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
-References: <20140313082431.10798.10888.stgit@potku.adurom.net>
-Date: Wed, 19 Mar 2014 11:06:19 +0200
-In-Reply-To: <20140313082431.10798.10888.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Thu, 13 Mar 2014 10:24:31 +0200")
-Message-ID: <87pplih81g.fsf@kamboji.qca.qualcomm.com> (sfid-20140319_100640_488791_59515205)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 3 Mar 2014 04:57:14 -0500
+Message-ID: <1393840630.13669.82.camel@dubbel> (sfid-20140303_105721_687690_7850629B)
+Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Mon, 03 Mar 2014 11:57:10 +0200
+In-Reply-To: <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
+References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
+	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
+	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
+	 <1393589841.13669.32.camel@dubbel>
+	 <CA+BoTQmaF+johnB5ia+ez5dFKYPWWwk7E=482Q3hzLv=YvZAvQ@mail.gmail.com>
+	 <1393594886.13669.47.camel@dubbel>
+	 <CA+BoTQkafvtCDU5LkDcyVonO2T=koaBCWABzSQmnDOXJh=AvDA@mail.gmail.com>
+	 <1393597923.13669.65.camel@dubbel>
+	 <CA+BoTQk=YLd+bur3HkJ5jwrT-EYKMF8+nzJSX+bJP_psesuE5g@mail.gmail.com>
+	 <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Hi Michał,
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+I had a new idea.
 
-> From: Marek Puzyniak <marek.puzyniak@tieto.com>
->
-> Command WMI_FORCE_FW_HANG_CMDID is not supported in firmware 10.1.
-> In order to have firmware crash simulation functionality also
-> in firmware 10.1 driver can force firmware crash by performing not allowed
-> operation. Driver can deliberately crash firmware when setting vdev param for
-> vdev id out of range.  This patch introduces two keywords to simulate_fw_crash:
->
-> 'soft' which will cause firmware crash that is recoverable
->        by warm firmware reset but supported only in main firmware.
-> 'hard' which will cause firmware crash recoverable by cold
->        firmware reset, this option works for both firmwares.
->
-> Commands to trigger firmware soft/hard crash:
->
-> echo 'soft' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
-> echo 'hard' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
->
-> kvalo: use strncmp(), remove '\n' before checking the command and
-> document how buf is null terminated
->
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-[...]
+On Fri, 2014-02-28 at 17:31 +0200, Luca Coelho wrote:
+> But seriously, I'm almost fully convinced your approach is better. I'll try to spin without the RESERVED mode.
+> 
+> But that probably will only happened Monday, because I'm already spinning down for the weekend.
 
-> @@ -479,14 +488,30 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
->  		goto exit;
->  	}
->  
-> -	ath10k_info("simulating firmware crash\n");
-> +	/* drop the possible '\n' from the end */
-> +	if (buf[count - 1] == '\n') {
-> +		buf[count - 1] = 0;
-> +		count--;
-> +	}
->  
-> -	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
-> -	if (ret)
-> -		ath10k_warn("failed to force fw hang (%d)\n", ret);
-> +	if (!strncmp(buf, "soft", sizeof(buf))) {
-> +		ath10k_info("simulating soft firmware crash\n");
-> +		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
-> +	} else if (!strncmp(buf, "hard", sizeof(buf))) {
-> +		ath10k_info("simulating hard firmware crash\n");
-> +		ret = ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
-> +					ar->wmi.vdev_param->rts_threshold, 0);
-> +	} else {
-> +		ret = -EINVAL;
-> +		goto exit;
-> +	}
+What about this: when we are reserving the chanctx, even if we're the
+only ones in it (and thus will change it on-the-fly), we increase the
+refcount.  This means that we would have refcount == 2, even though
+we're the only users, but that's aligned with what happens when we
+reserve a different chanctx.
 
-Fengguan's buildbot got warnings here and I assume they are coming from
-smatch:
+When we use the reservation, we do exactly the same thing as if we were
+moving to a new chanctx, but add a intermediate step where we check if
+the old ctx has refcount 0, in which case we change its channel:
 
-drivers/net/wireless/ath/ath10k/debug.c:500 ath10k_write_simulate_fw_crash() error: strncmp() '"hard"' too small (5 vs 32)
-drivers/net/wireless/ath/ath10k/debug.c:497 ath10k_write_simulate_fw_crash() error: strncmp() '"soft"' too small (5 vs 32)
+Reserving our own chanctx for future change:
 
-I wanted to use strncmp() instead of strcmp(), but I'm not sure what to
-do here. In my opinion it's guaranteed that the string "hard" is null
-terminated, so it shouldn't matter even if strlen("soft") (5) is less
-than sizeof(buf) (32), right? Or am I missing something here?
+1. new_ctx = old_ctx;
+2. increase new_ctx.refcount (new.refcount == 2, old.refcount == 2);
 
--- 
-Kalle Valo
+
+Using the reservation:
+
+1. unassign the vif from the old chanctx (old.refcount == 1,
+new.refcount == 1);
+2. we decrease the refcount of the new chanctx (new.refcount == 0,
+old.refcount == 0);
+3. if (old.refcount == 0) means we were the only user, change channel;
+4. we assign ourselves to the new chanctx (new.refcount == 1 again);
+
+
+This would make this whole thing pretty generic with only one extra if
+for the on-the-fly chanctx change case.
+
+If more vifs came and are changing the chanctx at the same time, it will
+be fine too because the channel will only change when the last reserver
+uses the reservation.
+
+Does this make sense?
+
+--
+Luca.
+
