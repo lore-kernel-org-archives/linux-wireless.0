@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:64218 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755036AbaCSInU (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbaCCNKf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:43:20 -0400
-Received: by mail-ig0-f180.google.com with SMTP id hl1so11082050igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:43:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-4-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
-	<CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com>
-Date: Wed, 19 Mar 2014 10:43:19 +0200
-Message-ID: <CAB3XZEckstWFB-2CmWg7JeoyT0bTUgSh5bXqZxADUHiurZgnhw@mail.gmail.com> (sfid-20140319_094325_823102_1F4593B6)
-Subject: Re: [RFC 03/21] mac80211: add max channel calculation utility function
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 3 Mar 2014 08:10:35 -0500
+Message-ID: <1393852231.10039.4.camel@jlt4.sipsolutions.net> (sfid-20140303_141037_812870_218F1196)
+Subject: Re: [PATCH 1/3] cfg80211: allow reprocessing of pending requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org, linux@eikelenboom.it
+Date: Mon, 03 Mar 2014 14:10:31 +0100
+In-Reply-To: <1393376982-28276-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20140226_020956_981992_D01A2AD2)
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1393376982-28276-2-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20140226_020956_981992_D01A2AD2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 10:32 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 18 March 2014 17:17, Eliad Peller <eliad@wizery.com> wrote:
->> hi,
->>
->> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> The utility function has no uses yet. It is aimed
->>> at future chanctx reservation management and
->>> channel switching.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>> ---
->> [...]
->>
->>> +int ieee80211_max_num_channels(struct ieee80211_local *local)
->>> +{
->>> +       struct ieee80211_sub_if_data *sdata;
->>> +       int num[NUM_NL80211_IFTYPES] = {};
->>> +       struct ieee80211_chanctx *ctx;
->>> +       int num_different_channels = 0;
->>> +       u8 radar_detect = 0;
->>> +       u32 max_num_different_channels = 1;
->>> +       int err;
->>> +
->>> +       lockdep_assert_held(&local->chanctx_mtx);
->>> +
->>> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
->>> +               num_different_channels++;
->>> +
->> this doesn't seem correct - i think we can have multiple channel
->> contexts with the same channel (e.g. due to exclusive mode)?
->
-> Hmm, does it even make sense to consider chanctx mode here?
->
-i don't think you should consider the chancx mode, but keep track of
-the used channels.
-if you have 2 different channel contexts with the same channel (e.g.
-due to exclusive mode), you have to make sure you don't count the same
-channel twice. you shouldn't care about the actual reason for it.
+On Tue, 2014-02-25 at 17:09 -0800, Luis R. Rodriguez wrote:
+> In certain situations we want to trigger reprocessing
+> of the last regulatory hint. One situation in which
+> this makes sense is the case where the cfg80211 was
+> built-in to the kernel, CFG80211_INTERNAL_REGDB was not
+> enabled and the CRDA binary is on a partition not availble
+> during early boot. In such a case we want to be able to
+> re-process the same request at some other point.
+> 
+> When we are asked to re-process the same request we need
+> to be careful to not kfree it, addresses that.
 
-Eliad.
+This looks OK, I've applied it, but I've renamed the function since it
+no longer has anything to do with the last request.
+
+johannes
+
+
