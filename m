@@ -1,142 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:36346 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbaCaLnF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51252 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753360AbaCCNMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:43:05 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hm4so3127877wib.8
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:03 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 01/13] cfg80211: allow drivers to iterate over matching combinations
-Date: Mon, 31 Mar 2014 12:39:19 +0200
-Message-Id: <1396262371-6466-2-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134311_623572_B60AA53C)
-In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
- <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 3 Mar 2014 08:12:34 -0500
+Message-ID: <1393852350.10039.7.camel@jlt4.sipsolutions.net> (sfid-20140303_141236_994932_FAF01466)
+Subject: Re: [PATCH v3] cfg80211: processing regulatory requests on netdev
+ notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 03 Mar 2014 14:12:30 +0100
+In-Reply-To: <1393447080-9783-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140226_213810_729280_C247C384)
+References: <1393447080-9783-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20140226_213810_729280_C247C384)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch splits cfg80211_check_combinations()
-into an iterator function and a simple iteration
-user.
+On Wed, 2014-02-26 at 12:38 -0800, Luis R. Rodriguez wrote:
+> This adds a trigger to review any pending regulatory
+> requests whenever an 802.11 device interface is brought
+> down or up. We use this as an opportunistic trigger
+> for checking the regulatory work queues as otherwise
+> they they're only checked upon an initial regulatory
+> request or when beacon hints are found.
+> 
+> This opportunistic mechanism can be used to trigger
+> kicking the queues regulatory queues at any time from
+> userspace without having to change the regulatory state.
+> 
+> A timer just waiting upon init is not that appropriate
+> as when it should be triggered will depend on systems,
+> a much better approach is to use and add opportunistic
+> triggers. The interface coming up is typically a good
+> indicator that filesystems have been mounted since
+> firmware is required for some devices.
 
-This makes it possible for drivers to asses how
-many channels can use given iftype setup. This in
-turn can be used for future
-multi-interface/multi-channel channel switching.
+I still don't like it. You have a problem in the regulatory code and
+work around it by hooking into random parts of the other code - can't
+you fix it properly in the regulatory code?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
- net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 64 insertions(+), 7 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b4ea653..af26751 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4730,6 +4730,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 gfp_t gfp);
- 
-+/**
-+ * cfg80211_iter_combinations - iterate over matching combinations
-+ *
-+ * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
-+ * @iter: function to call for each matching combination
-+ * @data: pointer to pass to iter function
-+ *
-+ * This function can be called by the driver to check what possible
-+ * combinations it fits in at a given moment, e.g. for channel switching
-+ * purposes.
-+ */
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 31b93b9..f9928f2 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1250,10 +1250,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
--int cfg80211_check_combinations(struct wiphy *wiphy,
--				const int num_different_channels,
--				const u8 radar_detect,
--				const int iftype_num[NUM_NL80211_IFTYPES])
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data)
- {
- 	int i, j, iftype;
- 	int num_interfaces = 0;
-@@ -1310,13 +1313,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- 		/* This combination covered all interface types and
- 		 * supported the requested numbers, so we're good.
- 		 */
--		kfree(limits);
--		return 0;
-+
-+		(*iter)(c, data);
-  cont:
- 		kfree(limits);
- 	}
- 
--	return -EBUSY;
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_iter_combinations);
-+
-+static void
-+cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
-+			  void *data)
-+{
-+	int *num = data;
-+	(*num)++;
-+}
-+
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int err, num = 0;
-+
-+	err = cfg80211_iter_combinations(wiphy, num_different_channels,
-+					 radar_detect, iftype_num,
-+					 cfg80211_iter_sum_ifcombs, &num);
-+	if (err)
-+		return err;
-+	if (num == 0)
-+		return -EBUSY;
-+
-+	return 0;
- }
- EXPORT_SYMBOL(cfg80211_check_combinations);
- 
--- 
-1.8.5.3
+johannes
 
