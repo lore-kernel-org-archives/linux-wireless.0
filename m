@@ -1,25 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm27-vm2.bullet.mail.sg3.yahoo.com ([106.10.151.129]:25888 "EHLO
-	nm27-vm2.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753424AbaCaOmZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 10:42:25 -0400
-Message-ID: <1396276552.27791.YahooMailBasic@web193503.mail.sg3.yahoo.com> (sfid-20140331_164230_929160_88619BBD)
-Date: Mon, 31 Mar 2014 22:35:52 +0800 (SGT)
-From: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Subject: Impact of migration from compat wireless to backports
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from packetmixer.de ([79.140.42.25]:55036 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754588AbaCCQXR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Mar 2014 11:23:17 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [net-next v4 1/3] if_ether.h: add IEEE 802.21 Ethertype
+Date: Mon,  3 Mar 2014 17:23:10 +0100
+Message-Id: <1393863792-18172-2-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172343_236672_EF27DDED)
+In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Mr.Adrian, Mr.Sujith & others,
-       We have been asked to migrate from Compat wireless 3.1.1 to backports. When i took the differences with the latest version (3.13.2 backports) and  compat wireless 3.1.1, there were huge differences in files. From AR9287 BT Wifi 2/3 wire coexistence are there any differences in migrating to backports as I might need to restart from scratch all the efforts?
-Please share if any of you had any issues.
-Thanks & regards
-Sandeep.
+Add the Ethertype for IEEE Std 802.21 - Media Independent Handover
+Protocol. This Ethertype is used for network control messages.
+
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ include/uapi/linux/if_ether.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
+index ba8b15f..750ba67 100644
+--- a/include/uapi/linux/if_ether.h
++++ b/include/uapi/linux/if_ether.h
+@@ -89,6 +89,7 @@
+ #define ETH_P_FCOE	0x8906		/* Fibre Channel over Ethernet  */
+ #define ETH_P_TDLS	0x890D          /* TDLS */
+ #define ETH_P_FIP	0x8914		/* FCoE Initialization Protocol */
++#define ETH_P_80221	0x8917		/* IEEE 802.21 Media Independent Handover Protocol */
+ #define ETH_P_QINQ1	0x9100		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+ #define ETH_P_QINQ2	0x9200		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+ #define ETH_P_QINQ3	0x9300		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+-- 
+1.7.10.4
+
