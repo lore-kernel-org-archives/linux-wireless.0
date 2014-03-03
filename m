@@ -1,80 +1,887 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24106 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514AbaCQNel (ORCPT
+Received: from mail.redpinesignals.com ([203.196.161.92]:9680 "EHLO
+	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753541AbaCCI0G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:34:41 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 01/21] wil6210: Helpers to deal with 'cidxtid' fields
-Date: Mon, 17 Mar 2014 15:34:05 +0200
-Message-ID: <1395063265-6522-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143453_754422_A42B56F0)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 3 Mar 2014 03:26:06 -0500
+Received: from [192.168.40.2] ([192.168.40.2])
+	(authenticated user fariya.f@redpinesignals.com)
+	by mail.redpinesignals.com
+	for linux-wireless@vger.kernel.org;
+	Mon, 3 Mar 2014 13:56:02 +0530
+Message-ID: <53143C44.4070305@redpinesignals.com> (sfid-20140303_092610_886813_D58B6849)
+Date: Mon, 03 Mar 2014 13:54:36 +0530
+From: Fariya Fatima <fariya.f@redpinesignals.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.14.0-rc5 v3 9/10] rsi: SDIO functionality
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Encode/decode helpers
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+From: Fariya Fatima
+
+This patch add the rsi_sdio module, enabling SDIO interface
+for the 91x chipsets.
+
+Signed-off-by: Fariya Fatima <fariya.f@redpinesignals.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c    |  2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h | 25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 092081e..7afaa5e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -588,7 +588,7 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
- 				.ring_size = cpu_to_le16(size),
- 			},
- 			.ringid = id,
--			.cidxtid = (cid & 0xf) | ((tid & 0xf) << 4),
-+			.cidxtid = mk_cidxtid(cid, tid),
- 			.encap_trans_type = WMI_VRING_ENC_TYPE_802_3,
- 			.mac_ctrl = 0,
- 			.to_resolution = 0,
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 980dccc..273d00f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -125,6 +125,31 @@ struct RGF_ICR {
- 
- /* Hardware definitions end */
- 
+ rsi_91x_sdio.c |  847 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 847 insertions(+)
+
+diff -rupN linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_sdio.c linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_sdio.c
+--- linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_sdio.c	1970-01-01 05:30:00.000000000 +0530
++++ linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_sdio.c	2014-03-04 07:38:00.124744420 +0545
+@@ -0,0 +1,847 @@
 +/**
-+ * mk_cidxtid - construct @cidxtid field
-+ * @cid: CID value
-+ * @tid: TID value
++ * Copyright (c) 2014 Redpine Signals Inc.
 + *
-+ * @cidxtid field encoded as bits 0..3 - CID; 4..7 - TID
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
 + */
-+static inline u8 mk_cidxtid(u8 cid, u8 tid)
++
++#include <linux/module.h>
++#include "rsi_sdio.h"
++#include "rsi_common.h"
++
++/**
++ * This function prepares cmd 52 read/write arg
++ *
++ * @param  rw Read/write
++ * @param  func function number
++ * @param  raw indicates whether to perform read after write
++ * @param  address address to which to read/write
++ * @param  writedata data to write
++ * @return argument
++ */
++static u32 rsi_sdio_set_cmd52_arg(bool rw,
++				  u8 func,
++				  u8 raw,
++				  u32 address,
++				  u8 writedata)
 +{
-+	return ((tid & 0xf) << 4) | (cid & 0xf);
++	return ((rw & 1) << 31) | ((func & 0x7) << 28) |
++		((raw & 1) << 27) | (1 << 26) |
++		((address & 0x1FFFF) << 9) | (1 << 8) |
++		(writedata & 0xFF);
 +}
 +
 +/**
-+ * parse_cidxtid - parse @cidxtid field
-+ * @cid: store CID value here
-+ * @tid: store TID value here
++ * This function issues cmd52 byte write onto the card.
 + *
-+ * @cidxtid field encoded as bits 0..3 - CID; 4..7 - TID
++ * @param  card Pointer to the mmc_card.
++ * @param  address Address to write.
++ * @param  byte Data to write.
++ * @return Write status.
 + */
-+static inline void parse_cidxtid(u8 cidxtid, u8 *cid, u8 *tid)
++static int rsi_cmd52writebyte(struct mmc_card *card,
++			      u32 address,
++			      u8 byte)
 +{
-+	*cid = cidxtid & 0xf;
-+	*tid = (cidxtid >> 4) & 0xf;
++	struct mmc_command io_cmd;
++	u32 arg;
++
++	memset(&io_cmd, 0, sizeof(io_cmd));
++	arg = rsi_sdio_set_cmd52_arg(1, 0, 0, address, byte);
++	io_cmd.opcode = SD_IO_RW_DIRECT;
++	io_cmd.arg = arg;
++	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
++
++	return mmc_wait_for_cmd(card->host, &io_cmd, 0);
 +}
 +
- struct wil6210_mbox_ring {
- 	u32 base;
- 	u16 entry_size; /* max. size of mbox entry, incl. all headers */
--- 
-1.8.3.2
++/**
++ * This function issues cmd52 byte read onto the card.
++ *
++ * @param  card Pointer to the mmc_card.
++ * @param  address Address to read from.
++ * @param  byte Variable to store read value.
++ * @return Read status.
++ */
++static int rsi_cmd52readbyte(struct mmc_card *card,
++			     u32 address,
++			     u8 *byte)
++{
++	struct mmc_command io_cmd;
++	u32 arg;
++	int err;
++
++	memset(&io_cmd, 0, sizeof(io_cmd));
++	arg = rsi_sdio_set_cmd52_arg(0, 0, 0, address, 0);
++	io_cmd.opcode = SD_IO_RW_DIRECT;
++	io_cmd.arg = arg;
++	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
++
++	err = mmc_wait_for_cmd(card->host, &io_cmd, 0);
++	if ((!err) && (byte))
++		*byte =  io_cmd.resp[0] & 0xFF;
++	return err;
++}
++
++/**
++ * This function issues sdio commands.
++ *
++ * @param  func Pointer to the sdio_func structure.
++ * @param  opcode Opcode value.
++ * @param  arg Arguments to pass.
++ * @param  flags Flags which are set.
++ * @param  resp Pointer to store response.
++ * @return err: command status as 0 or -1.
++ */
++static int rsi_issue_sdiocommand(struct sdio_func *func,
++				 u32 opcode,
++				 u32 arg,
++				 u32 flags,
++				 u32 *resp)
++{
++	struct mmc_command cmd;
++	struct mmc_host *host;
++	int err;
++
++	host = func->card->host;
++
++	memset(&cmd, 0, sizeof(struct mmc_command));
++	cmd.opcode = opcode;
++	cmd.arg = arg;
++	cmd.flags = flags;
++	err = mmc_wait_for_cmd(host, &cmd, 3);
++
++	if ((!err) && (resp))
++		*resp = cmd.resp[0];
++
++	return err;
++}
++
++/**
++ * This function is called upon the occurence of an interrupt.
++ *
++ * @param  function Pointer to the sdio_func structure.
++ * @return None.
++ */
++static void rsi_handle_interrupt(struct sdio_func *function)
++{
++	struct rsi_hw *adapter = sdio_get_drvdata(function);
++
++	sdio_release_host(function);
++	rsi_interrupt_handler(adapter);
++	sdio_claim_host(function);
++
++	return;
++}
++
++/**
++ * This function resets and re-initializes the card.
++ *
++ * @param  pfunction Pointer to the sdio_func structure.
++ * @return None.
++ */
++static void rsi_reset_card(struct sdio_func *pfunction)
++{
++	int ret = 0;
++	int err;
++	struct mmc_card *card = pfunction->card;
++	struct mmc_host *host = card->host;
++	s32 bit = (fls(host->ocr_avail) - 1);
++	u8 cmd52_resp;
++	u32 clock, resp, i;
++	u16 rca;
++
++	/* Reset 9110 chip */
++	ret = rsi_cmd52writebyte(pfunction->card,
++				 SDIO_CCCR_ABORT,
++				 (1 << 3));
++
++	/* Card will not send any response as it is getting reset immediately
++	 * Hence expect a timeout status from host controller
++	 */
++	if (ret != -ETIMEDOUT)
++		rsi_dbg(ERR_ZONE, "%s: Reset failed : %d\n", __func__, ret);
++
++	/* Wait for few milli seconds to get rid of residue charges if any */
++	msleep(20);
++
++	/* Initialize the SDIO card */
++	host->ios.vdd = bit;
++	host->ios.chip_select = MMC_CS_DONTCARE;
++	host->ios.bus_mode = MMC_BUSMODE_OPENDRAIN;
++	host->ios.power_mode = MMC_POWER_UP;
++	host->ios.bus_width = MMC_BUS_WIDTH_1;
++	host->ios.timing = MMC_TIMING_LEGACY;
++	host->ops->set_ios(host, &host->ios);
++
++	/*
++	 * This delay should be sufficient to allow the power supply
++	 * to reach the minimum voltage.
++	 */
++	msleep(20);
++
++	host->ios.clock = host->f_min;
++	host->ios.power_mode = MMC_POWER_ON;
++	host->ops->set_ios(host, &host->ios);
++
++	/*
++	 * This delay must be at least 74 clock sizes, or 1 ms, or the
++	 * time required to reach a stable voltage.
++	 */
++	msleep(20);
++
++	/* Issue CMD0. Goto idle state */
++	host->ios.chip_select = MMC_CS_HIGH;
++	host->ops->set_ios(host, &host->ios);
++	msleep(20);
++	err = rsi_issue_sdiocommand(pfunction,
++				    MMC_GO_IDLE_STATE,
++				    0,
++				    (MMC_RSP_NONE | MMC_CMD_BC),
++				    NULL);
++	host->ios.chip_select = MMC_CS_DONTCARE;
++	host->ops->set_ios(host, &host->ios);
++	msleep(20);
++	host->use_spi_crc = 0;
++
++	if (err)
++		rsi_dbg(ERR_ZONE, "%s: CMD0 failed : %d\n", __func__, err);
++
++	if (!host->ocr_avail) {
++		/* Issue CMD5, arg = 0 */
++		err = rsi_issue_sdiocommand(pfunction,
++					    SD_IO_SEND_OP_COND,
++					    0,
++					    (MMC_RSP_R4 | MMC_CMD_BCR),
++					    &resp);
++		if (err)
++			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
++				__func__, err);
++		host->ocr_avail = resp;
++	}
++
++	/* Issue CMD5, arg = ocr. Wait till card is ready  */
++	for (i = 0; i < 100; i++) {
++		err = rsi_issue_sdiocommand(pfunction,
++					    SD_IO_SEND_OP_COND,
++					    host->ocr_avail,
++					    (MMC_RSP_R4 | MMC_CMD_BCR),
++					    &resp);
++		if (err) {
++			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
++				__func__, err);
++			break;
++		}
++
++		if (resp & MMC_CARD_BUSY)
++			break;
++		msleep(20);
++	}
++
++	if ((i == 100) || (err)) {
++		rsi_dbg(ERR_ZONE, "%s: card in not ready : %d %d\n",
++			__func__, i, err);
++		return;
++	}
++
++	/* Issue CMD3, get RCA */
++	err = rsi_issue_sdiocommand(pfunction,
++				    SD_SEND_RELATIVE_ADDR,
++				    0,
++				    (MMC_RSP_R6 | MMC_CMD_BCR),
++				    &resp);
++	if (err) {
++		rsi_dbg(ERR_ZONE, "%s: CMD3 failed : %d\n", __func__, err);
++		return;
++	}
++	rca = resp >> 16;
++	host->ios.bus_mode = MMC_BUSMODE_PUSHPULL;
++	host->ops->set_ios(host, &host->ios);
++
++	/* Issue CMD7, select card  */
++	err = rsi_issue_sdiocommand(pfunction,
++				    MMC_SELECT_CARD,
++				    (rca << 16),
++				    (MMC_RSP_R1 | MMC_CMD_AC),
++				    NULL);
++	if (err) {
++		rsi_dbg(ERR_ZONE, "%s: CMD7 failed : %d\n", __func__, err);
++		return;
++	}
++
++	/* Enable high speed */
++	if (card->host->caps & MMC_CAP_SD_HIGHSPEED) {
++		rsi_dbg(ERR_ZONE, "%s: Set high speed mode\n", __func__);
++		err = rsi_cmd52readbyte(card, SDIO_CCCR_SPEED, &cmd52_resp);
++		if (err) {
++			rsi_dbg(ERR_ZONE, "%s: CCCR speed reg read failed: %d\n",
++				__func__, err);
++			card->state &= ~MMC_STATE_HIGHSPEED;
++		} else {
++			err = rsi_cmd52writebyte(card,
++						 SDIO_CCCR_SPEED,
++						 (cmd52_resp | SDIO_SPEED_EHS));
++			if (err) {
++				rsi_dbg(ERR_ZONE,
++					"%s: CCR speed regwrite failed %d\n",
++					__func__, err);
++				return;
++			}
++			mmc_card_set_highspeed(card);
++			host->ios.timing = MMC_TIMING_SD_HS;
++			host->ops->set_ios(host, &host->ios);
++		}
++	}
++
++	/* Set clock */
++	if (mmc_card_highspeed(card))
++		clock = 50000000;
++	else
++		clock = card->cis.max_dtr;
++
++	if (clock > host->f_max)
++		clock = host->f_max;
++
++	host->ios.clock = clock;
++	host->ops->set_ios(host, &host->ios);
++
++	if (card->host->caps & MMC_CAP_4_BIT_DATA) {
++		/* CMD52: Set bus width & disable card detect resistor */
++		err = rsi_cmd52writebyte(card,
++					 SDIO_CCCR_IF,
++					 (SDIO_BUS_CD_DISABLE |
++					  SDIO_BUS_WIDTH_4BIT));
++		if (err) {
++			rsi_dbg(ERR_ZONE, "%s: Set bus mode failed : %d\n",
++				__func__, err);
++			return;
++		}
++		host->ios.bus_width = MMC_BUS_WIDTH_4;
++		host->ops->set_ios(host, &host->ios);
++	}
++	return;
++}
++
++/**
++ * This function sets the clock frequency
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  freq Clock frequency.
++ * @return 0 on success.
++ */
++static int rsi_setclock(struct rsi_hw *adapter, u32 freq)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	struct mmc_host *host = dev->pfunction->card->host;
++	u32 clock;
++
++	clock = freq * 1000;
++	if (clock > host->f_max)
++		clock = host->f_max;
++	host->ios.clock = clock;
++	host->ops->set_ios(host, &host->ios);
++	return 0;
++}
++
++/**
++ * This function sets the host block length.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  length Block length to be set.
++ * @return status: 0 on success, -1 on failure.
++ */
++static int rsi_setblocklength(struct rsi_hw *adapter, u32 length)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	int status;
++	rsi_dbg(INIT_ZONE, "%s: Setting the block length\n", __func__);
++
++	status = sdio_set_block_size(dev->pfunction, length);
++	dev->pfunction->max_blksize = 256;
++
++	rsi_dbg(INFO_ZONE,
++		"%s: Operational blk length is %d\n", __func__, length);
++	return status;
++}
++
++/**
++ * This function queries and sets the card's features.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @return status: 0 on success, -1 on failure.
++ */
++static int rsi_setupcard(struct rsi_hw *adapter)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	int status = 0;
++
++	if (rsi_setclock(adapter, 50000)) {
++		rsi_dbg(INFO_ZONE,
++			"%s: Unsuccessful at setting clk\n", __func__);
++		return -1;
++	}
++
++	dev->tx_blk_size = 256;
++	status = rsi_setblocklength(adapter, dev->tx_blk_size);
++	if (status)
++		rsi_dbg(ERR_ZONE,
++			"%s: Unable to set block length\n", __func__);
++	return status;
++}
++
++static int rsi_init_sdio_interface(struct rsi_hw *adapter,
++				   struct sdio_func *pfunction)
++{
++	struct rsi_91x_sdiodev *rsi_91x_dev;
++	int status = -1;
++
++	rsi_91x_dev = kzalloc(sizeof(*rsi_91x_dev), GFP_KERNEL);
++	if (!rsi_91x_dev)
++		return status;
++
++	adapter->rsi_dev = rsi_91x_dev;
++
++	sdio_claim_host(pfunction);
++
++	pfunction->enable_timeout = 100;
++	status = sdio_enable_func(pfunction);
++	if (status) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to enable interface\n", __func__);
++		sdio_release_host(pfunction);
++		return status;
++	}
++
++	rsi_dbg(INIT_ZONE, "%s: Enabled the interface\n", __func__);
++
++	rsi_91x_dev->pfunction = pfunction;
++	adapter->device = &pfunction->dev;
++
++	sdio_set_drvdata(pfunction, adapter);
++
++	status = rsi_setupcard(adapter);
++	if (status) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to setup card\n", __func__);
++		goto fail;
++	}
++
++	rsi_dbg(INIT_ZONE, "%s: Setup card succesfully\n", __func__);
++
++	status = rsi_init_sdio_slave_regs(adapter);
++	if (status) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to init slave regs\n", __func__);
++		goto fail;
++	}
++	sdio_release_host(pfunction);
++
++	adapter->host_intf_write_pkt = rsi_host_intf_write_pkt;
++	adapter->host_intf_read_pkt = rsi_host_intf_read_pkt;
++	adapter->determine_event_timeout = rsi_determine_event_timeout;
++	adapter->check_hw_queue_status = rsi_read_buffer_status_register;
++
++#ifdef CONFIG_RSI_DEBUGFS
++	adapter->num_debugfs_entries = MAX_DEBUGFS_ENTRIES;
++#endif
++	return status;
++fail:
++	sdio_disable_func(pfunction);
++	sdio_release_host(pfunction);
++	return status;
++}
++
++/**
++ * This function reads one byte of information from a register.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  addr Address of the register.
++ * @param  data Pointer to the data that stores the data read.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_read_register(struct rsi_hw *adapter,
++		      u32 addr,
++		      u8 *data)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	u8 fun_num = 0;
++	int status;
++
++	sdio_claim_host(dev->pfunction);
++
++	if (fun_num == 0)
++		*data = sdio_f0_readb(dev->pfunction, addr, &status);
++	else
++		*data = sdio_readb(dev->pfunction, addr, &status);
++
++	sdio_release_host(dev->pfunction);
++
++	return status;
++}
++
++/**
++ * This function writes one byte of information into a register.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  function Function Number.
++ * @param  addr Address of the register.
++ * @param  data Pointer to the data tha has to be written.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_write_register(struct rsi_hw *adapter,
++		       u8 function,
++		       u32 addr,
++		       u8 *data)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	int status = 0;
++
++	sdio_claim_host(dev->pfunction);
++
++	if (function == 0)
++		sdio_f0_writeb(dev->pfunction, *data, addr, &status);
++	else
++		sdio_writeb(dev->pfunction, *data, addr, &status);
++
++	sdio_release_host(dev->pfunction);
++
++	return status;
++}
++
++/**
++ * This function acks the interrupt received.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  int_bit Interrupt bit to write into register.
++ * @return Void.
++ */
++void rsi_ack_interrupt(struct rsi_hw *adapter, u8 int_bit)
++{
++	int status;
++	status = rsi_write_register(adapter,
++				    1,
++				    (SDIO_FUN1_INTR_CLR_REG |
++				     RSI_SD_REQUEST_MASTER),
++				    &int_bit);
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: unable to send ack\n", __func__);
++	return;
++}
++
++
++
++/**
++ * This function read multiple bytes of information from the SD card.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  addr Address of the register.
++ * @param  count Number of multiple bytes to be read.
++ * @param  data Pointer to the read data.
++ * @return 0 on success, -1 on failure.
++ */
++static int rsi_read_register_multiple(struct rsi_hw *adapter,
++				      u32 addr,
++				      u32 count,
++				      u8 *data)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	u32 status;
++
++	sdio_claim_host(dev->pfunction);
++
++	status =  sdio_readsb(dev->pfunction, data, addr, count);
++
++	sdio_release_host(dev->pfunction);
++
++	if (status != 0)
++		rsi_dbg(ERR_ZONE, "%s: Synch Cmd53 read failed\n", __func__);
++	return status;
++}
++
++/**
++ * This function writes multiple bytes of information to the SD card.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  addr Address of the register.
++ * @param  Pointer to the data that has to be written.
++ * @param  count Number of multiple bytes to be written.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_write_register_multiple(struct rsi_hw *adapter,
++				u32 addr,
++				u8 *data,
++				u32 count)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	int status = 0;
++
++	if (dev->write_fail > 1) {
++		rsi_dbg(ERR_ZONE, "%s: Stopping card writes\n", __func__);
++		return 0;
++	} else if (dev->write_fail == 1) {
++		/**
++		 * Assuming it is a CRC failure, we want to allow another
++		 *  card write
++		 */
++		rsi_dbg(ERR_ZONE, "%s: Continue card writes\n", __func__);
++		dev->write_fail++;
++	}
++
++	sdio_claim_host(dev->pfunction);
++
++	status = sdio_writesb(dev->pfunction, addr, data, count);
++
++	sdio_release_host(dev->pfunction);
++
++	if (status) {
++		rsi_dbg(ERR_ZONE, "%s: Synch Cmd53 write failed %d\n",
++			__func__, status);
++		dev->write_fail = 2;
++	} else {
++		memcpy(dev->prev_desc, data, FRAME_DESC_SZ);
++	}
++	return status;
++}
++
++/**
++ * This function writes the packet to the device.
++ *
++ * @param  adapter Pointer to the adapter structure.
++ * @param  pkt Pointer to the data to be written on to the device.
++ * @param  len length of the data to be written on to the device.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_host_intf_write_pkt(struct rsi_hw *adapter,
++			    u8 *pkt,
++			    u32 len)
++{
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	u32 block_size = dev->tx_blk_size;
++	u32 num_blocks, address, length;
++	u32 queueno;
++	int status = 0;
++
++	queueno = ((pkt[1] >> 4) & 0xf);
++
++	num_blocks = len / block_size;
++
++	if (len % block_size)
++		num_blocks++;
++
++	address = (num_blocks * block_size | (queueno << 12));
++	length  = num_blocks * block_size;
++
++	status = rsi_write_register_multiple(adapter,
++					     address,
++					     (u8 *)pkt,
++					     length);
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: Unable to write onto the card: %d\n",
++			__func__, status);
++	rsi_dbg(DATA_TX_ZONE, "%s: Successfully written onto card\n", __func__);
++	return status;
++}
++
++/**
++ * This function reads the packet from the SD card.
++ *
++ * @param  adapter Pointer to the adapter data structure.
++ * @param  pkt Pointer to the packet data to be read from the the device.
++ * @param  length Length of the data to be read from the device.
++ * @return 0 on success, -1 on failure.
++ */
++int rsi_host_intf_read_pkt(struct rsi_hw *adapter,
++			   u8 *pkt,
++			   u32 length)
++{
++	int status  = 0;
++
++	if (!length) {
++		rsi_dbg(ERR_ZONE, "%s: Pkt size is zero\n", __func__);
++		return status;
++	}
++
++	status = rsi_read_register_multiple(adapter,
++					    length,
++					    length, /*num of bytes*/
++					    (u8 *)pkt);
++
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: Failed to read frame: %d\n", __func__,
++			status);
++	return status;
++}
++
++/**
++ * This function is called by kernel when the driver provided
++ * Vendor and device IDs are matched. All the initialization
++ * work is done here.
++ *
++ * @param  pfunction Pointer to the sdio_func structure.
++ * @param  id Pointer to sdio_device_id structure.
++ * @return 0 on success, 1 on failure.
++ */
++static int rsi_probe(struct sdio_func *pfunction,
++		     const struct sdio_device_id *id)
++{
++	struct rsi_hw *adapter;
++
++	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
++
++	adapter = rsi_init_os_intf_ops();
++	if (!adapter) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
++			__func__);
++		return 1;
++	}
++
++	if (rsi_init_sdio_interface(adapter, pfunction)) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to init sdio interface\n",
++			__func__);
++		goto fail;
++	}
++
++	if (rsi_device_init(adapter->priv)) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in device init\n", __func__);
++		sdio_claim_host(pfunction);
++		sdio_disable_func(pfunction);
++		sdio_release_host(pfunction);
++		goto fail;
++	}
++
++	sdio_claim_host(pfunction);
++	if (sdio_claim_irq(pfunction, rsi_handle_interrupt)) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to request IRQ\n", __func__);
++		sdio_release_host(pfunction);
++		goto fail;
++	}
++
++	sdio_release_host(pfunction);
++	rsi_dbg(INIT_ZONE, "%s: Registered Interrupt handler\n", __func__);
++
++	return 0;
++fail:
++	rsi_deinit_os_intf_ops(adapter);
++	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
++	return 1;
++}
++
++/**
++ * This function performs the reverse of the probe function.
++ *
++ * @param  pfunction Pointer to the sdio_func structure.
++ * @return void.
++ */
++static void rsi_disconnect(struct sdio_func *pfunction)
++{
++	struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++
++	if (!adapter)
++		return;
++
++	dev->write_fail = 2;
++	rsi_mac80211_detach(adapter);
++
++	sdio_claim_host(pfunction);
++	sdio_release_irq(pfunction);
++	sdio_disable_func(pfunction);
++	rsi_deinit_os_intf_ops(adapter);
++	/* Resetting to take care of the case, where-in driver is re-loaded */
++	rsi_reset_card(pfunction);
++	sdio_release_host(pfunction);
++
++	return;
++}
++
++#ifdef CONFIG_PM
++static int rsi_suspend(struct device *dev)
++{
++	/* Not yet implemented */
++	return -ENOSYS;
++}
++
++static int rsi_resume(struct device *dev)
++{
++	/* Not yet implemented */
++	return -ENOSYS;
++}
++
++static const struct dev_pm_ops rsi_pm_ops = {
++	.suspend = rsi_suspend,
++	.resume = rsi_resume,
++};
++#endif
++
++static const struct sdio_device_id rsi_dev_table[] =  {
++	{ SDIO_DEVICE(0x303, 0x100) },
++	{ SDIO_DEVICE(0x041B, 0x0301) },
++	{ SDIO_DEVICE(0x041B, 0x0201) },
++	{ SDIO_DEVICE(0x041B, 0x9330) },
++	{ /* Blank */},
++};
++
++static struct sdio_driver rsi_driver = {
++	.name       = "RSI-SDIO WLAN",
++	.probe      = rsi_probe,
++	.remove     = rsi_disconnect,
++	.id_table   = rsi_dev_table,
++#ifdef CONFIG_PM
++	.drv = {
++		.pm = &rsi_pm_ops,
++	}
++#endif
++};
++
++/**
++ * This function registers the sdio module.
++ *
++ * @param  Void.
++ * @return 0 on success.
++ */
++static int rsi_module_init(void)
++{
++	sdio_register_driver(&rsi_driver);
++	rsi_dbg(INIT_ZONE, "%s: Registering driver\n", __func__);
++	return 0;
++}
++
++/**
++ * This function unregisters the sdio module.
++ *
++ * @param  Void.
++ * @return None.
++ */
++static void rsi_module_exit(void)
++{
++	sdio_unregister_driver(&rsi_driver);
++	rsi_dbg(INFO_ZONE, "%s: Unregistering driver\n", __func__);
++	return;
++}
++
++module_init(rsi_module_init);
++module_exit(rsi_module_exit);
++
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("Common SDIO layer for RSI drivers");
++MODULE_SUPPORTED_DEVICE("RSI-91x");
++MODULE_DEVICE_TABLE(sdio, rsi_dev_table);
++MODULE_FIRMWARE(FIRMWARE_RSI9113);
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL");
+
+
 
