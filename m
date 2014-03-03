@@ -1,89 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46480 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752487AbaCPS5o (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51297 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753360AbaCCNSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2014 14:57:44 -0400
-Message-ID: <1394996230.15764.113.camel@deadeye.wl.decadent.org.uk> (sfid-20140316_195806_819427_BB0F1E36)
-Subject: Re: [PATCH 3/3] ath10k: add firmware files
-From: Ben Hutchings <ben@decadent.org.uk>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Sun, 16 Mar 2014 18:57:10 +0000
-In-Reply-To: <CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com>
-References: <20140314084501.23100.13103.stgit@x230>
-	 <20140314084514.23100.72654.stgit@x230>
-	 <CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-ANVEt/7OdFBiJ+ufZy8u"
+	Mon, 3 Mar 2014 08:18:08 -0500
+Message-ID: <1393852684.10039.11.camel@jlt4.sipsolutions.net> (sfid-20140303_141811_992954_847A3E9E)
+Subject: Re: [PATCH] cfg80211: fix cfg80211_leave() locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 03 Mar 2014 14:18:04 +0100
+In-Reply-To: <CA+BoTQk96KiL11N6X_8vx8S380vyaLMu0hU0P=dDUV4_fjw5fw@mail.gmail.com> (sfid-20140303_140715_936464_F062B634)
+References: <1393599480-27908-1-git-send-email-michal.kazior@tieto.com>
+	 <1393851336.10039.1.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQk96KiL11N6X_8vx8S380vyaLMu0hU0P=dDUV4_fjw5fw@mail.gmail.com>
+	 (sfid-20140303_140715_936464_F062B634)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2014-03-03 at 14:07 +0100, Michal Kazior wrote:
+> On 3 March 2014 13:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2014-02-28 at 15:58 +0100, Michal Kazior wrote:
+> >> The beacon_interval was set unprotected by
+> >> wdev.mtx. This could possibly lead to inconsistent
+> >> cfg80211 states.
+> >
+> > Why not just this patch? The beacon_interval is already set to 0 in
+> > stop_ap(), and is irrelevant for the other modes.
+> >
+> > diff --git a/net/wireless/core.c b/net/wireless/core.c
+> > index 010892b81a06..a3bf18d11609 100644
+> > --- a/net/wireless/core.c
+> > +++ b/net/wireless/core.c
+> > @@ -788,8 +788,6 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+> >         default:
+> >                 break;
+> >         }
+> > -
+> > -       wdev->beacon_interval = 0;
+> >  }
+> >
+> >  static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+> >
+> >
+> > johannes
+> 
+> Good point. I was focused on locking changes (for my other patch) and
+> noticed the beacon_interval being unprotected and didn't look more
+> into it. Should I respin or are you going to apply your patch
+> yourself? Either way is fine with me.
 
---=-ANVEt/7OdFBiJ+ufZy8u
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I've got it.
 
-On Fri, 2014-03-14 at 05:36 -0700, Luis R. Rodriguez wrote:
-> On Fri, Mar 14, 2014 at 1:45 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrot=
-e:
-[...]
-> > + NO LICENSES OR OTHER RIGHTS,
-> > +WHETHER EXPRESS, IMPLIED, BASED ON ESTOPPEL OR OTHERWISE, ARE GRANTED
-> > +TO ANY PARTY'S PATENTS, PATENT APPLICATIONS, OR PATENTABLE INVENTIONS
-> > +BY VIRTUE OF THIS LICENSE OR THE DELIVERY OR PROVISION BY QUALCOMM
-> > +ATHEROS, INC. OF THE SOFTWARE.
->=20
-> This -- however is new to linux-firmware -- and I hereby raise a big
-> red fucking flag. All other licenses on linux-firmware provide at the
-> very least a limited patent grant. What makes Qualcomm special ?
-[...]
+johannes
 
-There are several licence texts that don't mention patents at all.  I'm
-assuming that the companies submitting firmware for inclusion in Linux
-or linux-firmware do intend to grant whatever licences are required to
-distribute it to end users.
-
-Several licence texts explicitly exclude patent licences relating to any
-*other* products of the same company, but that's quite redundant.
-
-However this language seems to explicitly exclude *any* patent licence.
-You're right to raise a red flag because, assuming Qualcomm does have
-patents that cover the firmware alone, this seems to disallow
-redistribution in whatever jurisdictions those patents apply.
-
-Ben.
-
---=20
-Ben Hutchings
-Computers are not intelligent.	They only think they are.
-
---=-ANVEt/7OdFBiJ+ufZy8u
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAUyX0Bue/yOyVhhEJAQpPeQ/8D6Z1UqLY4JPQsVWUWUMd/9CMVO3pBIK8
-m8+yo0qgC8WL7CWHe8kPDkL05gNPdj5ef7qc+AzqYTKEvaa4pTbQ6BS8Y14FhTVS
-cUo4fDjhJfT9R7uP7XBtCGagcaOUzFoDvYgMlH+pN2qeoV+v+IkxXTadTRsfpY5x
-oLHklcoFTrwf02VLba77eNsEzKHciOG9go3rJVXn/wgwCYdBCCNhzwpmfZJQzPZm
-AwNFshs2ndQI7yVlU+zT/hSdEgpOj2Q20rZxFVVTQSxRd2J5NKvaqXu1vkSlDkGh
-m0uUCsluIHSt1VUK0RSBaJ/pIG/NatimdSCpH1V4ohREGAO5u3K7N/FUFcJk0apO
-3keexu3nJ40hkxyArPzL8mYNJb0mJ63cvAkkCyf6a5xECXJV24byG/5pvdSrLTkf
-M1pI9nQvQYRMN8YQTocNBiw3L8oQF/jEpabZKluHqy3Cayvnj+EluDhXOsbtcg/x
-ufhcViPr5xsyyTimkhcEVPPNKyPNdzXccRO7w5Ee6uN8mPrxlSHEShV4mnOdSGWH
-T2r4Y3ms2uTmmTDk2JNrDtengTg1qM8+B6dODOB7wR02j2bO7O2D8yei8dVm7SMG
-IVT4iJ0M9rv8jKrC/lTXG+EmfLaFKr4fOTe5jqTM2Gn8racr/hjvT2ywbV4wwdYq
-BYuxxRlkn6w=
-=r1Jd
------END PGP SIGNATURE-----
-
---=-ANVEt/7OdFBiJ+ufZy8u--
