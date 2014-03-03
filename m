@@ -1,98 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7019 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbaCZLKR (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:55042 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754588AbaCCQXT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 07:10:17 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/8] ath10k: cleanup ath10k_pci_wait_for_target_init()
-References: <20140325091311.16651.15747.stgit@potku.adurom.net>
-	<20140325091505.16651.15554.stgit@potku.adurom.net>
-	<CA+BoTQns9QXCctzrMzd5=o6EyA=d0TG-eLJw3hztE1-MD7HwkQ@mail.gmail.com>
-	<87lhvxz4up.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=N_L53c2Pgw3RQYcJx4-xp9fSOYvbeEUHgFCtSoP3QRA@mail.gmail.com>
-Date: Wed, 26 Mar 2014 13:10:11 +0200
-In-Reply-To: <CA+BoTQ=N_L53c2Pgw3RQYcJx4-xp9fSOYvbeEUHgFCtSoP3QRA@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 26 Mar 2014 10:52:59 +0100")
-Message-ID: <87ha6lz04s.fsf@kamboji.qca.qualcomm.com> (sfid-20140326_121022_653119_46149213)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 3 Mar 2014 11:23:19 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [net-next v4 3/3] cfg80211: add MPLS and 802.21 classification
+Date: Mon,  3 Mar 2014 17:23:12 +0100
+Message-Id: <1393863792-18172-4-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172341_033568_53ADCF50)
+In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+MPLS labels may contain traffic control information, which should be
+evaluated and used by the wireless subsystem if present.
 
-> On 26 March 2014 10:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->
-> [...]
->
->>>> -       while (wait_limit-- &&
->>>> -              !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
->>>> -                FW_IND_INITIALIZED)) {
->>>> +       timeout = jiffies + msecs_to_jiffies(wait);
->>>> +
->>>> +       do {
->>>> +               val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
->>>> +               if (val == FW_IND_INITIALIZED)
->>>> +                       break;
->
-> Ah, for some reason I've missed this earlier. You seem to replace &
-> with ==. I wonder if that's okay?
+Also check for IEEE 802.21 which is always network control traffic.
 
-No, it's not. Good catch, I'll change it back to '&'.
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Changes to third version:
 
-> FW indicator may contain FW_IND_EVENT_PENDING (i.e. firmware crashed
-> bit) too.
+ * add Johannes' Ack
+ * fix over-indented closing brace
 
-I'm guessing that FW_IND_INITIALIZED should be the only bit set if
-initialisation has happened correctly, but we cannot be certain (right
-now). Hence I'll change it back to '&'.
+Changes to second version:
 
-> It might be a good idea to check for that too and return a different
-> errno?
+ * rely on skb->protocol instead of checking ethertype
 
-Maybe. But to keep this patch simple, I don't add that right now. We can
-create a new patch for that.
+Changes to first version:
 
->>> It might be worth to add:
->>>
->>>  if (val == 0xFFFFFFFF)
->>>    return -EIO;
->>
->> What does receiving 0xFFFFFFFF mean here? PCI bus kaput?
->
-> A simple grepping (find drivers/net/ethernet/ -type f -name '*.[ch]' |
-> xargs grep -nC5 ioread32 | grep -C5 -i 0xffffffff) turns out results
-> like this:
->
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-200-  }
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-201-
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-202-  /* Use current
-> fetch_index as the ring starting point */
->  drivers/net/ethernet/cisco/enic/vnic_rq.c:203:  fetch_index =
-> ioread32(&rq->ctrl->fetch_index);
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-204-
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-205-  if (fetch_index ==
-> 0xFFFFFFFF) { /* check for hardware gone  */
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-206-          /* Hardware
-> surprise removal: reset fetch_index */
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-207-          fetch_index = 0;
->  drivers/net/ethernet/cisco/enic/vnic_rq.c-208-  }
->
->
->> Do we really want to stop trying after receiving that? What harm would
->> it cause to keep on trying? We would return an error anyway after the
->> timeout, right?
->
-> Yes. It's harmless but having the check allows to discern a real
-> timeout (target doesn't wake up for some reason) and a pci-e link
-> issue.
+ * include linux/mpls.h, not the UAPI one
+ * change __constant_htons to htons
+---
+ net/wireless/util.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Ok, I'll add the test you suggested.
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 780b454..ad03af3 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -11,6 +11,7 @@
+ #include <net/ip.h>
+ #include <net/dsfield.h>
+ #include <linux/if_vlan.h>
++#include <linux/mpls.h>
+ #include "core.h"
+ #include "rdev-ops.h"
+ 
+@@ -717,6 +718,21 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
+ 	case htons(ETH_P_IPV6):
+ 		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
+ 		break;
++	case htons(ETH_P_MPLS_UC):
++	case htons(ETH_P_MPLS_MC): {
++		struct mpls_label mpls_tmp, *mpls;
++
++		mpls = skb_header_pointer(skb, sizeof(struct ethhdr),
++					  sizeof(*mpls), &mpls_tmp);
++		if (!mpls)
++			return 0;
++
++		return (ntohl(mpls->entry) & MPLS_LS_TC_MASK)
++			>> MPLS_LS_TC_SHIFT;
++	}
++	case htons(ETH_P_80221):
++		/* 802.21 is always network control traffic */
++		return 7;
+ 	default:
+ 		return 0;
+ 	}
 -- 
-Kalle Valo
+1.7.10.4
+
