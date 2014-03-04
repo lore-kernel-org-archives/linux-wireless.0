@@ -1,131 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:60526 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757056AbaC1Dgb (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:36713 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757080AbaCDMwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 23:36:31 -0400
-Received: by mail-pa0-f47.google.com with SMTP id lj1so4388363pab.34
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 20:36:31 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 1/2] rtlwifi: add MSI interrupts mode support
-Date: Fri, 28 Mar 2014 11:36:18 +0800
-Message-Id: <1395977779-16093-1-git-send-email-adam.lee@canonical.com> (sfid-20140328_043650_953350_AA2B68F0)
-In-Reply-To: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
-References: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
+	Tue, 4 Mar 2014 07:52:47 -0500
+Received: by mail-ea0-f170.google.com with SMTP id g15so332299eak.15
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:45 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC 01/14] ath10k: add ath10k_htt_rx_amsdu_allowed function
+Date: Tue,  4 Mar 2014 13:52:14 +0100
+Message-Id: <1393937548-7482-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135254_497000_BECCCB9F)
+In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add MSI interrupts mode support, enable it when submodules' msi_support
-flag is true, also could fallback to pin-based interrupts mode if MSI
-interrupts mode fails.
+Introduce ath10k_htt_rx_amsdu_allowed() function, that
+group code for checking if skip amsdu packets.
 
-RealTek's policy(on modules which work well with MSI interrupts mode) is:
-
-> If the platform supports both MSI and pin-based, use MSI.
-> If the platform supports MSI only, use MSI.
-> If the platform supports pin-based only, use pin-based.
-
-Also as RealTek's testing results, RTL8188EE and RTL8723BE work well
-with both MSI mode and pin-based mode fallback.
-
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/rtlwifi/pci.c | 65 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 63 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  112 ++++++++++++++++--------------
+ 1 file changed, 60 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 7d71170..dae5525 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1853,6 +1853,65 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
- 	return true;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 36a3871..68a058d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -901,6 +901,63 @@ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
+ 	return CHECKSUM_UNNECESSARY;
  }
  
-+static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
++static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
++					struct sk_buff *head,
++					bool msdu_chaining,
++					struct htt_rx_info *info)
 +{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-+	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-+	int ret;
++	enum htt_rx_mpdu_status status = info->status;
 +
-+	ret = pci_enable_msi(rtlpci->pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-+			  IRQF_SHARED, KBUILD_MODNAME, hw);
-+	if (ret < 0) {
-+		pci_disable_msi(rtlpci->pdev);
-+		return ret;
++	if (!head) {
++		ath10k_warn("htt rx no data!\n");
++		return false;
 +	}
 +
-+	rtlpci->using_msi = true;
-+
-+	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-+		 "MSI Interrupt Mode!\n");
-+	return 0;
-+}
-+
-+static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-+	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-+	int ret;
-+
-+	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-+			  IRQF_SHARED, KBUILD_MODNAME, hw);
-+	if (ret < 0)
-+		return ret;
-+
-+	rtlpci->using_msi = false;
-+	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-+		 "Pin-based Interrupt Mode!\n");
-+	return 0;
-+}
-+
-+static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
-+{
-+	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-+	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-+	int ret;
-+
-+	if (rtlpci->msi_support) {
-+		ret = rtl_pci_intr_mode_msi(hw);
-+		if (ret < 0)
-+			ret = rtl_pci_intr_mode_legacy(hw);
-+	} else {
-+		ret = rtl_pci_intr_mode_legacy(hw);
++	if (head->len == 0) {
++		ath10k_dbg(ATH10K_DBG_HTT,
++			   "htt rx dropping due to zero-len\n");
++		return false;
 +	}
-+	return ret;
++
++	if (ath10k_htt_rx_has_decrypt_err(head)) {
++		ath10k_dbg(ATH10K_DBG_HTT,
++			   "htt rx dropping due to decrypt-err\n");
++		return false;
++	}
++
++	/* Skip mgmt frames while we handle this in WMI */
++	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
++	    ath10k_htt_rx_is_mgmt(head)) {
++		ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
++		return false;
++	}
++
++	if (status != HTT_RX_IND_MPDU_STATUS_OK &&
++	    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
++	    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
++	    !htt->ar->monitor_enabled) {
++		ath10k_dbg(ATH10K_DBG_HTT,
++			   "htt rx ignoring frame w/ status %d\n",
++			   status);
++		return false;
++	}
++
++	if (test_bit(ATH10K_CAC_RUNNING, &htt->ar->dev_flags)) {
++		ath10k_dbg(ATH10K_DBG_HTT,
++			   "htt rx CAC running\n");
++		return false;
++	}
++
++	/* FIXME: we do not support chaining yet.
++	 * this needs investigation */
++	if (msdu_chaining) {
++		ath10k_warn("htt rx msdu_chaining is true\n");
++		return false;
++	}
++
++	return true;
 +}
 +
- int rtl_pci_probe(struct pci_dev *pdev,
- 			    const struct pci_device_id *id)
+ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				  struct htt_rx_indication *rx)
  {
-@@ -1995,8 +2054,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	}
+@@ -933,7 +990,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
  
- 	rtlpci = rtl_pcidev(pcipriv);
--	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
--			  IRQF_SHARED, KBUILD_MODNAME, hw);
-+	err = rtl_pci_intr_mode_decide(hw);
- 	if (err) {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
- 			 "%s: failed to register IRQ handler\n",
-@@ -2064,6 +2122,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
- 		rtlpci->irq_alloc = 0;
- 	}
+ 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
+ 			struct sk_buff *msdu_head, *msdu_tail;
+-			enum htt_rx_mpdu_status status;
+ 			int msdu_chaining;
  
-+	if (rtlpci->using_msi)
-+		pci_disable_msi(rtlpci->pdev);
-+
- 	list_del(&rtlpriv->list);
- 	if (rtlpriv->io.pci_mem_start != 0) {
- 		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
+ 			msdu_head = NULL;
+@@ -944,57 +1000,9 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 							 &msdu_head,
+ 							 &msdu_tail);
+ 
+-			if (!msdu_head) {
+-				ath10k_warn("htt rx no data!\n");
+-				continue;
+-			}
+-
+-			if (msdu_head->len == 0) {
+-				ath10k_dbg(ATH10K_DBG_HTT,
+-					   "htt rx dropping due to zero-len\n");
+-				ath10k_htt_rx_free_msdu_chain(msdu_head);
+-				continue;
+-			}
+-
+-			if (ath10k_htt_rx_has_decrypt_err(msdu_head)) {
+-				ath10k_dbg(ATH10K_DBG_HTT,
+-					   "htt rx dropping due to decrypt-err\n");
+-				ath10k_htt_rx_free_msdu_chain(msdu_head);
+-				continue;
+-			}
+-
+-			status = info.status;
+-
+-			/* Skip mgmt frames while we handle this in WMI */
+-			if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
+-			    ath10k_htt_rx_is_mgmt(msdu_head)) {
+-				ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
+-				ath10k_htt_rx_free_msdu_chain(msdu_head);
+-				continue;
+-			}
+-
+-			if (status != HTT_RX_IND_MPDU_STATUS_OK &&
+-			    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
+-			    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
+-			    !htt->ar->monitor_enabled) {
+-				ath10k_dbg(ATH10K_DBG_HTT,
+-					   "htt rx ignoring frame w/ status %d\n",
+-					   status);
+-				ath10k_htt_rx_free_msdu_chain(msdu_head);
+-				continue;
+-			}
+-
+-			if (test_bit(ATH10K_CAC_RUNNING, &htt->ar->dev_flags)) {
+-				ath10k_dbg(ATH10K_DBG_HTT,
+-					   "htt rx CAC running\n");
+-				ath10k_htt_rx_free_msdu_chain(msdu_head);
+-				continue;
+-			}
+-
+-			/* FIXME: we do not support chaining yet.
+-			 * this needs investigation */
+-			if (msdu_chaining) {
+-				ath10k_warn("htt rx msdu_chaining is true\n");
++			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
++							 !!msdu_chaining,
++							 &info)) {
+ 				ath10k_htt_rx_free_msdu_chain(msdu_head);
+ 				continue;
+ 			}
 -- 
-1.9.1
+1.7.9.5
 
