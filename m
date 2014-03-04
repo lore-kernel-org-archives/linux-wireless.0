@@ -1,78 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:59187 "EHLO lekensteyn.nl"
+Received: from mga11.intel.com ([192.55.52.93]:29532 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754341AbaCTSwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 14:52:43 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Chaoming_Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lekensteyn@gmail.com
-Subject: [PATCH 0/3] rtlwifi (and staging rtl8821ae) cleanups
-Date: Thu, 20 Mar 2014 19:52:21 +0100
-Message-Id: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl> (sfid-20140320_195247_153426_C70C13EA)
+	id S1752644AbaCDGJc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2014 01:09:32 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jamie Parkinson <jamie.y.parkinson@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: RE: [Ilw] Windows/Linux driver alignment
+Date: Tue, 4 Mar 2014 06:09:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D770FD@HASMSX103.ger.corp.intel.com> (sfid-20140304_070935_354127_722D0F2F)
+References: <CALvPAgz++Vbrk0usKBvT4NCHZmbrHKh7EhgCVcYL7j8f_3h8aQ@mail.gmail.com>
+In-Reply-To: <CALvPAgz++Vbrk0usKBvT4NCHZmbrHKh7EhgCVcYL7j8f_3h8aQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Changing your mail to plaintext since the mailing lists don't accept HTML.
 
-The first patch of these series was NAKed some weeks ago because it would
-conflict with the new rtl8723be driver. Since those changes are in wireless-next
-now, I have adjusted that patch to take care of rtl8723be.
+Quoting your mail:
 
-The other two patches to the staging driver is similar to the rtlwifi changes.
-I am not sure who to send these two patches to. Greg is the staging maintainer,
-but John takes wireless patches, so I have included both of you.
+"Hi, 
+I've bought a Sony Vaio Pro 13 which is plagued with wireless problems. After installing the 16.10.0 Windows drivers, I've found a significant improvement, but I don't want to use Windows and the latest Linux drivers and kernel don't seem to help. When will these changes reach the iwlwifi firmware? (or is the issue more complex than that?). I will return the laptop if I can't fix this, so I have a somewhat limited time frame... 
+Thank you, 
+Jamie"
 
-All patches are compile-tested on top of v3.14-rc2-938-g67b3bd4.
-
-I also found the following (unrelated to my patches) warning while compiling the
-staging driver, perhaps it needs a closer look?
-
-  CC [M]  drivers/net/wireless/rtlwifi/stats.o
-  CC [M]  drivers/staging/rtl8821ae/rtl8821ae/hal_btc.o
-drivers/staging/rtl8821ae/rtl8821ae/dm.c: In function ‘rtl8821ae_dm_clear_txpower_tracking_state’:
-drivers/staging/rtl8821ae/rtl8821ae/dm.c:487:31: warning: iteration 2u invokes undefined behavior [-Waggressive-loop-optimizations]
-   rtldm->bb_swing_idx_ofdm[p] = rtldm->default_ofdm_index;
-                               ^
-drivers/staging/rtl8821ae/rtl8821ae/dm.c:485:2: note: containing loop
-  for (p = RF90_PATH_A; p < MAX_RF_PATH; ++p) {
-  ^
-  CC [M]  drivers/staging/rtl8821ae/rtl8821ae/hal_bt_coexist.o
-
-Thanks,
-Peter
-
-Peter Wu (3):
-  rtlwifi: remove unused allow_all_destaddr functions
-  staging/rtl8821ae: avoid accessing RCR directly
-  staging/rtl8821ae: remove unused allow_all_destaddr function
-
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 20 --------------------
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.h |  2 --
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c |  1 -
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 21 ---------------------
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.h |  2 --
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |  1 -
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 20 --------------------
- drivers/net/wireless/rtlwifi/rtl8192se/hw.h |  2 --
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |  1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 21 ---------------------
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.h |  2 --
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c |  1 -
- drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 20 --------------------
- drivers/net/wireless/rtlwifi/rtl8723be/hw.h |  2 --
- drivers/net/wireless/rtlwifi/wifi.h         |  2 --
- drivers/staging/rtl8821ae/rtl8821ae/hw.c    | 27 +++------------------------
- drivers/staging/rtl8821ae/rtl8821ae/hw.h    |  3 ---
- drivers/staging/rtl8821ae/rtl8821ae/sw.c    |  1 -
- drivers/staging/rtl8821ae/wifi.h            |  2 --
- 19 files changed, 3 insertions(+), 148 deletions(-)
-
--- 
-1.9.1
-
+There is no alignment whatsoever between the Linux and Windows releases. Besides this, my crystal ball is broken and you didn't get any description of your system nor the issue you are having. If you want someone to help you, it is not the way to go.
