@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:53086 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760135AbaCUJcq (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:61202 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757348AbaCDMwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 05:32:46 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so1569645eek.23
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:45 -0700 (PDT)
+	Tue, 4 Mar 2014 07:52:51 -0500
+Received: by mail-ea0-f169.google.com with SMTP id h14so335316eaj.14
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:50 -0800 (PST)
 From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
 	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 3/8] ath10k: introduce ieee80211_rx_status to htt_rx_info
-Date: Fri, 21 Mar 2014 10:32:16 +0100
-Message-Id: <1395394341-3958-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103254_010511_BF47F528)
-In-Reply-To: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+Subject: [RFC 05/14] ath10k: introduce ieee80211_rx_status to htt_rx_info
+Date: Tue,  4 Mar 2014 13:52:18 +0100
+Message-Id: <1393937548-7482-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135328_927689_07074352)
+In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -48,7 +48,7 @@ index 654867f..e80f033 100644
  	enum htt_rx_mpdu_encrypt_type encrypt_type;
  	s8 signal;
 diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index fd14c3a..f18e41c 100644
+index 3008a1d..2fca1fa 100644
 --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
 +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
 @@ -756,7 +756,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
