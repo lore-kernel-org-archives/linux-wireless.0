@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:55129 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830AbaCUJcm (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:50230 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757156AbaCDL6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 05:32:42 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so1569557eek.23
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:41 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+	Tue, 4 Mar 2014 06:58:54 -0500
+Received: by mail-ea0-f181.google.com with SMTP id k10so304702eaj.12
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 03:58:52 -0800 (PST)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 0/8] ath10k: refactor htt_rx path
-Date: Fri, 21 Mar 2014 10:32:13 +0100
-Message-Id: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103248_430209_97CFAE85)
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: do not overwrite max_antenna_gain
+Date: Tue,  4 Mar 2014 12:58:31 +0100
+Message-Id: <1393934311-26154-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20140304_125908_732175_D4C0974F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset remove htt_rx_info and intoduce usage
-of ieee80211_rx_status template. Introduce calculation
-split for per-ppdu and per-mpdu. Remove not needed
-calculation we did before for each mpdu. Before we
-did calculation for each mpdu and in case of heavy
-traffic we could have eg. 15mpdus in one ppdu.
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-This ieee80211_rx_status template will be also required
-to fix rates, rssi we will report to mac80211. I will
-send this patches soon.
+Seems like there's an old bug where we overwrite the
+antenna_gain with zero value.
 
-First two patches - no functional changes.
+This patch removes the excessive assignment of max_antenna_gain,
+which should be provided by regulatory domain settings.
 
-Tested on AP135, didn't notice any TP drop with this patchset.
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Base on:
-[PATCH 1/2] ath10k: add ath10k_htt_rx_amsdu_allowed function
-[PATCH 2/2] ath10k: Fill per-ppdu info in rx_info only once
-I send before.
-
-Please review.
-
-Janusz Dziedzic (8):
-  ath10k: move rx related functions to htt_rx.c
-  ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
-  ath10k: introduce ieee80211_rx_status to htt_rx_info
-  ath10k: setup rx channel per ppdu
-  ath10k: kill not needed fields from htt_rx_info
-  ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
-  ath10k: improve way we play with attention flags
-  ath10k: finally kill htt_rx_info
-
- drivers/net/wireless/ath/ath10k/htt.h    |   18 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  440 ++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/txrx.c   |  183 -------------
- drivers/net/wireless/ath/ath10k/txrx.h   |    1 -
- 4 files changed, 299 insertions(+), 343 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 478e7f6..cb1f7b5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3393,7 +3393,6 @@ int ath10k_wmi_scan_chan_list(struct ath10k *ar,
+ 		ci->max_power         = ch->max_power;
+ 		ci->reg_power         = ch->max_reg_power;
+ 		ci->antenna_max       = ch->max_antenna_gain;
+-		ci->antenna_max       = 0;
+ 
+ 		/* mode & flags share storage */
+ 		ci->mode              = ch->mode;
 -- 
-1.7.9.5
+1.7.10
 
