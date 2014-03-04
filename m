@@ -1,363 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:64183 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757547AbaCRT0B (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:37901 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756305AbaCDIIB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:01 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so6242963wgg.6
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:25:59 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/14] staging: vt6656: rxtx Replace wDuration* variables.
-Date: Tue, 18 Mar 2014 19:24:55 +0000
-Message-Id: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202607_980022_80B403F1)
+	Tue, 4 Mar 2014 03:08:01 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v8 5/5] cfg80211/mac80211: move more combination checks to mac80211
+Date: Tue,  4 Mar 2014 10:07:54 +0200
+Message-Id: <1393920474-4935-6-git-send-email-luca@coelho.fi> (sfid-20140304_090809_205143_648E835A)
+In-Reply-To: <1393920474-4935-1-git-send-email-luca@coelho.fi>
+References: <1393920474-4935-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix base type to __le16 and remove camel case.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Camel case changes
-wDuration* -> duration*
+Get rid of the cfg80211_can_add_interface() and
+cfg80211_can_change_interface() functions by moving that functionality
+to mac80211.  With this patch all interface combination checks are now
+out of cfg80211 (except for the channel switch case which will be
+addressed in a future commit).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Additionally, modify the ieee80211_check_combinations() function so
+that an undefined chandef can be passed, in order to use it before a
+channel is defined.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 72 +++++++++++++++++++++----------------------
- drivers/staging/vt6656/rxtx.h | 40 ++++++++++++------------
- 2 files changed, 56 insertions(+), 56 deletions(-)
+ net/mac80211/cfg.c     |  9 +++++++++
+ net/mac80211/iface.c   |  6 +++++-
+ net/mac80211/util.c    | 10 +++++++---
+ net/wireless/core.c    | 11 +++--------
+ net/wireless/core.h    | 22 ----------------------
+ net/wireless/nl80211.c |  5 ++---
+ net/wireless/util.c    |  5 -----
+ 7 files changed, 26 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7083af3..5507db8 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -481,14 +481,14 @@ static u16 vnt_rxtx_datahead_g(struct vnt_private *priv, u8 pkt_type, u16 rate,
- 							PK_TYPE_11B, &buf->b);
- 
- 	/* Get Duration and TimeStamp */
--	buf->wDuration_a = s_uGetDataDuration(priv, pkt_type, need_ack);
--	buf->wDuration_b = s_uGetDataDuration(priv, PK_TYPE_11B, need_ack);
-+	buf->duration_a = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_b = s_uGetDataDuration(priv, PK_TYPE_11B, need_ack);
- 
- 	buf->wTimeStampOff_a = vnt_time_stamp_off(priv, rate);
- 	buf->wTimeStampOff_b = vnt_time_stamp_off(priv,
- 					priv->byTopCCKBasicRate);
- 
--	return buf->wDuration_a;
-+	return buf->duration_a;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9b555e0..fae76f7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -109,6 +109,15 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ static int ieee80211_start_p2p_device(struct wiphy *wiphy,
+ 				      struct wireless_dev *wdev)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
+ 	return ieee80211_do_open(wdev, true);
  }
  
- static u16 vnt_rxtx_datahead_g_fb(struct vnt_private *priv, u8 pkt_type,
-@@ -502,17 +502,17 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_private *priv, u8 pkt_type,
- 						PK_TYPE_11B, &buf->b);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index be198f4..4c55481 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -250,6 +250,7 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_sub_if_data *nsdata;
++	int ret;
  
- 	/* Get Duration and TimeStamp */
--	buf->wDuration_a = s_uGetDataDuration(priv, pkt_type, need_ack);
--	buf->wDuration_b = s_uGetDataDuration(priv, PK_TYPE_11B, need_ack);
-+	buf->duration_a = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_b = s_uGetDataDuration(priv, PK_TYPE_11B, need_ack);
+ 	ASSERT_RTNL();
  
--	buf->wDuration_a_f0 = s_uGetDataDuration(priv, pkt_type, need_ack);
--	buf->wDuration_a_f1 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_a_f0 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_a_f1 = s_uGetDataDuration(priv, pkt_type, need_ack);
- 
- 	buf->wTimeStampOff_a = vnt_time_stamp_off(priv, rate);
- 	buf->wTimeStampOff_b = vnt_time_stamp_off(priv,
- 						priv->byTopCCKBasicRate);
- 
--	return buf->wDuration_a;
-+	return buf->duration_a;
- }
- 
- static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
-@@ -522,14 +522,14 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->a);
- 	/* Get Duration and TimeStampOff */
--	buf->wDuration = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration = s_uGetDataDuration(priv, pkt_type, need_ack);
- 
--	buf->wDuration_f0 = s_uGetDataDuration(priv, pkt_type, need_ack);
--	buf->wDuration_f1 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_f0 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration_f1 = s_uGetDataDuration(priv, pkt_type, need_ack);
- 
- 	buf->wTimeStampOff = vnt_time_stamp_off(priv, rate);
- 
--	return buf->wDuration;
-+	return buf->duration;
- }
- 
- static u16 vnt_rxtx_datahead_ab(struct vnt_private *priv, u8 pkt_type,
-@@ -539,11 +539,11 @@ static u16 vnt_rxtx_datahead_ab(struct vnt_private *priv, u8 pkt_type,
- 	/* Get SignalField,ServiceField,Length */
- 	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->ab);
- 	/* Get Duration and TimeStampOff */
--	buf->wDuration = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->duration = s_uGetDataDuration(priv, pkt_type, need_ack);
- 
- 	buf->wTimeStampOff = vnt_time_stamp_off(priv, rate);
- 
--	return buf->wDuration;
-+	return buf->duration;
- }
- 
- static int vnt_fill_ieee80211_rts(struct vnt_private *priv,
-@@ -579,14 +579,14 @@ static u16 vnt_rxtx_rts_g_head(struct vnt_private *priv,
- 	BBvCalculateParameter(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
- 
--	buf->wDuration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
-+	buf->duration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
- 		PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack, fb_option);
--	buf->wDuration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
--	buf->wDuration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
-+	buf->duration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
- 
--	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration_aa);
-+	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration_aa);
- 
- 	return vnt_rxtx_datahead_g(priv, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
-@@ -605,11 +605,11 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
- 
- 
--	buf->wDuration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
-+	buf->duration_bb = s_uGetRTSCTSDuration(priv, RTSDUR_BB, frame_len,
- 		PK_TYPE_11B, priv->byTopCCKBasicRate, need_ack, fb_option);
--	buf->wDuration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration_aa = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
--	buf->wDuration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
-+	buf->duration_ba = s_uGetRTSCTSDuration(priv, RTSDUR_BA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
- 
- 
-@@ -622,7 +622,7 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 	buf->wRTSDuration_aa_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack, fb_option);
- 
--	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration_aa);
-+	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration_aa);
- 
- 	return vnt_rxtx_datahead_g_fb(priv, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
-@@ -638,10 +638,10 @@ static u16 vnt_rxtx_rts_ab_head(struct vnt_private *priv,
- 	BBvCalculateParameter(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->ab);
- 
--	buf->wDuration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
- 
--	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration);
-+	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration);
- 
- 	return vnt_rxtx_datahead_ab(priv, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
-@@ -657,7 +657,7 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 	BBvCalculateParameter(priv, rts_frame_len,
- 		priv->byTopOFDMBasicRate, pkt_type, &buf->a);
- 
--	buf->wDuration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
-+	buf->duration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
- 
- 	buf->wRTSDuration_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
-@@ -666,7 +666,7 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 	buf->wRTSDuration_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack, fb_option);
- 
--	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration);
-+	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration);
- 
- 	return vnt_rxtx_datahead_a_fb(priv, pkt_type, current_rate,
- 			&buf->data_head, frame_len, need_ack);
-@@ -728,7 +728,7 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 		/* Get SignalField,ServiceField,Length */
- 		BBvCalculateParameter(pDevice, uCTSFrameLen,
- 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
--		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
-+		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice, CTSDUR_BA,
- 			cbFrameLength, byPktType,
- 			wCurrentRate, bNeedAck, byFBOption);
- 		/* Get CTSDuration_ba_f0 */
-@@ -740,7 +740,7 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 			CTSDUR_BA_F1, cbFrameLength, byPktType,
- 			pDevice->tx_rate_fb1, bNeedAck, byFBOption);
- 		/* Get CTS Frame body */
--		pBuf->data.duration = pBuf->wDuration_ba;
-+		pBuf->data.duration = pBuf->duration_ba;
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
- 
-@@ -752,11 +752,11 @@ static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 		BBvCalculateParameter(pDevice, uCTSFrameLen,
- 			pDevice->byTopCCKBasicRate, PK_TYPE_11B, &pBuf->b);
- 		/* Get CTSDuration_ba */
--		pBuf->wDuration_ba = s_uGetRTSCTSDuration(pDevice,
-+		pBuf->duration_ba = s_uGetRTSCTSDuration(pDevice,
- 			CTSDUR_BA, cbFrameLength, byPktType,
- 			wCurrentRate, bNeedAck, byFBOption);
- 		/*Get CTS Frame body*/
--		pBuf->data.duration = pBuf->wDuration_ba;
-+		pBuf->data.duration = pBuf->duration_ba;
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
- 
-@@ -1593,14 +1593,14 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
- 		struct vnt_tx_datahead_g *data_head = &pTX_Buffer->tx_head.
- 						tx_cts.tx.head.cts_g.data_head;
--		data_head->wDuration_a =
-+		data_head->duration_a =
- 			cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
--		data_head->wDuration_b =
-+		data_head->duration_b =
- 			cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
- 	} else {
- 		struct vnt_tx_datahead_ab *data_head = &pTX_Buffer->tx_head.
- 					tx_ab.tx.head.data_head_ab;
--		data_head->wDuration =
-+		data_head->duration =
- 			cpu_to_le16(pPacket->p80211Header->sA2.wDurationID);
+@@ -300,7 +301,10 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 		}
  	}
-     }
-@@ -2033,14 +2033,14 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
- 		struct vnt_tx_datahead_g *data_head = &pTX_Buffer->tx_head.
- 						tx_cts.tx.head.cts_g.data_head;
--		data_head->wDuration_a =
-+		data_head->duration_a =
- 			cpu_to_le16(p80211Header->sA2.wDurationID);
--		data_head->wDuration_b =
-+		data_head->duration_b =
- 			cpu_to_le16(p80211Header->sA2.wDurationID);
- 	} else {
- 		struct vnt_tx_datahead_ab *data_head = &pTX_Buffer->tx_head.
- 					tx_ab.tx.head.data_head_ab;
--		data_head->wDuration =
-+		data_head->duration =
- 			cpu_to_le16(p80211Header->sA2.wDurationID);
+ 
+-	return 0;
++	mutex_lock(&local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
+ }
+ 
+ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3972b64..955b043 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2812,7 +2812,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_iftype iftype = sdata->wdev.iftype;
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_chanctx *ctx;
+-	int num_different_channels = 1;
++	int num_different_channels = 0;
+ 	int total = 1;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+@@ -2820,9 +2820,13 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
+ 
+-	if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
++	if (WARN_ON(chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
++		    !chandef->chan))
+ 		return -EINVAL;
+ 
++	if (chandef)
++		num_different_channels = 1;
++
+ 	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+ 		return -EINVAL;
+ 
+@@ -2845,7 +2849,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 			num_different_channels++;
+ 			continue;
+ 		}
+-		if ((chanmode == IEEE80211_CHANCTX_SHARED) &&
++		if (chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
+ 		    cfg80211_chandef_compatible(chandef,
+ 						&ctx->conf.def))
+ 			continue;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 276cf93..7fca03e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -396,10 +396,7 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 		for (j = 0; j < c->n_limits; j++) {
+ 			u16 types = c->limits[j].types;
+ 
+-			/*
+-			 * interface types shouldn't overlap, this is
+-			 * used in cfg80211_can_change_interface()
+-			 */
++			/* interface types shouldn't overlap */
+ 			if (WARN_ON(types & all_iftypes))
+ 				return -EINVAL;
+ 			all_iftypes |= types;
+@@ -798,7 +795,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev;
+-	int ret;
+ 
+ 	if (!wdev)
+ 		return NOTIFY_DONE;
+@@ -961,9 +957,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+ 			return notifier_from_errno(-EOPNOTSUPP);
+-		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+-		if (ret)
+-			return notifier_from_errno(ret);
++		if (rfkill_blocked(rdev->rfkill))
++			return notifier_from_errno(-ERFKILL);
+ 		break;
  	}
-     }
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index b3ee6d0..d677d07 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -77,8 +77,8 @@ struct vnt_rrv_time_ab {
- struct vnt_tx_datahead_g {
- 	struct vnt_phy_field b;
- 	struct vnt_phy_field a;
--	u16 wDuration_b;
--	u16 wDuration_a;
-+	__le16 duration_b;
-+	__le16 duration_a;
- 	u16 wTimeStampOff_b;
- 	u16 wTimeStampOff_a;
- } __packed;
-@@ -86,35 +86,35 @@ struct vnt_tx_datahead_g {
- struct vnt_tx_datahead_g_fb {
- 	struct vnt_phy_field b;
- 	struct vnt_phy_field a;
--	u16 wDuration_b;
--	u16 wDuration_a;
--	u16 wDuration_a_f0;
--	u16 wDuration_a_f1;
-+	__le16 duration_b;
-+	__le16 duration_a;
-+	__le16 duration_a_f0;
-+	__le16 duration_a_f1;
- 	u16 wTimeStampOff_b;
- 	u16 wTimeStampOff_a;
- } __packed;
  
- struct vnt_tx_datahead_ab {
- 	struct vnt_phy_field ab;
--	u16 wDuration;
-+	__le16 duration;
- 	u16 wTimeStampOff;
- } __packed;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 4a930ef..53f1996 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -406,28 +406,6 @@ unsigned int
+ cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
+ 			      const struct cfg80211_chan_def *chandef);
  
- struct vnt_tx_datahead_a_fb {
- 	struct vnt_phy_field a;
--	u16 wDuration;
-+	__le16 duration;
- 	u16 wTimeStampOff;
--	u16 wDuration_f0;
--	u16 wDuration_f1;
-+	__le16 duration_f0;
-+	__le16 duration_f1;
- } __packed;
+-static inline int
+-cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-			      struct wireless_dev *wdev,
+-			      enum nl80211_iftype iftype)
+-{
+-	/* TODO: For this function, we'll probably need to keep some
+-	 * kind of interface combination check in cfg80211...
+-	 */
+-	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+-					    CHAN_MODE_UNDEFINED, 0);
+-}
+-
+-static inline int
+-cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+-			   enum nl80211_iftype iftype)
+-{
+-	if (rfkill_blocked(rdev->rfkill))
+-		return -ERFKILL;
+-
+-	return cfg80211_can_change_interface(rdev, NULL, iftype);
+-}
+-
+ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
+ {
+ 	unsigned long end = jiffies;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07253bf..5465e0e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8957,9 +8957,8 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	if (wdev->p2p_started)
+ 		return 0;
  
- /* RTS buffer header */
- struct vnt_rts_g {
- 	struct vnt_phy_field b;
- 	struct vnt_phy_field a;
--	u16 wDuration_ba;
--	u16 wDuration_aa;
--	u16 wDuration_bb;
-+	__le16 duration_ba;
-+	__le16 duration_aa;
-+	__le16 duration_bb;
- 	u16 wReserved;
- 	struct ieee80211_rts data;
- 	struct vnt_tx_datahead_g data_head;
-@@ -123,9 +123,9 @@ struct vnt_rts_g {
- struct vnt_rts_g_fb {
- 	struct vnt_phy_field b;
- 	struct vnt_phy_field a;
--	u16 wDuration_ba;
--	u16 wDuration_aa;
--	u16 wDuration_bb;
-+	__le16 duration_ba;
-+	__le16 duration_aa;
-+	__le16 duration_bb;
- 	u16 wReserved;
- 	u16 wRTSDuration_ba_f0;
- 	u16 wRTSDuration_aa_f0;
-@@ -137,7 +137,7 @@ struct vnt_rts_g_fb {
+-	err = cfg80211_can_add_interface(rdev, wdev->iftype);
+-	if (err)
+-		return err;
++	if (rfkill_blocked(rdev->rfkill))
++		return -ERFKILL;
  
- struct vnt_rts_ab {
- 	struct vnt_phy_field ab;
--	u16 wDuration;
-+	__le16 duration;
- 	u16 wReserved;
- 	struct ieee80211_rts data;
- 	struct vnt_tx_datahead_ab data_head;
-@@ -145,7 +145,7 @@ struct vnt_rts_ab {
+ 	err = rdev_start_p2p_device(rdev, wdev);
+ 	if (err)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b2498e3..378038d30 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -873,11 +873,6 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		return -EBUSY;
  
- struct vnt_rts_a_fb {
- 	struct vnt_phy_field a;
--	u16 wDuration;
-+	__le16 duration;
- 	u16 wReserved;
- 	u16 wRTSDuration_f0;
- 	u16 wRTSDuration_f1;
-@@ -156,7 +156,7 @@ struct vnt_rts_a_fb {
- /* CTS buffer header */
- struct vnt_cts {
- 	struct vnt_phy_field b;
--	u16 wDuration_ba;
-+	__le16 duration_ba;
- 	u16 wReserved;
- 	struct ieee80211_cts data;
- 	u16 reserved2;
-@@ -165,7 +165,7 @@ struct vnt_cts {
- 
- struct vnt_cts_fb {
- 	struct vnt_phy_field b;
--	u16 wDuration_ba;
-+	__le16 duration_ba;
- 	u16 wReserved;
- 	u16 wCTSDuration_ba_f0;
- 	u16 wCTSDuration_ba_f1;
+ 	if (ntype != otype && netif_running(dev)) {
+-		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+-						    ntype);
+-		if (err)
+-			return err;
+-
+ 		dev->ieee80211_ptr->use_4addr = false;
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 		wdev_lock(dev->ieee80211_ptr);
 -- 
-1.9.0
+1.8.5.3
 
