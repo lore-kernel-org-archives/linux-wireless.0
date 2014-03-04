@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:62085 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753293AbaCAURZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:25 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 16/23] ath9k_htc: add ath9k_htc_beacon_init (but not use it)
-Date: Sat,  1 Mar 2014 21:15:59 +0100
-Message-Id: <1393704966-13985-17-git-send-email-linux@rempel-privat.de> (sfid-20140301_214709_142326_5321CB1D)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:43441 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757187AbaCDO1Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2014 09:27:16 -0500
+Date: Tue, 4 Mar 2014 14:26:58 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"pali.rohar@gmail.com" <pali.rohar@gmail.com>,
+	"pavel@ucw.cz" <pavel@ucw.cz>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: use skb_trim to make skb shorter
+Message-ID: <20140304142658.GK8766@mudshark.cambridge.arm.com> (sfid-20140304_152801_850523_E312C186)
+References: <20140225105756.GB22279@mudshark.cambridge.arm.com>
+ <1393678326-23535-1-git-send-email-ivo.g.dimitrov.75@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1393678326-23535-1-git-send-email-ivo.g.dimitrov.75@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+Hi Jonn,
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index fc16c10..b9b03c1 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -62,6 +62,28 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 	}
- }
- 
-+/*
-+ * Both nexttbtt and intval have to be in usecs.
-+ */
-+static void ath9k_htc_beacon_init(struct ath9k_htc_priv *priv,
-+				  struct ath_beacon_config *conf,
-+				  bool reset_tsf)
-+{
-+	struct ath_hw *ah = priv->ah;
-+	int ret __attribute__ ((unused));
-+	__be32 htc_imask = 0;
-+	u8 cmd_rsp;
-+
-+	WMI_CMD(WMI_DISABLE_INTR_CMDID);
-+	if (reset_tsf)
-+		ath9k_hw_reset_tsf(ah);
-+	ath9k_htc_beaconq_config(priv);
-+	ath9k_hw_beaconinit(ah, conf->nexttbtt, conf->intval);
-+	priv->beacon.bmisscnt = 0;
-+	htc_imask = cpu_to_be32(ah->imask);
-+	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
-+}
-+
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 					struct ath_beacon_config *bss_conf)
- {
--- 
-1.9.0
+On Sat, Mar 01, 2014 at 12:52:06PM +0000, Ivaylo Dimitrov wrote:
+> the current code is directly setting skb->len, which is not correct and
+> brings problems with HAVE_EFFICIENT_UNALIGNED_ACCESS enabled in config
+> 
+> Signed-off-by: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+> ---
 
+Can you pick this patch up please? It addresses a regression introduced in
+the merge window (ARM started selecting HAVE_EFFICIENT_UNALIGNED_ACCESS).
+
+Cheers,
+
+Will
+
+>  drivers/net/wireless/ti/wl1251/rx.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
+> index 123c4bb..cde0eaf 100644
+> --- a/drivers/net/wireless/ti/wl1251/rx.c
+> +++ b/drivers/net/wireless/ti/wl1251/rx.c
+> @@ -180,7 +180,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+>  	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
+>  
+>  	/* The actual length doesn't include the target's alignment */
+> -	skb->len = desc->length  - PLCP_HEADER_LENGTH;
+> +	skb_trim(skb, desc->length - PLCP_HEADER_LENGTH);
+>  
+>  	fc = (u16 *)skb->data;
+>  
+> -- 
+> 1.7.9.5
+> 
+> 
