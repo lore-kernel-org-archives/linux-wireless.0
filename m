@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:57692 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865AbaCaKD2 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:35811 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752482AbaCDSvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 06:03:28 -0400
-Received: by mail-wg0-f46.google.com with SMTP id b13so5708146wgh.5
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 03:03:27 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/4] mac80211/cfg80211: CSA fixes/cleanups
-Date: Mon, 31 Mar 2014 11:57:17 +0200
-Message-Id: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com> (sfid-20140331_120332_110796_5B80A593)
-In-Reply-To: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 4 Mar 2014 13:51:39 -0500
+Date: Tue, 04 Mar 2014 13:51:36 -0500 (EST)
+Message-Id: <20140304.135136.953997395057467462.davem@davemloft.net> (sfid-20140304_195146_874240_E3EDE1BC)
+To: sw@simonwunderlich.de
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de
+Subject: Re: [net-next v4 0/3] 802.21 and MPLS headers and classification
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Simon Wunderlich <sw@simonwunderlich.de>
+Date: Mon,  3 Mar 2014 17:23:09 +0100
 
-The patchset fixes CSA tx queue locking and
-introduces interface teardown upon CSA failure
-during finalization.
+> this series contains a header file proposal for MPLS labels. These
+> labels do not seem to be properly defined in the kernel so far. We are
+> developing a wired/wireless 802.21/MPLS switch and need to check the
+> MPLS labels to use the traffic control info for transmissions over
+> 802.11 networks.
+> 
+> Changes to third version:
+> 
+>  * rename mpls_label_stack to mpls_label (thanks Neil)
+>  * fix over-indendented closing brac (thanks Sergei)
+>  * add Johannes' Ack
 
-v2:
- * get rid of idempotency
-
-v3:
- * fixes (see each commit)
-
-Michal Kazior (4):
-  mac80211: fix CSA tx queue locking
-  mac80211: split CSA finalize function
-  cfg80211: export interface stopping function
-  mac80211: disconnect iface if CSA unexpectedly fails
-
- include/net/cfg80211.h     |  15 +++++
- include/net/mac80211.h     |   4 +-
- net/mac80211/cfg.c         | 144 +++++++++++++++++++++++++++++++++------------
- net/mac80211/ieee80211_i.h |   2 +
- net/mac80211/iface.c       |   7 +++
- net/mac80211/mlme.c        |  37 +++++++++---
- net/wireless/ap.c          |   4 +-
- net/wireless/core.c        |  43 +++++++++++---
- net/wireless/core.h        |   7 +++
- net/wireless/mesh.c        |   4 +-
- net/wireless/trace.h       |  15 +++++
- net/wireless/util.c        |   3 +
- 12 files changed, 228 insertions(+), 57 deletions(-)
-
--- 
-1.8.5.3
-
+Series applied, thanks Simon.
