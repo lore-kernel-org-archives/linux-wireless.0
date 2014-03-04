@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:44924 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbaCVJCe (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44725 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755235AbaCDSpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2014 05:02:34 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hn9so1141419wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:33 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/10] staging: vt6656: rxtx Replace vnt_tx_fifo_head wReserved
-Date: Sat, 22 Mar 2014 09:01:30 +0000
-Message-Id: <1395478892-3419-8-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100241_098919_46BE6369)
-In-Reply-To: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
-References: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 4 Mar 2014 13:45:14 -0500
+Date: Tue, 4 Mar 2014 13:34:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: Re: pull request: iwlwifi 2014-03-04
+Message-ID: <20140304183453.GC7317@tuxdriver.com> (sfid-20140304_194559_734293_4EEDEB5A)
+References: <53160EF4.8090005@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53160EF4.8090005@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At run time wReserved has the value of wCurrentRate.
+On Tue, Mar 04, 2014 at 07:35:48PM +0200, Emmanuel Grumbach wrote:
+> Hi John,
+> 
+> One more fix and an update for device IDs.
+> There is a bugzilla reported for the fix which is mentioned in the commit message.
+> 
+> Please pull.
+> 
+> 	 emmanuel
+> 
+> The following changes since commit 143582c6847cb285b361804c613127c25de60ca4:
+> 
+>   iwlwifi: fix TX status for aggregated packets (2014-02-27 10:28:03 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to acfcd9ed588465e48efe5ceb67177096d51c95a9:
+> 
+>   iwlwifi: fix and add 7265 series HW IDs (2014-03-04 19:30:06 +0200)
 
-Replace with current_rate with __le16 base type and endian correct
-wCurrentRate.
+Pulling now...
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 2 +-
- drivers/staging/vt6656/rxtx.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 4bb13a7..2b67b1b 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -800,7 +800,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u16 wFifoCtl;
- 	u8 byFBOption = AUTO_FB_NONE;
- 
--	pFifoHead->wReserved = wCurrentRate;
-+	pFifoHead->current_rate = cpu_to_le16(wCurrentRate);
- 	wFifoCtl = pFifoHead->wFIFOCtl;
- 
- 	if (wFifoCtl & FIFOCTL_AUTO_FB_0)
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 779c672..4dfb2e0 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -219,7 +219,7 @@ struct vnt_tx_fifo_head {
- 	u16 wFIFOCtl;
- 	__le16 time_stamp;
- 	u16 wFragCtl;
--	u16 wReserved;
-+	__le16 current_rate;
- } __packed;
- 
- struct vnt_tx_buffer {
 -- 
-1.9.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
