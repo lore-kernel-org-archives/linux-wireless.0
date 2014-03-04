@@ -1,82 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7229 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbaCXLMJ (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:41216 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757250AbaCDOGA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 07:12:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k:  Add debugging for tx-credits usage.
-References: <1395428150-31996-1-git-send-email-greearb@candelatech.com>
-Date: Mon, 24 Mar 2014 13:12:03 +0200
-In-Reply-To: <1395428150-31996-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Fri, 21 Mar 2014 11:55:48
-	-0700")
-Message-ID: <871txr7svw.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_121240_886053_89D1BF9B)
+	Tue, 4 Mar 2014 09:06:00 -0500
+Received: by mail-bk0-f49.google.com with SMTP id my13so223138bkb.22
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 06:05:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1393937548-7482-14-git-send-email-janusz.dziedzic@tieto.com>
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1393937548-7482-14-git-send-email-janusz.dziedzic@tieto.com>
+Date: Tue, 4 Mar 2014 15:05:58 +0100
+Message-ID: <CA+BoTQ=+LajufXev1x6ZVDxzdc0v0Kf98gow-_ZzHoditwOtFA@mail.gmail.com> (sfid-20140304_150606_467838_124DE691)
+Subject: Re: [RFC 13/14] ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
-
-> From: Ben Greear <greearb@candelatech.com>
+On 4 March 2014 13:52, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/htt_rx.c |   22 +++++++++++++---------
+>  1 file changed, 13 insertions(+), 9 deletions(-)
 >
-> This helps track tx credits accounting and usage.  If
-> firmware hangs or otherwise fails to return credits, one
-> can more easily see the last few command types that
-> was send to the firmware.
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index 555aecf..e300a74 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -310,7 +310,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
 >
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>         if (htt->rx_confused) {
+>                 ath10k_warn("htt is confused. refusing rx\n");
+> -               return 0;
+> +               return -1;
+>         }
 
-This patchset didn't apply, and the sha1 ids were useless so that 3-way
-merge didn't work. Can you rebase, please? And better yet if you rebase
-in top of my master branch.
+Add a comment before function definition, please:
 
->  int ath10k_htc_send(struct ath10k_htc *htc,
->  		    enum ath10k_htc_ep_id eid,
-> -		    struct sk_buff *skb)
-> +		    struct sk_buff *skb, int dbg)
->  {
->  	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
->  	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
-> @@ -167,6 +167,10 @@ int ath10k_htc_send(struct ath10k_htc *htc,
->  			goto err_pull;
->  		}
->  		ep->tx_credits -= credits;
-> +		ath10k_dbg(ATH10K_DBG_HTC,
-> +			   "ep %d used %d credits, remaining %d dbg %d (0x%x)\n",
-> +			   eid, credits, ep->tx_credits, dbg, dbg);
+/* return: <0 fatal error, >=0 success, >0 number of chained msdus */
+
+(this includes return-value logic Ben's unchaining patch added..)
+
+
+>
+>         msdu = *head_msdu = ath10k_htt_rx_netbuf_pop(htt);
+> @@ -442,6 +442,9 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+>         }
+>         *tail_msdu = msdu;
+>
+> +       if (*head_msdu == NULL)
+> +               msdu_chaining = -1;
 > +
->  		spin_unlock_bh(&htc->tx_lock);
->  	}
+>         /*
+>          * Don't refill the ring yet.
+>          *
+> @@ -1089,11 +1092,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+>                                         enum htt_rx_mpdu_status status,
+>                                         bool channel_set)
+>  {
+> -       if (!head) {
+> -               ath10k_warn("htt rx no data!\n");
+> -               return false;
+> -       }
+> -
+>         if (head->len == 0) {
+>                 ath10k_dbg(ATH10K_DBG_HTT,
+>                            "htt rx dropping due to zero-len\n");
+> @@ -1209,8 +1207,14 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+>                                                          &msdu_head,
+>                                                          &msdu_tail);
+>
+> +                       if (msdu_chaining == -1) {
 
-[...]
+if (msdu_chaining < 0)
 
-> @@ -680,7 +684,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
->  
->  	reinit_completion(&htc->ctl_resp);
->  
-> -	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
-> +	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+I think having `ret` makes more sense here now.
 
-Using line numbers in debug messages is very cumbersome. Some people
-cherry pick patches, have their own changes and whatnot which will make
-it more difficult to read the debug logs. Isn't there any better way to
-do this?
 
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -544,7 +544,7 @@ static int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
->  	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
->  
->  	memset(skb_cb, 0, sizeof(*skb_cb));
-> -	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
-> +	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb, 0x71100000 | cmd_id);
->  	trace_ath10k_wmi_cmd(cmd_id, skb->data, skb->len, ret);
+> +                               ath10k_warn("htt rx no data!\n");
 
-What does 0x71100000 stand for?
+"failed to pop amsdu from htt rx ring: %d", ret
 
--- 
-Kalle Valo
+
+> +                               ath10k_htt_rx_free_msdu_chain(msdu_head);
+> +                               continue;
+> +                       }
+> +
+>                         if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
+> -                                                        !!msdu_chaining,
+> +                                                        msdu_chaining > 0,
+>                                                          status,
+>                                                          channel_set)) {
+>                                 ath10k_htt_rx_free_msdu_chain(msdu_head);
+> @@ -1280,12 +1284,12 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+>
+>         ath10k_dbg(ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
+>
+> -       if (!msdu_head) {
+> +       if (msdu_chaining == -1) {
+
+ret < 0
+
+
+>                 ath10k_warn("htt rx frag no data\n");
+
+"failed to .. : %d", ret
+
+
+>                 return;
+>         }
+>
+> -       if (msdu_chaining || msdu_head != msdu_tail) {
+> +       if (msdu_chaining > 0 || msdu_head != msdu_tail) {
+>                 ath10k_warn("aggregation with fragmentation?!\n");
+>                 ath10k_htt_rx_free_msdu_chain(msdu_head);
+>                 return;
+
+Actually the 2 checks above can be squashed:
+
+if (ret) {
+  ath10k_warn("failed to pop amsdu from htt rx for fragmented rx: %d", ret)
+
+
+
+Michał
