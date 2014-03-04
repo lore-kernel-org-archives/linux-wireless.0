@@ -1,124 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7311 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933480AbaCQNe7 (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:49975 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752984AbaCDWyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:34:59 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 10/21] wil6210: sort HW registers definitions
-Date: Mon, 17 Mar 2014 15:34:14 +0200
-Message-ID: <1395063265-6522-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143515_063631_C030EBF6)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 4 Mar 2014 17:54:22 -0500
+Received: by mail-ob0-f175.google.com with SMTP id uy5so229389obc.6
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 14:54:21 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/9] rtlwifi: Some cleanups
+Date: Tue,  4 Mar 2014 16:53:46 -0600
+Message-Id: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140304_235426_988040_8E02B7F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Put all registers in order for easier navigation;
-fix naming to reflect hardware cluster
+These patches consist of modifications needed to replace the staging version
+of r8821ae with a newer version that uses the regular version of rtlwifi.
+In addition, there are fixes that prevent the drivers from disabling IRQs
+for too long a time.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    |  6 +++---
- drivers/net/wireless/ath/wil6210/wil6210.h | 31 +++++++++++++++---------------
- 2 files changed, 19 insertions(+), 18 deletions(-)
+Finally, there are two patches that actually make the changes in the staging
+directory. The process of sending these through wireless has been discussed
+with Greg Kroah-Hartman.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 1f9f1d2..bd27bee 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -244,7 +244,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- #define S(a, v) iowrite32(ioread32(wil->csr + HOSTADDR(a)) | v, \
- 		wil->csr + HOSTADDR(a))
- 
--	wil->hw_version = R(RGF_FW_REV_ID);
-+	wil->hw_version = R(RGF_USER_FW_REV_ID);
- 	rev_id = wil->hw_version & 0xff;
- 	/* hpal_perst_from_pad_src_n_mask */
- 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT(6));
-@@ -268,7 +268,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 	if (rev_id == 1) {
- 		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00000080);
- 	} else {
--		W(RGF_LOS_COUNTER_CTL, BIT(6) | BIT(8));
-+		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(6) | BIT(8));
- 		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000);
- 	}
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
-@@ -284,7 +284,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 	} while (baud_rate != 0x15e);
- 
- 	if (rev_id == 2)
--		W(RGF_LOS_COUNTER_CTL, BIT(8));
-+		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(8));
- 
- 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 317621c..b376399 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -74,26 +74,18 @@ struct RGF_ICR {
- } __packed;
- 
- /* registers - FW addresses */
--#define RGF_FW_REV_ID			(0x880a8c) /* chip revision */
- #define RGF_USER_SERIAL_BAUD_RATE	(0x880050)
--#define RGF_LOS_COUNTER_CTL		(0x882dc4)
--#define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
--#define RGF_USER_USER_ICR		(0x880b4c) /* struct RGF_ICR */
--	#define BIT_USER_USER_ICR_SW_INT_2	BIT(18)
--#define RGF_USER_CLKS_CTL_SW_RST_MASK_0	(0x880b14)
--#define RGF_USER_MAC_CPU_0		(0x8801fc)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
-+#define RGF_USER_MAC_CPU_0		(0x8801fc)
-+#define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
-+#define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
- #define RGF_USER_CLKS_CTL_SW_RST_VEC_0	(0x880b04)
- #define RGF_USER_CLKS_CTL_SW_RST_VEC_1	(0x880b08)
- #define RGF_USER_CLKS_CTL_SW_RST_VEC_2	(0x880b0c)
- #define RGF_USER_CLKS_CTL_SW_RST_VEC_3	(0x880b10)
--
--#define RGF_DMA_PSEUDO_CAUSE		(0x881c68)
--#define RGF_DMA_PSEUDO_CAUSE_MASK_SW	(0x881c6c)
--#define RGF_DMA_PSEUDO_CAUSE_MASK_FW	(0x881c70)
--	#define BIT_DMA_PSEUDO_CAUSE_RX		BIT(0)
--	#define BIT_DMA_PSEUDO_CAUSE_TX		BIT(1)
--	#define BIT_DMA_PSEUDO_CAUSE_MISC	BIT(2)
-+#define RGF_USER_CLKS_CTL_SW_RST_MASK_0	(0x880b14)
-+#define RGF_USER_USER_ICR		(0x880b4c) /* struct RGF_ICR */
-+	#define BIT_USER_USER_ICR_SW_INT_2	BIT(18)
- 
- #define RGF_DMA_EP_TX_ICR		(0x881bb4) /* struct RGF_ICR */
- 	#define BIT_DMA_EP_TX_ICR_TX_DONE	BIT(0)
-@@ -108,13 +100,22 @@ struct RGF_ICR {
- /* Interrupt moderation control */
- #define RGF_DMA_ITR_CNT_TRSH		(0x881c5c)
- #define RGF_DMA_ITR_CNT_DATA		(0x881c60)
--#define RGF_DMA_ITR_CNT_CRL		(0x881C64)
-+#define RGF_DMA_ITR_CNT_CRL		(0x881c64)
- 	#define BIT_DMA_ITR_CNT_CRL_EN		BIT(0)
- 	#define BIT_DMA_ITR_CNT_CRL_EXT_TICK	BIT(1)
- 	#define BIT_DMA_ITR_CNT_CRL_FOREVER	BIT(2)
- 	#define BIT_DMA_ITR_CNT_CRL_CLR		BIT(3)
- 	#define BIT_DMA_ITR_CNT_CRL_REACH_TRSH	BIT(4)
- 
-+#define RGF_DMA_PSEUDO_CAUSE		(0x881c68)
-+#define RGF_DMA_PSEUDO_CAUSE_MASK_SW	(0x881c6c)
-+#define RGF_DMA_PSEUDO_CAUSE_MASK_FW	(0x881c70)
-+	#define BIT_DMA_PSEUDO_CAUSE_RX		BIT(0)
-+	#define BIT_DMA_PSEUDO_CAUSE_TX		BIT(1)
-+	#define BIT_DMA_PSEUDO_CAUSE_MISC	BIT(2)
-+
-+#define RGF_PCIE_LOS_COUNTER_CTL	(0x882dc4)
-+
- /* popular locations */
- #define HOST_MBOX   HOSTADDR(RGF_USER_USER_SCRATCH_PAD)
- #define HOST_SW_INT (HOSTADDR(RGF_USER_USER_ICR) + \
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry Finger (9):
+  rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: rtl8192se: rtl8723ae:
+    rtl8723be: rtl8188eu: Modify for new API
+  rtlwifi: Move common routines to core
+  rtlwifi: rtl8723be: rtl8723com: Remove unused allow_all_destaddr
+    functions
+  rtlwifi: rtl8192cu: Fix too long disable of IRQs
+  rtlwifi: rtl8192se: Fix too long disable of IRQs
+  rtlwifi: rtl8188ee: Fix too long disable of IRQs
+  rtlwifi: rtl8723ae: Fix too long disable of IRQs
+  staging: r8821ae: Replace driver with new version
+  staging: r8821ae: Remove remainder of files from old driver
+
+ .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |   12 -
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |    2 +-
+ drivers/net/wireless/rtlwifi/core.c                |   60 +
+ drivers/net/wireless/rtlwifi/core.h                |    4 +
+ drivers/net/wireless/rtlwifi/pci.c                 |   64 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |   10 +
+ drivers/net/wireless/rtlwifi/ps.c                  |  100 +
+ drivers/net/wireless/rtlwifi/ps.h                  |   60 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/Makefile    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   39 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |   61 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/reg.h       |   16 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.h       |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |   71 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       |   16 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.h       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   15 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |   71 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.h       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   50 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |  429 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/reg.h       |   14 -
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.h       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |   27 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   87 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/reg.h       |   12 -
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.h       |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |   19 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |   48 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       |   16 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/Makefile    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c        |   15 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.c       |   29 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h    |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/reg.h       |   16 -
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c        |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c       |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h       |    7 +-
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |  217 +-
+ drivers/staging/rtl8821ae/Kconfig                  |    2 +-
+ drivers/staging/rtl8821ae/Makefile                 |   48 +-
+ drivers/staging/rtl8821ae/btc.h                    |   82 +
+ .../staging/rtl8821ae/btcoexist/HalBtc8812a1Ant.c  | 3976 --------------
+ .../staging/rtl8821ae/btcoexist/HalBtc8812a1Ant.h  |  205 -
+ .../staging/rtl8821ae/btcoexist/habtc8723a1ant.c   | 1614 ------
+ .../staging/rtl8821ae/btcoexist/habtc8723a1ant.h   |  176 -
+ .../staging/rtl8821ae/btcoexist/halbt_precomp.h    |   99 -
+ .../staging/rtl8821ae/btcoexist/halbtc8192e1ant.c  | 3891 --------------
+ .../staging/rtl8821ae/btcoexist/halbtc8192e1ant.h  |  226 -
+ .../staging/rtl8821ae/btcoexist/halbtc8192e2ant.c  | 4242 ---------------
+ .../staging/rtl8821ae/btcoexist/halbtc8192e2ant.h  |  162 -
+ .../staging/rtl8821ae/btcoexist/halbtc8723a2ant.c  | 3780 -------------
+ .../staging/rtl8821ae/btcoexist/halbtc8723a2ant.h  |  179 -
+ .../staging/rtl8821ae/btcoexist/halbtc8723b1ant.c  | 4104 ---------------
+ .../staging/rtl8821ae/btcoexist/halbtc8723b1ant.h  |  175 -
+ .../staging/rtl8821ae/btcoexist/halbtc8723b2ant.c  | 4185 ---------------
+ .../staging/rtl8821ae/btcoexist/halbtc8723b2ant.h  |  145 -
+ drivers/staging/rtl8821ae/btcoexist/halbtcoutsrc.c | 1181 -----
+ drivers/staging/rtl8821ae/btcoexist/halbtcoutsrc.h |  549 --
+ drivers/staging/rtl8821ae/btcoexist/rtl_btc.c      |  236 -
+ drivers/staging/rtl8821ae/btcoexist/rtl_btc.h      |   66 -
+ drivers/staging/rtl8821ae/def.h                    |  442 ++
+ drivers/staging/rtl8821ae/dm.c                     | 3115 +++++++++++
+ drivers/staging/rtl8821ae/dm.h                     |  367 ++
+ drivers/staging/rtl8821ae/fw.c                     | 1311 +++++
+ drivers/staging/rtl8821ae/fw.h                     |  307 ++
+ drivers/staging/rtl8821ae/hal_bt_coexist.c         |  492 ++
+ drivers/staging/rtl8821ae/hal_bt_coexist.h         |  155 +
+ drivers/staging/rtl8821ae/hal_btc.c                | 1669 ++++++
+ drivers/staging/rtl8821ae/hal_btc.h                |  157 +
+ drivers/staging/rtl8821ae/hw.c                     | 3089 +++++++++++
+ drivers/staging/rtl8821ae/hw.h                     |   73 +
+ drivers/staging/rtl8821ae/led.c                    |  231 +
+ drivers/staging/rtl8821ae/led.h                    |   37 +
+ drivers/staging/rtl8821ae/phy.c                    | 5005 ++++++++++++++++++
+ drivers/staging/rtl8821ae/phy.h                    |  254 +
+ drivers/staging/rtl8821ae/pwrseq.c                 |  181 +
+ drivers/staging/rtl8821ae/pwrseq.h                 |  691 +++
+ drivers/staging/rtl8821ae/reg.h                    | 2433 +++++++++
+ drivers/staging/rtl8821ae/rf.c                     |  448 ++
+ drivers/staging/rtl8821ae/rf.h                     |   43 +
+ drivers/staging/rtl8821ae/rtl8821ae/btc.h          |   87 -
+ drivers/staging/rtl8821ae/rtl8821ae/def.h          |  442 --
+ drivers/staging/rtl8821ae/rtl8821ae/dm.c           | 3045 -----------
+ drivers/staging/rtl8821ae/rtl8821ae/dm.h           |  426 --
+ drivers/staging/rtl8821ae/rtl8821ae/fw.c           | 1349 -----
+ drivers/staging/rtl8821ae/rtl8821ae/fw.h           |  321 --
+ .../staging/rtl8821ae/rtl8821ae/hal_bt_coexist.c   |  519 --
+ .../staging/rtl8821ae/rtl8821ae/hal_bt_coexist.h   |  169 -
+ drivers/staging/rtl8821ae/rtl8821ae/hal_btc.c      | 2069 --------
+ drivers/staging/rtl8821ae/rtl8821ae/hal_btc.h      |  160 -
+ drivers/staging/rtl8821ae/rtl8821ae/hw.c           | 3346 ------------
+ drivers/staging/rtl8821ae/rtl8821ae/hw.h           |   75 -
+ drivers/staging/rtl8821ae/rtl8821ae/led.c          |  239 -
+ drivers/staging/rtl8821ae/rtl8821ae/led.h          |   40 -
+ drivers/staging/rtl8821ae/rtl8821ae/phy.c          | 5525 --------------------
+ drivers/staging/rtl8821ae/rtl8821ae/phy.h          |  258 -
+ drivers/staging/rtl8821ae/rtl8821ae/pwrseq.c       |  199 -
+ drivers/staging/rtl8821ae/rtl8821ae/pwrseq.h       |  413 --
+ drivers/staging/rtl8821ae/rtl8821ae/pwrseqcmd.c    |  140 -
+ drivers/staging/rtl8821ae/rtl8821ae/pwrseqcmd.h    |   71 -
+ drivers/staging/rtl8821ae/rtl8821ae/reg.h          | 2427 ---------
+ drivers/staging/rtl8821ae/rtl8821ae/rf.c           |  464 --
+ drivers/staging/rtl8821ae/rtl8821ae/rf.h           |   46 -
+ drivers/staging/rtl8821ae/rtl8821ae/sw.c           |  499 --
+ drivers/staging/rtl8821ae/rtl8821ae/sw.h           |   39 -
+ drivers/staging/rtl8821ae/rtl8821ae/table.c        | 4002 --------------
+ drivers/staging/rtl8821ae/rtl8821ae/table.h        |   62 -
+ drivers/staging/rtl8821ae/rtl8821ae/trx.c          | 1050 ----
+ drivers/staging/rtl8821ae/rtl8821ae/trx.h          |  641 ---
+ drivers/staging/rtl8821ae/sw.c                     |  417 ++
+ drivers/staging/rtl8821ae/sw.h                     |   34 +
+ drivers/staging/rtl8821ae/table.c                  | 3430 ++++++++++++
+ drivers/staging/rtl8821ae/table.h                  |   56 +
+ drivers/staging/rtl8821ae/trx.c                    |  944 ++++
+ drivers/staging/rtl8821ae/trx.h                    |  623 +++
+ 130 files changed, 26973 insertions(+), 58165 deletions(-)
+ create mode 100644 drivers/staging/rtl8821ae/btc.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/HalBtc8812a1Ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/HalBtc8812a1Ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/habtc8723a1ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/habtc8723a1ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbt_precomp.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8192e1ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8192e1ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8192e2ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8192e2ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723a2ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723a2ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723b1ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723b1ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723b2ant.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtc8723b2ant.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtcoutsrc.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/halbtcoutsrc.h
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/rtl_btc.c
+ delete mode 100644 drivers/staging/rtl8821ae/btcoexist/rtl_btc.h
+ create mode 100644 drivers/staging/rtl8821ae/def.h
+ create mode 100644 drivers/staging/rtl8821ae/dm.c
+ create mode 100644 drivers/staging/rtl8821ae/dm.h
+ create mode 100644 drivers/staging/rtl8821ae/fw.c
+ create mode 100644 drivers/staging/rtl8821ae/fw.h
+ create mode 100644 drivers/staging/rtl8821ae/hal_bt_coexist.c
+ create mode 100644 drivers/staging/rtl8821ae/hal_bt_coexist.h
+ create mode 100644 drivers/staging/rtl8821ae/hal_btc.c
+ create mode 100644 drivers/staging/rtl8821ae/hal_btc.h
+ create mode 100644 drivers/staging/rtl8821ae/hw.c
+ create mode 100644 drivers/staging/rtl8821ae/hw.h
+ create mode 100644 drivers/staging/rtl8821ae/led.c
+ create mode 100644 drivers/staging/rtl8821ae/led.h
+ create mode 100644 drivers/staging/rtl8821ae/phy.c
+ create mode 100644 drivers/staging/rtl8821ae/phy.h
+ create mode 100644 drivers/staging/rtl8821ae/pwrseq.c
+ create mode 100644 drivers/staging/rtl8821ae/pwrseq.h
+ create mode 100644 drivers/staging/rtl8821ae/reg.h
+ create mode 100644 drivers/staging/rtl8821ae/rf.c
+ create mode 100644 drivers/staging/rtl8821ae/rf.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/btc.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/def.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/dm.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/dm.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/fw.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/fw.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hal_bt_coexist.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hal_bt_coexist.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hal_btc.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hal_btc.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hw.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/hw.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/led.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/led.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/phy.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/phy.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/pwrseq.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/pwrseq.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/pwrseqcmd.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/pwrseqcmd.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/reg.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/rf.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/rf.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/sw.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/sw.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/table.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/table.h
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/trx.c
+ delete mode 100644 drivers/staging/rtl8821ae/rtl8821ae/trx.h
+ create mode 100644 drivers/staging/rtl8821ae/sw.c
+ create mode 100644 drivers/staging/rtl8821ae/sw.h
+ create mode 100644 drivers/staging/rtl8821ae/table.c
+ create mode 100644 drivers/staging/rtl8821ae/table.h
+ create mode 100644 drivers/staging/rtl8821ae/trx.c
+ create mode 100644 drivers/staging/rtl8821ae/trx.h
+
 -- 
-1.8.3.2
+1.8.4.5
 
