@@ -1,79 +1,377 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:61766 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755473AbaC0Suf (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:37881 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756382AbaCDIIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 14:50:35 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so3203419eek.21
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 11:50:34 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 4 Mar 2014 03:08:00 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] iwlwifi: mvm: implement mac80211's flush callback
-Date: Thu, 27 Mar 2014 20:50:33 +0200
-Message-Id: <1395946233-8672-1-git-send-email-egrumbach@gmail.com> (sfid-20140327_195039_641885_3DF572A1)
-In-Reply-To: <53346ABB.1060907@broadcom.com>
-References: <53346ABB.1060907@broadcom.com>
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v8 2/5] cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+Date: Tue,  4 Mar 2014 10:07:51 +0200
+Message-Id: <1393920474-4935-3-git-send-email-luca@coelho.fi> (sfid-20140304_090815_395435_02A23F51)
+In-Reply-To: <1393920474-4935-1-git-send-email-luca@coelho.fi>
+References: <1393920474-4935-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This allows mac80211 to flush the Tx queues before it sends
-critical management frames.
+Some interface types don't require DFS (such as STATION, P2P_CLIENT
+etc).  In order to centralize these decisions, make
+cfg80211_chandef_dfs_required() take the iftype into consideration.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Additionally, the function now returns a bitmap with the channel width
+that requires DFS.  This is done to simplify some of the calls.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+In v4:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 3ce7203..c08e02a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2463,6 +2463,34 @@ out_unlock:
- 	mutex_unlock(&mvm->mutex);
- }
+   * rebased on top of slightly modified applied patches
+   * removed the double negations when assigning err to a boolean;
+
+In v7:
+
+   * change cfg80211_chandef_dfs_required() back to returning 1 if
+     radar detection is needed instead of a bitmap with the width
+     required.
+---
+ include/net/cfg80211.h |  7 +++--
+ net/mac80211/ibss.c    | 31 ++++++++++-----------
+ net/mac80211/mesh.c    |  9 +++---
+ net/wireless/chan.c    | 75 ++++++++++++++++++++++++++++++++++++++------------
+ net/wireless/mesh.c    |  7 +++--
+ net/wireless/nl80211.c | 37 ++++++++++++-------------
+ 6 files changed, 104 insertions(+), 62 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 768fcc0..51f278a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -441,10 +441,13 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+  * cfg80211_chandef_dfs_required - checks if radar detection is required
+  * @wiphy: the wiphy to validate against
+  * @chandef: the channel definition to check
+- * Return: 1 if radar detection is required, 0 if it is not, < 0 on error
++ * @iftype: the interface type as specified in &enum nl80211_iftype
++ * Returns:
++ *	1 if radar detection is required, 0 if it is not, < 0 on error
+  */
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *chandef);
++				  const struct cfg80211_chan_def *chandef,
++				  enum nl80211_iftype);
  
-+static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif, u32 queues, bool drop)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct iwl_mvm_vif *mvmvif;
-+	struct iwl_mvm_sta *mvmsta;
-+
-+	if (!vif || vif->type != NL80211_IFTYPE_STATION)
+ /**
+  * ieee80211_chandef_rate_flags - returns rate flags for a channel
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index e458ca0..bca7d09 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -228,7 +228,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct beacon_data *presp;
+ 	enum nl80211_bss_scan_width scan_width;
+ 	bool have_higher_than_11mbit;
+-	bool radar_required = false;
++	bool radar_required;
+ 	int err;
+ 
+ 	sdata_assert_lock(sdata);
+@@ -282,21 +282,20 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &chandef);
++					    &chandef, NL80211_IFTYPE_ADHOC);
+ 	if (err < 0) {
+ 		sdata_info(sdata,
+ 			   "Failed to join IBSS, invalid chandef\n");
+ 		return;
+ 	}
+-	if (err > 0) {
+-		if (!ifibss->userspace_handles_dfs) {
+-			sdata_info(sdata,
+-				   "Failed to join IBSS, DFS channel without control program\n");
+-			return;
+-		}
+-		radar_required = true;
++	if (err > 0 && !ifibss->userspace_handles_dfs) {
++		sdata_info(sdata,
++			   "Failed to join IBSS, DFS channel without control program\n");
 +		return;
+ 	}
+ 
++	radar_required = err;
 +
-+	mutex_lock(&mvm->mutex);
-+	mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, mvmvif->ap_sta_id);
+ 	mutex_lock(&local->mtx);
+ 	if (ieee80211_vif_use_channel(sdata, &chandef,
+ 				      ifibss->fixed_channel ?
+@@ -775,7 +774,8 @@ static void ieee80211_ibss_csa_mark_radar(struct ieee80211_sub_if_data *sdata)
+ 	 * unavailable.
+ 	 */
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &ifibss->chandef);
++					    &ifibss->chandef,
++					    NL80211_IFTYPE_ADHOC);
+ 	if (err > 0)
+ 		cfg80211_radar_event(sdata->local->hw.wiphy, &ifibss->chandef,
+ 				     GFP_ATOMIC);
+@@ -873,16 +873,15 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &params.chandef);
++					    &params.chandef,
++					    NL80211_IFTYPE_ADHOC);
+ 	if (err < 0)
+ 		goto disconnect;
+-	if (err) {
++	if (err > 0 && !ifibss->userspace_handles_dfs)
+ 		/* IBSS-DFS only allowed with a control program */
+-		if (!ifibss->userspace_handles_dfs)
+-			goto disconnect;
++		goto disconnect;
+ 
+-		params.radar_required = true;
+-	}
++	params.radar_required = err;
+ 
+ 	if (cfg80211_chandef_identical(&params.chandef,
+ 				       &sdata->vif.bss_conf.chandef)) {
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index f70e9cd..ea0b628 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -903,14 +903,15 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
+-					    &params.chandef);
++					    &params.chandef,
++					    NL80211_IFTYPE_MESH_POINT);
+ 	if (err < 0)
+ 		return false;
+-	if (err) {
+-		params.radar_required = true;
++	if (err > 0)
+ 		/* TODO: DFS not (yet) supported */
+ 		return false;
+-	}
 +
-+	if (WARN_ON_ONCE(!mvmsta))
-+		goto done;
++	params.radar_required = err;
+ 
+ 	if (cfg80211_chandef_identical(&params.chandef,
+ 				       &sdata->vif.bss_conf.chandef)) {
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 8659d5c..b08c26f 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -326,28 +326,58 @@ static int cfg80211_get_chans_dfs_required(struct wiphy *wiphy,
+ 
+ 
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+-				  const struct cfg80211_chan_def *chandef)
++				  const struct cfg80211_chan_def *chandef,
++				  enum nl80211_iftype iftype)
+ {
+ 	int width;
+-	int r;
++	int ret;
+ 
+ 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+ 		return -EINVAL;
+ 
+-	width = cfg80211_chandef_get_width(chandef);
+-	if (width < 0)
+-		return -EINVAL;
++	switch (iftype) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_MESH_POINT:
++		width = cfg80211_chandef_get_width(chandef);
++		if (width < 0)
++			return -EINVAL;
+ 
+-	r = cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq1,
+-					    width);
+-	if (r)
+-		return r;
++		ret = cfg80211_get_chans_dfs_required(wiphy,
++						      chandef->center_freq1,
++						      width);
++		if (ret < 0)
++			return ret;
++		else if (ret > 0)
++			return BIT(chandef->width);
+ 
+-	if (!chandef->center_freq2)
+-		return 0;
++		if (!chandef->center_freq2)
++			return 0;
 +
-+	if (drop) {
-+		if (iwl_mvm_flush_tx_path(mvm, mvmsta->tfd_queue_msk, true))
-+			IWL_ERR(mvm, "flush request fail\n");
-+	} else {
-+		iwl_trans_wait_tx_queue_empty(mvm->trans,
-+					      mvmsta->tfd_queue_msk);
++		ret = cfg80211_get_chans_dfs_required(wiphy,
++						      chandef->center_freq2,
++						      width);
++		if (ret < 0)
++			return ret;
++		else if (ret > 0)
++			return BIT(chandef->width);
+ 
+-	return cfg80211_get_chans_dfs_required(wiphy, chandef->center_freq2,
+-					       width);
++		break;
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++	case NL80211_IFTYPE_P2P_DEVICE:
++		break;
++	case NUM_NL80211_IFTYPES:
++	default:
++		WARN_ON(1);
 +	}
-+done:
-+	mutex_unlock(&mvm->mutex);
-+}
 +
- const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.tx = iwl_mvm_mac_tx,
- 	.ampdu_action = iwl_mvm_mac_ampdu_action,
-@@ -2486,6 +2514,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.sta_rc_update = iwl_mvm_sta_rc_update,
- 	.conf_tx = iwl_mvm_mac_conf_tx,
- 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
-+	.flush = iwl_mvm_mac_flush,
- 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
- 	.sched_scan_stop = iwl_mvm_mac_sched_scan_stop,
- 	.set_key = iwl_mvm_mac_set_key,
++	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_chandef_dfs_required);
+ 
+@@ -671,7 +701,8 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+ 
+ 	trace_cfg80211_reg_can_beacon(wiphy, chandef);
+ 
+-	if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
++	if (cfg80211_chandef_dfs_required(wiphy, chandef,
++					  NL80211_IFTYPE_UNSPECIFIED) > 0 &&
+ 	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
+ 		/* We can skip IEEE80211_CHAN_NO_IR if chandef dfs available */
+ 		prohibited_flags = IEEE80211_CHAN_DISABLED;
+@@ -701,6 +732,8 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 		        enum cfg80211_chan_mode *chanmode,
+ 		        u8 *radar_detect)
+ {
++	int ret;
++
+ 	*chan = NULL;
+ 	*chanmode = CHAN_MODE_UNDEFINED;
+ 
+@@ -743,8 +776,11 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 			*chan = wdev->chandef.chan;
+ 			*chanmode = CHAN_MODE_SHARED;
+ 
+-			if (cfg80211_chandef_dfs_required(wdev->wiphy,
+-							  &wdev->chandef))
++			ret = cfg80211_chandef_dfs_required(wdev->wiphy,
++							    &wdev->chandef,
++							    wdev->iftype);
++			WARN_ON(ret < 0);
++			if (ret > 0)
+ 				*radar_detect |= BIT(wdev->chandef.width);
+ 		}
+ 		return;
+@@ -753,8 +789,11 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 			*chan = wdev->chandef.chan;
+ 			*chanmode = CHAN_MODE_SHARED;
+ 
+-			if (cfg80211_chandef_dfs_required(wdev->wiphy,
+-							  &wdev->chandef))
++			ret = cfg80211_chandef_dfs_required(wdev->wiphy,
++							    &wdev->chandef,
++							    wdev->iftype);
++			WARN_ON(ret < 0);
++			if (ret > 0)
+ 				*radar_detect |= BIT(wdev->chandef.width);
+ 		}
+ 		return;
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 5af5cc6..a95212b 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -178,10 +178,13 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &setup->chandef);
++	err = cfg80211_chandef_dfs_required(wdev->wiphy,
++					    &setup->chandef,
++					    NL80211_IFTYPE_MESH_POINT);
+ 	if (err < 0)
+ 		return err;
+-	if (err)
++
++	if (err > 0)
+ 		radar_detect_width = BIT(setup->chandef.width);
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 052c1bf..9fe7746 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3261,12 +3261,15 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
++	err = cfg80211_chandef_dfs_required(wdev->wiphy,
++					    &params.chandef,
++					    NL80211_IFTYPE_AP);
+ 	if (err < 0)
+ 		return err;
+-	if (err) {
+-		radar_detect_width = BIT(params.chandef.width);
++
++	if (err > 0) {
+ 		params.radar_required = true;
++		radar_detect_width = BIT(params.chandef.width);
+ 	}
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+@@ -5796,7 +5799,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (wdev->cac_started)
+ 		return -EBUSY;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
++	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef,
++					    NL80211_IFTYPE_UNSPECIFIED);
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -5931,22 +5935,15 @@ skip_beacons:
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
+-	switch (dev->ieee80211_ptr->iftype) {
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_MESH_POINT:
+-		err = cfg80211_chandef_dfs_required(wdev->wiphy,
+-						    &params.chandef);
+-		if (err < 0)
+-			return err;
+-		if (err) {
+-			radar_detect_width = BIT(params.chandef.width);
+-			params.radar_required = true;
+-		}
+-		break;
+-	default:
+-		break;
++	err = cfg80211_chandef_dfs_required(wdev->wiphy,
++					    &params.chandef,
++					    wdev->iftype);
++	if (err < 0)
++		return err;
++
++	if (err > 0) {
++		radar_detect_width = BIT(params.chandef.width);
++		params.radar_required = true;
+ 	}
+ 
+ 	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
 -- 
-1.8.3.2
+1.8.5.3
 
