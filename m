@@ -1,792 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:45641 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbaCCIYs (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:37878 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756375AbaCDIH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 03:24:48 -0500
-Received: from [192.168.40.2] ([192.168.40.2])
-	(authenticated user fariya.f@redpinesignals.com)
-	by mail.redpinesignals.com
-	for linux-wireless@vger.kernel.org;
-	Mon, 3 Mar 2014 13:54:44 +0530
-Message-ID: <53143BF6.4020504@redpinesignals.com> (sfid-20140303_092451_863701_1DDA08A9)
-Date: Mon, 03 Mar 2014 13:53:18 +0530
-From: Fariya Fatima <fariya.f@redpinesignals.com>
-MIME-Version: 1.0
+	Tue, 4 Mar 2014 03:07:59 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.14.0-rc5 v3 8/10] rsi: USB functionality
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
+Subject: [PATCH v8 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Date: Tue,  4 Mar 2014 10:07:50 +0200
+Message-Id: <1393920474-4935-2-git-send-email-luca@coelho.fi> (sfid-20140304_090808_556213_E06C2431)
+In-Reply-To: <1393920474-4935-1-git-send-email-luca@coelho.fi>
+References: <1393920474-4935-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This patch has the rsi_usb module, enabling the USB interface for
-the 91x chipsets.
+Separate the code that counts the interface types and channels from
+the code that check the interface combinations.  The new function that
+checks for combinations is exported so it can be called by the
+drivers.
 
-Signed-off-by: Fariya Fatima <fariya.f@redpinesignals.com>
+This is done in preparation for moving the interface combinations
+checks out of cfg80211.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
+In v4:
 
- rsi_91x_usb.c     |  572 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- rsi_91x_usb_ops.c |  177 ++++++++++++++++
- 2 files changed, 749 insertions(+)
+   * rebased on top of slightly modified applied patches
+   * removed the parenthesis from the comment (not needed for docbook)
+   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
 
-diff -rupN linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_usb.c linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_usb.c
---- linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_usb.c	1970-01-01 05:30:00.000000000 +0530
-+++ linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_usb.c	2014-03-04 07:37:36.500039770 +0545
-@@ -0,0 +1,572 @@
+In v7:
+
+   * removed redundant arguments (num_interfaces and used_iftypes)
+     from cfg80211_check_combinations();
+---
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  22 +++++++
+ net/wireless/util.c              | 128 ++++++++++++++++++++++-----------------
+ 3 files changed, 95 insertions(+), 56 deletions(-)
+
+diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
+index 044b764..d9b9416 100644
+--- a/Documentation/DocBook/80211.tmpl
++++ b/Documentation/DocBook/80211.tmpl
+@@ -100,6 +100,7 @@
+ !Finclude/net/cfg80211.h wdev_priv
+ !Finclude/net/cfg80211.h ieee80211_iface_limit
+ !Finclude/net/cfg80211.h ieee80211_iface_combination
++!Finclude/net/cfg80211.h cfg80211_check_combinations
+       </chapter>
+       <chapter>
+       <title>Actions and configuration</title>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ff3af16..768fcc0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4682,6 +4682,28 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
+ 
 +/**
-+ * Copyright (c) 2014 Redpine Signals Inc.
++ * cfg80211_check_combinations - check interface combinations
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
 + *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
++ * This function can be called by the driver to check whether a
++ * combination of interfaces and their types are allowed according to
++ * the interface combinations.
 + */
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES]);
 +
-+#include <linux/module.h>
-+#include "rsi_usb.h"
-+
-+/**
-+ * This function writes to the USB Card.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  buf Pointer to the buffer from where the data has to be taken.
-+ * @param  len Length to be written.
-+ * @param  endpoint Type of endpoint.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_usb_card_write(struct rsi_hw *adapter,
-+			      void *buf,
-+			      u16 len,
-+			      u8 endpoint)
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index dadc934..7ecc0ef 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1253,6 +1253,75 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
 +{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	int status;
-+	s32 transfer;
++	int i, j, iftype;
++	int num_interfaces = 0;
++	u32 used_iftypes = 0;
 +
-+	status = usb_bulk_msg(dev->usbdev,
-+			      usb_sndbulkpipe(dev->usbdev,
-+			      dev->bulkout_endpoint_addr[endpoint - 1]),
-+			      buf,
-+			      len,
-+			      &transfer,
-+			      HZ * 5);
-+
-+	if (status < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"Card write failed with error code :%10d\n", status);
-+		dev->write_fail = 1;
++	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++		num_interfaces += iftype_num[iftype];
++		if (iftype_num[iftype] > 0)
++			used_iftypes |= BIT(iftype);
 +	}
-+	return status;
-+}
 +
-+/**
-+ * This function writes multiple bytes of information to the USB card.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  addr Address of the register.
-+ * @param  data Pointer to the data that has to be written.
-+ * @param  count Number of multiple bytes to be written.
-+ * @return 0 on success, -1 on failure.
-+ */
-+static int rsi_write_multiple(struct rsi_hw *adapter,
-+			      u8 endpoint,
-+			      u8 *data,
-+			      u32 count)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	u8 *seg = dev->tx_buffer;
++	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
 +
-+	if (dev->write_fail)
++		c = &wiphy->iface_combinations[i];
++
++		if (num_interfaces > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
++		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
++				 GFP_KERNEL);
++		if (!limits)
++			return -ENOMEM;
++
++		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++			if (wiphy->software_iftypes & BIT(iftype))
++				continue;
++			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
++				if (!(limits[j].types & BIT(iftype)))
++					continue;
++				if (limits[j].max < iftype_num[iftype])
++					goto cont;
++				limits[j].max -= iftype_num[iftype];
++			}
++		}
++
++		if (radar_detect && !(c->radar_detect_widths & radar_detect))
++			goto cont;
++
++		/* Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/* This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
++		kfree(limits);
 +		return 0;
-+
-+	if (endpoint == MGMT_EP) {
-+		memset(seg, 0, RSI_USB_TX_HEAD_ROOM);
-+		memcpy(seg + RSI_USB_TX_HEAD_ROOM, data, count);
-+	} else {
-+		seg = ((u8 *)data - RSI_USB_TX_HEAD_ROOM);
++ cont:
++		kfree(limits);
 +	}
 +
-+	return rsi_usb_card_write(adapter,
-+				  seg,
-+				  count + RSI_USB_TX_HEAD_ROOM,
-+				  endpoint);
++	return -EBUSY;
 +}
-+
-+/**
-+ * This function initializes the bulk endpoints to the device.
-+ *
-+ * @param  interface Pointer to the USB interface structure.
-+ * @param  adapter Pointer to the adapter structure.
-+ * @return ret_val: 0 on success, -ENOMEM on failure.
-+ */
-+static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
-+					      struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	struct usb_host_interface *iface_desc;
-+	struct usb_endpoint_descriptor *endpoint;
-+	__le16 buffer_size;
-+	int ii, bep_found = 0;
-+
-+	iface_desc = &(interface->altsetting[0]);
-+
-+	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
-+		endpoint = &(iface_desc->endpoint[ii].desc);
-+
-+		if ((!(dev->bulkin_endpoint_addr)) &&
-+		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
-+		    ((endpoint->bmAttributes &
-+		    USB_ENDPOINT_XFERTYPE_MASK) ==
-+		    USB_ENDPOINT_XFER_BULK)) {
-+			buffer_size = endpoint->wMaxPacketSize;
-+			dev->bulkin_size = buffer_size;
-+			dev->bulkin_endpoint_addr =
-+				endpoint->bEndpointAddress;
-+		}
-+
-+		if (!dev->bulkout_endpoint_addr[bep_found] &&
-+		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
-+		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
-+		      USB_ENDPOINT_XFER_BULK)) {
-+			dev->bulkout_endpoint_addr[bep_found] =
-+				endpoint->bEndpointAddress;
-+			buffer_size = endpoint->wMaxPacketSize;
-+			dev->bulkout_size[bep_found] = buffer_size;
-+			bep_found++;
-+		}
-+
-+		if (bep_found >= MAX_BULK_EP)
-+			break;
-+	}
-+
-+	if (!(dev->bulkin_endpoint_addr) &&
-+	    (dev->bulkout_endpoint_addr[0]))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/* This function reads the data from given register address.
-+ *
-+ * @param  usbdev Pointer to the usb_device structure.
-+ * @param  reg Address of the register to be read.
-+ * @param  value Value to be read.
-+ * @param  len length of data to be read.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_usb_reg_read(struct usb_device *usbdev,
-+			    u32 reg,
-+			    u16 *value,
-+			    u16 len)
-+{
-+	u8 temp_buf[4];
-+	int status = 0;
-+
-+	status = usb_control_msg(usbdev,
-+				 usb_rcvctrlpipe(usbdev, 0),
-+				 USB_VENDOR_REGISTER_READ,
-+				 USB_TYPE_VENDOR,
-+				 ((reg & 0xffff0000) >> 16), (reg & 0xffff),
-+				 (void *)temp_buf,
-+				 len,
-+				 HZ * 5);
-+
-+	*value = (temp_buf[0] | (temp_buf[1] << 8));
-+	if (status < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Reg read failed with error code :%d\n",
-+			__func__, status);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function writes the given data into the given register address.
-+ *
-+ * @param  usbdev Pointer to the usb_device structure.
-+ * @param  reg Address of the register.
-+ * @param  value Value to write.
-+ * @param  len Length of data to be written.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_usb_reg_write(struct usb_device *usbdev,
-+			     u32 reg,
-+			     u16 value,
-+			     u16 len)
-+{
-+	u8 usb_reg_buf[4];
-+	int status = 0;
-+
-+	usb_reg_buf[0] = (value & 0x00ff);
-+	usb_reg_buf[1] = (value & 0xff00) >> 8;
-+	usb_reg_buf[2] = 0x0;
-+	usb_reg_buf[3] = 0x0;
-+
-+	status = usb_control_msg(usbdev,
-+				 usb_sndctrlpipe(usbdev, 0),
-+				 USB_VENDOR_REGISTER_WRITE,
-+				 USB_TYPE_VENDOR,
-+				 ((reg & 0xffff0000) >> 16),
-+				 (reg & 0xffff),
-+				 (void *)usb_reg_buf,
-+				 len,
-+				 HZ * 5);
-+	if (status < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Reg write failed with error code :%d\n",
-+			__func__, status);
-+	}
-+	return status;
-+}
-+
-+/**
-+ * This function is called when a packet is received from USB
-+ * the stack. This is a callback to recieve done.
-+ *
-+ * @param  urb Received URB.
-+ * @return None.
-+ */
-+static void rsi_rx_done_handler(struct urb *urb)
-+{
-+	struct rsi_hw *adapter = urb->context;
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+
-+	if (urb->status)
-+		return;
-+
-+	rsi_set_event(&dev->rx_thread.event);
-+	return;
-+}
-+
-+/**
-+ * This function submits the given URB to the USB stack.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_rx_urb_submit(struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	struct urb *urb = dev->rx_usb_urb[0];
-+
-+	usb_fill_bulk_urb(urb,
-+			  dev->usbdev,
-+			  usb_rcvbulkpipe(dev->usbdev,
-+				dev->bulkin_endpoint_addr),
-+			  urb->transfer_buffer,
-+			  3000,
-+			  rsi_rx_done_handler,
-+			  adapter);
-+	if (usb_submit_urb(urb, GFP_KERNEL)) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission\n", __func__);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * This function writes multiple bytes of information to multiple registers.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  addr Address of the register.
-+ * @param  data Pointer to the data that has to be written.
-+ * @param  count Number of multiple bytes to be written on to the registers.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+int rsi_write_ta_register_multiple(struct rsi_hw *adapter,
-+				   u32 addr,
-+				   u8 *data,
-+				   u32 count)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	u8 *buf;
-+	u8 transfer;
-+	int status = 0;
-+
-+	buf = kzalloc(4096, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	while (count) {
-+		transfer = min_t(int, count, 4096);
-+		memcpy(buf, data, transfer);
-+		status = usb_control_msg(dev->usbdev,
-+					 usb_sndctrlpipe(dev->usbdev, 0),
-+					 USB_VENDOR_REGISTER_WRITE,
-+					 USB_TYPE_VENDOR,
-+					 ((addr & 0xffff0000) >> 16),
-+					 (addr & 0xffff),
-+					 (void *)buf,
-+					 transfer,
-+					 HZ * 5);
-+		if (status < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"Reg write failed with error code :%d\n",
-+				status);
-+		} else {
-+			count -= transfer;
-+			data += transfer;
-+			addr += transfer;
-+		}
-+	}
-+
-+	kfree(buf);
-+	return 0;
-+}
-+
-+/**
-+ * This function writes the packet to the USB card.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  pkt Pointer to the data to be written on to the card.
-+ * @param  len Length of the data to be written on to the card.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_host_intf_write_pkt(struct rsi_hw *adapter,
-+			    u8 *pkt,
-+			    u32 len)
-+{
-+	u32 queueno = ((pkt[1] >> 4) & 0xf);
-+	u8 endpoint;
-+
-+	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
-+
-+	return rsi_write_multiple(adapter,
-+				  endpoint,
-+				  (u8 *)pkt,
-+				  len);
-+}
-+
-+/**
-+ * This function deinitializes the usb interface.
-+ *
-+ * @param  common Pointer to the common structure
-+ * @return VOID.
-+ */
-+static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+
-+	rsi_kill_thread(&dev->rx_thread);
-+	kfree(adapter->priv->rx_data_pkt);
-+	return;
-+}
-+
-+/**
-+ * This function initializes the usb interface.
-+ *
-+ * @param  adapter Pointer to the adapter structure.
-+ * @param  pfunction Pointer to USB interface structure.
-+ * @return 0 on success, -1 on failure.
-+ */
-+static int rsi_init_usb_interface(struct rsi_hw *adapter,
-+				  struct usb_interface *pfunction)
-+{
-+	struct rsi_91x_usbdev *rsi_dev;
-+	struct rsi_common *common = adapter->priv;
-+
-+	rsi_dev = kzalloc(sizeof(*rsi_dev), GFP_KERNEL);
-+	if (!rsi_dev)
-+		return -1;
-+
-+	adapter->rsi_dev = rsi_dev;
-+	rsi_dev->usbdev = interface_to_usbdev(pfunction);
-+
-+	if (rsi_find_bulk_in_and_out_endpoints(pfunction, adapter))
-+		return -1;
-+
-+	adapter->device = &pfunction->dev;
-+	usb_set_intfdata(pfunction, adapter);
-+
-+	common->rx_data_pkt = kmalloc(2048, GFP_KERNEL);
-+	if (!common->rx_data_pkt) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to allocate memory\n",
-+			__func__);
-+		return -1;
-+	}
-+
-+	rsi_dev->tx_buffer = kmalloc(2048, GFP_ATOMIC);
-+	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
-+	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
-+	rsi_dev->tx_blk_size = 252;
-+
-+	/* Initializing function callbacks */
-+	adapter->rx_urb_submit = rsi_rx_urb_submit;
-+	adapter->host_intf_write_pkt = rsi_host_intf_write_pkt;
-+	adapter->check_hw_queue_status = rsi_check_queue_status;
-+	adapter->determine_event_timeout = rsi_event_timeout;
-+
-+	rsi_init_event(&rsi_dev->rx_thread.event);
-+	if (rsi_create_kthread(common,
-+			       &rsi_dev->rx_thread,
-+			       rsi_usb_rx_thread,
-+			       "RX-Thread")) {
-+		rsi_dbg(ERR_ZONE, "%s: Unable to init rx thrd\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+#ifdef CONFIG_RSI_DEBUGFS
-+	/* In USB, one less than the MAX_DEBUGFS_ENTRIES entries is required */
-+	adapter->num_debugfs_entries = (MAX_DEBUGFS_ENTRIES - 1);
-+#endif
-+
-+	rsi_dbg(INIT_ZONE, "%s: Enabled the interface\n", __func__);
-+	return 0;
-+
-+fail:
-+	kfree(common->rx_data_pkt);
-+	return -1;
-+}
-+
-+/**
-+ * This function is called by kernel when the driver provided
-+ * Vendor and device IDs are matched. All the initialization
-+ * work is done here.
-+ *
-+ * @param  pfunction Pointer to the USB interface structure.
-+ * @param  id Pointer to the usb_device_id structure.
-+ * @return 0 on success, -1 on failure.
-+ */
-+static int rsi_probe(struct usb_interface *pfunction,
-+		     const struct usb_device_id *id)
-+{
-+	struct rsi_hw *adapter;
-+	struct rsi_91x_usbdev *dev;
-+	u16 fw_status;
-+
-+	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
-+
-+	adapter = rsi_init_os_intf_ops();
-+	if (!adapter) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
-+			__func__);
-+		return 1;
-+	}
-+
-+	if (rsi_init_usb_interface(adapter, pfunction)) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to init usb interface\n",
-+			__func__);
-+		goto err;
-+	}
-+
-+	rsi_dbg(ERR_ZONE, "%s: Initialized os intf ops\n", __func__);
-+
-+	dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+
-+	if (rsi_usb_reg_read(dev->usbdev, FW_STATUS_REG, &fw_status, 2) < 0)
-+		goto err1;
-+	else
-+		fw_status &= 1;
-+
-+	if (!fw_status) {
-+		if (rsi_device_init(adapter->priv)) {
-+			rsi_dbg(ERR_ZONE, "%s: Failed in device init\n",
-+				__func__);
-+			goto err1;
-+		}
-+
-+		if (rsi_usb_reg_write(dev->usbdev,
-+				      USB_INTERNAL_REG_1,
-+				      RSI_USB_READY_MAGIC_NUM, 1) < 0)
-+			goto err1;
-+		rsi_dbg(INIT_ZONE, "%s: Performed device init\n", __func__);
-+	}
-+
-+	if (rsi_rx_urb_submit(adapter))
-+		goto err1;
-+
-+	return 0;
-+err1:
-+	rsi_deinit_usb_interface(adapter);
-+err:
-+	rsi_deinit_os_intf_ops(adapter);
-+	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
-+	return 1;
-+}
-+
-+/**
-+ * This function performs the reverse of the probe function,
-+ * it deintialize the driver structure.
-+ *
-+ * @param  pfunction Pointer to the USB interface structure.
-+ * @return None.
-+ */
-+static void rsi_disconnect(struct usb_interface *pfunction)
-+{
-+	struct rsi_hw *adapter = usb_get_intfdata(pfunction);
-+
-+	if (!adapter)
-+		return;
-+
-+	rsi_mac80211_detach(adapter);
-+	rsi_deinit_usb_interface(adapter);
-+	rsi_deinit_os_intf_ops(adapter);
-+
-+	rsi_dbg(INFO_ZONE, "%s: Deinitialization completed\n", __func__);
-+	return;
-+}
-+
-+#ifdef CONFIG_PM
-+static int rsi_suspend(struct usb_interface *intf, pm_message_t message)
-+{
-+	/* Not yet implemented */
-+	return -ENOSYS;
-+}
-+
-+static int rsi_resume(struct usb_interface *intf)
-+{
-+	/* Not yet implemented */
-+	return -ENOSYS;
-+}
-+#endif
-+
-+static const struct usb_device_id rsi_dev_table[] = {
-+	{ USB_DEVICE(0x0303, 0x0100) },
-+	{ USB_DEVICE(0x041B, 0x0301) },
-+	{ USB_DEVICE(0x041B, 0x0201) },
-+	{ USB_DEVICE(0x041B, 0x9330) },
-+	{ /* Blank */},
-+};
-+
-+static struct usb_driver rsi_driver = {
-+	.name       = "RSI-USB WLAN",
-+	.probe      = rsi_probe,
-+	.disconnect = rsi_disconnect,
-+	.id_table   = rsi_dev_table,
-+#ifdef CONFIG_PM
-+	.suspend    = rsi_suspend,
-+	.resume     = rsi_resume,
-+#endif
-+};
-+
-+/**
-+ * This function registers the client driver.
-+ *
-+ * @param  Void.
-+ * @return 0 on success.
-+ */
-+static int rsi_module_init(void)
-+{
-+	usb_register(&rsi_driver);
-+	rsi_dbg(INIT_ZONE, "%s: Registering driver\n", __func__);
-+	return 0;
-+}
-+
-+/**
-+ * This function unregisters the client driver.
-+ *
-+ * @param  Void.
-+ * @return None.
-+ */
-+static void rsi_module_exit(void)
-+{
-+	usb_deregister(&rsi_driver);
-+	rsi_dbg(INFO_ZONE, "%s: Unregistering driver\n", __func__);
-+	return;
-+}
-+
-+module_init(rsi_module_init);
-+module_exit(rsi_module_exit);
-+
-+MODULE_AUTHOR("Redpine Signals Inc");
-+MODULE_DESCRIPTION("Common USB layer for RSI drivers");
-+MODULE_SUPPORTED_DEVICE("RSI-91x");
-+MODULE_DEVICE_TABLE(usb, rsi_dev_table);
-+MODULE_FIRMWARE(FIRMWARE_RSI9113);
-+MODULE_VERSION("0.1");
-+MODULE_LICENSE("GPL");
-diff -rupN linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_usb_ops.c linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
---- linux-3.14-rc5/drivers/net/wireless/rsi/rsi_91x_usb_ops.c	1970-01-01 05:30:00.000000000 +0530
-+++ linux-3.14-rc5_new/drivers/net/wireless/rsi/rsi_91x_usb_ops.c	2014-03-04 07:37:39.283004978 +0545
-@@ -0,0 +1,177 @@
-+/**
-+ * Copyright (c) 2014 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
-+ */
-+
-+#include <linux/firmware.h>
-+#include "rsi_usb.h"
-+
-+/**
-+ * This function includes the actual funtionality of copying the TA firmware to the card.
-+ * Basically this function includes opening the TA file,reading the TA file and
-+ * writing their values in blocks of data.
-+ *
-+ * @param  common Pointer to the driver private structure.
-+ * @param  fw Pointer to the firmware value to be written.
-+ * @param  len length of firmware file.
-+ * @param  num_blocks Number of blocks to be written to the card.
-+ * @return 0 on success and -1 on failure.
-+ */
-+static int rsi_copy_to_card(struct rsi_common *common,
-+			    const u8 *fw,
-+			    u32 len,
-+			    u32 num_blocks)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	u32 indx, ii;
-+	u32 block_size = dev->tx_blk_size;
-+	u32 lsb_address;
-+	u32 base_address;
-+
-+	base_address = TA_LOAD_ADDRESS;
-+
-+	for (indx = 0, ii = 0; ii < num_blocks; ii++, indx += block_size) {
-+		lsb_address = base_address;
-+		if (rsi_write_ta_register_multiple(adapter,
-+						   lsb_address,
-+						   (u8 *)(fw + indx),
-+						   block_size)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to load %s blk\n", __func__,
-+				FIRMWARE_RSI9113);
-+			return -1;
-+		}
-+		rsi_dbg(INIT_ZONE, "%s: loading block: %d\n", __func__, ii);
-+		base_address += block_size;
-+	}
-+
-+	if (len % block_size) {
-+		lsb_address = base_address;
-+		if (rsi_write_ta_register_multiple(adapter,
-+						   lsb_address,
-+						   (u8 *)(fw + indx),
-+						   len % block_size)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to load %s blk\n", __func__,
-+				FIRMWARE_RSI9113);
-+			return -1;
-+		}
-+	}
-+	rsi_dbg(INIT_ZONE,
-+		"%s: Succesfully loaded %s instructions\n", __func__,
-+		FIRMWARE_RSI9113);
-+
-+	rsi_dbg(INIT_ZONE, "%s: loaded firmware\n", __func__);
-+	return 0;
-+}
-+
-+/**
-+ * This is a kernel thread to receive the packets from the USB device.
-+ *
-+ * @param  common Pointer to the driver private structure.
-+ * @return None.
-+ */
-+void rsi_usb_rx_thread(struct rsi_common *common)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	int status;
-+
-+	do {
-+		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
-+
-+		if (atomic_read(&dev->rx_thread.thread_done))
-+			goto out;
-+
-+		mutex_lock(&common->tx_rxlock);
-+		status = rsi_read_pkt(common, 0);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
-+			mutex_unlock(&common->tx_rxlock);
-+			return;
-+		}
-+		mutex_unlock(&common->tx_rxlock);
-+		rsi_reset_event(&dev->rx_thread.event);
-+		if (adapter->rx_urb_submit(adapter)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed in urb submission", __func__);
-+			return;
-+		}
-+	} while (1);
-+
-+out:
-+	rsi_dbg(INFO_ZONE, "%s: Terminated thread\n", __func__);
-+	complete_and_exit(&dev->rx_thread.completion, 0);
-+	return;
-+}
-+
-+
-+/**
-+ * This function includes the actual funtionality of loading the TA firmware.
-+ * This function also includes opening the TA file,reading the TA file and
-+ * writing their values in blocks of data.
-+ *
-+ * @param  common Pointer to the driver private structure.
-+ * @param  fw_status Firmware status.
-+ * @return status: 0 on success, -1 on failure.
-+ */
-+static int rsi_load_ta_instructions(struct rsi_common *common)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	const struct firmware *fw_entry = NULL;
-+	u32 block_size = dev->tx_blk_size;
-+	const u8 *fw;
-+	u32 num_blocks, len;
-+	int status = 0;
-+
-+	status = request_firmware(&fw_entry, FIRMWARE_RSI9113, adapter->device);
-+	if (status < 0) {
-+		rsi_dbg(ERR_ZONE, "%s Firmware file %s not found\n",
-+			__func__, FIRMWARE_RSI9113);
-+		return status;
-+	}
-+
-+	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	len = fw_entry->size;
-+
-+	if (len % 4)
-+		len += (4 - (len % 4));
-+
-+	num_blocks = (len / block_size);
-+
-+	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
-+	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
-+
-+	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	release_firmware(fw_entry);
-+	return status;
-+}
-+
-+/**
-+ * This Function Initializes The HAL.
-+ *
-+ * @param  common Pointer to the driver private structure.
-+ * @param  fw_status Firmware status.
-+ * @return 0 on success, -1 on failure.
-+ */
-+int rsi_device_init(struct rsi_common *common)
-+{
-+	if (rsi_load_ta_instructions(common))
-+		return -1;
-+
-+	return 0;
-+}
-
++EXPORT_SYMBOL(cfg80211_check_combinations);
++
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+ 				 enum nl80211_iftype iftype,
+@@ -1261,7 +1330,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 u8 radar_detect)
+ {
+ 	struct wireless_dev *wdev_iter;
+-	u32 used_iftypes = BIT(iftype);
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_channel
+ 			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
+@@ -1269,7 +1337,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	int i, j;
++	int i;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1354,65 +1422,13 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 
+ 		num[wdev_iter->iftype]++;
+ 		total++;
+-		used_iftypes |= BIT(wdev_iter->iftype);
+ 	}
+ 
+ 	if (total == 1 && !radar_detect)
+ 		return 0;
+ 
+-	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+-		const struct ieee80211_iface_combination *c;
+-		struct ieee80211_iface_limit *limits;
+-		u32 all_iftypes = 0;
+-
+-		c = &rdev->wiphy.iface_combinations[i];
+-
+-		if (total > c->max_interfaces)
+-			continue;
+-		if (num_different_channels > c->num_different_channels)
+-			continue;
+-
+-		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+-				 GFP_KERNEL);
+-		if (!limits)
+-			return -ENOMEM;
+-
+-		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-				continue;
+-			for (j = 0; j < c->n_limits; j++) {
+-				all_iftypes |= limits[j].types;
+-				if (!(limits[j].types & BIT(iftype)))
+-					continue;
+-				if (limits[j].max < num[iftype])
+-					goto cont;
+-				limits[j].max -= num[iftype];
+-			}
+-		}
+-
+-		if (radar_detect && !(c->radar_detect_widths & radar_detect))
+-			goto cont;
+-
+-		/*
+-		 * Finally check that all iftypes that we're currently
+-		 * using are actually part of this combination. If they
+-		 * aren't then we can't use this combination and have
+-		 * to continue to the next.
+-		 */
+-		if ((all_iftypes & used_iftypes) != used_iftypes)
+-			goto cont;
+-
+-		/*
+-		 * This combination covered all interface types and
+-		 * supported the requested numbers, so we're good.
+-		 */
+-		kfree(limits);
+-		return 0;
+- cont:
+-		kfree(limits);
+-	}
+-
+-	return -EBUSY;
++	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
++					   radar_detect, num);
+ }
+ 
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+-- 
+1.8.5.3
 
