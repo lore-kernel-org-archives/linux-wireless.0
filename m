@@ -1,140 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:35663 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755537AbaCROqR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46907 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756456AbaCDUPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:17 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so5497905eek.10
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:16 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/35] iwlwifi: mvm: rs: fix search cycle rules
-Date: Tue, 18 Mar 2014 16:45:22 +0200
-Message-Id: <1395153939-23897-18-git-send-email-egrumbach@gmail.com> (sfid-20140318_154729_592848_1E3E355A)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Tue, 4 Mar 2014 15:15:17 -0500
+Date: Tue, 4 Mar 2014 15:13:13 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jonas Gorski <jogo@openwrt.org>
+Cc: Fariya Fatima <fariya.f@redpinesignals.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3.14.0-rc5 v3 1/10] rsi: Adding RS9113 driver files
+Message-ID: <20140304201313.GI7317@tuxdriver.com> (sfid-20140304_211527_575942_EB64E6B4)
+References: <5314357A.8090205@redpinesignals.com>
+ <20140304183828.GD7317@tuxdriver.com>
+ <CAOiHx==y9aSLA+Whr9A1xo7ikp7pDMtotc7=gPPZfPNLjap8rA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOiHx==y9aSLA+Whr9A1xo7ikp7pDMtotc7=gPPZfPNLjap8rA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Tue, Mar 04, 2014 at 09:08:26PM +0100, Jonas Gorski wrote:
+> On Tue, Mar 4, 2014 at 7:38 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> > Does anyone have any last objections or criticisms to this patch series?
+> 
+> > On Mon, Mar 03, 2014 at 01:25:38PM +0530, Fariya Fatima wrote:
+> >> Kconfig               |    1
+> >> Makefile              |    1
+> 
+> A minor critique would be that these Kconfig/Makefile changes should
+> be added in the last patch, else any in-between will result in a state
+> where the driver is selectable, but fails to build because of missing
+> source files.
 
-We should explore all possible columns when searching to be
-as resilient as possible to changing conditions. This fixes
-for example a scenario where even after a sudden creation of
-rssi difference between the 2 antennas we would keep doing MIMO
-at a low rate instead of switching to SISO at a higher rate using
-the better antenna which was the optimal configuration.
+FWIW, I tend to collapse a series like this (i.e. one that adds a new
+driver using a series of small, non-buildable patches) into a single
+patch when merging.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 36 +++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+> Also the subject suggests the patch set was based on linus' tree, not
+> wireless-next (or whatever the correct tree is), but this does not
+> necessarily mean it does not apply; I did not test this.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index ad83342..4e16d7c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -211,9 +211,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		.next_columns = {
- 			RS_COLUMN_LEGACY_ANT_B,
- 			RS_COLUMN_SISO_ANT_A,
-+			RS_COLUMN_SISO_ANT_B,
- 			RS_COLUMN_MIMO2,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_MIMO2_SGI,
- 		},
- 	},
- 	[RS_COLUMN_LEGACY_ANT_B] = {
-@@ -221,10 +221,10 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		.ant = ANT_B,
- 		.next_columns = {
- 			RS_COLUMN_LEGACY_ANT_A,
-+			RS_COLUMN_SISO_ANT_A,
- 			RS_COLUMN_SISO_ANT_B,
- 			RS_COLUMN_MIMO2,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_MIMO2_SGI,
- 		},
- 	},
- 	[RS_COLUMN_SISO_ANT_A] = {
-@@ -234,8 +234,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_SISO_ANT_B,
- 			RS_COLUMN_MIMO2,
- 			RS_COLUMN_SISO_ANT_A_SGI,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_SISO_ANT_B_SGI,
-+			RS_COLUMN_MIMO2_SGI,
- 		},
- 		.checks = {
- 			rs_siso_allow,
-@@ -248,8 +248,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_SISO_ANT_A,
- 			RS_COLUMN_MIMO2,
- 			RS_COLUMN_SISO_ANT_B_SGI,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_SISO_ANT_A_SGI,
-+			RS_COLUMN_MIMO2_SGI,
- 		},
- 		.checks = {
- 			rs_siso_allow,
-@@ -263,8 +263,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_SISO_ANT_B_SGI,
- 			RS_COLUMN_MIMO2_SGI,
- 			RS_COLUMN_SISO_ANT_A,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_SISO_ANT_B,
-+			RS_COLUMN_MIMO2,
- 		},
- 		.checks = {
- 			rs_siso_allow,
-@@ -279,8 +279,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_SISO_ANT_A_SGI,
- 			RS_COLUMN_MIMO2_SGI,
- 			RS_COLUMN_SISO_ANT_B,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
-+			RS_COLUMN_SISO_ANT_A,
-+			RS_COLUMN_MIMO2,
- 		},
- 		.checks = {
- 			rs_siso_allow,
-@@ -292,10 +292,10 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		.ant = ANT_AB,
- 		.next_columns = {
- 			RS_COLUMN_SISO_ANT_A,
-+			RS_COLUMN_SISO_ANT_B,
-+			RS_COLUMN_SISO_ANT_A_SGI,
-+			RS_COLUMN_SISO_ANT_B_SGI,
- 			RS_COLUMN_MIMO2_SGI,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
- 		},
- 		.checks = {
- 			rs_mimo_allow,
-@@ -307,10 +307,10 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		.sgi = true,
- 		.next_columns = {
- 			RS_COLUMN_SISO_ANT_A_SGI,
-+			RS_COLUMN_SISO_ANT_B_SGI,
-+			RS_COLUMN_SISO_ANT_A,
-+			RS_COLUMN_SISO_ANT_B,
- 			RS_COLUMN_MIMO2,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
--			RS_COLUMN_INVALID,
- 		},
- 		.checks = {
- 			rs_mimo_allow,
+This is usually not a (big) merge problem for a new driver.
+
+John
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
