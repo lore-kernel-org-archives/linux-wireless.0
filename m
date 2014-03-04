@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:56215 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754380AbaCROpn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44728 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753959AbaCDSpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:45:43 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so5422859eek.20
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:42 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/35] iwlwifi: mvm: init drv_stats_lock
-Date: Tue, 18 Mar 2014 16:45:05 +0200
-Message-Id: <1395153939-23897-1-git-send-email-egrumbach@gmail.com> (sfid-20140318_154547_404859_68C860B7)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Tue, 4 Mar 2014 13:45:16 -0500
+Date: Tue, 4 Mar 2014 13:33:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	"pali.rohar@gmail.com" <pali.rohar@gmail.com>,
+	"pavel@ucw.cz" <pavel@ucw.cz>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: use skb_trim to make skb shorter
+Message-ID: <20140304183348.GB7317@tuxdriver.com> (sfid-20140304_194524_466325_472DA1BB)
+References: <20140225105756.GB22279@mudshark.cambridge.arm.com>
+ <1393678326-23535-1-git-send-email-ivo.g.dimitrov.75@gmail.com>
+ <20140304142658.GK8766@mudshark.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140304142658.GK8766@mudshark.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+OK, I'll queue it as a fix...
 
-Otherwise lockdep complains about the lock, I'm not sure
-why we didn't see this before.
+On Tue, Mar 04, 2014 at 02:26:58PM +0000, Will Deacon wrote:
+> Hi Jonn,
+> 
+> On Sat, Mar 01, 2014 at 12:52:06PM +0000, Ivaylo Dimitrov wrote:
+> > the current code is directly setting skb->len, which is not correct and
+> > brings problems with HAVE_EFFICIENT_UNALIGNED_ACCESS enabled in config
+> > 
+> > Signed-off-by: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+> > ---
+> 
+> Can you pick this patch up please? It addresses a regression introduced in
+> the merge window (ARM started selecting HAVE_EFFICIENT_UNALIGNED_ACCESS).
+> 
+> Cheers,
+> 
+> Will
+> 
+> >  drivers/net/wireless/ti/wl1251/rx.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
+> > index 123c4bb..cde0eaf 100644
+> > --- a/drivers/net/wireless/ti/wl1251/rx.c
+> > +++ b/drivers/net/wireless/ti/wl1251/rx.c
+> > @@ -180,7 +180,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+> >  	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
+> >  
+> >  	/* The actual length doesn't include the target's alignment */
+> > -	skb->len = desc->length  - PLCP_HEADER_LENGTH;
+> > +	skb_trim(skb, desc->length - PLCP_HEADER_LENGTH);
+> >  
+> >  	fc = (u16 *)skb->data;
+> >  
+> > -- 
+> > 1.7.9.5
+> > 
+> > 
+> 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index e0ff43e..41c6370 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -1049,6 +1049,8 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	struct dentry *bcast_dir __maybe_unused;
- 	char buf[100];
- 
-+	spin_lock_init(&mvm->drv_stats_lock);
-+
- 	mvm->debugfs_dir = dbgfs_dir;
- 
- 	MVM_DEBUGFS_ADD_FILE(tx_flush, mvm->debugfs_dir, S_IWUSR);
 -- 
-1.8.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
