@@ -1,115 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54111 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbaCFJQV (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:63199 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756247AbaCDHPA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 04:16:21 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/2] brcmfmac: Use atomic functions for intstatus update.
-Date: Thu, 6 Mar 2014 10:16:12 +0100
-Message-ID: <1394097372-4643-3-git-send-email-arend@broadcom.com> (sfid-20140306_101633_653542_096A8AEE)
-In-Reply-To: <1394097372-4643-1-git-send-email-arend@broadcom.com>
-References: <1394097372-4643-1-git-send-email-arend@broadcom.com>
+	Tue, 4 Mar 2014 02:15:00 -0500
+Received: by mail-bk0-f42.google.com with SMTP id mx12so86556bkb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 23:14:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5314FD54.7070202@candelatech.com>
+References: <1393550452-1302-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQnCjkgr3V4bzXW8GHJDmGRHqg6x8An__vFW5bxdub=uyw@mail.gmail.com>
+	<5314FD54.7070202@candelatech.com>
+Date: Tue, 4 Mar 2014 08:14:59 +0100
+Message-ID: <CA+BoTQk1QJfOPORL54kUR+gxBO97BZhHnm_+KV4KgpAruKW0JQ@mail.gmail.com> (sfid-20140304_081527_732077_81237B78)
+Subject: Re: [PATCH v2] ath10k: support msdu chaining.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 3 March 2014 23:08, Ben Greear <greearb@candelatech.com> wrote:
+> On 02/27/2014 11:51 PM, Michal Kazior wrote:
+>> On 28 February 2014 02:20,  <greearb@candelatech.com> wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> Consolidate the list of msdu skbs into the msdu-head skb, delete the
+>>> rest of the skbs, pass the msdu-head skb on up the stack as normal.
+>>>
+>>> Tested with high-speed TCP and UDP traffic on modified firmware that
+>>> supports raw-rx.
+>>
+>> As for an umodified firmware I expect ath10k will just re-assemble
+>> corrupted frames just to have them dropped by mac80211. It might be
+>> worth checking:
+>>
+>>  if (chaining && fcs_error)
+>>     drop();
+>
+> As far as I can tell, packets with bad FCS are dropped earlier in that
+> rx method?
 
-The intstatus in sdio code can be updated from different
-threads. To protect intstatus access, atomic functions are
-used. One of them is set_bit, but this function is not
-guaranteed atomic on all platforms. The loop was replaced
-with local created OR function.
+Ah, good point. We're dropping some frames based on `status` value already.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++++++++++----------
- 1 file changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 70bab5e..a111b6f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2439,12 +2439,21 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- 	}
- }
- 
-+static void atomic_orr(int val, atomic_t *v)
-+{
-+	int old_val;
-+
-+	old_val = atomic_read(v);
-+	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
-+		old_val = atomic_read(v);
-+}
-+
- static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- {
- 	struct brcmf_core *buscore;
- 	u32 addr;
- 	unsigned long val;
--	int n, ret;
-+	int ret;
- 
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-@@ -2452,7 +2461,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
- 	if (ret != 0)
--		val = 0;
-+		return ret;
- 
- 	val &= bus->hostintmask;
- 	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
-@@ -2461,13 +2470,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	if (val) {
- 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
- 		bus->sdcnt.f1regdata++;
--	}
--
--	if (ret) {
--		atomic_set(&bus->intstatus, 0);
--	} else if (val) {
--		for_each_set_bit(n, &val, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
-+		atomic_orr(val, &bus->intstatus);
- 	}
- 
- 	return ret;
-@@ -2479,7 +2482,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	unsigned long intstatus;
- 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
- 	uint framecnt;			/* Temporary counter of tx/rx frames */
--	int err = 0, n;
-+	int err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2583,10 +2586,8 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	}
- 
- 	/* Keep still-pending events for next scheduling */
--	if (intstatus) {
--		for_each_set_bit(n, &intstatus, 32)
--			set_bit(n, (unsigned long *)&bus->intstatus.counter);
--	}
-+	if (intstatus)
-+		atomic_orr(intstatus, &bus->intstatus);
- 
- 	brcmf_sdio_clrintr(bus);
- 
--- 
-1.7.10.4
-
+Michał
