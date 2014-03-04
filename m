@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:48876 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752801AbaCXKRa (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44452 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756526AbaCDJDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 06:17:30 -0400
-Received: by mail-la0-f47.google.com with SMTP id y1so3440089lam.20
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 03:17:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87vbv46klt.fsf@kamboji.qca.qualcomm.com>
-References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1395394341-3958-5-git-send-email-janusz.dziedzic@tieto.com>
-	<87vbv46klt.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 24 Mar 2014 11:17:28 +0100
-Message-ID: <CALhHN=q0bK3qUDRtm-_zRKs-RFCpiVcGHihQPuHvMW7CVLiePg@mail.gmail.com> (sfid-20140324_111732_830529_F3BFB9B2)
-Subject: Re: [PATCH 4/8] ath10k: setup rx channel per ppdu
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 4 Mar 2014 04:03:44 -0500
+Message-ID: <1393923821.13669.123.camel@dubbel> (sfid-20140304_100359_501176_C6A380C6)
+Subject: Re: [PATCH v3 2/3] mac80211: implement chanctx reservation
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Tue, 04 Mar 2014 11:03:41 +0200
+In-Reply-To: <CA+BoTQnXUzJWfe3yoVoLDB=dSvZUsuCEVoX1UFk8KOBxzZr=6Q@mail.gmail.com>
+References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
+	 <1393590200-25309-3-git-send-email-luca@coelho.fi>
+	 <CA+BoTQnXUzJWfe3yoVoLDB=dSvZUsuCEVoX1UFk8KOBxzZr=6Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 March 2014 09:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->
->> Setup band and frequency in ieee80211_rx_status
->> only once - for ppdu.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
+On Mon, 2014-03-03 at 12:54 +0100, Michal Kazior wrote:
+> On 28 February 2014 13:23, Luca Coelho <luca@coelho.fi> wrote:
+> 
 > [...]
->
->> @@ -775,23 +794,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
->>       if (info->amsdu_more)
->>               status->flag |= RX_FLAG_AMSDU_MORE;
->>
->> -     status->signal = info->signal;
->
-> What about the signal, how is it set now? I don't see that anywhere in
-> this patch.
->
-This belongs to next patch - will fix it.
+> 
+> > +int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+> > +                                 const struct cfg80211_chan_def *chandef)
+> > +{
+> > +       struct ieee80211_local *local = sdata->local;
+> > +       struct ieee80211_chanctx_conf *conf;
+> > +       struct ieee80211_chanctx *new_ctx, *curr_ctx;
+> > +       int ret = 0;
+> > +
+> > +       mutex_lock(&local->chanctx_mtx);
+> > +
+> > +       conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+> > +                                        lockdep_is_held(&local->chanctx_mtx));
+> > +       if (!conf) {
+> > +               ret = -EINVAL;
+> > +               goto out;
+> > +       }
+> > +
+> > +       curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+> > +
+> > +       /* try to find another context with the chandef we want */
+> > +       new_ctx = ieee80211_find_chanctx(local, chandef,
+> > +                                        IEEE80211_CHANCTX_SHARED);
+> > +       if (!new_ctx) {
+> > +               /* create a new context */
+> > +               new_ctx = ieee80211_new_chanctx(local, chandef,
+> > +                                               IEEE80211_CHANCTX_SHARED);
+> 
+> Shouldn't you use curr_ctx->mode here instead of SHARED? Or perhaps
+> the function should take `mode` argument..
+> 
+> For CSA it's probably okay to just use curr_ctx->mode, but for a more
+> generic reservation it should probably be an argument.
 
-BR
-janusz
+You're right.  I'll add mode as an argument to this function in v4.
+
+--
+Luca
+
