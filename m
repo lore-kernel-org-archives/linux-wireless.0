@@ -1,153 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:33800 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113AbaCXPOK (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40170 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753784AbaCEKa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 11:14:10 -0400
-Message-ID: <53304BBE.6040403@lwfinger.net> (sfid-20140324_161422_615904_1AEC3D9B)
-Date: Mon, 24 Mar 2014 10:14:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org, stable@kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] rtlwifi: add MSI interrupts support
-References: <1395640841-14477-1-git-send-email-adam.lee@canonical.com> <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
-In-Reply-To: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 5 Mar 2014 05:30:28 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v4 1/3] mac80211: split ieee80211_vif_change_channel in two
+Date: Wed,  5 Mar 2014 12:30:21 +0200
+Message-Id: <1394015423-31199-2-git-send-email-luca@coelho.fi> (sfid-20140305_113047_583997_234A48B9)
+In-Reply-To: <1394015423-31199-1-git-send-email-luca@coelho.fi>
+References: <1394015423-31199-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2014 06:34 AM, Adam Lee wrote:
-> Add MSI interrupts support, enable it when msi_support flag is true,
-> also could fallback to pin-based interrupts mode if MSI mode fails.
->
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Your first patch turns on MSI support unconditionally. That implies that there 
-are no harmful effects for attempting to use MSI on a box where it is not 
-needed, and/or not implemented. If that is the case, then the msi_support bool 
-should be eliminated, your first patch dropped, and this one revised 
-appropriately. Driver rtl8723be added this bool, but never uses it. Once that 
-driver reaches mainline, a patch can be prepared to remove the variable.
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-I think this patch should be applied to stable. Applying it back to 3.10+ should 
-be far enough. That will pick up the initial submission of the RTL8188EE driver. 
-Boxes that need MSI interrupts are not likely to use any of the older chips.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-There are some additional in-line comments below.
-
-> ---
->   drivers/net/wireless/rtlwifi/pci.c | 63 ++++++++++++++++++++++++++++++++++++--
->   1 file changed, 61 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index f26f4ff..dd8497a 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1853,6 +1853,63 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
->   	return true;
->   }
->
-> +static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-
-I like a blank line between the declarations and the code.
-
-> +	ret = pci_enable_msi(rtlpci->pdev);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	if (ret < 0) {
-> +		pci_disable_msi(rtlpci->pdev);
-> +		return ret;
-> +	}
-> +
-> +	rtlpci->using_msi = true;
-> +
-> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-> +			("MSI Interrupt Mode!\n"));
-
-Doesn't checkpatch.pl complain about the alignment here?
-
-> +	return 0;
-> +}
-> +
-> +static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-> +
-> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	rtlpci->using_msi = false;
-> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
-> +		 ("Pin-based Interrupt Mode!\n"));
-> +	return 0;
-> +}
-> +
-> +static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
-> +{
-> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
-> +	int ret;
-> +	if (rtlpci->msi_support == true) {
-
-As discussed above, this test is not needed. If it were, the current version of 
-checkpatch.pl complains about the "== true" part.
-
-> +		ret = rtl_pci_intr_mode_msi(hw);
-> +		if (ret < 0)
-> +			ret = rtl_pci_intr_mode_legacy(hw);
-> +	} else {
-> +		ret = rtl_pci_intr_mode_legacy(hw);
-> +	}
-> +	return ret;
-> +}
-> +
->   int rtl_pci_probe(struct pci_dev *pdev,
->   			    const struct pci_device_id *id)
->   {
-> @@ -1995,8 +2052,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
->   	}
->
->   	rtlpci = rtl_pcidev(pcipriv);
-> -	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
-> -			  IRQF_SHARED, KBUILD_MODNAME, hw);
-> +	err = rtl_pci_intr_mode_decide(hw);
->   	if (err) {
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
->   			 "%s: failed to register IRQ handler\n",
-> @@ -2064,6 +2120,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
->   		rtlpci->irq_alloc = 0;
->   	}
->
-> +	if (rtlpci->using_msi == true)
-
-Again "if (rtlpci->using_msi)" is preferred.
-
-> +		pci_disable_msi(rtlpci->pdev);
-> +
->   	list_del(&rtlpriv->list);
->   	if (rtlpriv->io.pci_mem_start != 0) {
->   		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
->
-
-When you resubmit, use "[PATCH V2]" in the subject, and use the proper CC stable 
-with [3.10+] following the address.
-
-Larry
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 42c6592..a27c6ec 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
++}
++
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
+-- 
+1.8.5.3
 
