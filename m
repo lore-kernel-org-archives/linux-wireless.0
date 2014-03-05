@@ -1,117 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51373 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754166AbaCMRaN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:32926 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755920AbaCEPVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 13:30:13 -0400
-Date: Thu, 13 Mar 2014 13:27:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sebastian Reichel <sre@ring0.de>
-Cc: Tony Lindgren <tony@atomide.com>, Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140313172726.GC30579@tuxdriver.com> (sfid-20140313_183022_587980_E272B46D)
-References: <20140125000929.GD25488@atomide.com>
- <1392419156-14394-1-git-send-email-sre@debian.org>
- <20140226194436.GA20992@earth.universe>
- <20140313170038.GA20372@earth.universe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140313170038.GA20372@earth.universe>
+	Wed, 5 Mar 2014 10:21:04 -0500
+Message-ID: <1394032852.5275.41.camel@jlt4.sipsolutions.net> (sfid-20140305_162201_656146_ADEAC357)
+Subject: pull-request: mac80211 2014-03-05
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 05 Mar 2014 16:20:52 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-vM/U7ipzyrbKR5GMLVBj"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 13, 2014 at 06:00:39PM +0100, Sebastian Reichel wrote:
-> Hi,
-> 
-> On Wed, Feb 26, 2014 at 08:44:36PM +0100, Sebastian Reichel wrote:
-> > On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
-> > > The following patchset adds device tree support to the spi variant of the
-> > > wl1251 driver, which is used in the Nokia N900. Tony requested, that you
-> > > take the whole series even if that may introduce merge conflicts:
-> > > 
-> > > > Sebastian, please resend the whole series to John and feel free to add my
-> > > > acks.  It's best that John picks them all up, otherwise we'll have the same
-> > > > issue for v3.15. It seems that we should have just taken the merge conflict
-> > > > rather than going back and forth with this.
-> > 
-> > ping! Is there still anything wrong with this patchset?
-> 
-> ping! This patchset is quite old now. Please pull it into
-> wireless-next, so that it can appear in 3.15.
-> 
-> -- Sebastian
 
-These are already in wireless-next...
+--=-vM/U7ipzyrbKR5GMLVBj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-commit edb6e3ec374d5630dfc7a93ddd5c0f4864e98a9d
-Author: Sebastian Reichel <sre@debian.org>
-Date:   Sat Feb 15 00:05:56 2014 +0100
+John,
 
-    Documentation: dt: wireless: Add wl1251
-    
-    Add device tree binding documentation for Texas Instrument's wl1251
-    wireless lan chip. For now only the SPI binding is documented.
-    
-    Signed-off-by: Sebastian Reichel <sre@debian.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+We have some more fixes...
 
-commit 07bbca6f142d02b4b09d66ed3c2cde36c77057ad
-Author: Sebastian Reichel <sre@debian.org>
-Date:   Sat Feb 15 00:05:55 2014 +0100
+Here I have a fix from Eliad for the minimal channel width calculation
+in the mac80211 code which lead to monitor mode not working at all for
+drivers using that. One of my fixes is for an issue noticed by Michal,
+we clear an already cleared value but do it without locking, so just
+remove that. The other is for a data leak - we leak two bytes of kernel
+memory out over the air in QoS NULL frames because those don't get a
+sequence number assigned in the TX path.
 
-    wl1251: spi: add device tree support
-    
-    Add device tree support for the spi variant of wl1251.
-    
-    Signed-off-by: Sebastian Reichel <sre@debian.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Please let me know if there's any problem.
 
-commit e4c2e09e1534835c749de362b9b38e2d8b286236
-Author: Sebastian Reichel <sre@debian.org>
-Date:   Sat Feb 15 00:05:54 2014 +0100
+johannes
 
-    wl1251: spi: add vio regulator support
-    
-    This patch adds support for requesting the regulator powering
-    the vio pin.
-    
-    Signed-off-by: Sebastian Reichel <sre@debian.org>
-    Reviewed-by: Pavel Machek <pavel@ucw.cz>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-commit 1d207cd30b65fdd60d952cb9e100b6f776564f06
-Author: Sebastian Reichel <sre@debian.org>
-Date:   Sat Feb 15 00:05:53 2014 +0100
+The following changes since commit cb664981607a6b5b3d670ad57bbda893b2528d96=
+:
 
-    wl1251: move power GPIO handling into the driver
-    
-    Move the power GPIO handling from the board code into
-    the driver. This is a dependency for device tree support.
-    
-    Signed-off-by: Sebastian Reichel <sre@debian.org>
-    Reviewed-by: Pavel Machek <pavel@ucw.cz>
-    Acked-by: Tony Lindgren <tony@atomide.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+  mac80211: fix association to 20/40 MHz VHT networks (2014-02-27 20:53:01 =
++0100)
 
-commit 946651cba26779864bcdbd7e12502f5a36c2de37
-Author: Luciano Coelho <coelho@ti.com>
-Date:   Sat Feb 15 00:05:52 2014 +0100
+are available in the git repository at:
 
-    wl1251: split wl251 platform data to a separate structure
-    
-    Move the wl1251 part of the wl12xx platform data structure into a new
-    structure specifically for wl1251.  Change the platform data built-in
-    block and board files accordingly.
-    
-    Signed-off-by: Luciano Coelho <coelho@ti.com>
-    Acked-by: Tony Lindgren <tony@atomide.com>
-    Reviewed-by: Felipe Balbi <balbi@ti.com>
-    Reviewed-by: Sebastian Reichel <sre@debian.org>
-    Reviewed-by: Pavel Machek <pavel@ucw.cz>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+for you to fetch changes up to 864a6040f395464003af8dd0d8ca86fed19866d4:
+
+  mac80211: clear sequence/fragment number in QoS-null frames (2014-03-05 1=
+5:49:54 +0100)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: consider virtual mon when calculating min_def
+
+Johannes Berg (2):
+      cfg80211: remove racy beacon_interval assignment
+      mac80211: clear sequence/fragment number in QoS-null frames
+
+ net/mac80211/chan.c     | 6 ++++++
+ net/mac80211/mesh_ps.c  | 1 +
+ net/mac80211/sta_info.c | 1 +
+ net/wireless/core.c     | 2 --
+ 4 files changed, 8 insertions(+), 2 deletions(-)
+
+
+--=-vM/U7ipzyrbKR5GMLVBj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJTF0DUAAoJEDBSmw7B7bqrH8sQAKgEpQRISoaYmm42cuXlqru3
+gBVB/NZgI328p2CY92iewI/lrl1bKGcWUsA4IWsuQjybJyEkt0OlIFiFW3aUHYQY
+UvVLYdAat5w0NjqtA0jTz0590hn8X7/Rh6Dh/zBz2ZuYFQZFaekm4QEDyuRzoJns
+XN908Y3c0FIeqN6h4FtA8wJ4w0+293tqVGM78ssJrGQz2v14o+Ny0HI/bMd/TjpB
+x+JtPjBWSupM1RJWY8LDRd0WFTiVSzrpuLpkMXZPjakpmIo/sTr4OCkCQ4Lh40lW
+ZcDPhPrIufIcgwbo+tlXoCKrJl2wwcZSHoqBkaeSipI9jBrbDL5sxYzTJVkKGDiZ
+atGH9kOanv2hkUtbFW3j5v5uf0BfnOCJY6BSW/OXNdF14XgR9AyT8DtTSrKStS02
+ykhtmwBLu6mfg251fZjS2qIwyBV6bHKMAcgCd4JymsT3wQe9IFfi2EOWFr7ehrAU
+SPqB/2yl2vH5xhq54ss3oj4ojGsTtkFqDkIy+u6HNY5DT5ZnB20t5nIUu0lhlUAg
+wS4/bJDKW7cOWobABxv2894NMmiUDy0/PJHImYvAx7G/if8WAEk5isFK26UytnNO
+HjFoDfiHVLSox3EGFe/0ingdvloRWkmO6b3nBnjRbexyLaRP45/BigV4UwnU9aGL
+0v5CpSEZTeyBg+M+RsWD
+=70Wh
+-----END PGP SIGNATURE-----
+
+--=-vM/U7ipzyrbKR5GMLVBj--
+
