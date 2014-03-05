@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:46412 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105AbaCDWy1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:32860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580AbaCEPBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 17:54:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 4/9] rtlwifi: rtl8192cu: Fix too long disable of IRQs
-Date: Tue,  4 Mar 2014 16:53:50 -0600
-Message-Id: <1393973635-24799-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140304_235441_972639_E76464A9)
-In-Reply-To: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 5 Mar 2014 10:01:00 -0500
+Message-ID: <1394031651.5275.38.camel@jlt4.sipsolutions.net> (sfid-20140305_160108_744043_5CA7F458)
+Subject: Re: [PATCH 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
+ again
+From: Johannes Berg <johannes@sipsolutions.net>
+To: michael-dev <michael-dev@fami-braun.de>
+Cc: linville@tuxdriver.com, projekt-wlan@fem.tu-ilmenau.de,
+	linux-wireless@vger.kernel.org
+Date: Wed, 05 Mar 2014 16:00:51 +0100
+In-Reply-To: <f54e8751cdc525ebc4d0d8abbbc96550@fami-braun.de> (sfid-20140305_144700_435568_A1DD1A4E)
+References: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
+	 <f54e8751cdc525ebc4d0d8abbbc96550@fami-braun.de>
+	 (sfid-20140305_144700_435568_A1DD1A4E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit f78bccd79ba3cd9d9664981b501d57bdb81ab8a4 entitled "rtlwifi:
-rtl8192ce: Fix too long disable of IRQs", Olivier Langlois
-<olivier@trillion01.com> fixed a problem caused by an extra long disabling
-of interrupts. This patch makes the same fix for rtl8192cu.
+On Wed, 2014-03-05 at 14:40 +0100, michael-dev wrote:
+> commit de74a1d9032f4d37ea453ad2a647e1aff4cd2591
+>    "mac80211: fix WPA with VLAN on AP side with ps-sta"
+> fixed an issue.
+> commit "7cbf9d017dbb5e3276de7d527925d42d4c11e732"
+>    "mac80211: fix oops on mesh PS broadcast forwarding"
+> essentially reverted it, because vif.type cannot be AP_VLAN
+> due to the check to vif.type in ieee80211_get_buffered_bc before.
+> 
+> As the 7cbf9 commit intended to fix the MESH case, fix it
+> by checking for IFTYPE_AP instead of IFTYPE_AP_VLAN.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+This looks fine, but
+ * please add a Cc stable and Fixes line
+(https://lwn.net/Articles/571980/)
+ * is severely whitespace damaged, so I can't apply it
+ * is against a backport which has vastly different line numbers, so I'm
+not sure
+   it'd apply if it wasn't broken
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index db7df7f..68b5c7e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -985,6 +985,17 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	int err = 0;
- 	static bool iqk_initialized;
-+	unsigned long flags;
-+
-+	/* As this function can take a very long time (up to 350 ms)
-+	 * and can be called with irqs disabled, reenable the irqs
-+	 * to let the other devices continue being serviced.
-+	 *
-+	 * It is safe doing so since our own interrupts will only be enabled
-+	 * in a subsequent step.
-+	 */
-+	local_save_flags(flags);
-+	local_irq_enable();
- 
- 	rtlhal->hw_type = HARDWARE_TYPE_RTL8192CU;
- 	err = _rtl92cu_init_mac(hw);
-@@ -997,7 +1008,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
- 			 "Failed to download FW. Init HW without FW now..\n");
- 		err = 1;
--		return err;
-+		goto exit;
- 	}
- 	rtlhal->last_hmeboxnum = 0; /* h2c */
- 	_rtl92cu_phy_param_tab_init(hw);
-@@ -1034,6 +1045,8 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	_InitPABias(hw);
- 	_update_mac_setting(hw);
- 	rtl92c_dm_init(hw);
-+exit:
-+	local_irq_restore(flags);
- 	return err;
- }
- 
--- 
-1.8.4.5
+johannes
 
