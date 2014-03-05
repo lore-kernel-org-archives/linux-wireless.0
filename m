@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:53135 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752998AbaCYI5L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 04:57:11 -0400
-Received: by mail-oa0-f41.google.com with SMTP id j17so179548oag.28
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:57:11 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:9092 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755070AbaCECby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Mar 2014 21:31:54 -0500
+Date: Wed, 5 Mar 2014 03:31:51 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Bernd Wagener <Bernd.Wagener@Uni-Oldenburg.DE>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	frankyl@broadcom.com
+Subject: Re: brcmfmac NVRAM files
+Message-ID: <20140305023151.GG17664@zurbaran> (sfid-20140305_033157_653722_E3117FA6)
+References: <20140217150640.GJ18868@zurbaran>
+ <20140217163315.GA22010@zurbaran>
+ <53023E51.90202@Uni-Oldenburg.DE>
+ <530248DD.1050408@broadcom.com>
+ <20140217180033.GM18868@zurbaran>
+ <53032EAB.5070905@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
-	<CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
-Date: Tue, 25 Mar 2014 09:57:10 +0100
-Message-ID: <CA+BoTQmNVHj-rNvVgvTx=Adq6J1kpra2qwi3Pmzh2G2Npn-jGg@mail.gmail.com> (sfid-20140325_095720_129772_336D04A6)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53032EAB.5070905@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2014 09:54, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->>
->>> BTW, I also saw that the same happen to latest AP firmware whenever
->>> the peer stats is more than 1. But since the first peer stats is self
->>> stats, so it is ok to overwrite it.
->>
->> I disagree. Why do you think it is okay to overwrite self peer stats?
->>
-> Because TxRate, RxRate, RSSI are all no value, just the MAC address.
+Hi Arend,
 
-I don't think that's true for 10.1 firmware and AP interface types.
+On Tue, Feb 18, 2014 at 10:58:03AM +0100, Arend van Spriel wrote:
+> I certainly hope you misread that. Before 3.13 the driver always look
+> for brcmfmac-sdio.bin and brcmfmac-sdio.txt regardless the device being
+> used. That has changed so the firmware file now includes the chip id and
+> for some even the revision, eg. brcmfmac43241b4-sdio.bin and
+> brcmfmac43241b4-sdio.txt. The nvram file has a totally different format
+> as the bin file so copying will fail for sure.
+So I finally found this NVRAM file, hidden somewhere in an EFI variable
+(Thanks for the hint).
+I have 2 questions for you:
 
+- How can I tell if the target properly loaded this NVRAM file ? Is
+  checking for wlan0's MAC to match the NVRAM MAC a good way to verify
+  that ?
 
-Michał
+- I'm running this on an Asus T100 (x86 tablet). This is a BCM94324A1
+  over SDIO and I run wireless-next there (With your very latest
+  brcmfmac changes). I see the driver is quite unreliable, for example
+  scan times out most of the time as the driver puts the target to sleep
+  while it's in the middle of receiving partial scan results. I had to
+  increase BRCMF_WD_POLL_MS to 100ms to actually get scan results. Then
+  the driver seems to be having a hard time joining the couple of WPA
+  APs that I tested it against.
+  Am I missing something or are those instabilities to be expected with
+  the latest brcmfmac code ? Please let me know if you need debug logs,
+  I'll happily provide them.
+
+Cheers,
+Samuel.
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
