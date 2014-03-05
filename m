@@ -1,116 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:35170 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933833AbaCUNxj (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40164 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753753AbaCEKa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:39 -0400
-Received: by mail-ee0-f42.google.com with SMTP id d17so1857803eek.1
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:38 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Wed, 5 Mar 2014 05:30:28 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 06/13] mac80211: track reserved vifs in chanctx
-Date: Fri, 21 Mar 2014 14:47:24 +0100
-Message-Id: <1395409651-26120-7-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145350_735980_DF1AE5F3)
-In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v4 0/3] mac802111: channel context reservation
+Date: Wed,  5 Mar 2014 12:30:20 +0200
+Message-Id: <1394015423-31199-1-git-send-email-luca@coelho.fi> (sfid-20140305_113045_030201_56A0C701)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c        | 14 ++++++++++----
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       |  1 +
- 3 files changed, 13 insertions(+), 4 deletions(-)
+Hi,
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 38d3010..99df19c 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -271,6 +271,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 		return ERR_PTR(-ENOMEM);
- 
- 	INIT_LIST_HEAD(&ctx->assigned_vifs);
-+	INIT_LIST_HEAD(&ctx->reserved_vifs);
- 	ctx->conf.def = *chandef;
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
-@@ -725,16 +726,19 @@ void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_chanctx *ctx = sdata->reserved_chanctx;
-+
- 	lockdep_assert_held(&sdata->local->chanctx_mtx);
- 
--	if (WARN_ON(!sdata->reserved_chanctx))
-+	if (WARN_ON(!ctx))
- 		return -EINVAL;
- 
--	if (--sdata->reserved_chanctx->refcount == 0)
--		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
--
-+	list_del(&sdata->reserved_chanctx_list);
- 	sdata->reserved_chanctx = NULL;
- 
-+	if (--ctx->refcount == 0)
-+		ieee80211_free_chanctx(sdata->local, ctx);
-+
- 	return 0;
- }
- 
-@@ -782,6 +786,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	list_add(&sdata->reserved_chanctx_list, &new_ctx->reserved_vifs);
- 	new_ctx->refcount++;
- 	sdata->reserved_chanctx = new_ctx;
- 	sdata->reserved_chandef = *chandef;
-@@ -831,6 +836,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 	ctx->refcount--;
- 	sdata->reserved_chanctx = NULL;
- 	sdata->radar_required = sdata->reserved_radar_required;
-+	list_del(&sdata->reserved_chanctx_list);
- 
- 	if (old_ctx == ctx) {
- 		/* This is our own context, just change it */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cd776c1..6c5969b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -692,6 +692,7 @@ struct ieee80211_chanctx {
- 	struct rcu_head rcu_head;
- 
- 	struct list_head assigned_vifs;
-+	struct list_head reserved_vifs;
- 
- 	enum ieee80211_chanctx_mode mode;
- 	int refcount;
-@@ -760,6 +761,7 @@ struct ieee80211_sub_if_data {
- 	struct cfg80211_chan_def csa_chandef;
- 
- 	struct list_head assigned_chanctx_list;
-+	struct list_head reserved_chanctx_list;
- 
- 	/* context reservation -- protected with chanctx_mtx */
- 	struct ieee80211_chanctx *reserved_chanctx;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b130be3..75a852d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1297,6 +1297,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
- 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
- 	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
-+	INIT_LIST_HEAD(&sdata->reserved_chanctx_list);
- 
- 	switch (type) {
- 	case NL80211_IFTYPE_P2P_GO:
+New version.  Many thanks to Michał for all his comments!
+
+In v4:
+
+   * add chanctx mode parameter to ieee80211_vif_reserve_chanctx();
+   * compare the vif's previous BSS width with the reserved new width
+     instead of comparing it to the chanctx's combined width;
+   * remove IEEE80211_CHANCTX_RESERVED and the reserved_mode element;
+   * increase refcount also for "in-place" changes;
+   * stop queues also before doing an "in-place" change;
+   * refactor ieee80211_use_reserved_chanctx() a bit to fit "in-place"
+     better;
+
+In v3:
+
+   * promoted to PATCH ;)
+   * applied comments by Michał (see inlined in the patches);
+   * removed the "add usage of CS channel reservation for STA" patch,
+     since it's independent and is not ready;
+
+This series is based on top of mac80211-next/master, without including
+my combination check changes.  When the combination check patchset
+gets applied, I can either send the "merge" of the two features as a
+separate patchset or I can modify this patchset accordingly (though I
+prefer the former, so I can do things in small steps ;).
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (3):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: implement chanctx reservation
+  mac80211: allow reservation of a running chanctx
+
+ include/net/mac80211.h     |   7 ++
+ net/mac80211/chan.c        | 214 ++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |  14 +++
+ 3 files changed, 215 insertions(+), 20 deletions(-)
+
 -- 
 1.8.5.3
 
