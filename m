@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:58375 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754380AbaCROpv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:45:51 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so5497277eek.10
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:50 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10594 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756520AbaCEMLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 07:11:00 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/35] iwlwifi: nvm: fix VHT capability antenna-dependent fields
-Date: Tue, 18 Mar 2014 16:45:09 +0200
-Message-Id: <1395153939-23897-5-git-send-email-egrumbach@gmail.com> (sfid-20140318_154555_306168_0A983BA6)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: [RFC/RFT 2/9] iwlegacy: use CMD_COPY_PKT on il3945_get_measurement
+Date: Wed,  5 Mar 2014 13:13:27 +0100
+Message-Id: <1394021614-11514-3-git-send-email-sgruszka@redhat.com> (sfid-20140305_131104_925824_65DF0B36)
+In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-As the antenna dependent fields depend on the firmware file and not
-the NVM, use those fields in the VHT capability creation.
-
-Additionally, fix the STBC and antenna pattern consistency fields.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 2f962ec..6be30c6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -299,9 +299,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index dc1d20c..f7a58f5 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -668,13 +668,18 @@ il3945_get_measurement(struct il_priv *il,
+ 	struct il_host_cmd cmd = {
+ 		.id = C_SPECTRUM_MEASUREMENT,
+ 		.data = (void *)&spectrum,
+-		.flags = CMD_WANT_SKB,
++		.flags = CMD_COPY_PKT,
+ 	};
+ 	u32 add_time = le64_to_cpu(params->start_time);
+ 	int rc;
+ 	int spectrum_resp_status;
+ 	int duration = le16_to_cpu(params->duration);
  
- static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 				  struct iwl_nvm_data *data,
--				  struct ieee80211_sta_vht_cap *vht_cap)
-+				  struct ieee80211_sta_vht_cap *vht_cap,
-+				  u8 tx_chains, u8 rx_chains)
- {
--	int num_ants = num_of_ant(data->valid_rx_ant);
-+	int num_rx_ants = num_of_ant(rx_chains);
-+	int num_tx_ants = num_of_ant(tx_chains);
++	pkt = kmalloc(sizeof(*pkt), GFP_KERNEL);
++	if (!pkt)
++		return -ENOMEM;
++	cmd.pkt_ptr = pkt;
++
+ 	if (il_is_associated(il))
+ 		add_time =
+ 		    il_usecs_to_beacons(il,
+@@ -708,12 +713,12 @@ il3945_get_measurement(struct il_priv *il,
  
- 	vht_cap->vht_supported = true;
+ 	rc = il_send_cmd_sync(il, &cmd);
+ 	if (rc)
+-		return rc;
++		goto out;
  
-@@ -311,8 +313,10 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 		       3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
- 		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+-	pkt = (struct il_rx_pkt *)cmd.reply_page;
+ 	if (pkt->hdr.flags & IL_CMD_FAILED_MSK) {
+ 		IL_ERR("Bad return from N_RX_ON_ASSOC command\n");
+ 		rc = -EIO;
++		goto out;
+ 	}
  
--	if (num_ants > 1)
-+	if (num_tx_ants > 1)
- 		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
-+	else
-+		vht_cap->cap |= IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
+ 	spectrum_resp_status = le16_to_cpu(pkt->u.spectrum.status);
+@@ -733,8 +738,8 @@ il3945_get_measurement(struct il_priv *il,
+ 		break;
+ 	}
  
- 	if (iwlwifi_mod_params.amsdu_size_8K)
- 		vht_cap->cap |= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991;
-@@ -327,10 +331,8 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
+-	il_free_pages(il, cmd.reply_page);
+-
++out:
++	kfree(pkt);
+ 	return rc;
+ }
  
--	if (num_ants == 1 ||
--	    cfg->rx_with_siso_diversity) {
--		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
--				IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
-+	if (num_rx_ants == 1 || cfg->rx_with_siso_diversity) {
-+		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN;
- 		/* this works because NOT_SUPPORTED == 3 */
- 		vht_cap->vht_mcs.rx_mcs_map |=
- 			cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << 2);
-@@ -375,7 +377,8 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 	iwl_init_ht_hw_capab(cfg, data, &sband->ht_cap, IEEE80211_BAND_5GHZ,
- 			     tx_chains, rx_chains);
- 	if (enable_vht)
--		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap);
-+		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap,
-+				      tx_chains, rx_chains);
- 
- 	if (n_channels != n_used)
- 		IWL_ERR_DEV(dev, "NVM: used only %d of %d channels\n",
 -- 
-1.8.3.2
+1.7.11.7
 
