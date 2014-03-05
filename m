@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:36223 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaCQSwL (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:42323 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755911AbaCEChu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 14:52:11 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so4429246eek.6
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 11:52:10 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH] rtl818x: remove unused conf_erp callback from RF ops struct
-Date: Mon, 17 Mar 2014 19:52:42 +0100
-Message-Id: <1395082362-12673-1-git-send-email-andrea.merello@gmail.com> (sfid-20140317_195215_570648_5F612513)
+	Tue, 4 Mar 2014 21:37:50 -0500
+Received: by mail-ob0-f170.google.com with SMTP id uz6so418088obc.29
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 18:37:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <53168976.7000008@wwwdotorg.org>
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
+	<530D218E.9010007@wwwdotorg.org>
+	<CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com>
+	<53168976.7000008@wwwdotorg.org>
+Date: Wed, 5 Mar 2014 10:37:50 +0800
+Message-ID: <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com> (sfid-20140305_033813_072365_77948BFE)
+Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ERP configuration is now done outside RF code in both rtl8180
-and rtl8187 drivers.
+On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> On 03/04/2014 06:43 PM, Linus Walleij wrote:
 
-The conf_erp callback in common RF ops struct is now useless.
-Remove it.
+>> If I understand the situation correctly it's like ACPI does not have named
+>> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
+>> to the work of abstracting the access to GPIO handlers so that drivers
+>> need not know whether ACPI or DT is used for describing the hardware.
+>
+> For devices that already have both ACPI and DT bindings, we can't
+> pretend they can be the same; they are already potentially different. We
+> simply need to parse DT and ACPI differently, since that's the sway
+> their bindings are defined.
+>
+> For any devices that don't have both ACPI and DT bindings, I agree we
+> should certainly strive to make any new bindings aligned so we don't
+> have to deal with this for them.
+>
+> However, we can't change the past.
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl818x.h | 1 -
- 1 file changed, 1 deletion(-)
+Yeah, right, so for this very driver there are no bindings defined (yet)
+and the only device tree I can find referencing it is the Tegra20-paz00
+and it just use gpios = <>;
 
-diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
-index fa7f7f6..1815b15 100644
---- a/drivers/net/wireless/rtl818x/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x/rtl818x.h
-@@ -192,7 +192,6 @@ struct rtl818x_rf_ops {
- 	void (*init)(struct ieee80211_hw *);
- 	void (*stop)(struct ieee80211_hw *);
- 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
--	void (*conf_erp)(struct ieee80211_hw *, struct ieee80211_bss_conf *);
- 	u8 (*calc_rssi)(u8 agc, u8 sq);
- };
- 
--- 
-1.8.3.2
+So in this case I think this patch is the right way forward, but I admit
+I'm really uncertain in the general case.
 
+Yours,
+Linus Walleij
