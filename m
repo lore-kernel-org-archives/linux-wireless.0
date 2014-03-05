@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4374 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751423AbaCZCBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 22:01:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: correction in sleep confirm command sequence number
-Date: Tue, 25 Mar 2014 19:01:19 -0700
-Message-ID: <1395799280-29221-2-git-send-email-bzhao@marvell.com> (sfid-20140326_030201_704558_D91DBB15)
-In-Reply-To: <1395799280-29221-1-git-send-email-bzhao@marvell.com>
-References: <1395799280-29221-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:9214 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756520AbaCEMLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 07:11:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: [RFC/RFT 3/9] iwlegacy: use CMD_COPY_PKT on il_send_scan_abort
+Date: Wed,  5 Mar 2014 13:13:28 +0100
+Message-Id: <1394021614-11514-4-git-send-email-sgruszka@redhat.com> (sfid-20140305_131108_311779_218BFADD)
+In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-Incremented sequence number was not being used for SLEEP confirm
-command. This patch fixes the issue.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlegacy/common.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index b411558..cc81fcd 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -277,11 +277,11 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 31b9623..0661a5b 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1271,9 +1271,14 @@ il_send_scan_abort(struct il_priv *il)
+ 	struct il_rx_pkt *pkt;
+ 	struct il_host_cmd cmd = {
+ 		.id = C_SCAN_ABORT,
+-		.flags = CMD_WANT_SKB,
++		.flags = CMD_COPY_PKT,
+ 	};
  
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	pkt = kmalloc(sizeof(*pkt), GFP_KERNEL);
++	if (!pkt)
++		return -ENOMEM;
++	cmd.pkt_ptr = pkt;
++
+ 	/* Exit instantly with error when device is not ready
+ 	 * to receive scan abort command or it does not perform
+ 	 * hardware scan currently */
+@@ -1282,13 +1287,12 @@ il_send_scan_abort(struct il_priv *il)
+ 	    !test_bit(S_SCAN_HW, &il->status) ||
+ 	    test_bit(S_FW_ERROR, &il->status) ||
+ 	    test_bit(S_EXIT_PENDING, &il->status))
+-		return -EIO;
++		goto out;
  
-+	adapter->seq_num++;
- 	sleep_cfm_buf->seq_num =
- 		cpu_to_le16((HostCmd_SET_SEQ_NO_BSS_INFO
- 					(adapter->seq_num, priv->bss_num,
- 					 priv->bss_type)));
--	adapter->seq_num++;
+ 	ret = il_send_cmd_sync(il, &cmd);
+ 	if (ret)
+-		return ret;
++		goto out;
  
- 	if (adapter->iface_type == MWIFIEX_USB) {
- 		sleep_cfm_tmp =
+-	pkt = (struct il_rx_pkt *)cmd.reply_page;
+ 	if (pkt->u.status != CAN_ABORT_STATUS) {
+ 		/* The scan abort will return 1 for success or
+ 		 * 2 for "failure".  A failure condition can be
+@@ -1300,7 +1304,8 @@ il_send_scan_abort(struct il_priv *il)
+ 		ret = -EIO;
+ 	}
+ 
+-	il_free_pages(il, cmd.reply_page);
++out:
++	kfree(pkt);
+ 	return ret;
+ }
+ 
 -- 
-1.8.2.3
+1.7.11.7
 
