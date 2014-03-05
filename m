@@ -1,94 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:44773 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754648AbaCPRV4 (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:48690 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007AbaCEJui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2014 13:21:56 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v2 3/4] ath6kl: set NET_NAME_USER for P2P ifs
-Date: Sun, 16 Mar 2014 18:21:29 +0100
-Message-Id: <1394990490-1076-4-git-send-email-dh.herrmann@gmail.com> (sfid-20140316_182407_715250_0282BEA1)
-In-Reply-To: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
-References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
+	Wed, 5 Mar 2014 04:50:38 -0500
+Received: by mail-pd0-f173.google.com with SMTP id z10so849277pdj.4
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2014 01:50:37 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: allow the supported rate change by reassociate peer
+Date: Wed,  5 Mar 2014 17:50:26 +0800
+Message-Id: <1394013026-8426-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140305_105101_859743_C356388F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P2P netdevs and other devices that are created via nl80211 from user-space
-have a name provided by user-space. Therefore, set NET_NAME_USER so this
-is correctly shown in sysfs.
+IBSS mode requires the changing of supported rate. Do this
+by reassociate the peer. The investigation shows that if move
+from legacy to HT, the rate control won't work after changing
+the supported rate. But once changing the supported rate to HT,
+user can assign the TxRate in HT mode.
 
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 5 ++++-
- drivers/net/wireless/ath/ath6kl/cfg80211.h | 1 +
- drivers/net/wireless/ath/ath6kl/core.c     | 4 ++--
- 3 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   24 +++++++++++++-----------
+ drivers/net/wireless/ath/ath10k/wmi.c |    5 +++--
+ 2 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index c2c6f46..131d8ab 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1512,7 +1512,8 @@ static struct wireless_dev *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	wdev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
-+	wdev = ath6kl_interface_add(ar, name, NET_NAME_USER, type,
-+				    if_idx, nw_type);
- 	if (!wdev)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -3630,6 +3631,7 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 511a2f8..9ad1869 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1524,7 +1524,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
  }
  
- struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
-+					  unsigned char name_assign_type,
- 					  enum nl80211_iftype type,
- 					  u8 fw_vif_idx, u8 nw_type)
+ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+-				struct ieee80211_sta *sta)
++				struct ieee80211_sta *sta, bool reassoc)
  {
-@@ -3666,6 +3668,7 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
- 			ndev->dev_addr[4] ^= 0x80;
+ 	struct wmi_peer_assoc_complete_arg peer_arg;
+ 	int ret = 0;
+@@ -1538,6 +1538,7 @@ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+ 		return ret;
  	}
  
-+	ndev->name_assign_type = name_assign_type;
- 	init_netdev(ndev);
++	peer_arg.peer_reassoc = reassoc;
+ 	ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+ 	if (ret) {
+ 		ath10k_warn("Peer assoc failed for STA %pM vdev %i: %d\n",
+@@ -3195,6 +3196,16 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 				    sta->addr, smps, err);
+ 	}
  
- 	ath6kl_init_control_info(vif);
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index b59becd..5aa57a7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -25,6 +25,7 @@ enum ath6kl_cfg_suspend_mode {
- };
++	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM supp rates\n",
++			   sta->addr);
++
++		err = ath10k_station_assoc(ar, arvif, sta, true);
++		if (err)
++			ath10k_warn("Failed to reassociate station: %pM\n",
++				    sta->addr);
++	}
++
+ 	mutex_unlock(&ar->conf_mutex);
+ }
  
- struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
-+					  unsigned char name_assign_type,
- 					  enum nl80211_iftype type,
- 					  u8 fw_vif_idx, u8 nw_type);
- void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 4b46adb..3cc8145 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -195,8 +195,8 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- 	rtnl_lock();
+@@ -3275,7 +3286,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac sta %pM associated\n",
+ 			   sta->addr);
  
- 	/* Add an initial station interface */
--	wdev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
--				    INFRA_NETWORK);
-+	wdev = ath6kl_interface_add(ar, "wlan%d", NET_NAME_ENUM,
-+				    NL80211_IFTYPE_STATION, 0, INFRA_NETWORK);
+-		ret = ath10k_station_assoc(ar, arvif, sta);
++		ret = ath10k_station_assoc(ar, arvif, sta, false);
+ 		if (ret)
+ 			ath10k_warn("Failed to associate station %pM for vdev %i: %i\n",
+ 				    sta->addr, arvif->vdev_id, ret);
+@@ -4108,15 +4119,6 @@ static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
+ 		arsta->smps = smps;
+ 	}
  
- 	rtnl_unlock();
+-	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
+-		/* FIXME: Not implemented. Probably the only way to do it would
+-		 * be to re-assoc the peer. */
+-		changed &= ~IEEE80211_RC_SUPP_RATES_CHANGED;
+-		ath10k_dbg(ATH10K_DBG_MAC,
+-			   "mac sta rc update for %pM: changing supported rates not implemented\n",
+-			   sta->addr);
+-	}
+-
+ 	arsta->changed |= changed;
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 478e7f6..efb0cf2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3457,8 +3457,9 @@ int ath10k_wmi_peer_assoc(struct ath10k *ar,
+ 		__cpu_to_le32(arg->peer_vht_rates.tx_mcs_set);
+ 
+ 	ath10k_dbg(ATH10K_DBG_WMI,
+-		   "wmi peer assoc vdev %d addr %pM\n",
+-		   arg->vdev_id, arg->addr);
++		   "wmi peer assoc vdev %d addr %pM (%s)\n",
++		   arg->vdev_id, arg->addr,
++		   arg->peer_reassoc ? "reassociate" : "new");
+ 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->peer_assoc_cmdid);
+ }
  
 -- 
-1.9.0
+1.7.9.5
 
