@@ -1,335 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:50919 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756280AbaCROqp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:45 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so5451219eek.38
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:44 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56721 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754806AbaCEMKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 07:10:53 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/35] iwlwifi: mvm: configure low latency dependent scan parameters
-Date: Tue, 18 Mar 2014 16:45:35 +0200
-Message-Id: <1395153939-23897-31-git-send-email-egrumbach@gmail.com> (sfid-20140318_154702_334242_68F209E8)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: [RFC/RFT 0/9] iwlegacy rework rx allocation
+Date: Wed,  5 Mar 2014 13:13:25 +0100
+Message-Id: <1394021614-11514-1-git-send-email-sgruszka@redhat.com> (sfid-20140305_131057_230976_D8160A75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+Those patches replace compicated rx allocation algoritm with
+simple one which always assure we have RX buffers ready for 
+firmware. This fix long standing problem with microcode errors
+when system is under load.
 
-In case of system low latency configure passive scan to be fragmented.
-Set the following scan parameters for both immediate and scheduled scan:
- - passive scan fragment duration = 20ms
- - out-of-channel time = 70ms
- - suspend time = 105ms
-Restructure channel's active/passive dwell time configuration to better
-suit the above change.
+I tested them only on 4965.  
 
-The idea is that under low latency traffic passive scan is fragmented,
-i.e. that dwell on a particular channel will be fragmented. Each
-fragment dwell time is 20ms and fragments period is 105ms. Skipping to
-next channel will be delayed by the same period (105ms). So suspend_time
-parameter describing both fragments and channels skipping periods is set
-to 105ms. This value is chosen so that overall passive scan duration
-will not be too long. Max_out_time in this case is set to 70ms, so for
-active scanning operating channel will be left for 70ms while for
-passive still for 20ms (fragment dwell).
+Stanislaw Gruszka (9):
+  iwlegacy: add pkt pointer to command
+  iwlegacy: use CMD_COPY_PKT on il3945_get_measurement
+  iwlegacy: use CMD_COPY_PKT on il_send_scan_abort
+  iwlegacy: use CMD_COPY_PKT on il_send_add_sta
+  iwlegacy: use CMD_COPY_PKT on il_send_remove_station
+  iwlegacy: use CMD_COPY_PKT on il3945_send_rxon_assoc
+  iwlegacy: get rit of CMD_WANT_SKB
+  iwlegacy: treat RX notify specially
+  iwlegacy: rework rx buffers allocation
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h   |   2 +
- drivers/net/wireless/iwlwifi/mvm/scan.c  | 108 +++++++++++++++++++++++--------
- drivers/net/wireless/iwlwifi/mvm/utils.c |  19 ++++++
- 3 files changed, 101 insertions(+), 28 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c | 495 +++++--------------------------
+ drivers/net/wireless/iwlegacy/3945.c     |  74 ++---
+ drivers/net/wireless/iwlegacy/3945.h     |   8 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c | 447 +++++-----------------------
+ drivers/net/wireless/iwlegacy/4965.h     |   6 +-
+ drivers/net/wireless/iwlegacy/common.c   | 348 ++++++++++++++--------
+ drivers/net/wireless/iwlegacy/common.h   |  71 ++---
+ drivers/net/wireless/iwlegacy/debug.c    |   3 -
+ 8 files changed, 432 insertions(+), 1020 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index d581182..abfa567 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -984,6 +984,8 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- /* Low latency */
- int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			       bool value);
-+/* get SystemLowLatencyMode - only needed for beacon threshold? */
-+bool iwl_mvm_low_latency(struct iwl_mvm *mvm);
- /* get VMACLowLatencyMode */
- static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
- {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index ee3f67f..c91dc84 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -74,6 +74,11 @@
- struct iwl_mvm_scan_params {
- 	u32 max_out_time;
- 	u32 suspend_time;
-+	bool passive_fragmented;
-+	struct _dwell {
-+		u16 passive;
-+		u16 active;
-+	} dwell[IEEE80211_NUM_BANDS];
- };
- 
- static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
-@@ -165,15 +170,14 @@ static u16 iwl_mvm_get_passive_dwell(enum ieee80211_band band)
- 
- static void iwl_mvm_scan_fill_channels(struct iwl_scan_cmd *cmd,
- 				       struct cfg80211_scan_request *req,
--				       bool basic_ssid)
-+				       bool basic_ssid,
-+				       struct iwl_mvm_scan_params *params)
- {
--	u16 passive_dwell = iwl_mvm_get_passive_dwell(req->channels[0]->band);
--	u16 active_dwell = iwl_mvm_get_active_dwell(req->channels[0]->band,
--						    req->n_ssids);
- 	struct iwl_scan_channel *chan = (struct iwl_scan_channel *)
- 		(cmd->data + le16_to_cpu(cmd->tx_cmd.len));
- 	int i;
- 	int type = BIT(req->n_ssids) - 1;
-+	enum ieee80211_band band = req->channels[0]->band;
- 
- 	if (!basic_ssid)
- 		type |= BIT(req->n_ssids);
-@@ -183,8 +187,8 @@ static void iwl_mvm_scan_fill_channels(struct iwl_scan_cmd *cmd,
- 		chan->type = cpu_to_le32(type);
- 		if (req->channels[i]->flags & IEEE80211_CHAN_NO_IR)
- 			chan->type &= cpu_to_le32(~SCAN_CHANNEL_TYPE_ACTIVE);
--		chan->active_dwell = cpu_to_le16(active_dwell);
--		chan->passive_dwell = cpu_to_le16(passive_dwell);
-+		chan->active_dwell = cpu_to_le16(params->dwell[band].active);
-+		chan->passive_dwell = cpu_to_le16(params->dwell[band].passive);
- 		chan->iteration_count = cpu_to_le16(1);
- 		chan++;
- 	}
-@@ -262,19 +266,65 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
- }
- 
- static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
-+				     struct ieee80211_vif *vif,
-+				     int n_ssids,
- 				     struct iwl_mvm_scan_params *params)
- {
- 	bool global_bound = false;
-+	enum ieee80211_band band;
- 
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
- 					    IEEE80211_IFACE_ITER_NORMAL,
- 					    iwl_mvm_scan_condition_iterator,
- 					    &global_bound);
--	if (!global_bound)
--		return;
-+	/*
-+	 * Under low latency traffic passive scan is fragmented meaning
-+	 * that dwell on a particular channel will be fragmented. Each fragment
-+	 * dwell time is 20ms and fragments period is 105ms. Skipping to next
-+	 * channel will be delayed by the same period - 105ms. So suspend_time
-+	 * parameter describing both fragments and channels skipping periods is
-+	 * set to 105ms. This value is chosen so that overall passive scan
-+	 * duration will not be too long. Max_out_time in this case is set to
-+	 * 70ms, so for active scanning operating channel will be left for 70ms
-+	 * while for passive still for 20ms (fragment dwell).
-+	 */
-+	if (global_bound) {
-+		if (!iwl_mvm_low_latency(mvm)) {
-+			params->suspend_time = ieee80211_tu_to_usec(100);
-+			params->max_out_time = ieee80211_tu_to_usec(600);
-+		} else {
-+			params->suspend_time = ieee80211_tu_to_usec(105);
-+			/* P2P doesn't support fragmented passive scan, so
-+			 * configure max_out_time to be at least longest dwell
-+			 * time for passive scan.
-+			 */
-+			if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p) {
-+				params->max_out_time = ieee80211_tu_to_usec(70);
-+				params->passive_fragmented = true;
-+			} else {
-+				u32 passive_dwell;
-+
-+				/*
-+				 * Use band G so that passive channel dwell time
-+				 * will be assigned with maximum value.
-+				 */
-+				band = IEEE80211_BAND_2GHZ;
-+				passive_dwell = iwl_mvm_get_passive_dwell(band);
-+				params->max_out_time =
-+					ieee80211_tu_to_usec(passive_dwell);
-+			}
-+		}
-+	}
- 
--	params->suspend_time = ieee80211_tu_to_usec(100);
--	params->max_out_time = ieee80211_tu_to_usec(600);
-+	for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
-+		if (params->passive_fragmented)
-+			params->dwell[band].passive = 20;
-+		else
-+			params->dwell[band].passive =
-+				iwl_mvm_get_passive_dwell(band);
-+		params->dwell[band].active = iwl_mvm_get_active_dwell(band,
-+								      n_ssids);
-+	}
- }
- 
- int iwl_mvm_scan_request(struct iwl_mvm *mvm,
-@@ -311,9 +361,11 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 	cmd->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
- 	cmd->rxchain_sel_flags = iwl_mvm_scan_rx_chain(mvm);
- 
--	iwl_mvm_scan_calc_params(mvm, &params);
-+	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
- 	cmd->max_out_time = cpu_to_le32(params.max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params.suspend_time);
-+	if (params.passive_fragmented)
-+		cmd->scan_flags |= SCAN_FLAGS_FRAGMENTED_SCAN;
- 
- 	cmd->rxon_flags = iwl_mvm_scan_rxon_flags(req);
- 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
-@@ -360,7 +412,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 			    req->ie, req->ie_len,
- 			    mvm->fw->ucode_capa.max_probe_length));
- 
--	iwl_mvm_scan_fill_channels(cmd, req, basic_ssid);
-+	iwl_mvm_scan_fill_channels(cmd, req, basic_ssid, &params);
- 
- 	cmd->len = cpu_to_le16(sizeof(struct iwl_scan_cmd) +
- 		le16_to_cpu(cmd->tx_cmd.len) +
-@@ -554,10 +606,9 @@ static void iwl_scan_offload_build_tx_cmd(struct iwl_mvm *mvm,
- static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
- 			       struct ieee80211_vif *vif,
- 			       struct cfg80211_sched_scan_request *req,
--			       struct iwl_scan_offload_cmd *scan)
-+			       struct iwl_scan_offload_cmd *scan,
-+			       struct iwl_mvm_scan_params *params)
- {
--	struct iwl_mvm_scan_params params = {};
--
- 	scan->channel_count =
- 		mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels +
- 		mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
-@@ -566,14 +617,16 @@ static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
- 	scan->good_CRC_th = IWL_GOOD_CRC_TH_DEFAULT;
- 	scan->rx_chain = iwl_mvm_scan_rx_chain(mvm);
- 
--	iwl_mvm_scan_calc_params(mvm, &params);
--	scan->max_out_time = cpu_to_le32(params.max_out_time);
--	scan->suspend_time = cpu_to_le32(params.suspend_time);
-+	scan->max_out_time = cpu_to_le32(params->max_out_time);
-+	scan->suspend_time = cpu_to_le32(params->suspend_time);
- 
- 	scan->filter_flags |= cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
- 					  MAC_FILTER_IN_BEACON);
- 	scan->scan_type = cpu_to_le32(SCAN_TYPE_BACKGROUND);
- 	scan->rep_count = cpu_to_le32(1);
-+
-+	if (params->passive_fragmented)
-+		scan->scan_flags |= SCAN_FLAGS_FRAGMENTED_SCAN;
- }
- 
- static int iwl_ssid_exist(u8 *ssid, u8 ssid_len, struct iwl_ssid_ie *ssid_list)
-@@ -638,12 +691,11 @@ static void iwl_build_channel_cfg(struct iwl_mvm *mvm,
- 				  struct iwl_scan_channel_cfg *channels,
- 				  enum ieee80211_band band,
- 				  int *head, int *tail,
--				  u32 ssid_bitmap)
-+				  u32 ssid_bitmap,
-+				  struct iwl_mvm_scan_params *params)
- {
- 	struct ieee80211_supported_band *s_band;
--	int n_probes = req->n_ssids;
- 	int n_channels = req->n_channels;
--	u8 active_dwell, passive_dwell;
- 	int i, j, index = 0;
- 	bool partial;
- 
-@@ -653,8 +705,6 @@ static void iwl_build_channel_cfg(struct iwl_mvm *mvm,
- 	 * to scan. So add requested channels to head of the list and others to
- 	 * the end.
- 	*/
--	active_dwell = iwl_mvm_get_active_dwell(band, n_probes);
--	passive_dwell = iwl_mvm_get_passive_dwell(band);
- 	s_band = &mvm->nvm_data->bands[band];
- 
- 	for (i = 0; i < s_band->n_channels && *head <= *tail; i++) {
-@@ -678,8 +728,8 @@ static void iwl_build_channel_cfg(struct iwl_mvm *mvm,
- 		channels->channel_number[index] =
- 			cpu_to_le16(ieee80211_frequency_to_channel(
- 					s_band->channels[i].center_freq));
--		channels->dwell_time[index][0] = active_dwell;
--		channels->dwell_time[index][1] = passive_dwell;
-+		channels->dwell_time[index][0] = params->dwell[band].active;
-+		channels->dwell_time[index][1] = params->dwell[band].passive;
- 
- 		channels->iter_count[index] = cpu_to_le16(1);
- 		channels->iter_interval[index] = 0;
-@@ -721,6 +771,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 		.id = SCAN_OFFLOAD_CONFIG_CMD,
- 		.flags = CMD_SYNC,
- 	};
-+	struct iwl_mvm_scan_params params = {};
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -731,7 +782,8 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 	if (!scan_cfg)
- 		return -ENOMEM;
- 
--	iwl_build_scan_cmd(mvm, vif, req, &scan_cfg->scan_cmd);
-+	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, &params);
-+	iwl_build_scan_cmd(mvm, vif, req, &scan_cfg->scan_cmd, &params);
- 	scan_cfg->scan_cmd.len = cpu_to_le16(cmd_len);
- 
- 	iwl_scan_offload_build_ssid(req, &scan_cfg->scan_cmd, &ssid_bitmap);
-@@ -743,7 +795,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 					      scan_cfg->data);
- 		iwl_build_channel_cfg(mvm, req, &scan_cfg->channel_cfg,
- 				      IEEE80211_BAND_2GHZ, &head, &tail,
--				      ssid_bitmap);
-+				      ssid_bitmap, &params);
- 	}
- 	if (band_5ghz) {
- 		iwl_scan_offload_build_tx_cmd(mvm, vif, ies,
-@@ -753,7 +805,7 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 						SCAN_OFFLOAD_PROBE_REQ_SIZE);
- 		iwl_build_channel_cfg(mvm, req, &scan_cfg->channel_cfg,
- 				      IEEE80211_BAND_5GHZ, &head, &tail,
--				      ssid_bitmap);
-+				      ssid_bitmap, &params);
- 	}
- 
- 	cmd.data[0] = scan_cfg;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index e9de033d..c28da90 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -622,3 +622,22 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	return iwl_mvm_power_update_mac(mvm, vif);
- }
-+
-+static void iwl_mvm_ll_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	bool *result = _data;
-+
-+	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(vif)))
-+		*result = true;
-+}
-+
-+bool iwl_mvm_low_latency(struct iwl_mvm *mvm)
-+{
-+	bool result = false;
-+
-+	ieee80211_iterate_active_interfaces_atomic(
-+			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			iwl_mvm_ll_iter, &result);
-+
-+	return result;
-+}
 -- 
-1.8.3.2
+1.7.11.7
 
