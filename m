@@ -1,118 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40170 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753784AbaCEKa2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 05:30:28 -0500
-From: Luca Coelho <luca@coelho.fi>
+Received: from mx1.redhat.com ([209.132.183.28]:41353 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755539AbaCEMLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 07:11:08 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v4 1/3] mac80211: split ieee80211_vif_change_channel in two
-Date: Wed,  5 Mar 2014 12:30:21 +0200
-Message-Id: <1394015423-31199-2-git-send-email-luca@coelho.fi> (sfid-20140305_113047_583997_234A48B9)
-In-Reply-To: <1394015423-31199-1-git-send-email-luca@coelho.fi>
-References: <1394015423-31199-1-git-send-email-luca@coelho.fi>
+Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: [RFC/RFT 4/9] iwlegacy: use CMD_COPY_PKT on il_send_add_sta
+Date: Wed,  5 Mar 2014 13:13:29 +0100
+Message-Id: <1394021614-11514-5-git-send-email-sgruszka@redhat.com> (sfid-20140305_131111_575589_0DDD4F51)
+In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
-
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/net/wireless/iwlegacy/common.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 42c6592..a27c6ec 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 0661a5b..2778bdf 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1847,8 +1847,8 @@ il_add_sta_callback(struct il_priv *il, struct il_device_cmd *cmd,
+ int
+ il_send_add_sta(struct il_priv *il, struct il_addsta_cmd *sta, u8 flags)
+ {
+-	struct il_rx_pkt *pkt = NULL;
+-	int ret = 0;
++	struct il_rx_pkt *pkt;
++	int ret;
+ 	u8 data[sizeof(*sta)];
+ 	struct il_host_cmd cmd = {
+ 		.id = C_ADD_STA,
+@@ -1860,25 +1860,26 @@ il_send_add_sta(struct il_priv *il, struct il_addsta_cmd *sta, u8 flags)
+ 	D_INFO("Adding sta %u (%pM) %ssynchronously\n", sta_id, sta->sta.addr,
+ 	       flags & CMD_ASYNC ? "a" : "");
+ 
+-	if (flags & CMD_ASYNC)
++	if (flags & CMD_ASYNC) {
+ 		cmd.callback = il_add_sta_callback;
+-	else {
+-		cmd.flags |= CMD_WANT_SKB;
+-		might_sleep();
++	} else {
++		/* SYNC command mean we allow to sleep */
++		pkt = kmalloc(sizeof(*pkt), GFP_KERNEL);
++		if (!pkt)
++			return -ENOMEM;
++		cmd.pkt_ptr = pkt;
++		cmd.flags |= CMD_COPY_PKT;
+ 	}
+ 
+ 	cmd.len = il->ops->build_addsta_hcmd(sta, data);
+ 	ret = il_send_cmd(il, &cmd);
+ 
+-	if (ret || (flags & CMD_ASYNC))
++	if (flags & CMD_ASYNC)
+ 		return ret;
+ 
+-	if (ret == 0) {
+-		pkt = (struct il_rx_pkt *)cmd.reply_page;
++	if (ret == 0)
+ 		ret = il_process_add_sta_resp(il, sta, pkt, true);
+-	}
+-	il_free_pages(il, cmd.reply_page);
+-
++	kfree(pkt);
  	return ret;
  }
- 
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
- 
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
- 
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
-+	return 0;
-+}
-+
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
+ EXPORT_SYMBOL(il_send_add_sta);
 -- 
-1.8.5.3
+1.7.11.7
 
