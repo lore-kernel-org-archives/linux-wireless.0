@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:44930 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758493AbaCSItg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:32831 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100AbaCEOuO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:49:36 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e53so6274293eek.16
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:35 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC v2 3/8] ath10k: introduce ieee80211_rx_status to htt_rx_info
-Date: Wed, 19 Mar 2014 09:48:58 +0100
-Message-Id: <1395218943-31704-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_094956_808126_41D6EC7C)
-In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 5 Mar 2014 09:50:14 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.14] mac80211: clear sequence/fragment number in QoS-null frames
+Date: Wed,  5 Mar 2014 15:50:10 +0100
+Message-Id: <1394031010-22560-1-git-send-email-johannes@sipsolutions.net> (sfid-20140305_155024_170900_214FD454)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Will be used as a template, and final storage for
-rx_status.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Avoid leaking data by sending uninitialized memory and setting an
+invalid (non-zero) fragment number (the sequence number is ignored
+anyway) by setting the seq_ctrl field to zero.
+
+Cc: stable@vger.kernel.org
+Fixes: 3f52b7e328c5 ("mac80211: mesh power save basics")
+Fixes: ce662b44ce22 ("mac80211: send (QoS) Null if no buffered frames")
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    |    2 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c |    2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/mesh_ps.c  | 1 +
+ net/mac80211/sta_info.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 654867f..e80f033 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -21,6 +21,7 @@
- #include <linux/bug.h>
- #include <linux/interrupt.h>
- #include <linux/dmapool.h>
-+#include <net/mac80211.h>
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index 2802f9d9279d..ad8b377b4b9f 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -36,6 +36,7 @@ static struct sk_buff *mps_qos_null_get(struct sta_info *sta)
+ 				      sdata->vif.addr);
+ 	nullfunc->frame_control = fc;
+ 	nullfunc->duration_id = 0;
++	nullfunc->seq_ctrl = 0;
+ 	/* no address resolution for this frame -> set addr 1 immediately */
+ 	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
+ 	memset(skb_put(skb, 2), 0, 2); /* append QoS control field */
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index a023b432143b..137a192e64bc 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1206,6 +1206,7 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
+ 	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
+ 	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
++	nullfunc->seq_ctrl = 0;
  
- #include "htc.h"
- #include "rx_desc.h"
-@@ -1174,6 +1175,7 @@ struct htt_peer_unmap_event {
- 
- struct htt_rx_info {
- 	struct sk_buff *skb;
-+	struct ieee80211_rx_status rx_status;
- 	enum htt_rx_mpdu_status status;
- 	enum htt_rx_mpdu_encrypt_type encrypt_type;
- 	s8 signal;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index fd14c3a..f18e41c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -756,7 +756,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
- 
- 	status = IEEE80211_SKB_RXCB(info->skb);
--	memset(status, 0, sizeof(*status));
-+	memcpy(status, &info->rx_status, sizeof(*status));
- 
- 	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
- 		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
+ 	skb->priority = tid;
+ 	skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
 -- 
-1.7.9.5
+1.8.5.3
 
