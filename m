@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35766 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaC1EWA (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:49123 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756701AbaCEBnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 00:22:00 -0400
-Received: from [192.168.2.15] ([12.218.212.2])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id s2S4LxtJ012255
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 21:22:00 -0700
-Message-ID: <5334F8E7.1070803@candelatech.com> (sfid-20140328_052231_504026_EEC32353)
-Date: Thu, 27 Mar 2014 21:21:59 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 4 Mar 2014 20:43:18 -0500
+Received: by mail-oa0-f47.google.com with SMTP id i11so389016oag.20
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 17:43:17 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Setting txpower fails?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <530D218E.9010007@wwwdotorg.org>
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
+	<530D218E.9010007@wwwdotorg.org>
+Date: Wed, 5 Mar 2014 09:43:16 +0800
+Message-ID: <CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com> (sfid-20140305_024342_365688_5C06C69A)
+Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any idea why this isn't working?
+On Wed, Feb 26, 2014 at 7:04 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
 
-Kernel is 3.9.11+, driver is ath9k.
+>> -     gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+>> +     gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
+>
+> I think the correct fix here is to look up the GPIO by name rather than
+> by index, but simply hard-code the name rather than generating it with
+> sprintf(). Index lookups are hard to expand compatibly, but named-based
+> lookups scale much better.
+>
+> In other words, I rather specifically disagree with using a plain
+> "gpios" property in any future DT binding, but would strongly prefer
+> e.g. reset-gpios/shutdown-gpios or gpios/gpio-names.
 
-[root@ct523-9292 lanforge]# iwconfig wlan0
-wlan0     IEEE 802.11abgn  ESSID:off/any
-           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
-           Retry short limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
+If I understand the situation correctly it's like ACPI does not have named
+GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
+to the work of abstracting the access to GPIO handlers so that drivers
+need not know whether ACPI or DT is used for describing the hardware.
 
-[root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
-[root@ct523-9292 lanforge]# echo $?
-0
-[root@ct523-9292 lanforge]# iwconfig wlan0
-wlan0     IEEE 802.11abgn  ESSID:off/any
-           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
-           Retry short limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
+We could do worse. Like putting the GPIOs in a differently indexed order
+in DT vs ACPI.
 
-[root@ct523-9292 lanforge]#
+I have no strong opinion really, I just see that people doing DT and ACPI
+HW descriptions need to cooperate if they want to share infrastructure
+or we have to give up that pipe dream and let each HW description
+method have its own unique probe()-runpath. Which would be the result
+in this driver if we persist on using named GPIOs.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Yours,
+Linus Walleij
