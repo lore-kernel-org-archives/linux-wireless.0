@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:47484 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbaCYH1E convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:43828 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755539AbaCEMLV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 03:27:04 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so83204obc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 00:27:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53306239.2020006@candelatech.com>
-References: <1395428150-31996-1-git-send-email-greearb@candelatech.com>
-	<871txr7svw.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>
-	<53306239.2020006@candelatech.com>
-Date: Tue, 25 Mar 2014 08:27:02 +0100
-Message-ID: <CA+BoTQkCmJbvQjZ3vTV7AP1EwdcH_pAd0pex_v9bZDzwZdufbw@mail.gmail.com> (sfid-20140325_082725_595723_5E8803B6)
-Subject: Re: [PATCH 1/3] ath10k: Add debugging for tx-credits usage.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 5 Mar 2014 07:11:21 -0500
+Received: by mail-ea0-f175.google.com with SMTP id d10so972580eaj.20
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2014 04:11:20 -0800 (PST)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2] ath10k: do not overwrite max_antenna_gain
+Date: Wed,  5 Mar 2014 13:10:33 +0100
+Message-Id: <1394021433-19376-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20140305_131125_631781_51E50586)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 March 2014 17:50, Ben Greear <greearb@candelatech.com> wrote:
-> On 03/24/2014 04:21 AM, Michal Kazior wrote:
->> On 24 March 2014 12:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
->>>> -     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
->>>> +     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
->>>
->>> Using line numbers in debug messages is very cumbersome. Some people
->>> cherry pick patches, have their own changes and whatnot which will make
->>> it more difficult to read the debug logs. Isn't there any better way to
->>> do this?
->>
->> I would prefer to explicitly wait for tx credit replenishment in
->> ath10k_wmi_cmd_send() after a command is sent instead of all these
->> prints. This way you can get a full call trace if it times out.
->
-> Would that be a performance problem (by effectively allowing only a single
-> item to be sent to the firmware at any given time?)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-The only thing that may suffer here is wmi mgmt tx but I wouldn't
-consider that performance critical.
+Seems like we have an old bug, where we incidently overwrites
+the max_antenna_gain we pass to firmware, with zero value.
 
+End of all we are artifically reducing the output power.
 
-Michał
+This patch removes the excessive assignment on max_antenna_gain,
+which is being provided by regulatory domain, and consequently
+improves the tx power.
+
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 478e7f6..cb1f7b5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3393,7 +3393,6 @@ int ath10k_wmi_scan_chan_list(struct ath10k *ar,
+ 		ci->max_power         = ch->max_power;
+ 		ci->reg_power         = ch->max_reg_power;
+ 		ci->antenna_max       = ch->max_antenna_gain;
+-		ci->antenna_max       = 0;
+ 
+ 		/* mode & flags share storage */
+ 		ci->mode              = ch->mode;
+-- 
+1.7.10
+
