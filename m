@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa11-09.prod.phx3.secureserver.net ([68.178.252.110]:56621
-	"EHLO p3plsmtpa11-09.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751780AbaCCSLO (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:11003 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbaCEJQv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 13:11:14 -0500
-Date: Mon, 3 Mar 2014 11:11:12 -0700
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type
- 2 Tag Support
-Message-ID: <20140303181112.GA32605@animalcreek.com> (sfid-20140303_191118_684342_D64192E2)
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
- <20140221005059.GS18868@zurbaran>
- <20140226215309.GA21867@animalcreek.com>
+	Wed, 5 Mar 2014 04:16:51 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jouni Malinen <j@w1.fi>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 2/2] mac80211: ignore probe response from adjacent
+ channels
+Date: Wed, 5 Mar 2014 09:16:44 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D786F6@HASMSX103.ger.corp.intel.com> (sfid-20140305_101657_542494_A1AD3E15)
+References: <1393944614-4465-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1393944614-4465-2-git-send-email-emmanuel.grumbach@intel.com>
+ <20140305090854.GA3544@w1.fi>
+In-Reply-To: <20140305090854.GA3544@w1.fi>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140226215309.GA21867@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 02:53:09PM -0700, Mark A. Greer wrote:
-> On Fri, Feb 21, 2014 at 01:50:59AM +0100, Samuel Ortiz wrote:
-> > Hi Mark,
 > 
-> Hi Samuel - thanks for the feedback.
+> On Tue, Mar 04, 2014 at 04:50:14PM +0200, Emmanuel Grumbach wrote:
+> > This logic is already implemented in ieee80211_rx_mgmt_beacon.
+> > The purpose is to ignore probe responses that are received on adjacent
+> > channels. This can happen in 2.4GHz since channels overlap.
 > 
-> > Code looks quite nice, especially since this looks like a fairly complex
-> > driver. And the initial coments are quite useful, I appreciate that.
-> > I have a few comments/questions though:
-> > 
-> > 
-> > > + * been received and there isn't an error).  The delay is 3 ms since delays
-> > > + * over 2 ms have been observed during testing.
-> > Would you say this timeout depend on the SPI bus bandwidth ?
+> Why would this be done? I can understand not updating signal information,
+> but dropping Probe Response frames completely sounds quite undesirable.
+> These can be used to help optimize partial scans and any additional
+> information that can be used without having to change channels sounds
+> helpful to me.
 > 
-> It'll be one of the factors but the tag's response characteristics are
-> a big factor too.  I can bump it up a bit more if you prefer or do you
-> want me to somehow calculate it from the SPI bitrate?
 
-Ping.
+So I guess you want me to revert the code we currently have in ieee80211_rx_mgmt_beacon ;)
+Don't know really... If you are associated to an AP and hear its beacons / probe responses on another channel you really have a big problem in your radio?
