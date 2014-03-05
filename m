@@ -1,79 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f176.google.com ([209.85.220.176]:43989 "EHLO
-	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751087AbaCGDoN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60284 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754811AbaCEK4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 22:44:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACRpkdaYuZ5bXo7djOv04oyHPAFbO=pKfR7L7UBY+kZqZUHfmQ@mail.gmail.com>
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
- <530D218E.9010007@wwwdotorg.org> <CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com>
- <53168976.7000008@wwwdotorg.org> <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com>
- <53169304.9080002@wwwdotorg.org> <CACRpkdaYuZ5bXo7djOv04oyHPAFbO=pKfR7L7UBY+kZqZUHfmQ@mail.gmail.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Fri, 7 Mar 2014 11:43:52 +0800
-Message-ID: <CAGb2v65UQZoDJhjpX+kfa6HppXdhrCHG=A5m_WaQ_DimW-Lsbg@mail.gmail.com> (sfid-20140307_044418_191672_A00B24A1)
-Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Mar 2014 05:56:02 -0500
+Message-ID: <1394016959.5275.12.camel@jlt4.sipsolutions.net> (sfid-20140305_115608_184868_8A91DB3D)
+Subject: Re: [PATCH 3.14.0-rc5 v3 3/10] rsi: Adding core and main files
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fariya Fatima <fariya.f@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Mar 2014 11:55:59 +0100
+In-Reply-To: <53143A80.5010907@redpinesignals.com> (sfid-20140303_091846_012550_AEC79CCE)
+References: <53143A80.5010907@redpinesignals.com>
+	 (sfid-20140303_091846_012550_AEC79CCE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 7, 2014 at 11:41 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
-> On Wed, Mar 5, 2014 at 10:59 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->> On 03/04/2014 07:37 PM, Linus Walleij wrote:
->>> On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->>>> On 03/04/2014 06:43 PM, Linus Walleij wrote:
->>>
->>>>> If I understand the situation correctly it's like ACPI does not have named
->>>>> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
->>>>> to the work of abstracting the access to GPIO handlers so that drivers
->>>>> need not know whether ACPI or DT is used for describing the hardware.
->>>>
->>>> For devices that already have both ACPI and DT bindings, we can't
->>>> pretend they can be the same; they are already potentially different. We
->>>> simply need to parse DT and ACPI differently, since that's the sway
->>>> their bindings are defined.
->>>>
->>>> For any devices that don't have both ACPI and DT bindings, I agree we
->>>> should certainly strive to make any new bindings aligned so we don't
->>>> have to deal with this for them.
->>>>
->>>> However, we can't change the past.
->>>
->>> Yeah, right, so for this very driver there are no bindings defined (yet)
->>> and the only device tree I can find referencing it is the Tegra20-paz00
->>> and it just use gpios = <>;
->>>
->>> So in this case I think this patch is the right way forward, but I admit
->>> I'm really uncertain in the general case.
->>
->> If there are no bindings defined at all yet, then we can define both DT
->> and ACPI bindings to use name-based GPIOs. Index-based lookups aren't a
->> good way forward.
->
-> After Mark clarifying that ACPI is going to have named GPIOs I'm
-> totally aligned on this, so OK!
+On Mon, 2014-03-03 at 13:47 +0530, Fariya Fatima wrote:
+> From: Fariya Fatima
 
-Glad to hear this, but is it possible to get rid of the index in current
-drivers? Or change the behavior to name-based OR index-based lookups.
-This might break any DTs that have multiple GPIOs defined under one
-property though.
+Btw, From: should also have an email address.
 
 
-Cheers
-ChenYu
+> +	frame_type = (skb->data[0] & 0x0f);
+> +	fc = *((u16 *)&skb->data[MAC_80211_HDR_FRAME_CONTROL]);
+
+
+That's not endian safe. you should typecast to a struct instead and
+probably use the inlines from ieee80211.h instead of
+
+> +	if ((frame_type == IEEE80211_MGMT_FRAME) ||
+> +	    (frame_type == IEEE80211_CTL_FRAME)) {
+
+^ that. You also forgot the masking.
+
+> +	} else {
+> +		if (fc & IEEE80211_STYPE_QOS_DATA) {
+
+There's an inline for that too. fc should be __le16. Also you don't need
+to init it, in fact don't so the compiler will warn you if you don't do
+it in some code path.
+
+> +			tid = (skb->data[24] & IEEE80211_QOS_TID);
+> +			pr_info("going in qos_data check\n");
+> +			skb->priority = TID_TO_WME_AC(tid);
+> +		} else {
+> +			tid = IEEE80211_NONQOS_TID;
+> +			skb->priority = BE_Q;
+> +		}
+
+mac80211 sets and uses skb->priority, so this might not be a good idea.
+
+> +	return -1;
+
+again -1, not sure where it ends up getting used but a proper error code
+would be better.
+
+> +	if (!pkt_len) {
+> +		rsi_dbg(ERR_ZONE, "%s: Dummy pkt has come in\n", __func__);
+> +		BUG_ON(1);
+> +	}
+
+No need for BUG_ON, just do
+
+if (WARN(!pkt_len, "Dummy packet..."))
+	return NULL;
+
+or so.
+
+> +/**
+> + * This function initializes os interface operations.
+
+That sounds like some sort of OS abstraction, but doesn't really seem to
+be one? Maybe it should have a different name.
+
+> +	return;
+> +}
+
+naked return statements are useless.
+
+> +static void rsi_91x_hal_module_exit(void)
+> +{
+> +	rsi_dbg(INIT_ZONE, "%s: Module exit called\n", __func__);
+> +	return;
+
+ditto
+
+johannes
+
