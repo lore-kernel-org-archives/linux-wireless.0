@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:38448 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785AbaCYKbS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:33503 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbaCESIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 06:31:18 -0400
-Received: by mail-ve0-f175.google.com with SMTP id oz11so268641veb.20
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 03:31:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQnG4QAYrinu3LLj9PbSAdvuUzqyAZQvgrWme5Qd2Hpq6Q@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
-	<CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
-	<CA+BoTQmNVHj-rNvVgvTx=Adq6J1kpra2qwi3Pmzh2G2Npn-jGg@mail.gmail.com>
-	<CAEFj984srRCqzFmzjGuE2nFLrC-V+PEgDPC-mejsZnfGH52g_Q@mail.gmail.com>
-	<CA+BoTQnG4QAYrinu3LLj9PbSAdvuUzqyAZQvgrWme5Qd2Hpq6Q@mail.gmail.com>
-Date: Tue, 25 Mar 2014 18:31:17 +0800
-Message-ID: <CAEFj985jyNgSR18xuitL73mqwkgYSV=v7cXSDLVqE5wJfN3fpw@mail.gmail.com> (sfid-20140325_113142_432350_57F0A5D0)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Mar 2014 13:08:23 -0500
+Message-ID: <1394042899.5275.47.camel@jlt4.sipsolutions.net> (sfid-20140305_190826_281855_058D7D51)
+Subject: Re: [PATCH 3.14.0-rc5 v3 1/10] rsi: Adding RS9113 driver files
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fariya Fathima <fariya.f@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Mar 2014 19:08:19 +0100
+In-Reply-To: <-1822401706-40502@mail.redpinesignals.com>
+References: <-1822401706-40502@mail.redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> The second stats event has pdev stats. As per my other mail, 10.1 has
-> extra pdev stats. Since ath10k doesn't account that it reads peer
-> stats too early from the buffer. What you see is a tail of pdev stats
-> for 10.1.
->
-> You can try the following to test *10.1*:
->
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -2804,6 +2804,12 @@ struct wmi_pdev_stats {
->         __le32 phy_err_count;  /* Phy error count */
->         __le32 chan_tx_pwr;    /* channel tx power */
->         struct wal_dbg_stats wal; /* WAL dbg stats */
-> +       __le32 ack_rx_bad;
-> +       __le32 rts_bad;
-> +       __le32 rts_good;
-> +       __le32 fcs_bad;
-> +       __le32 no_beacons;
-> +       __le32 mib_int_count;
->  } __packed;
->
+On Wed, 2014-03-05 at 23:28 +0530, Fariya Fathima wrote:
 
-Ok. Probably can come out with a patch extending the pdev stats on this.
+> The num_debugfs entries corresponds to the number of debugfs entries
+> to be created by the core layer.  Our driver has support for 2
+> interfaces - SDIO & USB. The SDIO driver intends to create 4 debugfs
+> entries and the USB driver intends to create 3. This information is
+> indicated to the core layer by initializing the num_debufs entries,
+> depending on the interface.
 
-I get the self STA stats as follow on 10.1 firmware:
+Yeah I got confused with this. I guess it's OK, although likely to break
+in the future? Maybe the SDIO layer should provide that one debugfs
+handler itself, rather than having it in the core, so that this
+distinction isn't needed?
 
-AP:
-[  754.280000] ath10k: pdev 1 vdev 0 peer 1
-[  754.280000] ath10k: MAC 04:f0:21:0c:a5:43
-[  754.280000] ath10k: RSSI 0
-[  754.290000] ath10k: Tx 6000
-[  754.290000] ath10k: Rx 0
+> These seem odd ... maybe they should at least come with comments
+> about 
+> how generic kernel functionality can't be used and why it needs
+> another 
+> abstraction layer?
+> We did put in various fields inside the rsi_event and rsi_thread
+> structs to create a slight abstraction. I hope that is fine.
 
-STA:
-[  880.060000] ath10k: pdev 1 vdev 0 peer 1
-[  880.060000] ath10k: MAC 00:00:00:00:00:01
-[  880.070000] ath10k: RSSI 0
-[  880.070000] ath10k: Tx 6000
-[  880.070000] ath10k: Rx 0
+I have no issues with that really, it just seems odd, but maybe it just
+means the kernel functionality isn't precisely what you need.
 
-Similar to 636. But on 636, I don't find any tx rate, only rssi.
+johannes
 
----
-Chun-Yeow
