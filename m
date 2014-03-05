@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:61485 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbaC1RK5 (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:49666 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755305AbaCEC7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 13:10:57 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so4314565eek.11
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 10:10:56 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: fengguang.wu@intel.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, andrea.merello@gmail.com
-Subject: [PATCH 1/2] rtl8187: fix compile warning
-Date: Fri, 28 Mar 2014 18:12:08 +0100
-Message-Id: <1396026728-5569-1-git-send-email-andrea.merello@gmail.com> (sfid-20140328_181101_603139_FEC35C19)
-In-Reply-To: <5334b1ac.IdF9Kz2kTwX26Omj%fengguang.wu@intel.com>
-References: <5334b1ac.IdF9Kz2kTwX26Omj%fengguang.wu@intel.com>
+	Tue, 4 Mar 2014 21:59:23 -0500
+Message-ID: <53169304.9080002@wwwdotorg.org> (sfid-20140305_035944_270142_F308A1A0)
+Date: Tue, 04 Mar 2014 19:59:16 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Linus Walleij <linus.walleij@linaro.org>
+CC: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>	<1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>	<530D218E.9010007@wwwdotorg.org>	<CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com>	<53168976.7000008@wwwdotorg.org> <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com>
+In-Reply-To: <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANAPARAM3 register, defined in the rtl818x common register
-struct, is accessed as 16bit by rtl8187se and as 8bit by rtl8187b.
-Since I have no documentation about this, I can only stick to
-the reference code and to what is known to work.
+On 03/04/2014 07:37 PM, Linus Walleij wrote:
+> On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+>> On 03/04/2014 06:43 PM, Linus Walleij wrote:
+> 
+>>> If I understand the situation correctly it's like ACPI does not have named
+>>> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
+>>> to the work of abstracting the access to GPIO handlers so that drivers
+>>> need not know whether ACPI or DT is used for describing the hardware.
+>>
+>> For devices that already have both ACPI and DT bindings, we can't
+>> pretend they can be the same; they are already potentially different. We
+>> simply need to parse DT and ACPI differently, since that's the sway
+>> their bindings are defined.
+>>
+>> For any devices that don't have both ACPI and DT bindings, I agree we
+>> should certainly strive to make any new bindings aligned so we don't
+>> have to deal with this for them.
+>>
+>> However, we can't change the past.
+> 
+> Yeah, right, so for this very driver there are no bindings defined (yet)
+> and the only device tree I can find referencing it is the Tegra20-paz00
+> and it just use gpios = <>;
+> 
+> So in this case I think this patch is the right way forward, but I admit
+> I'm really uncertain in the general case.
 
-This issue has been addressed by a patch from Larry Finger
-that introduces an "union", in the register struct.
-In my last patch-set I applied it on the register struct, but
-I forget to update rtl8187 driver too.
-This patch does it.
-
-Suggested-by: Larry Finger <Larry.Finger@lwfinger.net> [ Original patch ]
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8187/dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index c981bcf..2c79bcc 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -592,7 +592,7 @@ static void rtl8187_set_anaparam(struct rtl8187_priv *priv, bool rfon)
- 	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, anaparam);
- 	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, anaparam2);
- 	if (priv->is_rtl8187b)
--		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, anaparam3);
-+		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3A, anaparam3);
- 	reg &= ~RTL818X_CONFIG3_ANAPARAM_WRITE;
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
--- 
-1.8.3.2
+If there are no bindings defined at all yet, then we can define both DT
+and ACPI bindings to use name-based GPIOs. Index-based lookups aren't a
+good way forward.
 
