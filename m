@@ -1,112 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:41027 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757219AbaCDMwz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 07:52:55 -0500
-Received: by mail-ea0-f173.google.com with SMTP id r15so335681ead.4
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:54 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 08/14] ath10k: kill rate substruct and tsf from htt_rx_info
-Date: Tue,  4 Mar 2014 13:52:21 +0100
-Message-Id: <1393937548-7482-9-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135306_714561_D1B4BA10)
-In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from mga03.intel.com ([143.182.124.21]:8567 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754984AbaCEMgV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 07:36:21 -0500
+Date: Wed, 5 Mar 2014 13:36:16 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "Mark A. Greer" <mgreer@animalcreek.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2
+ Tag Support
+Message-ID: <20140305123616.GC14401@zurbaran> (sfid-20140305_133627_813674_542D8961)
+References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
+ <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
+ <20140221005059.GS18868@zurbaran>
+ <20140226215309.GA21867@animalcreek.com>
+ <20140305001943.GA29983@animalcreek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140305001943.GA29983@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup rates only once per-ppdu.
+On Tue, Mar 04, 2014 at 05:19:43PM -0700, Mark A. Greer wrote:
+> On Wed, Feb 26, 2014 at 02:53:09PM -0700, Mark A. Greer wrote:
+> > On Fri, Feb 21, 2014 at 01:50:59AM +0100, Samuel Ortiz wrote:
+> > 
+> > > > +static int trf7970a_in_send_cmd(struct nfc_digital_dev *ddev,
+> > > > +		struct sk_buff *skb, u16 timeout,
+> > > > +		nfc_digital_cmd_complete_t cb, void *arg)
+> > > > +{
+> > > > +	struct trf7970a *trf = nfc_digital_get_drvdata(ddev);
+> > > > +	char *prefix;
+> > > > +	unsigned int len;
+> > > > +	int ret;
+> > > > +
+> > > > +	dev_dbg(trf->dev, "New request - state: %d, timeout: %d ms, len: %d\n",
+> > > > +			trf->state, timeout, skb->len);
+> > > > +
+> > > > +	if (skb->len > TRF7970A_TX_MAX)
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	mutex_lock(&trf->lock);
+> > > > +
+> > > > +	if ((trf->state != TRF7970A_ST_IDLE) &&
+> > > > +			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
+> > > > +		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
+> > > > +				trf->state);
+> > > > +		ret = -EIO;
+> > > > +		goto out_err;
+> > > > +	}
+> > > > +
+> > > > +	trf->rx_skb = nfc_alloc_recv_skb(TRF7970A_RX_SKB_ALLOC_SIZE,
+> > > > +			GFP_KERNEL);
+> > > > +	if (!trf->rx_skb) {
+> > > > +		dev_dbg(trf->dev, "Can't alloc rx_skb\n");
+> > > > +		ret = -ENOMEM;
+> > > > +		goto out_err;
+> > > > +	}
+> > > > +
+> > > > +	if (trf->state == TRF7970A_ST_IDLE_RX_BLOCKED) {
+> > > > +		ret = trf7970a_cmd(trf, TRF7970A_CMD_ENABLE_RX);
+> > > > +		if (ret)
+> > > > +			goto out_err;
+> > > > +
+> > > > +		trf->state = TRF7970A_ST_IDLE;
+> > > > +	}
+> > > > +
+> > > > +	ret = trf7970a_per_cmd_config(trf, skb);
+> > > > +	if (ret)
+> > > > +		goto out_err;
+> > > > +
+> > > > +	trf->ddev = ddev;
+> > > > +	trf->tx_skb = skb;
+> > > As you're going to carry this guy around and may need it from e.g. your
+> > > threaded interrupt handler, shouldn't you take a reference (skb_get) on it ?
+> > > I'm concerned by the fact that you could see your tx_skb disappear from
+> > > abort_cmd and get an IRQ before your state is set to IDLE.
+> > > Hmm, I guess that's protected by the mutex and so when you get an abort
+> > > from the digital stack you reset the state to IDLE and no one should try
+> > > to touch tx_skb after you release the mutex. Is that what you had in
+> > > mind ?
+> > 
+> > It is but taking a reference is a good idea.  I'll add that.
+> 
+> I've changed my mind on this (hope that's okay).
+> 
+> The driver is in control of freeing that skb and won't free it until
+> there's an abort or the processing is complete.  I believe that handle
+> the race with an abort correctly.
+That was my understanding as well, and I wanted to make sure that you
+had that in mind too. It seems to be the case.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |    7 -------
- drivers/net/wireless/ath/ath10k/htt_rx.c |   32 +++++++++++++++---------------
- 2 files changed, 16 insertions(+), 23 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 9f5da2b..ea39b87 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1178,13 +1178,6 @@ struct htt_rx_info {
- 	struct ieee80211_rx_status rx_status;
- 	enum htt_rx_mpdu_status status;
- 	enum htt_rx_mpdu_encrypt_type encrypt_type;
--	struct {
--		u8 info0;
--		u32 info1;
--		u32 info2;
--	} rate;
--
--	u32 tsf;
- 	bool fcs_err;
- 	bool amsdu_more;
- 	bool mic_err;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 0c34096..4eca6e6 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -655,14 +655,12 @@ static const u8 rx_legacy_rate_idx[] = {
- 	5,	/* 0x0F  - 9Mbps   */
- };
- 
--static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
-+static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- 				  enum ieee80211_band band,
-+				  u8 info0, u32 info1, u32 info2,
- 				  struct ieee80211_rx_status *status)
- {
- 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
--	u8 info0 = info->rate.info0;
--	u32 info1 = info->rate.info1;
--	u32 info2 = info->rate.info2;
- 	u8 preamble = 0;
- 
- 	/* Check if valid fields */
-@@ -794,14 +792,6 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	if (info->amsdu_more)
- 		status->flag |= RX_FLAG_AMSDU_MORE;
- 
--	ath10k_htt_rx_h_rates(ar, info, status->band, status);
--
--	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
--		/* TSF available only in 32-bit */
--		status->mactime = info->tsf & 0xffffffff;
--		status->flag |= RX_FLAG_MACTIME_END;
--	}
--
- 	ath10k_dbg(ATH10K_DBG_DATA,
- 		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
- 		   info->skb,
-@@ -1177,12 +1167,22 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
- 	info.rx_status.signal += rx->ppdu.combined_rssi;
- 
-+	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
-+		/* TSF available only in 32-bit */
-+		info.rx_status.mactime =
-+				__le32_to_cpu(rx->ppdu.tsf) & 0xffffffff;
-+		info.rx_status.flag |= RX_FLAG_MACTIME_END;
-+	}
-+
- 	channel_set = ath10k_htt_rx_h_channel(htt->ar, &info.rx_status);
- 
--	info.rate.info0 = rx->ppdu.info0;
--	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
--	info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
--	info.tsf = __le32_to_cpu(rx->ppdu.tsf);
-+	if (channel_set) {
-+		ath10k_htt_rx_h_rates(htt->ar, info.rx_status.band,
-+				      rx->ppdu.info0,
-+				      __le32_to_cpu(rx->ppdu.info1),
-+				      __le32_to_cpu(rx->ppdu.info2),
-+				      &info.rx_status);
-+	}
- 
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
- 			rx, sizeof(*rx) +
 -- 
-1.7.9.5
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
