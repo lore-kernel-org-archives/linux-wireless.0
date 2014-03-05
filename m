@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47423 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924AbaCXH6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 03:58:11 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>,
-	Ido Yariv <idox.yariv@intel.com>
-Subject: [PATCH] mac80211: Disable SMPS for the monitor interface
-Date: Mon, 24 Mar 2014 09:55:45 +0200
-Message-Id: <1395647745-7857-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140324_085815_883846_363BAFB4)
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35192 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757235AbaCEX0M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 18:26:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/3] rtlwifi: Miscellaneous fixups
+Date: Wed,  5 Mar 2014 17:25:58 -0600
+Message-Id: <1394061961-11682-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140306_002622_597236_18E3EB29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+This set of patches fixes a logged warning of a switch case that is not
+handled, and some Sparse/Smatch warnings for rtl8723be.
 
-All antennas should be operational when monitoring to maximize
-reception.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
----
- net/mac80211/chan.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Larry Finger (3):
+  rtlwifi: rtl8192ce: Handle unused switch case
+  rtlwifi: rtl8723be: Fix sparse errors
+  rtlwifi: rtl8723be: Fix smatch warnings
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 57b8ab1..be677e0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -522,6 +522,13 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 		rx_chains_static = max(rx_chains_static, needed_static);
- 		rx_chains_dynamic = max(rx_chains_dynamic, needed_dynamic);
- 	}
-+
-+	/* Disable SMPS for the monitor interface */
-+	sdata = rcu_dereference(local->monitor_sdata);
-+	if (sdata &&
-+	    rcu_access_pointer(sdata->vif.chanctx_conf) == &chanctx->conf)
-+		rx_chains_dynamic = rx_chains_static = local->rx_chains;
-+
- 	rcu_read_unlock();
- 
- 	if (!local->use_chanctx) {
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 4 +++-
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c | 8 --------
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 3 +--
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 2 +-
+ drivers/net/wireless/rtlwifi/wifi.h         | 2 +-
+ 5 files changed, 6 insertions(+), 13 deletions(-)
+
 -- 
-1.8.3.2
+1.8.4.5
 
