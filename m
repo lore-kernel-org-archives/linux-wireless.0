@@ -1,108 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:38536 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753672AbaCRI6Q convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:43989 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbaCEOca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 04:58:16 -0400
-Received: by mail-oa0-f43.google.com with SMTP id eb12so1584298oac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 01:58:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1395132248.15856.21.camel@dubbel>
-References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
-	<1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
-	<CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com>
-	<1395130437.15856.13.camel@dubbel>
-	<CA+BoTQn5dB8-4U0X+_GX_J7rDctTpCWg8ydjSQbrEjMB28NKEA@mail.gmail.com>
-	<1395132248.15856.21.camel@dubbel>
-Date: Tue, 18 Mar 2014 09:58:15 +0100
-Message-ID: <CA+BoTQmLSxmNy+O9mj9MHxtLvE7SU6EfHrCGnZcBmrD3ktonjw@mail.gmail.com> (sfid-20140318_095830_069781_25843A8A)
-Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
- combination check to mac80211
+	Wed, 5 Mar 2014 09:32:30 -0500
+Received: by mail-ea0-f178.google.com with SMTP id a15so1069405eae.23
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Mar 2014 06:32:29 -0800 (PST)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-	Eliad Peller <eliad@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/4] cfg80211: export interface stopping function
+Date: Wed,  5 Mar 2014 15:27:02 +0100
+Message-Id: <1394029623-21894-4-git-send-email-michal.kazior@tieto.com> (sfid-20140305_153242_582719_5F70686F)
+In-Reply-To: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 March 2014 09:44, Luca Coelho <luca@coelho.fi> wrote:
-> On Tue, 2014-03-18 at 09:36 +0100, Michal Kazior wrote:
->> On 18 March 2014 09:13, Coelho, Luciano <luciano.coelho@intel.com> wrote:
->> > On Fri, 2014-03-14 at 09:40 +0100, Michal Kazior wrote:
->> >> On 11 March 2014 15:16, Luciano Coelho <luciano.coelho@intel.com> wrote:
->>
->> [...]
->>
->> >> > +       list_for_each_entry(ctx, &local->chanctx_list, list) {
->> >> > +               if (ctx->conf.radar_enabled)
->> >> > +                       radar_detect |= BIT(ctx->conf.def.width);
->> >>
->> >> Is this really correct?
->> >
->> > I'm not sure anymore. :)
->> >
->> >
->> >> The original behaviour was to:
->> >>
->> >>  for each wdev:
->> >>    get_chan_state(..., &radar_width)
->> >>
->> >> where get_chan_state() ORs BIT(width) accordingly to iftype, etc.
->> >>
->> >> For 2 APs with different operational widths (e.g. 20 and 40) this means:
->> >>
->> >> a) old code: width_detect = BIT(WIDTH_20) | BIT(WIDTH_40)
->> >> b) new code: width_detect = BIT(chanctx->width) which is BIT(WIDTH_40)
->> >>
->> >> I think radar_detect should be computed:
->> >>
->> >>  radar_detect = 0 // **
->> >>  for each vif:
->> >>   if vif.ctx == ctx && vif.radar_required:
->> >>    radar_detect = BIT(vif.bss.width)
->> >>
->> >> ** you could argue to initialize with BIT(ctx->width), but all things
->> >> seem to use ieee80211_vif_use_channel() (including CAC/radar
->> >> detection) so bss_conf.chandef.width should be set correctly and
->> >> iteration alone should suffice.
->> >
->> > But does this really make sense? This was more or less the idea I had
->> > when I changed the cfg80211_chandef_dfs_required() to return a bit mask
->> > (which I later reverted).
->> >
->> > I think the current behavior may be wrong.  In the old
->> > cfg80211_can_use_iftype_chan() we match *any* of the bits in
->> > radar_detect with the bits supported in the interface combinations.  So,
->> > in your example, we would accept the combination even if the driver did
->> > not support WIDTH_40 (because it would match WIDTH_20).  If the context
->> > is set to WIDTH_40, don't we have to make sure the driver can detect
->> > radars on that width?
->>
->> Fair point, but current behaviour of cfg80211_can_use_iftype_chan()
->> doesn't seem like a correct one to me. It shouldn't match any but
->> *all* of the radar_detect bits, no?
->
-> I don't really know.  I think that if we're using 40MHz, we need to be
-> able to detect on the entire 40MHz, and that includes the 20MHz part as
-> well.  So being able to detect on 20MHz in that same channel context is
-> irrelevant, isn't it?
+This exports a new cfg80211_stop_iface() function.
 
-True but take this hypothetical case:
+This is intended for driver internal interface
+combination management and channel switching.
 
-You have a driver combination that supports radar_detect only at
-40MHz. You start AP @ 40MHz with radar. You match the radar_detect.
-You start AP @ 20MHz with radar. You match again radar_detect (because
-there's the AP @ 40MHz running). You stop AP @ 40Mhz. You now have
-only an AP running at 20MHz which requires radar_detect for 20MHz but
-there's no combination to match that. Oops. We should've never allowed
-the AP @ 20MHz to start.
+Due to locking issues (it re-enters driver) the
+call is asynchronous and uses cfg80211 event
+list/worker.
 
-I doubt there's hardware that needs a combination like that but it
-just bothers me current structure and logic allows it.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h | 15 +++++++++++++++
+ net/wireless/ap.c      |  4 ++--
+ net/wireless/core.c    | 44 +++++++++++++++++++++++++++++++++++++-------
+ net/wireless/core.h    |  7 +++++++
+ net/wireless/mesh.c    |  4 ++--
+ net/wireless/trace.h   | 15 +++++++++++++++
+ net/wireless/util.c    |  5 +++++
+ 7 files changed, 83 insertions(+), 11 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ff3af16..c52a787 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4682,6 +4682,21 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
+ 
++/**
++ * cfg80211_stop_iface - stop given interface
++ *
++ * @wiphy: the wiphy
++ * @wdev: wireless device
++ *
++ * Stop interface as if AP was stopped, IBSS/mesh left, STA disconnected.
++ *
++ * This is intended for channel switching and internal driver interface
++ * combination management.
++ *
++ * Note: This doesn't need any locks and is asynchronous.
++ */
++void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 3e02ade..bdad1f9 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -6,8 +6,8 @@
+ #include "rdev-ops.h"
+ 
+ 
+-static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+-			      struct net_device *dev, bool notify)
++int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
++		       struct net_device *dev, bool notify)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 086cddd..8b36954 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -751,23 +751,23 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ }
+ 
+-void cfg80211_leave(struct cfg80211_registered_device *rdev,
+-		    struct wireless_dev *wdev)
++void __cfg80211_leave(struct cfg80211_registered_device *rdev,
++		      struct wireless_dev *wdev)
+ {
+ 	struct net_device *dev = wdev->netdev;
+ 
+ 	ASSERT_RTNL();
++	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_ADHOC:
+-		cfg80211_leave_ibss(rdev, dev, true);
++		__cfg80211_leave_ibss(rdev, dev, true);
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+ 		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
+ 			__cfg80211_stop_sched_scan(rdev, false);
+ 
+-		wdev_lock(wdev);
+ #ifdef CONFIG_CFG80211_WEXT
+ 		kfree(wdev->wext.ie);
+ 		wdev->wext.ie = NULL;
+@@ -776,20 +776,50 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ #endif
+ 		cfg80211_disconnect(rdev, dev,
+ 				    WLAN_REASON_DEAUTH_LEAVING, true);
+-		wdev_unlock(wdev);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		cfg80211_leave_mesh(rdev, dev);
++		__cfg80211_leave_mesh(rdev, dev);
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		cfg80211_stop_ap(rdev, dev, true);
++		__cfg80211_stop_ap(rdev, dev, true);
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ }
+ 
++void cfg80211_leave(struct cfg80211_registered_device *rdev,
++		    struct wireless_dev *wdev)
++{
++	ASSERT_RTNL();
++
++	wdev_lock(wdev);
++	__cfg80211_leave(rdev, wdev);
++	wdev_unlock(wdev);
++}
++
++void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct cfg80211_event *ev;
++	unsigned long flags;
++
++	trace_cfg80211_stop_iface(wiphy, wdev);
++
++	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
++	if (!ev)
++		return;
++
++	ev->type = EVENT_STOPPED;
++
++	spin_lock_irqsave(&wdev->event_lock, flags);
++	list_add_tail(&ev->list, &wdev->event_list);
++	spin_unlock_irqrestore(&wdev->event_lock, flags);
++	queue_work(cfg80211_wq, &rdev->event_work);
++}
++EXPORT_SYMBOL(cfg80211_stop_iface);
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state, void *ptr)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 3975ffa..c652763f 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -182,6 +182,7 @@ enum cfg80211_event_type {
+ 	EVENT_ROAMED,
+ 	EVENT_DISCONNECTED,
+ 	EVENT_IBSS_JOINED,
++	EVENT_STOPPED,
+ };
+ 
+ struct cfg80211_event {
+@@ -275,6 +276,8 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+ 		       struct mesh_setup *setup,
+ 		       const struct mesh_config *conf);
++int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
++			  struct net_device *dev);
+ int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev);
+ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+@@ -282,6 +285,8 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 			      struct cfg80211_chan_def *chandef);
+ 
+ /* AP */
++int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
++		       struct net_device *dev, bool notify);
+ int cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		     struct net_device *dev, bool notify);
+ 
+@@ -464,6 +469,8 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num);
+ 
++void __cfg80211_leave(struct cfg80211_registered_device *rdev,
++		      struct wireless_dev *wdev);
+ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		    struct wireless_dev *wdev);
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 5af5cc6..b5c304e 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -262,8 +262,8 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ 	return 0;
+ }
+ 
+-static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+-				 struct net_device *dev)
++int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
++			  struct net_device *dev)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index aabccf1..24acf96 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2615,6 +2615,21 @@ TRACE_EVENT(cfg80211_ft_event,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(target_ap))
+ );
+ 
++TRACE_EVENT(cfg80211_stop_iface,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT,
++		  WIPHY_PR_ARG, WDEV_PR_ARG)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index dadc934..fa59606 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -789,6 +789,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 	unsigned long flags;
+ 	const u8 *bssid = NULL;
+ 
++	ASSERT_RTNL();
++
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	while (!list_empty(&wdev->event_list)) {
+ 		ev = list_first_entry(&wdev->event_list,
+@@ -823,6 +825,9 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid,
+ 					       ev->ij.channel);
+ 			break;
++		case EVENT_STOPPED:
++			__cfg80211_leave(wiphy_to_dev(wdev->wiphy), wdev);
++			break;
+ 		}
+ 		wdev_unlock(wdev);
+ 
+-- 
+1.8.5.3
 
-Michał
