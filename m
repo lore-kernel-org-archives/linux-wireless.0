@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:30439 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754272AbaCaNnE (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.221]:18461 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbaCENq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 09:43:04 -0400
-Message-ID: <533970DF.70303@broadcom.com> (sfid-20140331_154337_292937_4B2FC099)
-Date: Mon, 31 Mar 2014 15:42:55 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 5 Mar 2014 08:46:56 -0500
 MIME-Version: 1.0
-To: Denys Vlasenko <dvlasenk@redhat.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save
- 440 bytes
-References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com> <53391B89.7010304@broadcom.com> <53394F23.6080805@redhat.com>
-In-Reply-To: <53394F23.6080805@redhat.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 05 Mar 2014 14:40:38 +0100
+From: michael-dev <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: projekt-wlan@fem.tu-ilmenau.de, linux-wireless@vger.kernel.org,
+	Michael Braun <michael-dev@fami-braun.de>
+Subject: [PATCH 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta again
+In-Reply-To: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
+References: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
+Message-ID: <f54e8751cdc525ebc4d0d8abbbc96550@fami-braun.de> (sfid-20140305_144700_435568_A1DD1A4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31/03/14 13:18, Denys Vlasenko wrote:
-> On 03/31/2014 09:38 AM, Arend van Spriel wrote:
->> On 30/03/14 23:31, Denys Vlasenko wrote:
->>> Automated script discovered that without forced inlining,
->>> gcc-4.7 generates smaller code for this function.
->>>
->>> There is no need to declare static functions inline anyway:
->>> nowadays gcc detects single-callsite static functions
->>> which benefit from inlining.
->>
->> These patches look awfully familiar. I tend to object, but I don't know the details of this automated script.
->
-> The script removes "static" keyword, recompiles the .c file,
-> compares the sizes, and if code size went down,
-> creates a patch
->
->> How about execution time or is this only compile tested?
->
-> The change adds one pair of call/return instructions -
-> probably around 5-10 CPU cycles.
->
-> The function in question is a part of firmware download logic,
-> which is nowhere near being hot path/.
+commit de74a1d9032f4d37ea453ad2a647e1aff4cd2591
+   "mac80211: fix WPA with VLAN on AP side with ps-sta"
+fixed an issue.
+commit "7cbf9d017dbb5e3276de7d527925d42d4c11e732"
+   "mac80211: fix oops on mesh PS broadcast forwarding"
+essentially reverted it, because vif.type cannot be AP_VLAN
+due to the check to vif.type in ieee80211_get_buffered_bc before.
 
-True. My remarks are on all four patches and I just replied to the first 
-patch. The other patches are in interrupt handling code, ie. interrupt 
-or bottom-halve context.
+As the 7cbf9 commit intended to fix the MESH case, fix it
+by checking for IFTYPE_AP instead of IFTYPE_AP_VLAN.
 
->> The other thing is that you seem to rely on a specific gcc version.
->> What about pre-4.7? How about different architectures.
->> Was this determined on x86, arm, sparc, mips.
->> All these questions make me say 'nay'.
->
-> Not making functions inline unless there is a good reason
-> is a general good coding practice. It is not a compiler-
-> or architecture-specific optimization.
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 
-Agree, but you seem to assume that in this case there is no good reason.
+---
+--- compat-wireless-2014-01-23.1/net/mac80211/tx.c.orig 2014-03-05 
+13:19:21.000000000 +0100
++++ compat-wireless-2014-01-23.1/net/mac80211/tx.c      2014-03-05 
+13:42:25.187136039 +0100
+@@ -2983,7 +2983,7 @@ ieee80211_get_buffered_bc(struct ieee802
+                                 cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+                 }
 
-Regards,
-Arend
-
-
+-               if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++               if (sdata->vif.type == NL80211_IFTYPE_AP)
+                         sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+                 if (!ieee80211_tx_prepare(sdata, &tx, skb))
+                         break;
