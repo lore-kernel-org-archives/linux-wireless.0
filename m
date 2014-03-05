@@ -1,86 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:54746 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbaCZJxA convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754836AbaCEK4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 05:53:00 -0400
-Received: by mail-we0-f174.google.com with SMTP id t60so937014wes.5
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 02:52:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87lhvxz4up.fsf@kamboji.qca.qualcomm.com>
-References: <20140325091311.16651.15747.stgit@potku.adurom.net>
-	<20140325091505.16651.15554.stgit@potku.adurom.net>
-	<CA+BoTQns9QXCctzrMzd5=o6EyA=d0TG-eLJw3hztE1-MD7HwkQ@mail.gmail.com>
-	<87lhvxz4up.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 26 Mar 2014 10:52:59 +0100
-Message-ID: <CA+BoTQ=N_L53c2Pgw3RQYcJx4-xp9fSOYvbeEUHgFCtSoP3QRA@mail.gmail.com> (sfid-20140326_105305_561267_12AAA8D1)
-Subject: Re: [PATCH 1/8] ath10k: cleanup ath10k_pci_wait_for_target_init()
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 5 Mar 2014 05:56:20 -0500
+Message-ID: <1394016978.5275.13.camel@jlt4.sipsolutions.net> (sfid-20140305_115623_669402_8CD126C6)
+Subject: Re: [PATCH 3.14.0-rc5 v3 3/10] rsi: Adding core and main files
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fariya Fatima <fariya.f@redpinesignals.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Mar 2014 11:56:18 +0100
+In-Reply-To: <53143A80.5010907@redpinesignals.com> (sfid-20140303_091846_012550_AEC79CCE)
+References: <53143A80.5010907@redpinesignals.com>
+	 (sfid-20140303_091846_012550_AEC79CCE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 March 2014 10:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2014-03-03 at 13:47 +0530, Fariya Fatima wrote:
 
-[...]
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
->>> -       while (wait_limit-- &&
->>> -              !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
->>> -                FW_IND_INITIALIZED)) {
->>> +       timeout = jiffies + msecs_to_jiffies(wait);
->>> +
->>> +       do {
->>> +               val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
->>> +               if (val == FW_IND_INITIALIZED)
->>> +                       break;
+> +MODULE_LICENSE("GPL");
 
-Ah, for some reason I've missed this earlier. You seem to replace &
-with ==. I wonder if that's okay?
+That's not GPL actually.
 
-FW indicator may contain FW_IND_EVENT_PENDING (i.e. firmware crashed
-bit) too. It might be a good idea to check for that too and return a
-different errno?
+johannes
 
-
->>> +
->>
->> It might be worth to add:
->>
->>  if (val == 0xFFFFFFFF)
->>    return -EIO;
->
-> What does receiving 0xFFFFFFFF mean here? PCI bus kaput?
-
-A simple grepping (find drivers/net/ethernet/ -type f -name '*.[ch]' |
-xargs grep -nC5 ioread32 | grep -C5 -i 0xffffffff) turns out results
-like this:
-
- drivers/net/ethernet/cisco/enic/vnic_rq.c-200-  }
- drivers/net/ethernet/cisco/enic/vnic_rq.c-201-
- drivers/net/ethernet/cisco/enic/vnic_rq.c-202-  /* Use current
-fetch_index as the ring starting point */
- drivers/net/ethernet/cisco/enic/vnic_rq.c:203:  fetch_index =
-ioread32(&rq->ctrl->fetch_index);
- drivers/net/ethernet/cisco/enic/vnic_rq.c-204-
- drivers/net/ethernet/cisco/enic/vnic_rq.c-205-  if (fetch_index ==
-0xFFFFFFFF) { /* check for hardware gone  */
- drivers/net/ethernet/cisco/enic/vnic_rq.c-206-          /* Hardware
-surprise removal: reset fetch_index */
- drivers/net/ethernet/cisco/enic/vnic_rq.c-207-          fetch_index = 0;
- drivers/net/ethernet/cisco/enic/vnic_rq.c-208-  }
-
-
-> Do we really want to stop trying after receiving that? What harm would
-> it cause to keep on trying? We would return an error anyway after the
-> timeout, right?
-
-Yes. It's harmless but having the check allows to discern a real
-timeout (target doesn't wake up for some reason) and a pci-e link
-issue.
-
-
-Michał
