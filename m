@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42019 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302AbaCHPhh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 10:37:37 -0500
-Date: Sat, 8 Mar 2014 16:37:30 +0100
-From: Steffen Trumtrar <s.trumtrar@pengutronix.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Hui Liu <Hui.Liu@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath6kl@lists.infradead.org
-Subject: Re: [PATCH] ath6kl: sdio: fix system panic when doing wifi stress
- test
-Message-ID: <20140308153730.GA27506@pengutronix.de> (sfid-20140308_163817_726569_B3FA1B54)
-References: <1384221185-8645-1-git-send-email-r64343@freescale.com>
- <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
- <AD13664F485EE54694E29A7F9D5BE1AFC0AD96@039-SN2MPN1-022.039d.mgd.msft.net>
- <20140307093813.GA28728@pengutronix.de>
- <87a9d0oqbz.fsf@kamboji.qca.qualcomm.com>
+Received: from lekensteyn.nl ([178.21.112.251]:47337 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754811AbaCEL12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Mar 2014 06:27:28 -0500
+From: Peter Wu <peter@lekensteyn.nl>
+To: Thierry Moreau <thierry.moreau@connotech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtlwifi (rtl8192ce) consistently reports EBUSY error, but scanning works
+Date: Wed, 05 Mar 2014 11:51:07 +0100
+Message-ID: <30326094.D3kKybyiI3@al> (sfid-20140305_122738_607935_77BD3B52)
+In-Reply-To: <5316C602.8020504@connotech.com>
+References: <5316C602.8020504@connotech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87a9d0oqbz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 08, 2014 at 01:57:36PM +0200, Kalle Valo wrote:
-> Hi Steffen,
+On Wednesday 05 March 2014 06:36:50 Thierry Moreau wrote:
+> I am using a kind-of "linux from scratch" (i.e. Crux 3.0, 64 bits
+> Intel, kernel 3.10.32) and I am stuck with a EBUSY error return from
+> the wireless driver I suspect it comes from the driver behavior since
+> it is consistent either from the command
 > 
-> Steffen Trumtrar <s.trumtrar@pengutronix.de> writes:
+> iw dev wlan1 set channel 2
 > 
-> >> > Does the patch below help? It would also fix the corruption with
-> >> > scat_q_depth. Please note that I have only compile tested it. And I might
-> >> > have also missed something important, so please review it carefully.
-> >> 
-> >> Yes, Firstly, I have looked at the asm code and the compiler(gcc 4.8.1) works correctly after applying
-> >> the following patch. Secondly, I have tested the patch with compiler(gcc 4.8.1) on the real HW, and it
-> >> works fine too. Without the patch, the kernel crash will happen 100%.
-> >> 
-> >> Thus, for the patch:
-> >> 
-> >> Acked-by: Jason Liu <r64343@freescale.com>
-> >> Tested-by: Jason Liu <r64343@freescale.com>
+> or the comand
 > 
-> [...]
+> iwconfig wlan1 set channel 2
 > 
-> > What happend with this? If I look in mainline, I don't find it. At
-> > least the reording of the struct fields looks as if one definitely
-> > wants to have that.
-> 
-> It seems that I forgot to submit this properly, sorry about that. I did
-> it now:
-> 
-> http://lists.infradead.org/pipermail/ath6kl/2014-March/000000.html
-> 
+> (it occurred also with "iw" with a kernel where the iwconfig support
+> emulation is off -- CONFIG_CFG82011_WEXT). The EBUSY error return
+> occurs as early as immediately after the initial module install, and
+> consistently thereafter. The wireless scanning works (reporting a
+> nearby beacon on channel 1).
 
-\o/ Thank you.
+It was not entirely clear for me, but have you enabled the interface
+before changing the channel? I.e.
 
-Regards,
+    ip link set wlan0 up
+    iw dev wlan0 set channel 2
 
-Steffen
+I suggest to try 3.13 or even 3.14(-rcish). Earlier kernels (3.10 being
+the worst) had an issue[1] that impacted wireless stability.
 
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+> The system is a Shuttle XS36VL box
+> (http://us.shuttle.com/barebone/Models/XS36VL.html). It does not have
+> a physical wireless switch (a dmesg line above reports the switch
+> position as "on").
+
+The same box is operating in my neighbourhood (networking was not
+required for its purpose). Good luck with getting multi-head working.
+This box is running 3.14-rc2-something now with patches to get monitor
+mode to function properly.
+
+Kind regards,
+Peter
+
+ [1]: https://bugzilla.kernel.org/show_bug.cgi?id=60713
