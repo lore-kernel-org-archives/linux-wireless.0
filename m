@@ -1,61 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38009 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965054AbaCSOWS (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40177 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753798AbaCEKa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:22:18 -0400
-Message-ID: <1395238934.4142.22.camel@jlt4.sipsolutions.net> (sfid-20140319_152221_926466_2421DAED)
-Subject: Re: [PATCH] mac80211: don't downgrade VHT20 to HT20
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 19 Mar 2014 15:22:14 +0100
-In-Reply-To: <CA+BoTQnvSxOCxV4UwUmi2_if8NQWWJCht=urAewBZAiEJdHpZA@mail.gmail.com> (sfid-20140225_141121_872159_6A96AC3B)
-References: <1393327628-1078-1-git-send-email-michal.kazior@tieto.com>
-	 <1393330040.4170.0.camel@jlt4.sipsolutions.net>
-	 <1393330210.4170.1.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnvSxOCxV4UwUmi2_if8NQWWJCht=urAewBZAiEJdHpZA@mail.gmail.com>
-	 (sfid-20140225_141121_872159_6A96AC3B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Mar 2014 05:30:29 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v4 2/3] mac80211: implement chanctx reservation
+Date: Wed,  5 Mar 2014 12:30:22 +0200
+Message-Id: <1394015423-31199-3-git-send-email-luca@coelho.fi> (sfid-20140305_113051_397266_6BEB4559)
+In-Reply-To: <1394015423-31199-1-git-send-email-luca@coelho.fi>
+References: <1394015423-31199-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for the delay. Somehow I thought this was addressed, but I'm
-confused.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I think we all agree that the spec says:
+In order to support channel switch with multiple vifs and multiple
+contexts, we implement a concept of channel context reservation.  This
+allows us to reserve a channel context to be used later.
 
-> > A VHT STA shall set the Supported Channel Width Set subfield in its HT
-> > Capabilities element HT Capabilities Info field to 1, indicating that
-> > both 20 MHz operation and 40 MHz operation are supported.
+The reservation functionality is not tied directly to channel switch
+and may be used in other situations (eg. reserving a channel context
+during IBSS join).
 
-and that the station should therefore set the 20_40 capability bit in
-the association response?
+We first check if an existing compatible context exists and if it
+does, we reserve it.  If there is no compatible context we create a
+new one and reserve it.
 
-> The spec also defines VHT BSS operating channel width is derived from
-> HT Operation Element: STA Channel Width field (Table 10-19) and 20 MHz
-> is not forbidden for AP/mesh. hostapd seems to go in line with this
-> and allows VHT20 and VHT40.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In RFC v2:
 
-Yes but how is that related to the *capability* bit? You're talking
-about the HT/VHT operation information.
+   * reformulated the patch to make channel reservation generic and
+     not only for channel switch, as we may find other uses for it in
+     the future;
+   * added ieee80211_vif_unreserve_chanctx();
+   * removed reservation of the current chanctx from this patch;
+   * added a stop_queue_reason for chanctx reservation;
+   * added a few TODOs according to Michal's comments to be handled in
+     future patch series;
+   * set sdata->csa_chandef to the received chandef in all cases (it
+     was only happening in the alone-in-the-vif case;
 
-> Without my patch (i.e. with the 20/40 check left intact):
-> 
-> * If a station connects to VHT20 BSS, hostapd tries to add a VHT20
-> station, but mac80211 downgrades it to HT20,
-> * If mac80211 station connects to a VHT20 BSS it gets downgraded to HT20 too.
-> 
-> This means mac80211 is unable to setup VHT20 pairing properly even
-> though VHT20 BSS is defined in the spec.
-> 
-> My take is 10.39.1 means VHT STA AssocReq must contain
-> IEEE80211_HT_CAP_SUP_WIDTH_20_40.
-> I suppose AP (hostapd) should deny STA association in that case.
+In v3:
 
-So are you saying the station isn't setting 20_40 capability? Or is
-something else unsetting the bit in case it's a 20MHz network?
+   * removed stray empty line;
+   * reworded the commit message;
+   * added reserved_chandef;
+   * added comment about reserved_chanctx and reserved_chandef protection;
+   * wake the queues if ieee80211_assign_vif_chanctx() fails;
 
-johannes
+In v4:
+
+   * add chanctx mode parameter to ieee80211_vif_reserve_chanctx();
+   * compare the vif's previous BSS width with the reserved new width
+     instead of comparing it to the chanctx's combined width;
+---
+ net/mac80211/chan.c        | 127 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  14 +++++
+ 2 files changed, 141 insertions(+)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index a27c6ec..9dfdba5 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -419,6 +419,9 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
++	if (sdata->reserved_chanctx)
++		ieee80211_vif_unreserve_chanctx(sdata);
++
+ 	ieee80211_unassign_vif_chanctx(sdata, ctx);
+ 	if (ctx->refcount == 0)
+ 		ieee80211_free_chanctx(local, ctx);
+@@ -611,6 +614,130 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
++int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
++{
++	lockdep_assert_held(&sdata->local->chanctx_mtx);
++
++	if (WARN_ON(!sdata->reserved_chanctx))
++		return -EINVAL;
++
++	if (--sdata->reserved_chanctx->refcount == 0)
++		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
++
++	sdata->reserved_chanctx = NULL;
++
++	return 0;
++}
++
++int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
++				  const struct cfg80211_chan_def *chandef,
++				  enum ieee80211_chanctx_mode mode)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *new_ctx, *curr_ctx;
++	int ret = 0;
++
++	mutex_lock(&local->chanctx_mtx);
++
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	/* try to find another context with the chandef we want */
++	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
++	if (!new_ctx) {
++		/* create a new context */
++		new_ctx = ieee80211_new_chanctx(local, chandef, mode);
++		if (IS_ERR(new_ctx)) {
++			ret = PTR_ERR(new_ctx);
++			goto out;
++		}
++	}
++
++	/* reserve the new or existing context */
++	sdata->reserved_chanctx = new_ctx;
++	new_ctx->refcount++;
++
++	sdata->reserved_chandef = *chandef;
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
++int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
++				       u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx *ctx;
++	struct ieee80211_chanctx *old_ctx;
++	struct ieee80211_chanctx_conf *conf;
++	int ret, local_changed = *changed;
++
++	/* TODO: need to recheck if the chandef is usable etc.? */
++
++	lockdep_assert_held(&local->mtx);
++
++	mutex_lock(&local->chanctx_mtx);
++
++	ctx = sdata->reserved_chanctx;
++	if (WARN_ON(!ctx)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ieee80211_stop_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
++
++	ieee80211_unassign_vif_chanctx(sdata, old_ctx);
++	if (old_ctx->refcount == 0)
++		ieee80211_free_chanctx(local, old_ctx);
++
++	if (sdata->vif.bss_conf.chandef.width != sdata->reserved_chandef.width)
++		local_changed |= BSS_CHANGED_BANDWIDTH;
++
++	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
++
++	/* unref our reservation before assigning */
++	ctx->refcount--;
++	sdata->reserved_chanctx = NULL;
++	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
++	if (ret) {
++		/* if assign fails refcount stays the same */
++		if (ctx->refcount == 0)
++			ieee80211_free_chanctx(local, ctx);
++		goto out_wake;
++	}
++
++	*changed = local_changed;
++
++	ieee80211_recalc_chanctx_chantype(local, ctx);
++	ieee80211_recalc_smps_chanctx(local, ctx);
++	ieee80211_recalc_radar_chanctx(local, ctx);
++out_wake:
++	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
+ int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 				   const struct cfg80211_chan_def *chandef,
+ 				   u32 *changed)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8603dfb..ae8acc2 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -756,6 +756,10 @@ struct ieee80211_sub_if_data {
+ 	bool csa_radar_required;
+ 	struct cfg80211_chan_def csa_chandef;
+ 
++	/* context reservation -- protected with chanctx_mtx */
++	struct ieee80211_chanctx *reserved_chanctx;
++	struct cfg80211_chan_def reserved_chandef;
++
+ 	/* used to reconfigure hardware SM PS */
+ 	struct work_struct recalc_smps;
+ 
+@@ -899,6 +903,7 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+ 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
+ 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
++	IEEE80211_QUEUE_STOP_REASON_CHANCTX,
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+@@ -1776,6 +1781,15 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 			  const struct cfg80211_chan_def *chandef,
+ 			  enum ieee80211_chanctx_mode mode);
+ int __must_check
++ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
++			      const struct cfg80211_chan_def *chandef,
++			      enum ieee80211_chanctx_mode mode);
++int __must_check
++ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
++				   u32 *changed);
++int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata);
++
++int __must_check
+ ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 			       const struct cfg80211_chan_def *chandef,
+ 			       u32 *changed);
+-- 
+1.8.5.3
 
