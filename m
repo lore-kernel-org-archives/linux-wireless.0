@@ -1,157 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39102 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756213AbaCSUdU (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:35904 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752232AbaCEKGe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 16:33:20 -0400
-Message-ID: <1395261190.4142.34.camel@jlt4.sipsolutions.net> (sfid-20140319_213328_580356_7A86B38B)
-Subject: pull-request: mac80211-next 2014-03-19
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 19 Mar 2014 21:33:10 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-DOAyawVIYJLn7KF7bVPq"
-Mime-Version: 1.0
+	Wed, 5 Mar 2014 05:06:34 -0500
+Date: Wed, 5 Mar 2014 10:06:03 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	"pali.rohar@gmail.com" <pali.rohar@gmail.com>,
+	"pavel@ucw.cz" <pavel@ucw.cz>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: use skb_trim to make skb shorter
+Message-ID: <20140305100603.GA29309@mudshark.cambridge.arm.com> (sfid-20140305_110704_826696_B4B00FD2)
+References: <20140225105756.GB22279@mudshark.cambridge.arm.com>
+ <1393678326-23535-1-git-send-email-ivo.g.dimitrov.75@gmail.com>
+ <20140304142658.GK8766@mudshark.cambridge.arm.com>
+ <20140304183348.GB7317@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140304183348.GB7317@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 04, 2014 at 06:33:48PM +0000, John W. Linville wrote:
+> OK, I'll queue it as a fix...
 
---=-DOAyawVIYJLn7KF7bVPq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks, John.
 
-John,
-
-Following your announcement, I figured I should get some code to you
-still, if only because I'm lazy and don't want to disentangle the code I
-already have later to break it up into fixes and features ...
-
-This has a whole bunch of bugfixes for things that went into -next
-previously as well as some other bugfixes I didn't want to rush into
-3.14 at this point. The rest of it is some cleanups and a few small
-features, the biggest of which is probably Janusz's regulatory DFS CAC
-time code.
-
-Please let me know if there's any problem.
-
-johannes
-
----
-
-The following changes since commit 6658ab80fd4ef940fc2366ddb66690a15ea69c18=
-:
-
-  mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes (2014-=
-02-21 09:37:46 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to 73fb08e24ae840bc518facc2c605dd6bb3751fec:
-
-  cfg80211: remove macro ASSERT_RDEV_LOCK(rdev) (2014-03-19 21:29:58 +0100)
-
-----------------------------------------------------------------
-Alexander Bondar (1):
-      mac80211: release sched_scan_sdata when stopping sched scan
-
-Chun-Yeow Yeoh (1):
-      mac80211: add missing update on rx status VHT flag
-
-Eliad Peller (1):
-      mac80211: add status_driver_data array to ieee80211_tx_info
-
-Emmanuel Grumbach (2):
-      cfg80211/mac80211: ignore signal if the frame was heard on wrong chan=
-nel
-      mac80211: set beamforming bit in radiotap
-
-Ilan Peer (1):
-      cfg80211: send stop AP event only due to internal reason
-
-Janusz Dziedzic (3):
-      cfg80211: regulatory: allow user to set world regdomain
-      cfg80211: regulatory: allow getting DFS CAC time from userspace
-      cfg80211: DFS get CAC time from regulatory database
-
-Johannes Berg (4):
-      cfg80211: regulatory: simplify uevent sending
-      mac80211: fix potential use-after-free
-      mac80211: verify deauthentication and return error on failure
-      mac80211: fix suspend vs. authentication race
-
-Luis R. Rodriguez (1):
-      cfg80211: allow reprocessing of pending requests
-
-Michael Braun (1):
-      mac80211: fix WPA with VLAN on AP side with ps-sta again
-
-Michal Kazior (1):
-      mac80211: refactor channel switch function
-
-Vladimir Kondratiev (1):
-      wireless: max MSDU size for DMG networks
-
-Zhao, Gang (3):
-      cfg80211: make __cfg80211_join_ibss() static
-      cfg80211: remove unnecessary check
-      cfg80211: remove macro ASSERT_RDEV_LOCK(rdev)
-
- include/linux/ieee80211.h    |   4 ++
- include/net/cfg80211.h       |  23 ++++----
- include/net/mac80211.h       |   6 ++-
- include/net/regulatory.h     |  21 +++++---
- include/uapi/linux/nl80211.h |   6 +++
- net/mac80211/cfg.c           | 121 ++++++++++++++++++++++++---------------=
-----
- net/mac80211/ibss.c          |  12 +----
- net/mac80211/ieee80211_i.h   |   1 +
- net/mac80211/mlme.c          |  70 ++++++++++++++++---------
- net/mac80211/pm.c            |  14 +++--
- net/mac80211/rx.c            |   3 ++
- net/mac80211/scan.c          |   6 ++-
- net/mac80211/tx.c            |   2 +-
- net/wireless/ap.c            |   9 ++--
- net/wireless/chan.c          |  56 ++++++++++++++++++++
- net/wireless/core.c          |   2 +-
- net/wireless/core.h          |  10 ++--
- net/wireless/genregdb.awk    |   8 ++-
- net/wireless/ibss.c          |   8 +--
- net/wireless/mlme.c          |   2 +-
- net/wireless/nl80211.c       |  24 +++++++--
- net/wireless/reg.c           |  86 +++++++++++++++---------------
- net/wireless/reg.h           |   1 -
- net/wireless/scan.c          |  31 ++++++-----
- net/wireless/sme.c           |   1 -
- net/wireless/util.c          |   5 +-
- net/wireless/wext-sme.c      |   2 +-
- 27 files changed, 339 insertions(+), 195 deletions(-)
+Will
 
 
---=-DOAyawVIYJLn7KF7bVPq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJTKf8GAAoJEDBSmw7B7bqr3SkP/jn9vhqEWSbpludJv1Ep7+FN
-xe7cZPVBAD8QJhJ7hpY1RPfhbwU8koYEDD8Ukt+FF0ed4X31Sbc/MvHBS1IzYMpw
-XdEU1YLZXjAwNdsnqNpGu2AAdWLEB+Bfzci+wLrAry8ycjiOTBmM6sK2Y3nDKLJ2
-yi5J/mTsdAJJUtDDWWlm7xQSCJlwWHiJFCcywsk1w/eTPyvPs5ZixZgfwzN5cb2+
-G8a4BDCJgutfefudg+sZh0h0wMBPBz0F/V+zF9v2JzksDQhaU56rZIFa45zwIeqf
-rKDvcLD+c6+CaW6LRILpLKDbSvbkAyCBfkG3fOXZg2LZNxzIAa9QrNsqIIfmLCgJ
-ohHGEzNHQDGohAdyfs9KLvOLdI0bbJP7z+jAie9/K6rMlLChe9Q1j4/N2lOZ9r6x
-0uVUV+goV4JtvK9F9jxk0YvE2aAFLXHX8F8AR6yp/ykAxRFgFnPbgf3YTS6zJEx5
-RsSH9quKl6moUYQaNt5gaQwBrUxyMjsxtTAj3PAGx66Euz+N+orYOYEFWFLwiCnn
-zlC18AcSeCYAfb9DEWJf9VrKjOGSFPZr3ZXL61sECoR8tVWeD/5GjK/ppwa4WKPL
-db0AgTdS0VhmsJvKvpuwDIoDam7bELfekvnCVhIX3RTFhQZaMywpk/Nh7rAzlk9l
-fKzWpQwo34+jbCU2GY4J
-=9mlW
------END PGP SIGNATURE-----
-
---=-DOAyawVIYJLn7KF7bVPq--
-
+> On Tue, Mar 04, 2014 at 02:26:58PM +0000, Will Deacon wrote:
+> > Hi Jonn,
+> > 
+> > On Sat, Mar 01, 2014 at 12:52:06PM +0000, Ivaylo Dimitrov wrote:
+> > > the current code is directly setting skb->len, which is not correct and
+> > > brings problems with HAVE_EFFICIENT_UNALIGNED_ACCESS enabled in config
+> > > 
+> > > Signed-off-by: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+> > > ---
+> > 
+> > Can you pick this patch up please? It addresses a regression introduced in
+> > the merge window (ARM started selecting HAVE_EFFICIENT_UNALIGNED_ACCESS).
+> > 
+> > Cheers,
+> > 
+> > Will
+> > 
+> > >  drivers/net/wireless/ti/wl1251/rx.c |    2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
+> > > index 123c4bb..cde0eaf 100644
+> > > --- a/drivers/net/wireless/ti/wl1251/rx.c
+> > > +++ b/drivers/net/wireless/ti/wl1251/rx.c
+> > > @@ -180,7 +180,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+> > >  	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
+> > >  
+> > >  	/* The actual length doesn't include the target's alignment */
+> > > -	skb->len = desc->length  - PLCP_HEADER_LENGTH;
+> > > +	skb_trim(skb, desc->length - PLCP_HEADER_LENGTH);
+> > >  
+> > >  	fc = (u16 *)skb->data;
+> > >  
+> > > -- 
+> > > 1.7.9.5
+> > > 
+> > > 
+> > 
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> 
