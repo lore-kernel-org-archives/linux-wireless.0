@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:41388 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754533AbaCZNFp (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:56214 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752502AbaCEKyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 09:05:45 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v5 2/4] mac80211: set NET_NAME_USER for user-space created ifs
-Date: Wed, 26 Mar 2014 14:05:15 +0100
-Message-Id: <1395839117-20090-3-git-send-email-dh.herrmann@gmail.com> (sfid-20140326_140702_425603_1A0027E3)
-In-Reply-To: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
-References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+	Wed, 5 Mar 2014 05:54:25 -0500
+Date: Wed, 5 Mar 2014 12:54:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] mac80211: ignore probe response from adjacent
+ channels
+Message-ID: <20140305105422.GB32093@w1.fi> (sfid-20140305_115428_276311_7830713F)
+References: <1393944614-4465-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1393944614-4465-2-git-send-email-emmanuel.grumbach@intel.com>
+ <20140305090854.GA3544@w1.fi>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D7871D@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D7871D@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nl80211 interface allows creating new netdevs from user-space. The
-name is *always* provided by user-space, so we should set NET_NAME_USER to
-provide that information via sysfs. But we must not set it for the default
-wlan%d names as these are kernel-provided names.
+On Wed, Mar 05, 2014 at 09:20:07AM +0000, Grumbach, Emmanuel wrote:
+> > So I guess you want me to revert the code we currently have in
+> > ieee80211_rx_mgmt_beacon ;) Don't know really... If you are associated to
+> > an AP and hear its beacons / probe responses on another channel you really
+> > have a big problem in your radio?
+> 
+> FWIW: this logic is there since:
+> 
+> commit d91f36db51661018f6d54ff5966e283bcec4c545
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Thu Apr 16 13:17:26 2009 +0200
+> 
+>     mac80211: implement beacon filtering in software
 
-This allows udev to not rename dynamically created wifi devices (like wifi
-P2P devices).
+The frequency related areas in this commit are in a location that has a
+clear comment about it being for the current BSS. Your patch did not
+look like it would be for that case. If it is, the commit log should
+really say that clearly.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
----
- net/mac80211/cfg.c         | 2 +-
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/iface.c       | 2 ++
- net/mac80211/main.c        | 2 +-
- 4 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index aaa59d7..804cf0a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -31,7 +31,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	err = ieee80211_if_add(local, name, &wdev, type, params);
-+	err = ieee80211_if_add(local, name, NET_NAME_USER, &wdev, type, params);
- 	if (err)
- 		return ERR_PTR(err);
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 222c28b..1a938c3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1470,6 +1470,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- int ieee80211_iface_init(void);
- void ieee80211_iface_exit(void);
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
-+		     unsigned char name_assign_type,
- 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params);
- int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b8d331e..fe84853 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1574,6 +1574,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- }
- 
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
-+		     unsigned char name_assign_type,
- 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params)
- {
-@@ -1617,6 +1618,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 					+ IEEE80211_ENCRYPT_HEADROOM;
- 		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
- 
-+		ndev->name_assign_type = name_assign_type;
- 		ret = dev_alloc_name(ndev, ndev->name);
- 		if (ret < 0) {
- 			free_netdev(ndev);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b055f6a5..ee32a83 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1012,7 +1012,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	/* add one default STA interface if supported */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
--		result = ieee80211_if_add(local, "wlan%d", NULL,
-+		result = ieee80211_if_add(local, "wlan%d", NET_NAME_ENUM, NULL,
- 					  NL80211_IFTYPE_STATION, NULL);
- 		if (result)
- 			wiphy_warn(local->hw.wiphy,
 -- 
-1.9.1
-
+Jouni Malinen                                            PGP id EFC895FA
