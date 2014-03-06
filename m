@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:44634 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762AbaCNMhQ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37760 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751143AbaCFP1L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 08:37:16 -0400
+	Thu, 6 Mar 2014 10:27:11 -0500
+Date: Thu, 6 Mar 2014 20:42:58 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 2/2] mwl8k: mwl8k_update_survey can be static
+Message-ID: <5578b27253e21c67722b3250a7975dac2be81775.1394107732.git.yogeshp@marvell.com> (sfid-20140306_162715_173455_CD4CB83B)
+References: <cover.1394107732.git.yogeshp@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20140314084514.23100.72654.stgit@x230>
-References: <20140314084501.23100.13103.stgit@x230> <20140314084514.23100.72654.stgit@x230>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 14 Mar 2014 05:36:53 -0700
-Message-ID: <CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com> (sfid-20140314_133748_796259_9AE50CED)
-Subject: Re: [PATCH 3/3] ath10k: add firmware files
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <cover.1394107732.git.yogeshp@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 1:45 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> +* No Reverse engineering, decompiling, decrypting, or disassembling of
-> +  this software is permitted.
+It fixes following sparse check warning
+>#make C=1 CF=-D__CHECK_ENDIAN__ drivers/net/wireless/mwl8k.o
+>drivers/net/wireless/mwl8k.c:3089:6: warning: symbol 'mwl8k_update_survey' was not declared. Should it be static?
 
-We have other firmware licenses that have this language already on
-linux-firmware but let us also keep in mind that linux-firmware will
-likely not only be used by Linux folks.
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-<-- cut -->
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 706a445..3c0a0a8 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3088,8 +3088,8 @@ exit:
+ 	return idx;
+ }
+ 
+-void mwl8k_update_survey(struct mwl8k_priv *priv,
+-			 struct ieee80211_channel *channel)
++static void mwl8k_update_survey(struct mwl8k_priv *priv,
++				struct ieee80211_channel *channel)
+ {
+ 	u32 cca_cnt, rx_rdy;
+ 	s8 nf = 0, idx;
+-- 
+1.8.3.4
 
-> + NO LICENSES OR OTHER RIGHTS,
-> +WHETHER EXPRESS, IMPLIED, BASED ON ESTOPPEL OR OTHERWISE, ARE GRANTED
-> +TO ANY PARTY'S PATENTS, PATENT APPLICATIONS, OR PATENTABLE INVENTIONS
-> +BY VIRTUE OF THIS LICENSE OR THE DELIVERY OR PROVISION BY QUALCOMM
-> +ATHEROS, INC. OF THE SOFTWARE.
-
-This -- however is new to linux-firmware -- and I hereby raise a big
-red fucking flag. All other licenses on linux-firmware provide at the
-very least a limited patent grant. What makes Qualcomm special ?
-
-> +FOR ANY DIRECT DAMAGES ARISING UNDER OR RESULTING FROM
-> +THIS AGREEMENT OR IN CONNECTION WITH ANY USE OF THE SOFTWARE SHALL NOT
-> +EXCEED A TOTAL AMOUNT OF US$5.00.
-
-WTF - was this inspired by a Sci-Fi movie?
-
-  Luis
