@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:9204 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720AbaCaItm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52451 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbaCFTAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 04:49:42 -0400
-Message-ID: <53392C0D.2010404@meshcoding.com> (sfid-20140331_104949_125462_B57263BC)
-Date: Mon, 31 Mar 2014 10:49:17 +0200
-From: Antonio Quartulli <antonio@meshcoding.com>
-Reply-To: The list for a Better Approach To Mobile Ad-hoc
-	   Networking <b.a.t.m.a.n@lists.open-mesh.org>
-MIME-Version: 1.0
+	Thu, 6 Mar 2014 14:00:12 -0500
+Date: Thu, 6 Mar 2014 13:47:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: devel@lists.open80211s.org, Felix Fietkau <nbd@openwrt.org>,
-	b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [B.A.T.M.A.N.] [RFCv2 4/6] mac80211: minstrel - implement get_expected_throughput()
- API
-References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com> <1396211704-4677-5-git-send-email-antonio@meshcoding.com>
-In-Reply-To: <1396211704-4677-5-git-send-email-antonio@meshcoding.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ"
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-03-05
+Message-ID: <20140306184755.GC7788@tuxdriver.com> (sfid-20140306_200017_684294_43CE8599)
+References: <1394032852.5275.41.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394032852.5275.41.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 05, 2014 at 04:20:52PM +0100, Johannes Berg wrote:
+> John,
+> 
+> We have some more fixes...
+> 
+> Here I have a fix from Eliad for the minimal channel width calculation
+> in the mac80211 code which lead to monitor mode not working at all for
+> drivers using that. One of my fixes is for an issue noticed by Michal,
+> we clear an already cleared value but do it without locking, so just
+> remove that. The other is for a data leak - we leak two bytes of kernel
+> memory out over the air in QoS NULL frames because those don't get a
+> sequence number assigned in the TX path.
+> 
+> Please let me know if there's any problem.
+> 
+> johannes
+> 
+> 
+> The following changes since commit cb664981607a6b5b3d670ad57bbda893b2528d96:
+> 
+>   mac80211: fix association to 20/40 MHz VHT networks (2014-02-27 20:53:01 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 864a6040f395464003af8dd0d8ca86fed19866d4:
+> 
+>   mac80211: clear sequence/fragment number in QoS-null frames (2014-03-05 15:49:54 +0100)
 
-On 30/03/14 22:35, Antonio Quartulli wrote:
-> +static u32
-> +minstrel_get_expected_throughput(void *priv, void *priv_sta,
-> +				 struct ieee80211_supported_band *sband)
-> +{
-> +	struct minstrel_sta_info *mi =3D priv_sta;
-> +	int idx =3D mi->max_tp_rate[0];
-> +	u32 bitrate, ret;
-> +
-> +	bitrate =3D sband->bitrates[mi->r[idx].rix].bitrate;
-> +	ret =3D bitrate * MINSTREL_TRUNC(mi->r[idx].probability * 1000) / 100=
-0;
+Pulling now...
 
-Thanks to the point raised by Andrew Lunn I just realised that this
-value is expressed in Mbps/10 and so should be converted to Mbps/100
-before being returned (assuming we agree on using this unit).
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-
---28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIbBAEBCAAGBQJTOSwSAAoJEEKTMo6mOh1V8asP+J2bLE68i+RxFlJrzYzEllWq
-bwB+MppRkMI++NicUZ0yefjcfwrakxLKBqA9DFz/kYPGmuVplJELwJKrIW2CRdHz
-XuxkGRF0os53xeCkY+XiVXjLQbNHhx3bZmrtIaUhW09JGCLNiXVtGzgdwSIfn/i0
-3EVd1mn5qwGnvZD+WmxssbJktxXCj19JLVnYHSo7qRHa602iiPgpBDZQxKU7ss1a
-sb0Vx9ax7KBNDkRIkj+oINxHpT2B0mS+cuqsd5qo2YYFhkJAxW73MQNFIl4jEokS
-MUT6LM+x7tl507vFPmWCikBdixuZKlb2n2yRUHVpomRYUKCzXqM7MmX2LpKtrEu4
-kjfXNuIiFZkaJRAYcJr5FwzVW/SPmrauuQitME9kC2AQD3x0z993JOOiMmBloGK+
-w4Wul/0viRmrj1syqNKtG75lv1qOJaclUc94m8jEUASJgGOzYt8bffCG1HmRcwBF
-MwcNsONueDD+qgM6/sEmbOfWcYefJYcEdtKKf2x56RcMIOXqFl1be2eutnUkJ7OG
-2zkAbobRiBXQJ1bAdyJDdmuNV91DQYUBAkfB6xnMRwj3T8NfutigRiM0GN/7GdQm
-RXD1ihK58snPByb/1FoA7Ex7V9vJXtJc7WNnUpTFpxa6ZuelyAC0cBrl8k+A/adE
-KqVgmrzYzlcfCHcKQm0=
-=3Kbq
------END PGP SIGNATURE-----
-
---28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
