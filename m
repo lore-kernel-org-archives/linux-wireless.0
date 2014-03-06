@@ -1,45 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:44156 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752470AbaCGVMO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 16:12:14 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] p54usb: fix leaks at failure path in p54u_probe()
-Date: Sat,  8 Mar 2014 01:11:49 +0400
-Message-Id: <1394226709-10763-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140307_221253_334237_5E275650)
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:45611 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393AbaCFKM0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2014 05:12:26 -0500
+Received: by mail-ee0-f43.google.com with SMTP id e53so998641eek.16
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 02:12:24 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC v2 14/14] ath10k: improve way we play with attention flags
+Date: Thu,  6 Mar 2014 11:11:46 +0100
+Message-Id: <1394100706-7820-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140306_111241_065461_21B756CF)
+In-Reply-To: <1394100706-7820-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1394100706-7820-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If p54u_load_firmware() fails, p54u_probe() does not deallocate
-already allocated resources. The patch adds proper failure handling.
+Remove almost the same code, and do only once
+__le32_to_cpu() conversion.
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/p54/p54usb.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   77 ++++++------------------------
+ 1 file changed, 15 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 6e635cfa24c8..5df74503fd4f 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -1053,6 +1053,10 @@ static int p54u_probe(struct usb_interface *intf,
- 		priv->upload_fw = p54u_upload_firmware_net2280;
- 	}
- 	err = p54u_load_firmware(dev, intf);
-+	if (err) {
-+		usb_put_dev(udev);
-+		p54_free_common(dev);
-+	}
- 	return err;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c03d2ec..64f73f0 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1000,62 +1000,6 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 	ath10k_process_rx(htt->ar, info);
  }
  
+-static bool ath10k_htt_rx_has_decrypt_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_DECRYPT_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_has_fcs_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_FCS_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_has_mic_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_TKIP_MIC_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_is_mgmt(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_MGMT_TYPE)
+-		return true;
+-
+-	return false;
+-}
+-
+ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
+ {
+ 	struct htt_rx_desc *rxd;
+@@ -1091,7 +1035,8 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 					struct sk_buff *head,
+ 					bool msdu_chaining,
+ 					enum htt_rx_mpdu_status status,
+-					bool channel_set)
++					bool channel_set,
++					u32 attention)
+ {
+ 	if (head->len == 0) {
+ 		ath10k_dbg(ATH10K_DBG_HTT,
+@@ -1099,7 +1044,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 		return false;
+ 	}
+ 
+-	if (ath10k_htt_rx_has_decrypt_err(head)) {
++	if (attention & RX_ATTENTION_FLAGS_DECRYPT_ERR) {
+ 		ath10k_dbg(ATH10K_DBG_HTT,
+ 			   "htt rx dropping due to decrypt-err\n");
+ 		return false;
+@@ -1112,7 +1057,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 
+ 	/* Skip mgmt frames while we handle this in WMI */
+ 	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
+-	    ath10k_htt_rx_is_mgmt(head)) {
++	    attention & RX_ATTENTION_FLAGS_MGMT_TYPE) {
+ 		ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
+ 		return false;
+ 	}
+@@ -1148,9 +1093,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ {
+ 	struct htt_rx_info info;
+ 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
++	struct htt_rx_desc *rxd;
+ 	enum htt_rx_mpdu_status status;
+ 	struct ieee80211_hdr *hdr;
+ 	int num_mpdu_ranges;
++	u32 attention;
+ 	int fw_desc_len;
+ 	u8 *fw_desc;
+ 	bool channel_set, fcs_err, mic_err;
+@@ -1215,23 +1162,29 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				continue;
+ 			}
+ 
++			rxd = container_of((void *) msdu_head->data,
++					   struct htt_rx_desc,
++					   msdu_payload);
++			attention = __le32_to_cpu(rxd->attention.flags);
++
+ 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
+ 							 ret > 0,
+ 							 status,
+-							 channel_set)) {
++							 channel_set,
++							 attention)) {
+ 				ath10k_htt_rx_free_msdu_chain(msdu_head);
+ 				continue;
+ 			}
+ 
+ 			info.skb     = msdu_head;
+ 
+-			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
++			fcs_err = !!(attention & RX_ATTENTION_FLAGS_FCS_ERR);
+ 			if (fcs_err)
+ 				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+ 			else
+ 				info.rx_status.flag &= ~RX_FLAG_FAILED_FCS_CRC;
+ 
+-			mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
++			mic_err = !!(attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR);
+ 			if (mic_err)
+ 				info.rx_status.flag |= RX_FLAG_MMIC_ERROR;
+ 			else
 -- 
-1.8.3.2
+1.7.9.5
 
