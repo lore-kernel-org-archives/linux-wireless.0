@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39205 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbaCYJPD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 05:15:03 -0400
-Subject: [PATCH 0/8] ath10k: small cleanups to pci.c
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 25 Mar 2014 11:14:58 +0200
-Message-ID: <20140325091311.16651.15747.stgit@potku.adurom.net> (sfid-20140325_101509_457985_C75185EA)
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:38617 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829AbaCFK6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2014 05:58:19 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: RE: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+Date: Thu, 6 Mar 2014 10:58:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D79772@HASMSX103.ger.corp.intel.com> (sfid-20140306_115823_039429_04347DA0)
+References: <52B0B72A.5070704@gmail.com>
+ <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+ <20140113111357.GA4611@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+ <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+ <52D83C56.5010706@gmail.com> <20140116214357.GA10376@gobelin>
+ <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
+ <20140306102102.GA15185@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D796A6@HASMSX103.ger.corp.intel.com>
+ <20140306104936.GA21682@magnum.frso.rivierawaves.com>
+In-Reply-To: <20140306104936.GA21682@magnum.frso.rivierawaves.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While looking at the cold reset problem I did some cleanup
-to pci.c.
-
----
-
-Kalle Valo (8):
-      ath10k: cleanup ath10k_pci_wait_for_target_init()
-      ath10k: add module parameter to disable cold reset
-      ath10k: fix name of target_ps module parameter
-      ath10k: advertise only firmware API 2 files
-      ath10k: delete ar_pci->fw_indicator_address
-      ath10k: improve pci debug messages
-      ath10k: add module parameter values to the pci info print
-      ath10k: print chip id during boot
-
-
- drivers/net/wireless/ath/ath10k/core.c |    9 ++
- drivers/net/wireless/ath/ath10k/hw.h   |    1 
- drivers/net/wireless/ath/ath10k/pci.c  |  125 ++++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/pci.h  |    3 -
- 4 files changed, 92 insertions(+), 46 deletions(-)
-
+PiANCj4gT24gVGh1LCBNYXIgMDYsIDIwMTQgYXQgMTA6MjU6MzRBTSArMDAwMCwgR3J1bWJhY2gs
+IEVtbWFudWVsIHdyb3RlOg0KPiA+ID4gPg0KPiA+ID4gPiBIaSwNCj4gPiA+ID4NCj4gPiA+ID4g
+VGhhbmtzIGZvciB0aGUgdXBkYXRlLCBpbmRlZWQgbW9uaXRvciBpcyBpbiBiZXR0ZXIgc2hhcGUs
+IGhvd2V2ZXINCj4gPiA+ID4gSSBhbSBzdGlsbCBzZWVpbmcgc29tZSBpc3N1ZXMuDQo+ID4gPiA+
+IEUuZy4gc2hvcnQtZ3VhcmQgb3IgPiAyME1IeiBidyBmcmFtZXMgYXJlIG5vdCB2aXNpYmxlIHdo
+ZW4gbm90DQo+ID4gPiA+IGFnZ3JlZ2F0ZWQsIEkgc3RpbGwgc2VlICJNaWNyb2NvZGUgU1cgZXJy
+b3IgZGV0ZWN0ZWQuIiBidXQgaW4gYQ0KPiA+ID4gPiBkaWZmZXJlbnQgc2NlbmFyaW8gKG1vbml0
+b3Jpbmcgd2l0aCBtYWluIG1hbmFnZWQgaWZhY2UgZG93biwgdGhlbg0KPiA+ID4gPiB1cHBpbmcg
+dGhlIG1haW4gbWFuYWdlZCBpZmFjZSB1cCksIGl0IGFsc28gc2VlbXMgdGhhdCB3ZSBmaWx0ZXIN
+Cj4gPiA+ID4gb3V0IG1hbnkgZnJhbWVzIHdoZW4gdGhlIG1haW4gbWFuYWdlZCBpZmFjZSBpcyB1
+cCBhbmQvb3I/DQo+IGFzc29jaWF0ZWQuDQo+ID4gPiA+IEFsc28sIEkgc3RhcnRlZCB3b3JraW5n
+IG9uIEFNU0RVcyB0aGlzIHdlZWsgYW5kIHllc3RlcmRheSBteQ0KPiA+ID4gPiBsYXB0b3AgY3Jh
+c2hlZCBpbW1lZGlhdGVseSB3aGVuIG1vbml0b3JpbmcuIFRoaXMgbW9ybmluZyBJIHNlZQ0KPiA+
+ID4gPiB0aGF0IHRoaXMgaGFwcGVucyB3aGVuIG15IGFnZ3JlZ2F0ZXMgc3RhcnQgZ2V0dGluZyBh
+Ym92ZSB0aGUgfjRrDQo+ID4gPiA+IGxpbWl0IGFuZCBtb2Rwcm9iaW5nIHdpdGggYW1zZHVfc2l6
+ZV84Sz0xIHNlZW1zIHRvICdmaXgnIHRoZQ0KPiA+ID4gPiBpc3N1ZSwgSSBndWVzcyBzb21lIHBs
+YWNlcyBuZWVkIHNvbWUgb2Zsb3dzIGNoZWNrcy4NCj4gPg0KPiA+IEhtbS4uLiBUaGFua3MgZm9y
+IHRoZSBoZWFkcyAtIHVwLiBEbyB5b3UgaGF2ZSB0aGUgY3Jhc2ggZGF0YT8NCj4gPg0KPiBZb3Ug
+bWVhbiBhIHBjYXAgb2YgdGhlIHRyYWZmaWMgY3Jhc2hpbmcgdGhlIHN5c3RlbSBvciB0aGUgaXds
+bXZtIGRhdGEgPw0KPiBUaGUgY3Jhc2hlcyBhcmUgc2V2ZXJlIGVub3VnaCB0aGF0IHRoZXkgaGFu
+ZyBteSB3aG9sZSBsYXB0b3AgcmlnaHQgYXdheS4NCg0KT2ggb2sgLSBJIHdhcyB0YWxraW5nIGFi
+b3V0IHRoZSBXQVJOSU5HIC8gQlVHIG1lc3NhZ2Ugd2hhdGV2ZXIuDQoNCj4gDQo+ID4gPiA+IEFs
+bCB0aGlzIHdpdGggd2lyZWxlc3MtbmV4dEA3MDQ0NDVkOSAoaS5lLiBjaXJjYSB0aGUgdGltZSBJ
+IGdvdA0KPiA+ID4gPiB5b3VyDQo+ID4gPiA+IGVtYWlsKSBhbmQgZncgMjIuMTUuOC4wLg0KPiA+
+ID4gPg0KPiA+ID4NCj4gPiA+IFBsZWFzZSBwYXN0ZSB0aGUgZGF0YSBmb3IgdGhlIGZpcm13YXJl
+IGFzc2VydC4gQWxzbywgdGFrZQ0KPiA+ID4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
+bnV4L2tlcm5lbC9naXQvamJlcmcvbWFjODAyMTEuZ2l0L2NvbW0NCj4gPiA+IGl0Lz9pZD0NCj4g
+PiA+IDFjMzdhNzJjMWJkMGI4M2JlOGI5NWNmZjdmMWJjOWIxZjMyYmQ0MzMgaW50byBhY2NvdW50
+Lg0KPiBBdHRhY2hlZC4gTG9va3MgbGlrZSB0aGlzIGNoYW5nZSB3aWxsIGhlbHAuDQo+IA0KDQpC
+VFcgLSBuZXdlciBGVyBpcyBhdmFpbGFibGU6IDIyLjI0LjguMA0K
