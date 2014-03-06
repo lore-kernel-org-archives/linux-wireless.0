@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:50016 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755062AbaCOBEM (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:34840 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972AbaCFJQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 21:04:12 -0400
-Received: by mail-la0-f48.google.com with SMTP id gf5so2235149lab.21
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 18:04:11 -0700 (PDT)
+	Thu, 6 Mar 2014 04:16:22 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/2] brcmfmac: resolve atomic_set_mask() issues
+Date: Thu, 6 Mar 2014 10:16:10 +0100
+Message-ID: <1394097372-4643-1-git-send-email-arend@broadcom.com> (sfid-20140306_101636_627248_F2CE2E45)
 MIME-Version: 1.0
-In-Reply-To: <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
- <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
- <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
- <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com> <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 14 Mar 2014 18:03:50 -0700
-Message-ID: <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com> (sfid-20140315_020416_241234_3E04D4E6)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-To: Colleen T <colleen@cozybit.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 3:12 PM, Colleen T <colleen@cozybit.com> wrote:
-> I'm on mac80211-next/master, sha is
-> 5a970df8990d173e7e4092952f2e3da1de69b27d
+Tiny series resolving build issues on several platforms as reported
+by Fengguang Wu and Stephen Rothwell.
 
-I tried to reproduce by just merging the fixes in question onto Linus'
-tree and using radios=3 but no go. Can you provide the full kernel
-log, I'm particularly interested in what happened before. The
-COUNTRY=US on debian, which I believe you're on, should just trigger a
-regulatory domain setting to US upon initialization. Depending on how
-Debian does it this could either trigger as a module parameter or as a
-userspace event *after* the world regdom get set.
+These patches apply to the master branch of the wireless-next
+repository.
 
-The radios=3 alone would not do anything other than add new radios so
-I see no contention on the last_request by increasing or decreasing
-that. last_request is also protected by rtnl and although I was
-considering a possible race against processing the same last_request
-twice if you see how we call reg_process_pending_hints() on reg_todo()
-its protected by rtnl_lock() so I'm a bit puzzled as to how this is
-being triggered as those operations should be atomic. The other corner
-case I thought of was that for userspace requests which sets a
-timeout, but our when the timeout hits we also rtnl_lock() under
-reg_timeout_work().
+Arend van Spriel (1):
+  Revert "brcmfmac: Use atomic functions for intstatus update."
 
-The other corner I thought of was when we reset_regdomains() but all
-callers are rtnl_lock()'d. This is also the same for callers of
-set_regdom().
+Hante Meuleman (1):
+  brcmfmac: Use atomic functions for intstatus update.
 
-Do you get different results if you reduce the number of radios? If so
-where's the trigger point?
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-  Luis
+-- 
+1.7.10.4
+
