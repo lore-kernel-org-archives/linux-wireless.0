@@ -1,208 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:42102 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966AbaCROqD (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:38447 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbaCFWqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:03 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so5404854eek.18
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:01 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/35] iwlwifi: mvm: wait for stop sched-scan completion
-Date: Tue, 18 Mar 2014 16:45:15 +0200
-Message-Id: <1395153939-23897-11-git-send-email-egrumbach@gmail.com> (sfid-20140318_154610_178707_D669592F)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Thu, 6 Mar 2014 17:46:33 -0500
+Received: by mail-wg0-f45.google.com with SMTP id l18so3538799wgh.28
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 14:46:32 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 4/5] staging: vt6655: 64 bit fixes TKIP mic correct sizeof long.
+Date: Thu,  6 Mar 2014 22:44:24 +0000
+Message-Id: <1394145865-3748-4-git-send-email-tvboxspy@gmail.com> (sfid-20140306_234636_458858_C233C3B2)
+In-Reply-To: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
+References: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Correct to endian base type __le32.
 
-cfg80211 assumes a scheduled scan is stopped synchronously. Wait for the
-FW before returning to caller.
-
-Don't do anything in the async handler in the stop-from-above flow.
-There's no need to call the mac80211 sched-scan completion as the
-cleanup will be automatic. Make sure the async handler is called before
-the next incoming scan changes the scan_status by flushing the async
-handlers after all invocations.
-
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 24 +++++------------
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  7 ++++-
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 42 ++++++++++++++++++++++-------
- 3 files changed, 46 insertions(+), 27 deletions(-)
+ drivers/staging/vt6655/dpc.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 41b9e65..fff66ab 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1419,8 +1419,6 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 			       struct cfg80211_scan_request *req)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--	struct iwl_notification_wait wait_scan_done;
--	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
- 	int ret;
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index 7663856..771bf35 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -729,27 +729,27 @@ device_receive_frame(
+ 	// Soft MIC
+ 	if ((pKey != NULL) && (pKey->byCipherSuite == KEY_CTL_TKIP)) {
+ 		if (bIsWEP) {
+-			unsigned long *pdwMIC_L;
+-			unsigned long *pdwMIC_R;
+-			unsigned long dwMIC_Priority;
+-			unsigned long dwMICKey0 = 0, dwMICKey1 = 0;
++			__le32 *pdwMIC_L;
++			__le32 *pdwMIC_R;
++			__le32 dwMIC_Priority;
++			__le32 dwMICKey0 = 0, dwMICKey1 = 0;
+ 			u32 dwLocalMIC_L = 0;
+ 			u32 dwLocalMIC_R = 0;
+ 			viawget_wpa_header *wpahdr;
  
- 	if (req->n_channels == 0 || req->n_channels > MAX_NUM_SCAN_CHANNELS)
-@@ -1430,22 +1428,11 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 			if (pMgmt->eCurrMode == WMAC_MODE_ESS_AP) {
+-				dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[24]));
+-				dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[28]));
++				dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[24]));
++				dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[28]));
+ 			} else {
+ 				if (pDevice->pMgmt->eAuthenMode == WMAC_AUTH_WPANONE) {
+-					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[16]));
+-					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[20]));
++					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[16]));
++					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[20]));
+ 				} else if ((pKey->dwKeyIndex & BIT28) == 0) {
+-					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[16]));
+-					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[20]));
++					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[16]));
++					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[20]));
+ 				} else {
+-					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[24]));
+-					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[28]));
++					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[24]));
++					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[28]));
+ 				}
+ 			}
  
- 	switch (mvm->scan_status) {
- 	case IWL_MVM_SCAN_SCHED:
--		iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
--					   scan_done_notif,
--					   ARRAY_SIZE(scan_done_notif),
--					   NULL, NULL);
--		iwl_mvm_sched_scan_stop(mvm);
--		ret = iwl_wait_notification(&mvm->notif_wait,
--					    &wait_scan_done, HZ);
-+		ret = iwl_mvm_sched_scan_stop(mvm);
- 		if (ret) {
- 			ret = -EBUSY;
- 			goto out;
- 		}
--		/* iwl_mvm_rx_scan_offload_complete_notif() will be called
--		 * soon but will not reset the scan status as it won't be
--		 * IWL_MVM_SCAN_SCHED any more since we queue the next scan
--		 * immediately (below)
--		 */
- 		break;
- 	case IWL_MVM_SCAN_NONE:
- 		break;
-@@ -1461,7 +1448,8 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- out:
- 	mutex_unlock(&mvm->mutex);
--
-+	/* make sure to flush the Rx handler before the next scan arrives */
-+	iwl_mvm_wait_for_async_handlers(mvm);
- 	return ret;
- }
+@@ -763,14 +763,14 @@ device_receive_frame(
+ 			MIC_vGetMIC(&dwLocalMIC_L, &dwLocalMIC_R);
+ 			MIC_vUnInit();
  
-@@ -1751,12 +1739,14 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	int ret;
+-			pdwMIC_L = (unsigned long *)(skb->data + 4 + FrameSize);
+-			pdwMIC_R = (unsigned long *)(skb->data + 4 + FrameSize + 4);
++			pdwMIC_L = (__le32 *)(skb->data + 4 + FrameSize);
++			pdwMIC_R = (__le32 *)(skb->data + 4 + FrameSize + 4);
+ 			//DBG_PRN_GRP12(("RxL: %lx, RxR: %lx\n", *pdwMIC_L, *pdwMIC_R));
+ 			//DBG_PRN_GRP12(("LocalL: %lx, LocalR: %lx\n", dwLocalMIC_L, dwLocalMIC_R));
+ 			//DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "dwMICKey0= %lx,dwMICKey1= %lx \n", dwMICKey0, dwMICKey1);
  
- 	mutex_lock(&mvm->mutex);
--	iwl_mvm_sched_scan_stop(mvm);
-+	ret = iwl_mvm_sched_scan_stop(mvm);
- 	mutex_unlock(&mvm->mutex);
-+	iwl_mvm_wait_for_async_handlers(mvm);
- 
--	return 0;
-+	return ret;
- }
- 
- static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 3511bf7..4da53c3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -712,6 +712,11 @@ static inline const char *iwl_mvm_get_tx_fail_reason(u32 status) { return ""; }
- int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, bool sync);
- void iwl_mvm_async_handlers_purge(struct iwl_mvm *mvm);
- 
-+static inline void iwl_mvm_wait_for_async_handlers(struct iwl_mvm *mvm)
-+{
-+	flush_work(&mvm->async_handlers_wk);
-+}
-+
- /* Statistics */
- int iwl_mvm_rx_reply_statistics(struct iwl_mvm *mvm,
- 				struct iwl_rx_cmd_buffer *rxb,
-@@ -813,7 +818,7 @@ int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
- 				       struct cfg80211_sched_scan_request *req);
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct cfg80211_sched_scan_request *req);
--void iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
-+int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
- int iwl_mvm_rx_sched_scan_results(struct iwl_mvm *mvm,
- 				  struct iwl_rx_cmd_buffer *rxb,
- 				  struct iwl_device_cmd *cmd);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index b4c9fb6..a2cd54b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -519,10 +519,11 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- 		       scan_notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
- 		       "completed" : "aborted");
- 
--	/* might already be something else again, don't reset if so */
--	if (mvm->scan_status == IWL_MVM_SCAN_SCHED)
-+	/* only call mac80211 completion if the stop was initiated by FW */
-+	if (mvm->scan_status == IWL_MVM_SCAN_SCHED) {
- 		mvm->scan_status = IWL_MVM_SCAN_NONE;
--	ieee80211_sched_scan_stopped(mvm->hw);
-+		ieee80211_sched_scan_stopped(mvm->hw);
-+	}
- 
- 	return 0;
- }
-@@ -894,26 +895,49 @@ static int iwl_mvm_send_sched_scan_abort(struct iwl_mvm *mvm)
- 		 * microcode has notified us that a scan is completed.
- 		 */
- 		IWL_DEBUG_SCAN(mvm, "SCAN OFFLOAD ABORT ret %d.\n", status);
--		ret = -EIO;
-+		ret = -ENOENT;
- 	}
- 
- 	return ret;
- }
- 
--void iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
-+int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
- {
- 	int ret;
-+	struct iwl_notification_wait wait_scan_done;
-+	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	if (mvm->scan_status != IWL_MVM_SCAN_SCHED) {
- 		IWL_DEBUG_SCAN(mvm, "No offloaded scan to stop\n");
--		return;
-+		return 0;
- 	}
- 
-+	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
-+				   scan_done_notif,
-+				   ARRAY_SIZE(scan_done_notif),
-+				   NULL, NULL);
-+
- 	ret = iwl_mvm_send_sched_scan_abort(mvm);
--	if (ret)
-+	if (ret) {
- 		IWL_DEBUG_SCAN(mvm, "Send stop offload scan failed %d\n", ret);
--	else
--		IWL_DEBUG_SCAN(mvm, "Successfully sent stop offload scan\n");
-+		iwl_remove_notification(&mvm->notif_wait, &wait_scan_done);
-+		return ret;
-+	}
-+
-+	IWL_DEBUG_SCAN(mvm, "Successfully sent stop offload scan\n");
-+
-+	ret = iwl_wait_notification(&mvm->notif_wait, &wait_scan_done, 1 * HZ);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Clear the scan status so the next scan requests will succeed. This
-+	 * also ensures the Rx handler doesn't do anything, as the scan was
-+	 * stopped from above.
-+	 */
-+	mvm->scan_status = IWL_MVM_SCAN_NONE;
-+
-+	return 0;
- }
+-			if ((cpu_to_le32(*pdwMIC_L) != dwLocalMIC_L) ||
+-			    (cpu_to_le32(*pdwMIC_R) != dwLocalMIC_R) ||
++			if ((le32_to_cpu(*pdwMIC_L) != dwLocalMIC_L) ||
++			    (le32_to_cpu(*pdwMIC_R) != dwLocalMIC_R) ||
+ 			    pDevice->bRxMICFail) {
+ 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "MIC comparison is fail!\n");
+ 				pDevice->bRxMICFail = false;
 -- 
-1.8.3.2
+1.9.0
 
