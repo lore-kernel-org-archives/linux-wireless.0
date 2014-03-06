@@ -1,111 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:48416 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbaCYJPb (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:55919 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbaCFLyS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 05:15:31 -0400
-Subject: [PATCH 5/8] ath10k: delete ar_pci->fw_indicator_address
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 25 Mar 2014 11:15:28 +0200
-Message-ID: <20140325091528.16651.24296.stgit@potku.adurom.net> (sfid-20140325_101535_116708_6B122BED)
-In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
-References: <20140325091311.16651.15747.stgit@potku.adurom.net>
+	Thu, 6 Mar 2014 06:54:18 -0500
+Received: by mail-we0-f180.google.com with SMTP id p61so2921541wes.11
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 03:54:17 -0800 (PST)
+Date: Thu, 6 Mar 2014 12:54:06 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+Message-ID: <20140306115406.GA32396@magnum.frso.rivierawaves.com> (sfid-20140306_125423_009869_D7F16FC0)
+References: <20140113111357.GA4611@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+ <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+ <52D83C56.5010706@gmail.com>
+ <20140116214357.GA10376@gobelin>
+ <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
+ <20140306102102.GA15185@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D796A6@HASMSX103.ger.corp.intel.com>
+ <20140306104936.GA21682@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D79794@HASMSX103.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D79794@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It always contains the same constant, no need to have a separate variable for it.
+On Thu, Mar 06, 2014 at 11:02:48AM +0000, Grumbach, Emmanuel wrote:
+> > > On Thu, Mar 06, 2014 at 10:25:34AM +0000, Grumbach, Emmanuel wrote:
+> > > > > >
+> > > > > > Hi,
+> > > > > >
+> > > > > > Thanks for the update, indeed monitor is in better shape,
+> > > > > > however I am still seeing some issues.
+> > > > > > E.g. short-guard or > 20MHz bw frames are not visible when not
+> > > > > > aggregated, I still see "Microcode SW error detected." but in a
+> > > > > > different scenario (monitoring with main managed iface down,
+> > > > > > then upping the main managed iface up), it also seems that we
+> > > > > > filter out many frames when the main managed iface is up and/or?
+> > > associated.
+> > > > > > Also, I started working on AMSDUs this week and yesterday my
+> > > > > > laptop crashed immediately when monitoring. This morning I see
+> > > > > > that this happens when my aggregates start getting above the ~4k
+> > > > > > limit and modprobing with amsdu_size_8K=1 seems to 'fix' the
+> > > > > > issue, I guess some places need some oflows checks.
+> > > >
+> > > > Hmm... Thanks for the heads - up. Do you have the crash data?
+> > > >
+> > > You mean a pcap of the traffic crashing the system or the iwlmvm data ?
+> > > The crashes are severe enough that they hang my whole laptop right away.
+> > 
+> > Oh ok - I was talking about the WARNING / BUG message whatever.
+> > 
+> > >
+> > > > > > All this with wireless-next@704445d9 (i.e. circa the time I got
+> > > > > > your
+> > > > > > email) and fw 22.15.8.0.
+> > > > > >
+> > > > >
+> > > > > Please paste the data for the firmware assert. Also, take
+> > > > > https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211.git/co
+> > > > > mm
+> > > > > it/?id=
+> > > > > 1c37a72c1bd0b83be8b95cff7f1bc9b1f32bd433 into account.
+> > > Attached. Looks like this change will help.
+> > >
+> > 
+> > BTW - newer FW is available: 22.24.8.0
+> 
+> Just looked at your log - I'd hope the new FW will fix it.
+> Can you give it a try?
+> 
+Just did, seems to fix the issue, thanks.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   16 ++++++----------
- drivers/net/wireless/ath/ath10k/pci.h |    3 ---
- 2 files changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e70dde1beaca..0d8efba160dd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1750,16 +1750,15 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
- static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	u32 fw_indicator_address, fw_indicator;
-+	u32 fw_indicator;
  
- 	ath10k_pci_wake(ar);
- 
--	fw_indicator_address = ar_pci->fw_indicator_address;
--	fw_indicator = ath10k_pci_read32(ar, fw_indicator_address);
-+	fw_indicator = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
- 
- 	if (fw_indicator & FW_IND_EVENT_PENDING) {
- 		/* ACK: clear Target-side pending event */
--		ath10k_pci_write32(ar, fw_indicator_address,
-+		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
- 				   fw_indicator & ~FW_IND_EVENT_PENDING);
- 
- 		if (ar_pci->started) {
-@@ -1778,7 +1777,6 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
- 
- static int ath10k_pci_warm_reset(struct ath10k *ar)
- {
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret = 0;
- 	u32 val;
- 
-@@ -1810,7 +1808,7 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
- 	msleep(100);
- 
- 	/* clear fw indicator */
--	ath10k_pci_write32(ar, ar_pci->fw_indicator_address, 0);
-+	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, 0);
- 
- 	/* clear target LF timer interrupts */
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-@@ -2151,7 +2149,6 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- static void ath10k_pci_early_irq_tasklet(unsigned long data)
- {
- 	struct ath10k *ar = (struct ath10k *)data;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	u32 fw_ind;
- 	int ret;
- 
-@@ -2162,9 +2159,9 @@ static void ath10k_pci_early_irq_tasklet(unsigned long data)
- 		return;
- 	}
- 
--	fw_ind = ath10k_pci_read32(ar, ar_pci->fw_indicator_address);
-+	fw_ind = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
- 	if (fw_ind & FW_IND_EVENT_PENDING) {
--		ath10k_pci_write32(ar, ar_pci->fw_indicator_address,
-+		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS,
- 				   fw_ind & ~FW_IND_EVENT_PENDING);
- 
- 		/* Some structures are unavailable during early boot or at
-@@ -2537,7 +2534,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	}
- 
- 	ar_pci->ar = ar;
--	ar_pci->fw_indicator_address = FW_INDICATOR_ADDRESS;
- 	atomic_set(&ar_pci->keep_awake_count, 0);
- 
- 	pci_set_drvdata(pdev, ar);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index b43fdb4f7319..dfdebb4157aa 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -189,9 +189,6 @@ struct ath10k_pci {
- 
- 	struct ath10k_hif_cb msg_callbacks_current;
- 
--	/* Target address used to signal a pending firmware event */
--	u32 fw_indicator_address;
--
- 	/* Copy Engine used for Diagnostic Accesses */
- 	struct ath10k_ce_pipe *ce_diag;
- 
-
+Karl
