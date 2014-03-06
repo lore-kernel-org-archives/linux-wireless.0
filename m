@@ -1,72 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:33734 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786AbaCUNxa (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54111 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbaCFJQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:30 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so1849227eek.13
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:29 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 00/13] cfg80211/mac80211: implement multi-vif chanctx reservations
-Date: Fri, 21 Mar 2014 14:47:18 +0100
-Message-Id: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145334_643184_8F845942)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 6 Mar 2014 04:16:21 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/2] brcmfmac: Use atomic functions for intstatus update.
+Date: Thu, 6 Mar 2014 10:16:12 +0100
+Message-ID: <1394097372-4643-3-git-send-email-arend@broadcom.com> (sfid-20140306_101633_653542_096A8AEE)
+In-Reply-To: <1394097372-4643-1-git-send-email-arend@broadcom.com>
+References: <1394097372-4643-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This is part of my multi-vif csa work. These
-patches have been included in my recent big RFC.
-I'm trying to split it up a bit.
+The intstatus in sdio code can be updated from different
+threads. To protect intstatus access, atomic functions are
+used. One of them is set_bit, but this function is not
+guaranteed atomic on all platforms. The loop was replaced
+with local created OR function.
 
-The patchset incrementally improves chanctx
-reservations in order to support multi-vif
-reservations and in-place multi-vif reservations
-(typically for single-channel hardware, but
-multi-channel benefits from this too).
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++++++++++----------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
 
-Some of the patches (the refcounting) were also
-posted a while ago as a separate small RFC.
-
-This is based on Luca's combination and
-reservation patches and my CSA fixes/cleanups.
-
-
-v2:
- * add changelog for refcounting patches
- * fixes for issues pointed out by Eliad
-
-
-Michal Kazior (13):
-  cfg80211: allow drivers to iterate over matching combinations
-  mac80211: add max channel calculation utility function
-  mac80211: prevent chanctx overcommit
-  mac80211: add support for radar detection for reservations
-  mac80211: track assigned vifs in chanctx
-  mac80211: track reserved vifs in chanctx
-  mac80211: improve find_chanctx() for reservations
-  mac80211: improve chanctx reservation lookup
-  mac80211: split ieee80211_new_chanctx()
-  mac80211: split ieee80211_free_chanctx()
-  mac80211: fix racy usage of chanctx->refcount
-  mac80211: compute chanctx refcount on-the-fly
-  mac80211: implement multi-vif in-place reservations
-
- include/net/cfg80211.h     |  27 ++
- include/net/mac80211.h     |   7 -
- net/mac80211/cfg.c         |  19 +-
- net/mac80211/chan.c        | 597 ++++++++++++++++++++++++++++++++++-----------
- net/mac80211/ieee80211_i.h |  18 +-
- net/mac80211/iface.c       |   2 +
- net/mac80211/mlme.c        |   2 +-
- net/mac80211/util.c        |  43 ++++
- net/wireless/util.c        |  44 +++-
- 9 files changed, 592 insertions(+), 167 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 70bab5e..a111b6f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2439,12 +2439,21 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 	}
+ }
+ 
++static void atomic_orr(int val, atomic_t *v)
++{
++	int old_val;
++
++	old_val = atomic_read(v);
++	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
++		old_val = atomic_read(v);
++}
++
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+ 	struct brcmf_core *buscore;
+ 	u32 addr;
+ 	unsigned long val;
+-	int n, ret;
++	int ret;
+ 
+ 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
+@@ -2452,7 +2461,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+-		val = 0;
++		return ret;
+ 
+ 	val &= bus->hostintmask;
+ 	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
+@@ -2461,13 +2470,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	if (val) {
+ 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
+ 		bus->sdcnt.f1regdata++;
+-	}
+-
+-	if (ret) {
+-		atomic_set(&bus->intstatus, 0);
+-	} else if (val) {
+-		for_each_set_bit(n, &val, 32)
+-			set_bit(n, (unsigned long *)&bus->intstatus.counter);
++		atomic_orr(val, &bus->intstatus);
+ 	}
+ 
+ 	return ret;
+@@ -2479,7 +2482,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	unsigned long intstatus;
+ 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
+ 	uint framecnt;			/* Temporary counter of tx/rx frames */
+-	int err = 0, n;
++	int err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -2583,10 +2586,8 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	}
+ 
+ 	/* Keep still-pending events for next scheduling */
+-	if (intstatus) {
+-		for_each_set_bit(n, &intstatus, 32)
+-			set_bit(n, (unsigned long *)&bus->intstatus.counter);
+-	}
++	if (intstatus)
++		atomic_orr(intstatus, &bus->intstatus);
+ 
+ 	brcmf_sdio_clrintr(bus);
+ 
 -- 
-1.8.5.3
+1.7.10.4
 
