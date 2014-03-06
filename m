@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:53449 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbaCHXLU (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40720 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951AbaCFSCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 18:11:20 -0500
+	Thu, 6 Mar 2014 13:02:22 -0500
+Message-ID: <5318B82B.5050008@broadcom.com> (sfid-20140306_190226_121638_EAE8F58F)
+Date: Thu, 6 Mar 2014 19:02:19 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <2894930.q0nCt6o0pg@debian64>
-References: <1394226709-10763-1-git-send-email-khoroshilov@ispras.ru>
- <CABPxzYLzMvtWShP_PFdyTzV8P1P177yPZh=xAO=3tiy97UfEmQ@mail.gmail.com> <2894930.q0nCt6o0pg@debian64>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 9 Mar 2014 04:40:58 +0530
-Message-ID: <CABPxzY+S_7CtKKPwgcU4v+W51Jmuu0j=Ds_W41OaPAQNmekDsA@mail.gmail.com> (sfid-20140309_001141_849438_86247B83)
-Subject: Re: [PATCH] p54usb: fix leaks at failure path in p54u_probe()
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Dave Jones <davej@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<linville@tuxdriver.com>, <linux-coverity@vger.kernel.org>
+Subject: Re: brcmfmac: fix skb leak in brcmf_sdio_txpkt_prep_sg error path.
+References: <20140305192636.D06AA660D72@gitolite.kernel.org> <20140306060936.GB26578@redhat.com> <53183722.7000301@broadcom.com> <20140306170354.GA31372@redhat.com>
+In-Reply-To: <20140306170354.GA31372@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 9, 2014 at 4:38 AM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Sunday, March 09, 2014 04:14:32 AM Krishna Chaitanya wrote:
->> On Sat, Mar 8, 2014 at 2:41 AM, Alexey Khoroshilov
->> <khoroshilov@ispras.ru> wrote:
->> > If p54u_load_firmware() fails, p54u_probe() does not deallocate
->> > already allocated resources. The patch adds proper failure handling.
->> >
->> > Found by Linux Driver Verification project (linuxtesting.org).
->> >
->> > Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->> > ---
->> >  drivers/net/wireless/p54/p54usb.c | 4 ++++
->> >  1 file changed, 4 insertions(+)
->> >
->> > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
->> > index 6e635cfa24c8..5df74503fd4f 100644
->> > --- a/drivers/net/wireless/p54/p54usb.c
->> > +++ b/drivers/net/wireless/p54/p54usb.c
->> > @@ -1053,6 +1053,10 @@ static int p54u_probe(struct usb_interface *intf,
->> >                 priv->upload_fw = p54u_upload_firmware_net2280;
->> >         }
->> >         err = p54u_load_firmware(dev, intf);
->> > +       if (err) {
->> > +               usb_put_dev(udev);
->> > +               p54_free_common(dev);
->> > +       }
->> >         return err;
->> >  }
->> The load_firmware puts down the reference
->> in case of error. Only free is required here.
-> No, the put is required too... But let me explain:
+- netdev
++ linux-wireless
+
+On 03/06/14 18:03, Dave Jones wrote:
+> Commit 1eb4301867 added an allocation of an skb via brcmu_pkt_buf_get_skb()
+> but forgot to free it on one of the error paths.
 >
-> p54u_load_firmware calls usb_get_dev(udev) before it requests the firmware
-> load. The Reason is: the firmware callback is usually run in another thread
-> (usually it's pretty quick, but due to timeouts it could take up to 60 seconds
-> - or at least it did when I wrote it). Therefore I found it appropriate to give
-> that request callback its "reference++" as it needs the "udev" too (e.g.: for
-> dev_info, dev_err and releasing the driver if the device couldn't be
-> initialized).
+- Cc: Arend van Spriel<arend@broadcom.com>
++ Acked-by: Arend van Spriel <arend@broadcom.com
+> Signed-off-by: Dave Jones<davej@fedoraproject.org>
+---
+I guess you intend John to take this patch, right?
+
+Regards,
+Arend
+
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> index 119ee6eaf1c3..ddaa9efd053d 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> @@ -1948,8 +1948,10 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+>   		if (pkt_pad == NULL)
+>   			return -ENOMEM;
+>   		ret = brcmf_sdio_txpkt_hdalign(bus, pkt_pad);
+> -		if (unlikely(ret<  0))
+> +		if (unlikely(ret<  0)) {
+> +			kfree_skb(pkt_pad);
+>   			return ret;
+> +		}
+>   		memcpy(pkt_pad->data,
+>   		       pkt->data + pkt->len - tail_chop,
+>   		       tail_chop);
 >
-Thanks Christian and Alexey, you answered my next question as well :-).
+>
+
