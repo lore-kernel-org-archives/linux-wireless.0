@@ -1,27 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41700 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbaCGO3C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 09:29:02 -0500
-Message-ID: <1394202539.4653.7.camel@jlt4.sipsolutions.net> (sfid-20140307_152906_529346_BB9ADFF1)
-Subject: Re: [RFC PATCH 5/8] nl80211: Modify chandef related functions to
- work with 5/10MHz channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Michal Sojka <sojkam1@fel.cvut.cz>,
-	s.sander@nordsys.de, jan-niklas.meier@volkswagen.de
-Date: Fri, 07 Mar 2014 15:28:59 +0100
-In-Reply-To: <1394199475-5208-6-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143811_212139_B8B9F800)
-References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1394199475-5208-6-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140307_143811_212139_B8B9F800)
-Content-Type: text/plain
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:27359 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751124AbaCFLDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Mar 2014 06:03:07 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Bondar, Alexander" <alexander.bondar@intel.com>
+Subject: RE: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
+ on multi MAC
+Date: Thu, 6 Mar 2014 11:02:48 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D79794@HASMSX103.ger.corp.intel.com> (sfid-20140306_120312_110571_4E4C7726)
+References: <52B0B72A.5070704@gmail.com>
+ <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
+ <20140113111357.GA4611@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
+ <20140113124049.GA5796@magnum.frso.rivierawaves.com>
+ <52D83C56.5010706@gmail.com> <20140116214357.GA10376@gobelin>
+ <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
+ <20140306102102.GA15185@magnum.frso.rivierawaves.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D796A6@HASMSX103.ger.corp.intel.com>
+ <20140306104936.GA21682@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ditto here, no new channel_type please.
-
-johannes
-
+PiA+IE9uIFRodSwgTWFyIDA2LCAyMDE0IGF0IDEwOjI1OjM0QU0gKzAwMDAsIEdydW1iYWNoLCBF
+bW1hbnVlbCB3cm90ZToNCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEhpLA0KPiA+ID4gPiA+DQo+ID4g
+PiA+ID4gVGhhbmtzIGZvciB0aGUgdXBkYXRlLCBpbmRlZWQgbW9uaXRvciBpcyBpbiBiZXR0ZXIg
+c2hhcGUsDQo+ID4gPiA+ID4gaG93ZXZlciBJIGFtIHN0aWxsIHNlZWluZyBzb21lIGlzc3Vlcy4N
+Cj4gPiA+ID4gPiBFLmcuIHNob3J0LWd1YXJkIG9yID4gMjBNSHogYncgZnJhbWVzIGFyZSBub3Qg
+dmlzaWJsZSB3aGVuIG5vdA0KPiA+ID4gPiA+IGFnZ3JlZ2F0ZWQsIEkgc3RpbGwgc2VlICJNaWNy
+b2NvZGUgU1cgZXJyb3IgZGV0ZWN0ZWQuIiBidXQgaW4gYQ0KPiA+ID4gPiA+IGRpZmZlcmVudCBz
+Y2VuYXJpbyAobW9uaXRvcmluZyB3aXRoIG1haW4gbWFuYWdlZCBpZmFjZSBkb3duLA0KPiA+ID4g
+PiA+IHRoZW4gdXBwaW5nIHRoZSBtYWluIG1hbmFnZWQgaWZhY2UgdXApLCBpdCBhbHNvIHNlZW1z
+IHRoYXQgd2UNCj4gPiA+ID4gPiBmaWx0ZXIgb3V0IG1hbnkgZnJhbWVzIHdoZW4gdGhlIG1haW4g
+bWFuYWdlZCBpZmFjZSBpcyB1cCBhbmQvb3I/DQo+ID4gYXNzb2NpYXRlZC4NCj4gPiA+ID4gPiBB
+bHNvLCBJIHN0YXJ0ZWQgd29ya2luZyBvbiBBTVNEVXMgdGhpcyB3ZWVrIGFuZCB5ZXN0ZXJkYXkg
+bXkNCj4gPiA+ID4gPiBsYXB0b3AgY3Jhc2hlZCBpbW1lZGlhdGVseSB3aGVuIG1vbml0b3Jpbmcu
+IFRoaXMgbW9ybmluZyBJIHNlZQ0KPiA+ID4gPiA+IHRoYXQgdGhpcyBoYXBwZW5zIHdoZW4gbXkg
+YWdncmVnYXRlcyBzdGFydCBnZXR0aW5nIGFib3ZlIHRoZSB+NGsNCj4gPiA+ID4gPiBsaW1pdCBh
+bmQgbW9kcHJvYmluZyB3aXRoIGFtc2R1X3NpemVfOEs9MSBzZWVtcyB0byAnZml4JyB0aGUNCj4g
+PiA+ID4gPiBpc3N1ZSwgSSBndWVzcyBzb21lIHBsYWNlcyBuZWVkIHNvbWUgb2Zsb3dzIGNoZWNr
+cy4NCj4gPiA+DQo+ID4gPiBIbW0uLi4gVGhhbmtzIGZvciB0aGUgaGVhZHMgLSB1cC4gRG8geW91
+IGhhdmUgdGhlIGNyYXNoIGRhdGE/DQo+ID4gPg0KPiA+IFlvdSBtZWFuIGEgcGNhcCBvZiB0aGUg
+dHJhZmZpYyBjcmFzaGluZyB0aGUgc3lzdGVtIG9yIHRoZSBpd2xtdm0gZGF0YSA/DQo+ID4gVGhl
+IGNyYXNoZXMgYXJlIHNldmVyZSBlbm91Z2ggdGhhdCB0aGV5IGhhbmcgbXkgd2hvbGUgbGFwdG9w
+IHJpZ2h0IGF3YXkuDQo+IA0KPiBPaCBvayAtIEkgd2FzIHRhbGtpbmcgYWJvdXQgdGhlIFdBUk5J
+TkcgLyBCVUcgbWVzc2FnZSB3aGF0ZXZlci4NCj4gDQo+ID4NCj4gPiA+ID4gPiBBbGwgdGhpcyB3
+aXRoIHdpcmVsZXNzLW5leHRANzA0NDQ1ZDkgKGkuZS4gY2lyY2EgdGhlIHRpbWUgSSBnb3QNCj4g
+PiA+ID4gPiB5b3VyDQo+ID4gPiA+ID4gZW1haWwpIGFuZCBmdyAyMi4xNS44LjAuDQo+ID4gPiA+
+ID4NCj4gPiA+ID4NCj4gPiA+ID4gUGxlYXNlIHBhc3RlIHRoZSBkYXRhIGZvciB0aGUgZmlybXdh
+cmUgYXNzZXJ0LiBBbHNvLCB0YWtlDQo+ID4gPiA+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dp
+dC9saW51eC9rZXJuZWwvZ2l0L2piZXJnL21hYzgwMjExLmdpdC9jbw0KPiA+ID4gPiBtbQ0KPiA+
+ID4gPiBpdC8/aWQ9DQo+ID4gPiA+IDFjMzdhNzJjMWJkMGI4M2JlOGI5NWNmZjdmMWJjOWIxZjMy
+YmQ0MzMgaW50byBhY2NvdW50Lg0KPiA+IEF0dGFjaGVkLiBMb29rcyBsaWtlIHRoaXMgY2hhbmdl
+IHdpbGwgaGVscC4NCj4gPg0KPiANCj4gQlRXIC0gbmV3ZXIgRlcgaXMgYXZhaWxhYmxlOiAyMi4y
+NC44LjANCg0KSnVzdCBsb29rZWQgYXQgeW91ciBsb2cgLSBJJ2QgaG9wZSB0aGUgbmV3IEZXIHdp
+bGwgZml4IGl0Lg0KQ2FuIHlvdSBnaXZlIGl0IGEgdHJ5Pw0KDQo=
