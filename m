@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:44835 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbaC1Ncc convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:34840 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbaCFJQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:32:32 -0400
-Received: by mail-wi0-f178.google.com with SMTP id bs8so755175wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 06:32:30 -0700 (PDT)
+	Thu, 6 Mar 2014 04:16:21 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/2] Revert "brcmfmac: Use atomic functions for intstatus update."
+Date: Thu, 6 Mar 2014 10:16:11 +0100
+Message-ID: <1394097372-4643-2-git-send-email-arend@broadcom.com> (sfid-20140306_101631_096965_651939AF)
+In-Reply-To: <1394097372-4643-1-git-send-email-arend@broadcom.com>
+References: <1394097372-4643-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1396012109.4175.26.camel@jlt4.sipsolutions.net>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	<1395409651-26120-8-git-send-email-michal.kazior@tieto.com>
-	<1396012109.4175.26.camel@jlt4.sipsolutions.net>
-Date: Fri, 28 Mar 2014 14:32:30 +0100
-Message-ID: <CA+BoTQ=dxCyiOamh3qHWXsxGsPvWE=ex6Uq=FfBBjcXbi5GgCg@mail.gmail.com> (sfid-20140328_143235_590599_A0449B3C)
-Subject: Re: [PATCH v2 07/13] mac80211: improve find_chanctx() for reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 March 2014 14:08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
->> Relax ieee80211_find_chanctx(). If chanctx
->> reservation chandef is compatible with
->> current-future assigned interfaces chandef then
->> allow it to be used by new interfaces.
->
-> Err, I don't understand. Could you elaborate?
+This reverts commit c98db0bec72ac7ef127119c1ed962d6f56802b12.
 
-Yeah. Me too. Apparently I fail at English.
+The function atomic_set_mask() is not architecture independent
+so it can not be used in the driver as is.
 
-Basically this allows new vifs to be assigned to a chanctx as long as
-chanctx's reservation chandefs *and* chanctx's current chandef
-(implied by assigned vifs, if any) *and* the new vif chandef are
-compatible. chanctx being used for in-place reservation with
-conflicting channels are skipped. This also it makes it possible to
-assign a vif to a chanctx that has been created for reservation only
-(that hasn't been finalized yet) and has no vifs assigned whatsoever.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 5c2706e..70bab5e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2444,7 +2444,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	struct brcmf_core *buscore;
+ 	u32 addr;
+ 	unsigned long val;
+-	int ret;
++	int n, ret;
+ 
+ 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
+@@ -2452,7 +2452,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+-		return ret;
++		val = 0;
+ 
+ 	val &= bus->hostintmask;
+ 	atomic_set(&bus->fcstate, !!(val & I_HMB_FC_STATE));
+@@ -2461,7 +2461,13 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	if (val) {
+ 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
+ 		bus->sdcnt.f1regdata++;
+-		atomic_set_mask(val, &bus->intstatus);
++	}
++
++	if (ret) {
++		atomic_set(&bus->intstatus, 0);
++	} else if (val) {
++		for_each_set_bit(n, &val, 32)
++			set_bit(n, (unsigned long *)&bus->intstatus.counter);
+ 	}
+ 
+ 	return ret;
+@@ -2473,7 +2479,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	unsigned long intstatus;
+ 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
+ 	uint framecnt;			/* Temporary counter of tx/rx frames */
+-	int err = 0;
++	int err = 0, n;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -2577,8 +2583,10 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	}
+ 
+ 	/* Keep still-pending events for next scheduling */
+-	if (intstatus)
+-		atomic_set_mask(intstatus, &bus->intstatus);
++	if (intstatus) {
++		for_each_set_bit(n, &intstatus, 32)
++			set_bit(n, (unsigned long *)&bus->intstatus.counter);
++	}
+ 
+ 	brcmf_sdio_clrintr(bus);
+ 
+-- 
+1.7.10.4
 
-Michał
