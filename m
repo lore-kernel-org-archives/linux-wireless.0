@@ -1,76 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38712 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755539AbaCEMLJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 07:11:09 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
-Subject: [RFC/RFT 5/9] iwlegacy: use CMD_COPY_PKT on il_send_remove_station
-Date: Wed,  5 Mar 2014 13:13:30 +0100
-Message-Id: <1394021614-11514-6-git-send-email-sgruszka@redhat.com> (sfid-20140305_131114_757953_B7DB7779)
-In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
-References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:48232 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449AbaCGNiO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2014 08:38:14 -0500
+Received: by mail-ea0-f171.google.com with SMTP id n15so2318384ead.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 05:38:13 -0800 (PST)
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de
+Subject: [RFC PATCH 7/8] cfg80211: Use 5MHz bandwidth when checking usable channels
+Date: Fri,  7 Mar 2014 14:37:54 +0100
+Message-Id: <1394199475-5208-8-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143842_317104_7AF144E0)
+In-Reply-To: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+Current code checks if the 20MHz BW is allowed for particular
+channel -- if it is not, the channel is disabled. Since we
+need to use 5/10 MHz channels, this code is modified in the way
+that the default BW to check is 5MHz. If 5MHz is greater than
+the maximum bandwidth supported by the channel, the channel is
+disabled. If it is smaller than the maximum BW, the channel is
+used and the flags are set according to the BW supported by the
+channel.
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 2778bdf..92979e0 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -2107,29 +2107,29 @@ il_send_remove_station(struct il_priv *il, const u8 * addr, int sta_id,
- {
- 	struct il_rx_pkt *pkt;
- 	int ret;
--
- 	unsigned long flags_spin;
- 	struct il_rem_sta_cmd rm_sta_cmd;
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ net/wireless/reg.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b897fc..582e623 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -805,7 +805,7 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 		if (!band_rule_found)
+ 			band_rule_found = freq_in_rule_band(fr, center_freq);
  
- 	struct il_host_cmd cmd = {
- 		.id = C_REM_STA,
- 		.len = sizeof(struct il_rem_sta_cmd),
--		.flags = CMD_SYNC,
-+		.flags = CMD_SYNC | CMD_COPY_PKT,
- 		.data = &rm_sta_cmd,
- 	};
+-		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(20));
++		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(5));
  
-+	pkt = kmalloc(sizeof(*pkt), GFP_KERNEL);
-+	if (!pkt)
-+		return -ENOMEM;
-+	cmd.pkt_ptr = pkt;
-+
- 	memset(&rm_sta_cmd, 0, sizeof(rm_sta_cmd));
- 	rm_sta_cmd.num_sta = 1;
- 	memcpy(&rm_sta_cmd.addr, addr, ETH_ALEN);
- 
--	cmd.flags |= CMD_WANT_SKB;
--
- 	ret = il_send_cmd(il, &cmd);
--
- 	if (ret)
--		return ret;
-+		goto out;
- 
--	pkt = (struct il_rx_pkt *)cmd.reply_page;
- 	if (pkt->hdr.flags & IL_CMD_FAILED_MSK) {
- 		IL_ERR("Bad return from C_REM_STA (0x%08X)\n", pkt->hdr.flags);
- 		ret = -EIO;
-@@ -2152,8 +2152,9 @@ il_send_remove_station(struct il_priv *il, const u8 * addr, int sta_id,
- 			break;
- 		}
- 	}
--	il_free_pages(il, cmd.reply_page);
- 
-+out:
-+	kfree(pkt);
- 	return ret;
+ 		if (band_rule_found && bw_fits)
+ 			return rr;
+@@ -888,10 +888,10 @@ static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
  }
+ #endif
  
+-/*
+- * Note that right now we assume the desired channel bandwidth
+- * is always 20 MHz for each individual channel (HT40 uses 20 MHz
+- * per channel, the primary and the extension channel).
++/* Find an ieee80211_reg_rule such that a 5MHz channel with frequency
++ * @chan->center_freq fits there.
++ * If there is no such reg_rule, disable the channel, otherwise set the
++ * flags corresponding to the bandwidths allowed in the particular reg_rule
+  */
+ static void handle_channel(struct wiphy *wiphy,
+ 			   enum nl80211_reg_initiator initiator,
+@@ -944,8 +944,12 @@ static void handle_channel(struct wiphy *wiphy,
+ 	power_rule = &reg_rule->power_rule;
+ 	freq_range = &reg_rule->freq_range;
+ 
++	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(10))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(20))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags = IEEE80211_CHAN_NO_HT40;
++		bw_flags |= IEEE80211_CHAN_NO_HT40;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(80))
+ 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(160))
+@@ -1351,8 +1355,12 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	power_rule = &reg_rule->power_rule;
+ 	freq_range = &reg_rule->freq_range;
+ 
++	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(10))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(20))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags = IEEE80211_CHAN_NO_HT40;
++		bw_flags |= IEEE80211_CHAN_NO_HT40;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(80))
+ 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(160))
 -- 
-1.7.11.7
+1.8.5.1
 
