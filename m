@@ -1,134 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54077 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752627AbaCJVb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 17:31:59 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v9 0/5] cfg80211/mac80211: move interface combinations check to mac80211
-Date: Mon, 10 Mar 2014 23:31:38 +0200
-Message-Id: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com> (sfid-20140310_223204_347274_508E6E85)
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:62202 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbaCGW24 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2014 17:28:56 -0500
+Received: by mail-pa0-f47.google.com with SMTP id lj1so4724528pab.6
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 14:28:56 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH] iw: embrace the Developer Certificate of Origin for contributions
+Date: Fri,  7 Mar 2014 14:28:50 -0800
+Message-Id: <1394231330-4215-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140307_232900_461629_A39E0717)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Addressed some offline comments by Johannes,
+The Linux kernel started to embrace a light weight development contribution
+agreement process called the Developer Certificate of Origin (DCO) circa
+2004. Attorneys all over the planet have conferred a lot of respect and
+appreciation for this document and it provides a light weight alternative to
+cumbersome and controversial Contribution License Agreements (CLAs).
 
-In v9:
+Similar to streamlining FOSS licenses we also all stand to gain from
+streamlining a light weight contribution agreement process for development
+and in light of this the the Linux Foundation recently has made the DCO a
+standalone project [0] so that any FOSS project under any FOSS license can
+take advantage of the same gains. The motivation and intent is documented
+only currently on my blog post [1].
 
-   * pass sdata->wdev.iftype instead of sdata->vif.type when calling
-     cfg80211_chandef_dfs_required();
-   * fixed commit message in 2/5;
-   * added braces in a couple of if's that had comments and a
-     statement;
-   * move NL80211_IFTYPE_UNSPECIFIED to the WARN part of the switch in
-     dfs_required) and remove default;
+Lets take advantage of the new shiny DCO and embrace it for contributions.
 
-In v8:
+[0] http://developercertificate.org/
+[1] http://www.do-not-panic.com/2014/02/developer-certificate-of-origin.html
 
-   * fixed rebasing mistakes when setting radar_detect_width in
-     patches 3/5 and 4/5;
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ CONTRIBUTING | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+ create mode 100644 CONTRIBUTING
 
-In v7:
-
-   * added a new patch to get rid of some more combination checks in
-     cfg80211 (Johannes);
-   * remove local argument from ieee80211_check_combinations();
-   * remove redundant arguments from cfg80211_check_combinations();
-     (Johannes);
-   * change cfg80211_chandef_dfs_required() back to returning only 0
-     or 1 instead of the channel width bitmap (Johannes);
-   * remove a useless TODO in the cfg80211 doc (Johannes);
-
-In v6:
-
-   * fix typo in the interface counting code
-     s/sdata-vif.chanctx_conf/sdata_iter-vif.chanctx_conf/
-
-In v5:
-
-   * use local and sdata in ibss when calling
-     ieee80211_check_combinations();
-   * use the radar detection widths from all existing contexts,
-     regardless of whether we can share an existing context or if the
-     context is exclusive (thanks Michal!);
-
-In v4:
-
-   * rebased the remaining patches on top of what Johannes applied;
-   * lots of other small changes in response to Johannes's comments.
-     See each individual patch for detailed lists of changed (thanks
-     Johannes!);
-
-In v3:
-
-   * move the "pass the mode argument..." change to the right patch;
-
-In v2:
-
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations().
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-As Johannes suggested earlier, this patchset moves the interface
-combinations check from cfg80211 to mac80211.  This is needed to
-simplify the channel switch code.
-
-There are still some cases where cfg80211 may need to check the
-interface combinations (ie. when adding or changing an interface), so
-I created a helper function that can be called by cfg80211 itself or
-the drivers (such as mac80211).
-
-Also, for now, I only moved the check in the cases where
-ieee80211_vif_use_channel() is called and for IBSS join.  The channel
-switch stuff, which will be trickier, is still missing.  These will be
-handled separately and it doesn't really hurt to leave it as it is,
-except because it's a bit inconsistent.
-
-I had to shuffle some code around to make this whole thing a bit
-cleaner, including the check for whether radar detection is needed.
-
-This is not very thoroughly tested yet, I have just done some checks
-with AP and STA with and without chanctx and with 1 or 2 different
-channels.  This part seems to work, please test the rest. :)
-
-I'll try to add some hwsim tests to test this more thoroughly.
-
-Luca.
-
-
-Luciano Coelho (5):
-  cfg80211: refactor cfg80211_can_use_iftype_chan()
-  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-  cfg80211/mac80211: move interface counting for combination check to
-    mac80211
-  cfg80211/mac80211: move combination check to mac80211 for ibss
-  cfg80211/mac80211: move more combination checks to mac80211
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  31 +++++++--
- net/mac80211/cfg.c               |  11 +++-
- net/mac80211/chan.c              |  17 +++++
- net/mac80211/ibss.c              |  64 ++++++++++++------
- net/mac80211/ieee80211_i.h       |   4 ++
- net/mac80211/iface.c             |   6 +-
- net/mac80211/mesh.c              |   9 +--
- net/mac80211/util.c              |  76 +++++++++++++++++++++
- net/wireless/chan.c              |  74 ++++++++++++++++-----
- net/wireless/core.c              |  11 +---
- net/wireless/core.h              |  29 --------
- net/wireless/ibss.c              |  24 -------
- net/wireless/mesh.c              |  25 -------
- net/wireless/mlme.c              |  14 +---
- net/wireless/nl80211.c           |  59 +++++------------
- net/wireless/util.c              | 138 ++++++++++++++++++++++-----------------
- 17 files changed, 343 insertions(+), 250 deletions(-)
-
+diff --git a/CONTRIBUTING b/CONTRIBUTING
+new file mode 100644
+index 0000000..f288959
+--- /dev/null
++++ b/CONTRIBUTING
+@@ -0,0 +1,49 @@
++
++This project embraces the Developer Certificate of Origin (DCO) for
++contributions. This means you must agree to the following prior to submitting
++patches, if you agree with this developer certificate you acknowledge this by
++adding a Signed-off-by tag to your patch commit log. Every submitted patch
++must have this.
++
++The source for the DCO:
++
++http://developercertificate.org/
++
++-----------------------------------------------------------------------
++
++Developer Certificate of Origin
++Version 1.1
++
++Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
++660 York Street, Suite 102,
++San Francisco, CA 94110 USA
++
++Everyone is permitted to copy and distribute verbatim copies of this
++license document, but changing it is not allowed.
++
++
++Developer's Certificate of Origin 1.1
++
++By making a contribution to this project, I certify that:
++
++(a) The contribution was created in whole or in part by me and I
++    have the right to submit it under the open source license
++    indicated in the file; or
++
++(b) The contribution is based upon previous work that, to the best
++    of my knowledge, is covered under an appropriate open source
++    license and I have the right under that license to submit that
++    work with modifications, whether created in whole or in part
++    by me, under the same open source license (unless I am
++    permitted to submit under a different license), as indicated
++    in the file; or
++
++(c) The contribution was provided directly to me by some other
++    person who certified (a), (b) or (c) and I have not modified
++    it.
++
++(d) I understand and agree that this project and the contribution
++    are public and that a record of the contribution (including all
++    personal information I submit with it, including my sign-off) is
++    maintained indefinitely and may be redistributed consistent with
++    this project or the open source license(s) involved.
 -- 
 1.9.0
 
