@@ -1,64 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47935 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755901AbaCROp6 (ORCPT
+Received: from smtprelay0212.hostedemail.com ([216.40.44.212]:44759 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751692AbaCGUTw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:45:58 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so5454316eei.33
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:57 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/35] iwlwifi: mvm: fix scan offload for BGN SKU
-Date: Tue, 18 Mar 2014 16:45:13 +0200
-Message-Id: <1395153939-23897-9-git-send-email-egrumbach@gmail.com> (sfid-20140318_154824_237803_8543F55C)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Fri, 7 Mar 2014 15:19:52 -0500
+Message-ID: <1394223589.16156.83.camel@joe-AO722> (sfid-20140307_211956_295468_F759C5AF)
+Subject: Re: [PATCH v5 3/3] mac80211: allow reservation of a running chanctx
+From: Joe Perches <joe@perches.com>
+To: Luca Coelho <lrothc@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Fri, 07 Mar 2014 12:19:49 -0800
+In-Reply-To: <1394174602.4192.7.camel@dubbel>
+References: <1394017904-4012-1-git-send-email-luca@coelho.fi>
+	 <1394017904-4012-4-git-send-email-luca@coelho.fi>
+	 <CA+BoTQnXAjPRNLvEs3XrtGOBcayyOKHm74WSYMJh-MDuUxJKsA@mail.gmail.com>
+	 <1394174602.4192.7.camel@dubbel>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, 2014-03-07 at 08:43 +0200, Luca Coelho wrote:
+> On Wed, 2014-03-05 at 12:32 +0100, Michal Kazior wrote:
+> > On 5 March 2014 12:11, Luca Coelho <luca@coelho.fi> wrote:
+> > > With single-channel drivers, we need to be able to change a running
+> > > chanctx if we want to use chanctx reservation.  Not all drivers may be
+> > > able to do this, so add a flag that indicates support for it.
+[]
+> > > diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+[]
+> > > @@ -162,6 +162,26 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+> > >         }
+> > >  }
+> > >
+> > > +static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
+> > > +                                    struct ieee80211_chanctx *ctx)
+> > > +{
+> > > +       struct ieee80211_sub_if_data *sdata;
+> > > +       bool ret = false;
+> > > +
+> > > +       lockdep_assert_held(&local->chanctx_mtx);
+> > > +       rcu_read_lock();
+> > > +       list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+> > > +               if (sdata->reserved_chanctx == ctx) {
+> > > +                       ret = true;
+> > > +                       goto out;
+> > > +               }
+> > > +       }
+> > > +
+> > > +out:
+> > > +       rcu_read_unlock();
+> > > +       return false;
+> > 
+> > `return ret` ;-)
+> 
+> Gack! I'll fix.
 
-BGN SKU won't scan on 5.2GHz obviously, but the firmware
-still expects the driver to reserve space for the the probe
-request for the 5.2GHz band.
-Fix this by allocating space and leave it empty.
+trivia: using break is more traditional
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=69541
+static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
+					  struct ieee80211_chanctx *ctx)
+{
+	struct ieee80211_sub_if_data *sdata;
+	bool reserved = false;
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+	lockdep_assert_held(&local->chanctx_mtx);
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 713efd7..b4c9fb6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -709,7 +709,6 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 			      struct cfg80211_sched_scan_request *req,
- 			      struct ieee80211_sched_scan_ies *ies)
- {
--	int supported_bands = 0;
- 	int band_2ghz = mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels;
- 	int band_5ghz = mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
- 	int head = 0;
-@@ -726,13 +725,8 @@ int iwl_mvm_config_sched_scan(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (band_2ghz)
--		supported_bands++;
--	if (band_5ghz)
--		supported_bands++;
--
- 	cmd_len = sizeof(struct iwl_scan_offload_cfg) +
--				supported_bands * SCAN_OFFLOAD_PROBE_REQ_SIZE;
-+		  2 * SCAN_OFFLOAD_PROBE_REQ_SIZE;
- 
- 	scan_cfg = kzalloc(cmd_len, GFP_KERNEL);
- 	if (!scan_cfg)
--- 
-1.8.3.2
+	rcu_read_lock();
+
+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+		if (sdata->reserved_chanctx == ctx) {
+			reserved = true;
+			break;
+		}
+	}
+
+	rcu_read_unlock();
+
+	return reserved;
+}
+
 
