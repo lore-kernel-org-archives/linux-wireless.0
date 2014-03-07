@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46785 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345AbaC1JBc (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:49709 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbaCGC6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 05:01:32 -0400
-Date: Fri, 28 Mar 2014 12:01:27 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Fariya <fariyaf@gmail.com>
-Cc: kbuild@01.org, linux-wireless@vger.kernel.org
-Subject: Re: [kbuild-all] [wireless-next:master 316/316]
- drivers/net/wireless/rsi/rsi_91x_debugfs.c:296 rsi_init_dbgfs() error:
- potential null dereference 'dev_dbgfs'. (kzalloc returns null)
-Message-ID: <20140328090126.GC7045@mwanda> (sfid-20140328_100138_405255_B5953A7C)
-References: <53275729.QHDAYltTUiN7HGNZ%fengguang.wu@intel.com>
- <20140327154507.GA27177@mwanda>
- <20140327160105.GU7045@mwanda>
- <CAG+h2qigvA+yfPt9iRv6eZCLppwFznuZ=Hdk5Yxr-EB_9WTQig@mail.gmail.com>
+	Thu, 6 Mar 2014 21:58:52 -0500
+Received: by mail-oa0-f50.google.com with SMTP id i7so3574594oag.37
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 18:58:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG+h2qigvA+yfPt9iRv6eZCLppwFznuZ=Hdk5Yxr-EB_9WTQig@mail.gmail.com>
+In-Reply-To: <BD75D217E5BAC84080F8EFB2582976378B327178@ORSMSX109.amr.corp.intel.com>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
+	<53062F97.3050407@wwwdotorg.org>
+	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
+	<5306E599.7020605@wwwdotorg.org>
+	<CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
+	<BD75D217E5BAC84080F8EFB2582976378B327178@ORSMSX109.amr.corp.intel.com>
+Date: Fri, 7 Mar 2014 10:58:51 +0800
+Message-ID: <CACRpkdaU3OCa1qDojcBK4Ci+YfOC7YfqLWqqBiwzh9vfEasH+g@mail.gmail.com> (sfid-20140307_040105_415637_2097C7AB)
+Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: "Gross, Mark" <mark.gross@intel.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"mgross@linux.intel.com" <mgross@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 07:51:25AM +0530, Fariya wrote:
-> Hi Dan,
-> 
-> Do I need to re-send the whole of the driver again? Considering the driver
-> is a part of wireless-next, shall I check-out the wireless-next git repo
-> and create a patch for the mentioned fixes and send it across?
+On Fri, Feb 28, 2014 at 1:38 AM, Gross, Mark <mark.gross@intel.com> wrote:
 
-The latter.  Do it on top of wireles-next.
+> So if you have the luxury of being able to influence (file bugs against or write)
+> the platform enumeration ABI then with ACPI you can have a named gpio today.
+> Note: there is an expectation that the _PRP feature to go into the next version
+> of ACPI and that should enable a trivial 1-1 mapping (when _prp is used by the
+> ACPI platform) between the different platform enumeration API's (DT and ACPI).
 
-> 
-> > *The code for this one is:         transfer = min_t(int, count, 4096); It's
-> > complaining because "tranfers" is u8, but the cast to int always makes me
-> > worry negative values.  In this case, count is not user controlled so it's
-> > safe.  But that's a common security problem you should be aware of.  It's
-> > better to cast it to an unsigned value.*
-> 
-> >Shall I typecast the return value of min_t to u8?
+Oh I wasn't aware. This makes things better, and gives con_id a clear usecase
+in the ACPI probe path as well.
 
-No.  That would do a truncate to 8 bits before the compare.  Cast it to
-u32 first.
+[Stephen]
+>> If there were ever an (upstream?) ACPI "binding"(?) for the Tegra SDHCI
+>> controller, I would hope it would use the exact same names for the GPIO
+>> signals.
+>
+> me to!
 
-regards,
-dan carpenter
+Amen to that.
 
+Yours,
+Linus Walleij
