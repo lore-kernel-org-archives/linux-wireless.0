@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:45646 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbaCAAAF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbaCGO2A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 19:00:05 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x12so1123418wgg.8
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 16:00:03 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/9] staging: vt6656: clean up device_free_int_bufs.
-Date: Fri, 28 Feb 2014 23:58:37 +0000
-Message-Id: <1393631919-16182-7-git-send-email-tvboxspy@gmail.com> (sfid-20140301_010024_206165_A96EFC2F)
-In-Reply-To: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
-References: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 7 Mar 2014 09:28:00 -0500
+Message-ID: <1394202477.4653.4.camel@jlt4.sipsolutions.net> (sfid-20140307_152804_511407_477C951D)
+Subject: Re: [RFC PATCH 2/8] nl80211: Add attributes describing channel
+ bandwidth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Michal Sojka <sojkam1@fel.cvut.cz>,
+	s.sander@nordsys.de, jan-niklas.meier@volkswagen.de
+Date: Fri, 07 Mar 2014 15:27:57 +0100
+In-Reply-To: <1394199475-5208-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143806_016638_D28BD455)
+References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1394199475-5208-3-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140307_143806_016638_D28BD455)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up white and camel case.
+On Fri, 2014-03-07 at 14:37 +0100, Rostislav Lisovy wrote:
+> These attributes are used to report back to userspace
+> the information about the bandwidth allowed in
+> a particular channel
 
-Camel case change
-pDevice -> priv
+> +	NL80211_FREQUENCY_ATTR_NO_20MHZ,
+> +	NL80211_FREQUENCY_ATTR_NO_10MHZ,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This makes some sense, but I think such channels should be excluded by
+default from the channel list in nl80211.c because they will break old
+tools - you should include them only in the 'split wiphy info' case.
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 669e4f3..0475a20 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -801,9 +801,10 @@ static void usb_device_reset(struct vnt_private *pDevice)
- 	return ;
- }
- 
--static void device_free_int_bufs(struct vnt_private *pDevice)
-+static void device_free_int_bufs(struct vnt_private *priv)
- {
--	kfree(pDevice->int_buf.data_buf);
-+	kfree(priv->int_buf.data_buf);
-+
- 	return;
- }
- 
--- 
-1.9.0
+johannes
 
