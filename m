@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:32779 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757830AbaCRT0V (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:38801 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbaCGKTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:21 -0400
-Received: by mail-we0-f177.google.com with SMTP id u57so6169976wes.22
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:20 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/14] staging: vt6656: struct vnt_tx_short_buf_head correct base types
-Date: Tue, 18 Mar 2014 19:25:02 +0000
-Message-Id: <1395170708-2990-8-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202650_065880_198F0C2E)
-In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
-References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 7 Mar 2014 05:19:03 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21273.40172.734118.220513@gargle.gargle.HOWL> (sfid-20140307_111916_531299_EB509D3D)
+Date: Fri, 7 Mar 2014 15:48:20 +0530
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 00/23] ath9k|ath9k_htc: move dups to common-beacon
+In-Reply-To: <5319978F.6060803@rempel-privat.de>
+References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+	<21266.37896.937680.416439@gargle.gargle.HOWL>
+	<5312DD46.3030800@rempel-privat.de>
+	<21266.58035.719712.344551@gargle.gargle.HOWL>
+	<20140306184235.GA7788@tuxdriver.com>
+	<5319978F.6060803@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both variables duration and time_stamp_off are __le16 types
+Oleksij Rempel wrote:
+> Last response was about initvals, my patch set affect only beacon code.
+> Since i don't plan to rewrite ath9k_htc from scratch, i would assume it
+> will be better to continue this periodic clean work.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I didn't review the patches, but someone else needs to make sure that
+nothing is broken in ath9k.
 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 3978174..6d6539d 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -234,8 +234,8 @@ struct vnt_tx_short_buf_head {
- 	u16 fifo_ctl;
- 	u16 time_stamp;
- 	struct vnt_phy_field ab;
--	u16 duration;
--	u16 time_stamp_off;
-+	__le16 duration;
-+	__le16 time_stamp_off;
- } __packed;
- 
- struct vnt_beacon_buffer {
--- 
-1.9.0
-
+Sujith
