@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:46452 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753527AbaCJNw0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42405 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbaCGSUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 09:52:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
-	<CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
-	<CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
-	<CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com>
-	<CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com>
-	<CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com>
-	<CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com>
-Date: Mon, 10 Mar 2014 15:52:25 +0200
-Message-ID: <CANUX_P2Nj=Mv+DPuZvRrWxn74LSmW2X7_OvSbv=L733jNidc8A@mail.gmail.com> (sfid-20140310_145233_263400_D8C5CFB3)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Shuduo Sang <sangshuduo@gmail.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 7 Mar 2014 13:20:47 -0500
+Message-ID: <1394216443.4653.17.camel@jlt4.sipsolutions.net> (sfid-20140307_192056_335447_6524DC46)
+Subject: Re: [RFC PATCH 6/8] nl80211: Support for 5/10 MHz channels when
+ reporting BW restrictions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Michal Sojka <sojkam1@fel.cvut.cz>,
+	s.sander@nordsys.de, jan-niklas.meier@volkswagen.de
+Date: Fri, 07 Mar 2014 19:20:43 +0100
+In-Reply-To: <1394213496.25640.4.camel@umadbro> (sfid-20140307_183143_827312_15997133)
+References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1394199475-5208-7-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140307_143812_856469_1F424A6E) <1394202590.4653.8.camel@jlt4.sipsolutions.net>
+	 <1394213496.25640.4.camel@umadbro> (sfid-20140307_183143_827312_15997133)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 3:20 PM, Shuduo Sang <sangshuduo@gmail.com> wrote:
-> On Mon, Mar 10, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>>>> Hi,
->>>>>>
->>>>>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
->>>>>>> Hi,
->>>>>>>
->>>>>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
->>>>>>> can't resume after suspend recently. I tried many ways including
->>>>>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
->>>>>>> happens. I found it will not happen when I turn off WIFI device or USB
->>>>>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
->>>>>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
->>>>>>> Anyone has some ideas to fix it or debug it?
->>>>>>>
->>>>>>> Thanks,
->>>>>>> Shuduo
->>>>>>>
->>>>>>
->>>>>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
->>>>>> How do you disable WiFi? Rfkill or removing iwlwifi?
->>>>>>
->>>>>
->>>>> I have disabled WIFI device in BIOS, then its suspend/resume works.
->>>>>
->>>>
->>>> Do you have any logs to share?
->>>> I supposed you tested 3.13.6 right?
->>>
->>> Attach dmesg output. If any other log you need, I can capture too.
->>> Actually I tried 3.14-rc6, 3.13.6 and 3.11.10.
->>
->> This looks healthy.
->>
->>     Suspending console(s) (use no_console_suspend to debug)
->>
->> can you use no_console_suspend?
->
-> Yes, this log is already output from the kernel I compile with
-> no_console_suspend.
+On Fri, 2014-03-07 at 18:31 +0100, Rostislav Lisovy wrote:
+> On Fri, 2014-03-07 at 15:29 +0100, Johannes Berg wrote:
+> > This is the part of the code that I was referring to before, you
+> > should
+> > skip these channels if (!large) to not break older tools with too much
+> > data.
+> 
+> The whole channel (not only these attributes) should be excluded if the
+> 'split wiphy info' is not supported? I thought that reporting these
+> attributes only 'if (large)' is a safe solution (except the userspace
+> will be lacking some information).
 
-Hmm... weird...
-Don't know how we can debug this further then...
+The issue is that if all those channels are included, the data is
+guaranteed to become too large, and nothing will be shown in those older
+tools at all. So it's safer to just skip those channels that the old
+tools won't be able to use anyway.
+
+johannes
+
