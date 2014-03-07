@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:56770 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbaCWTTJ (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:45051 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbaCGLZX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2014 15:19:09 -0400
-From: Monam Agarwal <monamagarwal123@gmail.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net/mac80211: Use RCU_INIT_POINTER(x, NULL) in iface.c
-Date: Mon, 24 Mar 2014 00:48:08 +0530
-Message-Id: <1395602288-13958-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_201940_232372_47CDD272)
+	Fri, 7 Mar 2014 06:25:23 -0500
+Received: by mail-ee0-f42.google.com with SMTP id d17so1679016eek.29
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 03:25:22 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] mac80211: fix racy usage of chanctx->refcount
+Date: Fri,  7 Mar 2014 12:19:54 +0100
+Message-Id: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com> (sfid-20140307_122528_234458_D44AF2A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+Channel context refcount is protected by
+chanctx_mtx. Accessing the value without holding
+the mutex is racy. RCU section didn't guarantee
+anything here.
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+Theoretically ieee80211_channel_switch() could
+fail to see refcount change and read "1" instead
+of, e.g. "2". This means mac80211 could accept CSA
+even though it shouldn't have.
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/iface.c |    8 ++++----
+ net/mac80211/cfg.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b8d331e..4826c8f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -423,7 +423,7 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	mutex_unlock(&local->mtx);
- 	if (ret) {
- 		mutex_lock(&local->iflist_mtx);
--		rcu_assign_pointer(local->monitor_sdata, NULL);
-+		RCU_INIT_POINTER(local->monitor_sdata, NULL);
- 		mutex_unlock(&local->iflist_mtx);
- 		synchronize_net();
- 		drv_remove_interface(local, sdata);
-@@ -452,7 +452,7 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- 		return;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index aaa59d7..a79875c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3233,23 +3233,23 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				       &sdata->vif.bss_conf.chandef))
+ 		return -EINVAL;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->chanctx_mtx);
+ 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 	if (!chanctx_conf) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
  	}
  
--	rcu_assign_pointer(local->monitor_sdata, NULL);
-+	RCU_INIT_POINTER(local->monitor_sdata, NULL);
- 	mutex_unlock(&local->iflist_mtx);
+ 	/* don't handle for multi-VIF cases */
+ 	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+ 	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
+ 	}
+ 	num_chanctx = 0;
+ 	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
+ 		num_chanctx++;
+-	rcu_read_unlock();
++	mutex_unlock(&local->chanctx_mtx);
  
- 	synchronize_net();
-@@ -876,7 +876,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
- 		list_del(&sdata->u.vlan.list);
--		rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
-+		RCU_INIT_POINTER(sdata->vif.chanctx_conf, NULL);
- 		/* no need to tell driver */
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
-@@ -895,7 +895,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		/* relies on synchronize_rcu() below */
--		rcu_assign_pointer(local->p2p_sdata, NULL);
-+		RCU_INIT_POINTER(local->p2p_sdata, NULL);
- 		/* fall through */
- 	default:
- 		cancel_work_sync(&sdata->work);
+ 	if (num_chanctx > 1)
+ 		return -EBUSY;
 -- 
-1.7.9.5
+1.8.5.3
 
