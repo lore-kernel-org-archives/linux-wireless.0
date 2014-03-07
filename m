@@ -1,128 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:65272 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965379AbaCUNhS (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:39314 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbaCGCv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:37:18 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so1822653eek.6
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:37:17 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/4] mac80211: split CSA finalize function
-Date: Fri, 21 Mar 2014 14:31:13 +0100
-Message-Id: <1395408675-26013-3-git-send-email-michal.kazior@tieto.com> (sfid-20140321_143729_308895_C75CE6CB)
-In-Reply-To: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
- <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 6 Mar 2014 21:51:27 -0500
+Received: by mail-ob0-f182.google.com with SMTP id uz6so3595236obc.27
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 18:51:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <530CD45A.8050803@wwwdotorg.org>
+References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
+	<53062F97.3050407@wwwdotorg.org>
+	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
+	<5306E599.7020605@wwwdotorg.org>
+	<CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
+	<530CD45A.8050803@wwwdotorg.org>
+Date: Fri, 7 Mar 2014 10:51:27 +0800
+Message-ID: <CACRpkdZo1UHyCHe20LqRefCvS9BOT-2XeQXiZzLDQzUz4=Yc-w@mail.gmail.com> (sfid-20140307_035132_406527_A07CEDFC)
+Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Gross <mark.gross@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Improves readability and modularity.
+On Wed, Feb 26, 2014 at 1:35 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> On 02/25/2014 02:13 AM, Linus Walleij wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c | 61 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 37 insertions(+), 24 deletions(-)
+>> So it is basically there to satisfy the habit in some device
+>> tree bindings to name gpio arrays instead of just passing gpios = <...>;
+>> (The latter should be encouraged going forward.)
+>
+> Do you really want to switch from named GPIO lookups to index-based GPIO
+> lookups?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7737884..65768ef 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3051,25 +3051,11 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
- }
- EXPORT_SYMBOL(ieee80211_csa_finish);
- 
--static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+					  u32 *changed)
- {
--	struct ieee80211_local *local = sdata->local;
--	int err, changed = 0;
--
--	sdata_assert_lock(sdata);
--	lockdep_assert_held(&local->mtx);
--
--	sdata->radar_required = sdata->csa_radar_required;
--	err = ieee80211_vif_change_channel(sdata, &changed);
--	if (WARN_ON(err < 0))
--		return;
--
--	if (!local->use_chanctx) {
--		local->_oper_chandef = sdata->csa_chandef;
--		ieee80211_hw_config(local, 0);
--	}
-+	int err;
- 
--	sdata->vif.csa_active = false;
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
- 		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
-@@ -3077,30 +3063,57 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		sdata->u.ap.next_beacon = NULL;
- 
- 		if (err < 0)
--			return;
--		changed |= err;
-+			return err;
-+		*changed |= err;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		err = ieee80211_ibss_finish_csa(sdata);
- 		if (err < 0)
--			return;
--		changed |= err;
-+			return err;
-+		*changed |= err;
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
- 		err = ieee80211_mesh_finish_csa(sdata);
- 		if (err < 0)
--			return;
--		changed |= err;
-+			return err;
-+		*changed |= err;
- 		break;
- #endif
- 	default:
- 		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	u32 changed = 0;
-+	int err;
-+
-+	sdata_assert_lock(sdata);
-+	lockdep_assert_held(&local->mtx);
-+
-+	sdata->radar_required = sdata->csa_radar_required;
-+	err = ieee80211_vif_change_channel(sdata, &changed);
-+	if (WARN_ON(err < 0))
- 		return;
-+
-+	if (!local->use_chanctx) {
-+		local->_oper_chandef = sdata->csa_chandef;
-+		ieee80211_hw_config(local, 0);
- 	}
- 
--	ieee80211_bss_info_change_notify(sdata, changed);
-+	sdata->vif.csa_active = false;
-+
-+	err = ieee80211_set_after_csa_beacon(sdata, &changed);
-+	if (err)
-+		return;
- 
-+	ieee80211_bss_info_change_notify(sdata, changed);
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
- }
- 
--- 
-1.8.5.3
+I don't know what I want. I only know that ACPI and DT people
+are starting to step on each others feet.
 
+> Index-based lookups make it much harder to extend the DT
+> binding in a backwards-compatible fashion, especially in the face of
+> optional GPIOs (of which all of CD, WP, power are).
+
+You're probably right. At the same time it makes the world complex
+for the ambition to use the same interface for DT and ACPI alike.
+
+Yours,
+Linus Walleij
