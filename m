@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55032 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888AbaCCQXR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 11:23:17 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v4 0/3] 802.21 and MPLS headers and classification
-Date: Mon,  3 Mar 2014 17:23:09 +0100
-Message-Id: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172334_577423_48303AFD)
+Received: from mail.ispras.ru ([83.149.199.45]:44156 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752470AbaCGVMO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2014 16:12:14 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] p54usb: fix leaks at failure path in p54u_probe()
+Date: Sat,  8 Mar 2014 01:11:49 +0400
+Message-Id: <1394226709-10763-1-git-send-email-khoroshilov@ispras.ru> (sfid-20140307_221253_334237_5E275650)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this series contains a header file proposal for MPLS labels. These
-labels do not seem to be properly defined in the kernel so far. We are
-developing a wired/wireless 802.21/MPLS switch and need to check the
-MPLS labels to use the traffic control info for transmissions over
-802.11 networks.
+If p54u_load_firmware() fails, p54u_probe() does not deallocate
+already allocated resources. The patch adds proper failure handling.
 
-Changes to third version:
+Found by Linux Driver Verification project (linuxtesting.org).
 
- * rename mpls_label_stack to mpls_label (thanks Neil)
- * fix over-indendented closing brac (thanks Sergei)
- * add Johannes' Ack
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/p54/p54usb.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks,
-     Simon
-
-Simon Wunderlich (3):
-  if_ether.h: add IEEE 802.21 Ethertype
-  UAPI: add MPLS label stack definition
-  cfg80211: add MPLS and 802.21 classification
-
- include/linux/mpls.h          |    6 ++++++
- include/uapi/linux/if_ether.h |    1 +
- include/uapi/linux/mpls.h     |   34 ++++++++++++++++++++++++++++++++++
- net/wireless/util.c           |   16 ++++++++++++++++
- 4 files changed, 57 insertions(+)
- create mode 100644 include/linux/mpls.h
- create mode 100644 include/uapi/linux/mpls.h
-
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 6e635cfa24c8..5df74503fd4f 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -1053,6 +1053,10 @@ static int p54u_probe(struct usb_interface *intf,
+ 		priv->upload_fw = p54u_upload_firmware_net2280;
+ 	}
+ 	err = p54u_load_firmware(dev, intf);
++	if (err) {
++		usb_put_dev(udev);
++		p54_free_common(dev);
++	}
+ 	return err;
+ }
+ 
 -- 
-1.7.10.4
+1.8.3.2
 
