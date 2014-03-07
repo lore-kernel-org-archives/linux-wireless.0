@@ -1,97 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:45286 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756120AbaCZUDN (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:55797 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbaCGEW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 16:03:13 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so2059987eek.39
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 13:03:12 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 19/20] rtl8180: enable rtl8187se support
-Date: Wed, 26 Mar 2014 21:04:23 +0100
-Message-Id: <1395864263-5181-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_210318_767882_6C62058E)
+	Thu, 6 Mar 2014 23:22:27 -0500
+Message-ID: <5319497F.9080003@wwwdotorg.org> (sfid-20140307_052250_486806_5C9A12B3)
+Date: Thu, 06 Mar 2014 21:22:23 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Chen-Yu Tsai <wens@csie.org>,
+	Linus Walleij <linus.walleij@linaro.org>
+CC: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
+References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com> <530D218E.9010007@wwwdotorg.org> <CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com> <53168976.7000008@wwwdotorg.org> <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com> <53169304.9080002@wwwdotorg.org> <CACRpkdaYuZ5bXo7djOv04oyHPAFbO=pKfR7L7UBY+kZqZUHfmQ@mail.gmail.com> <CAGb2v65UQZoDJhjpX+kfa6HppXdhrCHG=A5m_WaQ_DimW-Lsbg@mail.gmail.com>
+In-Reply-To: <CAGb2v65UQZoDJhjpX+kfa6HppXdhrCHG=A5m_WaQ_DimW-Lsbg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finally make rtl8187se works (hopefylly).
-This patch adds PCI ID for rtl8187, updates copyright notes and
-updates MODULE_DESCRIPTION.
+On 03/06/2014 08:43 PM, Chen-Yu Tsai wrote:
+> On Fri, Mar 7, 2014 at 11:41 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
+>> On Wed, Mar 5, 2014 at 10:59 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+>>> On 03/04/2014 07:37 PM, Linus Walleij wrote:
+>>>> On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+>>>>> On 03/04/2014 06:43 PM, Linus Walleij wrote:
+>>>>
+>>>>>> If I understand the situation correctly it's like ACPI does not have named
+>>>>>> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
+>>>>>> to the work of abstracting the access to GPIO handlers so that drivers
+>>>>>> need not know whether ACPI or DT is used for describing the hardware.
+>>>>>
+>>>>> For devices that already have both ACPI and DT bindings, we can't
+>>>>> pretend they can be the same; they are already potentially different. We
+>>>>> simply need to parse DT and ACPI differently, since that's the sway
+>>>>> their bindings are defined.
+>>>>>
+>>>>> For any devices that don't have both ACPI and DT bindings, I agree we
+>>>>> should certainly strive to make any new bindings aligned so we don't
+>>>>> have to deal with this for them.
+>>>>>
+>>>>> However, we can't change the past.
+>>>>
+>>>> Yeah, right, so for this very driver there are no bindings defined (yet)
+>>>> and the only device tree I can find referencing it is the Tegra20-paz00
+>>>> and it just use gpios = <>;
+>>>>
+>>>> So in this case I think this patch is the right way forward, but I admit
+>>>> I'm really uncertain in the general case.
+>>>
+>>> If there are no bindings defined at all yet, then we can define both DT
+>>> and ACPI bindings to use name-based GPIOs. Index-based lookups aren't a
+>>> good way forward.
+>>
+>> After Mark clarifying that ACPI is going to have named GPIOs I'm
+>> totally aligned on this, so OK!
+> 
+> Glad to hear this, but is it possible to get rid of the index in current
+> drivers? Or change the behavior to name-based OR index-based lookups.
+> This might break any DTs that have multiple GPIOs defined under one
+> property though.
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 39 +++++++++++++++++++++++++++---
- 1 file changed, 35 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 2046fe2..98d8256f 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -1,15 +1,42 @@
- 
--/*
-- * Linux device driver for RTL8180 / RTL8185
-+/* Linux device driver for RTL8180 / RTL8185 / RTL8187SE
-  *
-  * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
-- * Copyright 2007 Andrea Merello <andrea.merello@gmail.com>
-+ * Copyright 2007,2014 Andrea Merello <andrea.merello@gmail.com>
-  *
-  * Based on the r8180 driver, which is:
-  * Copyright 2004-2005 Andrea Merello <andrea.merello@gmail.com>, et al.
-  *
-  * Thanks to Realtek for their support!
-  *
-+ ************************************************************************
-+ *
-+ * The driver was extended to the RTL8187SE in 2014 by
-+ * Andrea Merello <andrea.merello@gmail.com>
-+ *
-+ * based also on:
-+ *  - portions of rtl8187se Linux staging driver, Copyright Realtek corp.
-+ *  - other GPL, unpublished (until now), Linux driver code,
-+ *    Copyright Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ * A huge thanks goes to Sara V. Nari who forgives me when I'm
-+ * sitting in front of my laptop at evening, week-end, night...
-+ *
-+ * A special thanks goes to Antonio Cuni, who helped me with
-+ * some python userspace stuff I used to debug RTL8187SE code, and who
-+ * bought a laptop with an unsupported Wi-Fi card some years ago...
-+ *
-+ * Thanks to Larry Finger for writing some code for rtl8187se and for
-+ * his suggestions.
-+ *
-+ * Thanks to Dan Carpenter for reviewing my initial patch and for his
-+ * suggestions.
-+ *
-+ * Thanks to Bernhard Schiffner for his help in testing and for his
-+ * suggestions.
-+ *
-+ ************************************************************************
-+ *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-  * published by the Free Software Foundation.
-@@ -33,10 +60,14 @@
- 
- MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
- MODULE_AUTHOR("Andrea Merello <andrea.merello@gmail.com>");
--MODULE_DESCRIPTION("RTL8180 / RTL8185 PCI wireless driver");
-+MODULE_DESCRIPTION("RTL8180 / RTL8185 / RTL8187SE PCI wireless driver");
- MODULE_LICENSE("GPL");
- 
- static DEFINE_PCI_DEVICE_TABLE(rtl8180_table) = {
-+
-+	/* rtl8187se */
-+	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8199) },
-+
- 	/* rtl8185 */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8185) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x700f) },
--- 
-1.8.3.2
+For any bindings that are already defined to use index-based lookups, I
+think we have to continue using them, for backwards-compatibility with
+old DTs (and I assume old ACPI databases need the same thing).
 
