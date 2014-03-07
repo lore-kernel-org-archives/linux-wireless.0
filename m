@@ -1,97 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa11-08.prod.phx3.secureserver.net ([68.178.252.109]:55570
-	"EHLO p3plsmtpa11-08.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754375AbaCEATq (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41776 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752470AbaCGOoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 19:19:46 -0500
-Date: Tue, 4 Mar 2014 17:19:43 -0700
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Felipe Balbi <balbi@ti.com>, Erick Macias <emacias@ti.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/3] NFC: trf7970a: Add driver with ISO/IEC 14443 Type
- 2 Tag Support
-Message-ID: <20140305001943.GA29983@animalcreek.com> (sfid-20140305_011952_743879_231F1344)
-References: <1391206631-9862-1-git-send-email-mgreer@animalcreek.com>
- <1391206631-9862-2-git-send-email-mgreer@animalcreek.com>
- <20140221005059.GS18868@zurbaran>
- <20140226215309.GA21867@animalcreek.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140226215309.GA21867@animalcreek.com>
+	Fri, 7 Mar 2014 09:44:32 -0500
+Message-ID: <1394203467.4653.15.camel@jlt4.sipsolutions.net> (sfid-20140307_154447_867076_45F239E2)
+Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	"Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Mar 2014 15:44:27 +0100
+In-Reply-To: <1394191196-6425-3-git-send-email-michal.kazior@tieto.com> (sfid-20140307_122532_789476_71C0C158)
+References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	 <1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140307_122532_789476_71C0C158)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 02:53:09PM -0700, Mark A. Greer wrote:
-> On Fri, Feb 21, 2014 at 01:50:59AM +0100, Samuel Ortiz wrote:
+On Fri, 2014-03-07 at 12:19 +0100, Michal Kazior wrote:
+> It doesn't make much sense to have a manually
+> managed chanctx refcount. It isn't performance
+> critical and it can't be even used outside the
+> protection of chanctx_mtx.
 > 
-> > > +static int trf7970a_in_send_cmd(struct nfc_digital_dev *ddev,
-> > > +		struct sk_buff *skb, u16 timeout,
-> > > +		nfc_digital_cmd_complete_t cb, void *arg)
-> > > +{
-> > > +	struct trf7970a *trf = nfc_digital_get_drvdata(ddev);
-> > > +	char *prefix;
-> > > +	unsigned int len;
-> > > +	int ret;
-> > > +
-> > > +	dev_dbg(trf->dev, "New request - state: %d, timeout: %d ms, len: %d\n",
-> > > +			trf->state, timeout, skb->len);
-> > > +
-> > > +	if (skb->len > TRF7970A_TX_MAX)
-> > > +		return -EINVAL;
-> > > +
-> > > +	mutex_lock(&trf->lock);
-> > > +
-> > > +	if ((trf->state != TRF7970A_ST_IDLE) &&
-> > > +			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
-> > > +		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
-> > > +				trf->state);
-> > > +		ret = -EIO;
-> > > +		goto out_err;
-> > > +	}
-> > > +
-> > > +	trf->rx_skb = nfc_alloc_recv_skb(TRF7970A_RX_SKB_ALLOC_SIZE,
-> > > +			GFP_KERNEL);
-> > > +	if (!trf->rx_skb) {
-> > > +		dev_dbg(trf->dev, "Can't alloc rx_skb\n");
-> > > +		ret = -ENOMEM;
-> > > +		goto out_err;
-> > > +	}
-> > > +
-> > > +	if (trf->state == TRF7970A_ST_IDLE_RX_BLOCKED) {
-> > > +		ret = trf7970a_cmd(trf, TRF7970A_CMD_ENABLE_RX);
-> > > +		if (ret)
-> > > +			goto out_err;
-> > > +
-> > > +		trf->state = TRF7970A_ST_IDLE;
-> > > +	}
-> > > +
-> > > +	ret = trf7970a_per_cmd_config(trf, skb);
-> > > +	if (ret)
-> > > +		goto out_err;
-> > > +
-> > > +	trf->ddev = ddev;
-> > > +	trf->tx_skb = skb;
-> > As you're going to carry this guy around and may need it from e.g. your
-> > threaded interrupt handler, shouldn't you take a reference (skb_get) on it ?
-> > I'm concerned by the fact that you could see your tx_skb disappear from
-> > abort_cmd and get an IRQ before your state is set to IDLE.
-> > Hmm, I guess that's protected by the mutex and so when you get an abort
-> > from the digital stack you reset the state to IDLE and no one should try
-> > to touch tx_skb after you release the mutex. Is that what you had in
-> > mind ?
+> With future enhancements to channel contenxt
+> (namely reservations) refcount accounting will
+> become more complex and having manually managed
+> refcount is going to be error-prone and confusing.
 > 
-> It is but taking a reference is a good idea.  I'll add that.
+> The refcount is now equal to the number of vifs it
+> is assigned to. However in the future this will
+> change so keep the refcount/num_assigned_vifs
+> functions split now.
 
-I've changed my mind on this (hope that's okay).
+Alright, all of this looks fine, but we have a ton of churn in this area
+right now, and I've been sick and not as attentive as usual. Somebody
+also recently posted patches to refactor the recalc_* functions for
+channel contexts, which is sure to conflict with this.
 
-The driver is in control of freeing that skb and won't free it until
-there's an abort or the processing is complete.  I believe that handle
-the race with an abort correctly.
+With Luca and myself both also travelling for the next ~week, what's
+your preference on how to work this out? I likely won't be merging much
+while I'm not at home.
 
-Mark
---
+At least one of you will probably have to rebase the patches, and while
+I don't really care who does it or in which order they go in, I didn't
+really want to say that only in over a week from now.
+
+Maybe one of you can just put a git tree somewhere in the meantime
+(forked from mac80211-next) and collect those CSA/chanctx-related
+patches in there? So far, I think most patches I've seen fly by looked
+fine (from their description, I haven't had a chance to look into them
+in too much detail.)
+
+Of course I don't mind if you want to just wait for me to be back, I'm
+happy to do the merging and then complain about patches that need
+rebasing, just be warned that that would likely only happen after the
+17th.
+
+johannes
+
