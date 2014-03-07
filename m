@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45818 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbaCUP5K (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:46427 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753252AbaCGNiL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 11:57:10 -0400
-Message-ID: <532C6138.7010201@candelatech.com> (sfid-20140321_165715_091042_CC058F0B)
-Date: Fri, 21 Mar 2014 08:56:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
-References: <1395360324-20433-1-git-send-email-greearb@candelatech.com> <CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
-In-Reply-To: <CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Mar 2014 08:38:11 -0500
+Received: by mail-ee0-f48.google.com with SMTP id e51so1746578eek.7
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 05:38:10 -0800 (PST)
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de
+Subject: [RFC PATCH 5/8] nl80211: Modify chandef related functions to work with 5/10MHz channels
+Date: Fri,  7 Mar 2014 14:37:52 +0100
+Message-Id: <1394199475-5208-6-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143822_582062_B4D4A778)
+In-Reply-To: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2014 11:33 PM, Michal Kazior wrote:
-> On 21 March 2014 01:05,  <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Make the request command object the right size so that
->> firmware will not just throw it away.
->> Tested customized and upstream firmware.
-> 
-> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ net/wireless/nl80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-The firmware source I have checks in such a way that sending too
-large of a cmd should be fine, only too small of a command packet
-causes it to be ignored.
-
-I do not have the 636 firmware to test against.
-
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/wmi.h | 11 +++++++++++
->>  1 file changed, 11 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
->> index fa1b9e0..4946471 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -2766,6 +2766,11 @@ enum wmi_stats_id {
->>         WMI_REQUEST_AP_STAT     = 0x02
->>  };
->>
->> +struct wlan_inst_rssi_args {
->> +       __le16 cfg_retry_count;
->> +       __le16 retry_count;
->> +};
->> +
->>  struct wmi_request_stats_cmd {
->>         __le32 stats_id;
->>
->> @@ -2773,6 +2778,12 @@ struct wmi_request_stats_cmd {
->>          * Space to add parameters like
->>          * peer mac addr
->>          */
-> 
-> You can probably remove the comment now :-)
-
-Ok, I can do that.
-
-Thanks,
-Ben
-
-
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4fe2e6e..48040cd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1843,6 +1843,8 @@ static int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
+ 				info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
+ 
+ 		switch (chantype) {
++		case NL80211_CHAN_5MHZ:
++		case NL80211_CHAN_10MHZ:
+ 		case NL80211_CHAN_NO_HT:
+ 		case NL80211_CHAN_HT20:
+ 		case NL80211_CHAN_HT40PLUS:
+@@ -2213,6 +2215,8 @@ static int nl80211_send_chandef(struct sk_buff *msg,
+ 			chandef->chan->center_freq))
+ 		return -ENOBUFS;
+ 	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+ 	case NL80211_CHAN_WIDTH_40:
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.5.1
 
