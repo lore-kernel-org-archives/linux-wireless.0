@@ -1,51 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:58568 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbaC1H1I (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:61746 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbaCGGxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:27:08 -0400
-Received: by mail-wg0-f46.google.com with SMTP id b13so3219503wgh.17
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 00:27:06 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <5334F8E7.1070803@candelatech.com>
-References: <5334F8E7.1070803@candelatech.com>
-Date: Fri, 28 Mar 2014 08:27:06 +0100
-Message-ID: <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com> (sfid-20140328_082712_733470_4F9FFACB)
-Subject: Re: Setting txpower fails?
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Mar 2014 01:53:45 -0500
+Received: by mail-pa0-f48.google.com with SMTP id hz1so3767236pad.7
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 22:53:44 -0800 (PST)
+From: Ujjal Roy <royujjal@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Subject: [PATCH] iw: add support to set/get retry limit
+Date: Fri,  7 Mar 2014 12:23:38 +0530
+Message-Id: <1394175218-24869-1-git-send-email-royujjal@gmail.com> (sfid-20140307_075348_825819_A6F42EB7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
-> Any idea why this isn't working?
->
-> Kernel is 3.9.11+, driver is ath9k.
->
-> [root@ct523-9292 lanforge]# iwconfig wlan0
-> wlan0     IEEE 802.11abgn  ESSID:off/any
->           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->           Retry short limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->
-> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
-> [root@ct523-9292 lanforge]# echo $?
-> 0
-> [root@ct523-9292 lanforge]# iwconfig wlan0
-> wlan0     IEEE 802.11abgn  ESSID:off/any
->           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->           Retry short limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->
-> [root@ct523-9292 lanforge]#
->
+Sorry for late response. Original patch is started below.
+...
 
-Which version of wireless-tools?
-Why don't you use modern iw?
+Show the retry limit in phy details and also configure the
+retry limit.
 
-- Sedat -
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+---
+ info.c | 16 ++++++++++++++++
+ phy.c  | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+)
+
+diff --git a/info.c b/info.c
+index a696503..001b317 100644
+--- a/info.c
++++ b/info.c
+@@ -246,6 +246,22 @@ next:
+ 			printf("\tRTS threshold: %d\n", rts);
+ 	}
+ 
++	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT] ||
++	    tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]) {
++		unsigned char retry_short = 0, retry_long = 0;
++
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT])
++			retry_short = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT]);
++		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG])
++			retry_long = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]);
++		if (retry_short == retry_long) {
++			printf("\tRetry short long limit: %d\n", retry_short);
++		} else {
++			printf("\tRetry short limit: %d\n", retry_short);
++			printf("\tRetry long limit: %d\n", retry_long);
++		}
++	}
++
+ 	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+ 		unsigned char coverage;
+ 
+diff --git a/phy.c b/phy.c
+index 68f40f6..517d203 100644
+--- a/phy.c
++++ b/phy.c
+@@ -232,6 +232,70 @@ COMMAND(set, rts, "<rts threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+ 	"Set rts threshold.");
+ 
++static int handle_retry(struct nl80211_state *state,
++			struct nl_cb *cb, struct nl_msg *msg,
++			int argc, char **argv, enum id_input id)
++{
++	unsigned int retry_short = 0, retry_long = 0;
++	bool have_retry_s = false, have_retry_l = false;
++	int i;
++	enum {
++		S_NONE,
++		S_SHORT,
++		S_LONG,
++	} parser_state = S_NONE;
++
++	if (!argc || (argc != 2 && argc != 4))
++		return 1;
++
++	for (i = 0; i < argc; i++) {
++		char *end;
++		unsigned int tmpul;
++
++		if (strcmp(argv[i], "short") == 0) {
++			if (have_retry_s)
++				return 1;
++			parser_state = S_SHORT;
++			have_retry_s = true;
++		} else if (strcmp(argv[i], "long") == 0) {
++			if (have_retry_l)
++				return 1;
++			parser_state = S_LONG;
++			have_retry_l = true;
++		} else {
++			tmpul = strtoul(argv[i], &end, 10);
++			if (*end != '\0')
++				return 1;
++			if (!tmpul || tmpul > 255)
++				return -EINVAL;
++			switch (parser_state) {
++			case S_SHORT:
++				retry_short = tmpul;
++				break;
++			case S_LONG:
++				retry_long = tmpul;
++				break;
++			default:
++				return 1;
++			}
++		}
++	}
++
++	if (!have_retry_s && !have_retry_l)
++		return 1;
++	if (have_retry_s)
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT, retry_short);
++	if (have_retry_l)
++		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG, retry_long);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, retry, "[short <limit>] [long <limit>]",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
++	"Set retry limit.");
++
+ static int handle_netns(struct nl80211_state *state,
+ 			struct nl_cb *cb,
+ 			struct nl_msg *msg,
+-- 
+1.8.1.4
+
