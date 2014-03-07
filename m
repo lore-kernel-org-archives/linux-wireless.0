@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38409 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbaCBJVT (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:35787 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbaCGNiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2014 04:21:19 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Dan Carpenter <dan.carpenter@oracle.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 2/2] wil6210: fix smatch warning in wil_cfg80211_get_station()
-Date: Sun, 2 Mar 2014 11:20:51 +0200
-Message-ID: <1393752051-7611-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140302_102212_386814_7B64154D)
-In-Reply-To: <1393752051-7611-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1393752051-7611-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 7 Mar 2014 08:38:13 -0500
+Received: by mail-ea0-f175.google.com with SMTP id d10so2321292eaj.34
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 05:38:12 -0800 (PST)
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de
+Subject: [RFC PATCH 6/8] nl80211: Support for 5/10 MHz channels when reporting BW restrictions
+Date: Fri,  7 Mar 2014 14:37:53 +0100
+Message-Id: <1394199475-5208-7-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143819_394258_5B9C5937)
+In-Reply-To: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch suggests to propagate error code from wil_find_cid(), and, indeed,
-it is a good idea.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index a4da064..7439303 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -181,7 +181,7 @@ static int wil_cfg80211_get_station(struct wiphy *wiphy,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 48040cd..8b40a3a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -606,6 +606,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 		if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
++			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
++			goto nla_put_failure;
+ 	}
  
- 	wil_info(wil, "%s(%pM) CID %d\n", __func__, mac, cid);
- 	if (cid < 0)
--		return -ENOENT;
-+		return cid;
- 
- 	rc = wil_cid_fill_sinfo(wil, cid, sinfo);
- 
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
 -- 
-1.8.3.2
+1.8.5.1
 
