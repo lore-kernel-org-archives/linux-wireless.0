@@ -1,59 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8486 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756556AbaCDIhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 03:37:39 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: set beamforming bit in radiotap
-Date: Tue,  4 Mar 2014 10:35:25 +0200
-Message-Id: <1393922125-17383-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140304_093742_443825_233309A3)
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:49553 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754535AbaCHB0G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Mar 2014 20:26:06 -0500
+Received: by mail-pb0-f54.google.com with SMTP id ma3so4949534pbc.27
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 17:26:06 -0800 (PST)
+From: behanw@converseincode.com
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
+	pageexec@freemail.hu,
+	=?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>,
+	Behan Webster <behanw@converseincode.com>,
+	=?UTF-8?q?Vin=C3=ADcius=20Tinti?= <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Subject: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+Date: Fri,  7 Mar 2014 17:26:00 -0800
+Message-Id: <1394241960-1764-1-git-send-email-behanw@converseincode.com> (sfid-20140308_022700_984641_0B3BC758)
+In-Reply-To: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
+References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a bit in rx_status.vht_flags to let the low level driver
-notify mac80211 about a beamformed packet. Propagate this
-to the radiotap header.
+From: Jan-Simon Möller <dl9pf@gmx.de>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
+compliant equivalent. This is the original VLAIS struct.
+
+struct {
+	struct aead_request     req;
+	u8                      priv[crypto_aead_reqsize(tfm)];
+} aead_req;
+
+This patch instead allocates the appropriate amount of memory using an char
+array.
+
+The new code can be compiled with both gcc and clang.
+
+Signed-off-by: Jan-Simon Möller <dl9pf@gmx.de>
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+Signed-off-by: Vinícius Tinti <viniciustinti@gmail.com>
+Signed-off-by: Mark Charlebois <charlebm@gmail.com>
 ---
- include/net/mac80211.h | 2 ++
- net/mac80211/rx.c      | 2 ++
- 2 files changed, 4 insertions(+)
+ net/mac80211/aes_ccm.c | 40 ++++++++++++++++++++++------------------
+ 1 file changed, 22 insertions(+), 18 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 241e049..2890188 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -877,11 +877,13 @@ enum mac80211_rx_flags {
-  * @RX_VHT_FLAG_80MHZ: 80 MHz was used
-  * @RX_VHT_FLAG_80P80MHZ: 80+80 MHz was used
-  * @RX_VHT_FLAG_160MHZ: 160 MHz was used
-+ * @RX_VHT_FLAG_BF: packet was beamformed
-  */
- enum mac80211_rx_vht_flags {
- 	RX_VHT_FLAG_80MHZ		= BIT(0),
- 	RX_VHT_FLAG_80P80MHZ		= BIT(1),
- 	RX_VHT_FLAG_160MHZ		= BIT(2),
-+	RX_VHT_FLAG_BF			= BIT(3),
- };
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 7c7df47..3317578 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -23,12 +23,14 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			       u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+-	struct {
+-		struct aead_request	req;
+-		u8			priv[crypto_aead_reqsize(tfm)];
+-	} aead_req;
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6d66140..dc1cfa8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -333,6 +333,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 		/* in VHT, STBC is binary */
- 		if (status->flag & RX_FLAG_STBC_MASK)
- 			*pos |= IEEE80211_RADIOTAP_VHT_FLAG_STBC;
-+		if (status->vht_flag & RX_VHT_FLAG_BF)
-+			*pos |= IEEE80211_RADIOTAP_VHT_FLAG_BEAMFORMED;
- 		pos++;
- 		/* bandwidth */
- 		if (status->vht_flag & RX_VHT_FLAG_80MHZ)
+-	memset(&aead_req, 0, sizeof(aead_req));
++	char aead_req_data[sizeof(struct aead_request) +
++				crypto_aead_reqsize(tfm) +
++				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
++
++	struct aead_request *aead_req = (void *) aead_req_data;
++
++	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -36,23 +38,25 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(&aead_req.req, tfm);
+-	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
+-	aead_request_set_crypt(&aead_req.req, &pt, ct, data_len, b_0);
++	aead_request_set_tfm(aead_req, tfm);
++	aead_request_set_assoc(aead_req, &assoc, assoc.length);
++	aead_request_set_crypt(aead_req, &pt, ct, data_len, b_0);
+ 
+-	crypto_aead_encrypt(&aead_req.req);
++	crypto_aead_encrypt(aead_req);
+ }
+ 
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+-	struct {
+-		struct aead_request	req;
+-		u8			priv[crypto_aead_reqsize(tfm)];
+-	} aead_req;
+ 
+-	memset(&aead_req, 0, sizeof(aead_req));
++	char aead_req_data[sizeof(struct aead_request) +
++				crypto_aead_reqsize(tfm) +
++				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
++
++	struct aead_request *aead_req = (void *) aead_req_data;
++
++	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -60,12 +64,12 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(&aead_req.req, tfm);
+-	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
+-	aead_request_set_crypt(&aead_req.req, ct, &pt,
++	aead_request_set_tfm(aead_req, tfm);
++	aead_request_set_assoc(aead_req, &assoc, assoc.length);
++	aead_request_set_crypt(aead_req, ct, &pt,
+ 			       data_len + IEEE80211_CCMP_MIC_LEN, b_0);
+ 
+-	return crypto_aead_decrypt(&aead_req.req);
++	return crypto_aead_decrypt(aead_req);
+ }
+ 
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
 -- 
 1.8.3.2
 
