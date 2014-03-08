@@ -1,78 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57192 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249AbaC1OSl (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:48620 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724AbaCHXJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:18:41 -0400
-Message-ID: <533584BF.70604@candelatech.com> (sfid-20140328_151844_777684_0EF64730)
-Date: Fri, 28 Mar 2014 07:18:39 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 8 Mar 2014 18:09:23 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH] p54usb: fix leaks at failure path in p54u_probe()
+Date: Sun, 09 Mar 2014 00:08:54 +0100
+Message-ID: <2894930.q0nCt6o0pg@debian64> (sfid-20140309_001025_351836_B5545F38)
+In-Reply-To: <CABPxzYLzMvtWShP_PFdyTzV8P1P177yPZh=xAO=3tiy97UfEmQ@mail.gmail.com>
+References: <1394226709-10763-1-git-send-email-khoroshilov@ispras.ru> <CABPxzYLzMvtWShP_PFdyTzV8P1P177yPZh=xAO=3tiy97UfEmQ@mail.gmail.com>
 MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Setting txpower fails?
-References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
-In-Reply-To: <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2014 12:27 AM, Sedat Dilek wrote:
-> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
->> Any idea why this isn't working?
->>
->> Kernel is 3.9.11+, driver is ath9k.
->>
->> [root@ct523-9292 lanforge]# iwconfig wlan0
->> wlan0     IEEE 802.11abgn  ESSID:off/any
->>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>            Retry short limit:7   RTS thr:off   Fragment thr:off
->>            Encryption key:off
->>            Power Management:off
->>
->> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
->> [root@ct523-9292 lanforge]# echo $?
->> 0
->> [root@ct523-9292 lanforge]# iwconfig wlan0
->> wlan0     IEEE 802.11abgn  ESSID:off/any
->>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>            Retry short limit:7   RTS thr:off   Fragment thr:off
->>            Encryption key:off
->>            Power Management:off
->>
->> [root@ct523-9292 lanforge]#
->>
->
-> Which version of wireless-tools?
-> Why don't you use modern iw?
+On Sunday, March 09, 2014 04:14:32 AM Krishna Chaitanya wrote:
+> On Sat, Mar 8, 2014 at 2:41 AM, Alexey Khoroshilov
+> <khoroshilov@ispras.ru> wrote:
+> > If p54u_load_firmware() fails, p54u_probe() does not deallocate
+> > already allocated resources. The patch adds proper failure handling.
+> >
+> > Found by Linux Driver Verification project (linuxtesting.org).
+> >
+> > Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> > ---
+> >  drivers/net/wireless/p54/p54usb.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> >
+> > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+> > index 6e635cfa24c8..5df74503fd4f 100644
+> > --- a/drivers/net/wireless/p54/p54usb.c
+> > +++ b/drivers/net/wireless/p54/p54usb.c
+> > @@ -1053,6 +1053,10 @@ static int p54u_probe(struct usb_interface *intf,
+> >                 priv->upload_fw = p54u_upload_firmware_net2280;
+> >         }
+> >         err = p54u_load_firmware(dev, intf);
+> > +       if (err) {
+> > +               usb_put_dev(udev);
+> > +               p54_free_common(dev);
+> > +       }
+> >         return err;
+> >  }
+> The load_firmware puts down the reference
+> in case of error. Only free is required here.
+No, the put is required too... But let me explain:
 
-Do you know the right incantation for 'iw'?  From it's help, it seems
-this should work, but it throws an error.  I haven't dug into the
-code to figure out why...
+p54u_load_firmware calls usb_get_dev(udev) before it requests the firmware
+load. The Reason is: the firmware callback is usually run in another thread
+(usually it's pretty quick, but due to timeouts it could take up to 60 seconds 
+- or at least it did when I wrote it). Therefore I found it appropriate to give 
+that request callback its "reference++" as it needs the "udev" too (e.g.: for
+dev_info, dev_err and releasing the driver if the device couldn't be 
+initialized).
 
-[root@ct523-9292 lanforge]# iw dev wlan0 set txpower 10
-Invalid parameter: 10
-
-[root@ct523-9292 lanforge]# iwconfig --version
-iwconfig  Wireless-Tools version 29
-           Compatible with Wireless Extension v11 to v22.
-
-Kernel    Currently compiled with Wireless Extension v22.
-
-sta211    Recommend Wireless Extension v21 or later,
-           Currently compiled with Wireless Extension v22.
-...
-
-
-Thanks,
-Ben
-
->
-> - Sedat -
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Christian
