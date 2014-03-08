@@ -1,310 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:35535 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703AbaCaMKZ (ORCPT
+Received: from [67.231.148.174] ([67.231.148.174]:27823 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752666AbaCHDmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 08:10:25 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x13so5939930wgg.9
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 05:10:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 2/5] mac80211: use chanctx reservation for AP CSA
-Date: Mon, 31 Mar 2014 14:04:16 +0200
-Message-Id: <1396267459-9976-3-git-send-email-michal.kazior@tieto.com> (sfid-20140331_141040_035163_E95C8A42)
-In-Reply-To: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-References: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
- <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 7 Mar 2014 22:42:15 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/6] mwifiex: add VHT MCS rate configuration support
+Date: Fri, 7 Mar 2014 19:41:27 -0800
+Message-ID: <1394250091-18477-2-git-send-email-bzhao@marvell.com> (sfid-20140308_044224_990767_9A0E92FA)
+In-Reply-To: <1394250091-18477-1-git-send-email-bzhao@marvell.com>
+References: <1394250091-18477-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel switch finalization is now 2-step. First
-step is when driver calls csa_finish(), the other
-is when reservation is actually finalized (which
-be defered for in-place reservation).
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Also remove the ieee80211_vif_change_channel()
-which isn't used anymore.
+During Tx rate configuration, newer firmware V15 expects bitmap
+for VHT MCS rates as well.
 
-It is now safe to call ieee80211_csa_finish() more
-then once.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-v3:
- * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
- * fix comment style [Johannes]
- * use goto for cleaner unlocking/returning [Johannes]
- * squash with ieee80211_vif_change_channel() removal patch [Johannes]
- * fix commit message [Johannes]
- * add resilience for multiple ieee80211_csa_finish() calls
+ drivers/net/wireless/mwifiex/fw.h          |  1 +
+ drivers/net/wireless/mwifiex/main.h        |  2 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c     | 14 ++++++++++++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  9 +++++++++
+ 4 files changed, 25 insertions(+), 1 deletion(-)
 
- net/mac80211/cfg.c         | 82 +++++++++++++++++++++++++++++++---------------
- net/mac80211/chan.c        | 75 ++++++------------------------------------
- net/mac80211/ieee80211_i.h |  5 ---
- 3 files changed, 65 insertions(+), 97 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 871830e..be9e0c5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3096,17 +3096,35 @@ static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 5b30834..341e419 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1105,6 +1105,7 @@ struct mwifiex_rate_scope {
+ 	__le16 hr_dsss_rate_bitmap;
+ 	__le16 ofdm_rate_bitmap;
+ 	__le16 ht_mcs_rate_bitmap[8];
++	__le16 vht_mcs_rate_bitmap[8];
+ } __packed;
  
- 	sdata_assert_lock(sdata);
- 	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
+ struct mwifiex_rate_drop_pattern {
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5f9bfb0..713dd24 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -116,7 +116,7 @@ enum {
+ #define MWIFIEX_TYPE_DATA				0
+ #define MWIFIEX_TYPE_EVENT				3
  
--	sdata->radar_required = sdata->csa_radar_required;
--	err = ieee80211_vif_change_channel(sdata, &changed);
--	if (WARN_ON(err < 0))
--		return err;
-+	/*
-+	 * using reservation isn't immediate as it may be deferred until later
-+	 * with multi-vif. once reservation is complete it will re-schedule the
-+	 * work with no reserved_chanctx so verify chandef to check if it
-+	 * completed successfully
-+	 */
+-#define MAX_BITMAP_RATES_SIZE			10
++#define MAX_BITMAP_RATES_SIZE			18
  
--	if (!local->use_chanctx) {
--		local->_oper_chandef = sdata->csa_chandef;
--		ieee80211_hw_config(local, 0);
-+	if (sdata->reserved_chanctx) {
-+		/*
-+		 * with multi-vif csa driver may call ieee80211_csa_finish()
-+		 * many times while waiting for other interfaces to use their
-+		 * reservations
-+		 */
-+		if (sdata->reserved_ready)
-+			return 0;
+ #define MAX_CHANNEL_BAND_BG     14
+ #define MAX_CHANNEL_BAND_A      165
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 4315a3b..e3cac14 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -185,6 +185,13 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
+ 		     i++)
+ 			rate_scope->ht_mcs_rate_bitmap[i] =
+ 				cpu_to_le16(pbitmap_rates[2 + i]);
++		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
++			for (i = 0;
++			     i < ARRAY_SIZE(rate_scope->vht_mcs_rate_bitmap);
++			     i++)
++				rate_scope->vht_mcs_rate_bitmap[i] =
++					cpu_to_le16(pbitmap_rates[10 + i]);
++		}
+ 	} else {
+ 		rate_scope->hr_dsss_rate_bitmap =
+ 			cpu_to_le16(priv->bitmap_rates[0]);
+@@ -195,6 +202,13 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
+ 		     i++)
+ 			rate_scope->ht_mcs_rate_bitmap[i] =
+ 				cpu_to_le16(priv->bitmap_rates[2 + i]);
++		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
++			for (i = 0;
++			     i < ARRAY_SIZE(rate_scope->vht_mcs_rate_bitmap);
++			     i++)
++				rate_scope->vht_mcs_rate_bitmap[i] =
++					cpu_to_le16(priv->bitmap_rates[10 + i]);
++		}
+ 	}
+ 
+ 	rate_drop = (struct mwifiex_rate_drop_pattern *) ((u8 *) rate_scope +
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index a8f7d54..bfebb01 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -304,6 +304,15 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
+ 				priv->bitmap_rates[2 + i] =
+ 					le16_to_cpu(rate_scope->
+ 						    ht_mcs_rate_bitmap[i]);
 +
-+		err = ieee80211_vif_use_reserved_context(sdata);
-+		if (err)
-+			return err;
-+
-+		return 0;
- 	}
- 
-+	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
-+					&sdata->csa_chandef))
-+		return -EINVAL;
-+
- 	sdata->vif.csa_active = false;
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
-@@ -3134,6 +3152,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
-+	mutex_lock(&local->chanctx_mtx);
- 
- 	/* AP might have been stopped while waiting for the lock. */
- 	if (!sdata->vif.csa_active)
-@@ -3150,6 +3169,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	}
- 
- unlock:
-+	mutex_unlock(&local->chanctx_mtx);
- 	mutex_unlock(&local->mtx);
- 	sdata_unlock(sdata);
- }
-@@ -3284,7 +3304,7 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
--	int err, num_chanctx, changed = 0;
-+	int err, changed = 0;
- 
- 	sdata_assert_lock(sdata);
- 	lockdep_assert_held(&local->mtx);
-@@ -3299,37 +3319,43 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 				       &sdata->vif.bss_conf.chandef))
- 		return -EINVAL;
- 
-+	/* don't allow another channel switch if one is already active. */
-+	if (sdata->vif.csa_active)
-+		return -EBUSY;
-+
- 	mutex_lock(&local->chanctx_mtx);
- 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
- 					 lockdep_is_held(&local->chanctx_mtx));
- 	if (!conf) {
--		mutex_unlock(&local->chanctx_mtx);
--		return -EBUSY;
-+		err = -EBUSY;
-+		goto out;
- 	}
- 
--	/* don't handle for multi-VIF cases */
- 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
--		mutex_unlock(&local->chanctx_mtx);
--		return -EBUSY;
-+	if (!chanctx) {
-+		err = -EBUSY;
-+		goto out;
- 	}
--	num_chanctx = 0;
--	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
--		num_chanctx++;
--	mutex_unlock(&local->chanctx_mtx);
- 
--	if (num_chanctx > 1)
--		return -EBUSY;
-+	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
-+					    chanctx->mode,
-+					    params->radar_required);
-+	if (err)
-+		goto out;
- 
--	/* don't allow another channel switch if one is already active. */
--	if (sdata->vif.csa_active)
--		return -EBUSY;
-+	/* if reservation is invalid then this will fail */
-+	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
-+	if (err) {
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+		goto out;
-+	}
- 
- 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
--	if (err)
--		return err;
-+	if (err) {
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+		goto out;
-+	}
- 
--	sdata->csa_radar_required = params->radar_required;
- 	sdata->csa_chandef = params->chandef;
- 	sdata->csa_block_tx = params->block_tx;
- 	sdata->vif.csa_active = true;
-@@ -3347,7 +3373,9 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		ieee80211_csa_finalize(sdata);
- 	}
- 
--	return 0;
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return err;
- }
- 
- int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 6870c3c..94e06c0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -799,70 +799,6 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
--static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--					  struct ieee80211_chanctx *ctx,
--					  u32 *changed)
--{
--	struct ieee80211_local *local = sdata->local;
--	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	u32 chanctx_changed = 0;
--
--	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
--				     IEEE80211_CHAN_DISABLED))
--		return -EINVAL;
--
--	if (ieee80211_chanctx_refcount(local, ctx) != 1)
--		return -EINVAL;
--
--	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
--		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
--		*changed |= BSS_CHANGED_BANDWIDTH;
--	}
--
--	sdata->vif.bss_conf.chandef = *chandef;
--	ctx->conf.def = *chandef;
--
--	chanctx_changed |= IEEE80211_CHANCTX_CHANGE_CHANNEL;
--	drv_change_chanctx(local, ctx, chanctx_changed);
--
--	ieee80211_recalc_chanctx_chantype(local, ctx);
--	ieee80211_recalc_smps_chanctx(local, ctx);
--	ieee80211_recalc_radar_chanctx(local, ctx);
--	ieee80211_recalc_chanctx_min_def(local, ctx);
--
--	return 0;
--}
--
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
--	int ret;
--
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--
--	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-- out:
--	mutex_unlock(&local->chanctx_mtx);
--	return ret;
--}
--
- static void
- __ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
- 				      bool clear)
-@@ -964,7 +900,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- static void
- ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
- {
--	/* stub */
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &sdata->csa_finalize_work);
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- static int
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a941260..40e0d0d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -755,7 +755,6 @@ struct ieee80211_sub_if_data {
- 	struct work_struct csa_finalize_work;
- 	int csa_counter_offset_beacon;
- 	int csa_counter_offset_presp;
--	bool csa_radar_required;
- 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
- 	struct cfg80211_chan_def csa_chandef;
- 
-@@ -1802,10 +1801,6 @@ int __must_check
- ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u32 *changed);
--/* NOTE: only use ieee80211_vif_change_channel() for channel switch */
--int __must_check
--ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--			     u32 *changed);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
++			if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
++				for (i = 0; i < ARRAY_SIZE(rate_scope->
++							   vht_mcs_rate_bitmap);
++				     i++)
++					priv->bitmap_rates[10 + i] =
++					    le16_to_cpu(rate_scope->
++							vht_mcs_rate_bitmap[i]);
++			}
+ 			break;
+ 			/* Add RATE_DROP tlv here */
+ 		}
 -- 
-1.8.5.3
+1.8.2.3
 
