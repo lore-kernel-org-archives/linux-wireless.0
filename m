@@ -1,33 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38018 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965087AbaCSOZE (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:57009 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbaCHDCh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:25:04 -0400
-Message-ID: <1395239100.4142.23.camel@jlt4.sipsolutions.net> (sfid-20140319_152510_005594_E2F1E2F0)
-Subject: Re: [PATCH 1/3] cfg80211: remove unnecessary check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Mar 2014 15:25:00 +0100
-In-Reply-To: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com> (sfid-20140319_100449_864887_42B63984)
-References: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com>
-	 (sfid-20140319_100449_864887_42B63984)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 7 Mar 2014 22:02:37 -0500
+Received: by mail-pd0-f177.google.com with SMTP id g10so4806376pdj.36
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 19:02:37 -0800 (PST)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] cfg80211: make __cfg80211_join_ibss() static
+Date: Sat,  8 Mar 2014 11:01:24 +0800
+Message-Id: <0962cca52541e7067f7c001046fd6d36e7a76640.1394247591.git.gamerh2o@gmail.com> (sfid-20140308_040300_375074_18D0DBEF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-03-19 at 17:04 +0800, Zhao, Gang wrote:
-> RCU pointer bss->pub.beacon_ies is checked before in previous
-> statement:
-> 
-> if (rcu_access_pointer(bss->pub.beacon_ies))
-> 	continue;
-> 
-> There is no need to check it twice(and in the wrong way :) ).
+Function __cfg80211_join_ibss() is only used in net/wireless/ibss.c,
+so make it static.
 
-Applied.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/wireless/core.h | 4 ----
+ net/wireless/ibss.c | 8 ++++----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 4068300..766aabc 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -246,10 +246,6 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
+                       unsigned long age_secs);
+ 
+ /* IBSS */
+-int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+-			 struct net_device *dev,
+-			 struct cfg80211_ibss_params *params,
+-			 struct cfg80211_cached_keys *connkeys);
+ int cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+ 		       struct cfg80211_ibss_params *params,
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 349db9d..a6b5bda 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -82,10 +82,10 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
+ }
+ EXPORT_SYMBOL(cfg80211_ibss_joined);
+ 
+-int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+-			 struct net_device *dev,
+-			 struct cfg80211_ibss_params *params,
+-			 struct cfg80211_cached_keys *connkeys)
++static int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
++				struct net_device *dev,
++				struct cfg80211_ibss_params *params,
++				struct cfg80211_cached_keys *connkeys)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct ieee80211_channel *check_chan;
+-- 
+1.8.5.3
 
