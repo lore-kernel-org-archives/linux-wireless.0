@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7186 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaCXIW2 convert rfc822-to-8bit (ORCPT
+Received: from [67.231.156.173] ([67.231.156.173]:60183 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752238AbaCHDmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 04:22:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: fix the peer mac address in getting stats
-References: <1395380076-4306-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
-Date: Mon, 24 Mar 2014 10:22:22 +0200
-In-Reply-To: <CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 21 Mar 2014 07:51:22 +0100")
-Message-ID: <87d2hc80qp.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_092233_819646_2AD97C05)
+	Fri, 7 Mar 2014 22:42:14 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/6] mwifiex: extract firmware API version number
+Date: Fri, 7 Mar 2014 19:41:26 -0800
+Message-ID: <1394250091-18477-1-git-send-email-bzhao@marvell.com> (sfid-20140308_044220_190117_451599C2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-> On 21 March 2014 06:34, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
->> Using the macro to convert the MAC address from WMI word
->> format to char array has lead to the wrong peer mac
->> address printed out while retrieving the peer stats from
->> FW. Fix this.
->>
->> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/debug.c |    4 ++--
->>  drivers/net/wireless/ath/ath10k/wmi.h   |   10 ----------
->>  2 files changed, 2 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
->> index 6debd28..f95defa 100644
->> --- a/drivers/net/wireless/ath/ath10k/debug.c
->> +++ b/drivers/net/wireless/ath/ath10k/debug.c
->> @@ -252,8 +252,8 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
->>                         peer_stats = (struct wmi_peer_stats *)tmp;
->>                         s = &stats->peer_stat[i];
->>
->> -                       WMI_MAC_ADDR_TO_CHAR_ARRAY(&peer_stats->peer_macaddr,
->> -                                                  s->peer_macaddr);
->> +                       memcpy(s->peer_macaddr, &peer_stats->peer_macaddr.addr,
->> +                              ETH_ALEN);
->
-> I noticed checkpatch started suggesting to prefer ether_addr_copy()
-> over memcpy(). Not a big deal though.
+The firmware API version number will be used for future patches
+to support different firmware API specs.
 
-Yeah, especially that I haven't updated my checkpatch for few months and
-I don't see this warning yet :) (I'll try to keep ath10k checkpatch
-clean whenever possible.)
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 1 +
+ drivers/net/wireless/mwifiex/fw.h     | 2 ++
+ drivers/net/wireless/mwifiex/main.h   | 1 +
+ 3 files changed, 4 insertions(+)
 
-We need to switch ath10k to use ether_addr_copy() everywhere in a
-separate patch anyway.
-
-> Other than that the patch looks good.
->
-> Reviewed-By: Michał Kazior <michal.kazior@tieto.com>
-
-Thanks, I added this to the patch.
-
-Let's just hope that the l with the extra line doesn't cause any charset
-problems :) BTW, what is the name of the character? Never seen that
-before.
-
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 14e05c9..b411558 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1502,6 +1502,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 	}
+ 
+ 	adapter->fw_release_number = le32_to_cpu(hw_spec->fw_release_number);
++	adapter->fw_api_ver = (adapter->fw_release_number >> 16) & 0xff;
+ 	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
+ 
+ 	if (le32_to_cpu(hw_spec->dot_11ac_dev_cap)) {
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 39cb354..5b30834 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -515,6 +515,8 @@ enum P2P_MODES {
+ #define ACT_TDLS_CREATE            0x01
+ #define ACT_TDLS_CONFIG            0x02
+ 
++#define MWIFIEX_FW_V15		   15
++
+ struct mwifiex_ie_types_header {
+ 	__le16 type;
+ 	__le16 len;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f0289c1..5f9bfb0 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -802,6 +802,7 @@ struct mwifiex_adapter {
+ 	atomic_t pending_bridged_pkts;
+ 	struct semaphore *card_sem;
+ 	bool ext_scan;
++	u8 fw_api_ver;
+ 	u8 fw_key_api_major_ver, fw_key_api_minor_ver;
+ };
+ 
 -- 
-Kalle Valo
+1.8.2.3
+
