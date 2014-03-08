@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:40193 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754922AbaC0Spv (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:65213 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645AbaCHXAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 14:45:51 -0400
-Message-ID: <533471DC.3090107@lwfinger.net> (sfid-20140327_194604_290336_7B1320BF)
-Date: Thu, 27 Mar 2014 13:45:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 8 Mar 2014 18:00:20 -0500
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Adam Lee <adam.lee@canonical.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	stable@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH v2] rtlwifi: add MSI interrupts support
-References: <1395660884-15042-1-git-send-email-adam.lee@canonical.com> <1395715732-9545-1-git-send-email-adam.lee@canonical.com> <20140327181513.GF31168@tuxdriver.com>
-In-Reply-To: <20140327181513.GF31168@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <531B934C.31666.37555A14@pageexec.freemail.hu>
+References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
+	<1394241960-1764-1-git-send-email-behanw@converseincode.com>
+	<CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com>
+	<531B934C.31666.37555A14@pageexec.freemail.hu>
+Date: Sun, 9 Mar 2014 00:00:19 +0100
+Message-ID: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com> (sfid-20140309_000120_147521_1EBE2732)
+Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+From: Sergei Antonov <saproj@gmail.com>
+To: pageexec@freemail.hu
+Cc: behanw@converseincode.com, John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	=?UTF-8?Q?Jan=2DSimon_M=C3=B6ller?= <dl9pf@gmx.de>,
+	=?UTF-8?Q?Vin=C3=ADcius_Tinti?= <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2014 01:15 PM, John W. Linville wrote:
-> I'm confused -- is "rtlwifi: rtl8188ee: enable MSI interrupts support"
-> still wanted/needed?
+On 8 March 2014 23:01, PaX Team <pageexec@freemail.hu> wrote:
+> On 8 Mar 2014 at 21:29, Sergei Antonov wrote:
+>
+>> > -       memset(&aead_req, 0, sizeof(aead_req));
+>> > +       char aead_req_data[sizeof(struct aead_request) +
+>> > +                               crypto_aead_reqsize(tfm) +
+>> > +                               CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+>                                                      ^^^^^^^^^^^^^^^^^^^^
+> wouldn't the underlined attribute ensure the required alignment?
+Yes. Sorry, I overlooked it.
 
-I think so, but Adam needs to resubmit both patches in a V3.
-
-Larry
-
-
+I would remove unneeded CRYPTO_MINALIGN and get the alignment from the
+target structure:
+        char aead_req_data[sizeof(struct aead_request) +
+                           crypto_aead_reqsize(tfm)]
+                __attribute__((__aligned__(__alignof__(struct aead_request))));
