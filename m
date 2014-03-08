@@ -1,54 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23010 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbaB1XRh (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:62991 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751935AbaCHVgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 18:17:37 -0500
-Date: Sat, 1 Mar 2014 02:17:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: nbd@openwrt.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	kbuild@01.org
-Subject: re: ath9k: reduce baseband hang detection false positive rate
-Message-ID: <20140228231709.GC22115@elgon.mountain> (sfid-20140301_001741_187000_D0E450C9)
+	Sat, 8 Mar 2014 16:36:43 -0500
+Received: by mail-pb0-f49.google.com with SMTP id jt11so5624085pbb.22
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2014 13:36:43 -0800 (PST)
+Message-ID: <531B8D68.7020801@converseincode.com> (sfid-20140308_223659_205637_F8715FB7)
+Date: Sat, 08 Mar 2014 13:36:40 -0800
+From: Behan Webster <behanw@converseincode.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Joe Perches <joe@perches.com>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
+	pageexec@freemail.hu,
+	=?ISO-8859-1?Q?Jan-Simon_M=F6ller?= <dl9pf@gmx.de>,
+	=?ISO-8859-1?Q?Vin=ED?= =?ISO-8859-1?Q?cius_Tinti?=
+	<viniciustinti@gmail.com>, Mark Charlebois <charlebm@gmail.com>
+Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+References: <1394177091.4653.1.camel@jlt4.sipsolutions.net> <1394241960-1764-1-git-send-email-behanw@converseincode.com> <1394243809.6972.4.camel@joe-AO722> <531A7D4F.7090303@converseincode.com> <20140308145309.GA1615@redhat.com>
+In-Reply-To: <20140308145309.GA1615@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Felix Fietkau,
+On 03/08/14 06:53, Stanislaw Gruszka wrote:
+> On Fri, Mar 07, 2014 at 06:15:43PM -0800, Behan Webster wrote:
+>> On 03/07/14 17:56, Joe Perches wrote:
+>>> On Fri, 2014-03-07 at 17:26 -0800, behanw@converseincode.com wrote:
+>>>> From: Jan-Simon Möller <dl9pf@gmx.de>
+>>>>
+>>>> Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
+>>>> compliant equivalent. This is the original VLAIS struct.
+>>> []
+>>>> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+>>> []
+>>>> @@ -23,12 +23,14 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+>>>>   			       u8 *data, size_t data_len, u8 *mic)
+>>>>   {
+>>>>   	struct scatterlist assoc, pt, ct[2];
+>>>> -	struct {
+>>>> -		struct aead_request	req;
+>>>> -		u8			priv[crypto_aead_reqsize(tfm)];
+>>>> -	} aead_req;
+>>>> -	memset(&aead_req, 0, sizeof(aead_req));
+>>>> +	char aead_req_data[sizeof(struct aead_request) +
+>>>> +				crypto_aead_reqsize(tfm) +
+>>>> +				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+>>> Can this be a too large amount of stack?
+>>>
+>>> Is crypto_aead_reqsize() limited to < ~1k?
+>>>
+>>> Perhaps it'd be better to use kzalloc for this
+>>> or another reserved pool
+>> No more stack being used than with the the original code. The stack
+>> memory use is identical.
+> Could you explain that? It looks like aead_req_data can be bigger than
+> original struct aead_req up to CRYPTO_MINALIGN bytes. IOW adding
+> CRYPTO_MINALIGN to size seems unneeded as aead_request->__ctx alignment
+> requirement should by assured by proper sizeof(struct aead_request).
+True, possibly a few more bytes. Nothing significant. However, I will 
+fix this too.
 
-The patch d31a36a6d87f: "ath9k: reduce baseband hang detection false
-positive rate" from Feb 24, 2014, leads to the following static
-checker warning:
+> Besides, why not add VLAIS feature to llvm instead of fixing all
+> programs that use it?
+You aren't the first to ask this (I certainly get asked this regularly). :)
 
-	drivers/net/wireless/ath/ath9k/hw.c:1563 ath9k_hw_check_alive()
-	info: ignoring unreachable code.
+VLAIS is specifically disallowed by the C89, C99, and later C standards. 
+VLAIS is also not an officially documented feature of gcc (It is a side 
+effect from the support of other languages supported by the gcc 
+toolchain). The LLVM project won't add VLAIS support for these reasons, 
+and because it would unnecessarily complicate their compiler 
+architecture with almost no appreciable gain.
 
-drivers/net/wireless/ath/ath9k/hw.c
-  1545          do {
-  1546                  reg = REG_READ(ah, AR_OBS_BUS_1);
-  1547                  if (reg != last_val)
-  1548                          return true;
-  1549  
-  1550                  last_val = reg;
-  1551                  if ((reg & 0x7E7FFFEF) == 0x00702400)
-  1552                          continue;
-  1553  
-  1554                  switch (reg & 0x7E000B00) {
-  1555                  case 0x1E000000:
-  1556                  case 0x52000B00:
-  1557                  case 0x18000B00:
-  1558                          continue;
-  1559                  default:
-  1560                          return true;
-  1561                  }
-  1562  
-  1563                  udelay(1);
-                        ^^^^^^^^^
-We never hit this recently added delay.
+VLAIS is only used in a handful of places in the kernel (almost 
+exclusively in crypto related code), so changing it in the kernel not 
+only is easier, but also makes the kernel code C99 (and beyond) 
+compliant. Being standards compliant is important not only for clang, 
+but also for newer versions of gcc (though not yet in the case of VLAIS).
 
-  1564          } while (count-- > 0);
+VLAIS should not be confused with Variable Length Arrays (VLA) and 
+flexible members (undefined or zero length arrays at the end of a non 
+embedded struct) which are both explicitly in the C standards and 
+supported by both gcc and clang.
 
-regards,
-dan carpenter
+Behan
+
+-- 
+Behan Webster
+behanw@converseincode.com
+
