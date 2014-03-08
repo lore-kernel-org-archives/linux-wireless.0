@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34598 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228AbaCLNV7 convert rfc822-to-8bit (ORCPT
+Received: from mout.gmx.net ([212.227.17.22]:63184 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751669AbaCHXmH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 09:21:59 -0400
-Received: by mail-ob0-f179.google.com with SMTP id va2so9991822obc.38
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2014 06:21:58 -0700 (PDT)
+	Sat, 8 Mar 2014 18:42:07 -0500
+In-Reply-To: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
+References: <1394177091.4653.1.camel@jlt4.sipsolutions.net> <1394241960-1764-1-git-send-email-behanw@converseincode.com> <CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com> <531B934C.31666.37555A14@pageexec.freemail.hu> <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1394629569-13798-4-git-send-email-luciano.coelho@intel.com>
-References: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
-	<1394629569-13798-4-git-send-email-luciano.coelho@intel.com>
-Date: Wed, 12 Mar 2014 14:21:58 +0100
-Message-ID: <CA+BoTQkSqEVVKgK3rD26ECqnJPQo57M+4NNoifH1Wu+EBYvqwA@mail.gmail.com> (sfid-20140312_142209_229505_56D686ED)
-Subject: Re: [PATCH v7 3/4] mac80211: implement chanctx reservation
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+From: =?ISO-8859-1?Q?Jan-Simon_M=F6ller?= <dl9pf@gmx.de>
+Date: Sun, 09 Mar 2014 00:41:41 +0100
+To: Sergei Antonov <saproj@gmail.com>, pageexec@freemail.hu
+CC: behanw@converseincode.com, John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	=?ISO-8859-1?Q?Vin=EDcius_Tinti?= <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Message-ID: <fcb4c551-996e-42e4-a9ff-ac3c8f3bc5ea@email.android.com> (sfid-20140309_004212_423036_5D9F0FF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 March 2014 14:06, Luciano Coelho <luciano.coelho@intel.com> wrote:
-
-[...]
-
-> +       if (old_ctx == ctx) {
-> +               /* This is our own context, just change it */
-> +               ret = __ieee80211_vif_change_channel(sdata, old_ctx,
-> +                                                    &tmp_changed);
-> +               if (ret)
-> +                       goto out;
-> +       } else {
-> +               if (sdata->vif.bss_conf.chandef.width !=
-> +                   sdata->reserved_chandef.width)
-> +                       tmp_changed |= BSS_CHANGED_BANDWIDTH;
-> +
-> +               sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
-> +
-> +               ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-> +               if (old_ctx->refcount == 0)
-> +                       ieee80211_free_chanctx(local, old_ctx);
-> +               if (ret) {
-> +                       /* if assign fails refcount stays the same */
-> +                       if (ctx->refcount == 0)
-> +                               ieee80211_free_chanctx(local, ctx);
-> +                       goto out;
-> +               }
-> +
-> +               *changed = tmp_changed;
-> +
-> +               ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-
-Ah, you can't call it like that. This will deadlock because the
-function tries to grab chanctx_mtx but you're already holding it. You
-need to first split the vif_copy_chanctx() into 2 variants - with and
-without grabbing the chanctx_mtx.
 
 
-> +               ieee80211_recalc_chanctx_chantype(local, ctx);
-> +               ieee80211_recalc_smps_chanctx(local, ctx);
-> +               ieee80211_recalc_radar_chanctx(local, ctx);
-> +               ieee80211_recalc_chanctx_min_def(local, ctx);
-
-It seems you need to call these recalc* regardless what if() branch is
-taken so calling them in this branch is pointless, no?
-
-> +       }
-> +
-> +       *changed = tmp_changed;
-> +
-> +       ieee80211_recalc_chanctx_chantype(local, ctx);
-> +       ieee80211_recalc_smps_chanctx(local, ctx);
-> +       ieee80211_recalc_radar_chanctx(local, ctx);
-> +       ieee80211_recalc_chanctx_min_def(local, ctx);
+On 9. März 2014 00:00:19 MEZ, Sergei Antonov <saproj@gmail.com> wrote:
+>On 8 March 2014 23:01, PaX Team <pageexec@freemail.hu> wrote:
+>> On 8 Mar 2014 at 21:29, Sergei Antonov wrote:
+>>
+>>> > -       memset(&aead_req, 0, sizeof(aead_req));
+>>> > +       char aead_req_data[sizeof(struct aead_request) +
+>>> > +                               crypto_aead_reqsize(tfm) +
+>>> > +                               CRYPTO_MINALIGN]
+>CRYPTO_MINALIGN_ATTR;
+>>                                                     
+>^^^^^^^^^^^^^^^^^^^^
+>> wouldn't the underlined attribute ensure the required alignment?
+>Yes. Sorry, I overlooked it.
+>
+>I would remove unneeded CRYPTO_MINALIGN and get the alignment from the
+>target structure:
+>        char aead_req_data[sizeof(struct aead_request) +
+>                           crypto_aead_reqsize(tfm)]
+>        __attribute__((__aligned__(__alignof__(struct aead_request))));
 
 
 
-Michał
+LGTM
+
+
+
+-- 
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
