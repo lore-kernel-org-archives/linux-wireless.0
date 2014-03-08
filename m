@@ -1,38 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231AbaCJUa0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50659 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751296AbaCHDmL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 16:30:26 -0400
-Message-ID: <1394483382.30155.2.camel@jlt4.sipsolutions.net> (sfid-20140310_213037_409626_2AAE7ADE)
-Subject: Re: [PATCH 1/3] mac80211: fix racy usage of chanctx->refcount
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 10 Mar 2014 22:29:42 +0200
-In-Reply-To: <CAB3XZEek76hKh_5nqOs66DgFHT9iki17rZD8EqJnccQty4FdeQ@mail.gmail.com> (sfid-20140309_104027_325761_F4E44E1B)
-References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
-	 <CAB3XZEek76hKh_5nqOs66DgFHT9iki17rZD8EqJnccQty4FdeQ@mail.gmail.com>
-	 (sfid-20140309_104027_325761_F4E44E1B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 7 Mar 2014 22:42:11 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/6] mwifiex: use VHT MCS mask in set bitrate mask handler
+Date: Fri, 7 Mar 2014 19:41:28 -0800
+Message-ID: <1394250091-18477-3-git-send-email-bzhao@marvell.com> (sfid-20140308_044216_730811_5F4988F3)
+In-Reply-To: <1394250091-18477-1-git-send-email-bzhao@marvell.com>
+References: <1394250091-18477-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-03-09 at 11:40 +0200, Eliad Peller wrote:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-> > @@ -3233,23 +3233,23 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-> >                                        &sdata->vif.bss_conf.chandef))
-> >                 return -EINVAL;
-> >
-> > -       rcu_read_lock();
-> > +       mutex_lock(&local->chanctx_mtx);
-> >         chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> this should probably be rcu_dereference_protected now?
+As V15 firmware supports VHT rate configuration, we can use this
+information received in set bitrate mask handler.
 
-Yes, in fact, lockdep ought to warn about this usage now, please enable
-it :)
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 51ce99c..ee45d62 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1158,9 +1158,10 @@ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	u16 bitmap_rates[MAX_BITMAP_RATES_SIZE];
+ 	enum ieee80211_band band;
++	struct mwifiex_adapter *adapter = priv->adapter;
+ 
+ 	if (!priv->media_connected) {
+-		dev_err(priv->adapter->dev,
++		dev_err(adapter->dev,
+ 			"Can not set Tx data rate in disconnected state\n");
+ 		return -EINVAL;
+ 	}
+@@ -1181,9 +1182,16 @@ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
+ 
+ 	/* Fill HT MCS rates */
+ 	bitmap_rates[2] = mask->control[band].ht_mcs[0];
+-	if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2)
++	if (adapter->hw_dev_mcs_support == HT_STREAM_2X2)
+ 		bitmap_rates[2] |= mask->control[band].ht_mcs[1] << 8;
+ 
++       /* Fill VHT MCS rates */
++	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
++		bitmap_rates[10] = mask->control[band].vht_mcs[0];
++		if (adapter->hw_dev_mcs_support == HT_STREAM_2X2)
++			bitmap_rates[11] = mask->control[band].vht_mcs[1];
++	}
++
+ 	return mwifiex_send_cmd(priv, HostCmd_CMD_TX_RATE_CFG,
+ 				HostCmd_ACT_GEN_SET, 0, bitmap_rates, true);
+ }
+-- 
+1.8.2.3
 
