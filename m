@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37873 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933853AbaCSNwJ (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:34002 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbaCHCPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 09:52:09 -0400
-Message-ID: <1395237113.4142.5.camel@jlt4.sipsolutions.net> (sfid-20140319_145236_813708_6237C20B)
-Subject: Re: [PATCH v3] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: behanw@converseincode.com
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	Fri, 7 Mar 2014 21:15:47 -0500
+Received: by mail-pd0-f171.google.com with SMTP id r10so4749861pdi.16
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 18:15:46 -0800 (PST)
+Message-ID: <531A7D4F.7090303@converseincode.com> (sfid-20140308_031612_520973_FFE2BDC9)
+Date: Fri, 07 Mar 2014 18:15:43 -0800
+From: Behan Webster <behanw@converseincode.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
 	dwmw2@infradead.org, pageexec@freemail.hu,
-	Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>,
-	=?ISO-8859-1?Q?Vin=EDcius?= Tinti <viniciustinti@gmail.com>,
+	=?ISO-8859-1?Q?Jan-Simon_M=F6?= =?ISO-8859-1?Q?ller?=
+	<dl9pf@gmx.de>,
+	=?ISO-8859-1?Q?Vin=EDcius_Tinti?= <viniciustinti@gmail.com>,
 	Mark Charlebois <charlebm@gmail.com>
-Date: Wed, 19 Mar 2014 14:51:53 +0100
-In-Reply-To: <1395199933-4686-1-git-send-email-behanw@converseincode.com> (sfid-20140319_043225_892297_337F53BC)
-References: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
-	 <1395199933-4686-1-git-send-email-behanw@converseincode.com>
-	 (sfid-20140319_043225_892297_337F53BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>	 <1394241960-1764-1-git-send-email-behanw@converseincode.com> <1394243809.6972.4.camel@joe-AO722>
+In-Reply-To: <1394243809.6972.4.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm confused.
+On 03/07/14 17:56, Joe Perches wrote:
+> On Fri, 2014-03-07 at 17:26 -0800, behanw@converseincode.com wrote:
+>> From: Jan-Simon Möller <dl9pf@gmx.de>
+>>
+>> Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
+>> compliant equivalent. This is the original VLAIS struct.
+> []
+>> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+> []
+>> @@ -23,12 +23,14 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+>>   			       u8 *data, size_t data_len, u8 *mic)
+>>   {
+>>   	struct scatterlist assoc, pt, ct[2];
+>> -	struct {
+>> -		struct aead_request	req;
+>> -		u8			priv[crypto_aead_reqsize(tfm)];
+>> -	} aead_req;
+>>   
+>> -	memset(&aead_req, 0, sizeof(aead_req));
+>> +	char aead_req_data[sizeof(struct aead_request) +
+>> +				crypto_aead_reqsize(tfm) +
+>> +				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+> Can this be a too large amount of stack?
+>
+> Is crypto_aead_reqsize() limited to < ~1k?
+>
+> Perhaps it'd be better to use kzalloc for this
+> or another reserved pool
+No more stack being used than with the the original code. The stack 
+memory use is identical.
 
-On Tue, 2014-03-18 at 20:32 -0700, behanw@converseincode.com wrote:
+Behan
 
-
->  	struct scatterlist assoc, pt, ct[2];
-> -	struct {
-> -		struct aead_request	req;
-> -		u8			priv[crypto_aead_reqsize(tfm)];
-> -	} aead_req;
->  
-> -	memset(&aead_req, 0, sizeof(aead_req));
-> +	char aead_req_data[sizeof(struct aead_request) +
-> +		crypto_aead_reqsize(tfm)]
-> +		__aligned(__alignof__(struct aead_request));
-
-This looks fine, though I'd argue the blank lines before/after it
-shouldn't be there, and the indentation should be a bit different, but I
-was willing to clean that up.
-
->  int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
->  			      u8 *data, size_t data_len, u8 *mic)
->  {
->  	struct scatterlist assoc, pt, ct[2];
-> -	struct {
-> -		struct aead_request	req;
-> -		u8			priv[crypto_aead_reqsize(tfm)];
-> -	} aead_req;
->  
-> -	memset(&aead_req, 0, sizeof(aead_req));
-> +	char aead_req_data[sizeof(struct aead_request) +
-> +				crypto_aead_reqsize(tfm) +
-> +				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
-
-But why does the second instance use a completely different size/align?
-
-johannes
+-- 
+Behan Webster
+behanw@converseincode.com
 
