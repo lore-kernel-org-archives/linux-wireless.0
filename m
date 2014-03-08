@@ -1,52 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:45643 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634AbaCUOW7 (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:63820 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbaCHRfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 10:22:59 -0400
-Received: by mail-ve0-f169.google.com with SMTP id pa12so2669845veb.28
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 07:22:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=X=UxikrVrmr3hyQgjN2Tg5aeW5Ok7b+23n9X6bxRshA@mail.gmail.com>
-References: <1395396014-24631-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQ=X=UxikrVrmr3hyQgjN2Tg5aeW5Ok7b+23n9X6bxRshA@mail.gmail.com>
-Date: Fri, 21 Mar 2014 22:22:59 +0800
-Message-ID: <CAEFj987cTdr_7bhMajp2fRK5y1WAy0icyUJcTWSahW5sGFAFWQ@mail.gmail.com> (sfid-20140321_152314_340730_26B943A5)
-Subject: Re: [PATCH] ath10k: add the Rx rate in FW stats
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 8 Mar 2014 12:35:44 -0500
+Received: by mail-ee0-f45.google.com with SMTP id d17so2308297eek.32
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2014 09:35:42 -0800 (PST)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH] rtl8180: prepare to handle more than two chip types
+Date: Sat,  8 Mar 2014 18:36:37 +0100
+Message-Id: <1394300197-1331-1-git-send-email-andrea.merello@gmail.com> (sfid-20140308_183547_901864_EC37633A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Unfortunately this isn't as simple as it seems.
->
-> Stats are received via wmi_stats_event. This structure contains fields
-> describing number of pdev/vdev/beer/bcn stat entries. All entries
-> (structures) are appended in certain order after this header. This
-> means if you change length of structure type you skew the calculation
-> of all succeeding entries.
->
-> IOW this means this patch breaks peer stats for 999.999.0.636.
->
-> I'm quite positive wmi_pdev_stats is also broken. This implies vdev
-> stats and peer stats position calculation is skewed in the first place
-> and you get garbage.
->
-> The main problem here is there are subtle yet crazy binary
-> incompatibilities between these firmwares.
->
-> The best way would probably be to implement wmi as an abstraction
-> layer with completely different backends for different firmware
-> branches/revisions. Otherwise you sign up for some pain..
+Currently a "r8185" integer variable is used as a boolean flag to
+indicate whether the card is a rtl8185 or not.
+Since now the driver supports only rtl8185 and rtl8180 cards, if
+"r8185" variable is zero then the card is implicitly assumed to
+be a rtl8180.
 
-Thanks for your explanation. I will definitely take a look on this if
-I am able to figure out.
+Now I'm preparing to add support for a third card type (rtl8187se).
 
-This patch seems work well with patch from Ben Greear on latest AP firmware.
+This patch changes the "r8185" flag with an enum variable to
+explicitly indicate which card type we have.
 
-----
-Chun-Yeow
+I'm submitting this this patch now, even if I still have to submit
+other patches that not pertain with rtl8187se support, because
+IMHO it's not worth rebasing them on the current code, using r8185
+flag, and then changing them back again nearly immediately.
+BTW if someone feels I really should do this, please tell me..
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c     | 37 ++++++++++++++++----------
+ drivers/net/wireless/rtl818x/rtl8180/rtl8180.h |  6 ++++-
+ 2 files changed, 28 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 959e699..3c2b784 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -148,7 +148,8 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			rx_status.antenna = (flags2 >> 15) & 1;
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
+ 			agc = (flags2 >> 17) & 0x7F;
+-			if (priv->r8185) {
++
++			if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185) {
+ 				if (rx_status.rate_idx > 3)
+ 					signal = 90 - clamp_t(u8, agc, 25, 90);
+ 				else
+@@ -288,7 +289,7 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
+ 		   (ieee80211_get_tx_rate(dev, info)->hw_value << 24) |
+ 		   skb->len;
+ 
+-	if (priv->r8185)
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180)
+ 		tx_flags |= RTL818X_TX_DESC_FLAG_DMA |
+ 			    RTL818X_TX_DESC_FLAG_NO_ENC;
+ 
+@@ -305,7 +306,7 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
+ 		rts_duration = ieee80211_rts_duration(dev, priv->vif, skb->len,
+ 						      info);
+ 
+-	if (!priv->r8185) {
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8180) {
+ 		unsigned int remainder;
+ 
+ 		plcp_len = DIV_ROUND_UP(16 * (skb->len + 4),
+@@ -412,7 +413,7 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 
+ 	rtl818x_iowrite8(priv, &priv->map->MSR, 0);
+ 
+-	if (!priv->r8185)
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8180)
+ 		rtl8180_set_anaparam(priv, priv->anaparam);
+ 
+ 	rtl818x_iowrite32(priv, &priv->map->RDSAR, priv->rx_ring_dma);
+@@ -425,7 +426,7 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG2);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG2, reg & ~(1 << 3));
+-	if (priv->r8185) {
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185) {
+ 		reg = rtl818x_ioread8(priv, &priv->map->CONFIG2);
+ 		rtl818x_iowrite8(priv, &priv->map->CONFIG2, reg | (1 << 4));
+ 	}
+@@ -437,7 +438,7 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 
+ 	rtl818x_iowrite32(priv, &priv->map->INT_TIMEOUT, 0);
+ 
+-	if (priv->r8185) {
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+ 		rtl818x_iowrite8(priv, &priv->map->WPA_CONF, 0);
+ 		rtl818x_iowrite8(priv, &priv->map->RATE_FALLBACK, 0x81);
+ 		rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (8 << 4) | 0);
+@@ -460,7 +461,7 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 	}
+ 
+ 	priv->rf->init(dev);
+-	if (priv->r8185)
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185)
+ 		rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
+ 	return 0;
+ }
+@@ -624,7 +625,7 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 	      RTL818X_RX_CONF_BROADCAST |
+ 	      RTL818X_RX_CONF_NICMAC;
+ 
+-	if (priv->r8185)
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8185)
+ 		reg |= RTL818X_RX_CONF_CSDM1 | RTL818X_RX_CONF_CSDM2;
+ 	else {
+ 		reg |= (priv->rfparam & RF_PARAM_CARRIERSENSE1)
+@@ -636,7 +637,7 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 	priv->rx_conf = reg;
+ 	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
+-	if (priv->r8185) {
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+ 		reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+ 
+ 		/* CW is not on per-packet basis.
+@@ -668,7 +669,9 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 	reg |= (6 << 21 /* MAX TX DMA */) |
+ 	       RTL818X_TX_CONF_NO_ICV;
+ 
+-	if (priv->r8185)
++
++
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180)
+ 		reg &= ~RTL818X_TX_CONF_PROBE_DTS;
+ 	else
+ 		reg &= ~RTL818X_TX_CONF_HW_SEQNUM;
+@@ -1052,15 +1055,22 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 	switch (reg) {
+ 	case RTL818X_TX_CONF_R8180_ABCD:
+ 		chip_name = "RTL8180";
++		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8180;
+ 		break;
++
+ 	case RTL818X_TX_CONF_R8180_F:
+ 		chip_name = "RTL8180vF";
++		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8180;
+ 		break;
++
+ 	case RTL818X_TX_CONF_R8185_ABC:
+ 		chip_name = "RTL8185";
++		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8185;
+ 		break;
++
+ 	case RTL818X_TX_CONF_R8185_D:
+ 		chip_name = "RTL8185vD";
++		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8185;
+ 		break;
+ 	default:
+ 		printk(KERN_ERR "%s (rtl8180): Unknown chip! (0x%x)\n",
+@@ -1068,8 +1078,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 		goto err_iounmap;
+ 	}
+ 
+-	priv->r8185 = reg & RTL818X_TX_CONF_R8185_ABC;
+-	if (priv->r8185) {
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+ 		priv->band.n_bitrates = ARRAY_SIZE(rtl818x_rates);
+ 		pci_try_set_mwi(pdev);
+ 	}
+@@ -1118,7 +1127,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 
+ 	eeprom_93cx6_read(&eeprom, 0x17, &eeprom_val);
+ 	priv->csthreshold = eeprom_val >> 8;
+-	if (!priv->r8185) {
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8185) {
+ 		__le32 anaparam;
+ 		eeprom_93cx6_multiread(&eeprom, 0xD, (__le16 *)&anaparam, 2);
+ 		priv->anaparam = le32_to_cpu(anaparam);
+@@ -1142,7 +1151,7 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* OFDM TX power */
+-	if (priv->r8185) {
++	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+ 		for (i = 0; i < 14; i += 2) {
+ 			u16 txpwr;
+ 			eeprom_93cx6_read(&eeprom, 0x20 + (i >> 1), &txpwr);
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+index 3052331..b4a1c79 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
++++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+@@ -82,7 +82,11 @@ struct rtl8180_priv {
+ 	struct pci_dev *pdev;
+ 	u32 rx_conf;
+ 
+-	int r8185;
++	enum {
++		RTL818X_CHIP_FAMILY_RTL8180,
++		RTL818X_CHIP_FAMILY_RTL8185,
++		RTL818X_CHIP_FAMILY_RTL8187SE
++	} chip_family;
+ 	u32 anaparam;
+ 	u16 rfparam;
+ 	u8 csthreshold;
+-- 
+1.8.3.2
+
