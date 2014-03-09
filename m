@@ -1,82 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55042 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754588AbaCCQXT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 11:23:19 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v4 3/3] cfg80211: add MPLS and 802.21 classification
-Date: Mon,  3 Mar 2014 17:23:12 +0100
-Message-Id: <1393863792-18172-4-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172341_033568_53ADCF50)
-In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
-References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+Received: from mga09.intel.com ([134.134.136.24]:27293 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752368AbaCIOkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Mar 2014 10:40:46 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v6 1/3] mac80211: split ieee80211_vif_change_channel in two
+Date: Sun,  9 Mar 2014 16:40:37 +0200
+Message-Id: <1394376039-9644-2-git-send-email-luciano.coelho@intel.com> (sfid-20140309_154049_481047_D0FEE96D)
+In-Reply-To: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
+References: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MPLS labels may contain traffic control information, which should be
-evaluated and used by the wireless subsystem if present.
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-Also check for IEEE 802.21 which is always network control traffic.
-
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
-Changes to third version:
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
- * add Johannes' Ack
- * fix over-indented closing brace
-
-Changes to second version:
-
- * rely on skb->protocol instead of checking ethertype
-
-Changes to first version:
-
- * include linux/mpls.h, not the UAPI one
- * change __constant_htons to htons
----
- net/wireless/util.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 780b454..ad03af3 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -11,6 +11,7 @@
- #include <net/ip.h>
- #include <net/dsfield.h>
- #include <linux/if_vlan.h>
-+#include <linux/mpls.h>
- #include "core.h"
- #include "rdev-ops.h"
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 42c6592..a27c6ec 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
  
-@@ -717,6 +718,21 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
- 	case htons(ETH_P_IPV6):
- 		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
- 		break;
-+	case htons(ETH_P_MPLS_UC):
-+	case htons(ETH_P_MPLS_MC): {
-+		struct mpls_label mpls_tmp, *mpls;
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
++}
 +
-+		mpls = skb_header_pointer(skb, sizeof(struct ethhdr),
-+					  sizeof(*mpls), &mpls_tmp);
-+		if (!mpls)
-+			return 0;
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
 +
-+		return (ntohl(mpls->entry) & MPLS_LS_TC_MASK)
-+			>> MPLS_LS_TC_SHIFT;
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
 +	}
-+	case htons(ETH_P_80221):
-+		/* 802.21 is always network control traffic */
-+		return 7;
- 	default:
- 		return 0;
- 	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
 -- 
-1.7.10.4
+1.9.0
 
