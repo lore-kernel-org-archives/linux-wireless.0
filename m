@@ -1,111 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42002 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751959AbaCXIiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 04:38:05 -0400
-Message-ID: <1395650268.4515.21.camel@dubbel> (sfid-20140324_093811_248677_572097B9)
-From: Luca Coelho <luca@coelho.fi>
-To: "Berg, Johannes" <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 24 Mar 2014 10:37:48 +0200
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-sDS4tPg/YP4klQzWtpjr"
-Mime-Version: 1.0
-Subject: pull request: mac80211-next-csa 2014-03-24
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:43267 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752623AbaCIVnY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Mar 2014 17:43:24 -0400
+Received: by mail-qc0-f173.google.com with SMTP id r5so6938446qcx.32
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2014 14:43:23 -0700 (PDT)
+Message-ID: <531CE079.9050304@gmail.com> (sfid-20140309_224327_203115_30694526)
+Date: Sun, 09 Mar 2014 14:43:21 -0700
+From: Bryan Batten <bryanbatten@gmail.com>
+Reply-To: BryanBatten@gmail.com
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC} mac80211: optimize rate control initialization
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This proposed patch changes the rate control initialization sources to 
+reduce the number of files to be modified when a new rate control 
+scheme is added to the kernel. Reducing the scope of needed source 
+changes should enhance the Linux kernel as a vehicle for expanding 
+802.11 rate control capabilities by making the addition of new schemes 
+easier.
 
---=-sDS4tPg/YP4klQzWtpjr
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Affected files are net/mac80211/rate.h and net/mac80211/main.c.
 
-Hi Johannes,
+Adding an additional rate control scheme currently requires not only 
+adding the new rate control source code to the kernel, but also 
+modifying net/mac80211/rate.h to define initialization and exit 
+functions for the new scheme, and net/mac80211/main.c to add additional 
+initialization and exit calls to the added functions. This patch 
+removes the need to modify main.c when new rate control schemes are 
+added. It makes a one time modification to main.c and changes rate.h so 
+that any future rate control schemes added to mac80211 only require 
+changes to rate.h, leaving the source for main.c unchanged.
 
-As we agreed, I'm sending you a pull request with the channel-switch
-stuff Micha=C5=82 and I have been working on.
+The basic idea is to push the all the calls to specific rate control 
+initialization and exit functions down into rate.h, using generic rate 
+control initialization and exit functions defined there, then replace 
+the explicit calls in main.c with references to the generic functions. 
+The patch has two parts.
 
-This includes my combination and reservation patchsets and the VLAN copy
-chanctx from Micha=C5=82 that my reservation patchset depends on.
+First, net/mac80211/rate.h currently conditionally expands calls to 
+rc80211_pid_{init|exit} and rc80211_minstrel_{init|exit} based on the 
+setting for CONFIG_MAC80211_RC_PID and CONFIG_MAC80211_RC_MINSTREL. The 
+patch would add two wrapper functions:
 
-Please pull.
+static inline int mac80211_rc_init() to call all the initializers, and
+static inline void mac80211_rc_exit() to call all the exit functions.
 
-The following changes since commit 73fb08e24ae840bc518facc2c605dd6bb3751fec=
-:
+These symbols to not appear to be currently defined as of 3.12.11.
 
-  cfg80211: remove macro ASSERT_RDEV_LOCK(rdev) (2014-03-19 21:29:58 +0100)
+Second, in net/mac80211/main.c, ieee80211_init() and ieee80211_exit() 
+currently call rc80211_pid_{init|exit} and rc80211_minstrel_{init|exit} 
+individually, relying on the conditional definitions in rate.h to 
+appropriately expand the calls. The patch replaces the initialization 
+calls in ieee80211_init() with:
 
-are available in the git repository at:
+ret=mac80211_rc_init();
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/mac80211-next-csa.git =
-for-johannes
+and the exit calls in ieee80211_exit() with:
 
-for you to fetch changes up to 5824e703a7a1dbd766aa445fff8518ddf90468be:
+mac80211_rc_exit();
 
-  mac80211: allow reservation of a running chanctx (2014-03-24 10:18:32 +02=
-00)
+If this proposal is deemed to be a worthwhile effort, let me know the 
+appropriate version of the kernel to target, and I'll code (compile in 
+target kernel without error or warning messages using gcc 4.7.2) and 
+test (modified kernel does not crash) a formal patch and submit it to 
+wherever you deem appropriate.
 
-----------------------------------------------------------------
-Luciano Coelho (9):
-      cfg80211: refactor cfg80211_can_use_iftype_chan()
-      cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-      cfg80211/mac80211: move interface counting for combination check to m=
-ac80211
-      cfg80211/mac80211: move combination check to mac80211 for ibss
-      cfg80211/mac80211: move more combination checks to mac80211
-      mac80211: split ieee80211_vif_change_channel in two
-      mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
-      mac80211: implement chanctx reservation
-      mac80211: allow reservation of a running chanctx
+Additional comments and suggestions will be appreciated.
 
-Michal Kazior (1):
-      mac80211: protect AP VLAN list with local->mtx
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  31 ++++++-
- include/net/mac80211.h           |   7 ++
- net/mac80211/cfg.c               |  16 +++-
- net/mac80211/chan.c              | 384 +++++++++++++++++++++++++++++++++++=
-++++++++++++++++++++++-------------------
- net/mac80211/ibss.c              |  64 +++++++++----
- net/mac80211/ieee80211_i.h       |  21 ++++-
- net/mac80211/iface.c             |  15 ++-
- net/mac80211/mesh.c              |   9 +-
- net/mac80211/util.c              |  76 +++++++++++++++
- net/wireless/chan.c              |  74 +++++++++++----
- net/wireless/core.c              |  11 +--
- net/wireless/core.h              |  29 ------
- net/wireless/ibss.c              |  24 -----
- net/wireless/mesh.c              |  25 -----
- net/wireless/mlme.c              |  14 +--
- net/wireless/nl80211.c           |  59 ++++--------
- net/wireless/util.c              | 139 ++++++++++++++++------------
- 18 files changed, 651 insertions(+), 348 deletions(-)
-
-
---=-sDS4tPg/YP4klQzWtpjr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJTL+7cAAoJEKFHnKIaPMX6BW4P/j44aGIch7o4BwGYizLttSUq
-8qIyVhp8RZOEIrR2xxWKdwSne+p7hiyIGBKqQGVPW6majd8TvRE5str1iphn0X5s
-cU+oJfGDJyaR2Y8iIM9z8ZNxAf1nLrY05PwnntSDcrY0oPG2X+HuCepzkonATuJZ
-LKizcS+HIaf9z7bNKHsYee9AfqFhCGEHam2AZNlKcC6+gySXjnbDxDJ+oMRgsnPG
-ylv5WqD+3RjqoW/kezdLTX7hIEtrOuJgfbXiUlcP9q8nsyQ3tedAnddNfSTfdHUu
-GwgP7EfT6/RDF8vL8qw3mGyHpRwNowL7BKsbtxNB/4ykLOB3aLYTNgO/ldkcYhUS
-tqMkqCW70deQPPW5wYZZuMSytmWzGST2VbqjV+BoBQ2ZC6/on32LHR6YxiynyQ3m
-E4rNqRm0cm8NyOMz0MIvMWynk2qsV6dlVNAn6+HFqseI/Zj8DZ5RBUvNG63BI4Sy
-JQZxGPx7PTTPFx0FHVhH87/fzt9Fnym91wbrReJGIITNFa6vM1jaF5/DzkXXqg1a
-MQtGx9w+n+VQ1HzVMckEQjhCedndBoWt2xXvDbkxqUJXDWFYFnzB1qfQ0E5OfoNw
-4ktLdl6b/KGN1fEmix+Upy/BwWo9kZ+fdf0cq9t0Yn9NRPOj/+gXkyehlC6pefyf
-Idx9ms6cV+rqw5U/JjbJ
-=hIS2
------END PGP SIGNATURE-----
-
---=-sDS4tPg/YP4klQzWtpjr--
-
+Thanks,
+-- 
+Bryan
+-
+Large corporations are not notably capitalistic.
