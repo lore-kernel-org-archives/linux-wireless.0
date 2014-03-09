@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48873 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753410AbaCJNuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 09:50:40 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 0/2] Add SRAM dump utility through udef
-Date: Mon, 10 Mar 2014 15:48:21 +0200
-Message-Id: <1394459303-11074-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140310_145043_647443_D1954042)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:56715 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbaCIPPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Mar 2014 11:15:48 -0400
+Received: by mail-ie0-f174.google.com with SMTP id rp18so6035012iec.5
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2014 08:15:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEfEk72og-WkfYOyfExaC8iAxMo44japLu39Zrk5JNwi7g@mail.gmail.com>
+References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEfEk72og-WkfYOyfExaC8iAxMo44japLu39Zrk5JNwi7g@mail.gmail.com>
+Date: Sun, 9 Mar 2014 17:15:48 +0200
+Message-ID: <CAB3XZEevsO-oYA6qaj3HrupWVJ9gY-L8g60fhLBJNJSmLLeSWA@mail.gmail.com> (sfid-20140309_161551_293821_0B852E97)
+Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is very useful to have a dump of the device's SRAM when
-the firmware asserts to ba eblt analyze the problem.
+On Sun, Mar 9, 2014 at 11:47 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Fri, Mar 7, 2014 at 1:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> It doesn't make much sense to have a manually
+>> managed chanctx refcount. It isn't performance
+>> critical and it can't be even used outside the
+>> protection of chanctx_mtx.
+>>
+>> With future enhancements to channel contenxt
+>> (namely reservations) refcount accounting will
+>> become more complex and having manually managed
+>> refcount is going to be error-prone and confusing.
+>>
+>> The refcount is now equal to the number of vifs it
+>> is assigned to. However in the future this will
+>> change so keep the refcount/num_assigned_vifs
+>> functions split now.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+> [...]
+>
+>> +int ieee80211_chanctx_num_assigned_vifs(struct ieee80211_chanctx *ctx)
+>> +{
+>> +       struct ieee80211_local *local = ctx->local;
+>> +       struct ieee80211_sub_if_data *sdata;
+>> +       int num = 0;
+>> +
+>> +       lockdep_assert_held(&local->chanctx_mtx);
+>> +
+>> +       rcu_read_lock();
+>> +       list_for_each_entry_rcu(sdata, &local->interfaces, list)
+>> +               if (ieee80211_vif_assigned_chanctx(sdata) == ctx)
+>> +                       num++;
+>> +       rcu_read_unlock();
+>
+> i don't think you need rcu_read_lock if you already hold chanctx_mtx
+>
+just realized this for the interface iteration, not for the chanctx.
+please ignore :)
 
-This small patch series allows to read the SRAM from the
-device when an error occurs, and to save it aside. Then we
-send a udev event that can trigger a script which will read
-the data through debugfs. Going through userspace (udev)
-allows us to reach the file system which is the purpose.
-Today the SRAM is 80KB big so that we will have 80KB per
-assert. This should compress really well though.
-
-I send this series as a RFC for distributions. Would you use this?
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: send udev event when ASSERT occur for SRAM dump
-  iwlwifi: mvm: create a firmware error dump format
-
- drivers/net/wireless/iwlwifi/mvm/debugfs.c       |  51 +++++++++++
- drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h | 106 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   7 ++
- drivers/net/wireless/iwlwifi/mvm/mvm.h           |   6 +-
- drivers/net/wireless/iwlwifi/mvm/ops.c           |  36 +++++++-
- drivers/net/wireless/iwlwifi/mvm/utils.c         |  27 +++---
- 7 files changed, 214 insertions(+), 20 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
-
--- 
-1.8.3.2
-
+Eliad.
