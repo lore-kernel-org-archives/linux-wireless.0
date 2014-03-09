@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:51142 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbaCXIao convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0154.hostedemail.com ([216.40.44.154]:59520 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750761AbaCIHUM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 04:30:44 -0400
-Received: by mail-oa0-f49.google.com with SMTP id h16so5432986oag.36
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 01:30:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87d2hc80qp.fsf@kamboji.qca.qualcomm.com>
-References: <1395380076-4306-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
-	<87d2hc80qp.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 24 Mar 2014 09:30:44 +0100
-Message-ID: <CA+BoTQktUw+VhNfAWNJEECGjL9mTGPLTxBsrGOdzJtArjuC11A@mail.gmail.com> (sfid-20140324_093048_827745_DED6E9C5)
-Subject: Re: [PATCH] ath10k: fix the peer mac address in getting stats
-From: Michal Kazior <michal.kazior@tieto.com>
+	Sun, 9 Mar 2014 03:20:12 -0400
+Message-ID: <1394349609.6972.39.camel@joe-AO722> (sfid-20140309_082029_447748_3D4496B2)
+Subject: Re: [PATCH 5/6] ath6kl: remove a warning on a macro
+From: Joe Perches <joe@perches.com>
 To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org
+Date: Sat, 08 Mar 2014 23:20:09 -0800
+In-Reply-To: <87iornn8xx.fsf@kamboji.qca.qualcomm.com>
+References: <20140309065606.10793.67068.stgit@x230>
+	 <20140309065735.10793.45835.stgit@x230>
+	 <87iornn8xx.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 March 2014 09:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+On Sun, 2014-03-09 at 09:10 +0200, Kalle Valo wrote:
+> Hi Joe,
 
-[...]
+Hi Kalle.
 
->> Other than that the patch looks good.
->>
->> Reviewed-By: Michał Kazior <michal.kazior@tieto.com>
->
-> Thanks, I added this to the patch.
->
-> Let's just hope that the l with the extra line doesn't cause any charset
-> problems :) BTW, what is the name of the character? Never seen that
-> before.
+> I would need help with this checkpatch warning:
 
-http://www.fileformat.info/info/unicode/char/142/index.htm
+No idea what the warning is.
 
-I don't care much if you s/ł/l/. I already commit patches with an l.
+> > --- a/drivers/net/wireless/ath/ath6kl/debug.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/debug.c
+> > @@ -798,12 +798,10 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
+> >  		return -ENOMEM;
+> >  
+> >  #define EPSTAT(name)							\
+> > -	do {								\
+> > -		len = print_endpoint_stat(target, buf, buf_len, len,	\
+> > -					  offsetof(struct htc_endpoint_stats, \
+> > -						   name),		\
+> > -					  #name);			\
+> > -	} while (0)
+> > +	(len = print_endpoint_stat(target, buf, buf_len, len,		\
+> > +				   offsetof(struct htc_endpoint_stats,	\
+> > +					    name),			\
+> > +				   #name))
+> 
+> I wasn't quite able to figure out what is the preferred style here. I
+> don't see how the () style is any better, but checkpatch didn't complain
+> at least.
+
+No idea what the preferred style is, but
+I'd probably change the #define to
+
+#define EPSTAT(name)							\
+	print_endpoint_stat(target, buf, buf_len, len,			\
+			    offsetof(struct htc_endpoint_stats, name),	\
+			    #name)
+
+and the uses to
+
+	len = EPSTAT(whatever);
 
 
-Michał
