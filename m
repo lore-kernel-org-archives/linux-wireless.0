@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:36838 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898AbaCZT5L (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:44821 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbaCIJry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 15:57:11 -0400
-Received: by mail-ee0-f44.google.com with SMTP id e49so2079837eek.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:57:09 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 02/20] rtl8180: add rtl8187se chip type
-Date: Wed, 26 Mar 2014 20:58:14 +0100
-Message-Id: <1395863894-4368-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205716_684323_78E6B7CF)
+	Sun, 9 Mar 2014 05:47:54 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so6132693iec.21
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2014 01:47:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+Date: Sun, 9 Mar 2014 11:47:53 +0200
+Message-ID: <CAB3XZEfEk72og-WkfYOyfExaC8iAxMo44japLu39Zrk5JNwi7g@mail.gmail.com> (sfid-20140309_104822_608105_75F493B3)
+Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add back rtl8187se chip type to the enum for known chips.
-This causes unhandled switch/case warning that will be fixed
-in following patch
+On Fri, Mar 7, 2014 at 1:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> It doesn't make much sense to have a manually
+> managed chanctx refcount. It isn't performance
+> critical and it can't be even used outside the
+> protection of chanctx_mtx.
+>
+> With future enhancements to channel contenxt
+> (namely reservations) refcount accounting will
+> become more complex and having manually managed
+> refcount is going to be error-prone and confusing.
+>
+> The refcount is now equal to the number of vifs it
+> is assigned to. However in the future this will
+> change so keep the refcount/num_assigned_vifs
+> functions split now.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+[...]
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/rtl8180.h | 1 +
- 1 file changed, 1 insertion(+)
+> +int ieee80211_chanctx_num_assigned_vifs(struct ieee80211_chanctx *ctx)
+> +{
+> +       struct ieee80211_local *local = ctx->local;
+> +       struct ieee80211_sub_if_data *sdata;
+> +       int num = 0;
+> +
+> +       lockdep_assert_held(&local->chanctx_mtx);
+> +
+> +       rcu_read_lock();
+> +       list_for_each_entry_rcu(sdata, &local->interfaces, list)
+> +               if (ieee80211_vif_assigned_chanctx(sdata) == ctx)
+> +                       num++;
+> +       rcu_read_unlock();
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-index ad64c5e..e7127f3 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-+++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-@@ -92,6 +92,7 @@ struct rtl8180_priv {
- 	enum {
- 		RTL818X_CHIP_FAMILY_RTL8180,
- 		RTL818X_CHIP_FAMILY_RTL8185,
-+		RTL818X_CHIP_FAMILY_RTL8187SE,
- 	} chip_family;
- 	u32 anaparam;
- 	u16 rfparam;
--- 
-1.8.3.2
+i don't think you need rcu_read_lock if you already hold chanctx_mtx
 
+Eliad.
