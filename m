@@ -1,136 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:43083 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbaCSSfH (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56489 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbaCIG5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 14:35:07 -0400
-Received: by mail-ig0-f173.google.com with SMTP id t19so12574803igi.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 11:35:07 -0700 (PDT)
+	Sun, 9 Mar 2014 01:57:24 -0500
+Subject: [PATCH 3/6] ath6kl: remove spaces before semicolon
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 09 Mar 2014 08:57:23 +0200
+Message-ID: <20140309065723.10793.31242.stgit@x230> (sfid-20140309_075727_063711_B4A79956)
+In-Reply-To: <20140309065606.10793.67068.stgit@x230>
+References: <20140309065606.10793.67068.stgit@x230>
 MIME-Version: 1.0
-In-Reply-To: <1395150804-24090-14-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-14-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 19 Mar 2014 20:35:00 +0200
-Message-ID: <CAB3XZEc3wqpEVg=qSDeuGAKCTh_dRV2HyQJBSHvfq5p0EEuAmg@mail.gmail.com> (sfid-20140319_193514_303734_825E6CCF)
-Subject: Re: [RFC 13/21] mac80211: implement multi-vif in-place reservations
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Multi-vif in-place reservations happen when
-> it's impossible to allocate more chanctx as per
-> driver combinations.
->
-> Such reservations aren't finalized until last
-> reservation interface calls in to use the
-> reservation.
->
-> This introduces a special hook
-> ieee80211_vif_chanctx_reservation_complete(). This
-> is currently an empty stub and will be filled in
-> by AP/STA CSA code. This is required to implement
-> 2-step CSA finalization.
->
-> This also gets rid of driver requirement to be
-> able to re-program channel of a chanctx.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+Fixes checkpatch warning:
 
-i started playing with the patches and got some warnings.
-they seem to come from:
+CHECK: space prohibited before semicolon
 
-> +static int
-> +ieee80211_vif_use_reserved_incompat(struct ieee80211_local *local,
-> +                                   struct ieee80211_chanctx *ctx,
-> +                                   const struct cfg80211_chan_def *chandef)
-> +{
-[...]
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/target.h |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c   |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> +       new_ctx = ieee80211_alloc_chanctx(local, chandef, ctx->mode);
-> +       if (!new_ctx) {
-> +               err = -ENOMEM;
-> +               goto err;
->         }
->
-> -       old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
-> +               drv_unassign_vif_chanctx(local, sdata, ctx);
-> +               rcu_assign_pointer(sdata->vif.chanctx_conf, &new_ctx->conf);
-> +       }
->
-> -       if (sdata->vif.bss_conf.chandef.width != sdata->reserved_chandef.width)
-> -               tmp_changed |= BSS_CHANGED_BANDWIDTH;
-> +       list_del_rcu(&ctx->list);
-> +       ieee80211_del_chanctx(local, ctx);
->
-> -       sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
-> +       err = ieee80211_add_chanctx(local, new_ctx);
-> +       if (err)
-> +               goto err_revert;
->
-> -       /* unref our reservation */
-> -       sdata->reserved_chanctx = NULL;
-> -       sdata->radar_required = sdata->reserved_radar_required;
-> -       list_del(&sdata->reserved_chanctx_list);
-> +       /* don't simply overwrite radar_required in case of failure */
-> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
-> +               bool tmp = sdata->radar_required;
-> +               sdata->radar_required = sdata->reserved_radar_required;
-> +               sdata->reserved_radar_required = tmp;
-> +       }
->
-> -       if (old_ctx == ctx) {
-> -               /* This is our own context, just change it */
-> -               ret = __ieee80211_vif_change_channel(sdata, old_ctx,
-> -                                                    &tmp_changed);
-> -               if (ret)
-> -                       goto out;
-> -       } else {
-> -               ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-> -               if (ieee80211_chanctx_refcount(local, old_ctx) == 0)
-> -                       ieee80211_free_chanctx(local, old_ctx);
-> -               if (ret) {
-> -                       /* if assign fails refcount stays the same */
-> -                       if (ieee80211_chanctx_refcount(local, ctx) == 0)
-> -                               ieee80211_free_chanctx(local, ctx);
-> -                       goto out;
-> -               }
-> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
-> +               err = drv_assign_vif_chanctx(local, sdata, ctx);
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index a580a62..d5eeeae 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -289,7 +289,7 @@ struct host_interest {
+ 	u32 hi_hp_rx_traffic_ratio;                    /* 0xd8 */
+ 
+ 	/* test applications flags */
+-	u32 hi_test_apps_related    ;                  /* 0xdc */
++	u32 hi_test_apps_related;                      /* 0xdc */
+ 	/* location of test script */
+ 	u32 hi_ota_testscript;                         /* 0xe0 */
+ 	/* location of CAL data */
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index e9c28a7..40432fe 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -361,7 +361,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	u32 map_no = 0;
+ 	u16 htc_tag = ATH6KL_DATA_PKT_TAG;
+-	u8 ac = 99 ; /* initialize to unmapped ac */
++	u8 ac = 99; /* initialize to unmapped ac */
+ 	bool chk_adhoc_ps_mapping = false;
+ 	int ret;
+ 	struct wmi_tx_meta_v2 meta_v2;
+@@ -1214,7 +1214,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 		return is_queued;
+ 
+ 	spin_lock_bh(&rxtid->lock);
+-	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
++	for (idx = 0; idx < rxtid->hold_q_sz; idx++) {
+ 		if (rxtid->hold_q[idx].skb) {
+ 			/*
+ 			 * There is a frame in the queue and no
 
-this should be new_ctx (ctx was already removed from the driver, etc.)
-
-> +               if (err)
-> +                       goto err_unassign;
-> +       }
->
-> +       if (sdata->vif.type == NL80211_IFTYPE_AP)
->                 __ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-> -       }
->
-> -       *changed = tmp_changed;
-> +       list_add_rcu(&new_ctx->list, &local->chanctx_list);
-> +       kfree_rcu(ctx, rcu_head);
->
->         ieee80211_recalc_chanctx_chantype(local, ctx);
->         ieee80211_recalc_smps_chanctx(local, ctx);
->         ieee80211_recalc_radar_chanctx(local, ctx);
->         ieee80211_recalc_chanctx_min_def(local, ctx);
-
-and same here i guess.
-
-all the recalcs have to be moved after setting bss_conf.chandef in the
-following loop, as otherwise you it recalcs according to the old
-configuration (which is incompatible with the new one).
-
-after these changes the warnings were gone.
-i haven't done throughout testing, though.
-
-Eliad.
