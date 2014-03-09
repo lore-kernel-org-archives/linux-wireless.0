@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:54972 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105AbaCJNUn (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15771 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbaCIHK4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 09:20:43 -0400
+	Sun, 9 Mar 2014 03:10:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
+Subject: Re: [PATCH 5/6] ath6kl: remove a warning on a macro
+References: <20140309065606.10793.67068.stgit@x230>
+	<20140309065735.10793.45835.stgit@x230>
+Date: Sun, 9 Mar 2014 09:10:50 +0200
+In-Reply-To: <20140309065735.10793.45835.stgit@x230> (Kalle Valo's message of
+	"Sun, 09 Mar 2014 08:57:35 +0200")
+Message-ID: <87iornn8xx.fsf@kamboji.qca.qualcomm.com> (sfid-20140309_081100_577863_9B92EFEE)
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
- <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
- <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
- <CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com>
- <CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com> <CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com>
-From: Shuduo Sang <sangshuduo@gmail.com>
-Date: Mon, 10 Mar 2014 21:20:02 +0800
-Message-ID: <CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com> (sfid-20140310_142116_177266_26826633)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>>> Hi,
->>>>>
->>>>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
->>>>>> Hi,
->>>>>>
->>>>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
->>>>>> can't resume after suspend recently. I tried many ways including
->>>>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
->>>>>> happens. I found it will not happen when I turn off WIFI device or USB
->>>>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
->>>>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
->>>>>> Anyone has some ideas to fix it or debug it?
->>>>>>
->>>>>> Thanks,
->>>>>> Shuduo
->>>>>>
->>>>>
->>>>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
->>>>> How do you disable WiFi? Rfkill or removing iwlwifi?
->>>>>
->>>>
->>>> I have disabled WIFI device in BIOS, then its suspend/resume works.
->>>>
->>>
->>> Do you have any logs to share?
->>> I supposed you tested 3.13.6 right?
->>
->> Attach dmesg output. If any other log you need, I can capture too.
->> Actually I tried 3.14-rc6, 3.13.6 and 3.11.10.
->
-> This looks healthy.
->
->     Suspending console(s) (use no_console_suspend to debug)
->
-> can you use no_console_suspend?
+Hi Joe,
 
-Yes, this log is already output from the kernel I compile with
-no_console_suspend.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
+
+> Fixes checkpatch warning:
+>
+> WARNING: Single statement macros should not use a do {} while (0) loop
+
+I would need help with this checkpatch warning:
+
+> --- a/drivers/net/wireless/ath/ath6kl/debug.c
+> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
+> @@ -798,12 +798,10 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
+>  		return -ENOMEM;
+>  
+>  #define EPSTAT(name)							\
+> -	do {								\
+> -		len = print_endpoint_stat(target, buf, buf_len, len,	\
+> -					  offsetof(struct htc_endpoint_stats, \
+> -						   name),		\
+> -					  #name);			\
+> -	} while (0)
+> +	(len = print_endpoint_stat(target, buf, buf_len, len,		\
+> +				   offsetof(struct htc_endpoint_stats,	\
+> +					    name),			\
+> +				   #name))
+
+I wasn't quite able to figure out what is the preferred style here. I
+don't see how the () style is any better, but checkpatch didn't complain
+at least.
+
+-- 
+Kalle Valo
