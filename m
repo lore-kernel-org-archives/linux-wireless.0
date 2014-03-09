@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55038 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbaCCQXR (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38175 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbaCIG5H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 11:23:17 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v4 2/3] UAPI: add MPLS label stack definition
-Date: Mon,  3 Mar 2014 17:23:11 +0100
-Message-Id: <1393863792-18172-3-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172329_254502_38721CE4)
-In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
-References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+	Sun, 9 Mar 2014 01:57:07 -0500
+Subject: [PATCH 0/6] ath6kl: fixing new checkpatch warnings
+To: ath6kl@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 09 Mar 2014 08:57:05 +0200
+Message-ID: <20140309065606.10793.67068.stgit@x230> (sfid-20140309_075712_089434_1EDC12BA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Labels for the Multiprotocol Label Switching are defined in RFC 3032
-which was superseded by RFC 5462. Add the definition to UAPI and a stub
-header for include/linux.
+Hi,
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+this patchset fixes new checkpatch warnings which have appeared during the last
+year or so.
+
 ---
-Changes to third version:
 
- * rename mpls_label_stack to mpls_label, as it describes just one of
-   possibly multiple label stack entries (see RFC 3032).
+Kalle Valo (6):
+      ath6kl: fix blank lines before and after braces
+      ath6kl: use braces on both arms of if statement
+      ath6kl: remove spaces before semicolon
+      ath6kl: remove unnecessary line continuations
+      ath6kl: remove a warning on a macro
+      ath6kl: update Kconfig descriptions
 
-Changes to first version:
 
- * add stub mpls header in include/linux/mpls.h for users inside the
-   kernel
----
- include/linux/mpls.h      |    6 ++++++
- include/uapi/linux/mpls.h |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
- create mode 100644 include/linux/mpls.h
- create mode 100644 include/uapi/linux/mpls.h
-
-diff --git a/include/linux/mpls.h b/include/linux/mpls.h
-new file mode 100644
-index 0000000..9999145
---- /dev/null
-+++ b/include/linux/mpls.h
-@@ -0,0 +1,6 @@
-+#ifndef _LINUX_MPLS_H
-+#define _LINUX_MPLS_H
-+
-+#include <uapi/linux/mpls.h>
-+
-+#endif  /* _LINUX_MPLS_H */
-diff --git a/include/uapi/linux/mpls.h b/include/uapi/linux/mpls.h
-new file mode 100644
-index 0000000..bc9abfe
---- /dev/null
-+++ b/include/uapi/linux/mpls.h
-@@ -0,0 +1,34 @@
-+#ifndef _UAPI_MPLS_H
-+#define _UAPI_MPLS_H
-+
-+#include <linux/types.h>
-+#include <asm/byteorder.h>
-+
-+/* Reference: RFC 5462, RFC 3032
-+ *
-+ *  0                   1                   2                   3
-+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ * |                Label                  | TC  |S|       TTL     |
-+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+ *
-+ *	Label:  Label Value, 20 bits
-+ *	TC:     Traffic Class field, 3 bits
-+ *	S:      Bottom of Stack, 1 bit
-+ *	TTL:    Time to Live, 8 bits
-+ */
-+
-+struct mpls_label {
-+	__be32 entry;
-+};
-+
-+#define MPLS_LS_LABEL_MASK      0xFFFFF000
-+#define MPLS_LS_LABEL_SHIFT     12
-+#define MPLS_LS_TC_MASK         0x00000E00
-+#define MPLS_LS_TC_SHIFT        9
-+#define MPLS_LS_S_MASK          0x00000100
-+#define MPLS_LS_S_SHIFT         8
-+#define MPLS_LS_TTL_MASK        0x000000FF
-+#define MPLS_LS_TTL_SHIFT       0
-+
-+#endif /* _UAPI_MPLS_H */
--- 
-1.7.10.4
+ drivers/net/wireless/ath/ath6kl/Kconfig    |   30 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    9 ++++----
+ drivers/net/wireless/ath/ath6kl/core.c     |    5 +++--
+ drivers/net/wireless/ath/ath6kl/debug.c    |   14 ++++---------
+ drivers/net/wireless/ath/ath6kl/debug.h    |    2 +-
+ drivers/net/wireless/ath/ath6kl/hif.c      |    3 ---
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |   23 +++++----------------
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   10 +--------
+ drivers/net/wireless/ath/ath6kl/init.c     |    1 -
+ drivers/net/wireless/ath/ath6kl/main.c     |   10 ++++-----
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   15 +++++---------
+ drivers/net/wireless/ath/ath6kl/target.h   |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   31 ++++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/usb.c      |    2 --
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   19 +++++++----------
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    1 -
+ 16 files changed, 79 insertions(+), 98 deletions(-)
 
