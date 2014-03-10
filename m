@@ -1,103 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:63531 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757218AbaCDMw7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 07:52:59 -0500
-Received: by mail-ea0-f180.google.com with SMTP id m10so335573eaj.39
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:58 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 11/14] ath10k: kill status from htt_rx_info
-Date: Tue,  4 Mar 2014 13:52:24 +0100
-Message-Id: <1393937548-7482-12-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135309_590589_1F46B6C2)
-In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from connotech.com ([76.10.176.241]:51137 "EHLO mail.connotech.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753414AbaCJN0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 09:26:02 -0400
+Received: from [192.168.1.204] (DODECA1ER.CONNOTECH-INTERNAL.COM [192.168.1.204])
+	by mail.connotech.com (Postfix) with ESMTPA id 86B8931A22
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 09:23:14 -0400 (EDT)
+Message-ID: <531DBD98.2030906@connotech.com> (sfid-20140310_142702_761304_6D4EC331)
+Date: Mon, 10 Mar 2014 13:26:48 +0000
+From: Thierry Moreau <thierry.moreau@connotech.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Scan completes with wext, not with nl80211 (wpa_supplicant, rtlwifi,
+ 3.14.0-rc5)
+Content-Type: multipart/mixed;
+ boundary="------------040809090301070101070307"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not needed/used in htt_rx_info.
+This is a multi-part message in MIME format.
+--------------040809090301070101070307
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |    1 -
- drivers/net/wireless/ath/ath10k/htt_rx.c |   14 +++++---------
- 2 files changed, 5 insertions(+), 10 deletions(-)
+Hi!
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index d3d2f01..7ebbd8b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1176,7 +1176,6 @@ struct htt_peer_unmap_event {
- struct htt_rx_info {
- 	struct sk_buff *skb;
- 	struct ieee80211_rx_status rx_status;
--	enum htt_rx_mpdu_status status;
- 	enum htt_rx_mpdu_encrypt_type encrypt_type;
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 3aa5a61..976499d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1074,11 +1074,9 @@ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
- static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 					struct sk_buff *head,
- 					bool msdu_chaining,
--					struct htt_rx_info *info,
-+					enum htt_rx_mpdu_status status,
- 					bool channel_set)
- {
--	enum htt_rx_mpdu_status status = info->status;
--
- 	if (!head) {
- 		ath10k_warn("htt rx no data!\n");
- 		return false;
-@@ -1139,6 +1137,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- {
- 	struct htt_rx_info info;
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
-+	enum htt_rx_mpdu_status status;
- 	struct ieee80211_hdr *hdr;
- 	int num_mpdu_ranges;
- 	int fw_desc_len;
-@@ -1184,7 +1183,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				num_mpdu_ranges));
- 
- 	for (i = 0; i < num_mpdu_ranges; i++) {
--		info.status = mpdu_ranges[i].mpdu_range_status;
-+		status = mpdu_ranges[i].mpdu_range_status;
- 
- 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
- 			struct sk_buff *msdu_head, *msdu_tail;
-@@ -1200,7 +1199,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
- 							 !!msdu_chaining,
--							 &info,
-+							 status,
- 							 channel_set)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
-@@ -1297,15 +1296,12 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	}
- 
- 	info.skb = msdu_head;
--	info.status = HTT_RX_IND_MPDU_STATUS_OK;
- 	info.encrypt_type = MS(__le32_to_cpu(rxd->mpdu_start.info0),
- 				RX_MPDU_START_INFO0_ENCRYPT_TYPE);
- 	info.skb->ip_summed = ath10k_htt_rx_get_csum_state(info.skb);
- 
--	if (tkip_mic_err) {
-+	if (tkip_mic_err)
- 		ath10k_warn("tkip mic error\n");
--		info.status = HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR;
--	}
- 
- 	if (decrypt_err) {
- 		ath10k_warn("decryption err in fragmented rx\n");
--- 
-1.7.9.5
+This is not a show stopper for me, but some of you may want to deprecate 
+the wireless extension kernel option.
 
+I have a configuration where scanning and association attempt work fine 
+from wpa_supplicant when the wpa_priv utility is started with wext:wlan1 
+but not with nl80211:wlan1.
+
+If I try the not-performing variant (nl80211), I need to remove and 
+install the wifi module (rtl8192ce) for the other one to perform OK. 
+ From a fresh boot, this performing wext variant works fine the first time.
+
+I have traces from wpa_priv, wpa_supplicant, and wpa_cli from either 
+options. Same configuration files for build time and run time.
+
+Tried with various kernel options. A portion of the most recent kernel 
+config is attached.
+
+If I can be of assistance for improving the Linux Wi-Fi support, let me 
+know.
+
+- Thierry Moreau
+
+--------------040809090301070101070307
+Content-Type: text/plain; charset=us-ascii;
+ name="scan_only_with_wext.log"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="scan_only_with_wext.log"
+
+grep '\(WIFI\|WIRELESS\|RTL8\|80211\)' .config -C 4 -n
+928-# CONFIG_IRDA is not set
+929-# CONFIG_BT is not set
+930-# CONFIG_AF_RXRPC is not set
+931-CONFIG_FIB_RULES=y
+932:CONFIG_WIRELESS=y
+933:CONFIG_WIRELESS_EXT=y
+934-CONFIG_WEXT_CORE=y
+935-CONFIG_WEXT_PROC=y
+936-CONFIG_WEXT_SPY=y
+937-CONFIG_WEXT_PRIV=y
+938:CONFIG_CFG80211=y
+939:# CONFIG_NL80211_TESTMODE is not set
+940:# CONFIG_CFG80211_DEVELOPER_WARNINGS is not set
+941:# CONFIG_CFG80211_REG_DEBUG is not set
+942:CONFIG_CFG80211_DEFAULT_PS=y
+943:# CONFIG_CFG80211_DEBUGFS is not set
+944:# CONFIG_CFG80211_INTERNAL_REGDB is not set
+945:# CONFIG_CFG80211_WEXT is not set
+946:CONFIG_LIB80211=y
+947:CONFIG_LIB80211_CRYPT_WEP=y
+948:CONFIG_LIB80211_CRYPT_CCMP=y
+949:CONFIG_LIB80211_CRYPT_TKIP=y
+950:# CONFIG_LIB80211_DEBUG is not set
+951:CONFIG_MAC80211=y
+952:CONFIG_MAC80211_HAS_RC=y
+953:CONFIG_MAC80211_RC_MINSTREL=y
+954:CONFIG_MAC80211_RC_MINSTREL_HT=y
+955:CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+956:CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
+957:CONFIG_MAC80211_MESH=y
+958:CONFIG_MAC80211_LEDS=y
+959:# CONFIG_MAC80211_DEBUGFS is not set
+960:# CONFIG_MAC80211_MESSAGE_TRACING is not set
+961:# CONFIG_MAC80211_DEBUG_MENU is not set
+962-# CONFIG_WIMAX is not set
+963-CONFIG_RFKILL=y
+964-CONFIG_RFKILL_LEDS=y
+965-CONFIG_RFKILL_INPUT=y
+--
+1482-#
+1483-# CONFIG_USB_CATC is not set
+1484-# CONFIG_USB_KAWETH is not set
+1485-# CONFIG_USB_PEGASUS is not set
+1486:# CONFIG_USB_RTL8150 is not set
+1487:# CONFIG_USB_RTL8152 is not set
+1488-# CONFIG_USB_USBNET is not set
+1489-# CONFIG_USB_HSO is not set
+1490-# CONFIG_USB_IPHETH is not set
+1491-CONFIG_WLAN=y
+--
+1498-# CONFIG_PCMCIA_WL3501 is not set
+1499-# CONFIG_PRISM54 is not set
+1500-# CONFIG_USB_ZD1201 is not set
+1501-# CONFIG_USB_NET_RNDIS_WLAN is not set
+1502:# CONFIG_RTL8180 is not set
+1503:# CONFIG_RTL8187 is not set
+1504-# CONFIG_ADM8211 is not set
+1505:# CONFIG_MAC80211_HWSIM is not set
+1506-# CONFIG_MWL8K is not set
+1507-# CONFIG_ATH_CARDS is not set
+1508-# CONFIG_B43 is not set
+1509-# CONFIG_B43LEGACY is not set
+--
+1514-# CONFIG_HOSTAP_PLX is not set
+1515-# CONFIG_HOSTAP_PCI is not set
+1516-# CONFIG_HOSTAP_CS is not set
+1517-# CONFIG_IPW2100 is not set
+1518:# CONFIG_IWLWIFI is not set
+1519-# CONFIG_IWL4965 is not set
+1520-# CONFIG_IWL3945 is not set
+1521-# CONFIG_LIBERTAS is not set
+1522-# CONFIG_P54_COMMON is not set
+1523-# CONFIG_RT2X00 is not set
+1524-CONFIG_RTL_CARDS=y
+1525:CONFIG_RTL8192CE=m
+1526:# CONFIG_RTL8192SE is not set
+1527:# CONFIG_RTL8192DE is not set
+1528:# CONFIG_RTL8723AE is not set
+1529:# CONFIG_RTL8188EE is not set
+1530:# CONFIG_RTL8192CU is not set
+1531:CONFIG_RTLWIFI=m
+1532:CONFIG_RTLWIFI_PCI=m
+1533:CONFIG_RTLWIFI_DEBUG=y
+1534:CONFIG_RTL8192C_COMMON=m
+1535-# CONFIG_WL_TI is not set
+1536-# CONFIG_ZD1211RW is not set
+1537:# CONFIG_MWIFIEX is not set
+1538-# CONFIG_CW1200 is not set
+1539-
+1540-#
+1541-# Enable WiMAX (Networking options) to see the WiMAX drivers
+--
+1782-#
+1783-# CONFIG_SYNCLINK_CS is not set
+1784-# CONFIG_CARDMAN_4000 is not set
+1785-# CONFIG_CARDMAN_4040 is not set
+1786:# CONFIG_IPWIRELESS is not set
+1787-# CONFIG_MWAVE is not set
+1788-# CONFIG_RAW_DRIVER is not set
+1789-CONFIG_HPET=y
+1790-# CONFIG_HPET_MMAP is not set
+--
+2826-# CONFIG_FUJITSU_LAPTOP is not set
+2827-# CONFIG_FUJITSU_TABLET is not set
+2828-# CONFIG_AMILO_RFKILL is not set
+2829-# CONFIG_HP_ACCEL is not set
+2830:# CONFIG_HP_WIRELESS is not set
+2831-# CONFIG_MSI_LAPTOP is not set
+2832-# CONFIG_PANASONIC_LAPTOP is not set
+2833-# CONFIG_COMPAL_LAPTOP is not set
+2834-# CONFIG_SONY_LAPTOP is not set
+
+--------------040809090301070101070307--
