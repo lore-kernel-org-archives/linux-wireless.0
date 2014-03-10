@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:37675 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbaCGLZY (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:36239 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbaCJJIs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 06:25:24 -0500
-Received: by mail-ee0-f54.google.com with SMTP id d49so1689529eek.13
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 03:25:23 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] mac80211: include ieee80211_local in chanctx
-Date: Fri,  7 Mar 2014 12:19:55 +0100
-Message-Id: <1394191196-6425-2-git-send-email-michal.kazior@tieto.com> (sfid-20140307_122528_896003_B4A403C4)
-In-Reply-To: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
-References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 10 Mar 2014 05:08:48 -0400
+Received: by mail-ee0-f49.google.com with SMTP id c41so2938873eek.22
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 02:08:46 -0700 (PDT)
+Message-ID: <1394442523.18265.9.camel@dubbel> (sfid-20140310_100855_592590_8AE34AD5)
+Subject: Re: [PATCH v5 2/3] mac80211: implement chanctx reservation
+From: Luca Coelho <lrothc@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Mon, 10 Mar 2014 11:08:43 +0200
+In-Reply-To: <CA+BoTQmOPZGLt0Bv+YSZcXVif65G6+tRP0sbhcJEvz65FjABRg@mail.gmail.com>
+References: <1394017904-4012-1-git-send-email-luca@coelho.fi>
+	 <1394017904-4012-3-git-send-email-luca@coelho.fi>
+	 <CA+BoTQkb95xGNtVUxvn_u==P6fuy-h0iNAp8pGEcq8m0ZUm-7A@mail.gmail.com>
+	 <1394174912.4192.9.camel@dubbel>
+	 <CA+BoTQmOPZGLt0Bv+YSZcXVif65G6+tRP0sbhcJEvz65FjABRg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel contexts are implicitly bound to hw
-already so make it possible to dereference it
-through the channel context itself.
+On Mon, 2014-03-10 at 08:03 +0100, Michal Kazior wrote:
+> On 7 March 2014 07:48, Luca Coelho <luca@coelho.fi> wrote:
+> > On Wed, 2014-03-05 at 13:04 +0100, Michal Kazior wrote:
+> >> On 5 March 2014 12:11, Luca Coelho <luca@coelho.fi> wrote:
+> >>
+> >> [...]
+> >>
+> >> > +       /* unref our reservation before assigning */
+> >> > +       ctx->refcount--;
+> >> > +       sdata->reserved_chanctx = NULL;
+> >> > +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
+> >> > +       if (ret) {
+> >> > +               /* if assign fails refcount stays the same */
+> >> > +               if (ctx->refcount == 0)
+> >> > +                       ieee80211_free_chanctx(local, ctx);
+> >> > +               goto out_wake;
+> >> > +       }
+> >>
+> >> This actually won't work if there are AP VLANs (I noticed that yesterday).
+> >>
+> >> You can't call ieee80211_vif_copy_chanctx_to_vlans() here due to
+> >> current locking requirements. I have a patch for that though ;-) I'll
+> >> send it soon.
+> >
+> > How is this related to this patch?
+> >
+> > Anyway, good to know that you have fixed it. :)
+> 
+> If you re-assign a chanctx of an AP that has VLANs you leave VLANs
+> with the old chanctx pointer. Those pointers should be updated or else
+> you'll end up dereferencing an invalid pointer.
 
-This will make it possible to reduce number of
-arguments for chanctx-related functions.
+I see.  So, I need to call ieee80211_vif_copy_chanctx_to_vlans() here,
+but to do that I need your patch that allows it to be called without the
+RTNL.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c        | 1 +
- net/mac80211/ieee80211_i.h | 1 +
- 2 files changed, 2 insertions(+)
+So, now this series will depend on that patch, I'll talk to Johannes.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 42c6592..5b946e8 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -228,6 +228,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->conf.def = *chandef;
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
-+	ctx->local = local;
- 	ctx->mode = mode;
- 	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8603dfb..c21b0c3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -691,6 +691,7 @@ struct ieee80211_chanctx {
- 	struct list_head list;
- 	struct rcu_head rcu_head;
- 
-+	struct ieee80211_local *local;
- 	enum ieee80211_chanctx_mode mode;
- 	int refcount;
- 	bool driver_present;
--- 
-1.8.5.3
+--
+Luca.
 
