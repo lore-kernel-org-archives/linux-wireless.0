@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:34215 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbaC1HkW (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:47447 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516AbaCJP0s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:40:22 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so3673852eek.7
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 00:40:21 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/3] ath10k: ce fixes
-Date: Fri, 28 Mar 2014 08:34:22 +0100
-Message-Id: <1395992065-10086-1-git-send-email-michal.kazior@tieto.com> (sfid-20140328_084025_870771_D2E80782)
-In-Reply-To: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
-References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 10 Mar 2014 11:26:48 -0400
+Received: by mail-pb0-f53.google.com with SMTP id rp16so7353625pbb.26
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 08:26:47 -0700 (PDT)
+From: fariyaf@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH v4 00/11] rsi: Adding RS9113 wireless driver.
+Date: Mon, 10 Mar 2014 20:56:28 +0530
+Message-Id: <1394465199-10042-1-git-send-email-fariyaf@gmail.com> (sfid-20140310_162652_095079_A6E48AAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Fariya Fatima <fariyaf@gmail.com>
 
-This addresses memory allocations failures
-recently reported by Avery Pennarun.
+This series of patches adds Redpine Signals wireless driver.
 
+Fariya Fatima (11):
+  Adding RS9113 driver header files
+  Adding remaining header files
+  Adding core and main files.
+  Writing packets to device and debugfs.
+  MAC80211 callbacks to driver.
+  MAC80211 callbacks and management functions internal to device.
+  Management functions internal to the device.
+  USB functionality
+  SDIO functionality.
+  Remaining SDIO functionality.
+  Makefile and Kconfig
 
-v2:
- * add a new patch (result of splitting)
- * fix commit message
-
-
-Michal Kazior (3):
-  ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()
-  ath10k: split ce initialization and allocation
-  ath10k: deinit copy engine before resetting
-
- drivers/net/wireless/ath/ath10k/ce.c  | 356 +++++++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/ce.h  |  15 +-
- drivers/net/wireless/ath/ath10k/pci.c |  88 +++++----
- 3 files changed, 264 insertions(+), 195 deletions(-)
+ drivers/net/wireless/Kconfig                |    1 +
+ drivers/net/wireless/Makefile               |    1 +
+ drivers/net/wireless/rsi/Kconfig            |   30 +
+ drivers/net/wireless/rsi/Makefile           |   12 +
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  342 +++++++
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c  |  339 +++++++
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 1008 +++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_main.c     |  270 ++++++
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 1302 +++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_pkt.c      |  195 ++++
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     |  845 +++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  566 ++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_usb.c      |  572 ++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  177 ++++
+ drivers/net/wireless/rsi/rsi_boot_params.h  |  126 +++
+ drivers/net/wireless/rsi/rsi_common.h       |   87 ++
+ drivers/net/wireless/rsi/rsi_debugfs.h      |   48 +
+ drivers/net/wireless/rsi/rsi_main.h         |  232 +++++
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  285 ++++++
+ drivers/net/wireless/rsi/rsi_sdio.h         |  129 +++
+ drivers/net/wireless/rsi/rsi_usb.h          |   70 ++
+ 21 files changed, 6637 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/Kconfig
+ create mode 100644 drivers/net/wireless/rsi/Makefile
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_core.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_debugfs.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_mac80211.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_main.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_mgmt.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_sdio.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_boot_params.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_common.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_debugfs.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_main.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_mgmt.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_sdio.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_usb.h
 
 -- 
-1.8.5.3
+1.7.5.4
 
