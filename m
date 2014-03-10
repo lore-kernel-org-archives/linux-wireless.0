@@ -1,292 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34636 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591AbaC2QQG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2014 12:16:06 -0400
-Received: by mail-pa0-f51.google.com with SMTP id kq14so6353666pab.10
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2014 09:16:05 -0700 (PDT)
-From: Fariya Fatima <fariyaf@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:54077 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753809AbaCJVcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 17:32:09 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH] rsi: Fixes relating to issues reported by static code analyzers
-Date: Sat, 29 Mar 2014 21:45:43 +0530
-Message-Id: <1396109743-3352-1-git-send-email-fariyaf@gmail.com> (sfid-20140329_171612_023866_9EDA1F68)
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v9 5/5] cfg80211/mac80211: move more combination checks to mac80211
+Date: Mon, 10 Mar 2014 23:31:43 +0200
+Message-Id: <1394487103-13027-6-git-send-email-luciano.coelho@intel.com> (sfid-20140310_223218_099252_1CCF5A84)
+In-Reply-To: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
+References: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+Get rid of the cfg80211_can_add_interface() and
+cfg80211_can_change_interface() functions by moving that functionality
+to mac80211.  With this patch all interface combination checks are now
+out of cfg80211 (except for the channel switch case which will be
+addressed in a future commit).
 
-This patch contains fixes relating to the issues reported by static code analyzers.
+Additionally, modify the ieee80211_check_combinations() function so
+that an undefined chandef can be passed, in order to use it before a
+channel is defined.
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_core.c     |    6 +++-
- drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   35 ++++++++++++--------------
- drivers/net/wireless/rsi/rsi_91x_main.c     |    2 +-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   11 +++++---
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |    5 ++-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    6 +---
- drivers/net/wireless/rsi/rsi_91x_usb.c      |   26 ++++++++++++++-----
- 7 files changed, 52 insertions(+), 39 deletions(-)
+ net/mac80211/cfg.c     |  9 +++++++++
+ net/mac80211/iface.c   |  6 +++++-
+ net/mac80211/util.c    | 10 +++++++---
+ net/wireless/core.c    | 11 +++--------
+ net/wireless/core.h    | 22 ----------------------
+ net/wireless/nl80211.c |  5 ++---
+ net/wireless/util.c    |  5 -----
+ 7 files changed, 26 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index e89535e..1a8d321 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -102,10 +102,10 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
- 	}
- 
- get_queue_num:
--	q_num = 0;
- 	recontend_queue = false;
- 
- 	q_num = rsi_determine_min_weight_queue(common);
-+
- 	q_len = skb_queue_len(&common->tx_queue[ii]);
- 	ii = q_num;
- 
-@@ -118,7 +118,9 @@ get_queue_num:
- 		}
- 	}
- 
--	common->tx_qinfo[q_num].pkt_contended = 0;
-+	if (q_num < NUM_EDCA_QUEUES)
-+		common->tx_qinfo[q_num].pkt_contended = 0;
-+
- 	/* Adjust the back off values for all queues again */
- 	recontend_queue = rsi_recalculate_weights(common);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index 7e4ef45..c466246 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -289,32 +289,29 @@ int rsi_init_dbgfs(struct rsi_hw *adapter)
- 	const struct rsi_dbg_files *files;
- 
- 	dev_dbgfs = kzalloc(sizeof(*dev_dbgfs), GFP_KERNEL);
-+	if (!dev_dbgfs)
-+		return -ENOMEM;
-+
- 	adapter->dfsentry = dev_dbgfs;
- 
- 	snprintf(devdir, sizeof(devdir), "%s",
- 		 wiphy_name(adapter->hw->wiphy));
--	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
- 
--	if (IS_ERR(dev_dbgfs->subdir)) {
--		if (dev_dbgfs->subdir == ERR_PTR(-ENODEV))
--			rsi_dbg(ERR_ZONE,
--				"%s:Debugfs has not been mounted\n", __func__);
--		else
--			rsi_dbg(ERR_ZONE, "debugfs:%s not created\n", devdir);
-+	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
- 
--		adapter->dfsentry = NULL;
-+	if (!dev_dbgfs->subdir) {
- 		kfree(dev_dbgfs);
--		return (int)PTR_ERR(dev_dbgfs->subdir);
--	} else {
--		for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
--			files = &dev_debugfs_files[ii];
--			dev_dbgfs->rsi_files[ii] =
--			debugfs_create_file(files->name,
--					    files->perms,
--					    dev_dbgfs->subdir,
--					    common,
--					    &files->fops);
--		}
-+		return -ENOMEM;
-+	}
-+
-+	for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
-+		files = &dev_debugfs_files[ii];
-+		dev_dbgfs->rsi_files[ii] =
-+		debugfs_create_file(files->name,
-+				    files->perms,
-+				    dev_dbgfs->subdir,
-+				    common,
-+				    &files->fops);
- 	}
- 	return 0;
- }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 8810862..e491f38 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -51,7 +51,7 @@ void rsi_dbg(u32 zone, const char *fmt, ...)
- 	vaf.va = &args;
- 
- 	if (zone & rsi_zone_enabled)
--		pr_info("%pV", &vaf);
-+		pr_debug("%pV", &vaf);
- 	va_end(args);
- }
- EXPORT_SYMBOL_GPL(rsi_dbg);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index ef37d4b..7369429 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -738,7 +738,7 @@ int rsi_hal_load_key(struct rsi_common *common,
-  *
-  * Return: 0 on success, corresponding error code on failure.
-  */
--static u8 rsi_load_bootup_params(struct rsi_common *common)
-+static int rsi_load_bootup_params(struct rsi_common *common)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9b555e0..fae76f7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -109,6 +109,15 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ static int ieee80211_start_p2p_device(struct wiphy *wiphy,
+ 				      struct wireless_dev *wdev)
  {
- 	struct sk_buff *skb;
- 	struct rsi_boot_params *boot_params;
-@@ -1272,6 +1272,7 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
+ 	return ieee80211_do_open(wdev, true);
+ }
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index be198f4..4c55481 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -250,6 +250,7 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
  {
- 	s32 msg_len = (le16_to_cpu(*(__le16 *)&msg[0]) & 0x0fff);
- 	u16 msg_type = (msg[2]);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_sub_if_data *nsdata;
 +	int ret;
  
- 	rsi_dbg(FSM_ZONE, "%s: Msg Len: %d, Msg Type: %4x\n",
- 		__func__, msg_len, msg_type);
-@@ -1284,18 +1285,20 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
- 		if (common->fsm_state == FSM_CARD_NOT_READY) {
- 			rsi_set_default_parameters(common);
+ 	ASSERT_RTNL();
  
--			if (rsi_load_bootup_params(common))
--				return -ENOMEM;
-+			ret = rsi_load_bootup_params(common);
-+			if (ret)
-+				return ret;
- 			else
- 				common->fsm_state = FSM_BOOT_PARAMS_SENT;
- 		} else {
- 			return -EINVAL;
+@@ -300,7 +301,10 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
  		}
- 	} else if (msg_type == TX_STATUS_IND) {
--		if (msg[15] == PROBEREQ_CONFIRM)
-+		if (msg[15] == PROBEREQ_CONFIRM) {
- 			common->mgmt_q_block = false;
- 			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
- 				__func__);
-+		}
- 	} else {
- 		return rsi_mgmt_pkt_to_core(common, msg, msg_len, msg_type);
- 	}
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 852453f..2e39d38 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -756,12 +756,13 @@ fail:
- static void rsi_disconnect(struct sdio_func *pfunction)
- {
- 	struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
--	struct rsi_91x_sdiodev *dev =
--		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	struct rsi_91x_sdiodev *dev;
- 
- 	if (!adapter)
- 		return;
- 
-+	dev = (struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+
- 	dev->write_fail = 2;
- 	rsi_mac80211_detach(adapter);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index f1cb99c..20d11cc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -247,7 +247,7 @@ static int rsi_process_pkt(struct rsi_common *common)
- 	if (!common->rx_data_pkt) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
- 			__func__);
--		return -1;
-+		return -ENOMEM;
  	}
  
- 	status = rsi_sdio_host_intf_read_pkt(adapter,
-@@ -260,12 +260,10 @@ static int rsi_process_pkt(struct rsi_common *common)
- 	}
- 
- 	status = rsi_read_pkt(common, rcv_pkt_len);
--	kfree(common->rx_data_pkt);
--	return status;
- 
- fail:
- 	kfree(common->rx_data_pkt);
--	return -1;
-+	return status;
+-	return 0;
++	mutex_lock(&local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
  }
  
- /**
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index bb1bf96..4c46e56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -154,24 +154,30 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
- 			    u16 *value,
- 			    u16 len)
- {
--	u8 temp_buf[4];
--	int status = 0;
-+	u8 *buf;
-+	int status = -ENOMEM;
+ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3972b64..955b043 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2812,7 +2812,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_iftype iftype = sdata->wdev.iftype;
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_chanctx *ctx;
+-	int num_different_channels = 1;
++	int num_different_channels = 0;
+ 	int total = 1;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+@@ -2820,9 +2820,13 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(hweight32(radar_detect) > 1))
+ 		return -EINVAL;
+ 
+-	if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
++	if (WARN_ON(chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
++		    !chandef->chan))
+ 		return -EINVAL;
+ 
++	if (chandef)
++		num_different_channels = 1;
 +
-+	buf  = kmalloc(0x04, GFP_KERNEL);
-+	if (!buf)
-+		return status;
+ 	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+ 		return -EINVAL;
  
- 	status = usb_control_msg(usbdev,
- 				 usb_rcvctrlpipe(usbdev, 0),
- 				 USB_VENDOR_REGISTER_READ,
- 				 USB_TYPE_VENDOR,
- 				 ((reg & 0xffff0000) >> 16), (reg & 0xffff),
--				 (void *)temp_buf,
-+				 (void *)buf,
- 				 len,
- 				 HZ * 5);
+@@ -2845,7 +2849,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 			num_different_channels++;
+ 			continue;
+ 		}
+-		if ((chanmode == IEEE80211_CHANCTX_SHARED) &&
++		if (chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
+ 		    cfg80211_chandef_compatible(chandef,
+ 						&ctx->conf.def))
+ 			continue;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 276cf93..7fca03e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -396,10 +396,7 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 		for (j = 0; j < c->n_limits; j++) {
+ 			u16 types = c->limits[j].types;
  
--	*value = (temp_buf[0] | (temp_buf[1] << 8));
-+	*value = (buf[0] | (buf[1] << 8));
- 	if (status < 0) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Reg read failed with error code :%d\n",
- 			__func__, status);
+-			/*
+-			 * interface types shouldn't overlap, this is
+-			 * used in cfg80211_can_change_interface()
+-			 */
++			/* interface types shouldn't overlap */
+ 			if (WARN_ON(types & all_iftypes))
+ 				return -EINVAL;
+ 			all_iftypes |= types;
+@@ -798,7 +795,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev;
+-	int ret;
+ 
+ 	if (!wdev)
+ 		return NOTIFY_DONE;
+@@ -961,9 +957,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+ 			return notifier_from_errno(-EOPNOTSUPP);
+-		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+-		if (ret)
+-			return notifier_from_errno(ret);
++		if (rfkill_blocked(rdev->rfkill))
++			return notifier_from_errno(-ERFKILL);
+ 		break;
  	}
-+	kfree(buf);
-+
- 	return status;
- }
  
-@@ -190,8 +196,12 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
- 			     u16 value,
- 			     u16 len)
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 4a930ef..53f1996 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -406,28 +406,6 @@ unsigned int
+ cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
+ 			      const struct cfg80211_chan_def *chandef);
+ 
+-static inline int
+-cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-			      struct wireless_dev *wdev,
+-			      enum nl80211_iftype iftype)
+-{
+-	/* TODO: For this function, we'll probably need to keep some
+-	 * kind of interface combination check in cfg80211...
+-	 */
+-	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
+-					    CHAN_MODE_UNDEFINED, 0);
+-}
+-
+-static inline int
+-cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+-			   enum nl80211_iftype iftype)
+-{
+-	if (rfkill_blocked(rdev->rfkill))
+-		return -ERFKILL;
+-
+-	return cfg80211_can_change_interface(rdev, NULL, iftype);
+-}
+-
+ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
  {
--	u8 usb_reg_buf[4];
--	int status = 0;
-+	u8 *usb_reg_buf;
-+	int status = -ENOMEM;
-+
-+	usb_reg_buf  = kmalloc(0x04, GFP_KERNEL);
-+	if (!usb_reg_buf)
-+		return status;
+ 	unsigned long end = jiffies;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07253bf..5465e0e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8957,9 +8957,8 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	if (wdev->p2p_started)
+ 		return 0;
  
- 	usb_reg_buf[0] = (value & 0x00ff);
- 	usb_reg_buf[1] = (value & 0xff00) >> 8;
-@@ -212,6 +222,8 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
- 			"%s: Reg write failed with error code :%d\n",
- 			__func__, status);
- 	}
-+	kfree(usb_reg_buf);
-+
- 	return status;
- }
+-	err = cfg80211_can_add_interface(rdev, wdev->iftype);
+-	if (err)
+-		return err;
++	if (rfkill_blocked(rdev->rfkill))
++		return -ERFKILL;
  
-@@ -286,7 +298,7 @@ int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
- 		return -ENOMEM;
+ 	err = rdev_start_p2p_device(rdev, wdev);
+ 	if (err)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b2498e3..378038d30 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -873,11 +873,6 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		return -EBUSY;
  
- 	while (count) {
--		transfer = min_t(int, count, 4096);
-+		transfer = (u8)(min_t(u32, count, 4096));
- 		memcpy(buf, data, transfer);
- 		status = usb_control_msg(dev->usbdev,
- 					 usb_sndctrlpipe(dev->usbdev, 0),
+ 	if (ntype != otype && netif_running(dev)) {
+-		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+-						    ntype);
+-		if (err)
+-			return err;
+-
+ 		dev->ieee80211_ptr->use_4addr = false;
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 		wdev_lock(dev->ieee80211_ptr);
 -- 
-1.7.5.4
+1.9.0
 
