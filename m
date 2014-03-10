@@ -1,103 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:45465 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865AbaCaKDe (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:46452 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753527AbaCJNw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 06:03:34 -0400
-Received: by mail-wg0-f51.google.com with SMTP id k14so5553062wgh.34
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 03:03:33 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 4/4] mac80211: disconnect iface if CSA unexpectedly fails
-Date: Mon, 31 Mar 2014 11:57:21 +0200
-Message-Id: <1396259841-6359-5-git-send-email-michal.kazior@tieto.com> (sfid-20140331_120340_265597_3CDCB6BD)
-In-Reply-To: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
- <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 10 Mar 2014 09:52:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com>
+References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
+	<CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
+	<CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
+	<CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com>
+	<CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com>
+	<CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com>
+	<CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com>
+Date: Mon, 10 Mar 2014 15:52:25 +0200
+Message-ID: <CANUX_P2Nj=Mv+DPuZvRrWxn74LSmW2X7_OvSbv=L733jNidc8A@mail.gmail.com> (sfid-20140310_145233_263400_D8C5CFB3)
+Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
+ X1 carbon
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Shuduo Sang <sangshuduo@gmail.com>
+Cc: linux-usb <linux-usb@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tedd <tedd.an@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to leave a cripled
-interface running.
+On Mon, Mar 10, 2014 at 3:20 PM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+> On Mon, Mar 10, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
+>>>>>>> can't resume after suspend recently. I tried many ways including
+>>>>>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
+>>>>>>> happens. I found it will not happen when I turn off WIFI device or USB
+>>>>>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
+>>>>>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
+>>>>>>> Anyone has some ideas to fix it or debug it?
+>>>>>>>
+>>>>>>> Thanks,
+>>>>>>> Shuduo
+>>>>>>>
+>>>>>>
+>>>>>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
+>>>>>> How do you disable WiFi? Rfkill or removing iwlwifi?
+>>>>>>
+>>>>>
+>>>>> I have disabled WIFI device in BIOS, then its suspend/resume works.
+>>>>>
+>>>>
+>>>> Do you have any logs to share?
+>>>> I supposed you tested 3.13.6 right?
+>>>
+>>> Attach dmesg output. If any other log you need, I can capture too.
+>>> Actually I tried 3.14-rc6, 3.13.6 and 3.11.10.
+>>
+>> This looks healthy.
+>>
+>>     Suspending console(s) (use no_console_suspend to debug)
+>>
+>> can you use no_console_suspend?
+>
+> Yes, this log is already output from the kernel I compile with
+> no_console_suspend.
 
-As a side effect this will unblock tx queues with
-CSA reason immediately after failure instead of
-until after userspace requests interface to stop.
-
-This also gives userspace an opportunity to
-indirectly see CSA failure.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v3:
- * rebase to use gfp_t argument
-
- net/mac80211/cfg.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2fd8e08..821143c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3088,7 +3088,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
-@@ -3100,7 +3100,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	if (WARN_ON(err < 0))
--		return;
-+		return err;
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3111,7 +3111,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
- 	if (err)
--		return;
-+		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-@@ -3120,6 +3120,8 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_wake_queues_by_reason(&local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
-+
-+	return 0;
- }
- 
- void ieee80211_csa_finalize_work(struct work_struct *work)
-@@ -3128,6 +3130,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     csa_finalize_work);
- 	struct ieee80211_local *local = sdata->local;
-+	int err;
- 
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
-@@ -3139,7 +3142,12 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	if (!ieee80211_sdata_running(sdata))
- 		goto unlock;
- 
--	ieee80211_csa_finalize(sdata);
-+	err = ieee80211_csa_finalize(sdata);
-+	if (err) {
-+		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
-+		cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev, GFP_KERNEL);
-+		goto unlock;
-+	}
- 
- unlock:
- 	mutex_unlock(&local->mtx);
--- 
-1.8.5.3
-
+Hmm... weird...
+Don't know how we can debug this further then...
