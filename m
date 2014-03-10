@@ -1,262 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18453 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbaCKOR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 10:17:58 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com,
-	eliad@wizery.com
-Subject: [PATCH v10 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
-Date: Tue, 11 Mar 2014 16:16:30 +0200
-Message-Id: <1394547394-3910-2-git-send-email-luciano.coelho@intel.com> (sfid-20140311_151801_720414_7F332A5D)
-In-Reply-To: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
-References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:53232 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795AbaCJJDi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 05:03:38 -0400
+Received: by mail-oa0-f45.google.com with SMTP id o6so6725687oag.32
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 02:03:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEe9Pun657T7GNn8Sx85ARi=K9JQr=G8Mi+Tdci2X2c8cQ@mail.gmail.com>
+References: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
+	<1394376039-9644-4-git-send-email-luciano.coelho@intel.com>
+	<CAB3XZEe+-sdGfMupP7x0fKHCfevCtZDY7UrF6rRyL3==pnZf5Q@mail.gmail.com>
+	<1394437040.18265.1.camel@dubbel>
+	<CAB3XZEe9Pun657T7GNn8Sx85ARi=K9JQr=G8Mi+Tdci2X2c8cQ@mail.gmail.com>
+Date: Mon, 10 Mar 2014 10:03:37 +0100
+Message-ID: <CA+BoTQmTd5JLJTn7QujSE-6QuVXfcGTLWAiW=LaiGKkGyoYttA@mail.gmail.com> (sfid-20140310_100341_704231_472BB702)
+Subject: Re: [PATCH v6 3/3] mac80211: allow reservation of a running chanctx
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate the code that counts the interface types and channels from
-the code that check the interface combinations.  The new function that
-checks for combinations is exported so it can be called by the
-drivers.
+On 10 March 2014 09:32, Eliad Peller <eliad@wizery.com> wrote:
+> On Mon, Mar 10, 2014 at 9:37 AM, Luciano Coelho
+> <luciano.coelho@intel.com> wrote:
+>> On Sun, 2014-03-09 at 17:13 +0200, Eliad Peller wrote:
+>>> On Sun, Mar 9, 2014 at 4:40 PM, Luciano Coelho <luciano.coelho@intel.com> wrote:
+>>> > With single-channel drivers, we need to be able to change a running
+>>> > chanctx if we want to use chanctx reservation.  Not all drivers may be
+>>> > able to do this, so add a flag that indicates support for it.
+>>> >
+>>> > Changing a running chanctx can also be used as an optimization in
+>>> > multi-channel drivers when the context needs to be reserved for future
+>>> > usage.
+>>> >
+>>> > Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
+>>> > reserved so nobody else can use it (since we know it's going to
+>>> > change).  In the future, we may allow several vifs to use the same
+>>> > reservation as long as they plan to use the chanctx on the same
+>>> > future channel.
+>>> >
+>>> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+>>> > ---
+>>> [...]
+>>>
+>>> > @@ -177,7 +198,12 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+>>> >         list_for_each_entry(ctx, &local->chanctx_list, list) {
+>>> >                 const struct cfg80211_chan_def *compat;
+>>> >
+>>> > -               if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+>>> > +               /* We don't support chanctx reservation for multiple
+>>> > +                * vifs yet, so don't allow reserved chanctxs to be
+>>> > +                * reused.
+>>> > +                */
+>>> > +               if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
+>>> > +                   ieee80211_chanctx_is_reserved(local, ctx))
+>>> >                         continue;
+>>> >
+>>> i'm not sure that's correct.
+>>> you might want to find a chanctx in order to use it, not only for
+>>> reservation. any reason to reject it in this case?
+>>
+>> At the moment we don't support multi-vifs switching at the same time, so
+>> we don't allow anyone else to use a chanctx while it's reserved.
+>>
+> i'm not talking about multi-vifs switching.
+> consider the following scenario:
+> sta connected on channel 40
+> ap beaconing on channel 60
+>
+> now, you want (for whatever reason) to switch the ap to channel 40.
+> you'll reserve the sta's chanctx, and increase its refcount (to 2).
+>
+> now a new sta vif is added, and tries to connect on channel 40.
+> the check above will skip the existing channel context (because it's
+> also reserved) although there is no reason it won't be used.
 
-This is done in preparation for moving the interface combinations
-checks out of cfg80211.
+Good point. I have this case covered in my multi-vif csa patches. We
+could transplant it into Luca's patch?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In v4:
 
-   * rebased on top of slightly modified applied patches
-   * removed the parenthesis from the comment (not needed for docbook)
-   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
-
-In v7:
-
-   * removed redundant arguments (num_interfaces and used_iftypes)
-     from cfg80211_check_combinations();
-
-In v10:
-
-   * ignore sw_interfaces when counting used_types
----
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  22 +++++++
- net/wireless/util.c              | 129 ++++++++++++++++++++++-----------------
- 3 files changed, 96 insertions(+), 56 deletions(-)
-
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 044b764..d9b9416 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -100,6 +100,7 @@
- !Finclude/net/cfg80211.h wdev_priv
- !Finclude/net/cfg80211.h ieee80211_iface_limit
- !Finclude/net/cfg80211.h ieee80211_iface_combination
-+!Finclude/net/cfg80211.h cfg80211_check_combinations
-       </chapter>
-       <chapter>
-       <title>Actions and configuration</title>
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ff3af16..768fcc0 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4682,6 +4682,28 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
-  */
- unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
- 
-+/**
-+ * cfg80211_check_combinations - check interface combinations
-+ *
-+ * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
-+ *
-+ * This function can be called by the driver to check whether a
-+ * combination of interfaces and their types are allowed according to
-+ * the interface combinations.
-+ */
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES]);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index dadc934..a24448b 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1253,6 +1253,76 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int i, j, iftype;
-+	int num_interfaces = 0;
-+	u32 used_iftypes = 0;
-+
-+	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+		num_interfaces += iftype_num[iftype];
-+		if (iftype_num[iftype] > 0 &&
-+		    !(wiphy->software_iftypes & BIT(iftype)))
-+			used_iftypes |= BIT(iftype);
-+	}
-+
-+	for (i = 0; i < wiphy->n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		struct ieee80211_iface_limit *limits;
-+		u32 all_iftypes = 0;
-+
-+		c = &wiphy->iface_combinations[i];
-+
-+		if (num_interfaces > c->max_interfaces)
-+			continue;
-+		if (num_different_channels > c->num_different_channels)
-+			continue;
-+
-+		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
-+				 GFP_KERNEL);
-+		if (!limits)
-+			return -ENOMEM;
-+
-+		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+			if (wiphy->software_iftypes & BIT(iftype))
-+				continue;
-+			for (j = 0; j < c->n_limits; j++) {
-+				all_iftypes |= limits[j].types;
-+				if (!(limits[j].types & BIT(iftype)))
-+					continue;
-+				if (limits[j].max < iftype_num[iftype])
-+					goto cont;
-+				limits[j].max -= iftype_num[iftype];
-+			}
-+		}
-+
-+		if (radar_detect && !(c->radar_detect_widths & radar_detect))
-+			goto cont;
-+
-+		/* Finally check that all iftypes that we're currently
-+		 * using are actually part of this combination. If they
-+		 * aren't then we can't use this combination and have
-+		 * to continue to the next.
-+		 */
-+		if ((all_iftypes & used_iftypes) != used_iftypes)
-+			goto cont;
-+
-+		/* This combination covered all interface types and
-+		 * supported the requested numbers, so we're good.
-+		 */
-+		kfree(limits);
-+		return 0;
-+ cont:
-+		kfree(limits);
-+	}
-+
-+	return -EBUSY;
-+}
-+EXPORT_SYMBOL(cfg80211_check_combinations);
-+
- int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 struct wireless_dev *wdev,
- 				 enum nl80211_iftype iftype,
-@@ -1261,7 +1331,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				 u8 radar_detect)
- {
- 	struct wireless_dev *wdev_iter;
--	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
- 	struct ieee80211_channel
- 			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
-@@ -1269,7 +1338,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	enum cfg80211_chan_mode chmode;
- 	int num_different_channels = 0;
- 	int total = 1;
--	int i, j;
-+	int i;
- 
- 	ASSERT_RTNL();
- 
-@@ -1354,65 +1423,13 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 
- 		num[wdev_iter->iftype]++;
- 		total++;
--		used_iftypes |= BIT(wdev_iter->iftype);
- 	}
- 
- 	if (total == 1 && !radar_detect)
- 		return 0;
- 
--	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
--		const struct ieee80211_iface_combination *c;
--		struct ieee80211_iface_limit *limits;
--		u32 all_iftypes = 0;
--
--		c = &rdev->wiphy.iface_combinations[i];
--
--		if (total > c->max_interfaces)
--			continue;
--		if (num_different_channels > c->num_different_channels)
--			continue;
--
--		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
--				 GFP_KERNEL);
--		if (!limits)
--			return -ENOMEM;
--
--		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
--			if (rdev->wiphy.software_iftypes & BIT(iftype))
--				continue;
--			for (j = 0; j < c->n_limits; j++) {
--				all_iftypes |= limits[j].types;
--				if (!(limits[j].types & BIT(iftype)))
--					continue;
--				if (limits[j].max < num[iftype])
--					goto cont;
--				limits[j].max -= num[iftype];
--			}
--		}
--
--		if (radar_detect && !(c->radar_detect_widths & radar_detect))
--			goto cont;
--
--		/*
--		 * Finally check that all iftypes that we're currently
--		 * using are actually part of this combination. If they
--		 * aren't then we can't use this combination and have
--		 * to continue to the next.
--		 */
--		if ((all_iftypes & used_iftypes) != used_iftypes)
--			goto cont;
--
--		/*
--		 * This combination covered all interface types and
--		 * supported the requested numbers, so we're good.
--		 */
--		kfree(limits);
--		return 0;
-- cont:
--		kfree(limits);
--	}
--
--	return -EBUSY;
-+	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
-+					   radar_detect, num);
- }
- 
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
--- 
-1.9.0
-
+Michał
