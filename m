@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:59393 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040AbaCGJzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 04:55:45 -0500
-Message-ID: <5319978F.6060803@rempel-privat.de> (sfid-20140307_105552_195890_7DF2F900)
-Date: Fri, 07 Mar 2014 10:55:27 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:53701 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768AbaCJFGP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 01:06:15 -0400
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Sujith Manoharan <sujith@msujith.org>
-CC: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 00/23] ath9k|ath9k_htc: move dups to common-beacon
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de> <21266.37896.937680.416439@gargle.gargle.HOWL> <5312DD46.3030800@rempel-privat.de> <21266.58035.719712.344551@gargle.gargle.HOWL> <20140306184235.GA7788@tuxdriver.com>
-In-Reply-To: <20140306184235.GA7788@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="AeO70SW1dJaVvQJ8HkQan966kCGWGxOcx"
+From: Shuduo Sang <sangshuduo@gmail.com>
+Date: Mon, 10 Mar 2014 13:05:34 +0800
+Message-ID: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com> (sfid-20140310_060622_062437_1E8DCDDE)
+Subject: wifi driver or USB might leads suspend/resume failure on thinkpad X1 carbon
+To: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---AeO70SW1dJaVvQJ8HkQan966kCGWGxOcx
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Am 06.03.2014 19:42, schrieb John W. Linville:
-> On Sun, Mar 02, 2014 at 01:20:11PM +0530, Sujith Manoharan wrote:
->> Oleksij Rempel wrote:
->>> I was thinking about it too, but suddenly i don't have enough time an=
-d
->>> experience to do it. Beside, there is no need to write usb layer. It =
-is
->>> clean and separate from other part of the driver. But the HTC/WMI
->>> interface is not completely separate.
->>
->> Sure. It is just another option to consider.
->>
->>> Now about bigger picture. Right now i work only on ath9k<>ath9k_htc
->>> dups. But there are lots of dup code in ath9k itself. For example
->>> *_phy.c, *_initvals.h. Here are some examples:
->>
->> We already have duplicate detection for initvals. It is part of
->> the initvals tool in qca-swiss-army-knife.
->=20
-> So, where does this leave us?  Should this series be merged?  Or not?
+Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
+can't resume after suspend recently. I tried many ways including
+latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
+happens. I found it will not happen when I turn off WIFI device or USB
+3.0 in BIOS. So I suspect something need fix in either wifi driver or
+USB side. Since Windows 7 works good so I suppose no hardware issue.
+Anyone has some ideas to fix it or debug it?
 
-Last response was about initvals, my patch set affect only beacon code.
-Since i don't plan to rewrite ath9k_htc from scratch, i would assume it
-will be better to continue this periodic clean work.
-
-Sujith, are you agree? :) We need your Ack for this patch set.
-
---=20
-Regards,
-Oleksij
+Thanks,
+Shuduo
 
 
---AeO70SW1dJaVvQJ8HkQan966kCGWGxOcx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iF4EAREIAAYFAlMZl5IACgkQHwImuRkmbWkndwD/RK2Eq9zAqRtv5/8M34S5m6s5
-KplQmJqQ/YzhS7LJSxkA/iwdlufz2KKOWkUHxQ6f1hn+tmmLwd/ABWPARRg8sKYx
-=RuKH
------END PGP SIGNATURE-----
-
---AeO70SW1dJaVvQJ8HkQan966kCGWGxOcx--
+lspci -vnn output:
+..
+sniped
+..
+00:1d.0 USB controller: Intel Corporation Lynx Point-LP USB EHCI #1
+(rev 04) (prog-if 20 [EHCI])
+Subsystem: Lenovo Device 2218
+Flags: bus master, medium devsel, latency 0, IRQ 23
+Memory at f052d000 (32-bit, non-prefetchable) [size=1K]
+Capabilities: [50] Power Management version 3
+Capabilities: [58] Debug port: BAR=1 offset=00a0
+Capabilities: [98] PCI Advanced Features
+Kernel driver in use: ehci-pci
+..
+03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)
+Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+Flags: bus master, fast devsel, latency 0, IRQ 59
+Memory at f0400000 (64-bit, non-prefetchable) [size=8K]
+Capabilities: [c8] Power Management version 3
+Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Capabilities: [40] Express Endpoint, MSI 00
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [140] Device Serial Number 7c-7a-91-ff-ff-5e-4c-cd
+Capabilities: [14c] Latency Tolerance Reporting
+Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
+Kernel driver in use: iwlwifi
+Kernel modules: iwlwifi
