@@ -1,113 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37174 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757582AbaCSKLV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 06:11:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.14 v2] mac80211: fix suspend vs. authentication race
-Date: Wed, 19 Mar 2014 11:11:18 +0100
-Message-Id: <1395223878-12962-1-git-send-email-johannes@sipsolutions.net> (sfid-20140319_111124_629227_94838DBF)
+Received: from nbd.name ([46.4.11.11]:44474 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753244AbaCJPOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 11:14:06 -0400
+Message-ID: <531DD6B0.4030101@openwrt.org> (sfid-20140310_161428_202794_EE619298)
+Date: Mon, 10 Mar 2014 16:13:52 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Michael Braun <michael-dev@fami-braun.de>,
+	ath9k-devel@qca.qualcomm.com
+CC: projekt-wlan@fem.tu-ilmenau.de, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [RFC] ath9k: use more than one slot per bss for
+ multicast in staggered mode
+References: <1394462435-23329-1-git-send-email-michael-dev@fami-braun.de>
+In-Reply-To: <1394462435-23329-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2014-03-10 15:40, Michael Braun wrote:
+> Before, ath9k divided time in ATH_BCBUF many equally sized slots.
+> Each bss then was assigned to a single slot, leaving some or more slots empty.
+> The beacons of a bss were sent at the beginning of the slot for this bss,
+> and then the buffered multicast packets might be sent out.
+> 
+> As multicast packets are sent a lowest bitrate, wireless throughput
+> of multicast packets is very limited, and thus the time available
+> is crucial to avoid buffer overflow, which I frequently observed.
+I think in setups where you need to be able to send more multicast
+packets, you should consider increasing the multicast rate.
 
-Since Stanislaw's patch removing the quiescing code, mac80211 had
-a race regarding suspend vs. authentication: as cfg80211 doesn't
-track authentication attempts, it can't abort them. Therefore the
-attempts may be kept running while suspending, which can lead to
-all kinds of issues, in at least some cases causing an error in
-iwlmvm firmware.
+> This patch changes the behaviour of ath9k in two ways:
+>  1. the time available when processing a slot is increased
+>     to cover all subsequent unoccupied slots as well.
+>     This size is tracked in the variable named "slotwidth".
+I think we should not allow multicast transmission to eat up too much
+airtime during the beacon interval. If APs are flooded with multicast
+packets, it must not drown out useful unicast traffic.
 
-Fix this by aborting the authentication attempt when suspending.
+>  2. during each slot, buffered packets from *all* bss are
+>     sent out in a round-robin fashing, skipping those
+>     bss where stations are currently not listing.
+>     That could be either due to
+>       - last dtim did not containt the relevant flag or
+>       - a multicast packet not containing the "more data"
+>         flag was sent out.
+>     The state is tracked in multicastWakeup, which is
+>     true iff the stations in this bss should already
+>     be woken up.
+That does not seem like a good idea to me. Powersave clients waking up
+to receive multicast packets should be allowed to go to sleep again as
+soon as possible. Keeping them awake unnecessarily by not clearing the
+"more data" bit at the last packet make them eat more power.
 
-Cc: stable@vger.kernel.org
-Fixes: 12e7f517029d ("mac80211: cleanup generic suspend/resume procedures")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 26 ++++++++++++++++++++++++++
- net/mac80211/pm.c          | 14 +++++++++++---
- 3 files changed, 38 insertions(+), 3 deletions(-)
+> I currently don't know whether a non-buffered multicast packet
+> can slip between buffered packets (or between dtim notification
+> and the first buffered packet), so that an STA receives a
+> multicast packet without MOREDATA set while there a still
+> buffered packets to be received and just short before being
+> delivered on-air.
+The CAB queue gets enabled after a beacon and then takes priority over
+all other queues. No packets will slip in between once its transmission
+starts.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5e44e3179e02..6bd498470138 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1385,6 +1385,7 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mgd_conn_tx_status(struct ieee80211_sub_if_data *sdata,
- 				  __le16 fc, bool acked);
-+void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
- 
- /* IBSS code */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 245dce969b31..9f7a586e1d16 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3504,6 +3504,32 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
- }
- 
- #ifdef CONFIG_PM
-+void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+
-+	sdata_lock(sdata);
-+
-+	if (ifmgd->auth_data) {
-+		/*
-+		 * If we are trying to authenticate while suspending, cfg80211
-+		 * won't know and won't actually abort those attempts, thus we
-+		 * need to do that ourselves.
-+		 */
-+		ieee80211_send_deauth_disassoc(sdata,
-+					       ifmgd->auth_data->bss->bssid,
-+					       IEEE80211_STYPE_DEAUTH,
-+					       WLAN_REASON_DEAUTH_LEAVING,
-+					       false, frame_buf);
-+		ieee80211_destroy_auth_data(sdata, false);
-+		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
-+				      IEEE80211_DEAUTH_FRAME_LEN);
-+	}
-+
-+	sdata_unlock(sdata);
-+}
-+
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index af64fb8e8add..d478b880a0af 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -100,10 +100,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	/* remove all interfaces that were created in the driver */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata) ||
--		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
--		    sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+		if (!ieee80211_sdata_running(sdata))
- 			continue;
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_MONITOR:
-+			continue;
-+		case NL80211_IFTYPE_STATION:
-+			ieee80211_mgd_quiesce(sdata);
-+			break;
-+		default:
-+			break;
-+		}
- 
- 		drv_remove_interface(local, sdata);
- 	}
--- 
-1.8.5.3
-
+- Felix
