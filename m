@@ -1,86 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36404 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbaCaLn3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:43:29 -0400
-Received: by mail-we0-f174.google.com with SMTP id t60so4689184wes.33
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:28 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mga11.intel.com ([192.55.52.93]:48873 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753410AbaCJNuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 09:50:40 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 11/13] mac80211: fix racy usage of chanctx->refcount
-Date: Mon, 31 Mar 2014 12:39:29 +0200
-Message-Id: <1396262371-6466-12-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134339_938432_8507CA86)
-In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
- <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 0/2] Add SRAM dump utility through udef
+Date: Mon, 10 Mar 2014 15:48:21 +0200
+Message-Id: <1394459303-11074-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140310_145043_647443_D1954042)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel context refcount is protected by
-chanctx_mtx. Accessing the value without holding
-the mutex is racy. RCU section didn't guarantee
-anything here.
+It is very useful to have a dump of the device's SRAM when
+the firmware asserts to ba eblt analyze the problem.
 
-Theoretically ieee80211_channel_switch() could
-fail to see refcount change and read "1" instead
-of, e.g. "2". This means mac80211 could accept CSA
-even though it shouldn't have.
+This small patch series allows to read the SRAM from the
+device when an error occurs, and to save it aside. Then we
+send a udev event that can trigger a script which will read
+the data through debugfs. Going through userspace (udev)
+allows us to reach the file system which is the purpose.
+Today the SRAM is 80KB big so that we will have 80KB per
+assert. This should compress really well though.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * use rcu_dereference_protected() [Eliad/Johannes]
+I send this series as a RFC for distributions. Would you use this?
 
- net/mac80211/cfg.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+Emmanuel Grumbach (2):
+  iwlwifi: mvm: send udev event when ASSERT occur for SRAM dump
+  iwlwifi: mvm: create a firmware error dump format
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 821143c..caa351b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3282,7 +3282,7 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
- 	int err, num_chanctx, changed = 0;
- 
-@@ -3299,23 +3299,24 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 				       &sdata->vif.bss_conf.chandef))
- 		return -EINVAL;
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!chanctx_conf) {
--		rcu_read_unlock();
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		mutex_unlock(&local->chanctx_mtx);
- 		return -EBUSY;
- 	}
- 
- 	/* don't handle for multi-VIF cases */
--	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
-+	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
- 	if (chanctx->refcount > 1) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->chanctx_mtx);
- 		return -EBUSY;
- 	}
- 	num_chanctx = 0;
- 	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
- 		num_chanctx++;
--	rcu_read_unlock();
-+	mutex_unlock(&local->chanctx_mtx);
- 
- 	if (num_chanctx > 1)
- 		return -EBUSY;
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c       |  51 +++++++++++
+ drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h | 106 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   7 ++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h           |   6 +-
+ drivers/net/wireless/iwlwifi/mvm/ops.c           |  36 +++++++-
+ drivers/net/wireless/iwlwifi/mvm/utils.c         |  27 +++---
+ 7 files changed, 214 insertions(+), 20 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
+
 -- 
-1.8.5.3
+1.8.3.2
 
