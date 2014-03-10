@@ -1,91 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44807 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbaCKKqd (ORCPT
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:37899 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbaCJGzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 06:46:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Pull request: ath 20140311
-Date: Tue, 11 Mar 2014 12:46:24 +0200
-Message-ID: <87y50hgghr.fsf@kamboji.qca.qualcomm.com> (sfid-20140311_114636_610458_93280A8E)
+	Mon, 10 Mar 2014 02:55:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
+References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
+ <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
+From: Shuduo Sang <sangshuduo@gmail.com>
+Date: Mon, 10 Mar 2014 14:49:24 +0800
+Message-ID: <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com> (sfid-20140310_075515_925356_7F336A48)
+Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
+ X1 carbon
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-usb <linux-usb@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tedd <tedd.an@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Mar 10, 2014 at 2:11 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> Hi,
+>
+> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+>> Hi,
+>>
+>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
+>> can't resume after suspend recently. I tried many ways including
+>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
+>> happens. I found it will not happen when I turn off WIFI device or USB
+>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
+>> USB side. Since Windows 7 works good so I suppose no hardware issue.
+>> Anyone has some ideas to fix it or debug it?
+>>
+>> Thanks,
+>> Shuduo
+>>
+>
+> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
+> How do you disable WiFi? Rfkill or removing iwlwifi?
+>
 
-here's a new pull request from me, but just ath10k patches this time.
-Summary of the changes:
+I have disabled WIFI device in BIOS, then its suspend/resume works.
 
-Michal now did some optimisations and was able to improve throughput by
-100 Mbps on our MIPS based AP135 platform. Chun-Yeow added some
-workarounds to be able to better use ad-hoc mode. Ben improved log
-messages and added support for MSDU chaining. And, as usual, also some
-smaller fixes.
-
-Please let me know if there are any problems.
-
-Kalle
-
-The following changes since commit ef1b4141d0430583743a6045901e4d1a73557a33:
-
-  ath5k: set SURVEY_INFO_IN_USE on get_survey (2014-02-24 15:38:39 -0500)
-
-are available in the git repository at:
-
-  git://github.com/kvalo/ath.git for-linville
-
-for you to fetch changes up to 70dd77b4c50da518b57b8b9b125a8c9aabe9bc1a:
-
-  ath10k: do not overwrite max_antenna_gain (2014-03-07 10:14:10 +0200)
-
-----------------------------------------------------------------
-Ben Greear (3):
-      ath10k:  add more details to some debug messages
-      ath10k: add vdev-id, return code to error codes
-      ath10k: support msdu chaining
-
-Chun-Yeow Yeoh (2):
-      ath10k: implement drv_get_tsf for ibss merging
-      ath10k: set the mactime of ieee80211_rx_status
-
-Janusz Dziedzic (3):
-      ath10k: enable spectrum management support
-      ath10k: bitrate_mask add force_sgi support
-      ath10k: skip management frames in HTT path
-
-Marek Puzyniak (1):
-      ath10k: do not overwrite max_antenna_gain
-
-Michal Kazior (10):
-      ath10k: fix 4addr rx
-      ath10k: fix sta_rc_update for non-ap iftype
-      ath10k: remove DMA mapping wrappers
-      ath10k: remove is_aborted from skb_cb
-      ath10k: replace send_head() with tx_sg()
-      ath10k: bypass htc for htt tx path
-      ath10k: batch htt tx/rx completions
-      ath10k: reduce htt tx/rx spinlock overhead
-      ath10k: remove pci completion list
-      ath10k: minimize coherent dma accesses
-
- drivers/net/wireless/ath/ath10k/ce.c     |   16 +-
- drivers/net/wireless/ath/ath10k/ce.h     |    9 +-
- drivers/net/wireless/ath/ath10k/core.h   |   34 +--
- drivers/net/wireless/ath/ath10k/hif.h    |   25 +-
- drivers/net/wireless/ath/ath10k/htc.c    |   25 +-
- drivers/net/wireless/ath/ath10k/htt.h    |   18 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c |  236 +++++++++++++-----
- drivers/net/wireless/ath/ath10k/htt_tx.c |  205 ++++++++--------
- drivers/net/wireless/ath/ath10k/mac.c    |  268 ++++++++++++--------
- drivers/net/wireless/ath/ath10k/pci.c    |  389 +++++++-----------------------
- drivers/net/wireless/ath/ath10k/pci.h    |   28 ---
- drivers/net/wireless/ath/ath10k/txrx.c   |   24 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |   18 +-
- 13 files changed, 638 insertions(+), 657 deletions(-)
-
--- 
-Kalle Valo
+>>
+>> lspci -vnn output:
+>> ..
+>> sniped
+>> ..
+>> 00:1d.0 USB controller: Intel Corporation Lynx Point-LP USB EHCI #1
+>> (rev 04) (prog-if 20 [EHCI])
+>> Subsystem: Lenovo Device 2218
+>> Flags: bus master, medium devsel, latency 0, IRQ 23
+>> Memory at f052d000 (32-bit, non-prefetchable) [size=1K]
+>> Capabilities: [50] Power Management version 3
+>> Capabilities: [58] Debug port: BAR=1 offset=00a0
+>> Capabilities: [98] PCI Advanced Features
+>> Kernel driver in use: ehci-pci
+>> ..
+>> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)
+>> Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+>> Flags: bus master, fast devsel, latency 0, IRQ 59
+>> Memory at f0400000 (64-bit, non-prefetchable) [size=8K]
+>> Capabilities: [c8] Power Management version 3
+>> Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>> Capabilities: [40] Express Endpoint, MSI 00
+>> Capabilities: [100] Advanced Error Reporting
+>> Capabilities: [140] Device Serial Number 7c-7a-91-ff-ff-5e-4c-cd
+>> Capabilities: [14c] Latency Tolerance Reporting
+>> Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
+>> Kernel driver in use: iwlwifi
+>> Kernel modules: iwlwifi
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
