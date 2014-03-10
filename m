@@ -1,167 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:53127 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbaCQTm6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 15:42:58 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v4 1/4] net: add name_assign_type netdev attribute
-Date: Mon, 17 Mar 2014 20:42:35 +0100
-Message-Id: <1395085358-1171-2-git-send-email-dh.herrmann@gmail.com> (sfid-20140317_204458_238793_C89190EF)
-In-Reply-To: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
-References: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:48873 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753410AbaCJNun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 09:50:43 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/2] iwlwifi: mvm: create a firmware error dump format
+Date: Mon, 10 Mar 2014 15:48:23 +0200
+Message-Id: <1394459303-11074-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140310_145046_705051_8B54D997)
+In-Reply-To: <1394459303-11074-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1394459303-11074-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The name_assign_type attribute gives hints where the interface name of a
-given net-device comes from. Three different values are currently defined:
-  NET_NAME_ENUM:
-    This is the default. The ifname is provided by the kernel with an
-    enumerated suffix. Names may be reused and unstable.
-  NET_NAME_USER:
-    The ifname was provided by user-space during net-device setup.
-  NET_NAME_RENAMED:
-    The net-device has been renamed via RTNL. Once this type is set, it
-    cannot change again.
+This will allow to put more data in the dump file -not only
+the SRAM of the device.
 
-This attribute comes in handy for reliable net-device names. If an ifname
-is provided by user-space, we can safely assume that the naming-policy
-avoids reuse and is stable. Only if it was set by the kernel, the
-interfaces might need to be renamed.
-
-The NET_NAME_RENAMED value allows us to detect whether some-one else
-already renamed the device, in which case we shouldn't touch it again. The
-NET_NAME_USER value allows us to detect whether some other naming policy
-created the device, in which case there's no need to rename it.
-
-The most significant use-case is to detect virtual wifi-P2P devices, which
-are named by wpa_supplicant et al. We shouldn't rename them as wpas
-already provides a proper naming-policy.
-
-Note that this patch only provides the core infrastructure. The different
-net-dev types need to be manually fixed to use NET_NAME_USER instead of
-the default (NET_NAME_ENUM). NET_NAME_ENUM is the least restrictive,
-though, so it seems safe to use it as fallback for non-converted net-dev
-types.
-
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
+Change-Id: I5641dab6b538ea8d58a935bcd8590210d0102760
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v3:
- - move api constants to uapi header (Ben Hutchings)
-v4:
- - move name_assign_type so we avoid needless padding (David Laight)
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c       |  11 ++-
+ drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h | 106 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   2 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h           |   3 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c           |  33 ++++++-
+ drivers/net/wireless/iwlwifi/mvm/utils.c         |  22 +++--
+ intc-scripts/publishable-files                   |   1 +
+ 7 files changed, 160 insertions(+), 18 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
 
- include/linux/netdevice.h      | 2 ++
- include/uapi/linux/netdevice.h | 4 ++++
- net/core/dev.c                 | 7 +++++++
- net/core/net-sysfs.c           | 2 ++
- net/core/rtnetlink.c           | 2 ++
- 5 files changed, 17 insertions(+)
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index b8d8c80..1d48cee 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -1376,6 +1376,8 @@ struct net_device {
- 	struct kset		*queues_kset;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 7c6dff8..feafe86 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -65,6 +65,7 @@
+ #include "iwl-io.h"
+ #include "iwl-prph.h"
+ #include "debugfs.h"
++#include "fw-error-dump.h"
+ 
+ #ifdef CONFIG_IWLWIFI_SUPPORT_DEBUG_CMD
+ static ssize_t iwl_dbgfs_fw_dbg_write(struct iwl_mvm *mvm, char *buf,
+@@ -211,6 +212,8 @@ static int iwl_dbgfs_fw_error_dump_open(struct inode *inode, struct file *file)
+ 
+ 	file->private_data = mvm->fw_error_dump;
+ 	mvm->fw_error_dump = NULL;
++	mvm->fw_error_sram = NULL;
++	mvm->fw_error_sram_len = 0;
+ 	ret = 0;
+ 
+ out:
+@@ -222,16 +225,16 @@ static ssize_t iwl_dbgfs_fw_error_dump_read(struct file *file,
+ 					    char __user *user_buf,
+ 					    size_t count, loff_t *ppos)
+ {
+-	u8 *data = file->private_data;
+-	u32 len = *(u32 *)data;
++	struct iwl_fw_error_dump_file *dump_file = file->private_data;
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos,
+-				       data + sizeof(len), len);
++				       dump_file,
++				       le32_to_cpu(dump_file->file_len));
+ }
+ 
+ static int iwl_dbgfs_fw_error_dump_release(struct inode *inode, struct file *file)
+ {
+-	kfree(file->private_data);
++	vfree(file->private_data);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h b/drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
+new file mode 100644
+index 0000000..58c8941
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
+@@ -0,0 +1,106 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2014 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2014 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *****************************************************************************/
++
++#ifndef __fw_error_dump_h__
++#define __fw_error_dump_h__
++
++#include <linux/types.h>
++
++#define IWL_FW_ERROR_DUMP_BARKER	0x14789632
++
++/**
++ * enum iwl_fw_error_dump_type - types of data in the dump file
++ * @IWL_FW_ERROR_DUMP_SRAM:
++ * @IWL_FW_ERROR_DUMP_REG:
++ */
++enum iwl_fw_error_dump_type {
++	IWL_FW_ERROR_DUMP_SRAM = 0,
++	IWL_FW_ERROR_DUMP_REG = 1,
++
++	IWL_FW_ERROR_DUMP_MAX,
++};
++
++/**
++ * struct iwl_fw_error_dump_data - data for one type
++ * @type: %enum iwl_fw_error_dump_type
++ * @len: the length starting from %data - must be a multiplier of 4.
++ * @data: the data itself padded to be a multiplier of 4.
++ */
++struct iwl_fw_error_dump_data {
++	__le32 type;
++	__le32 len;
++	__u8 data[];
++} __packed __aligned(4);
++
++/**
++ * struct iwl_fw_error_dump_file - the layout of the header of the file
++ * @barker: must be %IWL_FW_ERROR_DUMP_BARKER
++ * @file_len: the length of all the file starting from %barker
++ * @data: array of %struct iwl_fw_error_dump_data
++ */
++struct iwl_fw_error_dump_file {
++	__le32 barker;
++	__le32 file_len;
++	u8 data[0];
++} __packed __aligned(4);
++
++#endif /* __fw_error_dump_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index b810334..61d603c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -564,6 +564,8 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ {
+ 	static char *env[] = { "DRIVER=iwlwifi", "EVENT=error_dump", NULL };
+ 
++	iwl_mvm_fw_error_dump(mvm);
++
+ 	/* notify the userspace about the error we had */
+ 	kobject_uevent_env(&mvm->hw->wiphy->dev.kobj, KOBJ_CHANGE, env);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index ce8373e..29cecbf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -581,6 +581,8 @@ struct iwl_mvm {
+ 	/* -1 for always, 0 for never, >0 for that many times */
+ 	s8 restart_fw;
+ 	void *fw_error_dump;
++	void *fw_error_sram;
++	u32 fw_error_sram_len;
+ 
+ 	struct led_classdev led;
+ 
+@@ -703,6 +705,7 @@ void iwl_mvm_hwrate_to_tx_rate(u32 rate_n_flags,
+ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
+ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
++void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm);
+ u8 first_antenna(u8 mask);
+ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 6cffcc1..d006405 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -80,6 +80,7 @@
+ #include "fw-api-scan.h"
+ #include "iwl-tm-gnl.h"
+ #include "time-event.h"
++#include "fw-error-dump.h"
+ #ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ #include "iwl-dnt-cfg.h"
+ #include "iwl-dnt-dispatch.h"
+@@ -578,7 +579,8 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
  #endif
  
-+	unsigned char		name_assign_type; /* name assignment type */
+ 	kfree(mvm->scan_cmd);
+-	kfree(mvm->fw_error_dump);
++	vfree(mvm->fw_error_dump);
++	kfree(mvm->fw_error_sram);
+ 	kfree(mvm->mcast_filter_cmd);
+ 	mvm->mcast_filter_cmd = NULL;
+ 
+@@ -866,6 +868,33 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ 	}
+ }
+ 
++void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
++{
++	struct iwl_fw_error_dump_file *dump_file;
++	struct iwl_fw_error_dump_data *dump_data;
++	u32 file_len;
 +
- 	bool			uc_promisc;
- 	unsigned int		promiscuity;
- 	unsigned int		allmulti;
-diff --git a/include/uapi/linux/netdevice.h b/include/uapi/linux/netdevice.h
-index 6b9500b..ea963e4 100644
---- a/include/uapi/linux/netdevice.h
-+++ b/include/uapi/linux/netdevice.h
-@@ -36,6 +36,10 @@
- /* Initial net device group. All devices belong to group 0 by default. */
- #define INIT_NETDEV_GROUP	0
- 
-+/* interface name assignment types (sysfs name_assign_type attribute) */
-+#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
-+#define NET_NAME_USER		1	/* provided by user-space */
-+#define NET_NAME_RENAMED	2	/* renamed by user-space */
- 
- 
- /* Media selection options. */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 587f9fb..4a2b360 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1083,6 +1083,7 @@ static int dev_get_valid_name(struct net *net,
- int dev_change_name(struct net_device *dev, const char *newname)
++	lockdep_assert_held(&mvm->mutex);
++
++	file_len = mvm->fw_error_sram_len +
++		   sizeof(*dump_file) +
++		   sizeof(*dump_data);
++
++	dump_file = vmalloc(file_len);
++	if (!dump_file)
++		return;
++
++	mvm->fw_error_dump = dump_file;
++
++	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
++	dump_file->file_len = cpu_to_le32(file_len);
++	dump_data = (void *)dump_file->data;
++	dump_data->type = IWL_FW_ERROR_DUMP_SRAM;
++	dump_data->len = cpu_to_le32(mvm->fw_error_sram_len);
++
++	memcpy(dump_data->data, mvm->fw_error_sram, mvm->fw_error_sram_len);
++}
++
+ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
  {
- 	char oldname[IFNAMSIZ];
-+	unsigned char old_assign_type;
- 	int err = 0;
- 	int ret;
- 	struct net *net;
-@@ -1109,10 +1110,14 @@ int dev_change_name(struct net_device *dev, const char *newname)
- 		return err;
- 	}
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+@@ -873,7 +902,7 @@ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
+ 	iwl_mvm_dump_nic_error_log(mvm);
  
-+	old_assign_type = dev->name_assign_type;
-+	dev->name_assign_type = NET_NAME_RENAMED;
-+
- rollback:
- 	ret = device_rename(&dev->dev, dev->name);
- 	if (ret) {
- 		memcpy(dev->name, oldname, IFNAMSIZ);
-+		dev->name_assign_type = old_assign_type;
- 		write_seqcount_end(&devnet_rename_seq);
- 		return ret;
- 	}
-@@ -1141,6 +1146,8 @@ rollback:
- 			write_seqcount_begin(&devnet_rename_seq);
- 			memcpy(dev->name, oldname, IFNAMSIZ);
- 			memcpy(oldname, newname, IFNAMSIZ);
-+			dev->name_assign_type = old_assign_type;
-+			old_assign_type = NET_NAME_RENAMED;
- 			goto rollback;
- 		} else {
- 			pr_err("%s: name change rollback failed: %d\n",
-diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
-index daed9a6..886403e 100644
---- a/net/core/net-sysfs.c
-+++ b/net/core/net-sysfs.c
-@@ -105,6 +105,7 @@ static ssize_t netdev_store(struct device *dev, struct device_attribute *attr,
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+-	iwl_mvm_fw_error_dump(mvm);
++	iwl_mvm_fw_error_sram_dump(mvm);
+ #endif
  
- NETDEVICE_SHOW_RO(dev_id, fmt_hex);
- NETDEVICE_SHOW_RO(dev_port, fmt_dec);
-+NETDEVICE_SHOW_RO(name_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_len, fmt_dec);
- NETDEVICE_SHOW_RO(iflink, fmt_dec);
-@@ -377,6 +378,7 @@ static struct attribute *net_class_attrs[] = {
- 	&dev_attr_dev_port.attr,
- 	&dev_attr_iflink.attr,
- 	&dev_attr_ifindex.attr,
-+	&dev_attr_name_assign_type.attr,
- 	&dev_attr_addr_assign_type.attr,
- 	&dev_attr_addr_len.attr,
- 	&dev_attr_link_mode.attr,
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index fc122fd..f1bd0fe 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -1967,6 +1967,8 @@ replay:
- 		}
+ 	iwl_mvm_nic_restart(mvm);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index f6beadb..da26871 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -516,28 +516,26 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 		iwl_mvm_dump_umac_error_log(mvm);
+ }
  
- 		dev->ifindex = ifm->ifi_index;
-+		if (tb[IFLA_IFNAME])
-+			dev->name_assign_type = NET_NAME_USER;
+-void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
++void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm)
+ {
+ 	const struct fw_img *img;
+-	u32 ofs, len = 0;
+-	u8 *buf;
++	u32 ofs, sram_len;
++	void *sram;
  
- 		if (ops->newlink) {
- 			err = ops->newlink(net, dev, tb, data);
+-	if (!mvm->ucode_loaded || mvm->fw_error_dump)
++	if (!mvm->ucode_loaded || mvm->fw_error_sram)
+ 		return;
+ 
+ 	img = &mvm->fw->img[mvm->cur_ucode];
+ 	ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+-	len = img->sec[IWL_UCODE_SECTION_DATA].len;
++	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+ 
+-	/* Will be freed when the debugfs reader will close the file */
+-	buf = kzalloc(len + sizeof(u32), GFP_ATOMIC);
+-	if (!buf)
++	sram = kzalloc(sram_len, GFP_ATOMIC);
++	if (!sram)
+ 		return;
+ 
+-	*((u32 *)buf) = len;
+-	iwl_trans_read_mem_bytes(mvm->trans, ofs, buf + sizeof(len), len);
+-
+-	mvm->fw_error_dump = buf;
++	iwl_trans_read_mem_bytes(mvm->trans, ofs, sram, sram_len);
++	mvm->fw_error_sram = sram;
++	mvm->fw_error_sram_len = sram_len;
+ }
+ 
+ /**
+diff --git a/intc-scripts/publishable-files b/intc-scripts/publishable-files
+index 562ab29..315bf16 100644
+--- a/intc-scripts/publishable-files
++++ b/intc-scripts/publishable-files
+@@ -103,6 +103,7 @@ drivers/net/wireless/iwlwifi/mvm/tx.c
+ drivers/net/wireless/iwlwifi/mvm/utils.c
+ drivers/net/wireless/iwlwifi/mvm/vendor-cmd.c
+ drivers/net/wireless/iwlwifi/mvm/vendor-cmd.h
++drivers/net/wireless/iwlwifi/mvm/fw-error-dump.h
+ drivers/net/wireless/iwlwifi/pcie
+ drivers/net/wireless/iwlwifi/pcie/drv.c
+ drivers/net/wireless/iwlwifi/pcie/internal.h
 -- 
-1.9.0
+1.8.3.2
 
