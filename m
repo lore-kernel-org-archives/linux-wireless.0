@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:35484 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817AbaCSIeQ convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7140 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486AbaCJR3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:34:16 -0400
-Received: by mail-ob0-f182.google.com with SMTP id uz6so7951609obc.27
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:34:16 -0700 (PDT)
+	Mon, 10 Mar 2014 13:29:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
+Subject: Re: [PATCH 5/6] ath6kl: remove a warning on a macro
+References: <20140309065606.10793.67068.stgit@x230>
+	<20140309065735.10793.45835.stgit@x230>
+	<87iornn8xx.fsf@kamboji.qca.qualcomm.com>
+	<1394349609.6972.39.camel@joe-AO722>
+Date: Mon, 10 Mar 2014 19:29:41 +0200
+In-Reply-To: <1394349609.6972.39.camel@joe-AO722> (Joe Perches's message of
+	"Sat, 8 Mar 2014 23:20:09 -0800")
+Message-ID: <87y50iklmi.fsf@kamboji.qca.qualcomm.com> (sfid-20140310_183000_026812_FD8494A7)
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com>
-Date: Wed, 19 Mar 2014 09:34:16 +0100
-Message-ID: <CA+BoTQ=-aw6hv9jjA60f+JgZsFdCqSE3cwZ4OdQfRaV6fe9s9g@mail.gmail.com> (sfid-20140319_093423_255961_AA92DC3C)
-Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 March 2014 17:42, Eliad Peller <eliad@wizery.com> wrote:
-> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> Relax ieee80211_find_chanctx(). If chanctx
->> reservation chandef is compatible with
->> current-future assigned interfaces chandef then
->> allow it to be used by new interfaces.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
-> [...]
+Joe Perches <joe@perches.com> writes:
+
+> On Sun, 2014-03-09 at 09:10 +0200, Kalle Valo wrote:
 >
->> +static const struct cfg80211_chan_def *
->> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
->> +                                  struct ieee80211_chanctx *ctx,
->> +                                  const struct cfg80211_chan_def *compat)
->> +{
->> +       struct ieee80211_sub_if_data *sdata;
->> +
->> +       lockdep_assert_held(&local->chanctx_mtx);
->> +
->> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
->> +                           reserved_chanctx_list) {
->> +               if (!compat)
->> +                       compat = &sdata->reserved_chandef;
-> this check is redundant.
+>> I would need help with this checkpatch warning:
+>
+> No idea what the warning is.
 
-It isn't. The function can be called with compat == NULL. You don't
-want to call cfg80211_chandef_compatible() with a NULL chandef.
+Hmm, maybe I'll just disable the warning in my check script.
 
+>> > --- a/drivers/net/wireless/ath/ath6kl/debug.c
+>> > +++ b/drivers/net/wireless/ath/ath6kl/debug.c
+>> > @@ -798,12 +798,10 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
+>> >  		return -ENOMEM;
+>> >  
+>> >  #define EPSTAT(name)							\
+>> > -	do {								\
+>> > -		len = print_endpoint_stat(target, buf, buf_len, len,	\
+>> > -					  offsetof(struct htc_endpoint_stats, \
+>> > -						   name),		\
+>> > -					  #name);			\
+>> > -	} while (0)
+>> > +	(len = print_endpoint_stat(target, buf, buf_len, len,		\
+>> > +				   offsetof(struct htc_endpoint_stats,	\
+>> > +					    name),			\
+>> > +				   #name))
+>> 
+>> I wasn't quite able to figure out what is the preferred style here. I
+>> don't see how the () style is any better, but checkpatch didn't complain
+>> at least.
+>
+> No idea what the preferred style is, but
+> I'd probably change the #define to
+>
+> #define EPSTAT(name)							\
+> 	print_endpoint_stat(target, buf, buf_len, len,			\
+> 			    offsetof(struct htc_endpoint_stats, name),	\
+> 			    #name)
+>
+> and the uses to
+>
+> 	len = EPSTAT(whatever);
 
-Michał
+The problem with this is that using of len as an argument is hidden but
+storing the result is visible. Maybe it's better that I just disable the
+warning for me and not worry about this.
+
+-- 
+Kalle Valo
