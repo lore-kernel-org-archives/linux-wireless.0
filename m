@@ -1,83 +1,796 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16755 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757176AbaCDNQR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 08:16:17 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] iwl4965: disable 8K A-MSDU by default
-Date: Tue,  4 Mar 2014 14:18:42 +0100
-Message-Id: <1393939122-20148-1-git-send-email-sgruszka@redhat.com> (sfid-20140304_141625_854733_483CFE68)
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:41004 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100AbaCJP1H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 11:27:07 -0400
+Received: by mail-pd0-f172.google.com with SMTP id p10so7194493pdj.31
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 08:27:06 -0700 (PDT)
+From: fariyaf@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH v4 08/11] rsi: USB functionality
+Date: Mon, 10 Mar 2014 20:56:36 +0530
+Message-Id: <1394465199-10042-9-git-send-email-fariyaf@gmail.com> (sfid-20140310_162759_521678_671E958B)
+In-Reply-To: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
+References: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlegacy version of this iwlwifi patch:
+From: Fariya Fatima <fariyaf@gmail.com>
 
-commit aed7d9ac1836defe033b561f4306e39014ac56fd
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Wed Feb 20 11:33:00 2013 +0200
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
 
-    iwlwifi: disable 8K A-MSDU by default
-
-    Supporting 8K A-MSDU means that we need to allocate order 1
-    pages for every Rx packet. Even when there is no traffic.
-    This adds stress on the memory manager. The handling of
-    compound pages is also less trivial for the memory manager
-    and not using them will make the allocation code run faster
-    although I didn't really measure.
-    Eric also pointed out that having huge buffers with little
-    data in them is not very nice towards the TCP stack since
-    the truesize of the skb is huge. This doesn't allow TCP
-    to have a big Rx window.
-    See https://patchwork.kernel.org/patch/2167711/ for details.
-
-    Note that very few vendors will actually send A-MSDU.
-    Disable this feature by default.
-
-    Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This patch has the remaining functions which prepare management
+frames internal to the device.
 ---
- drivers/net/wireless/iwlegacy/4965-mac.c | 3 +--
- drivers/net/wireless/iwlegacy/common.h   | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c     |  572 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c |  177 +++++++++
+ 2 files changed, 749 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb_ops.c
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 50673f7..888ad5c 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -92,7 +92,6 @@ il4965_check_abort_status(struct il_priv *il, u8 frame_count, u32 status)
-  * EEPROM
-  */
- struct il_mod_params il4965_mod_params = {
--	.amsdu_size_8K = 1,
- 	.restart_fw = 1,
- 	/* the rest are 0 by default */
- };
-@@ -6866,6 +6865,6 @@ module_param_named(11n_disable, il4965_mod_params.disable_11n, int, S_IRUGO);
- MODULE_PARM_DESC(11n_disable, "disable 11n functionality");
- module_param_named(amsdu_size_8K, il4965_mod_params.amsdu_size_8K, int,
- 		   S_IRUGO);
--MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
-+MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size (default 0 [disabled])");
- module_param_named(fw_restart, il4965_mod_params.restart_fw, int, S_IRUGO);
- MODULE_PARM_DESC(fw_restart, "restart firmware in case of error");
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 13145ad..dfb13c7 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1598,7 +1598,7 @@ struct il_mod_params {
- 	int disable_hw_scan;	/* def: 0 = use h/w scan */
- 	int num_of_queues;	/* def: HW dependent */
- 	int disable_11n;	/* def: 0 = 11n capabilities enabled */
--	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
-+	int amsdu_size_8K;	/* def: 0 = disable 8K amsdu size */
- 	int antenna;		/* def: 0 = both antennas (use diversity) */
- 	int restart_fw;		/* def: 1 = restart firmware */
- };
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+new file mode 100644
+index 0000000..5760c56
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -0,0 +1,572 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ */
++
++#include <linux/module.h>
++#include "rsi_usb.h"
++
++/**
++ * rsi_usb_card_write() - This function writes to the USB Card.
++ * @adapter: Pointer to the adapter structure.
++ * @buf: Pointer to the buffer from where the data has to be taken.
++ * @len: Length to be written.
++ * @endpoint: Type of endpoint.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++static int rsi_usb_card_write(struct rsi_hw *adapter,
++			      void *buf,
++			      u16 len,
++			      u8 endpoint)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	int status;
++	s32 transfer;
++
++	status = usb_bulk_msg(dev->usbdev,
++			      usb_sndbulkpipe(dev->usbdev,
++			      dev->bulkout_endpoint_addr[endpoint - 1]),
++			      buf,
++			      len,
++			      &transfer,
++			      HZ * 5);
++
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"Card write failed with error code :%10d\n", status);
++		dev->write_fail = 1;
++	}
++	return status;
++}
++
++/**
++ * rsi_write_multiple() - This function writes multiple bytes of information
++ *			  to the USB card.
++ * @adapter: Pointer to the adapter structure.
++ * @addr: Address of the register.
++ * @data: Pointer to the data that has to be written.
++ * @count: Number of multiple bytes to be written.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_write_multiple(struct rsi_hw *adapter,
++			      u8 endpoint,
++			      u8 *data,
++			      u32 count)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	u8 *seg = dev->tx_buffer;
++
++	if (dev->write_fail)
++		return 0;
++
++	if (endpoint == MGMT_EP) {
++		memset(seg, 0, RSI_USB_TX_HEAD_ROOM);
++		memcpy(seg + RSI_USB_TX_HEAD_ROOM, data, count);
++	} else {
++		seg = ((u8 *)data - RSI_USB_TX_HEAD_ROOM);
++	}
++
++	return rsi_usb_card_write(adapter,
++				  seg,
++				  count + RSI_USB_TX_HEAD_ROOM,
++				  endpoint);
++}
++
++/**
++ * rsi_find_bulk_in_and_out_endpoints() - This function initializes the bulk
++ *					  endpoints to the device.
++ * @interface: Pointer to the USB interface structure.
++ * @adapter: Pointer to the adapter structure.
++ *
++ * Return: ret_val: 0 on success, -ENOMEM on failure.
++ */
++static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
++					      struct rsi_hw *adapter)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct usb_host_interface *iface_desc;
++	struct usb_endpoint_descriptor *endpoint;
++	__le16 buffer_size;
++	int ii, bep_found = 0;
++
++	iface_desc = &(interface->altsetting[0]);
++
++	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
++		endpoint = &(iface_desc->endpoint[ii].desc);
++
++		if ((!(dev->bulkin_endpoint_addr)) &&
++		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
++		    ((endpoint->bmAttributes &
++		    USB_ENDPOINT_XFERTYPE_MASK) ==
++		    USB_ENDPOINT_XFER_BULK)) {
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkin_size = buffer_size;
++			dev->bulkin_endpoint_addr =
++				endpoint->bEndpointAddress;
++		}
++
++		if (!dev->bulkout_endpoint_addr[bep_found] &&
++		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
++		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
++		      USB_ENDPOINT_XFER_BULK)) {
++			dev->bulkout_endpoint_addr[bep_found] =
++				endpoint->bEndpointAddress;
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkout_size[bep_found] = buffer_size;
++			bep_found++;
++		}
++
++		if (bep_found >= MAX_BULK_EP)
++			break;
++	}
++
++	if (!(dev->bulkin_endpoint_addr) &&
++	    (dev->bulkout_endpoint_addr[0]))
++		return -1;
++
++	return 0;
++}
++
++/* rsi_usb_reg_read() - This function reads data from given register address.
++ * @usbdev: Pointer to the usb_device structure.
++ * @reg: Address of the register to be read.
++ * @value: Value to be read.
++ * @len: length of data to be read.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++static int rsi_usb_reg_read(struct usb_device *usbdev,
++			    u32 reg,
++			    u16 *value,
++			    u16 len)
++{
++	u8 temp_buf[4];
++	int status = 0;
++
++	status = usb_control_msg(usbdev,
++				 usb_rcvctrlpipe(usbdev, 0),
++				 USB_VENDOR_REGISTER_READ,
++				 USB_TYPE_VENDOR,
++				 ((reg & 0xffff0000) >> 16), (reg & 0xffff),
++				 (void *)temp_buf,
++				 len,
++				 HZ * 5);
++
++	*value = (temp_buf[0] | (temp_buf[1] << 8));
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"%s: Reg read failed with error code :%d\n",
++			__func__, status);
++	}
++	return status;
++}
++
++/**
++ * rsi_usb_reg_write() - This function writes the given data into the given
++ *			 register address.
++ * @usbdev: Pointer to the usb_device structure.
++ * @reg: Address of the register.
++ * @value: Value to write.
++ * @len: Length of data to be written.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++static int rsi_usb_reg_write(struct usb_device *usbdev,
++			     u32 reg,
++			     u16 value,
++			     u16 len)
++{
++	u8 usb_reg_buf[4];
++	int status = 0;
++
++	usb_reg_buf[0] = (value & 0x00ff);
++	usb_reg_buf[1] = (value & 0xff00) >> 8;
++	usb_reg_buf[2] = 0x0;
++	usb_reg_buf[3] = 0x0;
++
++	status = usb_control_msg(usbdev,
++				 usb_sndctrlpipe(usbdev, 0),
++				 USB_VENDOR_REGISTER_WRITE,
++				 USB_TYPE_VENDOR,
++				 ((reg & 0xffff0000) >> 16),
++				 (reg & 0xffff),
++				 (void *)usb_reg_buf,
++				 len,
++				 HZ * 5);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE,
++			"%s: Reg write failed with error code :%d\n",
++			__func__, status);
++	}
++	return status;
++}
++
++/**
++ * rsi_rx_done_handler() - This function is called when a packet is received
++ *			   from USB stack. This is callback to recieve done.
++ * @urb: Received URB.
++ *
++ * Return: None.
++ */
++static void rsi_rx_done_handler(struct urb *urb)
++{
++	struct rsi_hw *adapter = urb->context;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++
++	if (urb->status)
++		return;
++
++	rsi_set_event(&dev->rx_thread.event);
++}
++
++/**
++ * rsi_rx_urb_submit() - This function submits the given URB to the USB stack.
++ * @adapter: Pointer to the adapter structure.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++int rsi_rx_urb_submit(struct rsi_hw *adapter)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct urb *urb = dev->rx_usb_urb[0];
++
++	usb_fill_bulk_urb(urb,
++			  dev->usbdev,
++			  usb_rcvbulkpipe(dev->usbdev,
++				dev->bulkin_endpoint_addr),
++			  urb->transfer_buffer,
++			  3000,
++			  rsi_rx_done_handler,
++			  adapter);
++	if (usb_submit_urb(urb, GFP_KERNEL)) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission\n", __func__);
++		return -1;
++	}
++
++	return 0;
++}
++
++/**
++ * rsi_write_ta_register_multiple() - This function writes multiple bytes of
++ *				      information to multiple registers.
++ * @adapter: Pointer to the adapter structure.
++ * @addr: Address of the register.
++ * @data: Pointer to the data that has to be written.
++ * @count: Number of multiple bytes to be written on to the registers.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++int rsi_write_ta_register_multiple(struct rsi_hw *adapter,
++				   u32 addr,
++				   u8 *data,
++				   u32 count)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	u8 *buf;
++	u8 transfer;
++	int status = 0;
++
++	buf = kzalloc(4096, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	while (count) {
++		transfer = min_t(int, count, 4096);
++		memcpy(buf, data, transfer);
++		status = usb_control_msg(dev->usbdev,
++					 usb_sndctrlpipe(dev->usbdev, 0),
++					 USB_VENDOR_REGISTER_WRITE,
++					 USB_TYPE_VENDOR,
++					 ((addr & 0xffff0000) >> 16),
++					 (addr & 0xffff),
++					 (void *)buf,
++					 transfer,
++					 HZ * 5);
++		if (status < 0) {
++			rsi_dbg(ERR_ZONE,
++				"Reg write failed with error code :%d\n",
++				status);
++		} else {
++			count -= transfer;
++			data += transfer;
++			addr += transfer;
++		}
++	}
++
++	kfree(buf);
++	return 0;
++}
++
++/**
++ * rsi_host_intf_write_pkt() - This function writes the packet to the USB card.
++ * @adapter: Pointer to the adapter structure.
++ * @pkt: Pointer to the data to be written on to the card.
++ * @len: Length of the data to be written on to the card.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++int rsi_host_intf_write_pkt(struct rsi_hw *adapter,
++			    u8 *pkt,
++			    u32 len)
++{
++	u32 queueno = ((pkt[1] >> 4) & 0xf);
++	u8 endpoint;
++
++	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
++
++	return rsi_write_multiple(adapter,
++				  endpoint,
++				  (u8 *)pkt,
++				  len);
++}
++
++/**
++ * rsi_deinit_usb_interface() - This function deinitializes the usb interface.
++ * @adapter: Pointer to the adapter structure.
++ *
++ * Return: None.
++ */
++static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++
++	rsi_kill_thread(&dev->rx_thread);
++	kfree(adapter->priv->rx_data_pkt);
++}
++
++/**
++ * rsi_init_usb_interface() - This function initializes the usb interface.
++ * @adapter: Pointer to the adapter structure.
++ * @pfunction: Pointer to USB interface structure.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_init_usb_interface(struct rsi_hw *adapter,
++				  struct usb_interface *pfunction)
++{
++	struct rsi_91x_usbdev *rsi_dev;
++	struct rsi_common *common = adapter->priv;
++
++	rsi_dev = kzalloc(sizeof(*rsi_dev), GFP_KERNEL);
++	if (!rsi_dev)
++		return -1;
++
++	adapter->rsi_dev = rsi_dev;
++	rsi_dev->usbdev = interface_to_usbdev(pfunction);
++
++	if (rsi_find_bulk_in_and_out_endpoints(pfunction, adapter))
++		return -1;
++
++	adapter->device = &pfunction->dev;
++	usb_set_intfdata(pfunction, adapter);
++
++	common->rx_data_pkt = kmalloc(2048, GFP_KERNEL);
++	if (!common->rx_data_pkt) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to allocate memory\n",
++			__func__);
++		return -1;
++	}
++
++	rsi_dev->tx_buffer = kmalloc(2048, GFP_ATOMIC);
++	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
++	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
++	rsi_dev->tx_blk_size = 252;
++
++	/* Initializing function callbacks */
++	adapter->rx_urb_submit = rsi_rx_urb_submit;
++	adapter->host_intf_write_pkt = rsi_host_intf_write_pkt;
++	adapter->check_hw_queue_status = rsi_check_queue_status;
++	adapter->determine_event_timeout = rsi_event_timeout;
++
++	rsi_init_event(&rsi_dev->rx_thread.event);
++	if (rsi_create_kthread(common,
++			       &rsi_dev->rx_thread,
++			       rsi_usb_rx_thread,
++			       "RX-Thread")) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to init rx thrd\n",
++			__func__);
++		goto fail;
++	}
++
++#ifdef CONFIG_RSI_DEBUGFS
++	/* In USB, one less than the MAX_DEBUGFS_ENTRIES entries is required */
++	adapter->num_debugfs_entries = (MAX_DEBUGFS_ENTRIES - 1);
++#endif
++
++	rsi_dbg(INIT_ZONE, "%s: Enabled the interface\n", __func__);
++	return 0;
++
++fail:
++	kfree(common->rx_data_pkt);
++	return -1;
++}
++
++/**
++ * rsi_probe() - This function is called by kernel when the driver provided
++ *		 Vendor and device IDs are matched. All the initialization
++ *		 work is done here.
++ * @pfunction: Pointer to the USB interface structure.
++ * @id: Pointer to the usb_device_id structure.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_probe(struct usb_interface *pfunction,
++		     const struct usb_device_id *id)
++{
++	struct rsi_hw *adapter;
++	struct rsi_91x_usbdev *dev;
++	u16 fw_status;
++
++	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
++
++	adapter = rsi_91x_init();
++	if (!adapter) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
++			__func__);
++		return 1;
++	}
++
++	if (rsi_init_usb_interface(adapter, pfunction)) {
++		rsi_dbg(ERR_ZONE, "%s: Failed to init usb interface\n",
++			__func__);
++		goto err;
++	}
++
++	rsi_dbg(ERR_ZONE, "%s: Initialized os intf ops\n", __func__);
++
++	dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++
++	if (rsi_usb_reg_read(dev->usbdev, FW_STATUS_REG, &fw_status, 2) < 0)
++		goto err1;
++	else
++		fw_status &= 1;
++
++	if (!fw_status) {
++		if (rsi_device_init(adapter->priv)) {
++			rsi_dbg(ERR_ZONE, "%s: Failed in device init\n",
++				__func__);
++			goto err1;
++		}
++
++		if (rsi_usb_reg_write(dev->usbdev,
++				      USB_INTERNAL_REG_1,
++				      RSI_USB_READY_MAGIC_NUM, 1) < 0)
++			goto err1;
++		rsi_dbg(INIT_ZONE, "%s: Performed device init\n", __func__);
++	}
++
++	if (rsi_rx_urb_submit(adapter))
++		goto err1;
++
++	return 0;
++err1:
++	rsi_deinit_usb_interface(adapter);
++err:
++	rsi_91x_deinit(adapter);
++	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
++	return 1;
++}
++
++/**
++ * rsi_disconnect() - This function performs the reverse of the probe function,
++ *		      it deintialize the driver structure.
++ * @pfunction: Pointer to the USB interface structure.
++ *
++ * Return: None.
++ */
++static void rsi_disconnect(struct usb_interface *pfunction)
++{
++	struct rsi_hw *adapter = usb_get_intfdata(pfunction);
++
++	if (!adapter)
++		return;
++
++	rsi_mac80211_detach(adapter);
++	rsi_deinit_usb_interface(adapter);
++	rsi_91x_deinit(adapter);
++
++	rsi_dbg(INFO_ZONE, "%s: Deinitialization completed\n", __func__);
++}
++
++#ifdef CONFIG_PM
++static int rsi_suspend(struct usb_interface *intf, pm_message_t message)
++{
++	/* Not yet implemented */
++	return -ENOSYS;
++}
++
++static int rsi_resume(struct usb_interface *intf)
++{
++	/* Not yet implemented */
++	return -ENOSYS;
++}
++#endif
++
++static const struct usb_device_id rsi_dev_table[] = {
++	{ USB_DEVICE(0x0303, 0x0100) },
++	{ USB_DEVICE(0x041B, 0x0301) },
++	{ USB_DEVICE(0x041B, 0x0201) },
++	{ USB_DEVICE(0x041B, 0x9330) },
++	{ /* Blank */},
++};
++
++static struct usb_driver rsi_driver = {
++	.name       = "RSI-USB WLAN",
++	.probe      = rsi_probe,
++	.disconnect = rsi_disconnect,
++	.id_table   = rsi_dev_table,
++#ifdef CONFIG_PM
++	.suspend    = rsi_suspend,
++	.resume     = rsi_resume,
++#endif
++};
++
++/**
++ * rsi_module_init() - This function registers the client driver.
++ * @void: Void.
++ *
++ * Return: 0 on success.
++ */
++static int rsi_module_init(void)
++{
++	usb_register(&rsi_driver);
++	rsi_dbg(INIT_ZONE, "%s: Registering driver\n", __func__);
++	return 0;
++}
++
++/**
++ * rsi_module_exit() - This function unregisters the client driver.
++ * @void: Void.
++ *
++ * Return: None.
++ */
++static void rsi_module_exit(void)
++{
++	usb_deregister(&rsi_driver);
++	rsi_dbg(INFO_ZONE, "%s: Unregistering driver\n", __func__);
++}
++
++module_init(rsi_module_init);
++module_exit(rsi_module_exit);
++
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("Common USB layer for RSI drivers");
++MODULE_SUPPORTED_DEVICE("RSI-91x");
++MODULE_DEVICE_TABLE(usb, rsi_dev_table);
++MODULE_FIRMWARE(FIRMWARE_RSI9113);
++MODULE_VERSION("0.1");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+new file mode 100644
+index 0000000..fbcee61
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -0,0 +1,177 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ */
++
++#include <linux/firmware.h>
++#include "rsi_usb.h"
++
++/**
++ * rsi_copy_to_card() - This function includes the actual funtionality of
++ *			copying the TA firmware to the card.Basically this
++ *			function includes opening the TA file,reading the TA
++ *			file and writing their values in blocks of data.
++ * @common: Pointer to the driver private structure.
++ * @fw: Pointer to the firmware value to be written.
++ * @len: length of firmware file.
++ * @num_blocks: Number of blocks to be written to the card.
++ *
++ * Return: 0 on success and -1 on failure.
++ */
++static int rsi_copy_to_card(struct rsi_common *common,
++			    const u8 *fw,
++			    u32 len,
++			    u32 num_blocks)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	u32 indx, ii;
++	u32 block_size = dev->tx_blk_size;
++	u32 lsb_address;
++	u32 base_address;
++
++	base_address = TA_LOAD_ADDRESS;
++
++	for (indx = 0, ii = 0; ii < num_blocks; ii++, indx += block_size) {
++		lsb_address = base_address;
++		if (rsi_write_ta_register_multiple(adapter,
++						   lsb_address,
++						   (u8 *)(fw + indx),
++						   block_size)) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Unable to load %s blk\n", __func__,
++				FIRMWARE_RSI9113);
++			return -1;
++		}
++		rsi_dbg(INIT_ZONE, "%s: loading block: %d\n", __func__, ii);
++		base_address += block_size;
++	}
++
++	if (len % block_size) {
++		lsb_address = base_address;
++		if (rsi_write_ta_register_multiple(adapter,
++						   lsb_address,
++						   (u8 *)(fw + indx),
++						   len % block_size)) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Unable to load %s blk\n", __func__,
++				FIRMWARE_RSI9113);
++			return -1;
++		}
++	}
++	rsi_dbg(INIT_ZONE,
++		"%s: Succesfully loaded %s instructions\n", __func__,
++		FIRMWARE_RSI9113);
++
++	rsi_dbg(INIT_ZONE, "%s: loaded firmware\n", __func__);
++	return 0;
++}
++
++/**
++ * rsi_usb_rx_thread() - This is a kernel thread to receive the packets from
++ *			 the USB device.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: None.
++ */
++void rsi_usb_rx_thread(struct rsi_common *common)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	int status;
++
++	do {
++		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
++
++		if (atomic_read(&dev->rx_thread.thread_done))
++			goto out;
++
++		mutex_lock(&common->tx_rxlock);
++		status = rsi_read_pkt(common, 0);
++		if (status) {
++			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
++			mutex_unlock(&common->tx_rxlock);
++			return;
++		}
++		mutex_unlock(&common->tx_rxlock);
++		rsi_reset_event(&dev->rx_thread.event);
++		if (adapter->rx_urb_submit(adapter)) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Failed in urb submission", __func__);
++			return;
++		}
++	} while (1);
++
++out:
++	rsi_dbg(INFO_ZONE, "%s: Terminated thread\n", __func__);
++	complete_and_exit(&dev->rx_thread.completion, 0);
++}
++
++
++/**
++ * rsi_load_ta_instructions() - This function includes the actual funtionality
++ *				of loading the TA firmware.This function also
++ *				includes opening the TA file,reading the TA
++ *				file and writing their value in blocks of data.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++static int rsi_load_ta_instructions(struct rsi_common *common)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	const struct firmware *fw_entry = NULL;
++	u32 block_size = dev->tx_blk_size;
++	const u8 *fw;
++	u32 num_blocks, len;
++	int status = 0;
++
++	status = request_firmware(&fw_entry, FIRMWARE_RSI9113, adapter->device);
++	if (status < 0) {
++		rsi_dbg(ERR_ZONE, "%s Firmware file %s not found\n",
++			__func__, FIRMWARE_RSI9113);
++		return status;
++	}
++
++	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
++	len = fw_entry->size;
++
++	if (len % 4)
++		len += (4 - (len % 4));
++
++	num_blocks = (len / block_size);
++
++	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
++	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
++
++	status = rsi_copy_to_card(common, fw, len, num_blocks);
++	release_firmware(fw_entry);
++	return status;
++}
++
++/**
++ * rsi_device_init() - This Function Initializes The HAL.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++int rsi_device_init(struct rsi_common *common)
++{
++	if (rsi_load_ta_instructions(common))
++		return -1;
++
++	return 0;
++}
 -- 
-1.7.11.7
+1.7.5.4
 
