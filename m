@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34612 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752915AbaCFKZj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 05:25:39 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>
-Subject: RE: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Date: Thu, 6 Mar 2014 10:25:34 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D796A6@HASMSX103.ger.corp.intel.com> (sfid-20140306_112616_251824_1F4041F6)
-References: <52B0B72A.5070704@gmail.com>
- <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
- <20140113111357.GA4611@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
- <20140113124049.GA5796@magnum.frso.rivierawaves.com>
- <52D83C56.5010706@gmail.com> <20140116214357.GA10376@gobelin>
- <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
- <20140306102102.GA15185@magnum.frso.rivierawaves.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:47097 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbaCJH1r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Mar 2014 03:27:47 -0400
 MIME-Version: 1.0
+In-Reply-To: <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
+References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
+	<CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
+	<CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
+Date: Mon, 10 Mar 2014 09:27:45 +0200
+Message-ID: <CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com> (sfid-20140310_082751_934769_3EF375B7)
+Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
+ X1 carbon
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Shuduo Sang <sangshuduo@gmail.com>
+Cc: linux-usb <linux-usb@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tedd <tedd.an@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+DQo+ID4gSGksDQo+ID4NCj4gPiBUaGFua3MgZm9yIHRoZSB1cGRhdGUsIGluZGVlZCBtb25p
-dG9yIGlzIGluIGJldHRlciBzaGFwZSwgaG93ZXZlciBJIGFtDQo+ID4gc3RpbGwgc2VlaW5nIHNv
-bWUgaXNzdWVzLg0KPiA+IEUuZy4gc2hvcnQtZ3VhcmQgb3IgPiAyME1IeiBidyBmcmFtZXMgYXJl
-IG5vdCB2aXNpYmxlIHdoZW4gbm90DQo+ID4gYWdncmVnYXRlZCwgSSBzdGlsbCBzZWUgIk1pY3Jv
-Y29kZSBTVyBlcnJvciBkZXRlY3RlZC4iIGJ1dCBpbiBhDQo+ID4gZGlmZmVyZW50IHNjZW5hcmlv
-IChtb25pdG9yaW5nIHdpdGggbWFpbiBtYW5hZ2VkIGlmYWNlIGRvd24sIHRoZW4NCj4gPiB1cHBp
-bmcgdGhlIG1haW4gbWFuYWdlZCBpZmFjZSB1cCksIGl0IGFsc28gc2VlbXMgdGhhdCB3ZSBmaWx0
-ZXIgb3V0DQo+ID4gbWFueSBmcmFtZXMgd2hlbiB0aGUgbWFpbiBtYW5hZ2VkIGlmYWNlIGlzIHVw
-IGFuZC9vcj8gYXNzb2NpYXRlZC4NCj4gPiBBbHNvLCBJIHN0YXJ0ZWQgd29ya2luZyBvbiBBTVNE
-VXMgdGhpcyB3ZWVrIGFuZCB5ZXN0ZXJkYXkgbXkgbGFwdG9wDQo+ID4gY3Jhc2hlZCBpbW1lZGlh
-dGVseSB3aGVuIG1vbml0b3JpbmcuIFRoaXMgbW9ybmluZyBJIHNlZSB0aGF0IHRoaXMNCj4gPiBo
-YXBwZW5zIHdoZW4gbXkgYWdncmVnYXRlcyBzdGFydCBnZXR0aW5nIGFib3ZlIHRoZSB+NGsgbGlt
-aXQgYW5kDQo+ID4gbW9kcHJvYmluZyB3aXRoIGFtc2R1X3NpemVfOEs9MSBzZWVtcyB0byAnZml4
-JyB0aGUgaXNzdWUsIEkgZ3Vlc3Mgc29tZQ0KPiA+IHBsYWNlcyBuZWVkIHNvbWUgb2Zsb3dzIGNo
-ZWNrcy4NCg0KSG1tLi4uIFRoYW5rcyBmb3IgdGhlIGhlYWRzIC0gdXAuIERvIHlvdSBoYXZlIHRo
-ZSBjcmFzaCBkYXRhPw0KDQo+ID4gQWxsIHRoaXMgd2l0aCB3aXJlbGVzcy1uZXh0QDcwNDQ0NWQ5
-IChpLmUuIGNpcmNhIHRoZSB0aW1lIEkgZ290IHlvdXINCj4gPiBlbWFpbCkgYW5kIGZ3IDIyLjE1
-LjguMC4NCj4gPg0KPiANCj4gUGxlYXNlIHBhc3RlIHRoZSBkYXRhIGZvciB0aGUgZmlybXdhcmUg
-YXNzZXJ0LiBBbHNvLCB0YWtlDQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9r
-ZXJuZWwvZ2l0L2piZXJnL21hYzgwMjExLmdpdC9jb21taXQvP2lkPQ0KPiAxYzM3YTcyYzFiZDBi
-ODNiZThiOTVjZmY3ZjFiYzliMWYzMmJkNDMzIGludG8gYWNjb3VudC4NCg==
+On Mon, Mar 10, 2014 at 8:49 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+> On Mon, Mar 10, 2014 at 2:11 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> Hi,
+>>
+>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+>>> Hi,
+>>>
+>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
+>>> can't resume after suspend recently. I tried many ways including
+>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
+>>> happens. I found it will not happen when I turn off WIFI device or USB
+>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
+>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
+>>> Anyone has some ideas to fix it or debug it?
+>>>
+>>> Thanks,
+>>> Shuduo
+>>>
+>>
+>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
+>> How do you disable WiFi? Rfkill or removing iwlwifi?
+>>
+>
+> I have disabled WIFI device in BIOS, then its suspend/resume works.
+>
+
+Do you have any logs to share?
+I supposed you tested 3.13.6 right?
