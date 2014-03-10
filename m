@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56815 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbaC1HdA (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:53083 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbaCJXxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:33:00 -0400
-Subject: [PATCH v2 7/8] ath10k: add module parameter values to the pci info
- print
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 09:32:58 +0200
-Message-ID: <20140328073258.30438.10368.stgit@potku.adurom.net> (sfid-20140328_083304_408168_FB07F8DA)
-In-Reply-To: <20140328073040.30438.17966.stgit@potku.adurom.net>
-References: <20140328073040.30438.17966.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 10 Mar 2014 19:53:17 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH NEXT] rtlwifi: rtl8723be: Fix array dimension problems
+Date: Mon, 10 Mar 2014 18:53:10 -0500
+Message-Id: <1394495590-2351-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140311_005348_930874_C97868E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hopefully this makes it easier to debug problems in the future.
+Commit a619d1abe20c leads to the following static checker warning:
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+drivers/net/wireless/rtlwifi/rtl8723be/phy.c:667 _rtl8723be_store_tx_power_by_rate()
+error: buffer overflow 'rtlphy->tx_power_by_rate_offset[band]' 4 <= 5
+
+This warning arises because the code is testing the indices for the wrong maximum
+values. In addition, the tests merely putput a warning, and then procedes to
+corrupt memory. With this change, any such invalid memory access is avoided.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index a4e2da3251dc..dd34ac9a682f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1955,7 +1955,9 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
- 		irq_mode = "legacy";
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+index cadae9b..1575ef9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+@@ -629,18 +629,22 @@ static void _rtl8723be_store_tx_power_by_rate(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	u8 rate_section = _rtl8723be_get_rate_section_index(regaddr);
  
- 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
--		ath10k_info("pci irq %s\n", irq_mode);
-+		ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
-+			    irq_mode, ath10k_pci_irq_mode,
-+			    ath10k_pci_reset_mode);
+-	if (band != BAND_ON_2_4G && band != BAND_ON_5G)
++	if (band != BAND_ON_2_4G && band != BAND_ON_5G) {
+ 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
+ 			 "Invalid Band %d\n", band);
++		return;
++	}
  
- 	return 0;
- 
+-	if (rfpath > MAX_RF_PATH)
++	if (rfpath > TX_PWR_BY_RATE_NUM_RF) {
+ 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
+ 			 "Invalid RfPath %d\n", rfpath);
+-
+-	if (txnum > MAX_RF_PATH)
++		return;
++	}
++	if (txnum > TX_PWR_BY_RATE_NUM_RF) {
+ 		RT_TRACE(rtlpriv, COMP_POWER, PHY_TXPWR,
+ 			 "Invalid TxNum %d\n", txnum);
+-
++		return;
++	}
+ 	rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section] =
+ 									data;
+ }
+-- 
+1.8.4.5
 
