@@ -1,152 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:35382 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbaCSVvu (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:62308 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbaCKNZk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 17:51:50 -0400
-Date: Wed, 19 Mar 2014 18:51:43 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-03-19
-Message-ID: <20140319215143.GB9454@joana> (sfid-20140319_225216_006336_101F63F2)
+	Tue, 11 Mar 2014 09:25:40 -0400
+Received: by mail-ob0-f170.google.com with SMTP id uz6so8473036obc.29
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 06:25:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qcHopEYAB45HaUaB"
+In-Reply-To: <1394543651.30155.3.camel@jlt4.sipsolutions.net>
+References: <1394176178-8504-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQkVfgkMR_cvv5dUNkzLd7KrDQ7VMYKucJybpF0aAWpESA@mail.gmail.com>
+	<1394543651.30155.3.camel@jlt4.sipsolutions.net>
+Date: Tue, 11 Mar 2014 14:25:39 +0100
+Message-ID: <CA+BoTQk19_p8WcUpUbRNTZgStNMfYcSZEUhbEB9G6i0mvYy-=w@mail.gmail.com> (sfid-20140311_142543_469848_3B67BEFA)
+Subject: Re: [PATCH] mac80211: fix possible NULL dereference
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11 March 2014 14:14, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-03-11 at 12:30 +0100, Michal Kazior wrote:
+>> On 7 March 2014 08:09, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> > If chanctx is missing on a given vif then the band
+>> > is assumed to be 2GHz. However if hw doesn't
+>> > support 2GHz band then mac80211 ended up with a
+>> > NULL dereference.
+>
+>> Drop this, please. There are more places that need sband to be
+>> NULL-checked. I'll send out a more thorough patch later.
+>
+> Ok. However, I'm not sure that we should ever really run into this? At
+> least with Luca's patches we want to not go through NULL state to start
+> with.
 
---qcHopEYAB45HaUaB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Current channel reservation patches do a sequence of
+unassign_vif_chanctx() followed by assign_vif_chanctx(). This implies
+you have no chanctx for a split second. All places that aren't
+protected by chanctx_mtx (i.e. RCU) can get NULL chanctx during the
+reassignment.
 
-Hi John,
+One way to trigger that would be to spam-call ieee80211_get_station().
+If you get a NULL chanctx and you have 5GHz only hardware you get NULL
+dereference kernel splat.
 
-One more pull request to 3.15. This is mostly and bug fix pull request, it
-contains several fixes and clean up all over the tree, plus some small new
-features.
-=20
-Please pull or let me know of any problem. Thanks.
+With multi-vif CSA the vulnerability timeframe will increase.
 
-	Gustavo
 
----
-The following changes since commit 81ad6fd9698f659dbabdc6cd3e1667a98eb2be3b:
-
-  Bluetooth: Remove unnecessary stop_scan_complete function (2014-02-28 10:=
-28:17 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.gi=
-t for-upstream
-
-for you to fetch changes up to 40b552aa5a0bfa785bc7ddb5c2d7965b1e0bb08d:
-
-  Bluetooth: Enforce strict Secure Connections Only mode security (2014-03-=
-19 23:30:32 +0200)
-
-----------------------------------------------------------------
-Alexander Aring (1):
-      Bluetooth: make bluetooth 6lowpan as an option
-
-Andre Guedes (1):
-      Bluetooth: Enable duplicates filter in background scan
-
-Andrew Earl (1):
-      Bluetooth: Fix aborting eSCO connection in case of error 0x20
-
-Arnd Bergmann (1):
-      Bluetooth: make sure 6LOWPAN_IPHC is built-in if needed
-
-Claudio Takahasi (1):
-      Bluetooth: Fix removing Long Term Key
-
-Gustavo Padovan (1):
-      Bluetooth: Fix skb allocation check for A2MP
-
-Joe Perches (1):
-      Bluetooth: Convert uses of __constant_<foo> to <foo>
-
-Johan Hedberg (9):
-      Bluetooth: Fix expected key count debug logs
-      Bluetooth: Fix updating SMP remote key distribution information
-      Bluetooth: Fix const declaration for swap function src parameter
-      Bluetooth: Fix smp_e byte order to be consistent with SMP specificati=
-on
-      Bluetooth: Fix MITM flag when initiating SMP pairing
-      Bluetooth: Simplify logic when checking SMP_FLAG_TK_VALID
-      Bluetooth: Increase SMP re-encryption delay to 500ms
-      Bluetooth: Fix SMP user passkey notification mgmt event
-      Bluetooth: Fix Pair Device response parameters for pairing failure
-
-Marcel Holtmann (3):
-      Bluetooth: Add support for handling signature resolving keys
-      Bluetooth: Make LTK and CSRK only persisent when bonding
-      Bluetooth: Enforce strict Secure Connections Only mode security
-
-Michael Knudsen (1):
-      Bluetooth: Stop BCSP/H5 timer before cleaning up
-
-Peng Chen (2):
-      Bluetooth: Add a new PID/VID 0cf3/e005 for AR3012.
-      Bluetooth: Fix endianess issue in the ath3k driver
-
-Valentin Ilie (1):
-      Bluetooth: Remove assignments in if-statements
-
- drivers/bluetooth/ath3k.c        |  13 ++--
- drivers/bluetooth/bfusb.c        |  14 ++--
- drivers/bluetooth/bluecard_cs.c  |   9 ++-
- drivers/bluetooth/bt3c_cs.c      |   7 +-
- drivers/bluetooth/btuart_cs.c    |   6 +-
- drivers/bluetooth/btusb.c        |   1 +
- drivers/bluetooth/dtl1_cs.c      |   9 ++-
- drivers/bluetooth/hci_bcsp.c     |  31 ++++----
- drivers/bluetooth/hci_h5.c       |  10 +--
- drivers/bluetooth/hci_ldisc.c    |   9 ++-
- include/net/bluetooth/hci_core.h |  11 ++-
- include/net/bluetooth/mgmt.h     |  12 ++++
- net/bluetooth/6lowpan.h          |  21 ++++++
- net/bluetooth/Kconfig            |   8 ++-
- net/bluetooth/Makefile           |   3 +-
- net/bluetooth/a2mp.c             |  12 +++-
- net/bluetooth/hci_conn.c         |  37 ++++++----
- net/bluetooth/hci_core.c         |  14 ++--
- net/bluetooth/hci_event.c        |  27 +++++--
- net/bluetooth/hci_sock.c         |  16 ++---
- net/bluetooth/l2cap_core.c       |  90 +++++++++++------------
- net/bluetooth/l2cap_sock.c       |   6 +-
- net/bluetooth/mgmt.c             |  83 +++++++++++++++------
- net/bluetooth/rfcomm/core.c      |   4 +-
- net/bluetooth/sco.c              |  10 +--
- net/bluetooth/smp.c              | 208 +++++++++++++++++++++++++++++++++++=
-------------------
- net/bluetooth/smp.h              |   4 +-
- 27 files changed, 451 insertions(+), 224 deletions(-)
-
---qcHopEYAB45HaUaB
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTKhFvAAoJEPs3PUX4s20oHd8QAIId/F2JXuIATU5W0XZUpEz+
-0IO5O+bwrngN9AE8CpF4QePSvMchbse7PA5A4bGCummUINTNceqhelS9ViLSklOF
-BcsdbiLWqx26r7qoPymdAL4JbfO65fopGAkDalId2r/OED/IX6nVPvs4YLgHabji
-sM8zvG/moP4+VtTrOLtWykFxQ8KAAdnd94WS2EUJjQNyp+a8fZzd1F4kCXImrw2u
-MRXFwkYEQ6vlPrKlx/Bfm8J/Q5r++hCXu8CZsn1ho1kqHE9Byy8xIJE6pTA8Ku8S
-wCgQFFTxRJ85qrDMjPWaDIXj1YLI0jU+653lsQhgVXQTxNtx7lsYC0vmKokbh+o2
-1eUJmratthZC4GZyxElh9AikKZDKuLsPuWJm1YYTG8FJqntvGST0xzhmQmzug7Em
-RKyJPRuK2swKTlMXSIT5WuzYTFvw4YsWeWtBtekNRJcOHVkVZOQ/tOG2gh8xmIax
-X+eVETyCb8lF/i8jYPMstMAp452J0nK+zQ5fStmmxzWgzPwnjv5AHowYQqapKNQq
-WcLk+tqcmfWitW1+rmHzX2tz2vKvGVMNR5UIlSVaIz7PbGng3fwu0i0z3fMixmoe
-sczYoKQOJzYTfSG5TGq0sbiIBqhv7hT73As4vq/OcWfT3syqLTMGezQ5amtpE3JP
-mE/QvTT5SufNzWAZBQBq
-=i7cO
------END PGP SIGNATURE-----
-
---qcHopEYAB45HaUaB--
+Michał
