@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30715 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830AbaC3Vb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 17:31:56 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
+Received: from albert.telenet-ops.be ([195.130.137.90]:43669 "EHLO
+	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181AbaCKKX7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 06:23:59 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Jiri Kosina <trivial@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert+renesas@linux-m68k.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Subject: [PATCH 4/4] brcm80211: deinline brcmf_sdio_clrintr, save 8979 bytes
-Date: Sun, 30 Mar 2014 23:31:19 +0200
-Message-Id: <1396215079-7541-4-git-send-email-dvlasenk@redhat.com> (sfid-20140330_233228_927688_8E475D57)
-In-Reply-To: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
-References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
+	linux-wireless@vger.kernel.org
+Subject: [PATCH trivial 11/16] ath10k: Improve grammar in comments
+Date: Tue, 11 Mar 2014 11:23:45 +0100
+Message-Id: <1394533430-4746-11-git-send-email-geert@linux-m68k.org> (sfid-20140311_113342_896975_141B72E4)
+In-Reply-To: <1394533430-4746-1-git-send-email-geert@linux-m68k.org>
+References: <1394533430-4746-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Automated script discovered that without forced inlining,
-gcc-4.7 generates smaller code for this function.
+From: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
 
-There is no need to declare static functions inline anyway:
-nowadays gcc detects single-callsite static functions
-which benefit from inlining.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/wmi.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 47a6f39..55a6d0d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2516,7 +2516,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 	bus->tx_seq = bus->rx_seq = 0;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4b5e7d3d32b6..8bce1113b753 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1265,7 +1265,7 @@ struct wmi_resource_config {
+ 	 */
+ 	__le32 rx_decap_mode;
  
--static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
-+static void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- {
- 	unsigned long flags;
+-	/* what is the maximum scan requests than can be queued */
++	/* what is the maximum number of scan requests that can be queued */
+ 	__le32 scan_max_pending_reqs;
  
+ 	/* maximum VDEV that could use BMISS offload */
+@@ -1450,7 +1450,7 @@ struct wmi_resource_config_10x {
+ 	 */
+ 	__le32 rx_decap_mode;
+ 
+-	/* what is the maximum scan requests than can be queued */
++	/* what is the maximum number of scan requests that can be queued */
+ 	__le32 scan_max_pending_reqs;
+ 
+ 	/* maximum VDEV that could use BMISS offload */
 -- 
-1.8.1.4
+1.7.9.5
 
