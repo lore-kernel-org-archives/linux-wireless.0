@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:60174 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755902AbaCZT4L (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34218 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568AbaCKKE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 15:56:11 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so2053465eek.6
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:56:10 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 00/20] rtl8180: add support for rtl8187se
-Date: Wed, 26 Mar 2014 20:57:17 +0100
-Message-Id: <1395863837-4272-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205617_446331_18461F32)
+	Tue, 11 Mar 2014 06:04:59 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 00/14] ath10k: Refactor rx path little bit
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Tue, 11 Mar 2014 12:04:50 +0200
+In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Tue, 4 Mar 2014 13:52:13 +0100")
+Message-ID: <87a9cxhwzh.fsf@kamboji.qca.qualcomm.com> (sfid-20140311_110502_560945_B6E3F3D3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set contains all the modifications/adds that finally
-make rtl8187se work with rtl8180 driver
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Andrea Merello (20):
-  rtl818x: add registers for rtl8187se
-  rtl8180: add rtl8187se chip type
-  rtl8180: add rtl8187se fields to TX descriptor
-  rtl8180: add basic rate configuration support for rtl8187se
-  rtl8180: support for rtl8187se RX descriptors
-  rtl8180: add ISR for rtl8187se
-  rtl8180: introduce functions to enable/disable ints and add support
-    for rtl8187se
-  rtl8180: don't write MAR registers for rtl8187se
-  rtl8180: add TX queue mapping and support for rtl8187se
-  rtl8180: config carbus register for rtl8187se
-  rtl8180: add rtl8187se params to eeprom reading
-  rtl8180: introduce functions for setting ANAPARAM 2 and 3 params
-  rtl8180: add RF code for rtl8225 zebra v4
-  rtl8180: add rtl8187se HW initialization
-  rtl8180: add ERP configuration for rtl8187se
-  rtl8180: make sure RTL818X_MSR_ENEDCA is set for rtl8187se
-  rtl8180: add WMM parameters configuration for rtl8187se
-  rtl8180: detect rtl8187se card
-  rtl8180: enable rtl8187se support
-  rtl818x: Update Kconfig for rtl8187se
+> Refactor rx path, mainly split/reduce calculation we
+> did before. Now we caculate variable/flags only once
+> per-ppdu, while before we did some calculations for
+> each mpdu. Kill some not needed code and fill directly
+> ieee80211_rx_status structure.
+> TP veryfication required.
+>
+> Janusz Dziedzic (14):
+>   ath10k: add ath10k_htt_rx_amsdu_allowed function
+>   ath10k: Fill per-ppdu info in rx_info only once
+>   ath10k: move rx related functions to htt_rx.c
+>   ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+>   ath10k: introduce ieee80211_rx_status to htt_rx_info
+>   ath10k: kill signal field in htt_rx_info
+>   ath10k: setup rx channel per ppdu
+>   ath10k: kill rate substruct and tsf from htt_rx_info
+>   ath10k: kill fcs_err from htt_rx_info
+>   ath10k: kill mic_err/amsdu_more from htt_rx_info
+>   ath10k: kill status from htt_rx_info
+>   ath10k: kill encrypt_type from htt_rx_info
+>   ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
+>   ath10k: improve way we play with attention flags
 
- drivers/net/wireless/rtl818x/Kconfig             |   4 +-
- drivers/net/wireless/rtl818x/rtl8180/Makefile    |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c       | 637 +++++++++++++++++++++--
- drivers/net/wireless/rtl818x/rtl8180/rtl8180.h   |  59 ++-
- drivers/net/wireless/rtl818x/rtl8180/rtl8225.c   |   1 +
- drivers/net/wireless/rtl818x/rtl8180/rtl8225se.c | 475 +++++++++++++++++
- drivers/net/wireless/rtl818x/rtl8180/rtl8225se.h |  61 +++
- drivers/net/wireless/rtl818x/rtl818x.h           | 266 ++++++++--
- 8 files changed, 1389 insertions(+), 116 deletions(-)
- create mode 100644 drivers/net/wireless/rtl818x/rtl8180/rtl8225se.c
- create mode 100644 drivers/net/wireless/rtl818x/rtl8180/rtl8225se.h
+I did now a quick review:
+
+I didn't fully understand your idea with rx status template.
+
+I think the patchset is too long, it will be easier if you split these
+into two. First set with all the easy and obvious stuff and a second one
+for the rx status template.
+
+Some of the patches are missing commit logs. Even if the patch is
+obvious, please write a small commit log. Just oneliner would be enough.
+
+I would prefer the commit logs to answer more why the change is needed.
 
 -- 
-1.8.3.2
-
+Kalle Valo
