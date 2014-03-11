@@ -1,127 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57758 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754906AbaCCWHo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44807 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325AbaCKKqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 17:07:44 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3] ath10k:  support msdu chaining.
-Date: Mon,  3 Mar 2014 14:07:09 -0800
-Message-Id: <1393884429-8426-1-git-send-email-greearb@candelatech.com> (sfid-20140303_230749_960707_6166D40F)
+	Tue, 11 Mar 2014 06:46:33 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Pull request: ath 20140311
+Date: Tue, 11 Mar 2014 12:46:24 +0200
+Message-ID: <87y50hgghr.fsf@kamboji.qca.qualcomm.com> (sfid-20140311_114636_610458_93280A8E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi John,
 
-Consolidate the list of msdu skbs into the msdu-head skb, delete the
-rest of the skbs, pass the msdu-head skb on up the stack as normal.
+here's a new pull request from me, but just ath10k patches this time.
+Summary of the changes:
 
-Tested with high-speed TCP and UDP traffic on modified firmware that
-supports raw-rx.
+Michal now did some optimisations and was able to improve throughput by
+100 Mbps on our MIPS based AP135 platform. Chun-Yeow added some
+workarounds to be able to better use ad-hoc mode. Ben improved log
+messages and added support for MSDU chaining. And, as usual, also some
+smaller fixes.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Please let me know if there are any problems.
 
-v3:  Use helper function to make main rx code simpler to read,
-  and to get rid of checkpatch warnings.
+Kalle
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 59 +++++++++++++++++++++++++++++---
- 1 file changed, 54 insertions(+), 5 deletions(-)
+The following changes since commit ef1b4141d0430583743a6045901e4d1a73557a33:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 99ae8bb..56e5d5e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -399,6 +399,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		msdu_len = MS(__le32_to_cpu(rx_desc->msdu_start.info0),
- 			      RX_MSDU_START_INFO0_MSDU_LENGTH);
- 		msdu_chained = rx_desc->frag_info.ring2_more_count;
-+		msdu_chaining = msdu_chained;
- 
- 		if (msdu_len_invalid)
- 			msdu_len = 0;
-@@ -426,7 +427,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 
- 			msdu->next = next;
- 			msdu = next;
--			msdu_chaining = 1;
- 		}
- 
- 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
-@@ -902,6 +902,57 @@ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
- 	return CHECKSUM_UNNECESSARY;
- }
- 
-+static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
-+{
-+	struct sk_buff *next = msdu_head->next;
-+	struct sk_buff *to_free = next;
-+	int space;
-+	int total_len = 0;
-+
-+	/* TODO:  Might could optimize this by using
-+	 * skb_try_coalesce or similar method to
-+	 * decrease copying, or maybe get mac80211 to
-+	 * provide a way to just receive a list of
-+	 * skb?
-+	 */
-+
-+	msdu_head->next = NULL;
-+
-+	/* Allocate total length all at once. */
-+	while (next) {
-+		total_len += next->len;
-+		next = next->next;
-+	}
-+
-+	space = total_len - skb_tailroom(msdu_head);
-+	if ((space > 0) &&
-+	    (pskb_expand_head(msdu_head, 0, space, GFP_ATOMIC) < 0)) {
-+		/* TODO:  bump some rx-oom error stat */
-+		/* put it back together so we can free the
-+		 * whole list at once.
-+		 */
-+		msdu_head->next = to_free;
-+		return -1;
-+	}
-+
-+	/* Walk list again, copying contents into
-+	 * msdu_head
-+	 */
-+	next = to_free;
-+	while (next) {
-+		skb_copy_from_linear_data(next, skb_put(msdu_head, next->len),
-+					  next->len);
-+		next = next->next;
-+	}
-+
-+	/* If here, we have consolidated skb.  Free the
-+	 * fragments and pass the main skb on up the
-+	 * stack.
-+	 */
-+	ath10k_htt_rx_free_msdu_chain(to_free);
-+	return 0;
-+}
-+
- static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				  struct htt_rx_indication *rx)
- {
-@@ -1014,10 +1065,8 @@ continue_on:
- 				continue;
- 			}
- 
--			/* FIXME: we do not support chaining yet.
--			 * this needs investigation */
--			if (msdu_chaining) {
--				ath10k_warn("htt rx msdu_chaining is true\n");
-+			if (msdu_chaining &&
-+			    (ath10k_unchain_msdu(msdu_head) < 0)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
- 			}
+  ath5k: set SURVEY_INFO_IN_USE on get_survey (2014-02-24 15:38:39 -0500)
+
+are available in the git repository at:
+
+  git://github.com/kvalo/ath.git for-linville
+
+for you to fetch changes up to 70dd77b4c50da518b57b8b9b125a8c9aabe9bc1a:
+
+  ath10k: do not overwrite max_antenna_gain (2014-03-07 10:14:10 +0200)
+
+----------------------------------------------------------------
+Ben Greear (3):
+      ath10k:  add more details to some debug messages
+      ath10k: add vdev-id, return code to error codes
+      ath10k: support msdu chaining
+
+Chun-Yeow Yeoh (2):
+      ath10k: implement drv_get_tsf for ibss merging
+      ath10k: set the mactime of ieee80211_rx_status
+
+Janusz Dziedzic (3):
+      ath10k: enable spectrum management support
+      ath10k: bitrate_mask add force_sgi support
+      ath10k: skip management frames in HTT path
+
+Marek Puzyniak (1):
+      ath10k: do not overwrite max_antenna_gain
+
+Michal Kazior (10):
+      ath10k: fix 4addr rx
+      ath10k: fix sta_rc_update for non-ap iftype
+      ath10k: remove DMA mapping wrappers
+      ath10k: remove is_aborted from skb_cb
+      ath10k: replace send_head() with tx_sg()
+      ath10k: bypass htc for htt tx path
+      ath10k: batch htt tx/rx completions
+      ath10k: reduce htt tx/rx spinlock overhead
+      ath10k: remove pci completion list
+      ath10k: minimize coherent dma accesses
+
+ drivers/net/wireless/ath/ath10k/ce.c     |   16 +-
+ drivers/net/wireless/ath/ath10k/ce.h     |    9 +-
+ drivers/net/wireless/ath/ath10k/core.h   |   34 +--
+ drivers/net/wireless/ath/ath10k/hif.h    |   25 +-
+ drivers/net/wireless/ath/ath10k/htc.c    |   25 +-
+ drivers/net/wireless/ath/ath10k/htt.h    |   18 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  236 +++++++++++++-----
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  205 ++++++++--------
+ drivers/net/wireless/ath/ath10k/mac.c    |  268 ++++++++++++--------
+ drivers/net/wireless/ath/ath10k/pci.c    |  389 +++++++-----------------------
+ drivers/net/wireless/ath/ath10k/pci.h    |   28 ---
+ drivers/net/wireless/ath/ath10k/txrx.c   |   24 +-
+ drivers/net/wireless/ath/ath10k/wmi.c    |   18 +-
+ 13 files changed, 638 insertions(+), 657 deletions(-)
+
 -- 
-1.7.11.7
-
+Kalle Valo
