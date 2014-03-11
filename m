@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:57793 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753335AbaCAURL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:11 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 10/23] ath9k: remove unused beacon_qi
-Date: Sat,  1 Mar 2014 21:15:53 +0100
-Message-Id: <1393704966-13985-11-git-send-email-linux@rempel-privat.de> (sfid-20140301_214710_065993_6C1B2BB1)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from smtprelay0100.hostedemail.com ([216.40.44.100]:47704 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753189AbaCKRqQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 13:46:16 -0400
+Message-ID: <1394559971.20021.1.camel@joe-AO722> (sfid-20140311_184620_126793_3CBA2458)
+Subject: Re: [PATCH] ath10k: unify warning messages in mac.c
+From: Joe Perches <joe@perches.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Date: Tue, 11 Mar 2014 10:46:11 -0700
+In-Reply-To: <531F49F2.3030408@candelatech.com>
+References: <20140303154327.1290.67278.stgit@potku.adurom.net>
+	 <CA+BoTQmQndikH5uPDwBpstp9KmcD3tmHSGP5NpEreYEOtRm0sw@mail.gmail.com>
+	 <8761nv44nd.fsf@kamboji.qca.qualcomm.com>
+	 <87k3c1gf35.fsf@kamboji.qca.qualcomm.com>
+	 <531F49F2.3030408@candelatech.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
- 1 file changed, 1 deletion(-)
+On Tue, 2014-03-11 at 10:37 -0700, Ben Greear wrote:
+> but I would also suggest giving user a clue as to the
+> severity.  Something starting with 'failed' or 'warning' is pretty obvious.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d8dddce..aa4f144 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -420,7 +420,6 @@ struct ath_beacon {
- 	struct ieee80211_vif *bslot[ATH_BCBUF];
- 	int slottime;
- 	int slotupdate;
--	struct ath9k_tx_queue_info beacon_qi;
- 	struct ath_descdma bdma;
- 	struct ath_txq *cabq;
- 	struct list_head bbuf;
--- 
-1.9.0
+Isn't that the whole point of KERN_<LEVEL>?
+
+I think duplicating it is pointless.
 
