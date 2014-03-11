@@ -1,46 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29737 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752663AbaC3Vbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 17:31:40 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Subject: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save 440 bytes
-Date: Sun, 30 Mar 2014 23:31:16 +0200
-Message-Id: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com> (sfid-20140330_233301_157477_B3B24C33)
+Received: from coelho.fi ([88.198.205.34]:60441 "EHLO dedo"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752564AbaCKNlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 09:41:03 -0400
+Message-ID: <1394545241.19973.16.camel@dubbel> (sfid-20140311_144107_929104_423F3C9D)
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>, sw@simonwunderlich.de,
+	andrei.otcheretianski@intel.com
+Date: Tue, 11 Mar 2014 15:40:41 +0200
+In-Reply-To: <CAB3XZEeEM_cH=+PN-cRm884RYyka+uVsJFvQiBdWaWNmL7U1bA@mail.gmail.com>
+References: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
+	 <1394487103-13027-3-git-send-email-luciano.coelho@intel.com>
+	 <CAB3XZEeEM_cH=+PN-cRm884RYyka+uVsJFvQiBdWaWNmL7U1bA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v9 2/5] cfg80211/mac80211: refactor
+ cfg80211_chandef_dfs_required()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Automated script discovered that without forced inlining,
-gcc-4.7 generates smaller code for this function.
+On Tue, 2014-03-11 at 12:45 +0200, Eliad Peller wrote:
+> On Mon, Mar 10, 2014 at 11:31 PM, Luciano Coelho
+> <luciano.coelho@intel.com> wrote:
+> > Some interface types don't require DFS (such as STATION, P2P_CLIENT
+> > etc).  In order to centralize these decisions, make
+> > cfg80211_chandef_dfs_required() take the iftype into consideration.
+> >
+> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> > ---
+> [...]
+> 
+> >  int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+> > -                                 const struct cfg80211_chan_def *chandef)
+> > +                                 const struct cfg80211_chan_def *chandef,
+> > +                                 enum nl80211_iftype iftype)
+> >  {
+> >         int width;
+> > -       int r;
+> > +       int ret;
+> >
+> >         if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+> >                 return -EINVAL;
+> >
+> > -       width = cfg80211_chandef_get_width(chandef);
+> > -       if (width < 0)
+> > -               return -EINVAL;
+> > +       switch (iftype) {
+> > +       case NL80211_IFTYPE_ADHOC:
+> > +       case NL80211_IFTYPE_AP:
+> > +       case NL80211_IFTYPE_P2P_GO:
+> > +       case NL80211_IFTYPE_MESH_POINT:
+> > +               width = cfg80211_chandef_get_width(chandef);
+> > +               if (width < 0)
+> > +                       return -EINVAL;
+> >
+> it's a matter of style, but i think bailing out in non-relevant cases
+> and taking the code out of the switch looks better (less indentation,
+> etc.).
 
-There is no need to declare static functions inline anyway:
-nowadays gcc detects single-callsite static functions
-which benefit from inlining.
+Yeah, it's a style issue and I tend to agree with you.  But I also think
+it's good to have a switch where we can easily see what happens with
+each interface type.
 
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/chip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I won't change this now, but we can refactor this at a later point if it
+starts getting annoying. ;)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index df130ef..d020b0b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -933,7 +933,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
- 	return true;
- }
- 
--static inline void
-+static void
- brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
- {
- 	struct brcmf_core *core;
--- 
-1.8.1.4
+
+
+> [...]
+> 
+> > +       case NL80211_IFTYPE_STATION:
+> > +       case NL80211_IFTYPE_P2P_CLIENT:
+> > +       case NL80211_IFTYPE_MONITOR:
+> > +       case NL80211_IFTYPE_AP_VLAN:
+> > +       case NL80211_IFTYPE_WDS:
+> > +       case NL80211_IFTYPE_P2P_DEVICE:
+> > +               break;
+> > +       case NL80211_IFTYPE_UNSPECIFIED:
+> > +       case NUM_NL80211_IFTYPES:
+> > +               WARN_ON(1);
+> > +       }
+> 
+> [...]
+> 
+> > @@ -671,7 +700,8 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+> > -       if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
+> > +       if (cfg80211_chandef_dfs_required(wiphy, chandef,
+> > +                                         NL80211_IFTYPE_UNSPECIFIED) > 0 &&
+> wouldn't this WARN_ON()?
+
+Yep, you're right.  Previously I was calling this and I didn't really
+care what was the interface type.  But Johannes asked me to change the
+cfg80211_dfs_required() code to warn if unspecified was passed and I
+forgot to change it here.  I'll either have to add the iftype to the
+cfg80211_reg_can_beacon() function arguments (which is a bit ugly,
+because it's not really needed) or I'll have to move the UNSPECIFIED to
+some sort of "don't care" in the cfg80211_chandef_dfs_required()
+function.
+
+
+> > @@ -5796,7 +5799,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+> >         if (wdev->cac_started)
+> >                 return -EBUSY;
+> >
+> > -       err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
+> > +       err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef,
+> > +                                           NL80211_IFTYPE_UNSPECIFIED);
+> ditto.
+
+Ditto. :)
+
+--
+Cheers,
+Luca.
 
