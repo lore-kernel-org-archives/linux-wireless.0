@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsrv0.aau.at ([143.205.180.48]:50917 "EHLO
-	mailsrv.uni-klu.ac.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754481AbaCCKKF (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43673 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbaCKPda (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 05:10:05 -0500
-Received: from mailsrv.uni-klu.ac.at (localhost [127.0.0.1])
-	by mailsrv.uni-klu.ac.at (Postfix) with ESMTP id CB94A161515
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Mar 2014 11:03:37 +0100 (CET)
-Received: from [143.205.116.97] (zeno.nes.aau.at [143.205.116.97])
-	by mailsrv.uni-klu.ac.at (Postfix) with ESMTPSA id BFF41160EFF
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Mar 2014 11:03:37 +0100 (CET)
-Message-ID: <5314538C.40705@aau.at> (sfid-20140303_111338_897718_8EB249B5)
-Date: Mon, 03 Mar 2014 11:03:56 +0100
-From: Severin Kacianka <severin.kacianka@aau.at>
+	Tue, 11 Mar 2014 11:33:30 -0400
+Subject: [PATCH 2/2] ath10k: check otp.bin result
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Mar 2014 17:33:28 +0200
+Message-ID: <20140311153328.7148.50188.stgit@potku.adurom.net> (sfid-20140311_163333_987273_E2D00D34)
+In-Reply-To: <20140311153318.7148.47415.stgit@potku.adurom.net>
+References: <20140311153318.7148.47415.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Wireless Bandwidth Estimation
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+When we execute otp.bin in the target check that the result it returns doesn't
+contain an error. This is to make sure that we don't accidentally use invalid
+calibration data.
 
-I am currently looking a bit into the subject of estimating the 
-available bandwidth on a wireless link and I wanted to ask if there are 
-any tool or kernel parameters out there that might already do this. I am 
-aware that there are many papers on this subject (just take a look at 
-google scholar [1]), but none seem to offer a 'reliable' solution. The 
-best working tool I could find so far was wbest[2], but its results are 
-very jumpy.
+While at it, remove the useless label in the function and add few debug messages.
 
-I do not look for a tool to *measure* the available bandwidth (iperf 
-does that just fine), I would ideally like to get an estimation without 
-sending any data over the link (or at least only a few packets).
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-As an example think of video streaming: A video stream might take up 
-most of the bandwidth and thus you would like to avoid creating 
-additional measurement traffic. However - if the wireless link degraded 
-(because the client might move) what would be the best way to 'sense' 
-this degradation as early as possible and react to it (by e.g. reducing 
-the video bandwidth).
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 602fb9644cbf..e8f419144db6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -254,23 +254,34 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 
+ 	/* OTP is optional */
+ 
+-	if (!ar->otp_data || !ar->otp_len)
++	if (!ar->otp_data || !ar->otp_len) {
++		ath10k_warn("Not running otp, calibration will be incorrect!\n");
+ 		return 0;
++	}
++
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot upload otp to 0x%x len %d\n",
++		   address, ar->otp_len);
+ 
+ 	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
+ 	if (ret) {
+ 		ath10k_err("could not write otp (%d)\n", ret);
+-		goto exit;
++		return ret;
+ 	}
+ 
+ 	ret = ath10k_bmi_execute(ar, address, 0, &result);
+ 	if (ret) {
+ 		ath10k_err("could not execute otp (%d)\n", ret);
+-		goto exit;
++		return ret;
+ 	}
+ 
+-exit:
+-	return ret;
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
++
++	if (result != 0) {
++		ath10k_err("otp calibration failed: %d", result);
++		return -EINVAL;
++	}
++
++	return 0;
+ }
+ 
+ static int ath10k_download_fw(struct ath10k *ar)
 
-Thank you for your time,
-Severin
-
-[1] http://scholar.google.at/scholar?q=wireless+bandwidth+estimation
-[2] http://perform.wpi.edu/downloads/wbest/
