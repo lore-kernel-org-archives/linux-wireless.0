@@ -1,95 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:38132 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757219AbaCDMw5 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43666 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbaCKPdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 07:52:57 -0500
-Received: by mail-ea0-f177.google.com with SMTP id h10so332628eak.36
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:56 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+	Tue, 11 Mar 2014 11:33:25 -0400
+Subject: [PATCH 1/2] ath10k: separate result parameter in ath10k_bmi_execute()
 To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 09/14] ath10k: kill fcs_err from htt_rx_info
-Date: Tue,  4 Mar 2014 13:52:22 +0100
-Message-Id: <1393937548-7482-10-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135312_470681_747D3EF1)
-In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Mar 2014 17:33:19 +0200
+Message-ID: <20140311153318.7148.47415.stgit@potku.adurom.net> (sfid-20140311_163328_214322_D8DD4829)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup this directly in ieee80211_rx_status.
+It's just cleaner to have separate argument for the parameter and result. Also
+fix returned error value if response length is invalid.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    |    1 -
- drivers/net/wireless/ath/ath10k/htt_rx.c |   18 +++++++++++-------
- 2 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/bmi.c  |   13 ++++++++-----
+ drivers/net/wireless/ath/ath10k/bmi.h  |    2 +-
+ drivers/net/wireless/ath/ath10k/core.c |    6 ++----
+ 3 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index ea39b87..1713c70 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1178,7 +1178,6 @@ struct htt_rx_info {
- 	struct ieee80211_rx_status rx_status;
- 	enum htt_rx_mpdu_status status;
- 	enum htt_rx_mpdu_encrypt_type encrypt_type;
--	bool fcs_err;
- 	bool amsdu_more;
- 	bool mic_err;
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 4eca6e6..35a7ae15 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -786,9 +786,6 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	if (info->mic_err)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
+index a1f099628850..17d221abd58c 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.c
++++ b/drivers/net/wireless/ath/ath10k/bmi.c
+@@ -175,7 +175,7 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
+ 	return 0;
+ }
  
--	if (info->fcs_err)
--		status->flag |= RX_FLAG_FAILED_FCS_CRC;
--
- 	if (info->amsdu_more)
- 		status->flag |= RX_FLAG_AMSDU_MORE;
+-int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
++int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result)
+ {
+ 	struct bmi_cmd cmd;
+ 	union bmi_resp resp;
+@@ -184,7 +184,7 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
+ 	int ret;
  
-@@ -805,7 +802,8 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 		   status->rate_idx,
- 		   status->vht_nss,
- 		   status->freq,
--		   status->band, status->flag, info->fcs_err);
-+		   status->band, status->flag,
-+		   !!(status->flag & RX_FLAG_FAILED_FCS_CRC));
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
- 			info->skb->data, info->skb->len);
+ 	ath10k_dbg(ATH10K_DBG_BMI, "bmi execute address 0x%x param 0x%x\n",
+-		   address, *param);
++		   address, param);
  
-@@ -1149,7 +1147,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	int num_mpdu_ranges;
- 	int fw_desc_len;
- 	u8 *fw_desc;
--	bool channel_set;
-+	bool channel_set, fcs_err;
- 	int i, j;
+ 	if (ar->bmi.done_sent) {
+ 		ath10k_warn("command disallowed\n");
+@@ -193,7 +193,7 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
  
- 	lockdep_assert_held(&htt->rx_ring.lock);
-@@ -1213,10 +1211,16 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			}
+ 	cmd.id            = __cpu_to_le32(BMI_EXECUTE);
+ 	cmd.execute.addr  = __cpu_to_le32(address);
+-	cmd.execute.param = __cpu_to_le32(*param);
++	cmd.execute.param = __cpu_to_le32(param);
  
- 			info.skb     = msdu_head;
--			info.fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
+ 	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen, &resp, &resplen);
+ 	if (ret) {
+@@ -204,10 +204,13 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
+ 	if (resplen < sizeof(resp.execute)) {
+ 		ath10k_warn("invalid execute response length (%d)\n",
+ 			    resplen);
+-		return ret;
++		return -EIO;
+ 	}
+ 
+-	*param = __le32_to_cpu(resp.execute.result);
++	*result = __le32_to_cpu(resp.execute.result);
 +
-+			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
-+			if (fcs_err)
-+				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-+			else
-+				info.rx_status.flag &= ~RX_FLAG_FAILED_FCS_CRC;
++	ath10k_dbg(ATH10K_DBG_BMI, "bmi execute result 0x%x\n", *result);
 +
- 			info.mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
+ 	return 0;
+ }
  
--			if (info.fcs_err)
-+			if (fcs_err)
- 				ath10k_dbg(ATH10K_DBG_HTT,
- 					   "htt rx has FCS err\n");
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index 8d81ce1cec21..3a9bdf51c96a 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -217,7 +217,7 @@ int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
+ 		ret;							\
+ 	})
  
--- 
-1.7.9.5
+-int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param);
++int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result);
+ int ath10k_bmi_lz_stream_start(struct ath10k *ar, u32 address);
+ int ath10k_bmi_lz_data(struct ath10k *ar, const void *buffer, u32 length);
+ int ath10k_bmi_fast_download(struct ath10k *ar, u32 address,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index ebc5fc2ede75..602fb9644cbf 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -249,8 +249,7 @@ exit:
+ 
+ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ {
+-	u32 address = ar->hw_params.patch_load_addr;
+-	u32 exec_param;
++	u32 result, address = ar->hw_params.patch_load_addr;
+ 	int ret;
+ 
+ 	/* OTP is optional */
+@@ -264,8 +263,7 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 		goto exit;
+ 	}
+ 
+-	exec_param = 0;
+-	ret = ath10k_bmi_execute(ar, address, &exec_param);
++	ret = ath10k_bmi_execute(ar, address, 0, &result);
+ 	if (ret) {
+ 		ath10k_err("could not execute otp (%d)\n", ret);
+ 		goto exit;
 
