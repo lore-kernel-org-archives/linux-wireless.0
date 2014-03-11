@@ -1,106 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:55019 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbaCAURb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:31 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 15/23] ath9k: move ath9k_beacon_config_adhoc to common
-Date: Sat,  1 Mar 2014 21:15:58 +0100
-Message-Id: <1393704966-13985-16-git-send-email-linux@rempel-privat.de> (sfid-20140301_214709_523065_808B1C89)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:55023 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951AbaCKNF0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 09:05:26 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 2/5] nl80211: Support for 5/10 MHz channels when reporting BW restrictions
+Date: Tue, 11 Mar 2014 14:05:11 +0100
+Message-Id: <1394543114-6700-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140311_140654_512595_79DFA052)
+In-Reply-To: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/beacon.c        | 21 ++-------------------
- drivers/net/wireless/ath/ath9k/common-beacon.c | 25 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-beacon.h |  2 ++
- 3 files changed, 29 insertions(+), 19 deletions(-)
+If the 'split wiphy dump' is enabled report the extra attributes
+(if present) describing the bandwidth restrictions.
+If the 'split wiphy dump' is not enabled completely omit those
+channels that have flags set to either IEEE80211_CHAN_NO_10MHZ
+or IEEE80211_CHAN_NO_20MHZ thus preventing breaking of old
+user-space tools.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 9333fa1..01322a4 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -526,29 +526,12 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ net/wireless/nl80211.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4fe2e6e..c62c572 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -563,6 +563,13 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 				   struct ieee80211_channel *chan,
+ 				   bool large)
  {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u32 intval, nexttbtt;
++	/* Some channels must be completely excluded from the
++	 * list to protect old user-space tools from breaking
++	 */
++	if (!large && chan->flags &
++	    (IEEE80211_CHAN_NO_10MHZ | IEEE80211_CHAN_NO_20MHZ))
++		return 0;
++
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
+ 			chan->center_freq))
+ 		goto nla_put_failure;
+@@ -606,6 +613,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 		if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
++			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
++			goto nla_put_failure;
+ 	}
  
- 	ath9k_reset_beacon_status(sc);
- 
--	intval = TU_TO_USEC(conf->beacon_interval);
--
--	if (conf->ibss_creator)
--		nexttbtt = intval;
--	else
--		nexttbtt = ath9k_get_next_tbtt(sc, ath9k_hw_gettsf64(ah),
--					       conf->beacon_interval);
--
--	if (conf->enable_beacon)
--		ah->imask |= ATH9K_INT_SWBA;
--	else
--		ah->imask &= ~ATH9K_INT_SWBA;
--
--	ath_dbg(common, BEACON,
--		"IBSS (%s) nexttbtt: %u intval: %u conf_intval: %u\n",
--		(conf->enable_beacon) ? "Enable" : "Disable",
--		nexttbtt, intval, conf->beacon_interval);
-+	ath9k_cmn_beacon_config_adhoc(ah, conf);
- 
--	ath9k_beacon_init(sc, nexttbtt, intval, conf->ibss_creator);
-+	ath9k_beacon_init(sc, conf->nexttbtt, conf->intval, conf->ibss_creator);
- 
- 	/*
- 	 * Set the global 'beacon has been configured' flag for the
-diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.c b/drivers/net/wireless/ath/ath9k/common-beacon.c
-index 35cc9fd..45bc899 100644
---- a/drivers/net/wireless/ath/ath9k/common-beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/common-beacon.c
-@@ -124,3 +124,28 @@ int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_cmn_beacon_config_sta);
-+
-+void ath9k_cmn_beacon_config_adhoc(struct ath_hw *ah,
-+				   struct ath_beacon_config *conf)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	conf->intval = TU_TO_USEC(conf->beacon_interval);
-+
-+	if (conf->ibss_creator)
-+		conf->nexttbtt = conf->intval;
-+	else
-+		conf->nexttbtt = ath9k_get_next_tbtt(ah, ath9k_hw_gettsf64(ah),
-+					       conf->beacon_interval);
-+
-+	if (conf->enable_beacon)
-+		ah->imask |= ATH9K_INT_SWBA;
-+	else
-+		ah->imask &= ~ATH9K_INT_SWBA;
-+
-+	ath_dbg(common, BEACON,
-+		"IBSS (%s) nexttbtt: %u intval: %u conf_intval: %u\n",
-+		(conf->enable_beacon) ? "Enable" : "Disable",
-+		conf->nexttbtt, conf->intval, conf->beacon_interval);
-+}
-+EXPORT_SYMBOL(ath9k_cmn_beacon_config_adhoc);
-diff --git a/drivers/net/wireless/ath/ath9k/common-beacon.h b/drivers/net/wireless/ath/ath9k/common-beacon.h
-index 51cbcb5..d8e7c0d 100644
---- a/drivers/net/wireless/ath/ath9k/common-beacon.h
-+++ b/drivers/net/wireless/ath/ath9k/common-beacon.h
-@@ -19,3 +19,5 @@ struct ath_beacon_config;
- int ath9k_cmn_beacon_config_sta(struct ath_hw *ah,
- 				struct ath_beacon_config *conf,
- 				struct ath9k_beacon_state *bs);
-+void ath9k_cmn_beacon_config_adhoc(struct ath_hw *ah,
-+				   struct ath_beacon_config *conf);
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
 -- 
-1.9.0
+1.8.5.1
 
