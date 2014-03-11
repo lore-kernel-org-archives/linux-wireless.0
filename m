@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:44208 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754430AbaCCLyH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 06:54:07 -0500
-Received: by mail-ea0-f178.google.com with SMTP id a15so4361198eae.23
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 03:54:06 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:59251 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752983AbaCKPRB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 11:17:01 -0400
+Message-ID: <531F28D8.8010001@openwrt.org> (sfid-20140311_161706_316037_993EE683)
+Date: Tue, 11 Mar 2014 16:16:40 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1393590200-25309-3-git-send-email-luca@coelho.fi>
-References: <1393590200-25309-1-git-send-email-luca@coelho.fi>
-	<1393590200-25309-3-git-send-email-luca@coelho.fi>
-Date: Mon, 3 Mar 2014 12:54:06 +0100
-Message-ID: <CA+BoTQnXUzJWfe3yoVoLDB=dSvZUsuCEVoX1UFk8KOBxzZr=6Q@mail.gmail.com> (sfid-20140303_125438_244175_43E6F7AA)
-Subject: Re: [PATCH v3 2/3] mac80211: implement chanctx reservation
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 3.14] ath9k: fix ps-poll responses under a-mpdu sessions
+References: <1393073299-4831-1-git-send-email-nbd@openwrt.org>	<CAGXE3d_wmuDi2kUjvhLGxSFMAxwcYgjLXJ78fPgyHmDN7m0cSw@mail.gmail.com>	<531ED921.5040601@openwrt.org> <CAGXE3d-ku6EZsAo6ZksXxU4g9KTANnphmSGz3H_NUMfkaJGnew@mail.gmail.com>
+In-Reply-To: <CAGXE3d-ku6EZsAo6ZksXxU4g9KTANnphmSGz3H_NUMfkaJGnew@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2014 13:23, Luca Coelho <luca@coelho.fi> wrote:
+On 2014-03-11 15:22, Helmut Schaa wrote:
+> On Tue, Mar 11, 2014 at 10:36 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2014-03-11 10:28, Helmut Schaa wrote:
+>>> On Sat, Feb 22, 2014 at 1:48 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> When passing tx frames to the U-APSD queue for powersave poll responses,
+>>>> the ath_atx_tid pointer needs to be passed to ath_tx_setup_buffer for
+>>>> proper sequence number accounting.
+>>>>
+>>>> This fixes high latency and connection stability issues with ath9k
+>>>> running as AP and a few kinds of mobile phones as client, when PS-Poll
+>>>> is heavily used
+>>>>
+>>>> Cc: stable@vger.kernel.org
+>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>> ---
+>>>
+>>> Hi Felix,
+>>>
+>>> this commit introduced a regression for me when using Intel Win7
+>>> clients on a ath9k AP.
+>>>
+>>> I was not able to track the exact issue down yet :( but it seems to be
+>>> related to the Intel
+>>> client constantly tearing down the BA session and entering/leaving PS mode.
+>>>
+>>> Any idea?
+>> Please make some packet captures and describe more clearly what the
+>> regression is. Do you see connections stalling, big latencies, etc?
+> 
+> From what I can see with this patch action frames (like ADDBA and DELBA) get
+> sequence numbers from TID 0 assigned instead of a seq number from the global
+> counter. And that seems to "confuse" the client.
+> 
+> The following patch solves the issue for me and seems to still keep
+> Felix original intention ...
+Looks good to me, also because it ensures that action/mgmt frames are
+sent out faster, even with filled data queues.
+To really make sure that this issue does not happen again, we should
+also have a check in ath_tx_setup_buffer where it actually assigns the
+seqno.
+This will become useful in case we need to buffer non-data packets (e.g.
+for things like P2P powersave).
 
-[...]
-
-> +int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-> +                                 const struct cfg80211_chan_def *chandef)
-> +{
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_chanctx_conf *conf;
-> +       struct ieee80211_chanctx *new_ctx, *curr_ctx;
-> +       int ret = 0;
-> +
-> +       mutex_lock(&local->chanctx_mtx);
-> +
-> +       conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-> +                                        lockdep_is_held(&local->chanctx_mtx));
-> +       if (!conf) {
-> +               ret = -EINVAL;
-> +               goto out;
-> +       }
-> +
-> +       curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-> +
-> +       /* try to find another context with the chandef we want */
-> +       new_ctx = ieee80211_find_chanctx(local, chandef,
-> +                                        IEEE80211_CHANCTX_SHARED);
-> +       if (!new_ctx) {
-> +               /* create a new context */
-> +               new_ctx = ieee80211_new_chanctx(local, chandef,
-> +                                               IEEE80211_CHANCTX_SHARED);
-
-Shouldn't you use curr_ctx->mode here instead of SHARED? Or perhaps
-the function should take `mode` argument..
-
-For CSA it's probably okay to just use curr_ctx->mode, but for a more
-generic reservation it should probably be an argument.
-
-
-Michał
+- Felix
