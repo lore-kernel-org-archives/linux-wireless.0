@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0070.hostedemail.com ([216.40.44.70]:46783 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751914AbaCIVPh (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:44010 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754891AbaCKNFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 17:15:37 -0400
-Message-ID: <1394399733.6972.47.camel@joe-AO722> (sfid-20140309_221540_883727_2EF637CA)
-Subject: Re: [PATCH 4/6] ath6kl: remove unnecessary line continuations
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Sun, 09 Mar 2014 14:15:33 -0700
-In-Reply-To: <20140309065729.10793.45052.stgit@x230>
-References: <20140309065606.10793.67068.stgit@x230>
-	 <20140309065729.10793.45052.stgit@x230>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 11 Mar 2014 09:05:36 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 5/5] mac80211: Update conf_is_ht() to work properly with 5/10MHz channels
+Date: Tue, 11 Mar 2014 14:05:14 +0100
+Message-Id: <1394543114-6700-6-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140311_140630_891571_9B147126)
+In-Reply-To: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-03-09 at 08:57 +0200, Kalle Valo wrote:
-> Fixes checkpatch warning:
-> WARNING: Avoid unnecessary line continuations
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-[]
-> diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-[]
-> @@ -45,8 +45,9 @@ module_param(testmode, uint, 0644);
->  module_param(recovery_enable, uint, 0644);
->  module_param(heart_beat_poll, uint, 0644);
->  MODULE_PARM_DESC(recovery_enable, "Enable recovery from firmware error");
-> -MODULE_PARM_DESC(heart_beat_poll, "Enable fw error detection periodic"   \
-> -		 "polling. This also specifies the polling interval in"  \
-> +MODULE_PARM_DESC(heart_beat_poll,
-> +		 "Enable fw error detection periodic"
-> +		 "polling. This also specifies the polling interval in"
->  		 "msecs. Set reocvery_enable for this to be effective");
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ include/net/mac80211.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Couple things:
-
-o There's a missing space between periodic and polling
-o There's a typo of recovery
-
-My suggestion would be to use:
-
-MODULE_PARM_DESC(heart_beat_poll,
-		 "Enable fw error detection periodic polling in msecs - Also set recovery_enable for this to be effective");
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f4ab2fb..f56e45b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4585,7 +4585,9 @@ conf_is_ht40(struct ieee80211_conf *conf)
+ static inline bool
+ conf_is_ht(struct ieee80211_conf *conf)
+ {
+-	return conf->chandef.width != NL80211_CHAN_WIDTH_20_NOHT;
++	return (conf->chandef.width != NL80211_CHAN_WIDTH_5) &&
++		(conf->chandef.width != NL80211_CHAN_WIDTH_10) &&
++		(conf->chandef.width != NL80211_CHAN_WIDTH_20_NOHT);
+ }
+ 
+ static inline enum nl80211_iftype
+-- 
+1.8.5.1
 
