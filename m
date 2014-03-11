@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:35769 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757222AbaCSKxu (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:36278 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278AbaCKKkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 06:53:50 -0400
-Received: by mail-ie0-f169.google.com with SMTP id to1so8700001ieb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 03:53:50 -0700 (PDT)
+	Tue, 11 Mar 2014 06:40:11 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so10841151igb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 03:40:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=VSfN9KjAsGEsU0dnRTuUXagW8Kc7ThWDw_MzVycWknA@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com>
-	<CA+BoTQ=-aw6hv9jjA60f+JgZsFdCqSE3cwZ4OdQfRaV6fe9s9g@mail.gmail.com>
-	<CAB3XZEc0YpByFSu2QaPJ0VtACVRrJoQGfWKtC-qSPD1q1xKg1w@mail.gmail.com>
-	<CA+BoTQ=VSfN9KjAsGEsU0dnRTuUXagW8Kc7ThWDw_MzVycWknA@mail.gmail.com>
-Date: Wed, 19 Mar 2014 12:53:50 +0200
-Message-ID: <CAB3XZEfU6h20kLPBw2k3Z3Z3am857uLAamW0wAd+g1Q7KcYJEQ@mail.gmail.com> (sfid-20140319_115354_271706_7BD4823E)
-Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
+In-Reply-To: <1394487103-13027-2-git-send-email-luciano.coelho@intel.com>
+References: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
+	<1394487103-13027-2-git-send-email-luciano.coelho@intel.com>
+Date: Tue, 11 Mar 2014 12:40:10 +0200
+Message-ID: <CAB3XZEdhLOOT+6CYcqCMRBDBE66-EuXXkMiSLZmvedo+iZEZaA@mail.gmail.com> (sfid-20140311_114017_103389_8FE64ED3)
+Subject: Re: [PATCH v9 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
 From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>, sw@simonwunderlich.de,
+	andrei.otcheretianski@intel.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 11:00 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 19 March 2014 09:47, Eliad Peller <eliad@wizery.com> wrote:
->> On Wed, Mar 19, 2014 at 10:34 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> On 18 March 2014 17:42, Eliad Peller <eliad@wizery.com> wrote:
->>>> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>>>> Relax ieee80211_find_chanctx(). If chanctx
->>>>> reservation chandef is compatible with
->>>>> current-future assigned interfaces chandef then
->>>>> allow it to be used by new interfaces.
->>>>>
->>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>>>> ---
->>>> [...]
->>>>
->>>>> +static const struct cfg80211_chan_def *
->>>>> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
->>>>> +                                  struct ieee80211_chanctx *ctx,
->>>>> +                                  const struct cfg80211_chan_def *compat)
->>>>> +{
->>>>> +       struct ieee80211_sub_if_data *sdata;
->>>>> +
->>>>> +       lockdep_assert_held(&local->chanctx_mtx);
->>>>> +
->>>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
->>>>> +                           reserved_chanctx_list) {
->>>>> +               if (!compat)
->>>>> +                       compat = &sdata->reserved_chandef;
->>>> this check is redundant.
->>>
->>> It isn't. The function can be called with compat == NULL. You don't
->>> want to call cfg80211_chandef_compatible() with a NULL chandef.
->>>
->> at least this patch has an explicit check for compat not being NULL
->> (before calling the function).
->> since this function checks chandef compatibility with current
->> reserved chandefs, i don't see why anyone would call it with NULL?
+On Mon, Mar 10, 2014 at 11:31 PM, Luciano Coelho
+<luciano.coelho@intel.com> wrote:
+> Separate the code that counts the interface types and channels from
+> the code that check the interface combinations.  The new function that
+> checks for combinations is exported so it can be called by the
+> drivers.
 >
-> Fair argument if you treat the patch separately from the whole patchset.
+> This is done in preparation for moving the interface combinations
+> checks out of cfg80211.
 >
-> This is later called with NULL (patch: implement multi-vif in-place
-> reservations).
->
-> I could make a if (WARN_ON(!compat)) return NULL; guard condition at
-> the function start but I prefer the current way as it has wider
-> appliance for code reuse.
->
-ok. i haven't passed through all the patches yet.
-if you use it later with NULL there's no reason to change it.
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+[...]
+
+> +int cfg80211_check_combinations(struct wiphy *wiphy,
+> +                               const int num_different_channels,
+> +                               const u8 radar_detect,
+> +                               const int iftype_num[NUM_NL80211_IFTYPES])
+> +{
+> +       int i, j, iftype;
+> +       int num_interfaces = 0;
+> +       u32 used_iftypes = 0;
+> +
+> +       for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+> +               num_interfaces += iftype_num[iftype];
+> +               if (iftype_num[iftype] > 0)
+> +                       used_iftypes |= BIT(iftype);
+> +       }
+> +
+[...]
+
+> +
+> +               for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+> +                       if (wiphy->software_iftypes & BIT(iftype))
+> +                               continue;
+> +                       for (j = 0; j < c->n_limits; j++) {
+> +                               all_iftypes |= limits[j].types;
+> +                               if (!(limits[j].types & BIT(iftype)))
+> +                                       continue;
+> +                               if (limits[j].max < iftype_num[iftype])
+> +                                       goto cont;
+> +                               limits[j].max -= iftype_num[iftype];
+> +                       }
+> +               }
+> +
+> +               if (radar_detect && !(c->radar_detect_widths & radar_detect))
+> +                       goto cont;
+> +
+> +               /* Finally check that all iftypes that we're currently
+> +                * using are actually part of this combination. If they
+> +                * aren't then we can't use this combination and have
+> +                * to continue to the next.
+> +                */
+> +               if ((all_iftypes & used_iftypes) != used_iftypes)
+> +                       goto cont;
+> +
+if software_iftypes will be passed to this function, this check will
+fail (as they exist only in used_iftypes).
 
 Eliad.
