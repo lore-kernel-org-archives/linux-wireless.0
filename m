@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:53006 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153AbaC1Jab (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:37840 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbaCKNFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 05:30:31 -0400
-Subject: [PATCH] ath10k: cleanup debug messages in ath10k_wmi_event_host_swba()
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 11:30:28 +0200
-Message-ID: <20140328093028.16927.81551.stgit@potku.adurom.net> (sfid-20140328_103038_833674_A9998DBD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 11 Mar 2014 09:05:24 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 1/5] cfg80211: Add attributes describing prohibited channel bandwidth
+Date: Tue, 11 Mar 2014 14:05:10 +0100
+Message-Id: <1394543114-6700-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140311_140834_770682_7EA1D78A)
+In-Reply-To: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They were just too superfluous and made it harder to read logs. Change them to
-follow the normal style used in ath10k.
+Since there are channels which have only 10 or 5 MHz bandwidth,
+we have to keep track about this information (and be able to
+report it via netlink to userspace).
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ include/net/cfg80211.h       | 6 ++++++
+ include/uapi/linux/nl80211.h | 6 ++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d4b48ef0ec2e..fe4d5f1c672f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1362,13 +1362,10 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 	struct sk_buff *bcn;
- 	int ret, vdev_id = 0;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b1f84b0..f5ecd6c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -109,6 +109,10 @@ enum ieee80211_band {
+  *	channel as the control or any of the secondary channels.
+  *	This may be due to the driver or due to regulatory bandwidth
+  *	restrictions.
++ * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
++ *     on this channel.
++ * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
++ *     on this channel.
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+@@ -120,6 +124,8 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_NO_OFDM		= 1<<6,
+ 	IEEE80211_CHAN_NO_80MHZ		= 1<<7,
+ 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
++	IEEE80211_CHAN_NO_20MHZ		= 1<<9,
++	IEEE80211_CHAN_NO_10MHZ		= 1<<10,
+ };
  
--	ath10k_dbg(ATH10K_DBG_MGMT, "WMI_HOST_SWBA_EVENTID\n");
--
- 	ev = (struct wmi_host_swba_event *)skb->data;
- 	map = __le32_to_cpu(ev->vdev_map);
+ #define IEEE80211_CHAN_NO_HT40 \
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 91054fd..0748026 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2304,6 +2304,10 @@ enum nl80211_band_attr {
+  * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
+  *	using this channel as the primary or any of the secondary channels
+  *	isn't possible
++ * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
++ *     on this channel in current regulatory domain.
++ * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
++ *     on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+@@ -2322,6 +2326,8 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
+ 	NL80211_FREQUENCY_ATTR_NO_80MHZ,
+ 	NL80211_FREQUENCY_ATTR_NO_160MHZ,
++	NL80211_FREQUENCY_ATTR_NO_20MHZ,
++	NL80211_FREQUENCY_ATTR_NO_10MHZ,
  
--	ath10k_dbg(ATH10K_DBG_MGMT, "host swba:\n"
--		   "-vdev map 0x%x\n",
-+	ath10k_dbg(ATH10K_DBG_MGMT, "mgmt swba vdev_map 0x%x\n",
- 		   ev->vdev_map);
- 
- 	for (; map; map >>= 1, vdev_id++) {
-@@ -1385,12 +1382,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 		bcn_info = &ev->bcn_info[i];
- 
- 		ath10k_dbg(ATH10K_DBG_MGMT,
--			   "-bcn_info[%d]:\n"
--			   "--tim_len %d\n"
--			   "--tim_mcast %d\n"
--			   "--tim_changed %d\n"
--			   "--tim_num_ps_pending %d\n"
--			   "--tim_bitmap 0x%08x%08x%08x%08x\n",
-+			   "mgmt event bcn_info %d tim_len %d mcast %d changed %d num_ps_pending %d bitmap 0x%08x%08x%08x%08x\n",
- 			   i,
- 			   __le32_to_cpu(bcn_info->tim_info.tim_len),
- 			   __le32_to_cpu(bcn_info->tim_info.tim_mcast),
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+-- 
+1.8.5.1
 
