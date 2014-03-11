@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbaC1NZd (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:61576 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101AbaCKHqL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:25:33 -0400
-Message-ID: <1396013129.4175.29.camel@jlt4.sipsolutions.net> (sfid-20140328_142540_088342_759A9A72)
-Subject: Re: [PATCH v2 12/13] mac80211: compute chanctx refcount on-the-fly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 28 Mar 2014 14:25:29 +0100
-In-Reply-To: <CA+BoTQ=i+XdwCcixiWTT9zchyLeXq2-rr5XbvWAVs1kXx=VjUQ@mail.gmail.com> (sfid-20140328_142229_136741_7ECB5A6B)
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-13-git-send-email-michal.kazior@tieto.com>
-	 <1396012272.4175.27.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQ=i+XdwCcixiWTT9zchyLeXq2-rr5XbvWAVs1kXx=VjUQ@mail.gmail.com>
-	 (sfid-20140328_142229_136741_7ECB5A6B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Mar 2014 03:46:11 -0400
+Received: by mail-oa0-f41.google.com with SMTP id j17so8293405oag.28
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 00:46:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 11 Mar 2014 08:46:10 +0100
+Message-ID: <CA+BoTQkke050EMs0Nnz3O3XM6U2uRRVrxffVdwKJrWua+iapFw@mail.gmail.com> (sfid-20140311_084615_620199_A0D0D61B)
+Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-28 at 14:22 +0100, Michal Kazior wrote:
-> On 28 March 2014 14:11, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
-> >> It doesn't make much sense to store refcount in
-> >> the chanctx structure. One still needs to hold
-> >> chanctx_mtx to get the value safely. Besides,
-> >> refcount isn't on performance critical paths.
-> >>
-> >> This will make implementing chanctx reservation
-> >> refcounting a little easier.
-> >
-> > Why bother with patch 11 then?
-> 
-> I try to do one-thing-at-a-time. 11 is a fix, 12 is an enhancement. I
-> can squash it if you want?
+On 7 March 2014 12:19, Michal Kazior <michal.kazior@tieto.com> wrote:
+> It doesn't make much sense to have a manually
+> managed chanctx refcount. It isn't performance
+> critical and it can't be even used outside the
+> protection of chanctx_mtx.
+>
+> With future enhancements to channel contenxt
+> (namely reservations) refcount accounting will
+> become more complex and having manually managed
+> refcount is going to be error-prone and confusing.
+>
+> The refcount is now equal to the number of vifs it
+> is assigned to. However in the future this will
+> change so keep the refcount/num_assigned_vifs
+> functions split now.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-I guess it doesn't really matter, I was just wondering why you were
-bothering to fix it up if you're going to remove it :)
+Self-NACK.
 
-johannes
+I totally missed how ieee80211_remove_interfaces() works. It removes
+all interfaces from the list in one go before each is actually
+stopped. This means refcount computes 0. IOW If you unload a driver
+with multiple interfaces running you get a nice general protection
+fault (multiple ieee80211_free_chanctx calls).
 
+I'm planning on adding `struct list_head` to sdata and chanctx to be
+able to iterate over assigned (and reserved, in the future) chanctx.
+What do you think? Do you have other ideas?
+
+
+Michał
