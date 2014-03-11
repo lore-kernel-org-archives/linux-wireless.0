@@ -1,36 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37913 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933380AbaCSOBK (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:51093 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbaCKHU0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:01:10 -0400
-Message-ID: <1395237666.4142.10.camel@jlt4.sipsolutions.net> (sfid-20140319_150116_437256_CD334B93)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non
- modular
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Colleen T <colleen@cozybit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, linux@eikelenboom.it
-Date: Wed, 19 Mar 2014 15:01:06 +0100
-In-Reply-To: <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com> (sfid-20140314_213027_005689_0937166D)
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
-	 <1393852248.10039.5.camel@jlt4.sipsolutions.net>
-	 <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
-	 (sfid-20140314_213027_005689_0937166D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Mar 2014 03:20:26 -0400
+Received: by mail-ob0-f171.google.com with SMTP id wn1so8128007obc.16
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 00:20:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1394468854.24115.3.camel@jlt4.sipsolutions.net>
+References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+	<1394029623-21894-2-git-send-email-michal.kazior@tieto.com>
+	<1394468854.24115.3.camel@jlt4.sipsolutions.net>
+Date: Tue, 11 Mar 2014 08:20:26 +0100
+Message-ID: <CA+BoTQkJd0g7t-ZMC6TDF0FbcAFH_BVRUJUCSq6w9dUz-RqLHw@mail.gmail.com> (sfid-20140311_082043_971014_76FD2379)
+Subject: Re: [PATCH 1/4] mac80211: fix CSA tx queue locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-14 at 13:30 -0700, Colleen T wrote:
-> Hi guys,
-> 
-> This commit -- 5a970df8990d173e7e4092952f2e3da1de69b27d -- is causing
-> a regression on mac80211-next/master in our mesh test framework on
-> qemu.  We are using cfg80211 as a module.
+On 10 March 2014 17:27, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-03-05 at 15:27 +0100, Michal Kazior wrote:
+>
+>> +void ieee80211_recalc_csa_block_tx(struct ieee80211_local *local)
+>> +{
+>> +     lockdep_assert_held(&local->mtx);
+>> +
+>> +     if (ieee80211_csa_needs_block_tx(local))
+>> +             ieee80211_stop_queues_by_reason(&local->hw,
+>> +                                     IEEE80211_MAX_QUEUE_MAP,
+>> +                                     IEEE80211_QUEUE_STOP_REASON_CSA);
+>> +     else
+>> +             ieee80211_wake_queues_by_reason(&local->hw,
+>> +                                     IEEE80211_MAX_QUEUE_MAP,
+>> +                                     IEEE80211_QUEUE_STOP_REASON_CSA);
+>> +}
+>
+> I don't like this function, even if technically stop is idempotent, it
+> still seems strange to call this "recalc".
+>
+>> @@ -1092,7 +1131,11 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+>>       old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
+>>
+>>       /* abort any running channel switch */
+>> +     mutex_lock(&local->mtx);
+>>       sdata->vif.csa_active = false;
+>> +     ieee80211_recalc_csa_block_tx(local);
+>> +     mutex_unlock(&local->mtx);
+>
+> In fact, here you don't care about the stop queues part at all, afaict.
 
-I'm reverting that commit.
+I wanted to make the stop/wake code decision in one place. I
+understand you prefer to have:
 
-johannes
+ if (can_wake)
+  wake()
 
+and
+
+ if (!can_wake)
+  stop()
+
+calls explicitly instead of the "recalc" function?
+
+
+>>       sdata->csa_chandef = params->chandef;
+>> +     sdata->csa_block_tx = params->block_tx;
+>
+> doesn't that more belong to the previous patch?
+
+It belongs here.
+
+CSA tx queue blocking is global. If you want to support multi- CSA
+then you need to keep queues blocked until last CSA that requires tx
+being blocked is completed. To do that you need to store which
+interface CSA requested block_tx.
+
+I should probably include this note in the commit message.
+
+
+Michał
