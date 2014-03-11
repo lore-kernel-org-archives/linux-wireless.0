@@ -1,46 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48888 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754659AbaCNTaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 15:30:14 -0400
-Date: Fri, 14 Mar 2014 15:26:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: fariyaf@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 00/11] rsi: Adding RS9113 wireless driver.
-Message-ID: <20140314192604.GF20339@tuxdriver.com> (sfid-20140314_203021_753716_77D71B63)
-References: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
- <1394823891.5829.14.camel@dcbw.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394823891.5829.14.camel@dcbw.local>
+Received: from mga09.intel.com ([134.134.136.24]:18453 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbaCKOR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 10:17:58 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com,
+	eliad@wizery.com
+Subject: [PATCH v10 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Date: Tue, 11 Mar 2014 16:16:30 +0200
+Message-Id: <1394547394-3910-2-git-send-email-luciano.coelho@intel.com> (sfid-20140311_151801_720414_7F332A5D)
+In-Reply-To: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
+References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 02:04:51PM -0500, Dan Williams wrote:
-> On Mon, 2014-03-10 at 20:56 +0530, fariyaf@gmail.com wrote:
-> > From: Fariya Fatima <fariyaf@gmail.com>
-> > 
-> > This series of patches adds Redpine Signals wireless driver.
-> 
-> Looking much better, good work.
-> 
-> One last comment; there are a couple functions (rsi_device_init,
-> rsi_host_intf_write_pkt) that are defined multiple times, once in the
-> USB code and once in the SDIO code.  These need to be renamed, otherwise
-> you will not be able to load the USB and the SDIO modules at the same
-> time.
-> 
-> I would suggest making all the functions in rsi_usb.h start with
-> "rsi_usb" if they don't already, and have functions in rsi_sdio.h start
-> with "rsi_sdio" if they don't already.
+Separate the code that counts the interface types and channels from
+the code that check the interface combinations.  The new function that
+checks for combinations is exported so it can be called by the
+drivers.
 
-Good thing I haven't pushed yet... :-)
+This is done in preparation for moving the interface combinations
+checks out of cfg80211.
 
-Please make the changes Dan suggests and resubmit...thanks!
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In v4:
 
-John
+   * rebased on top of slightly modified applied patches
+   * removed the parenthesis from the comment (not needed for docbook)
+   * use num[NUM_NL80211_IFTYPES] in cfg80211_check_combinations()
+
+In v7:
+
+   * removed redundant arguments (num_interfaces and used_iftypes)
+     from cfg80211_check_combinations();
+
+In v10:
+
+   * ignore sw_interfaces when counting used_types
+---
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  22 +++++++
+ net/wireless/util.c              | 129 ++++++++++++++++++++++-----------------
+ 3 files changed, 96 insertions(+), 56 deletions(-)
+
+diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
+index 044b764..d9b9416 100644
+--- a/Documentation/DocBook/80211.tmpl
++++ b/Documentation/DocBook/80211.tmpl
+@@ -100,6 +100,7 @@
+ !Finclude/net/cfg80211.h wdev_priv
+ !Finclude/net/cfg80211.h ieee80211_iface_limit
+ !Finclude/net/cfg80211.h ieee80211_iface_combination
++!Finclude/net/cfg80211.h cfg80211_check_combinations
+       </chapter>
+       <chapter>
+       <title>Actions and configuration</title>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ff3af16..768fcc0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4682,6 +4682,28 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
+  */
+ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy);
+ 
++/**
++ * cfg80211_check_combinations - check interface combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ *
++ * This function can be called by the driver to check whether a
++ * combination of interfaces and their types are allowed according to
++ * the interface combinations.
++ */
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES]);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index dadc934..a24448b 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1253,6 +1253,76 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int i, j, iftype;
++	int num_interfaces = 0;
++	u32 used_iftypes = 0;
++
++	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++		num_interfaces += iftype_num[iftype];
++		if (iftype_num[iftype] > 0 &&
++		    !(wiphy->software_iftypes & BIT(iftype)))
++			used_iftypes |= BIT(iftype);
++	}
++
++	for (i = 0; i < wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
++
++		c = &wiphy->iface_combinations[i];
++
++		if (num_interfaces > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
++		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
++				 GFP_KERNEL);
++		if (!limits)
++			return -ENOMEM;
++
++		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
++			if (wiphy->software_iftypes & BIT(iftype))
++				continue;
++			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
++				if (!(limits[j].types & BIT(iftype)))
++					continue;
++				if (limits[j].max < iftype_num[iftype])
++					goto cont;
++				limits[j].max -= iftype_num[iftype];
++			}
++		}
++
++		if (radar_detect && !(c->radar_detect_widths & radar_detect))
++			goto cont;
++
++		/* Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/* This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
++		kfree(limits);
++		return 0;
++ cont:
++		kfree(limits);
++	}
++
++	return -EBUSY;
++}
++EXPORT_SYMBOL(cfg80211_check_combinations);
++
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+ 				 enum nl80211_iftype iftype,
+@@ -1261,7 +1331,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 u8 radar_detect)
+ {
+ 	struct wireless_dev *wdev_iter;
+-	u32 used_iftypes = BIT(iftype);
+ 	int num[NUM_NL80211_IFTYPES];
+ 	struct ieee80211_channel
+ 			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
+@@ -1269,7 +1338,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	enum cfg80211_chan_mode chmode;
+ 	int num_different_channels = 0;
+ 	int total = 1;
+-	int i, j;
++	int i;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1354,65 +1423,13 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 
+ 		num[wdev_iter->iftype]++;
+ 		total++;
+-		used_iftypes |= BIT(wdev_iter->iftype);
+ 	}
+ 
+ 	if (total == 1 && !radar_detect)
+ 		return 0;
+ 
+-	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+-		const struct ieee80211_iface_combination *c;
+-		struct ieee80211_iface_limit *limits;
+-		u32 all_iftypes = 0;
+-
+-		c = &rdev->wiphy.iface_combinations[i];
+-
+-		if (total > c->max_interfaces)
+-			continue;
+-		if (num_different_channels > c->num_different_channels)
+-			continue;
+-
+-		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+-				 GFP_KERNEL);
+-		if (!limits)
+-			return -ENOMEM;
+-
+-		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-				continue;
+-			for (j = 0; j < c->n_limits; j++) {
+-				all_iftypes |= limits[j].types;
+-				if (!(limits[j].types & BIT(iftype)))
+-					continue;
+-				if (limits[j].max < num[iftype])
+-					goto cont;
+-				limits[j].max -= num[iftype];
+-			}
+-		}
+-
+-		if (radar_detect && !(c->radar_detect_widths & radar_detect))
+-			goto cont;
+-
+-		/*
+-		 * Finally check that all iftypes that we're currently
+-		 * using are actually part of this combination. If they
+-		 * aren't then we can't use this combination and have
+-		 * to continue to the next.
+-		 */
+-		if ((all_iftypes & used_iftypes) != used_iftypes)
+-			goto cont;
+-
+-		/*
+-		 * This combination covered all interface types and
+-		 * supported the requested numbers, so we're good.
+-		 */
+-		kfree(limits);
+-		return 0;
+- cont:
+-		kfree(limits);
+-	}
+-
+-	return -EBUSY;
++	return cfg80211_check_combinations(&rdev->wiphy, num_different_channels,
++					   radar_detect, num);
+ }
+ 
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.0
+
