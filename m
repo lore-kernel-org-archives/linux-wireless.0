@@ -1,114 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:57715 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756178AbaCROqW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56385 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754649AbaCKKAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:22 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so5344741eek.25
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:21 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/35] iwlwifi: add rs_rate_scale_clear_tbl_windows helper function
-Date: Tue, 18 Mar 2014 16:45:25 +0200
-Message-Id: <1395153939-23897-21-git-send-email-egrumbach@gmail.com> (sfid-20140318_154636_474210_27DACDBF)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Tue, 11 Mar 2014 06:00:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 05/14] ath10k: introduce ieee80211_rx_status to htt_rx_info
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1393937548-7482-6-git-send-email-janusz.dziedzic@tieto.com>
+Date: Tue, 11 Mar 2014 11:59:55 +0200
+In-Reply-To: <1393937548-7482-6-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Tue, 4 Mar 2014 13:52:18 +0100")
+Message-ID: <87eh29hx7o.fsf@kamboji.qca.qualcomm.com> (sfid-20140311_110051_959375_B2AEBABF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-instead of duplicating the same loop multiple times,
-use a new function for it.
+> Will be used as a template, and final storage for
+> rx_status.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-this will be later used also for clearing other
-windows in the table.
+I think this patch is too small. It's good to have small atomic commits
+but I think goes overboard.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+> @@ -1174,6 +1175,7 @@ struct htt_peer_unmap_event {
+>  
+>  struct htt_rx_info {
+>  	struct sk_buff *skb;
+> +	struct ieee80211_rx_status rx_status;
+>  	enum htt_rx_mpdu_status status;
+>  	enum htt_rx_mpdu_encrypt_type encrypt_type;
+>  	s8 signal;
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index 3008a1d..2fca1fa 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -756,7 +756,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
+>  
+>  	status = IEEE80211_SKB_RXCB(info->skb);
+> -	memset(status, 0, sizeof(*status));
+> +	memcpy(status, &info->rx_status, sizeof(*status));
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 953c33f..568abd6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -503,6 +503,14 @@ static void rs_rate_scale_clear_window(struct iwl_rate_scale_data *window)
- 	window->average_tpt = IWL_INVALID_VALUE;
- }
- 
-+static void rs_rate_scale_clear_tbl_windows(struct iwl_scale_tbl_info *tbl)
-+{
-+	int i;
-+
-+	for (i = 0; i < IWL_RATE_COUNT; i++)
-+		rs_rate_scale_clear_window(&tbl->win[i]);
-+}
-+
- static inline u8 rs_is_valid_ant(u8 valid_antenna, u8 ant_type)
- {
- 	return (ant_type & valid_antenna) == ant_type;
-@@ -1370,7 +1378,6 @@ static u32 rs_bw_from_sta_bw(struct ieee80211_sta *sta)
- static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
- {
- 	struct iwl_scale_tbl_info *tbl;
--	int i;
- 	int active_tbl;
- 	int flush_interval_passed = 0;
- 	struct iwl_mvm *mvm;
-@@ -1431,9 +1438,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
- 
- 				IWL_DEBUG_RATE(mvm,
- 					       "LQ: stay in table clear win\n");
--				for (i = 0; i < IWL_RATE_COUNT; i++)
--					rs_rate_scale_clear_window(
--						&(tbl->win[i]));
-+				rs_rate_scale_clear_tbl_windows(tbl);
- 			}
- 		}
- 
-@@ -1442,8 +1447,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
- 		 * "search" table). */
- 		if (lq_sta->rs_state == RS_STATE_SEARCH_CYCLE_STARTED) {
- 			IWL_DEBUG_RATE(mvm, "Clearing up window stats\n");
--			for (i = 0; i < IWL_RATE_COUNT; i++)
--				rs_rate_scale_clear_window(&(tbl->win[i]));
-+			rs_rate_scale_clear_tbl_windows(tbl);
- 		}
- 	}
- }
-@@ -1733,7 +1737,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	int low = IWL_RATE_INVALID;
- 	int high = IWL_RATE_INVALID;
- 	int index;
--	int i;
- 	struct iwl_rate_scale_data *window = NULL;
- 	int current_tpt = IWL_INVALID_VALUE;
- 	int low_tpt = IWL_INVALID_VALUE;
-@@ -2018,8 +2021,7 @@ lq_update:
- 		if (lq_sta->search_better_tbl) {
- 			/* Access the "search" table, clear its history. */
- 			tbl = &(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
--			for (i = 0; i < IWL_RATE_COUNT; i++)
--				rs_rate_scale_clear_window(&(tbl->win[i]));
-+			rs_rate_scale_clear_tbl_windows(tbl);
- 
- 			/* Use new "search" start rate */
- 			index = tbl->rate.index;
-@@ -2340,8 +2342,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	lq_sta->lq.sta_id = sta_priv->sta_id;
- 
- 	for (j = 0; j < LQ_SIZE; j++)
--		for (i = 0; i < IWL_RATE_COUNT; i++)
--			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
-+		rs_rate_scale_clear_tbl_windows(&lq_sta->lq_info[j]);
- 
- 	lq_sta->flush_timer = 0;
- 
+So you are idea with the status template is that instead clearing
+status, you copy it from the previous frame and reuse it? Why do you
+want to do it? Performance reasons?
+
+I didn't fully understand your idea here, but I assume patch 9 is
+related as I see that you change the CRC flag handling from this:
+
+-	if (info->fcs_err)
+-		status->flag |= RX_FLAG_FAILED_FCS_CRC;
+
+to this:
+
++			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
++			if (fcs_err)
++				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
++			else
++				info.rx_status.flag &= ~RX_FLAG_FAILED_FCS_CRC;
+
+I don't really like that clearing the flag part. Can you describe what
+is your plan behind this template?
+
 -- 
-1.8.3.2
-
+Kalle Valo
