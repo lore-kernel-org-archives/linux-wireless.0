@@ -1,49 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:45630 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753981AbaCUO6p convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 10:58:45 -0400
-Received: by mail-oa0-f43.google.com with SMTP id eb12so2646540oac.16
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 07:58:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1395411440.4164.15.camel@jlt4.sipsolutions.net>
-References: <1395410520-26939-1-git-send-email-michal.kazior@tieto.com>
-	<1395411440.4164.15.camel@jlt4.sipsolutions.net>
-Date: Fri, 21 Mar 2014 15:58:44 +0100
-Message-ID: <CA+BoTQk5RiFPjDGMSwFHd6GGt=x9M6QXGZcdENtMjQrDcORicg@mail.gmail.com> (sfid-20140321_155849_300912_43F8C9F9)
-Subject: Re: [PATCH] ath10k: dont call csa_finish more than once
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from coelho.fi ([88.198.205.34]:60394 "EHLO dedo"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751986AbaCKNJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Mar 2014 09:09:15 -0400
+Message-ID: <1394543344.19973.8.camel@dubbel> (sfid-20140311_140921_879005_DF01930C)
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>, sw@simonwunderlich.de,
+	andrei.otcheretianski@intel.com
+Date: Tue, 11 Mar 2014 15:09:04 +0200
+In-Reply-To: <CAB3XZEdhLOOT+6CYcqCMRBDBE66-EuXXkMiSLZmvedo+iZEZaA@mail.gmail.com>
+References: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
+	 <1394487103-13027-2-git-send-email-luciano.coelho@intel.com>
+	 <CAB3XZEdhLOOT+6CYcqCMRBDBE66-EuXXkMiSLZmvedo+iZEZaA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v9 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 March 2014 15:17, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2014-03-21 at 15:02 +0100, Michal Kazior wrote:
->> Driver is supposed to call it only once for each
->> scheduled channel_switch_beacon().
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->> This is required for multi-vif csa but since that
->> isn't merged yet I'm not including any specifics
->> in the commit log itself.
->>
->> Preventing multiple ieee80211_csa_finish() calls
->> sounds like a good idea in general to me.
->
-> Didn't we have this discussion on the hwsim patch before?
+On Tue, 2014-03-11 at 12:40 +0200, Eliad Peller wrote:
+> On Mon, Mar 10, 2014 at 11:31 PM, Luciano Coelho
+> <luciano.coelho@intel.com> wrote:
+> > Separate the code that counts the interface types and channels from
+> > the code that check the interface combinations.  The new function that
+> > checks for combinations is exported so it can be called by the
+> > drivers.
+> >
+> > This is done in preparation for moving the interface combinations
+> > checks out of cfg80211.
+> >
+> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> > ---
+> [...]
+> 
+> > +int cfg80211_check_combinations(struct wiphy *wiphy,
+> > +                               const int num_different_channels,
+> > +                               const u8 radar_detect,
+> > +                               const int iftype_num[NUM_NL80211_IFTYPES])
+> > +{
+> > +       int i, j, iftype;
+> > +       int num_interfaces = 0;
+> > +       u32 used_iftypes = 0;
+> > +
+> > +       for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+> > +               num_interfaces += iftype_num[iftype];
+> > +               if (iftype_num[iftype] > 0)
+> > +                       used_iftypes |= BIT(iftype);
+> > +       }
+> > +
+> [...]
+> 
+> > +
+> > +               for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+> > +                       if (wiphy->software_iftypes & BIT(iftype))
+> > +                               continue;
+> > +                       for (j = 0; j < c->n_limits; j++) {
+> > +                               all_iftypes |= limits[j].types;
+> > +                               if (!(limits[j].types & BIT(iftype)))
+> > +                                       continue;
+> > +                               if (limits[j].max < iftype_num[iftype])
+> > +                                       goto cont;
+> > +                               limits[j].max -= iftype_num[iftype];
+> > +                       }
+> > +               }
+> > +
+> > +               if (radar_detect && !(c->radar_detect_widths & radar_detect))
+> > +                       goto cont;
+> > +
+> > +               /* Finally check that all iftypes that we're currently
+> > +                * using are actually part of this combination. If they
+> > +                * aren't then we can't use this combination and have
+> > +                * to continue to the next.
+> > +                */
+> > +               if ((all_iftypes & used_iftypes) != used_iftypes)
+> > +                       goto cont;
+> > +
+> if software_iftypes will be passed to this function, this check will
+> fail (as they exist only in used_iftypes).
 
-Oh. I'm not aware of the discussion. Probably missed it.
+Good point, I guess I should skip SW interface types in the iterator
+where I mark the user interfaces above...
 
+--
+Luca.
 
-> I'd argue that if all drivers must track this, then the mac80211 API is
-> defective.
-
-I can make this a mac80211 patch then?
-
-
-Michał
