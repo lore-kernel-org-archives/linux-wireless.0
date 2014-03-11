@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51371 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753787AbaCMRaN (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:50684 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbaCKEBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 13:30:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtl8821ae: fixup staging driver for revised ieee80211_is_robust_mgmt_frame
-Date: Thu, 13 Mar 2014 13:16:52 -0400
-Message-Id: <1394731012-20493-1-git-send-email-linville@tuxdriver.com> (sfid-20140313_183019_223875_65027107)
+	Tue, 11 Mar 2014 00:01:16 -0400
+From: "Zhao\, Gang" <gamerh2o@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: wireless: Kconfig: add missing dependency for airo_cs
+References: <1398887.G3HYkOfaVN@wuerfel>
+Date: Tue, 11 Mar 2014 12:01:04 +0800
+In-Reply-To: <1398887.G3HYkOfaVN@wuerfel> (Arnd Bergmann's message of "Mon, 10
+	Mar 2014 15:05:25 +0100")
+Message-ID: <87pplt9yf3.fsf@will.lan> (sfid-20140311_050140_777496_27F24A62)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit d8ca16db6bb2 ("mac80211: add length check in
-ieee80211_is_robust_mgmt_frame()" changed that API to take an skb,
-and added "_ieee80211_is_robust_mgmt_frame" as a direct replacement
-for the older API.  This is the same fix that was applied to the other
-rtlwifi drivers in that commit.
+On Mon, 2014-03-10 at 22:05:25 +0800, Arnd Bergmann wrote:
+> commit 4c59ff221e070 "wireless: Kconfig: add missing dependency" added a number
+> of 'depends on CFG80211' statements, but missed the AIRO_CS driver that
+> also causes the airo.c file to be built. This adds the (hopefully) last
+> such missing statement
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/staging/rtl8821ae/rtl8821ae/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for the catch.
 
-diff --git a/drivers/staging/rtl8821ae/rtl8821ae/trx.c b/drivers/staging/rtl8821ae/rtl8821ae/trx.c
-index 75ae4387fe19..963b55f661c8 100644
---- a/drivers/staging/rtl8821ae/rtl8821ae/trx.c
-+++ b/drivers/staging/rtl8821ae/rtl8821ae/trx.c
-@@ -616,7 +616,7 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 				return false;
- 		}
- 
--		if ((ieee80211_is_robust_mgmt_frame(hdr)) &&
-+		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 			(ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
- 		else
--- 
-1.8.5.3
+minor issue: commit log should be 'fails to be built'.
 
+>     
+> Cc: "Zhao, Gang" <gamerh2o@gmail.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index d1fab43..9c2c285 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -116,7 +116,7 @@ config AT76C50X_USB
+>  
+>  config AIRO_CS
+>  	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+> -	depends on PCMCIA && (BROKEN || !M32R)
+> +	depends on CFG80211 && PCMCIA && (BROKEN || !M32R)
+>  	select WIRELESS_EXT
+>  	select WEXT_SPY
+>  	select WEXT_PRIV
