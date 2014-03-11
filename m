@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31144 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbaCYL7S (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:48509 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718AbaCKNdF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 07:59:18 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4 v2] ath10k:  add debugging for tx-credits usage
-References: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
-Date: Tue, 25 Mar 2014 13:59:12 +0200
-In-Reply-To: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Mon, 24 Mar 2014 12:20:40
-	-0700")
-Message-ID: <87y4zy1obz.fsf@kamboji.qca.qualcomm.com> (sfid-20140325_125938_989616_507850C5)
+	Tue, 11 Mar 2014 09:33:05 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wm4so8455436obc.31
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 06:33:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1394543770.30155.4.camel@jlt4.sipsolutions.net>
+References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
+	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQkke050EMs0Nnz3O3XM6U2uRRVrxffVdwKJrWua+iapFw@mail.gmail.com>
+	<1394543770.30155.4.camel@jlt4.sipsolutions.net>
+Date: Tue, 11 Mar 2014 14:33:04 +0100
+Message-ID: <CA+BoTQnnWfNxeo6rtATU8qgj=dk9Kkx36GVewDr7p8OVFfcxNA@mail.gmail.com> (sfid-20140311_143310_551237_6A438BFE)
+Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
-
-> From: Ben Greear <greearb@candelatech.com>
+On 11 March 2014 14:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-03-11 at 08:46 +0100, Michal Kazior wrote:
 >
-> This helps track tx credits accounting and usage.  If
-> firmware hangs or otherwise fails to return credits, one
-> can more easily see the last few command types that
-> was sent to the firmware.
+>> Self-NACK.
 >
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
+> Heh.
 >
-> v2:  Improve comments.  Issue of using __LINE__ is not resolved.
+>> I totally missed how ieee80211_remove_interfaces() works. It removes
+>> all interfaces from the list in one go before each is actually
+>> stopped. This means refcount computes 0. IOW If you unload a driver
+>> with multiple interfaces running you get a nice general protection
+>> fault (multiple ieee80211_free_chanctx calls).
+>
+> Ok, that seems like a problem :)
+>
+>> I'm planning on adding `struct list_head` to sdata and chanctx to be
+>> able to iterate over assigned (and reserved, in the future) chanctx.
+>> What do you think? Do you have other ideas?
+>
+> I guess that seems reasonable - not sure why you'd want the reserved
+> one? Some of the maintenance there might be tricky?
 
-I'm going to drop this patch 1 for now, I'm not really fond of the idea
-using line numbers in debug messages. Hopefully we find an alternative
-solution, like what Michal proposed.
+For multi-vif we need to be able to track list of interfaces that have
+a reservation. This is needed for example for chandef calculation
+(e.g. to see if you can start a new vif on given chanctx that is part
+of a reservation already, etc).
 
--- 
-Kalle Valo
+It's also necessary so you can synchronize CSA across interfaces with
+the chanctx reservation that happen "in place" when you're out of
+max_num_different_channels. In that case you must unassign all
+interfaces, free chanctx, create new chanctx, and then assign the
+reservation interfaces.
+
+Actually I think there's also one thing that might benefit from
+chanctx-vif list tracking: ieee80211_recalc_chanctx_chantype(). It
+seems to complain with WARN_ON splat when I reload driver when more
+than 1 vif is running because it doesn't find a non-NULL `compat`
+chandef (rightfully so as local->interfaces is empty at that point due
+to ieee80211_remove_interfaces).
+
+
+Michał
