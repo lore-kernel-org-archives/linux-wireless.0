@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44568 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755325AbaCNSaU (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:43798 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbaCKLuv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 14:30:20 -0400
-Date: Fri, 14 Mar 2014 14:28:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20140311
-Message-ID: <20140314182749.GB20339@tuxdriver.com> (sfid-20140314_193039_382208_E068FB8F)
-References: <87y50hgghr.fsf@kamboji.qca.qualcomm.com>
+	Tue, 11 Mar 2014 07:50:51 -0400
+Received: by mail-we0-f170.google.com with SMTP id w61so9937404wes.29
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 04:50:50 -0700 (PDT)
+Message-ID: <531EF845.2050609@gmail.com> (sfid-20140311_125054_733023_5CF85CD9)
+Date: Tue, 11 Mar 2014 13:49:25 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y50hgghr.fsf@kamboji.qca.qualcomm.com>
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2014-03-11
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 12:46:24PM +0200, Kalle Valo wrote:
-> Hi John,
-> 
-> here's a new pull request from me, but just ath10k patches this time.
-> Summary of the changes:
-> 
-> Michal now did some optimisations and was able to improve throughput by
-> 100 Mbps on our MIPS based AP135 platform. Chun-Yeow added some
-> workarounds to be able to better use ad-hoc mode. Ben improved log
-> messages and added support for MSDU chaining. And, as usual, also some
-> smaller fixes.
-> 
-> Please let me know if there are any problems.
-> 
-> Kalle
-> 
-> The following changes since commit ef1b4141d0430583743a6045901e4d1a73557a33:
-> 
->   ath5k: set SURVEY_INFO_IN_USE on get_survey (2014-02-24 15:38:39 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath.git for-linville
-> 
-> for you to fetch changes up to 70dd77b4c50da518b57b8b9b125a8c9aabe9bc1a:
-> 
->   ath10k: do not overwrite max_antenna_gain (2014-03-07 10:14:10 +0200)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Pulling now...
+Hi John,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+One more bugfix - this bug has been there forever, so it might not be all=
+ that much important. Your call.
+
+We were sending a host command while the mutex wasn't held. This led to h=
+ard-to-catch races.
+
+Please pull - thanks.
+
+
+The following changes since commit acfcd9ed588465e48efe5ceb67177096d51c95=
+a9:
+
+  iwlwifi: fix and add 7265 series HW IDs (2014-03-04 19:30:06 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to 82e5a649453a3cf23516277abb84273768a1592b:
+
+  iwlwifi: dvm: take mutex when sending SYNC BT config command (2014-03-1=
+1 13:15:16 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: dvm: take mutex when sending SYNC BT config command
+
+ drivers/net/wireless/iwlwifi/dvm/main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+
+--nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTHvh+AAoJEC0Llv5uNjIBHfwP/353u0D8zlcZGzyOEbN6ORbk
+A8QjWShnPol4GOAPZ9f4WAf7oO8aBfvgZKMUzAaLB5B58FIr5YZ5VgnZvdN6UDSc
+/cQ9fR6oL5kXcGEEmJOW0krp6sOJd/Mpml/Oazk8KQfFBF3pmwf8PbvfDaETkaQP
+pNsdAmr0r4RralDatfyza4wo0BKvU95e6JUj1vag3+hFWmBx78y6H2nu0mCEt8U5
+BvM5TTOHtTTL+D2BZqRZ8ghiOy03TaEQbkzCUAh1A+Sx+b++ILsJ4nw6Y8K6Apim
+5UdCWPJjZGm26VQuTLce20a6+wx6XDYalTYLikH9Sk/z39BPFyKohOvoF5P6/wmJ
+TASJ4SMbrUiBywGQwsjp5c/wdlBycAMhaQo2Dn1Oc1GysMqb8Uss/56BQ9nzI6eD
+B2dn4XvTGyxpf+pi6fravBYYQ9JpKFKHTCsyBsdcrnbEZl/01U3kCSyxuC2mcQh+
+VpLLltUrtlZ8QNRUxgwuGcUWBsQYNamuQRbiXTwwFMbyI0zlax55lX2VoHKN/Lx8
+76Lhs9pMXiJcNqhcrldClvm+msFw2nrj7prAeEJwa8IcD/HqdGNYrSSc5scQW1gZ
+qw7Wu+oxsVfUAJUMjAqLbt01BYUB/SkbwXRpfa8724k8AIZTG7XLP61zp0pXdt0z
+87fV37t7g+NEbBpppubl
+=oGcH
+-----END PGP SIGNATURE-----
+
+--nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G--
