@@ -1,115 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37162 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:58453 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756193AbaCSKJD (ORCPT
+	with ESMTP id S1751950AbaCKNTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 06:09:03 -0400
+	Tue, 11 Mar 2014 09:19:07 -0400
+Message-ID: <1394543945.30155.6.camel@jlt4.sipsolutions.net> (sfid-20140311_141913_334294_56FB931D)
+Subject: Re: [PATCH 1/4] mac80211: fix CSA tx queue locking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.14] mac80211: fix suspend vs. authentication race
-Date: Wed, 19 Mar 2014 11:08:57 +0100
-Message-Id: <1395223737-1222-1-git-send-email-johannes@sipsolutions.net> (sfid-20140319_110907_570833_96E6381F)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 11 Mar 2014 15:19:05 +0200
+In-Reply-To: <CA+BoTQkJd0g7t-ZMC6TDF0FbcAFH_BVRUJUCSq6w9dUz-RqLHw@mail.gmail.com> (sfid-20140311_082028_411143_93F4EBAF)
+References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+	 <1394029623-21894-2-git-send-email-michal.kazior@tieto.com>
+	 <1394468854.24115.3.camel@jlt4.sipsolutions.net>
+	 <CA+BoTQkJd0g7t-ZMC6TDF0FbcAFH_BVRUJUCSq6w9dUz-RqLHw@mail.gmail.com>
+	 (sfid-20140311_082028_411143_93F4EBAF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2014-03-11 at 08:20 +0100, Michal Kazior wrote:
 
-Since Stanislaw's patch removing the quiescing code, mac80211 had
-a race regarding suspend vs. authentication: as cfg80211 doesn't
-track authentication attempts, it can't abort them. Therefore the
-attempts may be kept running while suspending, which can lead to
-all kinds of issues, in at least some cases causing an error in
-iwlmvm firmware.
+> > I don't like this function, even if technically stop is idempotent, it
+> > still seems strange to call this "recalc".
 
-Fix this by aborting the authentication attempt when suspending.
+> I wanted to make the stop/wake code decision in one place. I
+> understand you prefer to have:
+> 
+>  if (can_wake)
+>   wake()
+> 
+> and
+> 
+>  if (!can_wake)
+>   stop()
+> 
+> calls explicitly instead of the "recalc" function?
 
-Cc: stable@vger.kernel.org
-Fixes: 12e7f517029d ("mac80211: cleanup generic suspend/resume procedures")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 28 ++++++++++++++++++++++++++++
- net/mac80211/pm.c          | 14 +++++++++++---
- 3 files changed, 40 insertions(+), 3 deletions(-)
+Yes, I think that would be easier to understand? With the "recalc" you
+have to understand that it's idempotent.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8603dfb52b3a..562cedde0ada 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1391,6 +1391,7 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mgd_conn_tx_status(struct ieee80211_sub_if_data *sdata,
- 				  __le16 fc, bool acked);
-+void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
- 
- /* IBSS code */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5ade21eb3602..a6fec72d5567 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3576,6 +3576,34 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
- }
- 
- #ifdef CONFIG_PM
-+void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+
-+	sdata_lock(sdata);
-+
-+	if (ifmgd->auth_data) {
-+		/*
-+		 * If we are trying to authenticate while suspending, cfg80211
-+		 * won't know and won't actually abort those attempts, thus we
-+		 * need to do that ourselves.
-+		 */
-+
-+		drv_mgd_prepare_tx(sdata->local, sdata);
-+		ieee80211_send_deauth_disassoc(sdata,
-+					       ifmgd->auth_data->bss->bssid,
-+					       IEEE80211_STYPE_DEAUTH,
-+					       WLAN_REASON_DEAUTH_LEAVING,
-+					       false, frame_buf);
-+		ieee80211_destroy_auth_data(sdata, false);
-+		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
-+				      IEEE80211_DEAUTH_FRAME_LEN);
-+	}
-+
-+	sdata_unlock(sdata);
-+}
-+
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index af64fb8e8add..d478b880a0af 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -100,10 +100,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	/* remove all interfaces that were created in the driver */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata) ||
--		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
--		    sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+		if (!ieee80211_sdata_running(sdata))
- 			continue;
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_MONITOR:
-+			continue;
-+		case NL80211_IFTYPE_STATION:
-+			ieee80211_mgd_quiesce(sdata);
-+			break;
-+		default:
-+			break;
-+		}
- 
- 		drv_remove_interface(local, sdata);
- 	}
--- 
-1.8.5.3
+> >>       sdata->csa_chandef = params->chandef;
+> >> +     sdata->csa_block_tx = params->block_tx;
+> >
+> > doesn't that more belong to the previous patch?
+> 
+> It belongs here.
+> 
+> CSA tx queue blocking is global. If you want to support multi- CSA
+> then you need to keep queues blocked until last CSA that requires tx
+> being blocked is completed. To do that you need to store which
+> interface CSA requested block_tx.
+> 
+> I should probably include this note in the commit message.
+
+Ok :)
+
+johannes
 
