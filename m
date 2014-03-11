@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:52759 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303AbaCQWGU (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:35274 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753831AbaCKLxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 18:06:20 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x13so5115416wgg.26
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 15:06:19 -0700 (PDT)
-Message-ID: <532771CF.5050407@gmail.com> (sfid-20140317_230627_731516_6C832366)
-Date: Mon, 17 Mar 2014 22:06:07 +0000
-From: Malcolm Priestley <tvboxspy@gmail.com>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: vt6656: [BUG] Fix Warning BOGUS urb xfer, pipe
- 3 != type 1
-References: <1394973251-3055-1-git-send-email-tvboxspy@gmail.com> <20140317215008.GB22663@kroah.com>
-In-Reply-To: <20140317215008.GB22663@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 11 Mar 2014 07:53:41 -0400
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] iwlwifi: dvm: take mutex when sending SYNC BT config command
+Date: Tue, 11 Mar 2014 13:53:36 +0200
+Message-Id: <1394538816-21460-1-git-send-email-egrumbach@gmail.com> (sfid-20140311_125345_493991_88B9CD4C)
+In-Reply-To: <531EF845.2050609@gmail.com>
+References: <531EF845.2050609@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17/03/14 21:50, Greg KH wrote:
-> On Sun, Mar 16, 2014 at 12:34:11PM +0000, Malcolm Priestley wrote:
->> Stable kernels will need patches
->> staging: vt6656: s_nsInterruptUsbIoCompleteRead remove usb_fill_bulk_urb
->> staging: vt6656: PIPEnsInterruptRead use usb_fill_int_urb
->>
->> and a backported version of this patch.
->
-> So can you send those backported patches to the stable list when this
-> patch hits Linus's tree?
-Yes will do.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+There is a flow in which we send the host command in SYNC
+mode, but we don't take priv->mutex.
 
-Malcolm
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=1046495
+
+Cc: <stable@vger.kernel.org>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index ba1b1ea..ea7e70c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -252,13 +252,17 @@ static void iwl_bg_bt_runtime_config(struct work_struct *work)
+ 	struct iwl_priv *priv =
+ 		container_of(work, struct iwl_priv, bt_runtime_config);
+ 
++	mutex_lock(&priv->mutex);
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
++		goto out;
+ 
+ 	/* dont send host command if rf-kill is on */
+ 	if (!iwl_is_ready_rf(priv))
+-		return;
++		goto out;
++
+ 	iwlagn_send_advance_bt_config(priv);
++out:
++	mutex_unlock(&priv->mutex);
+ }
+ 
+ static void iwl_bg_bt_full_concurrency(struct work_struct *work)
+-- 
+1.8.3.2
+
