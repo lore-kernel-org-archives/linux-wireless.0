@@ -1,65 +1,317 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:50755 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbaCHUmu (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57019 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753414AbaCKPPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 15:42:50 -0500
-Received: by mail-pb0-f41.google.com with SMTP id jt11so5648707pbb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Mar 2014 12:42:48 -0800 (PST)
-Message-ID: <531B80C5.7010408@converseincode.com> (sfid-20140308_214314_965328_EFEDC716)
-Date: Sat, 08 Mar 2014 12:42:45 -0800
-From: Behan Webster <behanw@converseincode.com>
-MIME-Version: 1.0
-To: Sergei Antonov <saproj@gmail.com>
-CC: linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dwmw2@infradead.org, pageexec@freemail.hu,
-	=?UTF-8?B?SmFuLVNpbW9uIE3Dtmxs?= =?UTF-8?B?ZXI=?= <dl9pf@gmx.de>,
-	=?UTF-8?B?Vmluw61jaXVzIFRpbnRp?= <viniciustinti@gmail.com>,
-	Mark Charlebois <charlebm@gmail.com>
-Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>	<1394241960-1764-1-git-send-email-behanw@converseincode.com> <CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com>
-In-Reply-To: <CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 11 Mar 2014 11:15:18 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 1/3] mac80211: move flag IEEE80211_TX_CTL_FIRST_FRAGMENT into info->control.flags
+Date: Tue, 11 Mar 2014 16:15:00 +0100
+Message-Id: <1394550902-1228-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140311_161531_994222_C4CE51FF)
+In-Reply-To: <1394550902-1228-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1394550902-1228-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/14 12:29, Sergei Antonov wrote:
-> On 8 March 2014 02:26,  <behanw@converseincode.com> wrote:
->> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
->> index 7c7df47..3317578 100644
->> --- a/net/mac80211/aes_ccm.c
->> +++ b/net/mac80211/aes_ccm.c
->> @@ -23,12 +23,14 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
->>                                 u8 *data, size_t data_len, u8 *mic)
->>   {
->>          struct scatterlist assoc, pt, ct[2];
->> -       struct {
->> -               struct aead_request     req;
->> -               u8                      priv[crypto_aead_reqsize(tfm)];
->> -       } aead_req;
->>
->> -       memset(&aead_req, 0, sizeof(aead_req));
->> +       char aead_req_data[sizeof(struct aead_request) +
->> +                               crypto_aead_reqsize(tfm) +
->> +                               CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
->> +
->> +       struct aead_request *aead_req = (void *) aead_req_data;
-> Bad trick with regards to alignment.
-> The alignment requirement for struct aead_request is stronger than
-> what an array of chars may have.
-Damn it. I should have seen that too. We had to do that in our related 
-netfilter patch.
+Flag IEEE80211_TX_CTL_FIRST_FRAGMENT is only used within the tx path while
+ieee80211_tx_info->control is valid. Therefore this patch moves this flag
+from info->flags structure into the info->control.flags and renames it to
+IEEE80211_TX_CTRL_FIRST_FRAGMENT.
 
-Good catch. Will fix.
+Signed-off-by: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ drivers/net/wireless/ath/ath10k/mac.h          |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c          |    2 +-
+ drivers/net/wireless/b43/xmit.c                |    2 +-
+ drivers/net/wireless/b43legacy/xmit.c          |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c      |    6 +--
+ drivers/net/wireless/rtl818x/rtl8180/dev.c     |    2 +-
+ drivers/net/wireless/rtl818x/rtl8187/dev.c     |    2 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c         |    2 +-
+ include/net/mac80211.h                         |   62 ++++++++++++------------
+ net/mac80211/tx.c                              |   10 ++--
+ 11 files changed, 47 insertions(+), 47 deletions(-)
 
-Thanks,
-
-Behan
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index ba10219..b9110a6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -54,7 +54,7 @@ static inline void ath10k_tx_h_seq_no(struct sk_buff *skb)
+ 		if (arvif->tx_seq_no == 0)
+ 			arvif->tx_seq_no = 0x1000;
+ 
+-		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++		if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 			arvif->tx_seq_no += 0x10;
+ 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		hdr->seq_ctrl |= cpu_to_le16(arvif->tx_seq_no);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a650704..a2312fe 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2122,7 +2122,7 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 * BSSes.
+ 	 */
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++		if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 			sc->tx.seq_no += 0x10;
+ 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 218a0f3..8992749 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -406,7 +406,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+ 	/* use hardware sequence counter as the non-TID counter */
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
+ 		mac_ctl |= B43_TXH_MAC_HWSEQ;
+-	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++	if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 		mac_ctl |= B43_TXH_MAC_STMSDU;
+ 	if (phy->type == B43_PHYTYPE_A)
+ 		mac_ctl |= B43_TXH_MAC_5GHZ;
+diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
+index 86588c9..cf41bf0 100644
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -285,7 +285,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+ 		mac_ctl |= B43legacy_TX4_MAC_ACK;
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
+ 		mac_ctl |= B43legacy_TX4_MAC_HWSEQ;
+-	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++	if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 		mac_ctl |= B43legacy_TX4_MAC_STMSDU;
+ 	if (rate_fb_ofdm)
+ 		mac_ctl |= B43legacy_TX4_MAC_FALLBACKOFDM;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 9417cb5..81a294b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -6325,7 +6325,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 			frameid = bcmc_fid_generate(wlc, NULL, txh);
+ 		} else {
+ 			/* Increment the counter for first fragment */
+-			if (tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++			if (tx_info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 				scb->seqnum[p->priority]++;
+ 
+ 			/* extract fragment number from frame first */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 5642ccc..1ab263e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -362,7 +362,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	if (test_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags)) {
+-		if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
++		if (!(tx_info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT))
+ 			txdesc->u.ht.txop = TXOP_SIFS;
+ 		else
+ 			txdesc->u.ht.txop = TXOP_BACKOFF;
+@@ -409,7 +409,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 	if (ieee80211_is_mgmt(hdr->frame_control) &&
+ 	    !ieee80211_is_beacon(hdr->frame_control))
+ 		txdesc->u.ht.txop = TXOP_BACKOFF;
+-	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
++	else if (!(tx_info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT))
+ 		txdesc->u.ht.txop = TXOP_SIFS;
+ 	else
+ 		txdesc->u.ht.txop = TXOP_HTTXOP;
+@@ -484,7 +484,7 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
+ 	    ieee80211_is_probe_resp(hdr->frame_control))
+ 		__set_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags);
+ 
+-	if ((tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT) &&
++	if ((tx_info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT) &&
+ 	    !test_bit(ENTRY_TXD_RTS_FRAME, &txdesc->flags))
+ 		__set_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags);
+ 
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 7980ab1..ed4b180 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -319,7 +319,7 @@ static void rtl8180_tx(struct ieee80211_hw *dev,
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++		if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 			priv->seqno += 0x10;
+ 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+index c981bcf..65feb19 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -264,7 +264,7 @@ static void rtl8187_tx(struct ieee80211_hw *dev,
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++		if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 			priv->seqno += 0x10;
+ 		tx_hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		tx_hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index e7af261..14e2369 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -666,7 +666,7 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
+ 	cs->control = 0;
+ 
+ 	/* First fragment */
+-	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++	if (info->control.flags & IEEE80211_TX_CTRL_FIRST_FRAGMENT)
+ 		cs->control |= ZD_CS_NEED_RANDOM_BACKOFF;
+ 
+ 	/* No ACK expected (multicast, etc.) */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 86faa41..33710ee 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -394,7 +394,6 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_CTL_NO_ACK: tell the low level not to wait for an ack
+  * @IEEE80211_TX_CTL_CLEAR_PS_FILT: clear powersave filter for destination
+  *	station
+- * @IEEE80211_TX_CTL_FIRST_FRAGMENT: this is a first fragment of the frame
+  * @IEEE80211_TX_CTL_SEND_AFTER_DTIM: send this frame after DTIM beacon
+  * @IEEE80211_TX_CTL_AMPDU: this frame should be sent as part of an A-MPDU
+  * @IEEE80211_TX_CTL_INJECTED: Frame was injected, internal to mac80211.
+@@ -476,47 +475,48 @@ enum mac80211_tx_info_flags {
+ 	IEEE80211_TX_CTL_ASSIGN_SEQ		= BIT(1),
+ 	IEEE80211_TX_CTL_NO_ACK			= BIT(2),
+ 	IEEE80211_TX_CTL_CLEAR_PS_FILT		= BIT(3),
+-	IEEE80211_TX_CTL_FIRST_FRAGMENT		= BIT(4),
+-	IEEE80211_TX_CTL_SEND_AFTER_DTIM	= BIT(5),
+-	IEEE80211_TX_CTL_AMPDU			= BIT(6),
+-	IEEE80211_TX_CTL_INJECTED		= BIT(7),
+-	IEEE80211_TX_STAT_TX_FILTERED		= BIT(8),
+-	IEEE80211_TX_STAT_ACK			= BIT(9),
+-	IEEE80211_TX_STAT_AMPDU			= BIT(10),
+-	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
+-	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
+-	IEEE80211_TX_INTFL_OFFCHAN_TX_OK	= BIT(13),
+-	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
+-	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
+-	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+-	IEEE80211_TX_CTL_NO_PS_BUFFER		= BIT(17),
+-	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
+-	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
+-	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(20),
+-	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+-	IEEE80211_TX_CTL_LDPC			= BIT(22),
+-	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
+-	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
+-	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(26),
+-	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(27),
+-	IEEE80211_TX_STATUS_EOSP		= BIT(28),
+-	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
+-	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
+-	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(31),
++	IEEE80211_TX_CTL_SEND_AFTER_DTIM	= BIT(4),
++	IEEE80211_TX_CTL_AMPDU			= BIT(5),
++	IEEE80211_TX_CTL_INJECTED		= BIT(6),
++	IEEE80211_TX_STAT_TX_FILTERED		= BIT(7),
++	IEEE80211_TX_STAT_ACK			= BIT(8),
++	IEEE80211_TX_STAT_AMPDU			= BIT(9),
++	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(10),
++	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(11),
++	IEEE80211_TX_INTFL_OFFCHAN_TX_OK	= BIT(12),
++	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(13),
++	IEEE80211_TX_INTFL_RETRIED		= BIT(14),
++	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(15),
++	IEEE80211_TX_CTL_NO_PS_BUFFER		= BIT(16),
++	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(17),
++	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(18),
++	IEEE80211_TX_INTFL_MLME_CONN_TX		= BIT(19),
++	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(20),
++	IEEE80211_TX_CTL_LDPC			= BIT(21),
++	IEEE80211_TX_CTL_STBC			= BIT(22) | BIT(23),
++	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(24),
++	IEEE80211_TX_INTFL_TKIP_MIC_FAILURE	= BIT(25),
++	IEEE80211_TX_CTL_NO_CCK_RATE		= BIT(26),
++	IEEE80211_TX_STATUS_EOSP		= BIT(27),
++	IEEE80211_TX_CTL_USE_MINRATE		= BIT(28),
++	IEEE80211_TX_CTL_DONTFRAG		= BIT(29),
++	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(30),
+ };
+ 
+-#define IEEE80211_TX_CTL_STBC_SHIFT		23
++#define IEEE80211_TX_CTL_STBC_SHIFT		22
+ 
+ /**
+  * enum mac80211_tx_control_flags - flags to describe transmit control
+  *
+  * @IEEE80211_TX_CTRL_PORT_CTRL_PROTO: this frame is a port control
+  *	protocol frame (e.g. EAP)
++ * @IEEE80211_TX_CTRL_FIRST_FRAGMENT: this is a first fragment of the frame
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
++	IEEE80211_TX_CTRL_FIRST_FRAGMENT        = BIT(1),
+ };
+ 
+ /*
+@@ -524,13 +524,13 @@ enum mac80211_tx_control_flags {
+  * set by the tx handlers for each transmission attempt by the mac80211 stack.
+  */
+ #define IEEE80211_TX_TEMPORARY_FLAGS (IEEE80211_TX_CTL_NO_ACK |		      \
+-	IEEE80211_TX_CTL_CLEAR_PS_FILT | IEEE80211_TX_CTL_FIRST_FRAGMENT |    \
++	IEEE80211_TX_CTL_CLEAR_PS_FILT | IEEE80211_TX_STATUS_EOSP |	      \
+ 	IEEE80211_TX_CTL_SEND_AFTER_DTIM | IEEE80211_TX_CTL_AMPDU |	      \
+ 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
+ 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_NO_PS_BUFFER |    \
+ 	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
+-	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP)
++	IEEE80211_TX_CTL_STBC)
+ 
+ /**
+  * enum mac80211_rate_control_flags - per-rate flags set by the
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 722151f..de1a7da 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -856,8 +856,8 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
+ 		memcpy(tmp->cb, skb->cb, sizeof(tmp->cb));
+ 
+ 		info = IEEE80211_SKB_CB(tmp);
+-		info->flags &= ~(IEEE80211_TX_CTL_CLEAR_PS_FILT |
+-				 IEEE80211_TX_CTL_FIRST_FRAGMENT);
++		info->flags &= ~(IEEE80211_TX_CTL_CLEAR_PS_FILT);
++		info->control.flags &= ~(IEEE80211_TX_CTRL_FIRST_FRAGMENT);
+ 
+ 		if (rem)
+ 			info->flags |= IEEE80211_TX_CTL_MORE_FRAMES;
+@@ -1171,7 +1171,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	else if (test_and_clear_sta_flag(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 
+-	info->flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
++	info->control.flags |= IEEE80211_TX_CTRL_FIRST_FRAGMENT;
+ 
+ 	return TX_CONTINUE;
+ }
+@@ -2643,8 +2643,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	info->control.vif = vif;
+ 
+ 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT |
+-			IEEE80211_TX_CTL_ASSIGN_SEQ |
+-			IEEE80211_TX_CTL_FIRST_FRAGMENT;
++			IEEE80211_TX_CTL_ASSIGN_SEQ;
++	info->control.flags |= IEEE80211_TX_CTRL_FIRST_FRAGMENT;
+  out:
+ 	rcu_read_unlock();
+ 	return skb;
 -- 
-Behan Webster
-behanw@converseincode.com
+1.7.9.5
 
