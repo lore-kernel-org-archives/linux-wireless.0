@@ -1,155 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:45066 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757346AbaCDMxA (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:36326 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292AbaCKLaa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 07:53:00 -0500
-Received: by mail-ee0-f51.google.com with SMTP id c13so2820424eek.10
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:59 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 12/14] ath10k: kill encrypt_type from htt_rx_info
-Date: Tue,  4 Mar 2014 13:52:25 +0100
-Message-Id: <1393937548-7482-13-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135318_885625_7AA634D2)
-In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	Tue, 11 Mar 2014 07:30:30 -0400
+Received: by mail-ob0-f171.google.com with SMTP id wn1so8363415obc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 04:30:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1394176178-8504-1-git-send-email-michal.kazior@tieto.com>
+References: <1394176178-8504-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 11 Mar 2014 12:30:30 +0100
+Message-ID: <CA+BoTQkVfgkMR_cvv5dUNkzLd7KrDQ7VMYKucJybpF0aAWpESA@mail.gmail.com> (sfid-20140311_123033_841466_52AA6F38)
+Subject: Re: [PATCH] mac80211: fix possible NULL dereference
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup flags directly in ieee80211_rx_status.
+On 7 March 2014 08:09, Michal Kazior <michal.kazior@tieto.com> wrote:
+> If chanctx is missing on a given vif then the band
+> is assumed to be 2GHz. However if hw doesn't
+> support 2GHz band then mac80211 ended up with a
+> NULL dereference.
+>
+> This fixes a splat:
+>
+> [ 4605.207223] BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+> [ 4605.210789] IP: [<ffffffffa07b5635>] ieee80211_parse_bitrates+0x65/0x110 [mac80211]
+>
+> The splat was preceeded by WARN_ON(!chanctx_conf)
+> in ieee80211_get_sdata_band().
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |    1 -
- drivers/net/wireless/ath/ath10k/htt_rx.c |   48 +++++++++++++++++++-----------
- 2 files changed, 31 insertions(+), 18 deletions(-)
+Drop this, please. There are more places that need sband to be
+NULL-checked. I'll send out a more thorough patch later.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 7ebbd8b..870f807 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1176,7 +1176,6 @@ struct htt_peer_unmap_event {
- struct htt_rx_info {
- 	struct sk_buff *skb;
- 	struct ieee80211_rx_status rx_status;
--	enum htt_rx_mpdu_encrypt_type encrypt_type;
- };
- 
- struct ath10k_htt_txbuf {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 976499d..555aecf 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -767,22 +767,34 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
- 	return true;
- }
- 
--static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
-+static void ath10k_htt_rx_h_protected(struct ath10k_htt *htt,
-+				      struct htt_rx_info *info,
-+				      enum htt_rx_mpdu_encrypt_type enctype)
- {
--	struct ieee80211_rx_status *status;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
- 
--	status = IEEE80211_SKB_RXCB(info->skb);
--	memcpy(status, &info->rx_status, sizeof(*status));
--
--	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
--		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
--				RX_FLAG_MMIC_STRIPPED;
-+	if (enctype != HTT_RX_MPDU_ENCRYPT_NONE) {
-+		info->rx_status.flag |= RX_FLAG_DECRYPTED |
-+					RX_FLAG_IV_STRIPPED |
-+					RX_FLAG_MMIC_STRIPPED;
- 		hdr->frame_control = __cpu_to_le16(
- 				__le16_to_cpu(hdr->frame_control) &
--				~IEEE80211_FCTL_PROTECTED);
-+					~IEEE80211_FCTL_PROTECTED);
-+		return;
- 	}
- 
-+	info->rx_status.flag &= ~(RX_FLAG_DECRYPTED |
-+				  RX_FLAG_IV_STRIPPED |
-+				  RX_FLAG_MMIC_STRIPPED);
-+}
-+
-+static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
-+{
-+	struct ieee80211_rx_status *status;
-+
-+	status = IEEE80211_SKB_RXCB(info->skb);
-+	memcpy(status, &info->rx_status, sizeof(*status));
-+
- 	ath10k_dbg(ATH10K_DBG_DATA,
- 		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
- 		   info->skb,
-@@ -897,7 +909,7 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 		}
- 
- 		info->skb = skb;
--		info->encrypt_type = enctype;
-+		ath10k_htt_rx_h_protected(htt, info, enctype);
- 		skb = skb->next;
- 		info->skb->next = NULL;
- 
-@@ -979,7 +991,7 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
- 	}
- 
- 	info->skb = skb;
--	info->encrypt_type = enctype;
-+	ath10k_htt_rx_h_protected(htt, info, enctype);
- 
- 	ath10k_process_rx(htt->ar, info);
- }
-@@ -1243,6 +1255,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 				struct htt_rx_fragment_indication *frag)
- {
- 	struct sk_buff *msdu_head, *msdu_tail;
-+	enum htt_rx_mpdu_encrypt_type enctype;
- 	struct htt_rx_desc *rxd;
- 	enum rx_msdu_decap_format fmt;
- 	struct htt_rx_info info = {};
-@@ -1296,8 +1309,9 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	}
- 
- 	info.skb = msdu_head;
--	info.encrypt_type = MS(__le32_to_cpu(rxd->mpdu_start.info0),
--				RX_MPDU_START_INFO0_ENCRYPT_TYPE);
-+	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
-+		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
-+	ath10k_htt_rx_h_protected(htt, &info, enctype);
- 	info.skb->ip_summed = ath10k_htt_rx_get_csum_state(info.skb);
- 
- 	if (tkip_mic_err)
-@@ -1309,9 +1323,9 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 		goto end;
- 	}
- 
--	if (info.encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
-+	if (enctype != HTT_RX_MPDU_ENCRYPT_NONE) {
- 		hdrlen = ieee80211_hdrlen(hdr->frame_control);
--		paramlen = ath10k_htt_rx_crypto_param_len(info.encrypt_type);
-+		paramlen = ath10k_htt_rx_crypto_param_len(enctype);
- 
- 		/* It is more efficient to move the header than the payload */
- 		memmove((void *)info.skb->data + paramlen,
-@@ -1325,11 +1339,11 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 	trim  = 4;
- 
- 	/* remove crypto trailer */
--	trim += ath10k_htt_rx_crypto_tail_len(info.encrypt_type);
-+	trim += ath10k_htt_rx_crypto_tail_len(enctype);
- 
- 	/* last fragment of TKIP frags has MIC */
- 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
--	    info.encrypt_type == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
-+	    enctype == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
- 		trim += 8;
- 
- 	if (trim > info.skb->len) {
--- 
-1.7.9.5
 
+Michał
