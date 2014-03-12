@@ -1,228 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27293 "EHLO mga09.intel.com"
+Received: from www.piware.de ([213.9.93.70]:53768 "EHLO www.piware.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752413AbaCIOkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 10:40:53 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v6 3/3] mac80211: allow reservation of a running chanctx
-Date: Sun,  9 Mar 2014 16:40:39 +0200
-Message-Id: <1394376039-9644-4-git-send-email-luciano.coelho@intel.com> (sfid-20140309_154055_912061_8C386041)
-In-Reply-To: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
-References: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
+	id S1751721AbaCLRes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 13:34:48 -0400
+Date: Wed, 12 Mar 2014 18:34:46 +0100
+From: Martin Pitt <martin.pitt@ubuntu.com>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [mac80211_hwsim] BUG: unable to handle kernel paging request at
+ ce1db404
+Message-ID: <20140312173446.GD2983@piware.de> (sfid-20140312_183527_470530_A724A671)
+References: <20140305125703.GA7193@localhost>
+ <20140305132317.GB10880@localhost>
+ <20140308121138.GA8359@localhost>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="3siQDZowHQqNOShm"
+In-Reply-To: <20140308121138.GA8359@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With single-channel drivers, we need to be able to change a running
-chanctx if we want to use chanctx reservation.  Not all drivers may be
-able to do this, so add a flag that indicates support for it.
 
-Changing a running chanctx can also be used as an optimization in
-multi-channel drivers when the context needs to be reserved for future
-usage.
+--3siQDZowHQqNOShm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
-reserved so nobody else can use it (since we know it's going to
-change).  In the future, we may allow several vifs to use the same
-reservation as long as they plan to use the chanctx on the same
-future channel.
+Fengguang Wu [2014-03-08 20:11 +0800]:
+> [    4.429993] mac80211_hwsim: ieee80211_register_hw failed (-2)
+> [...]
+> [    4.431924]  [<c12377de>] get_device+0xf/0x17
+> [    4.431924]  [<c123a165>] driver_detach+0x38/0x8f
+> [    4.431924]  [<c1239433>] bus_remove_driver+0x53/0x66
+> [    4.431924]  [<c123a535>] driver_unregister+0x38/0x3d
+> [    4.431924]  [<c123b3aa>] platform_driver_unregister+0xb/0xd
+> [    4.431924]  [<c1c4ac9f>] init_mac80211_hwsim+0x3a5/0x3b6
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In v3:
 
-   * reworded the TODO, slightly;
+So that first message is from
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers=
+/net/wireless/mac80211_hwsim.c?id=3D9ea927748#n2428
 
-In v4:
+At this point we registered the platform driver and the class, and it
+should have created two devices (at least for the default radios=3D2).
+What's odd is that I don't see this printk in your kernel log:
 
-   * remove IEEE80211_CHANCTX_RESERVED and the reserved_mode element;
-   * increase refcount also for "in-place" changes;
-   * stop queues also before doing an "in-place" change;
-   * refactor ieee80211_use_reserved_chanctx() a bit to fit "in-place"
-     better;
+  mac80211_hwsim: Initializing radio %d
 
-In v5:
+If for some reasons "radio" is 0, it would not show this and not
+initialize data->dev, but then you shouldn't get to
+ieee80211_register_hw() either as it's in the same loop. So that's a
+bit of a mystery to me.
 
-   * fix checkpatch warnings;
+On failure, above ieee80211_register_hw() jumps to the cleanup:
 
-In v6:
+| failed_hw:
+| 	device_unregister(data->dev);
+| failed_drvdata:
+| 	ieee80211_free_hw(hw);
+| failed:
+| 	mac80211_hwsim_free();
+| failed_unregister_driver:
+| 	driver_unregister(&mac80211_hwsim_driver);
+| 	return err;
+| }
 
-   * return ret in ieee80211_chanctx_is_reserved();
-   * check if sdata is running in ieee80211_chanctx_is_reserved();
-   * keep check for IEEE80211_CHANCTX_EXCLUSIVE in
-     ieee80211_find_channel();
-   * use break instead of goto out in ieee80211_chanctx_is_reserved();
----
- include/net/mac80211.h |  7 ++++
- net/mac80211/chan.c    | 97 ++++++++++++++++++++++++++++++++++++--------------
- 2 files changed, 77 insertions(+), 27 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 86faa41..b35c608 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1553,6 +1553,12 @@ struct ieee80211_tx_control {
-  *	for a single active channel while using channel contexts. When support
-  *	is not enabled the default action is to disconnect when getting the
-  *	CSA frame.
-+ *
-+ * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
-+ *	channel context on-the-fly.  This is needed for channel switch
-+ *	on single-channel hardware.  It can also be used as an
-+ *	optimization in certain channel switch cases with
-+ *	multi-channel.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1584,6 +1590,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
- 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
- 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
-+	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
- };
- 
- /**
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 2acf973..a6fdc14 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -162,6 +162,27 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+The mac80211_hwsim_free() function again calls
+device_unregister(data->dev) for a list (not sure which, I'm not
+certain how to interpret
+
+  list_for_each_entry_safe(data, tmpdata, &tmplist, list)
+
+) Could that be the double free causing the memory corruption?
+
+If you are in a position to do quick builds and tests, does the crash
+go away with this?
+
+ 		printk(KERN_DEBUG "mac80211_hwsim: device_bind_driver failed (%d)\n",
+ 		       err);
+- 		goto failed_hw;
++ 		goto failed_drvdata;
  	}
- }
- 
-+static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
-+				     struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	bool ret = false;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+		if (sdata->reserved_chanctx == ctx) {
-+			ret = true;
-+			break;
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+	return ret;
-+}
-+
- static struct ieee80211_chanctx *
- ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       const struct cfg80211_chan_def *chandef,
-@@ -177,7 +198,12 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		const struct cfg80211_chan_def *compat;
- 
--		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
-+		/* We don't support chanctx reservation for multiple
-+		 * vifs yet, so don't allow reserved chanctxs to be
-+		 * reused.
-+		 */
-+		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
-+		    ieee80211_chanctx_is_reserved(local, ctx))
- 			continue;
- 
- 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
-@@ -652,11 +678,20 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 	/* try to find another context with the chandef we want */
- 	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
- 	if (!new_ctx) {
--		/* create a new context */
--		new_ctx = ieee80211_new_chanctx(local, chandef, mode);
--		if (IS_ERR(new_ctx)) {
--			ret = PTR_ERR(new_ctx);
--			goto out;
-+		if (curr_ctx->refcount == 1 &&
-+		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
-+			/* if we're the only users of the chanctx and
-+			 * the driver supports changing a running
-+			 * context, reserve our current context
-+			 */
-+			new_ctx = curr_ctx;
-+		} else {
-+			/* create a new context and reserve it */
-+			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
-+			if (IS_ERR(new_ctx)) {
-+				ret = PTR_ERR(new_ctx);
-+				goto out;
-+			}
- 		}
- 	}
- 
-@@ -701,37 +736,45 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
-+	/* unref our reservation */
-+	ctx->refcount--;
-+	sdata->reserved_chanctx = NULL;
- 
--	ieee80211_unassign_vif_chanctx(sdata, old_ctx);
--	if (old_ctx->refcount == 0)
--		ieee80211_free_chanctx(local, old_ctx);
-+	if (old_ctx == ctx) {
-+		/* This is our own context, just change it */
-+		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
-+						     &local_changed);
-+		if (ret)
-+			goto out;
-+	} else {
-+		ieee80211_unassign_vif_chanctx(sdata, old_ctx);
-+		if (old_ctx->refcount == 0)
-+			ieee80211_free_chanctx(local, old_ctx);
- 
--	if (sdata->vif.bss_conf.chandef.width != sdata->reserved_chandef.width)
--		local_changed |= BSS_CHANGED_BANDWIDTH;
-+		if (sdata->vif.bss_conf.chandef.width !=
-+		    sdata->reserved_chandef.width)
-+			local_changed |= BSS_CHANGED_BANDWIDTH;
- 
--	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
-+		sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
- 
--	/* unref our reservation before assigning */
--	ctx->refcount--;
--	sdata->reserved_chanctx = NULL;
--	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
--	if (ret) {
--		/* if assign fails refcount stays the same */
--		if (ctx->refcount == 0)
--			ieee80211_free_chanctx(local, ctx);
--		goto out_wake;
-+		ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-+		if (ret) {
-+			/* if assign fails refcount stays the same */
-+			if (ctx->refcount == 0)
-+				ieee80211_free_chanctx(local, ctx);
-+			goto out;
-+		}
-+
-+		ieee80211_recalc_chanctx_chantype(local, ctx);
-+		ieee80211_recalc_smps_chanctx(local, ctx);
-+		ieee80211_recalc_radar_chanctx(local, ctx);
- 	}
- 
- 	*changed = local_changed;
--
--	ieee80211_recalc_chanctx_chantype(local, ctx);
--	ieee80211_recalc_smps_chanctx(local, ctx);
--	ieee80211_recalc_radar_chanctx(local, ctx);
--out_wake:
-+out:
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
--out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
- }
--- 
-1.9.0
 
+(I'm not claiming that this is correct, just taking a stab at
+understanding what happens) If not, does it go away with changing the
+goto to failed_unregister_driver()?
+
+Thanks,
+
+Martin
+--=20
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
+
+--3siQDZowHQqNOShm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCAAGBQJTIJq2AAoJENFO8V2v4RNHA/8P/0BtuaxdqeAdJtkjKXXuSKCT
+WZNcimLWbKr0jf7miXzhRaMonkBo9iBnYwCGytu9ELKWUkvFfdu6SHM9GOGKmy9o
+B92qHFbHNy1wAeGo0Oblay9gVhmDU2+PgNySlKFW5u24DDd3Ym2sYpcsl3PI+BfP
+cOA1tQYEGOEYdoSEAt92Rf2sP8FQoH/YwHAE/y1exE7wEgToXmdbdLDcI3nHY571
+SVtw6le28BSlXnOYUPxiTWpVSe/9GDnjU3wxQfelVEAmzlzCtUDDXYBnaCxgU/Tc
+LV1z76K3nDbfyFwfecurxOwKFG8+Em7v6b9CeN+MZP3A9xstu2zDQ8LNbGoHR2vp
+ba1XYdsMsu+jHl63BwClgfwN4AWg7MvK5675u1ePXmHU2KIbB0Uj93m95ydYRQ0D
+f5bYLXQjMleoOwPk/X2ostgI8DxYrq8wQpUYGHTfY+dGjsHTyddZ5TemrMxNnM3s
+Sf12e1bsmFCBQeu6ZA2TdIt/Vg6O97tnuZ62x3yWWW7ti94rgvogMqbtJD9+vFKi
+Cy5FsU8yO6pmWpwVUkFq2o9C/IIW0IrOhVq8JQdBV34MzvXXhDf8KsEX8Zy74Hox
+92cbLAOgE06rSv2Iz7MaSsZHc1JPjfvG4Nx+plmjEmmj1Ebp7I+6gla4Q+9EtxwV
+FS9gf4rf8R6G0oieWJ2Z
+=uieF
+-----END PGP SIGNATURE-----
+
+--3siQDZowHQqNOShm--
