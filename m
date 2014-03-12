@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37953 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbaCIKDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 06:03:12 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH] ath9k: fix ready time of the multicast buffer queue
-Date: Sun,  9 Mar 2014 11:02:54 +0100
-Message-Id: <1394359374-37177-1-git-send-email-nbd@openwrt.org> (sfid-20140309_110315_416209_859A7C07)
+Received: from smtprelay0013.hostedemail.com ([216.40.44.13]:39170 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751412AbaCLOL2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 10:11:28 -0400
+Message-ID: <1394633481.28839.54.camel@joe-AO722> (sfid-20140312_151131_846248_63AFE922)
+Subject: Re: [PATCH 2/6] ath6kl: use braces on both arms of if statement
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Jones Desougi <jones.desougi@27m.se>, ath6kl@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Date: Wed, 12 Mar 2014 07:11:21 -0700
+In-Reply-To: <87iorjg5ok.fsf@kamboji.qca.qualcomm.com>
+References: <20140309065606.10793.67068.stgit@x230>
+	 <20140309065717.10793.76274.stgit@x230>
+	 <1394401348.6972.50.camel@joe-AO722> <53201F25.30200@27m.se>
+	 <87iorjg5ok.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-qi->tqi_readyTime is written directly to registers that expect
-microseconds as unit instead of TU.
-When setting the CABQ ready time, cur_conf->beacon_interval is in TU, so
-convert it to microseconds before passing it to ath9k_hw.
+On Wed, 2014-03-12 at 10:52 +0200, Kalle Valo wrote:
+> Jones Desougi <jones.desougi@27m.se> writes:
+> > That inverts the meaning of the condition though.
+> > On 03/09/2014 10:42 PM, Joe Perches wrote:
+> > ...
+> >> -	if (bss == NULL) {
+> > ...
+> >> -	} else
+> >> +	if (!bss) {
+> >         if (bss) {
+> Yeah, that was buggy. Thanks for pointing it out.
 
-This should hopefully fix some Tx DMA issues with buffered multicast
-frames in AP mode.
+Yes, I stuffed that one up.
+And Jones, thanks for noticing.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index fafacfe..3e7966b 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1699,7 +1699,7 @@ int ath_cabq_update(struct ath_softc *sc)
- 
- 	ath9k_hw_get_txq_props(sc->sc_ah, qnum, &qi);
- 
--	qi.tqi_readyTime = (cur_conf->beacon_interval *
-+	qi.tqi_readyTime = (TU_TO_USEC(cur_conf->beacon_interval) *
- 			    ATH_CABQ_READY_TIME) / 100;
- 	ath_txq_update(sc, qnum, &qi);
- 
--- 
-1.8.3.4 (Apple Git-47)
 
