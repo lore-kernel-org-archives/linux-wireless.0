@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52451 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbaCFTAM (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:51226 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbaCLIrg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 14:00:12 -0500
-Date: Thu, 6 Mar 2014 13:47:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-03-05
-Message-ID: <20140306184755.GC7788@tuxdriver.com> (sfid-20140306_200017_684294_43CE8599)
-References: <1394032852.5275.41.camel@jlt4.sipsolutions.net>
+	Wed, 12 Mar 2014 04:47:36 -0400
+Received: by mail-la0-f42.google.com with SMTP id ec20so6555581lab.29
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2014 01:47:35 -0700 (PDT)
+Message-ID: <53201F25.30200@27m.se> (sfid-20140312_094743_308852_EDC5D4BF)
+Date: Wed, 12 Mar 2014 09:47:33 +0100
+From: Jones Desougi <jones.desougi@27m.se>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394032852.5275.41.camel@jlt4.sipsolutions.net>
+To: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/6] ath6kl: use braces on both arms of if statement
+References: <20140309065606.10793.67068.stgit@x230>	 <20140309065717.10793.76274.stgit@x230> <1394401348.6972.50.camel@joe-AO722>
+In-Reply-To: <1394401348.6972.50.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 04:20:52PM +0100, Johannes Berg wrote:
-> John,
-> 
-> We have some more fixes...
-> 
-> Here I have a fix from Eliad for the minimal channel width calculation
-> in the mac80211 code which lead to monitor mode not working at all for
-> drivers using that. One of my fixes is for an issue noticed by Michal,
-> we clear an already cleared value but do it without locking, so just
-> remove that. The other is for a data leak - we leak two bytes of kernel
-> memory out over the air in QoS NULL frames because those don't get a
-> sequence number assigned in the TX path.
-> 
-> Please let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> The following changes since commit cb664981607a6b5b3d670ad57bbda893b2528d96:
-> 
->   mac80211: fix association to 20/40 MHz VHT networks (2014-02-27 20:53:01 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 864a6040f395464003af8dd0d8ca86fed19866d4:
-> 
->   mac80211: clear sequence/fragment number in QoS-null frames (2014-03-05 15:49:54 +0100)
+That inverts the meaning of the condition though.
 
-Pulling now...
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On 03/09/2014 10:42 PM, Joe Perches wrote:
+...
+> -	if (bss == NULL) {
+...
+> -	} else
+> +	if (!bss) {
+
+        if (bss) {
+
+>  		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss\n");
+> +		return NULL;
+> +	}
+...
+
