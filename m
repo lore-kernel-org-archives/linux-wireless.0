@@ -1,97 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:63591 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757811AbaCRT0K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:10 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x13so6459853wgg.9
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/14] staging: vt6656: rxtx: Replace wRTSTxRrvTime*
-Date: Tue, 18 Mar 2014 19:24:57 +0000
-Message-Id: <1395170708-2990-3-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202615_141339_8247A72B)
-In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
-References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+Received: from [143.182.124.21] ([143.182.124.21]:21409 "EHLO mga03.intel.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754083AbaCLOhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 10:37:37 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v8 1/4] mac80211: split ieee80211_vif_change_channel in two
+Date: Wed, 12 Mar 2014 16:37:18 +0200
+Message-Id: <1394635041-2561-2-git-send-email-luciano.coelho@intel.com> (sfid-20140312_153747_258930_910B7DE6)
+In-Reply-To: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
+References: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix base type to __le16 and remove camel case.
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-Camel case changes
-wRTSTxRrvTime* -> rts_rrv_time*
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 10 +++++-----
- drivers/staging/vt6656/rxtx.h |  8 ++++----
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 1a29251..51aa77c 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -816,11 +816,11 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_rts *pBuf =
- 					&tx_buffer->tx_head.tx_rts.rts;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index fdbb932..ef77703 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
  
--			pBuf->wRTSTxRrvTime_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
-+			pBuf->rts_rrv_time_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
- 					byPktType, cbFrameSize, wCurrentRate);
--			pBuf->wRTSTxRrvTime_ba = s_uGetRTSCTSRsvTime(pDevice, 1,
-+			pBuf->rts_rrv_time_ba = s_uGetRTSCTSRsvTime(pDevice, 1,
- 					byPktType, cbFrameSize, wCurrentRate);
--			pBuf->wRTSTxRrvTime_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
-+			pBuf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
  
- 			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
-@@ -880,7 +880,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
- 							tx_head.tx_ab.ab;
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
  
--			pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
-+			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 2,
- 				byPktType, cbFrameSize, wCurrentRate);
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
  
- 			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-@@ -914,7 +914,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
- 							tx_head.tx_ab.ab;
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
  
--			pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
-+			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
- 
- 			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index bb2d0ce..1e8f5e2 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -53,9 +53,9 @@ struct vnt_mic_hdr {
- 
- /* RsvTime buffer header */
- struct vnt_rrv_time_rts {
--	u16 wRTSTxRrvTime_ba;
--	u16 wRTSTxRrvTime_aa;
--	u16 wRTSTxRrvTime_bb;
-+	__le16 rts_rrv_time_ba;
-+	__le16 rts_rrv_time_aa;
-+	__le16 rts_rrv_time_bb;
- 	u16 wReserved;
- 	u16 wTxRrvTime_b;
- 	u16 wTxRrvTime_a;
-@@ -69,7 +69,7 @@ struct vnt_rrv_time_cts {
- } __packed;
- 
- struct vnt_rrv_time_ab {
--	u16 wRTSTxRrvTime;
-+	__le16 rts_rrv_time;
- 	u16 wTxRrvTime;
- } __packed;
- 
+-	ret = 0;
++	return 0;
++}
++
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
 -- 
 1.9.0
 
