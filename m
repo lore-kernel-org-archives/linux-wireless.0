@@ -1,194 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:42227 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482AbaCYLSU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 07:18:20 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so303727eek.40
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 04:18:19 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()
-Date: Tue, 25 Mar 2014 12:12:22 +0100
-Message-Id: <1395745943-29492-2-git-send-email-michal.kazior@tieto.com> (sfid-20140325_121824_731434_AB44D0FC)
-In-Reply-To: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
-References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61870 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752942AbaCLOLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 10:11:36 -0400
+Date: Wed, 12 Mar 2014 15:14:04 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Kevin Lo <kevlo@kevlo.org>
+Subject: [PATCH 3.14] Revert "rt2x00: rt2800lib: Update BBP register
+ initialization for RT53xx"
+Message-ID: <20140312141403.GA1924@redhat.com> (sfid-20140312_151139_442026_0D127706)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows to use GFP_KERNEL allocation. This
-should decrease chance of allocation failure, e.g.
-during firmware recovery.
+This reverts commit eac40d9631a7db43570df859fa8a9922e9623607. It cause
+random connection drops on RT5390 PCI adapters.
 
-Reported-By: Avery Pennarun <apenwarr@gmail.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+On Mediatek there is different driver version available for RT53xx chip
+based on bus type (2.5.0.3 for PCI and 2.6.1.3 for USB). Hence possibly
+we should set registers differently based on bus type. But is also
+possible that new driver (i.e. 2.6.1.3) was not verified on RT53xx USB.
+
+Until we figure out how to initialize registers properly for RT53xx just
+revert commit eac40d9631a7db43570df859fa8a9922e9623607 since it cause
+regression.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  | 53 +++++++++++++++++------------------
- drivers/net/wireless/ath/ath10k/pci.c | 22 ++++++++-------
- 2 files changed, 37 insertions(+), 38 deletions(-)
+John, if possible queue this patch to 3.14, if not plese add
+Cc: <stable@vger.kernel.org> #3.14+
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index a79499c..653a240 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -843,7 +843,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 				   struct ath10k_ce_pipe *ce_state,
- 				   const struct ce_attr *attr)
- {
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_ce_ring *src_ring;
- 	unsigned int nentries = attr->src_nentries;
- 	unsigned int ce_nbytes;
-@@ -885,10 +884,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 	 * coherent DMA are unsupported
- 	 */
- 	src_ring->base_addr_owner_space_unaligned =
--		pci_alloc_consistent(ar_pci->pdev,
--				     (nentries * sizeof(struct ce_desc) +
--				      CE_DESC_RING_ALIGN),
--				     &base_addr);
-+		dma_alloc_coherent(ar->dev,
-+				   (nentries * sizeof(struct ce_desc) +
-+				    CE_DESC_RING_ALIGN),
-+				   &base_addr, GFP_KERNEL);
- 	if (!src_ring->base_addr_owner_space_unaligned) {
- 		kfree(ce_state->src_ring);
- 		ce_state->src_ring = NULL;
-@@ -912,11 +911,11 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 		kmalloc((nentries * sizeof(struct ce_desc) +
- 			 CE_DESC_RING_ALIGN), GFP_KERNEL);
- 	if (!src_ring->shadow_base_unaligned) {
--		pci_free_consistent(ar_pci->pdev,
--				    (nentries * sizeof(struct ce_desc) +
--				     CE_DESC_RING_ALIGN),
--				    src_ring->base_addr_owner_space,
--				    src_ring->base_addr_ce_space);
-+		dma_free_coherent(ar->dev,
-+				  (nentries * sizeof(struct ce_desc) +
-+				   CE_DESC_RING_ALIGN),
-+				  src_ring->base_addr_owner_space,
-+				  src_ring->base_addr_ce_space);
- 		kfree(ce_state->src_ring);
- 		ce_state->src_ring = NULL;
- 		return -ENOMEM;
-@@ -946,7 +945,6 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 				    struct ath10k_ce_pipe *ce_state,
- 				    const struct ce_attr *attr)
- {
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_ce_ring *dest_ring;
- 	unsigned int nentries = attr->dest_nentries;
- 	unsigned int ce_nbytes;
-@@ -986,10 +984,10 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 	 * coherent DMA are unsupported
- 	 */
- 	dest_ring->base_addr_owner_space_unaligned =
--		pci_alloc_consistent(ar_pci->pdev,
--				     (nentries * sizeof(struct ce_desc) +
--				      CE_DESC_RING_ALIGN),
--				     &base_addr);
-+		dma_alloc_coherent(ar->dev,
-+				   (nentries * sizeof(struct ce_desc) +
-+				    CE_DESC_RING_ALIGN),
-+				   &base_addr, GFP_KERNEL);
- 	if (!dest_ring->base_addr_owner_space_unaligned) {
- 		kfree(ce_state->dest_ring);
- 		ce_state->dest_ring = NULL;
-@@ -1112,26 +1110,25 @@ out:
- void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state)
- {
- 	struct ath10k *ar = ce_state->ar;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ drivers/net/wireless/rt2x00/rt2800lib.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 7f8b5d1..41d4a81 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -5460,14 +5460,15 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
  
- 	if (ce_state->src_ring) {
- 		kfree(ce_state->src_ring->shadow_base_unaligned);
--		pci_free_consistent(ar_pci->pdev,
--				    (ce_state->src_ring->nentries *
--				     sizeof(struct ce_desc) +
--				     CE_DESC_RING_ALIGN),
--				    ce_state->src_ring->base_addr_owner_space,
--				    ce_state->src_ring->base_addr_ce_space);
-+		dma_free_coherent(ar->dev,
-+				  (ce_state->src_ring->nentries *
-+				   sizeof(struct ce_desc) +
-+				   CE_DESC_RING_ALIGN),
-+				  ce_state->src_ring->base_addr_owner_space,
-+				  ce_state->src_ring->base_addr_ce_space);
- 		kfree(ce_state->src_ring);
+ 	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
+ 
+-	rt2800_bbp_write(rt2x00dev, 69, 0x0d);
+-	rt2800_bbp_write(rt2x00dev, 70, 0x06);
++	rt2800_bbp_write(rt2x00dev, 69, 0x12);
+ 	rt2800_bbp_write(rt2x00dev, 73, 0x13);
+ 	rt2800_bbp_write(rt2x00dev, 75, 0x46);
+ 	rt2800_bbp_write(rt2x00dev, 76, 0x28);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 77, 0x59);
+ 
++	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
++
+ 	rt2800_bbp_write(rt2x00dev, 79, 0x13);
+ 	rt2800_bbp_write(rt2x00dev, 80, 0x05);
+ 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
+@@ -5510,7 +5511,6 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
+ 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
+-		rt2800_bbp_write(rt2x00dev, 148, 0x84);
  	}
  
- 	if (ce_state->dest_ring) {
--		pci_free_consistent(ar_pci->pdev,
--				    (ce_state->dest_ring->nentries *
--				     sizeof(struct ce_desc) +
--				     CE_DESC_RING_ALIGN),
--				    ce_state->dest_ring->base_addr_owner_space,
--				    ce_state->dest_ring->base_addr_ce_space);
-+		dma_free_coherent(ar->dev,
-+				  (ce_state->dest_ring->nentries *
-+				   sizeof(struct ce_desc) +
-+				   CE_DESC_RING_ALIGN),
-+				  ce_state->dest_ring->base_addr_owner_space,
-+				  ce_state->dest_ring->base_addr_ce_space);
- 		kfree(ce_state->dest_ring);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 783cfa0..4cd3537 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -355,9 +355,10 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 	 *   2) Buffer in DMA-able space
- 	 */
- 	orig_nbytes = nbytes;
--	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
--							 orig_nbytes,
--							 &ce_data_base);
-+	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
-+						       orig_nbytes,
-+						       &ce_data_base,
-+						       GFP_ATOMIC);
- 
- 	if (!data_buf) {
- 		ret = -ENOMEM;
-@@ -455,8 +456,8 @@ done:
- 			    address, ret);
- 
- 	if (data_buf)
--		pci_free_consistent(ar_pci->pdev, orig_nbytes,
--				    data_buf, ce_data_base);
-+		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
-+				  ce_data_base);
- 
- 	return ret;
- }
-@@ -499,9 +500,10 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 	 *   2) Buffer in DMA-able space
- 	 */
- 	orig_nbytes = nbytes;
--	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
--							 orig_nbytes,
--							 &ce_data_base);
-+	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
-+						       orig_nbytes,
-+						       &ce_data_base,
-+						       GFP_ATOMIC);
- 	if (!data_buf) {
- 		ret = -ENOMEM;
- 		goto done;
-@@ -597,8 +599,8 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 
- done:
- 	if (data_buf) {
--		pci_free_consistent(ar_pci->pdev, orig_nbytes, data_buf,
--				    ce_data_base);
-+		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
-+				  ce_data_base);
- 	}
- 
- 	if (ret != 0)
+ 	rt2800_disable_unused_dac_adc(rt2x00dev);
 -- 
-1.8.5.3
+1.7.11.7
 
