@@ -1,31 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22872 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbaCUPht (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 11:37:49 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: add ath10k_htt_rx_amsdu_allowed function
-In-Reply-To: <1395209381-26782-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Wed, 19 Mar 2014 07:09:40 +0100")
-References: <1395209381-26782-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Fri, 21 Mar 2014 17:37:44 +0200
-Message-ID: <8738ibbm0n.fsf@kamboji.qca.qualcomm.com> (sfid-20140321_163753_488807_C4EC091F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:25614 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753611AbaCLNGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 09:06:14 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v7 1/4] mac80211: split ieee80211_vif_change_channel in two
+Date: Wed, 12 Mar 2014 15:06:06 +0200
+Message-Id: <1394629569-13798-2-git-send-email-luciano.coelho@intel.com> (sfid-20140312_140622_370267_4A504C78)
+In-Reply-To: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
+References: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-> Introduce ath10k_htt_rx_amsdu_allowed() function, that
-> group code for checking if skip amsdu packets.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-Thanks, both patches applied.
-
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index fdbb932..ef77703 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
++}
++
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
 -- 
-Kalle Valo
+1.9.0
+
