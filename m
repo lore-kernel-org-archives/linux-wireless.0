@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:42323 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911AbaCEChu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 21:37:50 -0500
-Received: by mail-ob0-f170.google.com with SMTP id uz6so418088obc.29
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 18:37:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <53168976.7000008@wwwdotorg.org>
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
-	<1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
-	<530D218E.9010007@wwwdotorg.org>
-	<CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com>
-	<53168976.7000008@wwwdotorg.org>
-Date: Wed, 5 Mar 2014 10:37:50 +0800
-Message-ID: <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com> (sfid-20140305_033813_072365_77948BFE)
-Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:25614 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753611AbaCLNGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 09:06:12 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v7 0/4] mac802111: channel context reservation
+Date: Wed, 12 Mar 2014 15:06:05 +0200
+Message-Id: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com> (sfid-20140312_140618_529465_F179D615)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-> On 03/04/2014 06:43 PM, Linus Walleij wrote:
+Hi,
 
->> If I understand the situation correctly it's like ACPI does not have named
->> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
->> to the work of abstracting the access to GPIO handlers so that drivers
->> need not know whether ACPI or DT is used for describing the hardware.
->
-> For devices that already have both ACPI and DT bindings, we can't
-> pretend they can be the same; they are already potentially different. We
-> simply need to parse DT and ACPI differently, since that's the sway
-> their bindings are defined.
->
-> For any devices that don't have both ACPI and DT bindings, I agree we
-> should certainly strive to make any new bindings aligned so we don't
-> have to deal with this for them.
->
-> However, we can't change the past.
+New version with some comments from an offline review with Johannes
+plus a few comments by Michal and Eliad.  I removed the history from
+here, since it's all in the patches anyway.
 
-Yeah, right, so for this very driver there are no bindings defined (yet)
-and the only device tree I can find referencing it is the Tegra20-paz00
-and it just use gpios = <>;
+There's a new patch here to combine the assign and unassign functions
+to avoid having problems with a NULL conf while the vif is still
+running.
 
-So in this case I think this patch is the right way forward, but I admit
-I'm really uncertain in the general case.
+--
+Luca.
 
-Yours,
-Linus Walleij
+Luciano Coelho (4):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
+  mac80211: implement chanctx reservation
+  mac80211: allow reservation of a running chanctx
+
+ include/net/mac80211.h     |   7 ++
+ net/mac80211/chan.c        | 298 +++++++++++++++++++++++++++++++++++----------
+ net/mac80211/ieee80211_i.h |  13 ++
+ 3 files changed, 256 insertions(+), 62 deletions(-)
+
+-- 
+1.9.0
+
