@@ -1,104 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:64869 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756028AbaCROqA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:00 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so5464073eek.4
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:59 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/35] iwlwifi: mvm: check for d0i3 fw capability
-Date: Tue, 18 Mar 2014 16:45:14 +0200
-Message-Id: <1395153939-23897-10-git-send-email-egrumbach@gmail.com> (sfid-20140318_154613_281454_60F422A5)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+Received: from coelho.fi ([88.198.205.34]:33063 "EHLO dedo"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754412AbaCLOVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Mar 2014 10:21:39 -0400
+Message-ID: <1394634090.16246.2.camel@dubbel> (sfid-20140312_152147_862598_B06F49C7)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Wed, 12 Mar 2014 16:21:30 +0200
+In-Reply-To: <CA+BoTQkSqEVVKgK3rD26ECqnJPQo57M+4NNoifH1Wu+EBYvqwA@mail.gmail.com>
+References: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
+	 <1394629569-13798-4-git-send-email-luciano.coelho@intel.com>
+	 <CA+BoTQkSqEVVKgK3rD26ECqnJPQo57M+4NNoifH1Wu+EBYvqwA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v7 3/4] mac80211: implement chanctx reservation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Wed, 2014-03-12 at 14:21 +0100, Michal Kazior wrote:
+> On 12 March 2014 14:06, Luciano Coelho <luciano.coelho@intel.com> wrote:
+> 
+> [...]
+> 
+> > +       if (old_ctx == ctx) {
+> > +               /* This is our own context, just change it */
+> > +               ret = __ieee80211_vif_change_channel(sdata, old_ctx,
+> > +                                                    &tmp_changed);
+> > +               if (ret)
+> > +                       goto out;
+> > +       } else {
+> > +               if (sdata->vif.bss_conf.chandef.width !=
+> > +                   sdata->reserved_chandef.width)
+> > +                       tmp_changed |= BSS_CHANGED_BANDWIDTH;
+> > +
+> > +               sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
+> > +
+> > +               ret = ieee80211_assign_vif_chanctx(sdata, ctx);
+> > +               if (old_ctx->refcount == 0)
+> > +                       ieee80211_free_chanctx(local, old_ctx);
+> > +               if (ret) {
+> > +                       /* if assign fails refcount stays the same */
+> > +                       if (ctx->refcount == 0)
+> > +                               ieee80211_free_chanctx(local, ctx);
+> > +                       goto out;
+> > +               }
+> > +
+> > +               *changed = tmp_changed;
+> > +
+> > +               ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+> 
+> Ah, you can't call it like that. This will deadlock because the
+> function tries to grab chanctx_mtx but you're already holding it. You
+> need to first split the vif_copy_chanctx() into 2 variants - with and
+> without grabbing the chanctx_mtx.
 
-Check for both cfg->d0i3 and fw d0i3 support in order
-to enable d0i3 support.
+Grrrr! Concentrate, Luca, concentrate!
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h       | 8 ++++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 6 +++---
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 6 ++++++
- 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index f04ff87..18f867c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -125,6 +125,14 @@ enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_GO_UAPSD		= BIT(30),
- };
- 
-+/**
-+ * enum iwl_ucode_tlv_capa - ucode capabilities
-+ * @IWL_UCODE_TLV_CAPA_D0I3_SUPPORT: supports D0i3
-+ */
-+enum iwl_ucode_tlv_capa {
-+	IWL_UCODE_TLV_CAPA_D0I3_SUPPORT		= BIT(0),
-+};
-+
- /* The default calibrate table size if not specified by firmware file */
- #define IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE	18
- #define IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE		19
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index d74cc43..41b9e65 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -205,7 +205,7 @@ static const struct iwl_fw_bcast_filter iwl_mvm_default_bcast_filters[] = {
- 
- void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- {
--	if (!mvm->trans->cfg->d0i3)
-+	if (!iwl_mvm_is_d0i3_supported(mvm))
- 		return;
- 
- 	IWL_DEBUG_RPM(mvm, "Take mvm reference - type %d\n", ref_type);
-@@ -215,7 +215,7 @@ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- 
- void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- {
--	if (!mvm->trans->cfg->d0i3)
-+	if (!iwl_mvm_is_d0i3_supported(mvm))
- 		return;
- 
- 	IWL_DEBUG_RPM(mvm, "Leave mvm reference - type %d\n", ref_type);
-@@ -228,7 +228,7 @@ iwl_mvm_unref_all_except(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref)
- {
- 	int i;
- 
--	if (!mvm->trans->cfg->d0i3)
-+	if (!iwl_mvm_is_d0i3_supported(mvm))
- 		return;
- 
- 	for_each_set_bit(i, mvm->ref_bitmap, IWL_MVM_REF_COUNT) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 5fb5109..3511bf7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -656,6 +656,12 @@ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
- 	return iwl_mvm_sta_from_mac80211(sta);
- }
- 
-+static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
-+{
-+	return mvm->trans->cfg->d0i3 &&
-+	       (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
-+}
-+
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
- 
- struct iwl_rate_info {
--- 
-1.8.3.2
+> > +               ieee80211_recalc_chanctx_chantype(local, ctx);
+> > +               ieee80211_recalc_smps_chanctx(local, ctx);
+> > +               ieee80211_recalc_radar_chanctx(local, ctx);
+> > +               ieee80211_recalc_chanctx_min_def(local, ctx);
+> 
+> It seems you need to call these recalc* regardless what if() branch is
+> taken so calling them in this branch is pointless, no?
+> 
+> > +       }
+> > +
+> > +       *changed = tmp_changed;
+> > +
+> > +       ieee80211_recalc_chanctx_chantype(local, ctx);
+> > +       ieee80211_recalc_smps_chanctx(local, ctx);
+> > +       ieee80211_recalc_radar_chanctx(local, ctx);
+> > +       ieee80211_recalc_chanctx_min_def(local, ctx);
+
+More stuff I screwed up in my rebases...
+
+--
+Luca.
 
