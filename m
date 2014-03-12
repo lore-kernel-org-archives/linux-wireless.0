@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:36673 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755095AbaCOR2v (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:33064 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752246AbaCLCuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Mar 2014 13:28:51 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so2539340eek.11
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2014 10:28:50 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
+	Tue, 11 Mar 2014 22:50:25 -0400
+Date: Tue, 11 Mar 2014 22:50:23 -0400 (EDT)
+Message-Id: <20140311.225023.1953610775705849306.davem@davemloft.net> (sfid-20140312_035031_971966_CDB92A28)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	andrea.merello@gmail.com
-Subject: [PATCH 0/4] rtl8180: improvements from rtl8187se branch
-Date: Sat, 15 Mar 2014 18:29:34 +0100
-Message-Id: <1394904578-5279-1-git-send-email-andrea.merello@gmail.com> (sfid-20140315_182855_070235_B78F02DC)
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-03-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140310190101.GB25703@tuxdriver.com>
+References: <20140310190101.GB25703@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is another patch-set that ports on current rtl8180 driver the
-following four improvements from my rtl8187se local tree.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 10 Mar 2014 15:01:02 -0400
 
-Andrea Merello (4):
-  rtl8180: remove too-early-added rtl8187se enum value
-  rtl8180: support for BSS_CHANGED_BASIC_RATES
-  rtl8180: make *IFS and CW tunable by mac80211, and set them in the
-    proper place
-  rtl8180: move eeprom read stuff in a separate function
+> For the mac80211 bits, Johannes says:
+> 
+> "This time, I have a number of small fixes and improvements, and those
+> are fairly straight-forward. More interesting changes come from Luca
+> with some preparations for the CSA work, mostly around interface/channel
+> combinations checking. One other possibly interesting change is a small
+> one by myself to add NAPI support back to mac80211, which can help
+> improve TCP behaviour through GRO."
+> 
+> For the Bluetooth bits, Gustavo says:
+> 
+> "This is our first pull request for 3.15, the main feature here is the addition of
+> the privacy feature for low energy devices. Other than that we have a bunch of small
+> improvements, fixes, and clean ups all over the tree."
+> 
+> And...
+> 
+> "Another pull request to 3.15. Here we have the second part of the LE private
+> feature, the LE auto-connect feature and improvements to the power off
+> procedures. The rest are small improvements, clean up, and fixes."
+> 
+> For the iwlwifi bits, Emmanuel says:
+> 
+> "I have here a whole bunch of various things. Trivial cleanups,
+> debugfs handlers and new stuff for the new generation of devices
+> along with new capabilities for monitor mode. We also have support
+> for power save for dual interface mode, but that is not supported by
+> the firmware currently available."
+> 
+> And for the Atheros bits, Kalle says:
+> 
+> "For ath10k Alexander did some cleanup to PCI error cases and switched
+> ath10k to use pci_enable_msi_range(). Michal implemented AP CSA support
+> and sta_rc_update() operation. I enabled firmware "STA quick kickout"
+> functionality for faster detection of disappeared clients.
+> 
+> Also there are lots of small fixes to everywhere from various people."
+> 
+> I pulled the wireless tree to avoid some merge conflicts, and I
+> reverted the staging patch that I had mistakenly merged previously.
+> Along with that, mwifiex, brcmfmac, wil6210, ath9k, and a few other
+> drivers get their usual round of updates.  Also notable is the addition
+> of yet another driver in the rtlwifi family.
+> 
+> Please let me know if there are problems!
 
- drivers/net/wireless/rtl818x/rtl8180/dev.c     | 262 +++++++++++++++++++------
- drivers/net/wireless/rtl818x/rtl8180/rtl8180.h |   6 +-
- drivers/net/wireless/rtl818x/rtl8180/rtl8225.c |  22 ---
- 3 files changed, 201 insertions(+), 89 deletions(-)
-
--- 
-1.8.3.2
-
+Pulled, thanks a lot John.
