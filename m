@@ -1,114 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:45887 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932391AbaCQJdq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 05:33:46 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 3/3] ath9k: Fix temperature compensation
-Date: Mon, 17 Mar 2014 15:02:48 +0530
-Message-Id: <1395048768-25245-3-git-send-email-sujith@msujith.org> (sfid-20140317_103350_009297_DD3340D4)
-In-Reply-To: <1395048768-25245-1-git-send-email-sujith@msujith.org>
-References: <1395048768-25245-1-git-send-email-sujith@msujith.org>
+Received: from ring0.de ([5.45.105.125]:46909 "EHLO ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753351AbaCMRAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Mar 2014 13:00:44 -0400
+Date: Thu, 13 Mar 2014 18:00:39 +0100
+From: Sebastian Reichel <sre@ring0.de>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
+Message-ID: <20140313170038.GA20372@earth.universe> (sfid-20140313_180112_522475_2BB51B96)
+References: <20140125000929.GD25488@atomide.com>
+ <1392419156-14394-1-git-send-email-sre@debian.org>
+ <20140226194436.GA20992@earth.universe>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+In-Reply-To: <20140226194436.GA20992@earth.universe>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The registers for temperature compensation need to
-be programmed only for active chains. Use the TX chainmask
-to make sure that this is done properly for QCA953x.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 59 +++++++++++++++-----------
- 1 file changed, 35 insertions(+), 24 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d7625ec..235053b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4792,43 +4792,54 @@ static void ar9003_hw_power_control_override(struct ath_hw *ah,
- 
- tempslope:
- 	if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
-+		u8 txmask = (eep->baseEepHeader.txrxMask & 0xf0) >> 4;
-+
- 		/*
- 		 * AR955x has tempSlope register for each chain.
- 		 * Check whether temp_compensation feature is enabled or not.
- 		 */
- 		if (eep->baseEepHeader.featureEnable & 0x1) {
- 			if (frequency < 4000) {
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      eep->base_ext2.tempSlopeLow);
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      temp_slope);
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      eep->base_ext2.tempSlopeHigh);
-+				if (txmask & BIT(0))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      eep->base_ext2.tempSlopeLow);
-+				if (txmask & BIT(1))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      temp_slope);
-+				if (txmask & BIT(2))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      eep->base_ext2.tempSlopeHigh);
- 			} else {
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      temp_slope);
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      temp_slope1);
--				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
--					      AR_PHY_TPC_19_ALPHA_THERM,
--					      temp_slope2);
-+				if (txmask & BIT(0))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      temp_slope);
-+				if (txmask & BIT(1))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      temp_slope1);
-+				if (txmask & BIT(2))
-+					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
-+						      AR_PHY_TPC_19_ALPHA_THERM,
-+						      temp_slope2);
- 			}
- 		} else {
- 			/*
- 			 * If temp compensation is not enabled,
- 			 * set all registers to 0.
- 			 */
--			REG_RMW_FIELD(ah, AR_PHY_TPC_19,
--				      AR_PHY_TPC_19_ALPHA_THERM, 0);
--			REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
--				      AR_PHY_TPC_19_ALPHA_THERM, 0);
--			REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
--				      AR_PHY_TPC_19_ALPHA_THERM, 0);
-+			if (txmask & BIT(0))
-+				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
-+					      AR_PHY_TPC_19_ALPHA_THERM, 0);
-+			if (txmask & BIT(1))
-+				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
-+					      AR_PHY_TPC_19_ALPHA_THERM, 0);
-+			if (txmask & BIT(2))
-+				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
-+					      AR_PHY_TPC_19_ALPHA_THERM, 0);
- 		}
- 	} else {
- 		REG_RMW_FIELD(ah, AR_PHY_TPC_19,
--- 
-1.9.0
+On Wed, Feb 26, 2014 at 08:44:36PM +0100, Sebastian Reichel wrote:
+> On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
+> > The following patchset adds device tree support to the spi variant of t=
+he
+> > wl1251 driver, which is used in the Nokia N900. Tony requested, that you
+> > take the whole series even if that may introduce merge conflicts:
+> >=20
+> > > Sebastian, please resend the whole series to John and feel free to ad=
+d my
+> > > acks.  It's best that John picks them all up, otherwise we'll have th=
+e same
+> > > issue for v3.15. It seems that we should have just taken the merge co=
+nflict
+> > > rather than going back and forth with this.
+>=20
+> ping! Is there still anything wrong with this patchset?
 
+ping! This patchset is quite old now. Please pull it into
+wireless-next, so that it can appear in 3.15.
+
+-- Sebastian
+
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJTIeQ2AAoJENju1/PIO/qa/uQP+QGEUssFuzxeHdgpihzHszVR
+Fr65MaNUs3C5fnQWum6mnaf1uWKyC41Ex/KmbIOGrIdeMjx8vDq3X7jc4HC+54z9
+RMEUL0uOVbtp1H8IWD1pXBvd6ePpziqpII8SV1hl0hz5xKsO0P0TPo+sCipcKGrU
++ib0NqSN0hSX0X1u5DP2k/tluuzsSUvjffUDQbVD75BCVvi5WmbBqbjHaX9wq9sK
+uS0l4NoVsJUIJ2f7q7/Kmrv0uS0YmzzUIV1S0Ot2fqB7Hi+IJieKfPxYA4kM/1Rm
+8DoPc4L8B9e2cuQnFzZa3jHcYFoJa/Px7xOtyHSGWLCChsmH4PTsmrylIPtJJJTX
+Csvgr28L9AJ11BdiKdlfChZsDOYilxnnnlyezjSAMf7gg4ZczwGzORwiB6YcDj2n
+Z+BAxfYuygsUVJNc3xUeRsSrTPg5WbQgOyQx+uD5FIwo+f98m1gDqFe/ibuSTzdR
+BwfRwd9DOn02q7bf+4BnsM3fxt7iqY2SL5UgHCx4UJxw1eFtrGBqnFi6o8hf8mSm
+nnON3vPtPdZ8TOYa+ajRjsvrS+i0mkWHbYIAOJ3A5hBn/wPEfJXzC4CZLx+/xS4A
+gTc5fEG5Sw8sKVTtR9hZxrc+HDB9pSvoecZjBOm3DAT2AJVOeoQmMxE36qMPxoVv
+n9PBoIP33ILd33WdO10y
+=M0vO
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
