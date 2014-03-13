@@ -1,60 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:44821 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931AbaCIJry (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 05:47:54 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so6132693iec.21
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2014 01:47:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
-References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
-	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 9 Mar 2014 11:47:53 +0200
-Message-ID: <CAB3XZEfEk72og-WkfYOyfExaC8iAxMo44japLu39Zrk5JNwi7g@mail.gmail.com> (sfid-20140309_104822_608105_75F493B3)
-Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:37123 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752880AbaCMNdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Mar 2014 09:33:52 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v9 1/4] mac80211: split ieee80211_vif_change_channel in two
+Date: Thu, 13 Mar 2014 15:33:38 +0200
+Message-Id: <1394717621-5608-2-git-send-email-luciano.coelho@intel.com> (sfid-20140313_143355_834284_282994D9)
+In-Reply-To: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
+References: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 7, 2014 at 1:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> It doesn't make much sense to have a manually
-> managed chanctx refcount. It isn't performance
-> critical and it can't be even used outside the
-> protection of chanctx_mtx.
->
-> With future enhancements to channel contenxt
-> (namely reservations) refcount accounting will
-> become more complex and having manually managed
-> refcount is going to be error-prone and confusing.
->
-> The refcount is now equal to the number of vifs it
-> is assigned to. However in the future this will
-> change so keep the refcount/num_assigned_vifs
-> functions split now.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
+channel reservation for CS, we will need to call the function to
+change channel when the lock is already held, so split the part that
+requires the lock out and leave the locking in the original function.
 
-> +int ieee80211_chanctx_num_assigned_vifs(struct ieee80211_chanctx *ctx)
-> +{
-> +       struct ieee80211_local *local = ctx->local;
-> +       struct ieee80211_sub_if_data *sdata;
-> +       int num = 0;
-> +
-> +       lockdep_assert_held(&local->chanctx_mtx);
-> +
-> +       rcu_read_lock();
-> +       list_for_each_entry_rcu(sdata, &local->interfaces, list)
-> +               if (ieee80211_vif_assigned_chanctx(sdata) == ctx)
-> +                       num++;
-> +       rcu_read_unlock();
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
 
-i don't think you need rcu_read_lock if you already hold chanctx_mtx
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index fdbb932..ef77703 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+-				 u32 *changed)
++static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_chanctx *ctx,
++					  u32 *changed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *conf;
+-	struct ieee80211_chanctx *ctx;
+ 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
+-	int ret;
+ 	u32 chanctx_changed = 0;
+ 
+-	lockdep_assert_held(&local->mtx);
+-
+-	/* should never be called if not performing a channel switch. */
+-	if (WARN_ON(!sdata->vif.csa_active))
+-		return -EINVAL;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+ 				     IEEE80211_CHAN_DISABLED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&local->chanctx_mtx);
+-	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-					 lockdep_is_held(&local->chanctx_mtx));
+-	if (!conf) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ctx->refcount != 1) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (ctx->refcount != 1)
++		return -EINVAL;
+ 
+ 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
+ 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
+@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+-	ret = 0;
++	return 0;
++}
++
++int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
++				 u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	lockdep_assert_held(&local->mtx);
++
++	/* should never be called if not performing a channel switch. */
++	if (WARN_ON(!sdata->vif.csa_active))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++
++	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
+-- 
+1.9.0
 
-Eliad.
