@@ -1,130 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:47994 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbaCaLnY (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:40649 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbaCMIYe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:43:24 -0400
-Received: by mail-we0-f176.google.com with SMTP id x48so4687809wes.35
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:23 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 09/13] mac80211: split ieee80211_new_chanctx()
-Date: Mon, 31 Mar 2014 12:39:27 +0200
-Message-Id: <1396262371-6466-10-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134335_718655_D205618D)
-In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
- <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 13 Mar 2014 04:24:34 -0400
+Subject: [PATCH v2] ath10k: add soft/hard firmware crash option to
+ simulate_fw_crash
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 13 Mar 2014 10:24:31 +0200
+Message-ID: <20140313082431.10798.10888.stgit@potku.adurom.net> (sfid-20140313_092442_044675_6EE45EBF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a little too much. Split it up so
-the code can be easily reused in the future.
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Command WMI_FORCE_FW_HANG_CMDID is not supported in firmware 10.1.
+In order to have firmware crash simulation functionality also
+in firmware 10.1 driver can force firmware crash by performing not allowed
+operation. Driver can deliberately crash firmware when setting vdev param for
+vdev id out of range.  This patch introduces two keywords to simulate_fw_crash:
+
+'soft' which will cause firmware crash that is recoverable
+       by warm firmware reset but supported only in main firmware.
+'hard' which will cause firmware crash recoverable by cold
+       firmware reset, this option works for both firmwares.
+
+Commands to trigger firmware soft/hard crash:
+
+echo 'soft' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
+echo 'hard' > /sys/kernel/debug/ieee80211/phyX/ath10k/simulate_fw_crash
+
+kvalo: use strncmp(), remove '\n' before checking the command and
+document how buf is null terminated
+
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/chan.c | 56 ++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 43 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c |   51 +++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a12cc23..8e207c0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -345,19 +345,17 @@ static bool ieee80211_is_radar_required(struct ieee80211_local *local)
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 6debd281350a..3da70c74b3fa 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -451,12 +451,23 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+ {
+-	const char buf[] = "To simulate firmware crash write the keyword"
+-			   " `crash` to this file.\nThis will force firmware"
+-			   " to report a crash to the host system.\n";
++	const char buf[] = "To simulate firmware crash write one of the"
++			   " keywords to this file:\n `soft` - this will send"
++			   " WMI_FORCE_FW_HANG_ASSERT to firmware if FW"
++			   " supports that command.\n `hard` - this will send"
++			   " to firmware command with illegal parameters"
++			   " causing firmware crash.\n";
++
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
  }
  
- static struct ieee80211_chanctx *
--ieee80211_new_chanctx(struct ieee80211_local *local,
--		      const struct cfg80211_chan_def *chandef,
--		      enum ieee80211_chanctx_mode mode)
-+ieee80211_alloc_chanctx(struct ieee80211_local *local,
-+			const struct cfg80211_chan_def *chandef,
-+			enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
--	u32 changed;
--	int err;
++/* Simulate firmware crash:
++ * 'soft': Call wmi command causing firmware hang. This firmware hang is
++ * recoverable by warm firmware reset.
++ * 'hard': Force firmware crash by setting any vdev parameter for not allowed
++ * vdev id. This is hard firmware crash because it is recoverable only by cold
++ * firmware reset.
++ */
+ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 					      const char __user *user_buf,
+ 					      size_t count, loff_t *ppos)
+@@ -467,11 +478,9 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
  
- 	lockdep_assert_held(&local->chanctx_mtx);
+ 	mutex_lock(&ar->conf_mutex);
  
- 	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
- 	if (!ctx)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
++	/* Don't copy over the last byte, keep it initialised to zero to
++	 * make sure that the buffer is properly null terminated. */
+ 	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
+-	if (strcmp(buf, "crash") && strcmp(buf, "crash\n")) {
+-		ret = -EINVAL;
+-		goto exit;
+-	}
  
- 	INIT_LIST_HEAD(&ctx->assigned_vifs);
- 	INIT_LIST_HEAD(&ctx->reserved_vifs);
-@@ -367,31 +365,63 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->mode = mode;
- 	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
-+
-+	return ctx;
-+}
-+
-+static int ieee80211_add_chanctx(struct ieee80211_local *local,
-+				 struct ieee80211_chanctx *ctx)
-+{
-+	u32 changed;
-+	int err;
-+
-+	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
- 	if (!local->use_chanctx)
- 		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
- 
--	/* we hold the mutex to prevent idle from changing */
--	lockdep_assert_held(&local->mtx);
- 	/* turn idle off *before* setting channel -- some drivers need that */
- 	changed = ieee80211_idle_off(local);
- 	if (changed)
- 		ieee80211_hw_config(local, changed);
- 
- 	if (!local->use_chanctx) {
--		local->_oper_chandef = *chandef;
-+		local->_oper_chandef = ctx->conf.def;
- 		ieee80211_hw_config(local, 0);
- 	} else {
- 		err = drv_add_chanctx(local, ctx);
- 		if (err) {
--			kfree(ctx);
- 			ieee80211_recalc_idle(local);
--			return ERR_PTR(err);
-+			return err;
- 		}
+ 	if (ar->state != ATH10K_STATE_ON &&
+ 	    ar->state != ATH10K_STATE_RESTARTED) {
+@@ -479,14 +488,30 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 		goto exit;
  	}
  
--	/* and keep the mutex held until the new chanctx is on the list */
--	list_add_rcu(&ctx->list, &local->chanctx_list);
-+	return 0;
-+}
-+
-+static struct ieee80211_chanctx *
-+ieee80211_new_chanctx(struct ieee80211_local *local,
-+		      const struct cfg80211_chan_def *chandef,
-+		      enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_chanctx *ctx;
-+	int err;
-+
-+	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	ctx = ieee80211_alloc_chanctx(local, chandef, mode);
-+	if (!ctx)
-+		return ERR_PTR(-ENOMEM);
+-	ath10k_info("simulating firmware crash\n");
++	/* drop the possible '\n' from the end */
++	if (buf[count - 1] == '\n') {
++		buf[count - 1] = 0;
++		count--;
++	}
  
-+	err = ieee80211_add_chanctx(local, ctx);
-+	if (err) {
-+		kfree(ctx);
-+		return ERR_PTR(err);
+-	ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
+-	if (ret)
+-		ath10k_warn("failed to force fw hang (%d)\n", ret);
++	if (!strncmp(buf, "soft", sizeof(buf))) {
++		ath10k_info("simulating soft firmware crash\n");
++		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
++	} else if (!strncmp(buf, "hard", sizeof(buf))) {
++		ath10k_info("simulating hard firmware crash\n");
++		ret = ath10k_wmi_vdev_set_param(ar, TARGET_NUM_VDEVS + 1,
++					ar->wmi.vdev_param->rts_threshold, 0);
++	} else {
++		ret = -EINVAL;
++		goto exit;
++	}
+ 
+-	if (ret == 0)
+-		ret = count;
++	if (ret) {
++		ath10k_warn("failed to simulate firmware crash: %d\n", ret);
++		goto exit;
 +	}
 +
-+	list_add_rcu(&ctx->list, &local->chanctx_list);
- 	return ctx;
- }
++	ret = count;
  
--- 
-1.8.5.3
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
 
