@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753982AbaCCMtW (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:54932 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbaCMS7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 07:49:22 -0500
-Message-ID: <1393850958.10039.0.camel@jlt4.sipsolutions.net> (sfid-20140303_134925_965308_117F01EC)
-Subject: Re: [PATCH] mac80211: consider virtual mon when calculating min_def
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Date: Mon, 03 Mar 2014 13:49:18 +0100
-In-Reply-To: <1393846634-21264-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1393846634-21264-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 13 Mar 2014 14:59:47 -0400
+Date: Thu, 13 Mar 2014 14:59:42 -0400 (EDT)
+Message-Id: <20140313.145942.1469921760118318430.davem@davemloft.net> (sfid-20140313_195955_901385_5195B4C0)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-03-13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140313184353.GD30579@tuxdriver.com>
+References: <20140311.234712.259725858772258155.davem@davemloft.net>
+	<20140311.235115.534789621550791915.davem@davemloft.net>
+	<20140313184353.GD30579@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-03 at 13:37 +0200, Emmanuel Grumbach wrote:
-> From: Eliad Peller <eliad@wizery.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 13 Mar 2014 14:43:54 -0400
+
+> I have amended this commit request to correct the build problems in
+> staging, including a warning added to one of the staging drivers by
+> the wireless-next tree.  I also included a fix from Larry Finger to
+> address an issue found in rtl8723be by Dan Carpenter and smatch.
 > 
-> When calculating the current max bw required for
-> a channel context, we didn't consider the virtual
-> monitor interface, resulting in its channel context
-> being narrower than configured.
+> Please let me know if there are problems!
 
-Applied. I decided to drop the Cc stable since our driver usage of this
-is only in 3.14 so before that it doesn't really matter.
-
-johannes
-
+Ok, pulled, let's see how this build goes :-)
