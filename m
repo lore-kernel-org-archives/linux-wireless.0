@@ -1,73 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:64623 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaCWShD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3708 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbaCMFQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2014 14:37:03 -0400
-From: Monam Agarwal <monamagarwal123@gmail.com>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-	ilw@linux.intel.com, linville@tuxdriver.com, eliad@wizery.com,
-	eytan.lifshitz@intel.com, eyal@wizery.com, Max.Stepanov@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless: Use RCU_INIT_POINTER(x, NULL) in iwlwifi/mvm/sta.c
-Date: Mon, 24 Mar 2014 00:05:56 +0530
-Message-Id: <1395599756-7861-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_193709_474129_73738C82)
+	Thu, 13 Mar 2014 01:16:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2] ath10k: add recalc RTS/CTS protection method
+References: <1393837661-15235-1-git-send-email-marek.kwaczynski@tieto.com>
+Date: Thu, 13 Mar 2014 07:16:46 +0200
+In-Reply-To: <1393837661-15235-1-git-send-email-marek.kwaczynski@tieto.com>
+	(Marek Kwaczynski's message of "Mon, 3 Mar 2014 10:07:41 +0100")
+Message-ID: <87txb2d6f5.fsf@kamboji.qca.qualcomm.com> (sfid-20140313_061711_185773_6B3A99D0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+Marek Kwaczynski <marek.kwaczynski@tieto.com> writes:
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+> Add recalculation of RTS/CTS protection when one or more legacy
+> stations are connected to ath10k. In this case enable RTS/CTS
+> protection and set sw retry profile are needed in the FW.
+> Without this change legacy station is starved and has very low
+> throughput.
+>
+> Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
----
- drivers/net/wireless/iwlwifi/mvm/sta.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Thanks, applied.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 2677d1c..b793775 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -498,7 +498,7 @@ void iwl_mvm_sta_drained_wk(struct work_struct *wk)
- 				sta_id);
- 			continue;
- 		}
--		rcu_assign_pointer(mvm->fw_id_to_mac_id[sta_id], NULL);
-+		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta_id], NULL);
- 		clear_bit(sta_id, mvm->sta_drained);
- 	}
- 
-@@ -557,7 +557,7 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
- 	} else {
- 		spin_unlock_bh(&mvm_sta->lock);
- 		ret = iwl_mvm_rm_sta_common(mvm, mvm_sta->sta_id);
--		rcu_assign_pointer(mvm->fw_id_to_mac_id[mvm_sta->sta_id], NULL);
-+		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[mvm_sta->sta_id], NULL);
- 	}
- 
- 	return ret;
-@@ -571,7 +571,7 @@ int iwl_mvm_rm_sta_id(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	rcu_assign_pointer(mvm->fw_id_to_mac_id[sta_id], NULL);
-+	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta_id], NULL);
- 	return ret;
- }
- 
-@@ -593,7 +593,7 @@ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
- 
- void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
- {
--	rcu_assign_pointer(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
-+	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
- 	memset(sta, 0, sizeof(struct iwl_mvm_int_sta));
- 	sta->sta_id = IWL_MVM_STATION_COUNT;
- }
 -- 
-1.7.9.5
-
+Kalle Valo
