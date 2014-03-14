@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:43665 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755178AbaCKKX7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 06:23:59 -0400
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Jiri Kosina <trivial@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@linux-m68k.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH trivial 12/16] ath6kl: Spelling s/determnine/determine/
-Date: Tue, 11 Mar 2014 11:23:46 +0100
-Message-Id: <1394533430-4746-12-git-send-email-geert@linux-m68k.org> (sfid-20140311_113318_756532_4935A419)
-In-Reply-To: <1394533430-4746-1-git-send-email-geert@linux-m68k.org>
-References: <1394533430-4746-1-git-send-email-geert@linux-m68k.org>
+Received: from mga01.intel.com ([192.55.52.88]:43368 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755984AbaCNJaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Mar 2014 05:30:25 -0400
+Date: Fri, 14 Mar 2014 17:30:02 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Martin Pitt <martin.pitt@ubuntu.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [mac80211_hwsim] BUG: unable to handle kernel paging request at
+ ce1db404
+Message-ID: <20140314093002.GA20607@localhost> (sfid-20140314_103215_382449_01A86C29)
+References: <20140305125703.GA7193@localhost>
+ <20140305132317.GB10880@localhost>
+ <20140312170806.GC2983@piware.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140312170806.GC2983@piware.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
+Hi Martin,
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@linux-m68k.org>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/ath/ath6kl/wmi.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Mar 12, 2014 at 06:08:06PM +0100, Martin Pitt wrote:
+> Hey Fengguang,
+> 
+> Fengguang Wu [2014-03-05 21:23 +0800]:
+> > git bisect start v3.10 v3.9 --
+[snip]
+> > git bisect  bad d8efcf38b13df3e9e889cf7cc214cb85dc53600c  # 04:30      0-      3  Merge tag 'for-linus' of git://git.kernel.org/pub/scm/virt/kvm/kvm
+> > git bisect  bad b148a42ba7823e34971cd4e5b05a5c74fa3311ed  # 04:30      0-     19  Add linux-next specific files for 20140228
+> 
+> I noticed that this bisect list didn't include Sasha Levin's followup fix:
+> 
+>   http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mac80211_hwsim.c?id=c07fe5ae06
+> 
+> That was supposed to fix problems at registration. Is that actually
+> inclued in your bisection? I suppose it is, but it's quite clear that
+> with only 9ea927 you'd get crashes with building it statically.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index b5f226503baf..5c702ae4d9f8 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1068,7 +1068,7 @@ struct wmi_power_mode_cmd {
- } __packed;
- 
- /*
-- * Policy to determnine whether power save failure event should be sent to
-+ * Policy to determine whether power save failure event should be sent to
-  * host during scanning
-  */
- enum power_save_fail_event_policy {
--- 
-1.7.9.5
+The "git bisect start v3.10 v3.9" itself may not include that fixing
+commit, however the bisect script will check latest mainline and
+linux-next kernels at the end, and this line shows that linux-next at
+that day is still bad:
 
+> > git bisect  bad b148a42ba7823e34971cd4e5b05a5c74fa3311ed  # 04:30      0-     19  Add linux-next specific files for 20140228
+
+I confirmed that b148a42ba7823e34971cd4e5b05a5c74fa3311ed does contain
+the fixing commit c07fe5ae06.
+
+Thanks,
+Fengguang
