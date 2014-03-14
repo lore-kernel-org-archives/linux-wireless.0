@@ -1,84 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:41685 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760947AbaCUNxf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:35 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so1845464eek.34
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:34 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 03/13] mac80211: prevent chanctx overcommit
-Date: Fri, 21 Mar 2014 14:47:21 +0100
-Message-Id: <1395409651-26120-4-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145339_567581_B26F5FB5)
-In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+Received: from gwb.able.be ([194.78.97.254]:50457 "EHLO mail.able.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754518AbaCNT46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Mar 2014 15:56:58 -0400
+From: Tijs Van Buggenhout <tvb@able.be>
+To: backports@vger.kernel.org, linux-wireless@vger.kernel.org
+Reply-To: tvb@able.be
+Cc: tvb@able.be
+Subject: [wireless] [b43] [brcmsmac] [3.3.8]: backport bcma_core_pci_up/down from 3.12
+Date: Fri, 14 Mar 2014 20:51:19 +0100
+Message-ID: <1423990.vA4A9XhDx1@tijs> (sfid-20140314_205703_730461_CF874B9C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not allocate more channel contexts than a
-driver is capable for currently matching interface
-combination.
+commit 6273720de27b0dbd278f823d9c99d40122f41d63
+Author: Tijs Van Buggenhout <tijs.van.buggenhout@vasco.com>
+Date:   Fri Mar 14 20:42:21 2014 +0100
 
-This allows the ieee80211_vif_reserve_chanctx() to
-act as a guard against breaking interface
-combinations.
+Backport bcma_core_pci_up/down from 3.12
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+Compiling module b43 from compat-wireless-2014-01-23.1 for 3.3.8 kernel
+results in build errors like so:
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index ee77795..2bf2d01 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -9,6 +9,25 @@
- #include "ieee80211_i.h"
- #include "driver-ops.h"
- 
-+static int ieee80211_num_chanctx(struct ieee80211_local *local)
+  ...
+  CC [M]  /compat-wireless-2014-01-23.1/compat/backport-3.13.o
+  CC [M]  /compat-wireless-2014-01-23.1/compat/dma-shared-helpers.o
+  LD [M]  /compat-wireless-2014-01-23.1/compat/compat.o
+  CC [M]  /compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.o
+/compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.c: In function
+'b43_wireless_core_exit':
+/compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.c:4680:3: error:
+implicit declaration of function 'bcma_core_pci_down' [-Werror=implicit-
+function-declaration]
+/compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.c: In function
+'b43_wireless_core_init':
+/compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.c:4729:3: error:
+implicit declaration of function 'bcma_core_pci_up' [-Werror=implicit-
+function-declaration]
+cc1: some warnings being treated as errors
+
+make[9]: *** [/compat-wireless-2014-01-23.1/drivers/net/wireless/b43/main.o]
+Error 1
+make[8]: *** [/compat-wireless-2014-01-23.1/drivers/net/wireless/b43] Error 2
+make[7]: *** [/compat-wireless-2014-01-23.1/drivers/net/wireless] Error 2
+make[6]: *** [_module_/compat-wireless-2014-01-23.1] Error 2
+make[5]: *** [modules] Error 2
+make[4]: *** [modules] Error 2
+make[3]: *** [modules] Error 2
+make[3]: Leaving directory `/compat-wireless-2014-01-23.1'
+make[2]: *** [/compat-wireless-2014-01-23.1/.built] Error 2
+
+bcma_core_pci_up and bcma_core_pci_down are used in b43/main.c and
+brcmsmac/main.c, but are only introduced in kernel 3.12.0. The following patch
+adds a backport of these functions for earlier kernel versions. Tested patch
+on b43 and ath9k driver.
+
+Signed-off-by: Tijs Van Buggenhout <tvb@able.be>
+--
+
+diff --git a/backport/backport-include/linux/bcma/bcma_driver_pci.h b/backport/backport-include/linux/bcma/bcma_driver_pci.h
+new file mode 100644
+index 0000000..5e52f04
+--- /dev/null
++++ b/backport/backport-include/linux/bcma/bcma_driver_pci.h
+@@ -0,0 +1,14 @@
++#ifndef __BACKPORT_BCMA_DRIVER_PCI_H
++#define __BACKPORT_BCMA_DRIVER_PCI_H
++#include_next <linux/bcma/bcma_driver_pci.h>
++#include <linux/version.h>
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,12,0)
++struct bcma_bus;
++#define bcma_core_pci_up LINUX_BACKPORT(bcma_core_pci_up)
++extern void bcma_core_pci_up(struct bcma_bus *bus);
++#define bcma_core_pci_down LINUX_BACKPORT(bcma_core_pci_down)
++extern void bcma_core_pci_down(struct bcma_bus *bus);
++#endif
++
++#endif /* __BACKPORT_BCMA_DRIVER_PCI_H */
+diff --git a/backport/compat/backport-3.12.c b/backport/compat/backport-3.12.c
+index 7e3dc58..5f0edb2 100644
+--- a/backport/compat/backport-3.12.c
++++ b/backport/compat/backport-3.12.c
+@@ -27,3 +27,33 @@ u8 *hid_alloc_report_buf(struct hid_report *report, gfp_t flags)
+ 	return kmalloc(len, flags);
+ }
+ EXPORT_SYMBOL_GPL(hid_alloc_report_buf);
++
++#if defined(CONFIG_BCMA) || defined(CONFIG_BCMA_MODULE)
++#include <linux/bcma/bcma.h>
++
++void bcma_core_pci_up(struct bcma_bus *bus)
 +{
-+	struct ieee80211_chanctx *ctx;
-+	int num = 0;
++	struct bcma_drv_pci *pc;
 +
-+	lockdep_assert_held(&local->chanctx_mtx);
++	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
++		return;
 +
-+	list_for_each_entry(ctx, &local->chanctx_list, list)
-+		num++;
++	pc = &bus->drv_pci[0];
 +
-+	return num;
++	bcma_core_pci_extend_L1timer(pc, true);
 +}
++EXPORT_SYMBOL_GPL(bcma_core_pci_up);
 +
-+static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
++void bcma_core_pci_down(struct bcma_bus *bus)
 +{
-+	lockdep_assert_held(&local->chanctx_mtx);
-+	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
-+}
++	struct bcma_drv_pci *pc;
 +
- static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
- {
- 	switch (sta->bandwidth) {
-@@ -745,13 +764,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 			 * context, reserve our current context
- 			 */
- 			new_ctx = curr_ctx;
--		} else {
-+		} else if (ieee80211_can_create_new_chanctx(local)) {
- 			/* create a new context and reserve it */
- 			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
- 			if (IS_ERR(new_ctx)) {
- 				ret = PTR_ERR(new_ctx);
- 				goto out;
- 			}
-+		} else {
-+			ret = -EBUSY;
-+			goto out;
- 		}
- 	}
- 
--- 
-1.8.5.3
++	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
++		return;
++
++	pc = &bus->drv_pci[0];
++
++	bcma_core_pci_extend_L1timer(pc, false);
++}
++EXPORT_SYMBOL_GPL(bcma_core_pci_down);
++#endif
 
