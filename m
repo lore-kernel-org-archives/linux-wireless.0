@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:45549 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752696AbaCaLUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:20:30 -0400
-Message-ID: <1396264822.1787.1.camel@dubbel> (sfid-20140331_132032_804108_5362AE90)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Mon, 31 Mar 2014 14:20:22 +0300
-In-Reply-To: <1396259841-6359-3-git-send-email-michal.kazior@tieto.com>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-3-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v3 2/4] mac80211: split CSA finalize function
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44568 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325AbaCNSaU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Mar 2014 14:30:20 -0400
+Date: Fri, 14 Mar 2014 14:28:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: Pull request: ath 20140311
+Message-ID: <20140314182749.GB20339@tuxdriver.com> (sfid-20140314_193039_382208_E068FB8F)
+References: <87y50hgghr.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y50hgghr.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
-> Improves readability and modularity.
+On Tue, Mar 11, 2014 at 12:46:24PM +0200, Kalle Valo wrote:
+> Hi John,
 > 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
+> here's a new pull request from me, but just ath10k patches this time.
+> Summary of the changes:
+> 
+> Michal now did some optimisations and was able to improve throughput by
+> 100 Mbps on our MIPS based AP135 platform. Chun-Yeow added some
+> workarounds to be able to better use ad-hoc mode. Ben improved log
+> messages and added support for MSDU chaining. And, as usual, also some
+> smaller fixes.
+> 
+> Please let me know if there are any problems.
+> 
+> Kalle
+> 
+> The following changes since commit ef1b4141d0430583743a6045901e4d1a73557a33:
+> 
+>   ath5k: set SURVEY_INFO_IN_USE on get_survey (2014-02-24 15:38:39 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git for-linville
+> 
+> for you to fetch changes up to 70dd77b4c50da518b57b8b9b125a8c9aabe9bc1a:
+> 
+>   ath10k: do not overwrite max_antenna_gain (2014-03-07 10:14:10 +0200)
 
-Looks good to me.
+Pulling now...
 
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
