@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46548 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754624AbaCPTRW (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:58401 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754108AbaCNLit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2014 15:17:22 -0400
-Message-ID: <1394997429.15764.116.camel@deadeye.wl.decadent.org.uk> (sfid-20140316_201758_963884_9637A72C)
-Subject: Re: [PATCH v2 1/4] net: add name_assign_type netdev attribute
-From: Ben Hutchings <ben@decadent.org.uk>
-To: David Herrmann <dh.herrmann@gmail.com>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Sun, 16 Mar 2014 19:17:09 +0000
-In-Reply-To: <1394990490-1076-2-git-send-email-dh.herrmann@gmail.com>
-References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
-	 <1394990490-1076-2-git-send-email-dh.herrmann@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-t6iSqRIB9XFun5VjX3F7"
-Mime-Version: 1.0
+	Fri, 14 Mar 2014 07:38:49 -0400
+Received: by mail-la0-f41.google.com with SMTP id gl10so1673735lab.14
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 04:38:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87bnx983oh.fsf@kamboji.qca.qualcomm.com>
+References: <20140313082431.10798.10888.stgit@potku.adurom.net>
+	<87bnx983oh.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 14 Mar 2014 12:38:48 +0100
+Message-ID: <CADnKcVjjpes6uMM8pwwPKrqLfduYYYRvh2EAW4D2_RWv4zxDRA@mail.gmail.com> (sfid-20140314_123853_565780_67FCD080)
+Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Kalle,
 
---=-t6iSqRIB9XFun5VjX3F7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 14 March 2014 11:39, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Hi Marek,
+>
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> From: Marek Puzyniak <marek.puzyniak@tieto.com>
+>>
+>> Command WMI_FORCE_FW_HANG_CMDID is not supported in firmware 10.1.
+>> In order to have firmware crash simulation functionality also
+>> in firmware 10.1 driver can force firmware crash by performing not allowed
+>> operation. Driver can deliberately crash firmware when setting vdev param for
+>> vdev id out of range.  This patch introduces two keywords to simulate_fw_crash:
 
-On Sun, 2014-03-16 at 18:21 +0100, David Herrmann wrote:
-[...]
-> --- a/include/linux/netdevice.h
-> +++ b/include/linux/netdevice.h
-> @@ -74,6 +74,11 @@ void netdev_set_default_ethtool_ops(struct net_device =
-*dev,
->  #define NET_RX_SUCCESS		0	/* keep 'em coming, baby */
->  #define NET_RX_DROP		1	/* packet dropped */
-> =20
-> +/* interface name assignment types */
-> +#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
-> +#define NET_NAME_USER		1	/* provided by user-space */
-> +#define NET_NAME_RENAMED	2	/* renamed by user-space */
 [...]
 
-I think these definitions should be put in a UAPI header.  Even if the
-names don't end up being used by userland, that would make it clear that
-the numbers are a stable ABI.
+> can you please review my changes and check if they are ok?
 
-Ben.
+Looks fine.
 
---=20
-Ben Hutchings
-Computers are not intelligent.	They only think they are.
-
---=-t6iSqRIB9XFun5VjX3F7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAUyX4tee/yOyVhhEJAQrgGw//WphR8tzozaVHMuvgPNNscsBZQ+kw3c1S
-wBUVbTbfYmylS4oSI48yxJpPZOB8tu5K6dxWR806oUJYda0v37sZwaBhYtb666/W
-TdjTY9614FGxL1/gU9UfPQwEjHCXNujdq7Ylj/68u+CzSjnHMSfXryOV6IvGNmJD
-9ejfclWRJC3eUZ4dVFbeN8X7/dLvQ6EOgaF03jbhqH9dXd/xMtHlP3RDZ7hK7xfK
-KUrIXPJhDh8avjO5CmzVODVl/SHNFBvZtWd+yOJNFK6uZfNJHP+4uF7x4m+c0DGq
-pQoj+rkxmT16eo9NaSd//R4c+Iqgzp+oVMZT8r9xI8BAxHZ7gU1XDzT8/N6ez3qj
-Xb4wEFwgw7OCpSCZzVyDvKvDVZiP5PVfRP0PcmUBMgB7CxnboTw3DKbQP/YcfZJs
-6I4Qx4Exdr3CxMRm3StVD2uG5D0MjmMPucfDs1E07837knpqrJVKuYw0s7SntSud
-M8oXr0E7BZkTzGvjlxZIMj5jrmAegIhjzTAeeIauhpp3dYhYtxWFRRFgCgF5zLnO
-Rl8HXYzWH02HN2EMnuqy2R7i/8noQQMTcYeMozyddXduV+NyvkprA4fmW+D6jerv
-BnKemsl0C0mw3lRUcGM3yThtb9+RTbCjdU9EDAqq3s0E3VbfCDaCuOh7bL9Ut1o3
-t1BVW0DIHlQ=
-=uFI+
------END PGP SIGNATURE-----
-
---=-t6iSqRIB9XFun5VjX3F7--
+Thank you,
+Marek
