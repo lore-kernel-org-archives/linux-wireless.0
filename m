@@ -1,96 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:48380 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbaC1OjL (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:9267 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754925AbaCNPXw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:39:11 -0400
-Received: by mail-wi0-f182.google.com with SMTP id d1so832300wiv.3
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:39:10 -0700 (PDT)
+	Fri, 14 Mar 2014 11:23:52 -0400
+Message-ID: <53231F04.4070903@broadcom.com> (sfid-20140314_162424_942811_74552F0F)
+Date: Fri, 14 Mar 2014 16:23:48 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <533584BF.70604@candelatech.com>
-References: <5334F8E7.1070803@candelatech.com>
-	<CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
-	<533584BF.70604@candelatech.com>
-Date: Fri, 28 Mar 2014 15:39:09 +0100
-Message-ID: <CA+icZUUBH5zp4nVnP-B_tGUskn=Fsvcr5Ebo-QR7Joh8dYgmvQ@mail.gmail.com> (sfid-20140328_153915_770540_852E9B25)
-Subject: Re: Setting txpower fails?
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Dave Taht <dave.taht@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"Ben Hutchings" <ben@decadent.org.uk>,
+	<ath10k@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: add firmware files
+References: <20140314084501.23100.13103.stgit@x230>	<20140314084514.23100.72654.stgit@x230>	<CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com> <CAA93jw57SG8ZVJDH3wMxBgBfue-B3Vk3hq8Mj01fxLeyRL6qUw@mail.gmail.com>
+In-Reply-To: <CAA93jw57SG8ZVJDH3wMxBgBfue-B3Vk3hq8Mj01fxLeyRL6qUw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 3:18 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
+On 03/14/14 13:47, Dave Taht wrote:
+> On Fri, Mar 14, 2014 at 5:36 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com>  wrote:
+>> On Fri, Mar 14, 2014 at 1:45 AM, Kalle Valo<kvalo@qca.qualcomm.com>  wrote:
+>>> +FOR ANY DIRECT DAMAGES ARISING UNDER OR RESULTING FROM
+>>> +THIS AGREEMENT OR IN CONNECTION WITH ANY USE OF THE SOFTWARE SHALL NOT
+>>> +EXCEED A TOTAL AMOUNT OF US$5.00.
 >>
->> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com>
->> wrote:
->>>
->>> Any idea why this isn't working?
->>>
->>> Kernel is 3.9.11+, driver is ath9k.
->>>
->>> [root@ct523-9292 lanforge]# iwconfig wlan0
->>> wlan0     IEEE 802.11abgn  ESSID:off/any
->>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>>            Retry short limit:7   RTS thr:off   Fragment thr:off
->>>            Encryption key:off
->>>            Power Management:off
->>>
->>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
->>> [root@ct523-9292 lanforge]# echo $?
->>> 0
->>> [root@ct523-9292 lanforge]# iwconfig wlan0
->>> wlan0     IEEE 802.11abgn  ESSID:off/any
->>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>>            Retry short limit:7   RTS thr:off   Fragment thr:off
->>>            Encryption key:off
->>>            Power Management:off
->>>
->>> [root@ct523-9292 lanforge]#
->>>
+>> WTF - was this inspired by a Sci-Fi movie?
+>
+> Actually this is awesome. Does this mean I CAN reverse engineer,
+> decompile, decrypt and dissemble this software?
+
+I must say I admire your ability to read between bold printed lines 
+almost as much as your songs ;-)
+
+> Where do I send my 5 bucks?
+>
+>>    Luis
 >>
->> Which version of wireless-tools?
->> Why don't you use modern iw?
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
 >
 >
-> Do you know the right incantation for 'iw'?  From it's help, it seems
-> this should work, but it throws an error.  I haven't dug into the
-> code to figure out why...
->
-> [root@ct523-9292 lanforge]# iw dev wlan0 set txpower 10
-> Invalid parameter: 10
 >
 
-I have found [1] in the wiki.
-For more details and a quick answer try to ask on IRC?
-
-- Sedat -
-
-[1] http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
-
-> [root@ct523-9292 lanforge]# iwconfig --version
-> iwconfig  Wireless-Tools version 29
->           Compatible with Wireless Extension v11 to v22.
->
-> Kernel    Currently compiled with Wireless Extension v22.
->
-> sta211    Recommend Wireless Extension v21 or later,
->           Currently compiled with Wireless Extension v22.
-> ...
->
->
-> Thanks,
-> Ben
->
->>
->> - Sedat -
->>
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
