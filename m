@@ -1,135 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:61746 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbaCGGxp (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:42253 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516AbaCNIkb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 01:53:45 -0500
-Received: by mail-pa0-f48.google.com with SMTP id hz1so3767236pad.7
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 22:53:44 -0800 (PST)
-From: Ujjal Roy <royujjal@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: add support to set/get retry limit
-Date: Fri,  7 Mar 2014 12:23:38 +0530
-Message-Id: <1394175218-24869-1-git-send-email-royujjal@gmail.com> (sfid-20140307_075348_825819_A6F42EB7)
+	Fri, 14 Mar 2014 04:40:31 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wp18so2235080obc.35
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 01:40:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
+References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
+	<1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
+Date: Fri, 14 Mar 2014 09:40:31 +0100
+Message-ID: <CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com> (sfid-20140314_094155_735494_5DC4A121)
+Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
+ combination check to mac80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	sw@simonwunderlich.de,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
+	Eliad Peller <eliad@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for late response. Original patch is started below.
-...
+On 11 March 2014 15:16, Luciano Coelho <luciano.coelho@intel.com> wrote:
 
-Show the retry limit in phy details and also configure the
-retry limit.
+[...]
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
----
- info.c | 16 ++++++++++++++++
- phy.c  | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 80 insertions(+)
+> +int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+> +                                const struct cfg80211_chan_def *chandef,
+> +                                enum ieee80211_chanctx_mode chanmode,
+> +                                u8 radar_detect)
+> +{
+> +       struct ieee80211_local *local = sdata->local;
+> +       struct ieee80211_sub_if_data *sdata_iter;
+> +       enum nl80211_iftype iftype = sdata->wdev.iftype;
+> +       int num[NUM_NL80211_IFTYPES];
+> +       struct ieee80211_chanctx *ctx;
+> +       int num_different_channels = 1;
+> +       int total = 1;
+> +
+> +       lockdep_assert_held(&local->chanctx_mtx);
+> +
+> +       if (WARN_ON(hweight32(radar_detect) > 1))
+> +               return -EINVAL;
+> +
+> +       if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
+> +               return -EINVAL;
+> +
+> +       if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+> +               return -EINVAL;
+> +
+> +       /* Always allow software iftypes */
+> +       if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
+> +               if (radar_detect)
+> +                       return -EINVAL;
+> +               return 0;
+> +       }
+> +
+> +       memset(num, 0, sizeof(num));
+> +
+> +       if (iftype != NL80211_IFTYPE_UNSPECIFIED)
+> +               num[iftype] = 1;
+> +
 
-diff --git a/info.c b/info.c
-index a696503..001b317 100644
---- a/info.c
-+++ b/info.c
-@@ -246,6 +246,22 @@ next:
- 			printf("\tRTS threshold: %d\n", rts);
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT] ||
-+	    tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]) {
-+		unsigned char retry_short = 0, retry_long = 0;
-+
-+		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT])
-+			retry_short = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT]);
-+		if (tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG])
-+			retry_long = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]);
-+		if (retry_short == retry_long) {
-+			printf("\tRetry short long limit: %d\n", retry_short);
-+		} else {
-+			printf("\tRetry short limit: %d\n", retry_short);
-+			printf("\tRetry long limit: %d\n", retry_long);
-+		}
-+	}
-+
- 	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
- 		unsigned char coverage;
- 
-diff --git a/phy.c b/phy.c
-index 68f40f6..517d203 100644
---- a/phy.c
-+++ b/phy.c
-@@ -232,6 +232,70 @@ COMMAND(set, rts, "<rts threshold|off>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
- 	"Set rts threshold.");
- 
-+static int handle_retry(struct nl80211_state *state,
-+			struct nl_cb *cb, struct nl_msg *msg,
-+			int argc, char **argv, enum id_input id)
-+{
-+	unsigned int retry_short = 0, retry_long = 0;
-+	bool have_retry_s = false, have_retry_l = false;
-+	int i;
-+	enum {
-+		S_NONE,
-+		S_SHORT,
-+		S_LONG,
-+	} parser_state = S_NONE;
-+
-+	if (!argc || (argc != 2 && argc != 4))
-+		return 1;
-+
-+	for (i = 0; i < argc; i++) {
-+		char *end;
-+		unsigned int tmpul;
-+
-+		if (strcmp(argv[i], "short") == 0) {
-+			if (have_retry_s)
-+				return 1;
-+			parser_state = S_SHORT;
-+			have_retry_s = true;
-+		} else if (strcmp(argv[i], "long") == 0) {
-+			if (have_retry_l)
-+				return 1;
-+			parser_state = S_LONG;
-+			have_retry_l = true;
-+		} else {
-+			tmpul = strtoul(argv[i], &end, 10);
-+			if (*end != '\0')
-+				return 1;
-+			if (!tmpul || tmpul > 255)
-+				return -EINVAL;
-+			switch (parser_state) {
-+			case S_SHORT:
-+				retry_short = tmpul;
-+				break;
-+			case S_LONG:
-+				retry_long = tmpul;
-+				break;
-+			default:
-+				return 1;
-+			}
-+		}
-+	}
-+
-+	if (!have_retry_s && !have_retry_l)
-+		return 1;
-+	if (have_retry_s)
-+		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT, retry_short);
-+	if (have_retry_l)
-+		NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG, retry_long);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, retry, "[short <limit>] [long <limit>]",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
-+	"Set retry limit.");
-+
- static int handle_netns(struct nl80211_state *state,
- 			struct nl_cb *cb,
- 			struct nl_msg *msg,
--- 
-1.8.1.4
+> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
+> +               if (ctx->conf.radar_enabled)
+> +                       radar_detect |= BIT(ctx->conf.def.width);
 
+Is this really correct?
+
+The original behaviour was to:
+
+ for each wdev:
+   get_chan_state(..., &radar_width)
+
+where get_chan_state() ORs BIT(width) accordingly to iftype, etc.
+
+For 2 APs with different operational widths (e.g. 20 and 40) this means:
+
+a) old code: width_detect = BIT(WIDTH_20) | BIT(WIDTH_40)
+b) new code: width_detect = BIT(chanctx->width) which is BIT(WIDTH_40)
+
+I think radar_detect should be computed:
+
+ radar_detect = 0 // **
+ for each vif:
+  if vif.ctx == ctx && vif.radar_required:
+   radar_detect = BIT(vif.bss.width)
+
+** you could argue to initialize with BIT(ctx->width), but all things
+seem to use ieee80211_vif_use_channel() (including CAC/radar
+detection) so bss_conf.chandef.width should be set correctly and
+iteration alone should suffice.
+
+
+Michał
