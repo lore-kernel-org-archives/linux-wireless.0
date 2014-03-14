@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:59597 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756478AbaCRQmA (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24880 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbaCNRHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 12:42:00 -0400
-Received: by mail-ie0-f180.google.com with SMTP id as1so7427801iec.39
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 09:42:00 -0700 (PDT)
+	Fri, 14 Mar 2014 13:07:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: add firmware files
+References: <20140314084501.23100.13103.stgit@x230>
+	<20140314084514.23100.72654.stgit@x230>
+	<CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com>
+Date: Fri, 14 Mar 2014 19:07:29 +0200
+In-Reply-To: <CAB=NE6WW8yX4kdy02j2fT4g0JvYj4a_XkiqYtXKZSMB7FHuwNg@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Fri, 14 Mar 2014 05:36:53 -0700")
+Message-ID: <87ob18ogj2.fsf@kamboji.qca.qualcomm.com> (sfid-20140314_180813_809770_D1835EE2)
 MIME-Version: 1.0
-In-Reply-To: <1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 18 Mar 2014 18:42:00 +0200
-Message-ID: <CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com> (sfid-20140318_174205_812488_FC9BD45D)
-Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Relax ieee80211_find_chanctx(). If chanctx
-> reservation chandef is compatible with
-> current-future assigned interfaces chandef then
-> allow it to be used by new interfaces.
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
+
+> On Fri, Mar 14, 2014 at 1:45 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+>> + NO LICENSES OR OTHER RIGHTS,
+>> +WHETHER EXPRESS, IMPLIED, BASED ON ESTOPPEL OR OTHERWISE, ARE GRANTED
+>> +TO ANY PARTY'S PATENTS, PATENT APPLICATIONS, OR PATENTABLE INVENTIONS
+>> +BY VIRTUE OF THIS LICENSE OR THE DELIVERY OR PROVISION BY QUALCOMM
+>> +ATHEROS, INC. OF THE SOFTWARE.
+>
+> This -- however is new to linux-firmware -- and I hereby raise a big
+> red fucking flag. All other licenses on linux-firmware provide at the
+> very least a limited patent grant. What makes Qualcomm special ?
 
-> +static const struct cfg80211_chan_def *
-> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
-> +                                  struct ieee80211_chanctx *ctx,
-> +                                  const struct cfg80211_chan_def *compat)
-> +{
-> +       struct ieee80211_sub_if_data *sdata;
-> +
-> +       lockdep_assert_held(&local->chanctx_mtx);
-> +
-> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
-> +                           reserved_chanctx_list) {
-> +               if (!compat)
-> +                       compat = &sdata->reserved_chandef;
-this check is redundant.
+Well, I was just told to use this license with our firmware, I didn't
+write this.
 
-Eliad.
+-- 
+Kalle Valo
