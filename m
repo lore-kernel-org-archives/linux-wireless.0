@@ -1,102 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56497 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbaCIG5q (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56221 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbaCOEjc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 01:57:46 -0500
-Subject: [PATCH 6/6] ath6kl: update Kconfig descriptions
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 15 Mar 2014 00:39:32 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so3439992pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 21:39:31 -0700 (PDT)
+From: "Zhao\, Gang" <gamerh2o@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Sun, 09 Mar 2014 08:57:46 +0200
-Message-ID: <20140309065746.10793.56291.stgit@x230> (sfid-20140309_075748_851230_40520C39)
-In-Reply-To: <20140309065606.10793.67068.stgit@x230>
-References: <20140309065606.10793.67068.stgit@x230>
+Subject: Re: [PATCH] wlan-ng: fixup staging driver for removal of ieee80211_dsss_chan_to_freq
+References: <1394730975-20389-1-git-send-email-linville@tuxdriver.com>
+Date: Sat, 15 Mar 2014 12:39:14 +0800
+In-Reply-To: <1394730975-20389-1-git-send-email-linville@tuxdriver.com> (John
+	W. Linville's message of "Thu, 13 Mar 2014 13:16:15 -0400")
+Message-ID: <87wqfw6pot.fsf@will.lan> (sfid-20140315_053935_642446_D507480C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The help text were either out of date, too small or didn't exist at all. Also
-move cfg80211 dependency to ath6kl_core module as it has all the calls to
-cfg80211.
+On Fri, 2014-03-14 at 01:16:15 +0800, John W. Linville wrote:
+> Commit 3ebe8e257307a87c33460aa7d2b75dadd374ed9c ("ieee80211: remove
+> function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}") removed
+> ieee80211_dsss_chan_to_freq, but it neglected to account for this
+> staging driver...
 
-Fixes checkpatch warning:
+Hi, John.
 
-WARNING: please write a paragraph that describes the config symbol fully
+I have submited a similar patch to staging/staging-next tree, and it was
+applied in that tree on Feb 18, the commit is 4e5e9d7c66f04 on that
+tree. But my patch add a variable to deal with 80 characters
+problem. I'm not sure if your patch is applied to wireless-next, then
+there could be a conflict in future time.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/Kconfig |   30 +++++++++++++++++++++++-------
- 1 file changed, 23 insertions(+), 7 deletions(-)
+I separated the wireless tree patches and staging tree patch to
+different maintainers when doing that change. If I knew the staging driver
+change can happen on wireless tree, I should have combined them in one place.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index e39e586..9c125ff 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -1,11 +1,19 @@
- config ATH6KL
- 	tristate "Atheros mobile chipsets support"
-+	depends on CFG80211
-+        ---help---
-+	  This module adds core support for wireless adapters based on
-+	  Atheros AR6003 and AR6004 chipsets. You still need separate
-+	  bus drivers for USB and SDIO to be able to use real devices.
-+
-+	  If you choose to build it as a module, it will be called
-+	  ath6kl_core. Please note that AR6002 and AR6001 are not
-+	  supported by this driver.
- 
- config ATH6KL_SDIO
- 	tristate "Atheros ath6kl SDIO support"
- 	depends on ATH6KL
- 	depends on MMC
--	depends on CFG80211
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros AR6003 and AR6004 chipsets running over SDIO. If you
-@@ -17,25 +25,31 @@ config ATH6KL_USB
- 	tristate "Atheros ath6kl USB support"
- 	depends on ATH6KL
- 	depends on USB
--	depends on CFG80211
- 	---help---
- 	  This module adds support for wireless adapters based on
--	  Atheros AR6004 chipset running over USB. This is still under
--	  implementation and it isn't functional. If you choose to
--	  build it as a module, it will be called ath6kl_usb.
-+	  Atheros AR6004 chipset and chipsets based on it running over
-+	  USB. If you choose to build it as a module, it will be
-+	  called ath6kl_usb.
- 
- config ATH6KL_DEBUG
- 	bool "Atheros ath6kl debugging"
- 	depends on ATH6KL
- 	---help---
--	  Enables debug support
-+	  Enables ath6kl debug support, including debug messages
-+	  enabled with debug_mask module parameter and debugfs
-+	  interface.
-+
-+	  If unsure, say Y to make it easier to debug problems.
- 
- config ATH6KL_TRACING
- 	bool "Atheros ath6kl tracing support"
- 	depends on ATH6KL
- 	depends on EVENT_TRACING
- 	---help---
--	  Select this to ath6kl use tracing infrastructure.
-+	  Select this to ath6kl use tracing infrastructure which, for
-+	  example, can be enabled with help of trace-cmd. All debug
-+	  messages and commands are delivered to using individually
-+	  enablable trace points.
- 
- 	  If unsure, say Y to make it easier to debug problems.
- 
-@@ -47,3 +61,5 @@ config ATH6KL_REGDOMAIN
- 	  Enabling this makes it possible to change the regdomain in
- 	  the firmware. This can be only enabled if regulatory requirements
- 	  are taken into account.
-+
-+	  If unsure, say N.
-
+>
+> Cc: Zhao, Gang <gamerh2o@gmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/staging/wlan-ng/cfg80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+> index a7d24c95191d..7dd2b95416e8 100644
+> --- a/drivers/staging/wlan-ng/cfg80211.c
+> +++ b/drivers/staging/wlan-ng/cfg80211.c
+> @@ -416,7 +416,7 @@ static int prism2_scan(struct wiphy *wiphy,
+>  		memcpy(&ie_buf[2], &(msg2.ssid.data.data), msg2.ssid.data.len);
+>  		bss = cfg80211_inform_bss(wiphy,
+>  			ieee80211_get_channel(wiphy,
+> -			      ieee80211_dsss_chan_to_freq(msg2.dschannel.data)),
+> +			      ieee80211_channel_to_frequency(msg2.dschannel.data, IEEE80211_BAND_2GHZ)),
+>  			(const u8 *) &(msg2.bssid.data.data),
+>  			msg2.timestamp.data, msg2.capinfo.data,
+>  			msg2.beaconperiod.data,
