@@ -1,353 +1,779 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59047 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754239AbaCCTpQ (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:43376 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756619AbaCOWRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 14:45:16 -0500
-Date: Mon, 3 Mar 2014 14:44:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless 2014-03-03
-Message-ID: <20140303194432.GD26300@tuxdriver.com> (sfid-20140303_204529_580492_896D58B4)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
+	Sat, 15 Mar 2014 18:17:48 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ma3so4125591pbc.13
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2014 15:17:48 -0700 (PDT)
+From: Fariya Fatima <fariyaf@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH v5 07/11] rsi: Management functions internal to the device.
+Date: Sun, 16 Mar 2014 03:47:08 +0530
+Message-Id: <1394921832-4056-8-git-send-email-fariyaf@gmail.com> (sfid-20140315_231823_286904_6E61DF72)
+In-Reply-To: <1394921832-4056-1-git-send-email-fariyaf@gmail.com>
+References: <1394921832-4056-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Fariya Fatima <fariyaf@gmail.com>
 
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch has the remaining functions which prepare management frames internal to the device.
 
-Dave,
-
-Please pull this batch of fixes intended for the 3.14 stream...
-
-For the mac80211 bits, Johannes says:
-
-"This time I have a fix to get out of an 'infinite error state' in case
-regulatory domain updates failed and two fixes for VHT associations: one
-to not disconnect immediately when the AP uses more bandwidth than the
-new regdomain would allow after a change due to association country
-information getting used, and one for an issue in the code where
-mac80211 doesn't correctly ignore a reserved field and then uses an HT
-instead of VHT association."
-
-For the iwlwifi bits, Emmanuel says:
-
-"Johannes fixes a long standing bug in the AMPDU status reporting.
-Max fixes the listen time which was way too long and causes trouble
-to several APs."
-
-Along with those, Bing Zhao marks the mwifiex_usb driver as _not_
-supporting USB autosuspend after a number of problems with that have
-been reported.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
 ---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |  740 +++++++++++++++++++++++++++++++
+ 1 files changed, 740 insertions(+), 0 deletions(-)
 
-The following changes since commit 635d61a3735e05c8da72740006670f819e5b6a5f:
-
-  USB AX88179/178A: Support D-Link DUB-1312 (2014-03-02 20:29:30 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
-avem
-
-for you to fetch changes up to 0c6a4812a0e1879daa6c8ac88e566dbb85e1ea70:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless into for-davem (2014-03-03 14:34:45 -0500)
-
-----------------------------------------------------------------
-
-Bing Zhao (1):
-      mwifiex: do not advertise usb autosuspend support
-
-Janusz Dziedzic (1):
-      cfg80211: regulatory: reset regdomain in case of error
-
-Johannes Berg (3):
-      mac80211: don't validate unchanged AP bandwidth while tracking
-      iwlwifi: fix TX status for aggregated packets
-      mac80211: fix association to 20/40 MHz VHT networks
-
-John W. Linville (3):
-      Merge branch 'master' of git://git.kernel.org/.../iwlwifi/iwlwifi-fix=
-es
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
-nto for-davem
-
-Max Stepanov (1):
-      iwlwifi: mvm: change of listen interval from 70 to 10
-
- drivers/net/wireless/iwlwifi/dvm/tx.c  | 14 +++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h |  2 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c  | 18 +++++++++---------
- drivers/net/wireless/mwifiex/usb.c     |  8 --------
- net/mac80211/mlme.c                    | 23 +++++++++++++++++++++++
- net/wireless/reg.c                     | 10 +++++++++-
- 6 files changed, 51 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/i=
-wlwifi/dvm/tx.c
-index a6839dfcb82d..398dd096674c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -1291,8 +1291,6 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *pr=
-iv,
- 	struct iwl_compressed_ba_resp *ba_resp =3D (void *)pkt->data;
- 	struct iwl_ht_agg *agg;
- 	struct sk_buff_head reclaimed_skbs;
--	struct ieee80211_tx_info *info;
--	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb;
- 	int sta_id;
- 	int tid;
-@@ -1379,22 +1377,28 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *=
-priv,
- 	freed =3D 0;
-=20
- 	skb_queue_walk(&reclaimed_skbs, skb) {
--		hdr =3D (struct ieee80211_hdr *)skb->data;
-+		struct ieee80211_hdr *hdr =3D (void *)skb->data;
-+		struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-=20
- 		if (ieee80211_is_data_qos(hdr->frame_control))
- 			freed++;
- 		else
- 			WARN_ON_ONCE(1);
-=20
--		info =3D IEEE80211_SKB_CB(skb);
- 		iwl_trans_free_tx_cmd(priv->trans, info->driver_data[1]);
-=20
-+		memset(&info->status, 0, sizeof(info->status));
-+		/* Packet was transmitted successfully, failures come as single
-+		 * frames because before failing a frame the firmware transmits
-+		 * it without aggregation at least once.
-+		 */
-+		info->flags |=3D IEEE80211_TX_STAT_ACK;
-+
- 		if (freed =3D=3D 1) {
- 			/* this is the first skb we deliver in this batch */
- 			/* put the rate scaling data there */
- 			info =3D IEEE80211_SKB_CB(skb);
- 			memset(&info->status, 0, sizeof(info->status));
--			info->flags |=3D IEEE80211_TX_STAT_ACK;
- 			info->flags |=3D IEEE80211_TX_STAT_AMPDU;
- 			info->status.ampdu_ack_len =3D ba_resp->txed_2_done;
- 			info->status.ampdu_len =3D ba_resp->txed;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/=
-iwlwifi/mvm/mvm.h
-index e4ead86f06d6..2b0ba1fc3c82 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -152,7 +152,7 @@ enum iwl_power_scheme {
- 	IWL_POWER_SCHEME_LP
- };
-=20
--#define IWL_CONN_MAX_LISTEN_INTERVAL	70
-+#define IWL_CONN_MAX_LISTEN_INTERVAL	10
- #define IWL_UAPSD_AC_INFO		(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO |\
- 					 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |\
- 					 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |\
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/i=
-wlwifi/mvm/tx.c
-index 4df12fa9d336..76ee486039d7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -822,16 +822,12 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct i=
-wl_rx_cmd_buffer *rxb,
- 	struct iwl_mvm_ba_notif *ba_notif =3D (void *)pkt->data;
- 	struct sk_buff_head reclaimed_skbs;
- 	struct iwl_mvm_tid_data *tid_data;
--	struct ieee80211_tx_info *info;
- 	struct ieee80211_sta *sta;
- 	struct iwl_mvm_sta *mvmsta;
--	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb;
- 	int sta_id, tid, freed;
--
- 	/* "flow" corresponds to Tx queue */
- 	u16 scd_flow =3D le16_to_cpu(ba_notif->scd_flow);
--
- 	/* "ssn" is start of block-ack Tx window, corresponds to index
- 	 * (in Tx queue's circular buffer) of first TFD/frame in window */
- 	u16 ba_resp_scd_ssn =3D le16_to_cpu(ba_notif->scd_ssn);
-@@ -888,22 +884,26 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct i=
-wl_rx_cmd_buffer *rxb,
- 	freed =3D 0;
-=20
- 	skb_queue_walk(&reclaimed_skbs, skb) {
--		hdr =3D (struct ieee80211_hdr *)skb->data;
-+		struct ieee80211_hdr *hdr =3D (void *)skb->data;
-+		struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-=20
- 		if (ieee80211_is_data_qos(hdr->frame_control))
- 			freed++;
- 		else
- 			WARN_ON_ONCE(1);
-=20
--		info =3D IEEE80211_SKB_CB(skb);
- 		iwl_trans_free_tx_cmd(mvm->trans, info->driver_data[1]);
-=20
-+		memset(&info->status, 0, sizeof(info->status));
-+		/* Packet was transmitted successfully, failures come as single
-+		 * frames because before failing a frame the firmware transmits
-+		 * it without aggregation at least once.
-+		 */
-+		info->flags |=3D IEEE80211_TX_STAT_ACK;
-+
- 		if (freed =3D=3D 1) {
- 			/* this is the first skb we deliver in this batch */
- 			/* put the rate scaling data there */
--			info =3D IEEE80211_SKB_CB(skb);
--			memset(&info->status, 0, sizeof(info->status));
--			info->flags |=3D IEEE80211_TX_STAT_ACK;
- 			info->flags |=3D IEEE80211_TX_STAT_AMPDU;
- 			info->status.ampdu_ack_len =3D ba_notif->txed_2_done;
- 			info->status.ampdu_len =3D ba_notif->txed;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwif=
-iex/usb.c
-index cb6b70a1b34d..208748804a55 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -525,13 +525,6 @@ static int mwifiex_usb_resume(struct usb_interface *in=
-tf)
- 						   MWIFIEX_BSS_ROLE_ANY),
- 				  MWIFIEX_ASYNC_CMD);
-=20
--#ifdef CONFIG_PM
--	/* Resume handler may be called due to remote wakeup,
--	 * force to exit suspend anyway
--	 */
--	usb_disable_autosuspend(card->udev);
--#endif /* CONFIG_PM */
--
- 	return 0;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index a9a189a..f09c72e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -560,3 +560,743 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
+ 
+ 	return rsi_send_internal_mgmt_frame(common, skb);
  }
-=20
-@@ -571,7 +564,6 @@ static struct usb_driver mwifiex_usb_driver =3D {
- 	.id_table =3D mwifiex_usb_table,
- 	.suspend =3D mwifiex_usb_suspend,
- 	.resume =3D mwifiex_usb_resume,
--	.supports_autosuspend =3D 1,
- };
-=20
- static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 57d5482b10fa..245dce969b31 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -222,6 +222,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_da=
-ta *sdata,
- 	switch (vht_oper->chan_width) {
- 	case IEEE80211_VHT_CHANWIDTH_USE_HT:
- 		vht_chandef.width =3D chandef->width;
-+		vht_chandef.center_freq1 =3D chandef->center_freq1;
- 		break;
- 	case IEEE80211_VHT_CHANWIDTH_80MHZ:
- 		vht_chandef.width =3D NL80211_CHAN_WIDTH_80;
-@@ -271,6 +272,28 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_d=
-ata *sdata,
- 	ret =3D 0;
-=20
- out:
-+	/*
-+	 * When tracking the current AP, don't do any further checks if the
-+	 * new chandef is identical to the one we're currently using for the
-+	 * connection. This keeps us from playing ping-pong with regulatory,
-+	 * without it the following can happen (for example):
-+	 *  - connect to an AP with 80 MHz, world regdom allows 80 MHz
-+	 *  - AP advertises regdom US
-+	 *  - CRDA loads regdom US with 80 MHz prohibited (old database)
-+	 *  - the code below detects an unsupported channel, downgrades, and
-+	 *    we disconnect from the AP in the caller
-+	 *  - disconnect causes CRDA to reload world regdomain and the game
-+	 *    starts anew.
-+	 * (see https://bugzilla.kernel.org/show_bug.cgi?id=3D70881)
-+	 *
-+	 * It seems possible that there are still scenarios with CSA or real
-+	 * bandwidth changes where a this could happen, but those cases are
-+	 * less common and wouldn't completely prevent using the AP.
-+	 */
-+	if (tracking &&
-+	    cfg80211_chandef_identical(chandef, &sdata->vif.bss_conf.chandef))
-+		return ret;
 +
- 	/* don't print the message below for VHT mismatch if VHT is disabled */
- 	if (ret & IEEE80211_STA_DISABLE_VHT)
- 		vht_chandef =3D *chandef;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4c50c21d6f52..f0541370e68e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2373,6 +2373,7 @@ static int reg_set_rd_country_ie(const struct ieee802=
-11_regdomain *rd,
- int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	struct regulatory_request *lr;
-+	bool user_reset =3D false;
- 	int r;
-=20
- 	if (!reg_is_valid_request(rd->alpha2)) {
-@@ -2389,6 +2390,7 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 		break;
- 	case NL80211_REGDOM_SET_BY_USER:
- 		r =3D reg_set_rd_user(rd, lr);
-+		user_reset =3D true;
- 		break;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		r =3D reg_set_rd_driver(rd, lr);
-@@ -2402,8 +2404,14 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 	}
-=20
- 	if (r) {
--		if (r =3D=3D -EALREADY)
-+		switch (r) {
-+		case -EALREADY:
- 			reg_set_request_processed();
-+			break;
-+		default:
-+			/* Back to world regulatory in case of errors */
-+			restore_regulatory_settings(user_reset);
++/**
++ * rsi_program_bb_rf() - This function starts base band and RF programming.
++ *			 This is called after initial configurations are done.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, corresponding negative error code on failure.
++ */
++static int rsi_program_bb_rf(struct rsi_common *common)
++{
++	struct sk_buff *skb;
++	struct rsi_mac_frame *mgmt_frame;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending program BB/RF frame\n", __func__);
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame = (struct rsi_mac_frame *)skb->data;
++
++	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
++	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint << 8);
++
++	if (common->rf_reset) {
++		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
++		rsi_dbg(MGMT_TX_ZONE, "%s: ===> RF RESET REQUEST SENT <===\n",
++			__func__);
++		common->rf_reset = 0;
++	}
++	common->bb_rf_prog_count = 1;
++	mgmt_frame->desc_word[7] |= cpu_to_le16(PUT_BBP_RESET |
++				     BBP_REG_WRITE | (RSI_RF_TYPE << 4));
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_set_vap_capabilities() - This function send vap capability to firmware.
++ * @common: Pointer to the driver private structure.
++ * @opmode: Operating mode of device.
++ *
++ * Return: 0 on success, corresponding negative error code on failure.
++ */
++int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode)
++{
++	struct sk_buff *skb = NULL;
++	struct rsi_vap_caps *vap_caps;
++	u16 vap_id = 0;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
++
++	skb = dev_alloc_skb(sizeof(struct rsi_vap_caps));
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, sizeof(struct rsi_vap_caps));
++	vap_caps = (struct rsi_vap_caps *)skb->data;
++
++	vap_caps->desc_word[0] = cpu_to_le16((sizeof(struct rsi_vap_caps) -
++					     FRAME_DESC_SZ) |
++					     (RSI_WIFI_MGMT_Q << 12));
++	vap_caps->desc_word[1] = cpu_to_le16(VAP_CAPABILITIES);
++	vap_caps->desc_word[4] = cpu_to_le16(mode |
++					     (common->channel_width << 8));
++	vap_caps->desc_word[7] = cpu_to_le16((vap_id << 8) |
++					     (common->mac_id << 4) |
++					     common->radio_id);
++
++	memcpy(vap_caps->mac_addr, common->mac_addr, IEEE80211_ADDR_LEN);
++	vap_caps->keep_alive_period = cpu_to_le16(90);
++	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
++
++	vap_caps->rts_threshold = cpu_to_le16(common->rts_threshold);
++	vap_caps->default_mgmt_rate = 0;
++	if (conf_is_ht40(&common->priv->hw->conf)) {
++		vap_caps->default_ctrl_rate =
++				cpu_to_le32(RSI_RATE_6 | FULL40M_ENABLE << 16);
++	} else {
++		vap_caps->default_ctrl_rate = cpu_to_le32(RSI_RATE_6);
++	}
++	vap_caps->default_data_rate = 0;
++	vap_caps->beacon_interval = cpu_to_le16(200);
++	vap_caps->dtim_period = cpu_to_le16(4);
++
++	skb_put(skb, sizeof(*vap_caps));
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_hal_load_key() - This function is used to load keys within the firmware.
++ * @common: Pointer to the driver private structure.
++ * @data: Pointer to the key data.
++ * @key_len: Key length to be loaded.
++ * @key_type: Type of key: GROUP/PAIRWISE.
++ * @key_id: Key index.
++ * @cipher: Type of cipher used.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++int rsi_hal_load_key(struct rsi_common *common,
++		     u8 *data,
++		     u16 key_len,
++		     u8 key_type,
++		     u8 key_id,
++		     u32 cipher)
++{
++	struct sk_buff *skb = NULL;
++	struct rsi_set_key *set_key;
++	u16 key_descriptor = 0;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending load key frame\n", __func__);
++
++	skb = dev_alloc_skb(sizeof(struct rsi_set_key));
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, sizeof(struct rsi_set_key));
++	set_key = (struct rsi_set_key *)skb->data;
++
++	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
++	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
++		key_len += 1;
++		key_descriptor |= BIT(2);
++		if (key_len >= 13)
++			key_descriptor |= BIT(3);
++	} else if (cipher != KEY_TYPE_CLEAR) {
++		key_descriptor |= BIT(4);
++		if (key_type == RSI_PAIRWISE_KEY)
++			key_id = 0;
++		if (cipher == WLAN_CIPHER_SUITE_TKIP)
++			key_descriptor |= BIT(5);
++	}
++	key_descriptor |= (key_type | BIT(13) | (key_id << 14));
++
++	set_key->desc_word[0] = cpu_to_le16((sizeof(struct rsi_set_key) -
++					    FRAME_DESC_SZ) |
++					    (RSI_WIFI_MGMT_Q << 12));
++	set_key->desc_word[1] = cpu_to_le16(SET_KEY_REQ);
++	set_key->desc_word[4] = cpu_to_le16(key_descriptor);
++
++	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
++	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
++		memcpy(&set_key->key[key_id][1],
++		       data,
++		       key_len * 2);
++	} else {
++		memcpy(&set_key->key[0][0], data, key_len);
++	}
++
++	memcpy(set_key->tx_mic_key, &data[16], 8);
++	memcpy(set_key->rx_mic_key, &data[24], 8);
++
++	skb_put(skb, sizeof(struct rsi_set_key));
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/*
++ * rsi_load_bootup_params() - This function send bootup params to the firmware.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, corresponding error code on failure.
++ */
++static u8 rsi_load_bootup_params(struct rsi_common *common)
++{
++	struct sk_buff *skb;
++	struct rsi_boot_params *boot_params;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending boot params frame\n", __func__);
++	skb = dev_alloc_skb(sizeof(struct rsi_boot_params));
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, sizeof(struct rsi_boot_params));
++	boot_params = (struct rsi_boot_params *)skb->data;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s:\n", __func__);
++
++	if (common->channel_width == BW_40MHZ) {
++		memcpy(&boot_params->bootup_params,
++		       &boot_params_40,
++		       sizeof(struct bootup_params));
++		rsi_dbg(MGMT_TX_ZONE, "%s: Packet 40MHZ <=== %d\n", __func__,
++			UMAC_CLK_40BW);
++		boot_params->desc_word[7] = cpu_to_le16(UMAC_CLK_40BW);
++	} else {
++		memcpy(&boot_params->bootup_params,
++		       &boot_params_20,
++		       sizeof(struct bootup_params));
++		if (boot_params_20.valid != cpu_to_le32(VALID_20)) {
++			boot_params->desc_word[7] = cpu_to_le16(UMAC_CLK_20BW);
++			rsi_dbg(MGMT_TX_ZONE,
++				"%s: Packet 20MHZ <=== %d\n", __func__,
++				UMAC_CLK_20BW);
++		} else {
++			boot_params->desc_word[7] = cpu_to_le16(UMAC_CLK_40MHZ);
++			rsi_dbg(MGMT_TX_ZONE,
++				"%s: Packet 20MHZ <=== %d\n", __func__,
++				UMAC_CLK_40MHZ);
 +		}
-=20
- 		kfree(rd);
- 		return r;
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
++	}
++
++	/**
++	 * Bit{0:11} indicates length of the Packet
++	 * Bit{12:15} indicates host queue number
++	 */
++	boot_params->desc_word[0] = cpu_to_le16(sizeof(struct bootup_params) |
++				    (RSI_WIFI_MGMT_Q << 12));
++	boot_params->desc_word[1] = cpu_to_le16(BOOTUP_PARAMS_REQUEST);
++
++	skb_put(skb, sizeof(struct rsi_boot_params));
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_send_reset_mac() - This function prepares reset MAC request and sends an
++ *			  internal management frame to indicate it to firmware.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, corresponding error code on failure.
++ */
++static int rsi_send_reset_mac(struct rsi_common *common)
++{
++	struct sk_buff *skb;
++	struct rsi_mac_frame *mgmt_frame;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending reset MAC frame\n", __func__);
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame = (struct rsi_mac_frame *)skb->data;
++
++	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++	mgmt_frame->desc_word[1] = cpu_to_le16(RESET_MAC_REQ);
++	mgmt_frame->desc_word[4] = cpu_to_le16(RETRY_COUNT << 8);
++
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_set_channel() - This function programs the channel.
++ * @common: Pointer to the driver private structure.
++ * @channel: Channel value to be set.
++ *
++ * Return: 0 on success, corresponding error code on failure.
++ */
++int rsi_set_channel(struct rsi_common *common, u16 channel)
++{
++	struct sk_buff *skb = NULL;
++	struct rsi_mac_frame *mgmt_frame;
++
++	rsi_dbg(MGMT_TX_ZONE,
++		"%s: Sending scan req frame\n", __func__);
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame = (struct rsi_mac_frame *)skb->data;
++
++	if (common->band == IEEE80211_BAND_5GHZ) {
++		if ((channel >= 36) && (channel <= 64))
++			channel = ((channel - 32) / 4);
++		else if ((channel > 64) && (channel <= 140))
++			channel = ((channel - 102) / 4) + 8;
++		else if (channel >= 149)
++			channel = ((channel - 151) / 4) + 18;
++		else
++			return -EINVAL;
++	} else {
++		if (channel > 14) {
++			rsi_dbg(ERR_ZONE, "%s: Invalid chno %d, band = %d\n",
++				__func__, channel, common->band);
++			return -EINVAL;
++		}
++	}
++
++	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++	mgmt_frame->desc_word[1] = cpu_to_le16(SCAN_REQUEST);
++	mgmt_frame->desc_word[4] = cpu_to_le16(channel);
++
++	mgmt_frame->desc_word[7] = cpu_to_le16(PUT_BBP_RESET |
++					       BBP_REG_WRITE |
++					       (RSI_RF_TYPE << 4));
++
++	mgmt_frame->desc_word[5] = cpu_to_le16(0x01);
++
++	if (common->channel_width == BW_40MHZ)
++		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
++
++	common->channel = channel;
++
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_compare() - This function is used to compare two integers
++ * @a: pointer to the first integer
++ * @b: pointer to the second integer
++ *
++ * Return: 0 if both are equal, -1 if the first is smaller, else 1
++ */
++static int rsi_compare(const void *a, const void *b)
++{
++	u16 _a = *(const u16 *)(a);
++	u16 _b = *(const u16 *)(b);
++
++	if (_a > _b)
++		return -1;
++
++	if (_a < _b)
++		return 1;
++
++	return 0;
++}
++
++/**
++ * rsi_map_rates() - This function is used to map selected rates to hw rates.
++ * @rate: The standard rate to be mapped.
++ * @offset: Offset that will be returned.
++ *
++ * Return: 0 if it is a mcs rate, else 1
++ */
++static bool rsi_map_rates(u16 rate, int *offset)
++{
++	int kk;
++	for (kk = 0; kk < ARRAY_SIZE(rsi_mcsrates); kk++) {
++		if (rate == mcs[kk]) {
++			*offset = kk;
++			return false;
++		}
++	}
++
++	for (kk = 0; kk < ARRAY_SIZE(rsi_rates); kk++) {
++		if (rate == rsi_rates[kk].bitrate / 5) {
++			*offset = kk;
++			break;
++		}
++	}
++	return true;
++}
++
++/**
++ * rsi_send_auto_rate_request() - This function is to set rates for connection
++ *				  and send autorate request to firmware.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, corresponding error code on failure.
++ */
++static int rsi_send_auto_rate_request(struct rsi_common *common)
++{
++	struct sk_buff *skb;
++	struct rsi_auto_rate *auto_rate;
++	int ii = 0, jj = 0, kk = 0;
++	struct ieee80211_hw *hw = common->priv->hw;
++	u8 band = hw->conf.chandef.chan->band;
++	u8 num_supported_rates = 0;
++	u8 rate_offset = 0;
++	u32 rate_bitmap = common->bitrate_mask[band];
++
++	u16 *selected_rates, min_rate;
++
++	skb = dev_alloc_skb(sizeof(struct rsi_auto_rate));
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	selected_rates = kmalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
++	if (!selected_rates) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, sizeof(struct rsi_auto_rate));
++	memset(selected_rates, 0, 2 * RSI_TBL_SZ);
++
++	auto_rate = (struct rsi_auto_rate *)skb->data;
++
++	auto_rate->aarf_rssi = cpu_to_le16(((u16)3 << 6) | (u16)(18 & 0x3f));
++	auto_rate->collision_tolerance = cpu_to_le16(3);
++	auto_rate->failure_limit = cpu_to_le16(3);
++	auto_rate->initial_boundary = cpu_to_le16(3);
++	auto_rate->max_threshold_limt = cpu_to_le16(27);
++
++	auto_rate->desc_word[1] = cpu_to_le16(AUTO_RATE_IND);
++
++	if (common->channel_width == BW_40MHZ)
++		auto_rate->desc_word[7] |= cpu_to_le16(1);
++
++	if (band == IEEE80211_BAND_2GHZ)
++		min_rate = STD_RATE_01;
++	else
++		min_rate = STD_RATE_06;
++
++	for (ii = 0, jj = 0; ii < ARRAY_SIZE(rsi_rates); ii++) {
++		if (rate_bitmap & BIT(ii)) {
++			selected_rates[jj++] = (rsi_rates[ii].bitrate / 5);
++			rate_offset++;
++		}
++	}
++	num_supported_rates = jj;
++
++	if (common->vif_info[0].is_ht) {
++		for (ii = 0; ii < ARRAY_SIZE(mcs); ii++)
++			selected_rates[jj++] = mcs[ii];
++		num_supported_rates += ARRAY_SIZE(mcs);
++		rate_offset += ARRAY_SIZE(mcs);
++	}
++
++	if (rate_offset < (RSI_TBL_SZ / 2) - 1) {
++		for (ii = jj; ii < (RSI_TBL_SZ / 2); ii++) {
++			selected_rates[jj++] = min_rate;
++			rate_offset++;
++		}
++	}
++
++	sort(selected_rates, jj, sizeof(u16), &rsi_compare, NULL);
++
++	/* mapping the rates to RSI rates */
++	for (ii = 0; ii < jj; ii++) {
++		if (rsi_map_rates(selected_rates[ii], &kk)) {
++			auto_rate->supported_rates[ii] =
++				cpu_to_le16(rsi_rates[kk].hw_value);
++		} else {
++			auto_rate->supported_rates[ii] =
++				cpu_to_le16(rsi_mcsrates[kk]);
++		}
++	}
++
++	/* loading HT rates in the bottom half of the auto rate table */
++	if (common->vif_info[0].is_ht) {
++		if (common->vif_info[0].sgi)
++			auto_rate->supported_rates[rate_offset++] =
++				cpu_to_le16(RSI_RATE_MCS7_SG);
++
++		for (ii = rate_offset, kk = ARRAY_SIZE(rsi_mcsrates) - 1;
++		     ii < rate_offset + 2 * ARRAY_SIZE(rsi_mcsrates); ii++) {
++			if (common->vif_info[0].sgi)
++				auto_rate->supported_rates[ii++] =
++					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
++			auto_rate->supported_rates[ii] =
++				cpu_to_le16(rsi_mcsrates[kk--]);
++		}
++
++		for (; ii < RSI_TBL_SZ; ii++) {
++			auto_rate->supported_rates[ii] =
++				cpu_to_le16(rsi_mcsrates[0]);
++		}
++	}
++
++	auto_rate->num_supported_rates = cpu_to_le16(num_supported_rates * 2);
++	auto_rate->moderate_rate_inx = cpu_to_le16(num_supported_rates / 2);
++	auto_rate->desc_word[7] |= cpu_to_le16(0 << 8);
++	num_supported_rates *= 2;
++
++	auto_rate->desc_word[0] = cpu_to_le16((sizeof(*auto_rate) -
++					       FRAME_DESC_SZ) |
++					       (RSI_WIFI_MGMT_Q << 12));
++
++	skb_put(skb,
++		sizeof(struct rsi_auto_rate));
++	kfree(selected_rates);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_inform_bss_status() - This function informs about bss status with the
++ *			     help of sta notify params by sending an internal
++ *			     management frame to firmware.
++ * @common: Pointer to the driver private structure.
++ * @status: Bss status type.
++ * @bssid: Bssid.
++ * @qos_enable: Qos is enabled.
++ * @aid: Aid (unique for all STAs).
++ *
++ * Return: None.
++ */
++void rsi_inform_bss_status(struct rsi_common *common,
++			   u8 status,
++			   const unsigned char *bssid,
++			   u8 qos_enable,
++			   u16 aid)
++{
++	if (status) {
++		rsi_hal_send_sta_notify_frame(common,
++					      NL80211_IFTYPE_STATION,
++					      STA_CONNECTED,
++					      bssid,
++					      qos_enable,
++					      aid);
++		if (common->min_rate == 0xffff)
++			rsi_send_auto_rate_request(common);
++	} else {
++		rsi_hal_send_sta_notify_frame(common,
++					      NL80211_IFTYPE_STATION,
++					      STA_DISCONNECTED,
++					      bssid,
++					      qos_enable,
++					      aid);
++	}
++}
++
++/**
++ * rsi_eeprom_read() - This function sends a frame to read the mac address
++ *		       from the eeprom.
++ * @common: Pointer to the driver private structure.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_eeprom_read(struct rsi_common *common)
++{
++	struct rsi_mac_frame *mgmt_frame;
++	struct sk_buff *skb;
++
++	rsi_dbg(MGMT_TX_ZONE, "%s: Sending EEPROM read req frame\n", __func__);
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame = (struct rsi_mac_frame *)skb->data;
++
++	/* FrameType */
++	mgmt_frame->desc_word[1] = cpu_to_le16(EEPROM_READ_TYPE);
++	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++	/* Number of bytes to read */
++	mgmt_frame->desc_word[3] = cpu_to_le16(ETH_ALEN +
++					       WLAN_MAC_MAGIC_WORD_LEN +
++					       WLAN_HOST_MODE_LEN +
++					       WLAN_FW_VERSION_LEN);
++	/* Address to read */
++	mgmt_frame->desc_word[4] = cpu_to_le16(WLAN_MAC_EEPROM_ADDR);
++
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
++ * rsi_handle_ta_confirm_type() - This function handles the confirm frames.
++ * @common: Pointer to the driver private structure.
++ * @msg: Pointer to received packet.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_handle_ta_confirm_type(struct rsi_common *common,
++				      u8 *msg)
++{
++	u8 sub_type = (msg[15] & 0xff);
++
++	switch (sub_type) {
++	case BOOTUP_PARAMS_REQUEST:
++		rsi_dbg(FSM_ZONE, "%s: Boot up params confirm received\n",
++			__func__);
++		if (common->fsm_state == FSM_BOOT_PARAMS_SENT) {
++			if (rsi_eeprom_read(common)) {
++				common->fsm_state = FSM_CARD_NOT_READY;
++				goto out;
++			} else {
++				common->fsm_state = FSM_EEPROM_READ_MAC_ADDR;
++			}
++		} else {
++			rsi_dbg(ERR_ZONE,
++				"%s: Received bootup params cfm in %d state\n",
++				 __func__, common->fsm_state);
++			return 0;
++		}
++		break;
++
++	case EEPROM_READ_TYPE:
++		if (common->fsm_state == FSM_EEPROM_READ_MAC_ADDR) {
++			if (msg[16] == MAGIC_WORD) {
++				u8 offset = (FRAME_DESC_SZ + WLAN_HOST_MODE_LEN
++					     + WLAN_MAC_MAGIC_WORD_LEN);
++				memcpy(common->mac_addr,
++				       &msg[offset],
++				       ETH_ALEN);
++				memcpy(&common->fw_ver,
++				       &msg[offset + ETH_ALEN],
++				       sizeof(struct version_info));
++
++			} else {
++				common->fsm_state = FSM_CARD_NOT_READY;
++				break;
++			}
++			if (rsi_send_reset_mac(common))
++				goto out;
++			else
++				common->fsm_state = FSM_RESET_MAC_SENT;
++		} else {
++			rsi_dbg(ERR_ZONE,
++				"%s: Received eeprom mac addr in %d state\n",
++				__func__, common->fsm_state);
++			return 0;
++		}
++		break;
++
++	case RESET_MAC_REQ:
++		if (common->fsm_state == FSM_RESET_MAC_SENT) {
++			rsi_dbg(FSM_ZONE, "%s: Reset MAC cfm received\n",
++				__func__);
++
++			if (rsi_load_radio_caps(common))
++				goto out;
++			else
++				common->fsm_state = FSM_RADIO_CAPS_SENT;
++		} else {
++			rsi_dbg(ERR_ZONE,
++				"%s: Received reset mac cfm in %d state\n",
++				 __func__, common->fsm_state);
++			return 0;
++		}
++		break;
++
++	case RADIO_CAPABILITIES:
++		if (common->fsm_state == FSM_RADIO_CAPS_SENT) {
++			common->rf_reset = 1;
++			if (rsi_program_bb_rf(common)) {
++				goto out;
++			} else {
++				common->fsm_state = FSM_BB_RF_PROG_SENT;
++				rsi_dbg(FSM_ZONE, "%s: Radio cap cfm received\n",
++					__func__);
++			}
++		} else {
++			rsi_dbg(ERR_ZONE,
++				"%s: Received radio caps cfm in %d state\n",
++				 __func__, common->fsm_state);
++			return 0;
++		}
++		break;
++
++	case BB_PROG_VALUES_REQUEST:
++	case RF_PROG_VALUES_REQUEST:
++	case BBP_PROG_IN_TA:
++		rsi_dbg(FSM_ZONE, "%s: BB/RF cfm received\n", __func__);
++		if (common->fsm_state == FSM_BB_RF_PROG_SENT) {
++			common->bb_rf_prog_count--;
++			if (!common->bb_rf_prog_count) {
++				common->fsm_state = FSM_MAC_INIT_DONE;
++				return rsi_mac80211_attach(common);
++			}
++		} else {
++			goto out;
++		}
++		break;
++
++	default:
++		rsi_dbg(INFO_ZONE, "%s: Invalid TA confirm pkt received\n",
++			__func__);
++		break;
++	}
++	return 0;
++out:
++	rsi_dbg(ERR_ZONE, "%s: Unable to send pkt/Invalid frame received\n",
++		__func__);
++	return -EINVAL;
++}
++
++/**
++ * rsi_mgmt_pkt_recv() - This function processes the management packets
++ *			 recieved from the hardware.
++ * @common: Pointer to the driver private structure.
++ * @msg: Pointer to the received packet.
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
++{
++	s32 msg_len = (le16_to_cpu(*(__le16 *)&msg[0]) & 0x0fff);
++	u16 msg_type = (msg[2]);
++
++	rsi_dbg(FSM_ZONE, "%s: Msg Len: %d, Msg Type: %4x\n",
++		__func__, msg_len, msg_type);
++
++	if (msg_type == TA_CONFIRM_TYPE) {
++		return rsi_handle_ta_confirm_type(common, msg);
++	} else if (msg_type == CARD_READY_IND) {
++		rsi_dbg(FSM_ZONE, "%s: Card ready indication received\n",
++			__func__);
++		if (common->fsm_state == FSM_CARD_NOT_READY) {
++			rsi_set_default_parameters(common);
++
++			if (rsi_load_bootup_params(common))
++				return -ENOMEM;
++			else
++				common->fsm_state = FSM_BOOT_PARAMS_SENT;
++		} else {
++			return -EINVAL;
++		}
++	} else if (msg_type == TX_STATUS_IND) {
++		if (msg[15] == PROBEREQ_CONFIRM)
++			common->mgmt_q_block = false;
++			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
++				__func__);
++	} else {
++		return rsi_mgmt_pkt_to_core(common, msg, msg_len, msg_type);
++	}
++	return 0;
++}
+-- 
+1.7.5.4
 
---r5Pyd7+fXNt84Ff3
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTFNugAAoJEJctW/TcYTgGBL4P/jmP/zpuuLLpQElKLDe+coxY
-LNHEh7I98r2z5geRrvHHFbBzAvuRdUdEHqeln8exw3Sn6hqKjqsNyk/xTRQmrGua
-Hdvz+2/HZewCylBfbpILDzg/B1+oXS2WejxnXF0+U5AiJJbcIt0WVJeAAETm0yEe
-v6X66X8YvrziCop46m/XLMbnV/VTGUjzRpKCh7XSJfR6levfq2EuoC4e2DXV2r/r
-zAq5fE0nK8fbcoet3ir/kpCecZeIRlez4k21N5jaAdLSqy8p+hVDoCEX5ze++tHX
-G/HA5nvaviUofg2RHUWmSwk7Hd7n4/beQsJqZgvyrweWqKuLfcuDNXfbqvkd1qqM
-tzTqOdK/o3vOAvyDAIL14F/ita1F1T/8P540vFhoxU/Kla9gvdrO35eyHUQy5w0W
-KsHuZH8i2W7zg3TuRRBdYDhZcsQNyS/EhzJlqF81rSbvcHYTJ8Mcy8nQ6EP+ZeH0
-gd0h339h7fFbmg4Gx2OMZQrRU34+scLURq0ljpzRN36VHrF2IWczltjJvCGN/gl9
-2j9lYFpU4m+yAif7wwG2S5UTSh4ukSXNy7OFicb1lCiMBaL+bHUPoTzSDEMo+3Qg
-0F7FyUKdp+vaJeCICMa6Cz0E6mEEpExU8EhkUFaRA+9WfKMwIwlCLrHerj6rdd0E
-h209SV+t/J/jm0JfQOFt
-=KHan
------END PGP SIGNATURE-----
-
---r5Pyd7+fXNt84Ff3--
