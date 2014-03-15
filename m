@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34317 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbaCWTSD (ORCPT
+Received: from smtprelay0196.hostedemail.com ([216.40.44.196]:58787 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756560AbaCOWXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2014 15:18:03 -0400
-From: Monam Agarwal <monamagarwal123@gmail.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net/mac80211: Use RCU_INIT_POINTER(x, NULL) in ibss.c
-Date: Mon, 24 Mar 2014 00:47:02 +0530
-Message-Id: <1395602222-13677-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_201838_661257_4B20B255)
+	Sat, 15 Mar 2014 18:23:54 -0400
+Message-ID: <1394922230.5689.2.camel@joe-AO722> (sfid-20140315_232357_564715_300EFA39)
+Subject: Re: [PATCH v5 01/11] rsi: Adding RS9113 header files.
+From: Joe Perches <joe@perches.com>
+To: Fariya Fatima <fariyaf@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 15 Mar 2014 15:23:50 -0700
+In-Reply-To: <1394921832-4056-2-git-send-email-fariyaf@gmail.com>
+References: <1394921832-4056-1-git-send-email-fariyaf@gmail.com>
+	 <1394921832-4056-2-git-send-email-fariyaf@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+> diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+[]
+> +static inline void rsi_dbg(u32 zone, const char *fmt, ...)
+> +{
+> +	struct va_format vaf;
+> +	va_list args;
+> +
+> +	va_start(args, fmt);
+> +
+> +	vaf.fmt = fmt;
+> +	vaf.va = &args;
+> +
+> +	if (zone & rsi_zone_enabled)
+> +		pr_info("%pV", &vaf);
+> +	va_end(args);
+> +}
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+I believe debugging messages should be emitted at KERN_DEBUG.
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
----
- net/mac80211/ibss.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Also, it seems that every use uses "%s: ", __func__.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index e458ca0..cb262c4 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -253,7 +253,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 
- 	presp = rcu_dereference_protected(ifibss->presp,
- 					  lockdep_is_held(&sdata->wdev.mtx));
--	rcu_assign_pointer(ifibss->presp, NULL);
-+	RCU_INIT_POINTER(ifibss->presp, NULL);
- 	if (presp)
- 		kfree_rcu(presp, rcu_head);
- 
--- 
-1.7.9.5
+I think it'd be better to remove all those uses from the
+calling sites and use:
+
+%pS:, __builtin_return_address(0)
+
 
