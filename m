@@ -1,139 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45742 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755947AbaCOQSe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48764 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbaCOPUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Mar 2014 12:18:34 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/5] brcmfmac: assure active clock request upon entering SLEEP state
-Date: Sat, 15 Mar 2014 17:18:20 +0100
-Message-ID: <1394900301-15417-5-git-send-email-arend@broadcom.com> (sfid-20140315_171837_505681_F08880F5)
-In-Reply-To: <1394900301-15417-1-git-send-email-arend@broadcom.com>
-References: <1394900301-15417-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 15 Mar 2014 11:20:47 -0400
+Message-ID: <1394896841.30941.4.camel@jlt4.sipsolutions.net> (sfid-20140315_162110_370050_BDDC76C1)
+Subject: Re: [mac80211_hwsim] BUG: unable to handle kernel paging request at
+ ce1db404
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Martin Pitt <martin.pitt@ubuntu.com>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Date: Sat, 15 Mar 2014 16:20:41 +0100
+In-Reply-To: <CABPxzYLJA-gQjw2CwmL63dYEQ35h073k_vsp1uEM0B-sAmEwKQ@mail.gmail.com> (sfid-20140312_214614_906421_705BDEDC)
+References: <20140305125703.GA7193@localhost>
+	 <20140305132317.GB10880@localhost> <20140308121138.GA8359@localhost>
+	 <20140312173446.GD2983@piware.de>
+	 <CABPxzYLJA-gQjw2CwmL63dYEQ35h073k_vsp1uEM0B-sAmEwKQ@mail.gmail.com>
+	 (sfid-20140312_214614_906421_705BDEDC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the SDIO driver goes in low power state it must assure that
-a clock request in ChipCLKCSR is set. Otherwise waking up the
-device can fail. The register is read and if necessary the ALP
-clock will be requested.
+On Thu, 2014-03-13 at 02:15 +0530, Krishna Chaitanya wrote:
 
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   39 ++++++++++++++------
- 1 file changed, 28 insertions(+), 11 deletions(-)
+> From the logs it looks like "rate_control_alloc" is failed,
+> causing ieee80211_register_hw to fail triggering the crash.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index bcdaf72..859eddd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -175,6 +175,7 @@ struct rte_console {
- #define SBSDIO_ALP_AVAIL		0x40
- /* Status: HT is ready */
- #define SBSDIO_HT_AVAIL			0x80
-+#define SBSDIO_CSR_MASK			0x1F
- #define SBSDIO_AVBITS		(SBSDIO_HT_AVAIL | SBSDIO_ALP_AVAIL)
- #define SBSDIO_ALPAV(regval)	((regval) & SBSDIO_AVBITS)
- #define SBSDIO_HTAV(regval)	(((regval) & SBSDIO_AVBITS) == SBSDIO_AVBITS)
-@@ -720,16 +721,12 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- 	int err = 0;
- 	int try_cnt = 0;
- 
--	brcmf_dbg(TRACE, "Enter\n");
-+	brcmf_dbg(TRACE, "Enter: on=%d\n", on);
- 
- 	wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
- 	/* 1st KSO write goes to AOS wake up core if device is asleep  */
- 	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
- 			  wr_val, &err);
--	if (err) {
--		brcmf_err("SDIO_AOS KSO write error: %d\n", err);
--		return err;
--	}
- 
- 	if (on) {
- 		/* device WAKEUP through KSO:
-@@ -759,13 +756,19 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- 					   &err);
- 		if (((rd_val & bmask) == cmp_val) && !err)
- 			break;
--		brcmf_dbg(SDIO, "KSO wr/rd retry:%d (max: %d) ERR:%x\n",
--			  try_cnt, MAX_KSO_ATTEMPTS, err);
-+
- 		udelay(KSO_WAIT_US);
- 		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
- 				  wr_val, &err);
- 	} while (try_cnt++ < MAX_KSO_ATTEMPTS);
- 
-+	if (try_cnt > 2)
-+		brcmf_dbg(SDIO, "try_cnt=%d rd_val=0x%x err=%d\n", try_cnt,
-+			  rd_val, err);
-+
-+	if (try_cnt > MAX_KSO_ATTEMPTS)
-+		brcmf_err("max tries: rd_val=0x%x err=%d\n", rd_val, err);
-+
- 	return err;
- }
- 
-@@ -966,6 +969,7 @@ static int
- brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- {
- 	int err = 0;
-+	u8 clkcsr;
- 
- 	brcmf_dbg(SDIO, "Enter: request %s currently %s\n",
- 		  (sleep ? "SLEEP" : "WAKE"),
-@@ -984,8 +988,20 @@ brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- 			    atomic_read(&bus->ipend) > 0 ||
- 			    (!atomic_read(&bus->fcstate) &&
- 			    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
--			    data_ok(bus)))
--				 return -EBUSY;
-+			    data_ok(bus))) {
-+				 err = -EBUSY;
-+				 goto done;
-+			}
-+
-+			clkcsr = brcmf_sdiod_regrb(bus->sdiodev,
-+						   SBSDIO_FUNC1_CHIPCLKCSR,
-+						   &err);
-+			if ((clkcsr & SBSDIO_CSR_MASK) == 0) {
-+				brcmf_dbg(SDIO, "no clock, set ALP\n");
-+				brcmf_sdiod_regwb(bus->sdiodev,
-+						  SBSDIO_FUNC1_CHIPCLKCSR,
-+						  SBSDIO_ALP_AVAIL_REQ, &err);
-+			}
- 			err = brcmf_sdio_kso_control(bus, false);
- 			/* disable watchdog */
- 			if (!err)
-@@ -1002,7 +1018,7 @@ brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- 		} else {
- 			brcmf_err("error while changing bus sleep state %d\n",
- 				  err);
--			return err;
-+			goto done;
- 		}
- 	}
- 
-@@ -1014,7 +1030,8 @@ end:
- 	} else {
- 		brcmf_sdio_clkctl(bus, CLK_AVAIL, pendok);
- 	}
--
-+done:
-+	brcmf_dbg(SDIO, "Exit: err=%d\n", err);
- 	return err;
- 
- }
--- 
-1.7.9.5
+Yes.
+
+> what RC are u using? Default should be minstrel, i dont see
+> a reason for rc alloc to fail (remote reason kmalloc failure),
+> so did you disable RC completely? No prints either w.r.t RC either in
+> dmesg?
+
+Pay attention to the .config.
+
+johannes
 
