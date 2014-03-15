@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([5.45.105.125]:46909 "EHLO ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753351AbaCMRAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 13:00:44 -0400
-Date: Thu, 13 Mar 2014 18:00:39 +0100
-From: Sebastian Reichel <sre@ring0.de>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140313170038.GA20372@earth.universe> (sfid-20140313_180112_522475_2BB51B96)
-References: <20140125000929.GD25488@atomide.com>
- <1392419156-14394-1-git-send-email-sre@debian.org>
- <20140226194436.GA20992@earth.universe>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
-In-Reply-To: <20140226194436.GA20992@earth.universe>
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:36673 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755095AbaCOR2v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Mar 2014 13:28:51 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so2539340eek.11
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2014 10:28:50 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	andrea.merello@gmail.com
+Subject: [PATCH 0/4] rtl8180: improvements from rtl8187se branch
+Date: Sat, 15 Mar 2014 18:29:34 +0100
+Message-Id: <1394904578-5279-1-git-send-email-andrea.merello@gmail.com> (sfid-20140315_182855_070235_B78F02DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is another patch-set that ports on current rtl8180 driver the
+following four improvements from my rtl8187se local tree.
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Andrea Merello (4):
+  rtl8180: remove too-early-added rtl8187se enum value
+  rtl8180: support for BSS_CHANGED_BASIC_RATES
+  rtl8180: make *IFS and CW tunable by mac80211, and set them in the
+    proper place
+  rtl8180: move eeprom read stuff in a separate function
 
-Hi,
+ drivers/net/wireless/rtl818x/rtl8180/dev.c     | 262 +++++++++++++++++++------
+ drivers/net/wireless/rtl818x/rtl8180/rtl8180.h |   6 +-
+ drivers/net/wireless/rtl818x/rtl8180/rtl8225.c |  22 ---
+ 3 files changed, 201 insertions(+), 89 deletions(-)
 
-On Wed, Feb 26, 2014 at 08:44:36PM +0100, Sebastian Reichel wrote:
-> On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
-> > The following patchset adds device tree support to the spi variant of t=
-he
-> > wl1251 driver, which is used in the Nokia N900. Tony requested, that you
-> > take the whole series even if that may introduce merge conflicts:
-> >=20
-> > > Sebastian, please resend the whole series to John and feel free to ad=
-d my
-> > > acks.  It's best that John picks them all up, otherwise we'll have th=
-e same
-> > > issue for v3.15. It seems that we should have just taken the merge co=
-nflict
-> > > rather than going back and forth with this.
->=20
-> ping! Is there still anything wrong with this patchset?
+-- 
+1.8.3.2
 
-ping! This patchset is quite old now. Please pull it into
-wireless-next, so that it can appear in 3.15.
-
--- Sebastian
-
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBCgAGBQJTIeQ2AAoJENju1/PIO/qa/uQP+QGEUssFuzxeHdgpihzHszVR
-Fr65MaNUs3C5fnQWum6mnaf1uWKyC41Ex/KmbIOGrIdeMjx8vDq3X7jc4HC+54z9
-RMEUL0uOVbtp1H8IWD1pXBvd6ePpziqpII8SV1hl0hz5xKsO0P0TPo+sCipcKGrU
-+ib0NqSN0hSX0X1u5DP2k/tluuzsSUvjffUDQbVD75BCVvi5WmbBqbjHaX9wq9sK
-uS0l4NoVsJUIJ2f7q7/Kmrv0uS0YmzzUIV1S0Ot2fqB7Hi+IJieKfPxYA4kM/1Rm
-8DoPc4L8B9e2cuQnFzZa3jHcYFoJa/Px7xOtyHSGWLCChsmH4PTsmrylIPtJJJTX
-Csvgr28L9AJ11BdiKdlfChZsDOYilxnnnlyezjSAMf7gg4ZczwGzORwiB6YcDj2n
-Z+BAxfYuygsUVJNc3xUeRsSrTPg5WbQgOyQx+uD5FIwo+f98m1gDqFe/ibuSTzdR
-BwfRwd9DOn02q7bf+4BnsM3fxt7iqY2SL5UgHCx4UJxw1eFtrGBqnFi6o8hf8mSm
-nnON3vPtPdZ8TOYa+ajRjsvrS+i0mkWHbYIAOJ3A5hBn/wPEfJXzC4CZLx+/xS4A
-gTc5fEG5Sw8sKVTtR9hZxrc+HDB9pSvoecZjBOm3DAT2AJVOeoQmMxE36qMPxoVv
-n9PBoIP33ILd33WdO10y
-=M0vO
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
