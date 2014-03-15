@@ -1,207 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:45185 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933833AbaCUJcu (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45742 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755958AbaCOQSe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 05:32:50 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so1566326eek.21
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:49 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 7/8] ath10k: improve way we play with attention flags
-Date: Fri, 21 Mar 2014 10:32:20 +0100
-Message-Id: <1395394341-3958-8-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103258_395760_A98B1F66)
-In-Reply-To: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+	Sat, 15 Mar 2014 12:18:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/5] brcmfmac: remove mode field from brcmf_cfg80211_vif structure
+Date: Sat, 15 Mar 2014 17:18:21 +0100
+Message-ID: <1394900301-15417-6-git-send-email-arend@broadcom.com> (sfid-20140315_171841_885922_B00599B0)
+In-Reply-To: <1394900301-15417-1-git-send-email-arend@broadcom.com>
+References: <1394900301-15417-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove almost the same code, and do only once
-__le32_to_cpu() conversion.
+The nl80211 iftype was converted to a mode value and stored in
+brcmf_cfg80211_vif structure. The value was used only within
+brcmfmac driver to decide execution of conditional code. Better
+use wireless_dev::iftype for that as the wdev is contained in
+the brcmf_cfg80211_vif structure.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |   94 ++++++------------------------
- 1 file changed, 19 insertions(+), 75 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |    6 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   60 +++++++-------------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   17 ------
+ 3 files changed, 21 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 64abc2a..bc40f11 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -800,7 +800,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	memcpy(status, &info->rx_status, sizeof(*status));
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index fc4f98b..f3445ac 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -797,7 +797,8 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 			/* SOCIAL CHANNELS 1, 6, 11 */
+ 			search_state = WL_P2P_DISC_ST_SEARCH;
+ 			brcmf_dbg(INFO, "P2P SEARCH PHASE START\n");
+-		} else if (dev != NULL && vif->mode == WL_MODE_AP) {
++		} else if (dev != NULL &&
++			   vif->wdev.iftype == NL80211_IFTYPE_P2P_GO) {
+ 			/* If you are already a GO, then do SEARCH only */
+ 			brcmf_dbg(INFO, "Already a GO. Do SEARCH Only\n");
+ 			search_state = WL_P2P_DISC_ST_SEARCH;
+@@ -2256,7 +2257,6 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
+ 	struct brcmf_cfg80211_vif *vif;
+ 	enum brcmf_fil_p2p_if_types iftype;
+-	enum wl_mode mode;
+ 	int err;
  
- 	ath10k_dbg(ATH10K_DBG_DATA,
--		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
-+		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %imic-err %i\n",
- 		   info->skb,
- 		   info->skb->len,
- 		   status->flag == 0 ? "legacy" : "",
-@@ -813,7 +813,8 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 		   status->vht_nss,
- 		   status->freq,
- 		   status->band, status->flag,
--		   !!(status->flag & RX_FLAG_FAILED_FCS_CRC));
-+		   !!(status->flag & RX_FLAG_FAILED_FCS_CRC),
-+		   !!(status->flag & RX_FLAG_MMIC_ERROR));
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
- 			info->skb->data, info->skb->len);
- 
-@@ -1000,62 +1001,6 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
- 	ath10k_process_rx(htt->ar, info);
+ 	if (brcmf_cfg80211_vif_event_armed(cfg))
+@@ -2267,11 +2267,9 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		iftype = BRCMF_FIL_P2P_IF_CLIENT;
+-		mode = WL_MODE_BSS;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		iftype = BRCMF_FIL_P2P_IF_GO;
+-		mode = WL_MODE_AP;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		return brcmf_p2p_create_p2pdev(&cfg->p2p, wiphy,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index adbd5b7..9f75afb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -494,6 +494,19 @@ brcmf_configure_arp_offload(struct brcmf_if *ifp, bool enable)
+ 	return err;
  }
  
--static bool ath10k_htt_rx_has_decrypt_err(struct sk_buff *skb)
--{
--	struct htt_rx_desc *rxd;
--	u32 flags;
--
--	rxd = (void *)skb->data - sizeof(*rxd);
--	flags = __le32_to_cpu(rxd->attention.flags);
--
--	if (flags & RX_ATTENTION_FLAGS_DECRYPT_ERR)
--		return true;
--
--	return false;
--}
--
--static bool ath10k_htt_rx_has_fcs_err(struct sk_buff *skb)
--{
--	struct htt_rx_desc *rxd;
--	u32 flags;
--
--	rxd = (void *)skb->data - sizeof(*rxd);
--	flags = __le32_to_cpu(rxd->attention.flags);
--
--	if (flags & RX_ATTENTION_FLAGS_FCS_ERR)
--		return true;
--
--	return false;
--}
--
--static bool ath10k_htt_rx_has_mic_err(struct sk_buff *skb)
--{
--	struct htt_rx_desc *rxd;
--	u32 flags;
--
--	rxd = (void *)skb->data - sizeof(*rxd);
--	flags = __le32_to_cpu(rxd->attention.flags);
--
--	if (flags & RX_ATTENTION_FLAGS_TKIP_MIC_ERR)
--		return true;
--
--	return false;
--}
--
--static bool ath10k_htt_rx_is_mgmt(struct sk_buff *skb)
--{
--	struct htt_rx_desc *rxd;
--	u32 flags;
--
--	rxd = (void *)skb->data - sizeof(*rxd);
--	flags = __le32_to_cpu(rxd->attention.flags);
--
--	if (flags & RX_ATTENTION_FLAGS_MGMT_TYPE)
--		return true;
--
--	return false;
--}
--
- static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
- {
- 	struct htt_rx_desc *rxd;
-@@ -1141,7 +1086,8 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
- static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 					struct sk_buff *head,
- 					enum htt_rx_mpdu_status status,
--					bool channel_set)
-+					bool channel_set,
-+					u32 attention)
- {
- 	if (head->len == 0) {
- 		ath10k_dbg(ATH10K_DBG_HTT,
-@@ -1149,7 +1095,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 		return false;
- 	}
- 
--	if (ath10k_htt_rx_has_decrypt_err(head)) {
-+	if (attention & RX_ATTENTION_FLAGS_DECRYPT_ERR) {
- 		ath10k_dbg(ATH10K_DBG_HTT,
- 			   "htt rx dropping due to decrypt-err\n");
- 		return false;
-@@ -1162,7 +1108,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 
- 	/* Skip mgmt frames while we handle this in WMI */
- 	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
--	    ath10k_htt_rx_is_mgmt(head)) {
-+	    attention & RX_ATTENTION_FLAGS_MGMT_TYPE) {
- 		ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
- 		return false;
- 	}
-@@ -1191,12 +1137,14 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- {
- 	struct htt_rx_info info;
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
-+	struct htt_rx_desc *rxd;
- 	enum htt_rx_mpdu_status status;
- 	struct ieee80211_hdr *hdr;
- 	int num_mpdu_ranges;
-+	u32 attention;
- 	int fw_desc_len;
- 	u8 *fw_desc;
--	bool channel_set, fcs_err, mic_err;
-+	bool channel_set;
- 	int i, j;
- 	int ret;
- 
-@@ -1258,9 +1206,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				continue;
- 			}
- 
-+			rxd = container_of((void *) msdu_head->data,
-+					   struct htt_rx_desc,
-+					   msdu_payload);
-+			attention = __le32_to_cpu(rxd->attention.flags);
++static bool brcmf_is_apmode(struct brcmf_cfg80211_vif *vif)
++{
++	enum nl80211_iftype iftype;
 +
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
- 							 status,
--							 channel_set)) {
-+							 channel_set,
-+							 attention)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
- 			}
-@@ -1273,26 +1227,16 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
++	iftype = vif->wdev.iftype;
++	return iftype == NL80211_IFTYPE_AP || iftype == NL80211_IFTYPE_P2P_GO;
++}
++
++static bool brcmf_is_ibssmode(struct brcmf_cfg80211_vif *vif)
++{
++	return vif->wdev.iftype == NL80211_IFTYPE_ADHOC;
++}
++
+ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 						     const char *name,
+ 						     enum nl80211_iftype type,
+@@ -654,7 +667,6 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 			  type);
+ 		return -EOPNOTSUPP;
+ 	case NL80211_IFTYPE_ADHOC:
+-		vif->mode = WL_MODE_IBSS;
+ 		infra = 0;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+@@ -670,12 +682,10 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 			 */
+ 			return 0;
+ 		}
+-		vif->mode = WL_MODE_BSS;
+ 		infra = 1;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		vif->mode = WL_MODE_AP;
+ 		ap = 1;
+ 		break;
+ 	default:
+@@ -699,7 +709,7 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 			err = -EAGAIN;
+ 			goto done;
+ 		}
+-		brcmf_dbg(INFO, "IF Type = %s\n", (vif->mode == WL_MODE_IBSS) ?
++		brcmf_dbg(INFO, "IF Type = %s\n", brcmf_is_ibssmode(vif) ?
+ 			  "Adhoc" : "Infra");
+ 	}
+ 	ndev->ieee80211_ptr->iftype = type;
+@@ -1923,7 +1933,7 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_dbg(CONN, "Setting the key index %d\n", key.index);
+ 		memcpy(key.data, params->key, key.len);
  
- 			info.skb     = msdu_head;
+-		if ((ifp->vif->mode != WL_MODE_AP) &&
++		if (!brcmf_is_apmode(ifp->vif) &&
+ 		    (params->cipher == WLAN_CIPHER_SUITE_TKIP)) {
+ 			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
+ 			memcpy(keybuf, &key.data[24], sizeof(keybuf));
+@@ -2022,7 +2032,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_WEP104\n");
+ 		break;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+-		if (ifp->vif->mode != WL_MODE_AP) {
++		if (!brcmf_is_apmode(ifp->vif)) {
+ 			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
+ 			memcpy(keybuf, &key.data[24], sizeof(keybuf));
+ 			memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
+@@ -2183,7 +2193,7 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
  
--			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
--			if (fcs_err)
-+			if (attention & RX_ATTENTION_FLAGS_FCS_ERR)
- 				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
- 			else
- 				info.rx_status.flag &= ~RX_FLAG_FAILED_FCS_CRC;
+-	if (ifp->vif->mode == WL_MODE_AP) {
++	if (brcmf_is_apmode(ifp->vif)) {
+ 		memcpy(&sta_info_le, mac, ETH_ALEN);
+ 		err = brcmf_fil_iovar_data_get(ifp, "sta_info",
+ 					       &sta_info_le,
+@@ -2200,7 +2210,7 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 		}
+ 		brcmf_dbg(TRACE, "STA idle time : %d ms, connected time :%d sec\n",
+ 			  sinfo->inactive_time, sinfo->connected_time);
+-	} else if (ifp->vif->mode == WL_MODE_BSS) {
++	} else if (ifp->vif->wdev.iftype == NL80211_IFTYPE_STATION) {
+ 		if (memcmp(mac, bssid, ETH_ALEN)) {
+ 			brcmf_err("Wrong Mac address cfg_mac-%pM wl_bssid-%pM\n",
+ 				  mac, bssid);
+@@ -2482,11 +2492,6 @@ CleanUp:
+ 	return err;
+ }
  
--			mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
--			if (mic_err)
-+			if (attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR)
- 				info.rx_status.flag |= RX_FLAG_MMIC_ERROR;
- 			else
- 				info.rx_status.flag &= ~RX_FLAG_MMIC_ERROR;
- 
--			if (fcs_err)
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx has FCS err\n");
+-static bool brcmf_is_ibssmode(struct brcmf_cfg80211_vif *vif)
+-{
+-	return vif->mode == WL_MODE_IBSS;
+-}
 -
--			if (mic_err)
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx has MIC err\n");
--
- 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
+ static s32 brcmf_update_bss_info(struct brcmf_cfg80211_info *cfg,
+ 				 struct brcmf_if *ifp)
+ {
+@@ -4259,32 +4264,6 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	CFG80211_TESTMODE_CMD(brcmf_cfg80211_testmode)
+ };
  
- 			if (ath10k_htt_rx_hdr_is_amsdu(hdr))
+-static s32 brcmf_nl80211_iftype_to_mode(enum nl80211_iftype type)
+-{
+-	switch (type) {
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_WDS:
+-	case NL80211_IFTYPE_MONITOR:
+-	case NL80211_IFTYPE_MESH_POINT:
+-		return -ENOTSUPP;
+-	case NL80211_IFTYPE_ADHOC:
+-		return WL_MODE_IBSS;
+-	case NL80211_IFTYPE_STATION:
+-	case NL80211_IFTYPE_P2P_CLIENT:
+-		return WL_MODE_BSS;
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_P2P_GO:
+-		return WL_MODE_AP;
+-	case NL80211_IFTYPE_P2P_DEVICE:
+-		return WL_MODE_P2P;
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-	default:
+-		break;
+-	}
+-
+-	return -EINVAL;
+-}
+-
+ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+ {
+ 	/* scheduled scan settings */
+@@ -4409,7 +4388,6 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+ 	vif->wdev.wiphy = cfg->wiphy;
+ 	vif->wdev.iftype = type;
+ 
+-	vif->mode = brcmf_nl80211_iftype_to_mode(type);
+ 	vif->pm_block = pm_block;
+ 	vif->roam_off = -1;
+ 
+@@ -4703,7 +4681,7 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 	s32 err = 0;
+ 	u16 reason;
+ 
+-	if (ifp->vif->mode == WL_MODE_AP) {
++	if (brcmf_is_apmode(ifp->vif)) {
+ 		err = brcmf_notify_connect_status_ap(cfg, ndev, e, data);
+ 	} else if (brcmf_is_linkup(e)) {
+ 		brcmf_dbg(CONN, "Linkup\n");
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 5715bb0..283c525 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -89,21 +89,6 @@ enum brcmf_scan_status {
+ 	BRCMF_SCAN_STATUS_SUPPRESS,
+ };
+ 
+-/**
+- * enum wl_mode - driver mode of virtual interface.
+- *
+- * @WL_MODE_BSS: connects to BSS.
+- * @WL_MODE_IBSS: operate as ad-hoc.
+- * @WL_MODE_AP: operate as access-point.
+- * @WL_MODE_P2P: provide P2P discovery.
+- */
+-enum wl_mode {
+-	WL_MODE_BSS,
+-	WL_MODE_IBSS,
+-	WL_MODE_AP,
+-	WL_MODE_P2P
+-};
+-
+ /* dongle configuration */
+ struct brcmf_cfg80211_conf {
+ 	u32 frag_threshold;
+@@ -193,7 +178,6 @@ struct vif_saved_ie {
+  * @ifp: lower layer interface pointer
+  * @wdev: wireless device.
+  * @profile: profile information.
+- * @mode: operating mode.
+  * @roam_off: roaming state.
+  * @sme_state: SME state using enum brcmf_vif_status bits.
+  * @pm_block: power-management blocked.
+@@ -204,7 +188,6 @@ struct brcmf_cfg80211_vif {
+ 	struct brcmf_if *ifp;
+ 	struct wireless_dev wdev;
+ 	struct brcmf_cfg80211_profile profile;
+-	s32 mode;
+ 	s32 roam_off;
+ 	unsigned long sme_state;
+ 	bool pm_block;
 -- 
 1.7.9.5
 
