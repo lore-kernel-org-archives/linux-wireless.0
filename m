@@ -1,61 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64476 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbaCaHiv (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:60145 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756278AbaCOR3E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 03:38:51 -0400
-Message-ID: <53391B89.7010304@broadcom.com> (sfid-20140331_093952_713641_29AC2BB4)
-Date: Mon, 31 Mar 2014 09:38:49 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Denys Vlasenko <dvlasenk@redhat.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save
- 440 bytes
-References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
-In-Reply-To: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sat, 15 Mar 2014 13:29:04 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so2514055eek.37
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2014 10:29:03 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	andrea.merello@gmail.com
+Subject: [PATCH 3/4] rtl8180: make *IFS and CW tunable by mac80211, and set them in the proper place
+Date: Sat, 15 Mar 2014 18:29:37 +0100
+Message-Id: <1394904578-5279-4-git-send-email-andrea.merello@gmail.com> (sfid-20140315_182909_076403_9EC92B2A)
+In-Reply-To: <1394904578-5279-1-git-send-email-andrea.merello@gmail.com>
+References: <1394904578-5279-1-git-send-email-andrea.merello@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30/03/14 23:31, Denys Vlasenko wrote:
-> Automated script discovered that without forced inlining,
-> gcc-4.7 generates smaller code for this function.
->
-> There is no need to declare static functions inline anyway:
-> nowadays gcc detects single-callsite static functions
-> which benefit from inlining.
+SLOT, SIFS, DIFS, EIFS, CW and ACK-timeout registers are set in an
+RF-code callback and their values are fixed.
 
-These patches look awfully familiar. I tend to object, but I don't know 
-the details of this automated script. Does it only look for code size. 
-How about execution time or is this only compile tested? The other thing 
-is that you seem to rely on a specific gcc version. What about pre-4.7? 
-How about different architectures. Was this determined on x86, arm, 
-sparc, mips. All these questions make me say 'nay'.
+This patch moves this off the rf-code, and introduce two new functions
+that calculate these values depending by slot time and CW values
+requested by mac80211.
 
-Regards,
-Arend
+This seems to improve performances on my setup.
 
-> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/chip.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-> index df130ef..d020b0b 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-> @@ -933,7 +933,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
->   	return true;
->   }
->
-> -static inline void
-> +static void
->   brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
->   {
->   	struct brcmf_core *core;
->
+Currently the ack and slot time values could be stored in a local
+variable, but this patch stores it in the driver "priv" structure
+because it will be useful for rtl8187se support that will be added
+(hopefully) soon.
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c     | 83 +++++++++++++++++++++++++-
+ drivers/net/wireless/rtl818x/rtl8180/rtl8180.h |  2 +
+ drivers/net/wireless/rtl818x/rtl8180/rtl8225.c | 22 -------
+ 3 files changed, 83 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index ede8fee..9ee68fd 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -866,6 +866,72 @@ static int rtl8180_config(struct ieee80211_hw *dev, u32 changed)
+ 	return 0;
+ }
+ 
++static int rtl8180_conf_tx(struct ieee80211_hw *dev,
++			    struct ieee80211_vif *vif, u16 queue,
++			    const struct ieee80211_tx_queue_params *params)
++{
++	struct rtl8180_priv *priv = dev->priv;
++	u8 cw_min, cw_max;
++
++	/* nothing to do ? */
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8180)
++		return 0;
++
++	cw_min = fls(params->cw_min);
++	cw_max = fls(params->cw_max);
++
++	rtl818x_iowrite8(priv, &priv->map->CW_VAL, (cw_max << 4) | cw_min);
++
++	return 0;
++}
++
++static void rtl8180_conf_erp(struct ieee80211_hw *dev,
++			    struct ieee80211_bss_conf *info)
++{
++	struct rtl8180_priv *priv = dev->priv;
++	u8 sifs, difs;
++	int eifs;
++	u8 hw_eifs;
++
++	/* TODO: should we do something ? */
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8180)
++		return;
++
++	/* I _hope_ this means 10uS for the HW.
++	 * In reference code it is 0x22 for
++	 * both rtl8187L and rtl8187SE
++	 */
++	sifs = 0x22;
++
++	if (info->use_short_slot)
++		priv->slot_time = 9;
++	else
++		priv->slot_time = 20;
++
++	/* 10 is SIFS time in uS */
++	difs = 10 + 2 * priv->slot_time;
++	eifs = 10 + difs + priv->ack_time;
++
++	/* HW should use 4uS units for EIFS (I'm sure for rtl8185)*/
++	hw_eifs = DIV_ROUND_UP(eifs, 4);
++
++
++	rtl818x_iowrite8(priv, &priv->map->SLOT, priv->slot_time);
++	rtl818x_iowrite8(priv, &priv->map->SIFS, sifs);
++	rtl818x_iowrite8(priv, &priv->map->DIFS, difs);
++
++	/* from reference code. set ack timeout reg = eifs reg */
++	rtl818x_iowrite8(priv, &priv->map->CARRIER_SENSE_COUNTER, hw_eifs);
++
++	/* rtl8187/rtl8185 HW bug. After EIFS is elapsed,
++	 * the HW still wait for DIFS.
++	 * HW uses 4uS units for EIFS.
++	 */
++	hw_eifs = DIV_ROUND_UP(eifs - difs, 4);
++
++	rtl818x_iowrite8(priv, &priv->map->EIFS, hw_eifs);
++}
++
+ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *info,
+@@ -896,8 +962,20 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
+ 	if (changed & BSS_CHANGED_BASIC_RATES)
+ 		rtl8180_conf_basic_rates(dev, info->basic_rates);
+ 
+-	if (changed & BSS_CHANGED_ERP_SLOT && priv->rf->conf_erp)
+-		priv->rf->conf_erp(dev, info);
++	if (changed & (BSS_CHANGED_ERP_SLOT | BSS_CHANGED_ERP_PREAMBLE)) {
++
++		/* when preamble changes, acktime duration changes, and erp must
++		 * be recalculated. ACK time is calculated at lowest rate.
++		 * Since mac80211 include SIFS time we remove it (-10)
++		 */
++		priv->ack_time =
++			le16_to_cpu(ieee80211_generic_frame_duration(dev,
++					priv->vif,
++					IEEE80211_BAND_2GHZ, 10,
++					&priv->rates[0])) - 10;
++
++		rtl8180_conf_erp(dev, info);
++	}
+ 
+ 	if (changed & BSS_CHANGED_BEACON_ENABLED)
+ 		vif_priv->enable_beacon = info->enable_beacon;
+@@ -955,6 +1033,7 @@ static const struct ieee80211_ops rtl8180_ops = {
+ 	.remove_interface	= rtl8180_remove_interface,
+ 	.config			= rtl8180_config,
+ 	.bss_info_changed	= rtl8180_bss_info_changed,
++	.conf_tx		= rtl8180_conf_tx,
+ 	.prepare_multicast	= rtl8180_prepare_multicast,
+ 	.configure_filter	= rtl8180_configure_filter,
+ 	.get_tsf		= rtl8180_get_tsf,
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+index c2f1c9d..7014bf0 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
++++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+@@ -81,6 +81,8 @@ struct rtl8180_priv {
+ 	struct ieee80211_supported_band band;
+ 	struct pci_dev *pdev;
+ 	u32 rx_conf;
++	u8 slot_time;
++	u16 ack_time;
+ 
+ 	enum {
+ 		RTL818X_CHIP_FAMILY_RTL8180,
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c b/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
+index d60a5f3..1c0fe23 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
+@@ -730,32 +730,11 @@ static void rtl8225_rf_set_channel(struct ieee80211_hw *dev,
+ 	msleep(10);
+ }
+ 
+-static void rtl8225_rf_conf_erp(struct ieee80211_hw *dev,
+-				struct ieee80211_bss_conf *info)
+-{
+-	struct rtl8180_priv *priv = dev->priv;
+-
+-	if (info->use_short_slot) {
+-		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
+-		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+-		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+-		rtl818x_iowrite8(priv, &priv->map->EIFS, 81);
+-		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
+-	} else {
+-		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
+-		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x44);
+-		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
+-		rtl818x_iowrite8(priv, &priv->map->EIFS, 81);
+-		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
+-	}
+-}
+-
+ static const struct rtl818x_rf_ops rtl8225_ops = {
+ 	.name		= "rtl8225",
+ 	.init		= rtl8225_rf_init,
+ 	.stop		= rtl8225_rf_stop,
+ 	.set_chan	= rtl8225_rf_set_channel,
+-	.conf_erp	= rtl8225_rf_conf_erp,
+ };
+ 
+ static const struct rtl818x_rf_ops rtl8225z2_ops = {
+@@ -763,7 +742,6 @@ static const struct rtl818x_rf_ops rtl8225z2_ops = {
+ 	.init		= rtl8225z2_rf_init,
+ 	.stop		= rtl8225_rf_stop,
+ 	.set_chan	= rtl8225_rf_set_channel,
+-	.conf_erp	= rtl8225_rf_conf_erp,
+ };
+ 
+ const struct rtl818x_rf_ops * rtl8180_detect_rf(struct ieee80211_hw *dev)
+-- 
+1.8.3.2
 
