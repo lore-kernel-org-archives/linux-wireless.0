@@ -1,115 +1,673 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [143.182.124.21] ([143.182.124.21]:21409 "EHLO mga03.intel.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754083AbaCLOhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 10:37:37 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:41769 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756560AbaCOWRe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Mar 2014 18:17:34 -0400
+Received: by mail-pa0-f48.google.com with SMTP id hz1so4145880pad.35
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Mar 2014 15:17:34 -0700 (PDT)
+From: Fariya Fatima <fariyaf@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v8 1/4] mac80211: split ieee80211_vif_change_channel in two
-Date: Wed, 12 Mar 2014 16:37:18 +0200
-Message-Id: <1394635041-2561-2-git-send-email-luciano.coelho@intel.com> (sfid-20140312_153747_258930_910B7DE6)
-In-Reply-To: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
-References: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH v5 01/11] rsi: Adding RS9113 header files.
+Date: Sun, 16 Mar 2014 03:47:02 +0530
+Message-Id: <1394921832-4056-2-git-send-email-fariyaf@gmail.com> (sfid-20140315_231802_703374_FC3980A0)
+In-Reply-To: <1394921832-4056-1-git-send-email-fariyaf@gmail.com>
+References: <1394921832-4056-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
+From: Fariya Fatima <fariyaf@gmail.com>
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+This patch contains all the header files.
+
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
 ---
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/net/wireless/rsi/rsi_boot_params.h |  126 +++++++++++++++
+ drivers/net/wireless/rsi/rsi_debugfs.h     |   48 ++++++
+ drivers/net/wireless/rsi/rsi_main.h        |  232 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_sdio.h        |  129 +++++++++++++++
+ drivers/net/wireless/rsi/rsi_usb.h         |   68 ++++++++
+ 5 files changed, 603 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_boot_params.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_debugfs.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_main.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_sdio.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_usb.h
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index fdbb932..ef77703 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
- 
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
- 
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
+diff --git a/drivers/net/wireless/rsi/rsi_boot_params.h b/drivers/net/wireless/rsi/rsi_boot_params.h
+new file mode 100644
+index 0000000..5e2721f
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_boot_params.h
+@@ -0,0 +1,126 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_BOOTPARAMS_HEADER_H__
++#define __RSI_BOOTPARAMS_HEADER_H__
++
++#define CRYSTAL_GOOD_TIME                BIT(0)
++#define BOOTUP_MODE_INFO                 BIT(1)
++#define WIFI_TAPLL_CONFIGS               BIT(5)
++#define WIFI_PLL960_CONFIGS              BIT(6)
++#define WIFI_AFEPLL_CONFIGS              BIT(7)
++#define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
++
++#define TA_PLL_M_VAL_20                  8
++#define TA_PLL_N_VAL_20                  1
++#define TA_PLL_P_VAL_20                  4
++
++#define PLL960_M_VAL_20                  0x14
++#define PLL960_N_VAL_20                  0
++#define PLL960_P_VAL_20                  5
++
++#define UMAC_CLK_40MHZ                   40
++
++#define TA_PLL_M_VAL_40                  46
++#define TA_PLL_N_VAL_40                  3
++#define TA_PLL_P_VAL_40                  3
++
++#define PLL960_M_VAL_40                  0x14
++#define PLL960_N_VAL_40                  0
++#define PLL960_P_VAL_40                  5
++
++#define UMAC_CLK_20BW \
++	(((TA_PLL_M_VAL_20 + 1) * 40) / \
++	 ((TA_PLL_N_VAL_20 + 1) * (TA_PLL_P_VAL_20 + 1)))
++#define VALID_20 \
++	(WIFI_PLL960_CONFIGS | WIFI_AFEPLL_CONFIGS | WIFI_SWITCH_CLK_CONFIGS)
++#define UMAC_CLK_40BW   \
++	(((TA_PLL_M_VAL_40 + 1) * 40) / \
++	 ((TA_PLL_N_VAL_40 + 1) * (TA_PLL_P_VAL_40 + 1)))
++#define VALID_40 \
++	(WIFI_PLL960_CONFIGS | WIFI_AFEPLL_CONFIGS | WIFI_SWITCH_CLK_CONFIGS | \
++	 WIFI_TAPLL_CONFIGS | CRYSTAL_GOOD_TIME | BOOTUP_MODE_INFO)
++
++/* structure to store configs related to TAPLL programming */
++struct tapll_info {
++	__le16 pll_reg_1;
++	__le16 pll_reg_2;
++} __packed;
++
++/* structure to store configs related to PLL960 programming */
++struct pll960_info {
++	__le16 pll_reg_1;
++	__le16 pll_reg_2;
++	__le16 pll_reg_3;
++} __packed;
++
++/* structure to store configs related to AFEPLL programming */
++struct afepll_info {
++	__le16 pll_reg;
++} __packed;
++
++/* structure to store configs related to pll configs */
++struct pll_config {
++	struct tapll_info tapll_info_g;
++	struct pll960_info pll960_info_g;
++	struct afepll_info afepll_info_g;
++} __packed;
++
++/* structure to store configs related to UMAC clk programming */
++struct switch_clk {
++	__le16 switch_clk_info;
++	/* If switch_bbp_lmac_clk_reg is set then this value will be programmed
++	 * into reg
++	 */
++	__le16 bbp_lmac_clk_reg_val;
++	/* if switch_umac_clk is set then this value will be programmed */
++	__le16 umac_clock_reg_config;
++	/* if switch_qspi_clk is set then this value will be programmed */
++	__le16 qspi_uart_clock_reg_config;
++} __packed;
++
++struct device_clk_info {
++	struct pll_config pll_config_g;
++	struct switch_clk switch_clk_g;
++} __packed;
++
++struct bootup_params {
++	__le16 magic_number;
++	__le16 crystal_good_time;
++	__le32 valid;
++	__le32 reserved_for_valids;
++	__le16 bootup_mode_info;
++	/* configuration used for digital loop back */
++	__le16 digital_loop_back_params;
++	__le16 rtls_timestamp_en;
++	__le16 host_spi_intr_cfg;
++	struct device_clk_info device_clk_info[3];
++	/* ulp buckboost wait time  */
++	__le32 buckboost_wakeup_cnt;
++	/* pmu wakeup wait time & WDT EN info */
++	__le16 pmu_wakeup_wait;
++	u8 shutdown_wait_time;
++	/* Sleep clock source selection */
++	u8 pmu_slp_clkout_sel;
++	/* WDT programming values */
++	__le32 wdt_prog_value;
++	/* WDT soc reset delay */
++	__le32 wdt_soc_rst_delay;
++	/* dcdc modes configs */
++	__le32 dcdc_operation_mode;
++	__le32 soc_reset_wait_cnt;
++} __packed;
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_debugfs.h b/drivers/net/wireless/rsi/rsi_debugfs.h
+new file mode 100644
+index 0000000..580ad3b
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_debugfs.h
+@@ -0,0 +1,48 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_DEBUGFS_H__
++#define __RSI_DEBUGFS_H__
++
++#include "rsi_main.h"
++#include <linux/debugfs.h>
++
++#ifndef CONFIG_RSI_DEBUGFS
++static inline int rsi_init_dbgfs(struct rsi_hw *adapter)
++{
 +	return 0;
 +}
 +
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
++static inline void rsi_remove_dbgfs(struct rsi_hw *adapter)
 +{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
++	return;
++}
++#else
++struct rsi_dbg_files {
++	const char *name;
++	umode_t perms;
++	const struct file_operations fops;
++};
 +
-+	lockdep_assert_held(&local->mtx);
++struct rsi_debugfs {
++	struct dentry *subdir;
++	struct rsi_dbg_ops *dfs_get_ops;
++	struct dentry *rsi_files[MAX_DEBUGFS_ENTRIES];
++};
++int rsi_init_dbgfs(struct rsi_hw *adapter);
++void rsi_remove_dbgfs(struct rsi_hw *adapter);
++#endif
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+new file mode 100644
+index 0000000..bebdc2a
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -0,0 +1,232 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
++#ifndef __RSI_MAIN_H__
++#define __RSI_MAIN_H__
 +
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
++#include <linux/string.h>
++#include <linux/skbuff.h>
++#include <net/mac80211.h>
++
++#define ERR_ZONE                        BIT(0)  /* For Error Msgs             */
++#define INFO_ZONE                       BIT(1)  /* For General Status Msgs    */
++#define INIT_ZONE                       BIT(2)  /* For Driver Init Seq Msgs   */
++#define MGMT_TX_ZONE                    BIT(3)  /* For TX Mgmt Path Msgs      */
++#define MGMT_RX_ZONE                    BIT(4)  /* For RX Mgmt Path Msgs      */
++#define DATA_TX_ZONE                    BIT(5)  /* For TX Data Path Msgs      */
++#define DATA_RX_ZONE                    BIT(6)  /* For RX Data Path Msgs      */
++#define FSM_ZONE                        BIT(7)  /* For State Machine Msgs     */
++#define ISR_ZONE                        BIT(8)  /* For Interrupt Msgs         */
++
++#define FSM_CARD_NOT_READY              0
++#define FSM_BOOT_PARAMS_SENT            1
++#define FSM_EEPROM_READ_MAC_ADDR        2
++#define FSM_RESET_MAC_SENT              3
++#define FSM_RADIO_CAPS_SENT             4
++#define FSM_BB_RF_PROG_SENT             5
++#define FSM_MAC_INIT_DONE               6
++
++extern u32 rsi_zone_enabled;
++
++static inline void rsi_dbg(u32 zone, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	if (zone & rsi_zone_enabled)
++		pr_info("%pV", &vaf);
++	va_end(args);
++}
++
++#define RSI_MAX_VIFS                    1
++#define NUM_EDCA_QUEUES                 4
++#define IEEE80211_ADDR_LEN              6
++#define FRAME_DESC_SZ                   16
++#define MIN_802_11_HDR_LEN              24
++
++#define DATA_QUEUE_WATER_MARK           400
++#define MIN_DATA_QUEUE_WATER_MARK       300
++#define MULTICAST_WATER_MARK            200
++#define MAC_80211_HDR_FRAME_CONTROL     0
++#define WME_NUM_AC                      4
++#define NUM_SOFT_QUEUES                 5
++#define MAX_HW_QUEUES                   8
++#define INVALID_QUEUE                   0xff
++#define MAX_CONTINUOUS_VO_PKTS          8
++#define MAX_CONTINUOUS_VI_PKTS          4
++
++/* Queue information */
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define IEEE80211_MGMT_FRAME            0x00
++#define IEEE80211_CTL_FRAME             0x04
++
++#define IEEE80211_QOS_TID               0x0f
++#define IEEE80211_NONQOS_TID            16
++
++#define MAX_DEBUGFS_ENTRIES             4
++
++#define TID_TO_WME_AC(_tid) (      \
++	((_tid) == 0 || (_tid) == 3) ? BE_Q : \
++	((_tid) < 3) ? BK_Q : \
++	((_tid) < 6) ? VI_Q : \
++	VO_Q)
++
++#define WME_AC(_q) (    \
++	((_q) == BK_Q) ? IEEE80211_AC_BK : \
++	((_q) == BE_Q) ? IEEE80211_AC_BE : \
++	((_q) == VI_Q) ? IEEE80211_AC_VI : \
++	IEEE80211_AC_VO)
++
++struct version_info {
++	u16 major;
++	u16 minor;
++	u16 release_num;
++	u16 patch_num;
++} __packed;
++
++struct skb_info {
++	s8 rssi;
++	u32 flags;
++	u16 channel;
++	s8 tid;
++	s8 sta_id;
++};
++
++enum edca_queue {
++	BK_Q,
++	BE_Q,
++	VI_Q,
++	VO_Q,
++	MGMT_SOFT_Q
++};
++
++struct security_info {
++	bool security_enable;
++	u32 ptk_cipher;
++	u32 gtk_cipher;
++};
++
++struct wmm_qinfo {
++	s32 weight;
++	s32 wme_params;
++	s32 pkt_contended;
++};
++
++struct transmit_q_stats {
++	u32 total_tx_pkt_send[NUM_EDCA_QUEUES + 1];
++	u32 total_tx_pkt_freed[NUM_EDCA_QUEUES + 1];
++};
++
++struct vif_priv {
++	bool is_ht;
++	bool sgi;
++	u16 seq_start;
++};
++
++struct rsi_event {
++	atomic_t event_condition;
++	wait_queue_head_t event_queue;
++};
++
++struct rsi_thread {
++	void (*thread_function)(void *);
++	struct completion completion;
++	struct task_struct *task;
++	struct rsi_event event;
++	atomic_t thread_done;
++};
++
++struct rsi_hw;
++
++struct rsi_common {
++	struct rsi_hw *priv;
++	struct vif_priv vif_info[RSI_MAX_VIFS];
++
++	bool mgmt_q_block;
++	struct version_info driver_ver;
++	struct version_info fw_ver;
++
++	struct rsi_thread tx_thread;
++	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
++	/* Mutex declaration */
++	struct mutex mutex;
++	/* Mutex used between tx/rx threads */
++	struct mutex tx_rxlock;
++	u8 endpoint;
++
++	/* Channel/band related */
++	u8 band;
++	u8 channel_width;
++
++	u16 rts_threshold;
++	u16 bitrate_mask[2];
++	u32 fixedrate_mask[2];
++
++	u8 rf_reset;
++	struct transmit_q_stats tx_stats;
++	struct security_info secinfo;
++	struct wmm_qinfo tx_qinfo[NUM_EDCA_QUEUES];
++	struct ieee80211_tx_queue_params edca_params[NUM_EDCA_QUEUES];
++	u8 mac_addr[IEEE80211_ADDR_LEN];
++
++	/* state related */
++	u32 fsm_state;
++	bool init_done;
++	u8 bb_rf_prog_count;
++	bool iface_down;
++
++	/* Generic */
++	u8 channel;
++	u8 *rx_data_pkt;
++	u8 mac_id;
++	u8 radio_id;
++	u16 rate_pwr[20];
++	u16 min_rate;
++
++	/* WMM algo related */
++	u8 selected_qnum;
++	u32 pkt_cnt;
++	u8 min_weight;
++};
++
++struct rsi_hw {
++	struct rsi_common *priv;
++	struct ieee80211_hw *hw;
++	struct ieee80211_vif *vifs[RSI_MAX_VIFS];
++	struct ieee80211_tx_queue_params edca_params[NUM_EDCA_QUEUES];
++	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
++
++	struct device *device;
++	u8 sc_nvifs;
++
++#ifdef CONFIG_RSI_DEBUGFS
++	struct rsi_debugfs *dfsentry;
++	u8 num_debugfs_entries;
++#endif
++	void *rsi_dev;
++	int (*host_intf_read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*host_intf_write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
++	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
++	int (*rx_urb_submit)(struct rsi_hw *adapter);
++	int (*determine_event_timeout)(struct rsi_hw *adapter);
++};
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+new file mode 100644
+index 0000000..df4b5e2
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -0,0 +1,129 @@
++/**
++ * @section LICENSE
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ */
++
++#ifndef __RSI_SDIO_INTF__
++#define __RSI_SDIO_INTF__
++
++#include <linux/mmc/card.h>
++#include <linux/mmc/mmc.h>
++#include <linux/mmc/host.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/sd.h>
++#include <linux/mmc/sdio_ids.h>
++#include "rsi_main.h"
++
++enum sdio_interrupt_type {
++	BUFFER_FULL         = 0x0,
++	BUFFER_AVAILABLE    = 0x1,
++	FIRMWARE_ASSERT_IND = 0x3,
++	MSDU_PACKET_PENDING = 0x4,
++	UNKNOWN_INT         = 0XE
++};
++
++/* Buffer status register related info */
++#define PKT_BUFF_SEMI_FULL                      0
++#define PKT_BUFF_FULL                           1
++#define PKT_MGMT_BUFF_FULL                      2
++#define MSDU_PKT_PENDING                        3
++/* Interrupt Bit Related Macros */
++#define PKT_BUFF_AVAILABLE                      0
++#define FW_ASSERT_IND                           2
++
++#define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
++#define RSI_FN1_INT_REGISTER                    0xf9
++#define RSI_SD_REQUEST_MASTER                   0x10000
++
++/* FOR SD CARD ONLY */
++#define SDIO_RX_NUM_BLOCKS_REG                  0x000F1
++#define SDIO_FW_STATUS_REG                      0x000F2
++#define SDIO_NXT_RD_DELAY2                      0x000F5
++#define SDIO_MASTER_ACCESS_MSBYTE               0x000FA
++#define SDIO_MASTER_ACCESS_LSBYTE               0x000FB
++#define SDIO_READ_START_LVL                     0x000FC
++#define SDIO_READ_FIFO_CTL                      0x000FD
++#define SDIO_WRITE_FIFO_CTL                     0x000FE
++#define SDIO_FUN1_INTR_CLR_REG                  0x0008
++#define SDIO_REG_HIGH_SPEED                     0x0013
++
++#define RSI_GET_SDIO_INTERRUPT_TYPE(_I, TYPE)      \
++	{					   \
++		TYPE =                             \
++		(_I & (1 << PKT_BUFF_AVAILABLE)) ? \
++		BUFFER_AVAILABLE :		   \
++		(_I & (1 << MSDU_PKT_PENDING)) ?   \
++		MSDU_PACKET_PENDING :              \
++		(_I & (1 << FW_ASSERT_IND)) ?      \
++		FIRMWARE_ASSERT_IND : UNKNOWN_INT; \
 +	}
 +
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++/* common registers in SDIO function1 */
++#define TA_SOFT_RESET_REG            0x0004
++#define TA_TH0_PC_REG                0x0400
++#define TA_HOLD_THREAD_REG           0x0844
++#define TA_RELEASE_THREAD_REG        0x0848
 +
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
++#define TA_SOFT_RST_CLR              0
++#define TA_SOFT_RST_SET              BIT(0)
++#define TA_PC_ZERO                   0
++#define TA_HOLD_THREAD_VALUE         cpu_to_le32(0xF)
++#define TA_RELEASE_THREAD_VALUE      cpu_to_le32(0xF)
++#define TA_BASE_ADDR                 0x2200
++#define MISC_CFG_BASE_ADDR           0x4150
++
++struct receive_info {
++	bool buffer_full;
++	bool semi_buffer_full;
++	bool mgmt_buffer_full;
++	u32 mgmt_buf_full_counter;
++	u32 buf_semi_full_counter;
++	u8 watch_bufferfull_count;
++	u32 sdio_intr_status_zero;
++	u32 sdio_int_counter;
++	u32 total_sdio_msdu_pending_intr;
++	u32 total_sdio_unknown_intr;
++	u32 buf_full_counter;
++	u32 buf_avilable_counter;
++};
++
++struct rsi_91x_sdiodev {
++	struct sdio_func *pfunction;
++	struct task_struct *in_sdio_litefi_irq;
++	struct receive_info rx_info;
++	u32 next_read_delay;
++	u32 sdio_high_speed_enable;
++	u8 sdio_clock_speed;
++	u32 cardcapability;
++	u8 prev_desc[16];
++	u32 tx_blk_size;
++	u8 write_fail;
++};
++
++void rsi_interrupt_handler(struct rsi_hw *adapter);
++int rsi_init_sdio_slave_regs(struct rsi_hw *adapter);
++int rsi_sdio_device_init(struct rsi_common *common);
++int rsi_sdio_read_register(struct rsi_hw *adapter, u32 addr, u8 *data);
++int rsi_sdio_host_intf_read_pkt(struct rsi_hw *adapter, u8 *pkt, u32 length);
++int rsi_sdio_write_register(struct rsi_hw *adapter, u8 function,
++			    u32 addr, u8 *data);
++int rsi_sdio_write_register_multiple(struct rsi_hw *adapter, u32 addr,
++				     u8 *data, u32 count);
++void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
++int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
++int rsi_sdio_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num);
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+new file mode 100644
+index 0000000..ebea0c4
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -0,0 +1,68 @@
++/**
++ * @section LICENSE
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_USB_INTF__
++#define __RSI_USB_INTF__
++
++#include <linux/usb.h>
++#include "rsi_main.h"
++#include "rsi_common.h"
++
++#define USB_INTERNAL_REG_1           0x25000
++#define RSI_USB_READY_MAGIC_NUM      0xab
++#define FW_STATUS_REG                0x41050012
++
++#define USB_VENDOR_REGISTER_READ     0x15
++#define USB_VENDOR_REGISTER_WRITE    0x16
++#define RSI_USB_TX_HEAD_ROOM         128
++
++#define MAX_RX_URBS                  1
++#define MAX_BULK_EP                  8
++#define MGMT_EP                      1
++#define DATA_EP                      2
++
++struct rsi_91x_usbdev {
++	struct rsi_thread rx_thread;
++	u8 endpoint;
++	struct usb_device *usbdev;
++	struct usb_interface *pfunction;
++	struct urb *rx_usb_urb[MAX_RX_URBS];
++	u8 *tx_buffer;
++	__le16 bulkin_size;
++	u8 bulkin_endpoint_addr;
++	__le16 bulkout_size[MAX_BULK_EP];
++	u8 bulkout_endpoint_addr[MAX_BULK_EP];
++	u32 tx_blk_size;
++	u8 write_fail;
++};
++
++static inline int rsi_usb_check_queue_status(struct rsi_hw *adapter, u8 q_num)
++{
++	/* In USB, there isn't any need to check the queue status */
++	return QUEUE_NOT_FULL;
++}
++
++static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
++{
++	return EVENT_WAIT_FOREVER;
++}
++
++int rsi_usb_device_init(struct rsi_common *common);
++int rsi_usb_write_register_multiple(struct rsi_hw *adapter, u32 addr,
++				    u8 *data, u32 count);
++void rsi_usb_rx_thread(struct rsi_common *common);
++#endif
 -- 
-1.9.0
+1.7.5.4
 
