@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42310 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752693AbaCaG2P (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:50016 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755062AbaCOBEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 02:28:15 -0400
-Message-ID: <53390AE4.4030705@candelatech.com> (sfid-20140331_082828_142851_5D73CD1E)
-Date: Sun, 30 Mar 2014 23:27:48 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 14 Mar 2014 21:04:12 -0400
+Received: by mail-la0-f48.google.com with SMTP id gf5so2235149lab.21
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 18:04:11 -0700 (PDT)
 MIME-Version: 1.0
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Here are some ath10k performance graphs.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+ <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
+ <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
+ <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com> <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 14 Mar 2014 18:03:50 -0700
+Message-ID: <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com> (sfid-20140315_020416_241234_3E04D4E6)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
+To: Colleen T <colleen@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I finally have a firmware stable enough to do some throughput
-tests (only locked station machine up once doing these!).
+On Fri, Mar 14, 2014 at 3:12 PM, Colleen T <colleen@cozybit.com> wrote:
+> I'm on mac80211-next/master, sha is
+> 5a970df8990d173e7e4092952f2e3da1de69b27d
 
-I find the download test interesting where the rx link rate goes very low
-after 12 or so stations.
+I tried to reproduce by just merging the fixes in question onto Linus'
+tree and using radios=3 but no go. Can you provide the full kernel
+log, I'm particularly interested in what happened before. The
+COUNTRY=US on debian, which I believe you're on, should just trigger a
+regulatory domain setting to US upon initialization. Depending on how
+Debian does it this could either trigger as a module parameter or as a
+userspace event *after* the world regdom get set.
 
-tx link rate is not reported properly yet by ath10k, so ignore that.
+The radios=3 alone would not do anything other than add new radios so
+I see no contention on the last_request by increasing or decreasing
+that. last_request is also protected by rtnl and although I was
+considering a possible race against processing the same last_request
+twice if you see how we call reg_process_pending_hints() on reg_todo()
+its protected by rtnl_lock() so I'm a bit puzzled as to how this is
+being triggered as those operations should be atomic. The other corner
+case I thought of was that for userspace requests which sets a
+timeout, but our when the timeout hits we also rtnl_lock() under
+reg_timeout_work().
 
-http://www.candelatech.com/examples/cap-ath10k-tcp-download-open/
-http://www.candelatech.com/examples/cap-ath10k-tcp-download-wpa2/
-http://www.candelatech.com/examples/cap-ath10k-tcp-upload-open/
-http://www.candelatech.com/examples/cap-ath10k-tcp-upload-wpa2/
+The other corner I thought of was when we reset_regdomains() but all
+callers are rtnl_lock()'d. This is also the same for callers of
+set_regdom().
 
-Some notes are near the top of each report, and in general:
+Do you get different results if you reduce the number of radios? If so
+where's the trigger point?
 
-The station machine is sending to/from wired Eth1 to/from the
-stations, ie it is both sides of the network.
-The AP is configured as router.  Both systems are running
-our customized 10.1.467-ct firmware, and near the latest ath10k kernel.  Station
-machine is Fedora 17, AP is Fedora 19.  Both are 64-bit, CPU is a mobile core-i7,
-8GB RAM, SSD hard drives (not that it should matter).
-
-Due to the vagaries of ath10k hardware and our firmware, we get hardware acceleration when
-sending encrypted packets, but we have to decrypt received packets on the CPU.
-
-I am not sure why open TCP throughput is so bad compared to upload.
-I'll run some UDP tests when I get a chance.
-
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
