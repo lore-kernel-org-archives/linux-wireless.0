@@ -1,248 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:61818 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754708AbaCRN7X (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:38548 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298AbaCPRVw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:23 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e53so5392732eek.2
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:22 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 12/21] mac80211: compute chanctx refcount on-the-fly
-Date: Tue, 18 Mar 2014 14:53:15 +0100
-Message-Id: <1395150804-24090-13-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150100_011727_A88D2596)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 16 Mar 2014 13:21:52 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v2 1/4] net: add name_assign_type netdev attribute
+Date: Sun, 16 Mar 2014 18:21:27 +0100
+Message-Id: <1394990490-1076-2-git-send-email-dh.herrmann@gmail.com> (sfid-20140316_182413_372735_5E98643C)
+In-Reply-To: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
+References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to store refcount in
-the chanctx structure. One still needs to hold
-chanctx_mtx to get the value safely. Besides,
-refcount isn't on performance critical paths.
+The name_assign_type attribute gives hints where the interface name of a
+given net-device comes from. Three different values are currently defined:
+  NET_NAME_ENUM:
+    This is the default. The ifname is provided by the kernel with an
+    enumerated suffix. Names may be reused and unstable.
+  NET_NAME_USER:
+    The ifname was provided by user-space during net-device setup.
+  NET_NAME_RENAMED:
+    The net-device has been renamed via RTNL. Once this type is set, it
+    cannot change again.
 
-This will make implementing chanctx reservation
-refcounting a little easier.
+This attribute comes in handy for reliable net-device names. If an ifname
+is provided by user-space, we can safely assume that the naming-policy
+avoids reuse and is stable. Only if it was set by the kernel, the
+interfaces might need to be renamed.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+The NET_NAME_RENAMED value allows us to detect whether some-one else
+already renamed the device, in which case we shouldn't touch it again. The
+NET_NAME_USER value allows us to detect whether some other naming policy
+created the device, in which case there's no need to rename it.
+
+The most significant use-case is to detect virtual wifi-P2P devices, which
+are named by wpa_supplicant et al. We shouldn't rename them as wpas
+already provides a proper naming-policy.
+
+Note that this patch only provides the core infrastructure. The different
+net-dev types need to be manually fixed to use NET_NAME_USER instead of
+the default (NET_NAME_ENUM). NET_NAME_ENUM is the least restrictive,
+though, so it seems safe to use it as fallback for non-converted net-dev
+types.
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
 ---
- net/mac80211/cfg.c         |  2 +-
- net/mac80211/chan.c        | 59 +++++++++++++++++++++++++++++++++++-----------
- net/mac80211/ieee80211_i.h |  3 ++-
- net/mac80211/mlme.c        |  2 +-
- 4 files changed, 49 insertions(+), 17 deletions(-)
+ include/linux/netdevice.h | 6 ++++++
+ net/core/dev.c            | 7 +++++++
+ net/core/net-sysfs.c      | 2 ++
+ net/core/rtnetlink.c      | 2 ++
+ 4 files changed, 17 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 61b62f4..954259d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3251,7 +3251,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index b8d8c80..d3040c5 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -74,6 +74,11 @@ void netdev_set_default_ethtool_ops(struct net_device *dev,
+ #define NET_RX_SUCCESS		0	/* keep 'em coming, baby */
+ #define NET_RX_DROP		1	/* packet dropped */
  
- 	/* don't handle for multi-VIF cases */
- 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1) {
-+	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
- 		mutex_unlock(&local->chanctx_mtx);
- 		return -EBUSY;
- 	}
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 623df6f..e99362d 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -9,6 +9,41 @@
- #include "ieee80211_i.h"
- #include "driver-ops.h"
++/* interface name assignment types */
++#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
++#define NET_NAME_USER		1	/* provided by user-space */
++#define NET_NAME_RENAMED	2	/* renamed by user-space */
++
+ /*
+  * Transmit return codes: transmit return codes originate from three different
+  * namespaces:
+@@ -1248,6 +1253,7 @@ struct net_device {
+ 	 * of the interface.
+ 	 */
+ 	char			name[IFNAMSIZ];
++	unsigned char		name_assign_type; /* name assignment type */
  
-+static int ieee80211_chanctx_num_assigned(struct ieee80211_local *local,
-+					  struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	int num = 0;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	list_for_each_entry(sdata, &ctx->assigned_vifs, assigned_chanctx_list)
-+		num++;
-+
-+	return num;
-+}
-+
-+static int ieee80211_chanctx_num_reserved(struct ieee80211_local *local,
-+					  struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	int num = 0;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list)
-+		num++;
-+
-+	return num;
-+}
-+
-+int ieee80211_chanctx_refcount(struct ieee80211_local *local,
-+			       struct ieee80211_chanctx *ctx)
-+{
-+	return ieee80211_chanctx_num_assigned(local, ctx) +
-+	       ieee80211_chanctx_num_reserved(local, ctx);
-+}
-+
- static int ieee80211_num_chanctx(struct ieee80211_local *local)
+ 	/* device name hash chain, please keep it close to name[] */
+ 	struct hlist_node	name_hlist;
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 587f9fb..4a2b360 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1083,6 +1083,7 @@ static int dev_get_valid_name(struct net *net,
+ int dev_change_name(struct net_device *dev, const char *newname)
  {
- 	struct ieee80211_chanctx *ctx;
-@@ -465,7 +500,7 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- {
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
--	WARN_ON_ONCE(ctx->refcount != 0);
-+	WARN_ON_ONCE(ieee80211_chanctx_refcount(local, ctx) != 0);
- 
- 	list_del_rcu(&ctx->list);
- 	ieee80211_del_chanctx(local, ctx);
-@@ -544,7 +579,6 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	if (conf) {
- 		curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--		curr_ctx->refcount--;
- 		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
- 		conf = NULL;
- 		list_del(&sdata->assigned_chanctx_list);
-@@ -555,7 +589,6 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 		if (ret)
- 			goto out;
- 
--		new_ctx->refcount++;
- 		conf = &new_ctx->conf;
- 		list_add(&sdata->assigned_chanctx_list,
- 			 &new_ctx->assigned_vifs);
-@@ -566,14 +599,14 @@ out:
- 
- 	sdata->vif.bss_conf.idle = !conf;
- 
--	if (curr_ctx && curr_ctx->refcount > 0) {
-+	if (curr_ctx && ieee80211_chanctx_num_assigned(local, curr_ctx) > 0) {
- 		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
- 		ieee80211_recalc_smps_chanctx(local, curr_ctx);
- 		ieee80211_recalc_radar_chanctx(local, curr_ctx);
- 		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
+ 	char oldname[IFNAMSIZ];
++	unsigned char old_assign_type;
+ 	int err = 0;
+ 	int ret;
+ 	struct net *net;
+@@ -1109,10 +1110,14 @@ int dev_change_name(struct net_device *dev, const char *newname)
+ 		return err;
  	}
  
--	if (new_ctx && new_ctx->refcount > 0) {
-+	if (new_ctx && ieee80211_chanctx_num_assigned(local, new_ctx) > 0) {
- 		ieee80211_recalc_txpower(sdata);
- 		ieee80211_recalc_chanctx_min_def(local, new_ctx);
- 	}
-@@ -605,7 +638,7 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_vif_unreserve_chanctx(sdata);
- 
- 	ieee80211_assign_vif_chanctx(sdata, NULL);
--	if (ctx->refcount == 0)
-+	if (ieee80211_chanctx_refcount(local, ctx) == 0)
- 		ieee80211_free_chanctx(local, ctx);
- }
- 
-@@ -737,7 +770,7 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
++	old_assign_type = dev->name_assign_type;
++	dev->name_assign_type = NET_NAME_RENAMED;
++
+ rollback:
+ 	ret = device_rename(&dev->dev, dev->name);
  	if (ret) {
- 		/* if assign fails refcount stays the same */
--		if (ctx->refcount == 0)
-+		if (ieee80211_chanctx_refcount(local, ctx) == 0)
- 			ieee80211_free_chanctx(local, ctx);
- 		goto out;
+ 		memcpy(dev->name, oldname, IFNAMSIZ);
++		dev->name_assign_type = old_assign_type;
+ 		write_seqcount_end(&devnet_rename_seq);
+ 		return ret;
  	}
-@@ -761,7 +794,7 @@ static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
+@@ -1141,6 +1146,8 @@ rollback:
+ 			write_seqcount_begin(&devnet_rename_seq);
+ 			memcpy(dev->name, oldname, IFNAMSIZ);
+ 			memcpy(oldname, newname, IFNAMSIZ);
++			dev->name_assign_type = old_assign_type;
++			old_assign_type = NET_NAME_RENAMED;
+ 			goto rollback;
+ 		} else {
+ 			pr_err("%s: name change rollback failed: %d\n",
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index daed9a6..886403e 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -105,6 +105,7 @@ static ssize_t netdev_store(struct device *dev, struct device_attribute *attr,
  
--	if (ctx->refcount != 1)
-+	if (ieee80211_chanctx_refcount(local, ctx) != 1)
- 		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
-@@ -867,7 +900,7 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
- 	list_del(&sdata->reserved_chanctx_list);
- 	sdata->reserved_chanctx = NULL;
- 
--	if (--ctx->refcount == 0)
-+	if (ieee80211_chanctx_refcount(sdata->local, ctx) == 0)
- 		ieee80211_free_chanctx(sdata->local, ctx);
- 
- 	return 0;
-@@ -896,7 +929,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 
- 	new_ctx = ieee80211_find_reservation_chanctx(local, chandef, mode);
- 	if (!new_ctx) {
--		if (curr_ctx->refcount == 1 &&
-+		if (ieee80211_chanctx_refcount(local, curr_ctx) == 1 &&
- 		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
- 			/* if we're the only users of the chanctx and
- 			 * the driver supports changing a running
-@@ -917,7 +950,6 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	list_add(&sdata->reserved_chanctx_list, &new_ctx->reserved_vifs);
--	new_ctx->refcount++;
- 	sdata->reserved_chanctx = new_ctx;
- 	sdata->reserved_chandef = *chandef;
- 	sdata->reserved_radar_required = radar_required;
-@@ -963,7 +995,6 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
- 
- 	/* unref our reservation */
--	ctx->refcount--;
- 	sdata->reserved_chanctx = NULL;
- 	sdata->radar_required = sdata->reserved_radar_required;
- 	list_del(&sdata->reserved_chanctx_list);
-@@ -976,11 +1007,11 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 			goto out;
- 	} else {
- 		ret = ieee80211_assign_vif_chanctx(sdata, ctx);
--		if (old_ctx->refcount == 0)
-+		if (ieee80211_chanctx_refcount(local, old_ctx) == 0)
- 			ieee80211_free_chanctx(local, old_ctx);
- 		if (ret) {
- 			/* if assign fails refcount stays the same */
--			if (ctx->refcount == 0)
-+			if (ieee80211_chanctx_refcount(local, ctx) == 0)
- 				ieee80211_free_chanctx(local, ctx);
- 			goto out;
+ NETDEVICE_SHOW_RO(dev_id, fmt_hex);
+ NETDEVICE_SHOW_RO(dev_port, fmt_dec);
++NETDEVICE_SHOW_RO(name_assign_type, fmt_dec);
+ NETDEVICE_SHOW_RO(addr_assign_type, fmt_dec);
+ NETDEVICE_SHOW_RO(addr_len, fmt_dec);
+ NETDEVICE_SHOW_RO(iflink, fmt_dec);
+@@ -377,6 +378,7 @@ static struct attribute *net_class_attrs[] = {
+ 	&dev_attr_dev_port.attr,
+ 	&dev_attr_iflink.attr,
+ 	&dev_attr_ifindex.attr,
++	&dev_attr_name_assign_type.attr,
+ 	&dev_attr_addr_assign_type.attr,
+ 	&dev_attr_addr_len.attr,
+ 	&dev_attr_link_mode.attr,
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index fc122fd..f1bd0fe 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -1967,6 +1967,8 @@ replay:
  		}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0701631..2de8121 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -695,7 +695,6 @@ struct ieee80211_chanctx {
- 	struct list_head reserved_vifs;
  
- 	enum ieee80211_chanctx_mode mode;
--	int refcount;
- 	bool driver_present;
+ 		dev->ifindex = ifm->ifi_index;
++		if (tb[IFLA_IFNAME])
++			dev->name_assign_type = NET_NAME_USER;
  
- 	struct ieee80211_chanctx_conf conf;
-@@ -1802,6 +1801,8 @@ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
- 					 bool clear);
-+int ieee80211_chanctx_refcount(struct ieee80211_local *local,
-+			       struct ieee80211_chanctx *ctx);
- 
- void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *chanctx);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 94f0af2..a4d8e99 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1089,7 +1089,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	}
- 	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
- 			       struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1) {
-+	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
- 		sdata_info(sdata,
- 			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
- 		ieee80211_queue_work(&local->hw,
+ 		if (ops->newlink) {
+ 			err = ops->newlink(net, dev, tb, data);
 -- 
-1.8.5.3
+1.9.0
 
