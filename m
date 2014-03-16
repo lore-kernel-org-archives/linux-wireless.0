@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f180.google.com ([209.85.160.180]:54053 "EHLO
-	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbaC2JxD (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46379 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753281AbaCPSNd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2014 05:53:03 -0400
-Received: by mail-yk0-f180.google.com with SMTP id 19so1609810ykq.25
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2014 02:53:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140328.214254.1620280677250220442.davem@davemloft.net>
-References: <CAG-2HqVJPrTWXtuvDkU6MvfNj0MXfNuBMmdoKWtSd5kToZ3mMQ@mail.gmail.com>
- <20140328.172107.16072208664321602.davem@davemloft.net> <CAG-2HqVQ-MAZgsZAkykvVtbtYgDA3bfJA5rEqpdX5vBqPTjLJg@mail.gmail.com>
- <20140328.214254.1620280677250220442.davem@davemloft.net>
-From: Tom Gundersen <teg@jklm.no>
-Date: Sat, 29 Mar 2014 10:46:02 +0100
-Message-ID: <CAG-2HqWQsLPaaHxMFn5Bha0BGKSAVZV9n87KTCsbQ1ewktzZvA@mail.gmail.com> (sfid-20140329_105310_172685_A91BAD70)
-Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
-To: David Miller <davem@davemloft.net>
-Cc: David Herrmann <dh.herrmann@gmail.com>,
-	netdev <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 16 Mar 2014 14:13:33 -0400
+Message-ID: <1394993614.15764.90.camel@deadeye.wl.decadent.org.uk> (sfid-20140316_191336_435938_6A835699)
+Subject: Re: pull request: firmware for Intel Wireless adapter 7260 / 3160 -
+ 22.24.8.0
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Date: Sun, 16 Mar 2014 18:13:34 +0000
+In-Reply-To: <530AF9AE.4000000@gmail.com>
+References: <530AF48F.8050802@gmail.com> <530AF9AE.4000000@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-Yen8Xkj3SeUGWkni2WjG"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 29, 2014 at 2:42 AM, David Miller <davem@davemloft.net> wrote:
-> From: Tom Gundersen <teg@jklm.no>
-> Date: Fri, 28 Mar 2014 23:39:57 +0100
->
->> You mean coordinate with each other in userspace? If so, I still don't
->> see how this can ever be anything else than fragile. It will depend on
->> each userspace component actually opting in to whatever scheme we
->> devise, and does so correctly.
->
-> Isn't that essentially what dbus is?
->
-> A way for seperate userland components to coordinate their
-> activities?
 
-The protocol is not the problem. The issue is that this information
-only exists reliably in the kernel, so we need to get it from there
-somehow.
+--=-Yen8Xkj3SeUGWkni2WjG
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> I just simply don't like all of these ramdom keys getting
-> added all over the place to guide udev behavior wrt. some
-> other entity.
+On Mon, 2014-02-24 at 09:50 +0200, Emmanuel Grumbach wrote:
+> Hi Ben,
+>=20
+> I have a new firmware for 7260 / 3160 - new version is 22.24.8.0.
+>=20
+> Please pull - thanks!
+>=20
+> The following changes since commit d7f8a7c81a3aaf06e4166ff17f9ef7cae83191=
+6f:
+>=20
+>   Remove executable permissions from firmware files (2014-01-27 00:49:23 =
++0000)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware =
+master
+>=20
+> for you to fetch changes up to 509a474f31360bce4546046ab037ddad1cc0471a:
+>=20
+>   iwlwifi: update firmware for 7260 / 3160 devices (2014-02-24 09:19:42 +=
+0200)
+>=20
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       iwlwifi: update firmware for 7260 / 3160 devices
+>=20
+>  WHENCE               |    6 +++---
+>  iwlwifi-3160-8.ucode |  Bin 662032 -> 667284 bytes
+>  iwlwifi-7260-8.ucode |  Bin 674628 -> 679780 bytes
+>  3 files changed, 3 insertions(+), 3 deletions(-)
 
-Well, in this case udev is sort of doing a bit of the kernel's work,
-and it needs some information from the kernel to do it reliably.
-Another approach would be for the kernel to just assign predictable
-interface names to devices to begin with and we would never have to
-touch them. You have all the information so that would be relatively
-easy.
+Pulled, thanks.  Sorry for the delay.
 
-The issue I see with that is that there are several ways to generate
-predictable names, and the user may want to chose between them, so
-this is arguably policy that should not be in the kernel. If you don't
-think that's a problem, I'd be happy to submit a patch to move all
-this logic from udev to the kernel, just let me know how you see it.
+Ben.
 
-Cheers,
+--=20
+Ben Hutchings
+Computers are not intelligent.	They only think they are.
 
-Tom
+--=-Yen8Xkj3SeUGWkni2WjG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUAUyXpzue/yOyVhhEJAQo31w/+K2urs974jTPt7L/TiNA1QXcxTUsTUJDa
+KBQsIageC16Qt+UlOkYiAl5gwwXKBVpCRI1GzT05SAHQ6j+ae+01v07WbXsIkGe9
+3NKBw2zo81S5Hp9r9ov6UGI2H7/go7phhvKFip+jpgIC7qGoK9HQb9l7Q0dc8YgT
+6KxVHcyYOQi/lbcJcfYQKygs5qO2PEgR9wWHLe2AgyEU7nNJ8TMCZOG6UGwGRPzg
+E4DnkHkUeRklFQ4ljYbNroRAEaWVx6/ktKDhoHlda/o8iXKOidQfMbwWZS/OlcXD
+qkseCIOFVakLfjfc3moEnO2yRRyhrv3dQvKB9IavmKuv7EUDHeHTocknTrfvBh4w
++k9p7t31EUFGMAxA65cne4FXlBtro0uf8d3kLSdLDECukxnlWLo21bhaCYzcaJJO
+wBPiLV//aqGp9UbE9NPXiQrLgahmsxHdgodNIgl0ZeN1nZsXMeB8CroOIIf73mJX
+f4fwTOg0zv7XmZWPfHtX90NqVcg4tLQU+LsYnhkBNKTE771SjXTHGBZ8LMUayfEk
+p29ARrQnzB/yX7YlFhd9cQeBATM0x7SCJ8bWs+kzk7kRDcXGU/OQ1rRWVWTCaUEi
+mqWgCoNyFU0fAFRHCly+41v+a1uCwiOKiBpIgIKq63v6Oo0YPiHMLyaiKTgdsefr
+6s5Kgu8LQVs=
+=Wkhc
+-----END PGP SIGNATURE-----
+
+--=-Yen8Xkj3SeUGWkni2WjG--
