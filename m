@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:33030 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788AbaCSIrR (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:35339 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624AbaCPRVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:47:17 -0400
-Received: by mail-ie0-f172.google.com with SMTP id as1so8575574iec.3
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:47:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=-aw6hv9jjA60f+JgZsFdCqSE3cwZ4OdQfRaV6fe9s9g@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com>
-	<CA+BoTQ=-aw6hv9jjA60f+JgZsFdCqSE3cwZ4OdQfRaV6fe9s9g@mail.gmail.com>
-Date: Wed, 19 Mar 2014 10:47:16 +0200
-Message-ID: <CAB3XZEc0YpByFSu2QaPJ0VtACVRrJoQGfWKtC-qSPD1q1xKg1w@mail.gmail.com> (sfid-20140319_094722_812807_3633343D)
-Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 16 Mar 2014 13:21:54 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 2/4] mac80211: set NET_NAME_USER for user-space created ifs
+Date: Sun, 16 Mar 2014 18:21:28 +0100
+Message-Id: <1394990490-1076-3-git-send-email-dh.herrmann@gmail.com> (sfid-20140316_182308_402792_13136D60)
+In-Reply-To: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
+References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 10:34 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 18 March 2014 17:42, Eliad Peller <eliad@wizery.com> wrote:
->> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> Relax ieee80211_find_chanctx(). If chanctx
->>> reservation chandef is compatible with
->>> current-future assigned interfaces chandef then
->>> allow it to be used by new interfaces.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>> ---
->> [...]
->>
->>> +static const struct cfg80211_chan_def *
->>> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
->>> +                                  struct ieee80211_chanctx *ctx,
->>> +                                  const struct cfg80211_chan_def *compat)
->>> +{
->>> +       struct ieee80211_sub_if_data *sdata;
->>> +
->>> +       lockdep_assert_held(&local->chanctx_mtx);
->>> +
->>> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
->>> +                           reserved_chanctx_list) {
->>> +               if (!compat)
->>> +                       compat = &sdata->reserved_chandef;
->> this check is redundant.
->
-> It isn't. The function can be called with compat == NULL. You don't
-> want to call cfg80211_chandef_compatible() with a NULL chandef.
->
-at least this patch has an explicit check for compat not being NULL
-(before calling the function).
-since this function checks chandef compatibility with current
-reserved chandefs, i don't see why anyone would call it with NULL?
+The nl80211 interface allows creating new netdevs from user-space. The
+name is *always* provided by user-space, so we should set NET_NAME_USER to
+provide that information via sysfs. But we must not set it for the default
+wlan%d names as these are kernel-provided names.
 
-Eliad.
+This allows udev to not rename dynamically created wifi devices (like wifi
+P2P devices).
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
+---
+ net/mac80211/cfg.c         | 2 +-
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/iface.c       | 2 ++
+ net/mac80211/main.c        | 2 +-
+ 4 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1acb291..34f10fe 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -31,7 +31,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int err;
+ 
+-	err = ieee80211_if_add(local, name, &wdev, type, params);
++	err = ieee80211_if_add(local, name, NET_NAME_USER, &wdev, type, params);
+ 	if (err)
+ 		return ERR_PTR(err);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0d1a0f8..96f453a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1469,6 +1469,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ int ieee80211_iface_init(void);
+ void ieee80211_iface_exit(void);
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
++		     unsigned char name_assign_type,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params);
+ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b8d331e..fe84853 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1574,6 +1574,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ }
+ 
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
++		     unsigned char name_assign_type,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params)
+ {
+@@ -1617,6 +1618,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 					+ IEEE80211_ENCRYPT_HEADROOM;
+ 		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+ 
++		ndev->name_assign_type = name_assign_type;
+ 		ret = dev_alloc_name(ndev, ndev->name);
+ 		if (ret < 0) {
+ 			free_netdev(ndev);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b055f6a5..ee32a83 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1012,7 +1012,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	/* add one default STA interface if supported */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
+-		result = ieee80211_if_add(local, "wlan%d", NULL,
++		result = ieee80211_if_add(local, "wlan%d", NET_NAME_ENUM, NULL,
+ 					  NL80211_IFTYPE_STATION, NULL);
+ 		if (result)
+ 			wiphy_warn(local->hw.wiphy,
+-- 
+1.9.0
+
