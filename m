@@ -1,82 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:55919 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbaCFLyS (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:44346 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090AbaCPVxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 06:54:18 -0500
-Received: by mail-we0-f180.google.com with SMTP id p61so2921541wes.11
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 03:54:17 -0800 (PST)
-Date: Thu, 6 Mar 2014 12:54:06 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>
-Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Message-ID: <20140306115406.GA32396@magnum.frso.rivierawaves.com> (sfid-20140306_125423_009869_D7F16FC0)
-References: <20140113111357.GA4611@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
- <20140113124049.GA5796@magnum.frso.rivierawaves.com>
- <52D83C56.5010706@gmail.com>
- <20140116214357.GA10376@gobelin>
- <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
- <20140306102102.GA15185@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D796A6@HASMSX103.ger.corp.intel.com>
- <20140306104936.GA21682@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D79794@HASMSX103.ger.corp.intel.com>
+	Sun, 16 Mar 2014 17:53:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D79794@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <1394997429.15764.116.camel@deadeye.wl.decadent.org.uk>
+References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
+	<1394990490-1076-2-git-send-email-dh.herrmann@gmail.com>
+	<1394997429.15764.116.camel@deadeye.wl.decadent.org.uk>
+Date: Sun, 16 Mar 2014 22:53:48 +0100
+Message-ID: <CANq1E4R8WAWu5_V+_D_8e+u0hmhayi4Ueh7pDwcbvGwp=KTRBw@mail.gmail.com> (sfid-20140316_225419_527943_58C7158C)
+Subject: Re: [PATCH v2 1/4] net: add name_assign_type netdev attribute
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: netdev <netdev@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 06, 2014 at 11:02:48AM +0000, Grumbach, Emmanuel wrote:
-> > > On Thu, Mar 06, 2014 at 10:25:34AM +0000, Grumbach, Emmanuel wrote:
-> > > > > >
-> > > > > > Hi,
-> > > > > >
-> > > > > > Thanks for the update, indeed monitor is in better shape,
-> > > > > > however I am still seeing some issues.
-> > > > > > E.g. short-guard or > 20MHz bw frames are not visible when not
-> > > > > > aggregated, I still see "Microcode SW error detected." but in a
-> > > > > > different scenario (monitoring with main managed iface down,
-> > > > > > then upping the main managed iface up), it also seems that we
-> > > > > > filter out many frames when the main managed iface is up and/or?
-> > > associated.
-> > > > > > Also, I started working on AMSDUs this week and yesterday my
-> > > > > > laptop crashed immediately when monitoring. This morning I see
-> > > > > > that this happens when my aggregates start getting above the ~4k
-> > > > > > limit and modprobing with amsdu_size_8K=1 seems to 'fix' the
-> > > > > > issue, I guess some places need some oflows checks.
-> > > >
-> > > > Hmm... Thanks for the heads - up. Do you have the crash data?
-> > > >
-> > > You mean a pcap of the traffic crashing the system or the iwlmvm data ?
-> > > The crashes are severe enough that they hang my whole laptop right away.
-> > 
-> > Oh ok - I was talking about the WARNING / BUG message whatever.
-> > 
-> > >
-> > > > > > All this with wireless-next@704445d9 (i.e. circa the time I got
-> > > > > > your
-> > > > > > email) and fw 22.15.8.0.
-> > > > > >
-> > > > >
-> > > > > Please paste the data for the firmware assert. Also, take
-> > > > > https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211.git/co
-> > > > > mm
-> > > > > it/?id=
-> > > > > 1c37a72c1bd0b83be8b95cff7f1bc9b1f32bd433 into account.
-> > > Attached. Looks like this change will help.
-> > >
-> > 
-> > BTW - newer FW is available: 22.24.8.0
-> 
-> Just looked at your log - I'd hope the new FW will fix it.
-> Can you give it a try?
-> 
-Just did, seems to fix the issue, thanks.
+Hi
 
- 
-Karl
+On Sun, Mar 16, 2014 at 8:17 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
+> On Sun, 2014-03-16 at 18:21 +0100, David Herrmann wrote:
+> [...]
+>> --- a/include/linux/netdevice.h
+>> +++ b/include/linux/netdevice.h
+>> @@ -74,6 +74,11 @@ void netdev_set_default_ethtool_ops(struct net_device *dev,
+>>  #define NET_RX_SUCCESS               0       /* keep 'em coming, baby */
+>>  #define NET_RX_DROP          1       /* packet dropped */
+>>
+>> +/* interface name assignment types */
+>> +#define NET_NAME_ENUM                0       /* enumerated by kernel (default) */
+>> +#define NET_NAME_USER                1       /* provided by user-space */
+>> +#define NET_NAME_RENAMED     2       /* renamed by user-space */
+> [...]
+>
+> I think these definitions should be put in a UAPI header.  Even if the
+> names don't end up being used by userland, that would make it clear that
+> the numbers are a stable ABI.
+
+I tried to follow addr_assign_type as closely as possible. The
+NET_ADDR_* constants are only defined internally either. I am fine
+with exporting the constants, just want to make sure there's no reason
+to hide them that I'm not aware of.
+
+Thanks
+David
