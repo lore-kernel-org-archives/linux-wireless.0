@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:43366 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966AbaCaVJz (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:57096 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbaCQTnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 17:09:55 -0400
-Date: Mon, 31 Mar 2014 17:09:53 -0400 (EDT)
-Message-Id: <20140331.170953.1487229969639485446.davem@davemloft.net> (sfid-20140331_231045_153631_49624767)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-03-31
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140331193118.GE17412@tuxdriver.com>
-References: <20140331193118.GE17412@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 17 Mar 2014 15:43:04 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v4 4/4] brcmfmac: set NET_NAME_USER for P2P ifs
+Date: Mon, 17 Mar 2014 20:42:38 +0100
+Message-Id: <1395085358-1171-5-git-send-email-dh.herrmann@gmail.com> (sfid-20140317_204436_840492_30B532FB)
+In-Reply-To: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
+References: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 31 Mar 2014 15:31:19 -0400
+Netdevs created via nl80211 (currently only P2P ifs) have names provided
+by user-space. Therefore, set the naming-policy to NET_NAME_USER so it is
+correctly shown in sysfs.
 
-> Please accept this one last round of general wireless updates for
-> the 3.15 merge window!
-> 
-> For the Bluetooth bits, Gustavo says:
-> 
-> "Here follow another set of patches to 3.15. This is mostly a bug fix
-> pull request with the exception of one commit from Marcel which adds
-> tracking to the current configured LE scan type parameter."
-> 
-> Beyond that, notable bits include some final refactoring of rtl8180
-> and the addition of the rtl8187se driver, fixes for a number of
-> problems identified by Dan Carpenter and his static analysis tools,
-> and a handful of other bits here and there.
-> 
-> Please let me know if there are problems!
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Pulled, thanks John.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index fc4f98b..6af4d26 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -2310,6 +2310,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 		goto fail;
+ 	}
+ 
++	ifp->ndev->name_assign_type = NET_NAME_USER;
+ 	strncpy(ifp->ndev->name, name, sizeof(ifp->ndev->name) - 1);
+ 	err = brcmf_net_attach(ifp, true);
+ 	if (err) {
+-- 
+1.9.0
+
