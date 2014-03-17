@@ -1,207 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:58238 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126AbaCZT6n (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:52759 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303AbaCQWGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 15:58:43 -0400
-Received: by mail-ee0-f42.google.com with SMTP id d17so2090167eek.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:58:42 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 05/20] rtl8180: support for rtl8187se RX descriptors
-Date: Wed, 26 Mar 2014 20:59:52 +0100
-Message-Id: <1395863992-4536-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205855_427568_06D015A7)
+	Mon, 17 Mar 2014 18:06:20 -0400
+Received: by mail-wg0-f43.google.com with SMTP id x13so5115416wgg.26
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 15:06:19 -0700 (PDT)
+Message-ID: <532771CF.5050407@gmail.com> (sfid-20140317_230627_731516_6C832366)
+Date: Mon, 17 Mar 2014 22:06:07 +0000
+From: Malcolm Priestley <tvboxspy@gmail.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: vt6656: [BUG] Fix Warning BOGUS urb xfer, pipe
+ 3 != type 1
+References: <1394973251-3055-1-git-send-email-tvboxspy@gmail.com> <20140317215008.GB22663@kroah.com>
+In-Reply-To: <20140317215008.GB22663@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently RX status descriptor and RX command descriptor are
-represented using the same struct type.
-This patch splits this by introducing different types for
-rx status and command descriptor.
-Doing this make it possible to handle rtl8187se RX descriptors
-easier.
-This patch do also this by adding specific cases where needed.
+On 17/03/14 21:50, Greg KH wrote:
+> On Sun, Mar 16, 2014 at 12:34:11PM +0000, Malcolm Priestley wrote:
+>> Stable kernels will need patches
+>> staging: vt6656: s_nsInterruptUsbIoCompleteRead remove usb_fill_bulk_urb
+>> staging: vt6656: PIPEnsInterruptRead use usb_fill_int_urb
+>>
+>> and a backported version of this patch.
+>
+> So can you send those backported patches to the stable list when this
+> patch hits Linus's tree?
+Yes will do.
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c     | 52 +++++++++++++++++++-------
- drivers/net/wireless/rtl818x/rtl8180/rtl8180.h | 23 +++++++++---
- 2 files changed, 57 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 6b237ed..867ec07 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -129,14 +129,30 @@ void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
- static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
-+	struct rtl818x_rx_cmd_desc *cmd_desc;
- 	unsigned int count = 32;
- 	u8 signal, agc, sq;
- 	dma_addr_t mapping;
- 
- 	while (count--) {
--		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
-+		void *entry = priv->rx_ring + priv->rx_idx * priv->rx_ring_sz;
- 		struct sk_buff *skb = priv->rx_buf[priv->rx_idx];
--		u32 flags = le32_to_cpu(entry->flags);
-+		u32 flags, flags2;
-+		u64 tsft;
-+
-+		if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
-+			struct rtl8187se_rx_desc *desc = entry;
-+
-+			flags = le32_to_cpu(desc->flags);
-+			flags2 = le32_to_cpu(desc->flags2);
-+			tsft = le64_to_cpu(desc->tsft);
-+		} else {
-+			struct rtl8180_rx_desc *desc = entry;
-+
-+			flags = le32_to_cpu(desc->flags);
-+			flags2 = le32_to_cpu(desc->flags2);
-+			tsft = le64_to_cpu(desc->tsft);
-+		}
- 
- 		if (flags & RTL818X_RX_DESC_FLAG_OWN)
- 			return;
-@@ -146,7 +162,6 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 				      RTL818X_RX_DESC_FLAG_RX_ERR)))
- 			goto done;
- 		else {
--			u32 flags2 = le32_to_cpu(entry->flags2);
- 			struct ieee80211_rx_status rx_status = {0};
- 			struct sk_buff *new_skb = dev_alloc_skb(MAX_RX_SIZE);
- 
-@@ -178,14 +193,18 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 					signal = 90 - clamp_t(u8, agc, 25, 90);
- 				else
- 					signal = 95 - clamp_t(u8, agc, 30, 95);
--			} else {
-+			} else if (priv->chip_family ==
-+				   RTL818X_CHIP_FAMILY_RTL8180) {
- 				sq = flags2 & 0xff;
- 				signal = priv->rf->calc_rssi(agc, sq);
-+			} else {
-+				/* TODO: rtl8187se rssi */
-+				signal = 10;
- 			}
- 			rx_status.signal = signal;
- 			rx_status.freq = dev->conf.chandef.chan->center_freq;
- 			rx_status.band = dev->conf.chandef.chan->band;
--			rx_status.mactime = le64_to_cpu(entry->tsft);
-+			rx_status.mactime = tsft;
- 			rx_status.flag |= RX_FLAG_MACTIME_START;
- 			if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
- 				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-@@ -199,11 +218,13 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 		}
- 
- 	done:
--		entry->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
--		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
-+		cmd_desc = entry;
-+		cmd_desc->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
-+		cmd_desc->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
- 					   MAX_RX_SIZE);
- 		if (priv->rx_idx == 31)
--			entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
-+			cmd_desc->flags |=
-+				cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
- 		priv->rx_idx = (priv->rx_idx + 1) % 32;
- 	}
- }
-@@ -529,11 +550,16 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
- static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
--	struct rtl8180_rx_desc *entry;
-+	struct rtl818x_rx_cmd_desc *entry;
- 	int i;
- 
-+	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE)
-+		priv->rx_ring_sz = sizeof(struct rtl8187se_rx_desc);
-+	else
-+		priv->rx_ring_sz = sizeof(struct rtl8180_rx_desc);
-+
- 	priv->rx_ring = pci_alloc_consistent(priv->pdev,
--					     sizeof(*priv->rx_ring) * 32,
-+					     priv->rx_ring_sz * 32,
- 					     &priv->rx_ring_dma);
- 
- 	if (!priv->rx_ring || (unsigned long)priv->rx_ring & 0xFF) {
-@@ -541,13 +567,13 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 		return -ENOMEM;
- 	}
- 
--	memset(priv->rx_ring, 0, sizeof(*priv->rx_ring) * 32);
-+	memset(priv->rx_ring, 0, priv->rx_ring_sz * 32);
- 	priv->rx_idx = 0;
- 
- 	for (i = 0; i < 32; i++) {
- 		struct sk_buff *skb = dev_alloc_skb(MAX_RX_SIZE);
- 		dma_addr_t *mapping;
--		entry = &priv->rx_ring[i];
-+		entry = priv->rx_ring + priv->rx_ring_sz*i;
- 		if (!skb) {
- 			wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
- 			return -ENOMEM;
-@@ -587,7 +613,7 @@ static void rtl8180_free_rx_ring(struct ieee80211_hw *dev)
- 		kfree_skb(skb);
- 	}
- 
--	pci_free_consistent(priv->pdev, sizeof(*priv->rx_ring) * 32,
-+	pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
- 			    priv->rx_ring, priv->rx_ring_dma);
- 	priv->rx_ring = NULL;
- }
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-index 47a084c..d866cc6 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-+++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
-@@ -55,13 +55,25 @@ struct rtl8180_tx_desc {
- 	__le16 frag_qsize;
- } __packed;
- 
-+struct rtl818x_rx_cmd_desc {
-+	__le32 flags;
-+	u32 reserved;
-+	__le32 rx_buf;
-+} __packed;
-+
- struct rtl8180_rx_desc {
- 	__le32 flags;
- 	__le32 flags2;
--	union {
--		__le32 rx_buf;
--		__le64 tsft;
--	};
-+	__le64 tsft;
-+
-+} __packed;
-+
-+struct rtl8187se_rx_desc {
-+	__le32 flags;
-+	__le64 tsft;
-+	__le32 flags2;
-+	__le32 flags3;
-+	u32 reserved[3];
- } __packed;
- 
- struct rtl8180_tx_ring {
-@@ -88,7 +100,8 @@ struct rtl8180_priv {
- 
- 	/* rtl8180 driver specific */
- 	spinlock_t lock;
--	struct rtl8180_rx_desc *rx_ring;
-+	void *rx_ring;
-+	u8 rx_ring_sz;
- 	dma_addr_t rx_ring_dma;
- 	unsigned int rx_idx;
- 	struct sk_buff *rx_buf[32];
--- 
-1.8.3.2
-
+Malcolm
