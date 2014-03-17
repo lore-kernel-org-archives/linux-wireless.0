@@ -1,94 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52885 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754089AbaCZOkp (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:41800 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbaCQT2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 10:40:45 -0400
-Message-ID: <5332E6C6.7040700@candelatech.com> (sfid-20140326_154050_928838_74B09378)
-Date: Wed, 26 Mar 2014 07:40:06 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: Add debugging for tx-credits usage.
-References: <1395428150-31996-1-git-send-email-greearb@candelatech.com>	<871txr7svw.fsf@kamboji.qca.qualcomm.com>	<CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>	<53306239.2020006@candelatech.com>	<CA+BoTQkCmJbvQjZ3vTV7AP1EwdcH_pAd0pex_v9bZDzwZdufbw@mail.gmail.com>	<53319D65.4090907@candelatech.com> <CA+BoTQnMmwsz0438yVrP_bQ-AKZaoktW7NrGAODVEx4w21-dEA@mail.gmail.com>
-In-Reply-To: <CA+BoTQnMmwsz0438yVrP_bQ-AKZaoktW7NrGAODVEx4w21-dEA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 17 Mar 2014 15:28:44 -0400
+Date: Mon, 17 Mar 2014 15:28:41 -0400 (EDT)
+Message-Id: <20140317.152841.481757410112656879.davem@davemloft.net> (sfid-20140317_202847_926870_00E2840E)
+To: dh.herrmann@gmail.com
+Cc: netdev@vger.kernel.org, teg@jklm.no, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ben@decadent.org.uk, David.Laight@aculab.com
+Subject: Re: [PATCH v4 1/4] net: add name_assign_type netdev attribute
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1395079295-1325-1-git-send-email-dh.herrmann@gmail.com>
+References: <1394990490-1076-2-git-send-email-dh.herrmann@gmail.com>
+	<1395079295-1325-1-git-send-email-dh.herrmann@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2014 12:18 AM, Michal Kazior wrote:
-> On 25 March 2014 16:14, Ben Greear <greearb@candelatech.com> wrote:
->> On 03/25/2014 12:27 AM, Michal Kazior wrote:
->>>
->>> On 24 March 2014 17:50, Ben Greear <greearb@candelatech.com> wrote:
->>>>
->>>> On 03/24/2014 04:21 AM, Michal Kazior wrote:
->>>>>
->>>>> On 24 March 2014 12:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>>>
->>>>
->>>>>>> -     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
->>>>>>> +     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
->>>>>>
->>>>>>
->>>>>> Using line numbers in debug messages is very cumbersome. Some people
->>>>>> cherry pick patches, have their own changes and whatnot which will make
->>>>>> it more difficult to read the debug logs. Isn't there any better way to
->>>>>> do this?
->>>>>
->>>>>
->>>>> I would prefer to explicitly wait for tx credit replenishment in
->>>>> ath10k_wmi_cmd_send() after a command is sent instead of all these
->>>>> prints. This way you can get a full call trace if it times out.
->>>>
->>>>
->>>> Would that be a performance problem (by effectively allowing only a
->>>> single
->>>> item to be sent to the firmware at any given time?)
->>>
->>>
->>> The only thing that may suffer here is wmi mgmt tx but I wouldn't
->>> consider that performance critical.
->>
->>
->> In that case, why use credits at all?
->
-> Excellent question.
->
-> Firmware provides 2 HTC tx credits for WMI. I guess this is on
-> purpose. I imagine WMI mgmt tx can hang (i.e. not replenish tx
-> credits). In that case the remaining tx credit could be used to try
-> recovering, e.g. down/stop vdev (I think it should drop all pending tx
-> and thus free the stuck HTC tx credit).
->
-> It might be a good idea to keep this recovery strategy in mind when
-> implementing the "wait for tx replenishment" wmi tx blocking.
 
-Seems to me we should just fix the firmware to respond quickly..and if we know exactly which
-command is not being answered (quickly) in the firmware, it might be easier to debug
-it.
+When you post new versions of patches, you should post the entire series
+again.
 
-That said, while debugging I think I have seen cases where one message would
-be consumed for a long time, and then suddenly it frees up again.
+This way it is unambiguous what patches go which which others.
 
-So, I'm not sure what to do.  Maybe could improve firmware to return an id
-so we know exactly which of the messages was processed, and then the driver
-could do the work of figuring out what commands are outstanding by just keeping
-a copy in RAM....
-
-Thanks,
-Ben
-
->
->
-> Michał
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks.
