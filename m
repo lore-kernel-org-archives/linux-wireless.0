@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37067 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbaC1NPR (ORCPT
+Received: from zhbdzmsp-mail13.bluewin.ch ([195.186.99.121]:53506 "EHLO
+	zhbdzmsp-mail13.bluewin.ch" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750706AbaCQSto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:15:17 -0400
-Date: Fri, 28 Mar 2014 09:07:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Fariya Fatima <fariyaf@gmail.com>, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch] rsi: rsi_91x: misleading debug printk
-Message-ID: <20140328130748.GJ31168@tuxdriver.com> (sfid-20140328_141524_556634_32AD6B8B)
-References: <20140328082733.GK25192@mwanda>
+	Mon, 17 Mar 2014 14:49:44 -0400
+Message-ID: <5327421C.2040603@weiss.ch> (sfid-20140317_194949_917940_0CD2CAE6)
+Date: Mon, 17 Mar 2014 19:42:36 +0100
+From: Rolf Anderegg <rolf.anderegg@weiss.ch>
+Reply-To: <rolf.anderegg@weiss.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140328082733.GK25192@mwanda>
+To: <linux-wireless@vger.kernel.org>
+Subject: ath5k: SIOCGIWFREQ ioctl EINVAL
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-;-)
+I was lately required to move to a newer kernel (3.12.10-rt15) on an Intel Atom
+setup. All is working fine, including the wireless module (ath5k) acting as an
+access point on my bridge, using hostapd:
 
-goto fail;
-goto fail;
+:~$ lspci
+...
+03:00.0 Ethernet controller: Qualcomm Atheros AR5212/AR5213 Wireless Network
+Adapter (rev 01)
+	Subsystem: D-Link System Inc AirPlus DWL-G520 Wireless PCI Adapter (rev. B)
+	Flags: bus master, fast Back2Back, medium devsel, latency 168, IRQ 20
+	Memory at d0000000 (32-bit, non-prefetchable) [size=64K]
+	Kernel driver in use: ath5k
+	Kernel modules: ath5k
+...
+:~$ iwconfig ath0
+ath0      IEEE 802.11bg  Mode:Master  Tx-Power=27 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:on
 
-Thanks, Dan!
+:~$ iwlist ath0 f
+ath0      11 channels in total; available frequencies :
+          Channel 01 : 2.412 GHz
+          Channel 02 : 2.417 GHz
+          Channel 03 : 2.422 GHz
+          Channel 04 : 2.427 GHz
+          Channel 05 : 2.432 GHz
+          Channel 06 : 2.437 GHz
+          Channel 07 : 2.442 GHz
+          Channel 08 : 2.447 GHz
+          Channel 09 : 2.452 GHz
+          Channel 10 : 2.457 GHz
+          Channel 11 : 2.462 GHz
 
-On Fri, Mar 28, 2014 at 11:27:33AM +0300, Dan Carpenter wrote:
-> There is a missing set of curly braces here so the debug output says
-> "Probe confirm received" unintentionally.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-> index ef37d4b..2361a68 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-> @@ -1292,10 +1292,11 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
->  			return -EINVAL;
->  		}
->  	} else if (msg_type == TX_STATUS_IND) {
-> -		if (msg[15] == PROBEREQ_CONFIRM)
-> +		if (msg[15] == PROBEREQ_CONFIRM) {
->  			common->mgmt_q_block = false;
->  			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
->  				__func__);
-> +		}
->  	} else {
->  		return rsi_mgmt_pkt_to_core(common, msg, msg_len, msg_type);
->  	}
-> 
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+However, as can be seen above I am now unable to read the current
+channel/frequency info within iwlist, iwconfig or any other tool; ioctl on
+SIOCGIWFREQ seems to fail with EINVAL (Invalid argument):
+
+:~$ strace iwconfig ath0
+...
+ioctl(3, SIOCGIWFREQ, 0xbfc8f41c)       = -1 EINVAL (Invalid argument)
+...
+
+I also have a a USB wireless stick (based on AR9271, using module ath9k_htc) at
+hand, also working fine in same setup, but no chance to read SIOCGIWFREQ.
+Why could this be? Has anything changed in the atheros wireless section
+regarding this?
+Thanks in advance,
+
+Rolf Anderegg
