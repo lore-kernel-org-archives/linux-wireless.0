@@ -1,27 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233AbaC1Igz (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:64616 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbaCQVQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 04:36:55 -0400
-Message-ID: <1395995801.4175.4.camel@jlt4.sipsolutions.net> (sfid-20140328_093732_884036_53A530AE)
-Subject: Re: [PATCH] net/mac80211: Use RCU_INIT_POINTER(x, NULL) in util.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Monam Agarwal <monamagarwal123@gmail.com>
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 28 Mar 2014 09:36:41 +0100
-In-Reply-To: <1395602503-14958-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_202244_669399_5CEA350C)
-References: <1395602503-14958-1-git-send-email-monamagarwal123@gmail.com>
-	 (sfid-20140323_202244_669399_5CEA350C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 17 Mar 2014 17:16:07 -0400
+Received: by mail-wi0-f179.google.com with SMTP id f8so2852365wiw.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 14:16:04 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH] staging: vt6656: [BUG] set usb_fill_int_urb interval to 1
+Date: Mon, 17 Mar 2014 21:15:03 +0000
+Message-Id: <1395090903-2988-1-git-send-email-tvboxspy@gmail.com> (sfid-20140317_221611_549599_8F83B87D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied, but I rewrote the commit log and squashed the mac80211 patches
-into one.
+As result of patch
+staging: vt6656: [BUG] Fix Warning BOGUS urb xfer, pipe 3 != type 1
 
-johannes
+has resulted in sluggish TX performance due to interupt inverval
+being too long.
+
+Set int_interval to 1 as set in bInterval of endpoint 1.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 7dd885f..3c93230 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -1007,7 +1007,7 @@ static int  device_open(struct net_device *dev)
+ 
+ 	schedule_delayed_work(&pDevice->second_callback_work, HZ);
+ 
+-	pDevice->int_interval = 100;  /* max 100 microframes */
++	pDevice->int_interval = 1;  /* bInterval is set to 1 */
+     pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+ 
+     pDevice->bIsRxWorkItemQueued = true;
+-- 
+1.9.0
 
