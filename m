@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:49923 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbaCAUQi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:16:38 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 03/23] ath9k_htc: move beaconq to struct htc_beacon
-Date: Sat,  1 Mar 2014 21:15:46 +0100
-Message-Id: <1393704966-13985-4-git-send-email-linux@rempel-privat.de> (sfid-20140301_211643_226139_1B9CB88E)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:33374 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbaCQTm4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2014 15:42:56 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v4 0/4] Provide netdev naming-policy via sysfs
+Date: Mon, 17 Mar 2014 20:42:34 +0100
+Message-Id: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com> (sfid-20140317_204525_675682_CFA61235)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc.h            | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 8 ++++----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+Hi
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index ed41db5..69022b0 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -409,6 +409,7 @@ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
- struct htc_beacon {
- 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
- 	u32 bmisscnt;
-+	u32 beaconq;
- };
- 
- struct ath_btcoex {
-@@ -512,7 +513,6 @@ struct ath9k_htc_priv {
- 	struct work_struct led_work;
- #endif
- 
--	int beaconq;
- 	int cabq;
- 	int hwq_map[IEEE80211_NUM_ACS];
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 8929050..09ad141 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -26,7 +26,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
- 	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
- 
--	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
-+	ath9k_hw_get_txq_props(ah, priv->beacon.beaconq, &qi);
- 
- 	if (priv->ah->opmode == NL80211_IFTYPE_AP ||
- 	    priv->ah->opmode == NL80211_IFTYPE_MESH_POINT) {
-@@ -54,11 +54,11 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 
- 	}
- 
--	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
-+	if (!ath9k_hw_set_txq_props(ah, priv->beacon.beaconq, &qi)) {
- 		ath_err(ath9k_hw_common(ah),
--			"Unable to update beacon queue %u!\n", priv->beaconq);
-+			"Unable to update beacon queue %u!\n", priv->beacon.beaconq);
- 	} else {
--		ath9k_hw_resettxqueue(ah, priv->beaconq);
-+		ath9k_hw_resettxqueue(ah, priv->beacon.beaconq);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index b8a0220..6eb19b8 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -405,8 +405,8 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
- 	for (i = 0; i < ARRAY_SIZE(priv->hwq_map); i++)
- 		priv->hwq_map[i] = -1;
- 
--	priv->beaconq = ath9k_hw_beaconq_setup(priv->ah);
--	if (priv->beaconq == -1) {
-+	priv->beacon.beaconq = ath9k_hw_beaconq_setup(priv->ah);
-+	if (priv->beacon.beaconq == -1) {
- 		ath_err(common, "Unable to setup BEACON xmit queue\n");
- 		goto err;
- 	}
+This is v4 of the netdev naming-policy series. You can find v1 here:
+  http://thread.gmane.org/gmane.linux.kernel/1657015
+Changes since v1:
+  - fix mac80211 core to set NET_NAME_ENUM for wlan%d kernel-provided names
+  - acked-by udev developers
+  - avoid padding after name_assign_type in "struct net_device" (David Laight)
+  - move API constants to uapi header (Ben Hutchings)
+
+
+This series implements a new sysfs attribute for netdevs called
+"name_assign_type". It provides an integer that describes where an interface
+name comes from. See Patch #1 for a description of this attribute. It is
+modelled after the existing "addr_assign_type" attribute.
+
+The main use-case is to allow udev to skip applying reliable ifnames to virtual
+devices. For instance, if wifi-P2P devices are created, wpas already provides a
+suitable naming-policy and udev shouldn't touch these devices. Same is true for
+other virtual devices.
+The idea is that if a device-name was provided by user-space, we should always
+prefer fixing this naming-policy instead of making udev rename the device. For
+kernel provided names that's hardly possible, though. Providing the
+naming-policy source via sysfs is thus a simple way to see whether renames are
+needed.
+
+Additionally, this field allows to detect whether a netdev has been manually
+renamed, which is quite useful for debugging and during crash-recovery.
+Furthermore, it fixes real udev bugs if a netdev is already renamed in the
+initrd and udev only runs in the real root. Detecting renames avoids overwriting
+custom user provided names.
+
+Thanks
+David
+
+David Herrmann (4):
+  net: add name_assign_type netdev attribute
+  mac80211: set NET_NAME_USER for user-space created ifs
+  ath6kl: set NET_NAME_USER for P2P ifs
+  brcmfmac: set NET_NAME_USER for P2P ifs
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
+ drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
+ drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+ include/linux/netdevice.h                     | 2 ++
+ include/uapi/linux/netdevice.h                | 4 ++++
+ net/core/dev.c                                | 7 +++++++
+ net/core/net-sysfs.c                          | 2 ++
+ net/core/rtnetlink.c                          | 2 ++
+ net/mac80211/cfg.c                            | 2 +-
+ net/mac80211/ieee80211_i.h                    | 1 +
+ net/mac80211/iface.c                          | 2 ++
+ net/mac80211/main.c                           | 2 +-
+ 13 files changed, 30 insertions(+), 5 deletions(-)
+
 -- 
 1.9.0
 
