@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:33635 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944AbaCDWyc (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5536 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933495AbaCQNfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 17:54:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 7/9] rtlwifi: rtl8723ae: Fix too long disable of IRQs
-Date: Tue,  4 Mar 2014 16:53:53 -0600
-Message-Id: <1393973635-24799-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140304_235440_523135_AA2EE072)
-In-Reply-To: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 17 Mar 2014 09:35:18 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 20/21] wil6210: add memory barriers for the reset flow
+Date: Mon, 17 Mar 2014 15:34:24 +0200
+Message-ID: <1395063265-6522-21-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143525_934486_0E5A82B8)
+In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit f78bccd79ba3cd9d9664981b501d57bdb81ab8a4 entitled "rtlwifi:
-rtl8192ce: Fix too long disable of IRQs", Olivier Langlois
-<olivier@trillion01.com> fixed a problem caused by an extra long disabling
-of interrupts. This patch makes the same fix for rtl8723ae.
+make sure reset flow executed in order
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-index b47167c..f4c9852 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-@@ -881,14 +881,25 @@ int rtl8723ae_hw_init(struct ieee80211_hw *hw)
- 	bool rtstatus = true;
- 	int err;
- 	u8 tmp_u1b;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c782e25..0005d9b 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -289,19 +289,23 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT(6));
+ 	/* car_perst_rst_src_n_mask */
+ 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT(7));
++	wmb(); /* order is important here */
  
- 	rtlpriv->rtlhal.being_init_adapter = true;
-+	/* As this function can take a very long time (up to 350 ms)
-+	 * and can be called with irqs disabled, reenable the irqs
-+	 * to let the other devices continue being serviced.
-+	 *
-+	 * It is safe doing so since our own interrupts will only be enabled
-+	 * in a subsequent step.
-+	 */
-+	local_save_flags(flags);
-+	local_irq_enable();
-+
- 	rtlpriv->intf_ops->disable_aspm(hw);
- 	rtstatus = _rtl8712e_init_mac(hw);
- 	if (rtstatus != true) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
- 		err = 1;
--		return err;
-+		goto exit;
- 	}
+ 	W(RGF_USER_MAC_CPU_0,  BIT(1)); /* mac_cpu_man_rst */
+ 	W(RGF_USER_USER_CPU_0, BIT(1)); /* user_cpu_man_rst */
++	wmb(); /* order is important here */
  
- 	err = rtl8723_download_fw(hw, false);
-@@ -896,8 +907,7 @@ int rtl8723ae_hw_init(struct ieee80211_hw *hw)
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
- 			 "Failed to download FW. Init HW without FW now..\n");
- 		err = 1;
--		rtlhal->fw_ready = false;
--		return err;
-+		goto exit;
- 	} else {
- 		rtlhal->fw_ready = true;
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000170);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FC00);
++	wmb(); /* order is important here */
+ 
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0);
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
++	wmb(); /* order is important here */
+ 
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000001);
+ 	if (rev_id == 1) {
+@@ -311,6 +315,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000);
  	}
-@@ -972,6 +982,8 @@ int rtl8723ae_hw_init(struct ieee80211_hw *hw)
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "under 1.5V\n");
- 	}
- 	rtl8723ae_dm_init(hw);
-+exit:
-+	local_irq_restore(flags);
- 	rtlpriv->rtlhal.being_init_adapter = false;
- 	return err;
- }
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
++	wmb(); /* order is important here */
+ 
+ 	/* wait until device ready */
+ 	do {
+@@ -327,6 +332,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(8));
+ 
+ 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
++	wmb(); /* order is important here */
+ 
+ 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
+ 
 -- 
-1.8.4.5
+1.8.3.2
 
