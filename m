@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:33114 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S933957AbaCSOLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:11:18 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 18527-01 for <linux-wireless@vger.kernel.org>;
- Wed, 19 Mar 2014 14:11:14 +0000 (GMT)
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'behanw@converseincode.com'" <behanw@converseincode.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"davem@davemloft.net" <davem@davemloft.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"pageexec@freemail.hu" <pageexec@freemail.hu>,
-	=?utf-8?B?SmFuLVNpbW9uIE3DtmxsZXI=?= <dl9pf@gmx.de>,
-	=?utf-8?B?Vmluw61jaXVzIFRpbnRp?= <viniciustinti@gmail.com>,
-	Mark Charlebois <charlebm@gmail.com>
-Subject: RE: [PATCH v3] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-Date: Wed, 19 Mar 2014 14:09:57 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D0F6E11D1@AcuExch.aculab.com> (sfid-20140319_151141_594476_2309905F)
-References: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
- <1395199933-4686-1-git-send-email-behanw@converseincode.com>
-In-Reply-To: <1395199933-4686-1-git-send-email-behanw@converseincode.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:36223 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbaCQSwL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Mar 2014 14:52:11 -0400
+Received: by mail-ee0-f47.google.com with SMTP id b15so4429246eek.6
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 11:52:10 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: [PATCH] rtl818x: remove unused conf_erp callback from RF ops struct
+Date: Mon, 17 Mar 2014 19:52:42 +0100
+Message-Id: <1395082362-12673-1-git-send-email-andrea.merello@gmail.com> (sfid-20140317_195215_570648_5F612513)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogYmVoYW53QGNvbnZlcnNlaW5jb2RlLmNvbQ0KPiBSZXBsYWNlZCB0aGUgdXNlIG9mIGEg
-VmFyaWFibGUgTGVuZ3RoIEFycmF5IEluIFN0cnVjdCAoVkxBSVMpIHdpdGggYSBDOTkNCj4gY29t
-cGxpYW50IGVxdWl2YWxlbnQuIFRoaXMgaXMgdGhlIG9yaWdpbmFsIFZMQUlTIHN0cnVjdC4NCj4g
-DQo+IHN0cnVjdCB7DQo+IAlzdHJ1Y3QgYWVhZF9yZXF1ZXN0ICAgICByZXE7DQo+IAl1OCAgICAg
-ICAgICAgICAgICAgICAgICBwcml2W2NyeXB0b19hZWFkX3JlcXNpemUodGZtKV07DQo+IH0gYWVh
-ZF9yZXE7DQo+IA0KPiBUaGlzIHBhdGNoIGluc3RlYWQgYWxsb2NhdGVzIHRoZSBhcHByb3ByaWF0
-ZSBhbW91bnQgb2YgbWVtb3J5IHVzaW5nIGFuIGNoYXINCj4gYXJyYXkuDQo+IA0KPiBUaGUgbmV3
-IGNvZGUgY2FuIGJlIGNvbXBpbGVkIHdpdGggYm90aCBnY2MgYW5kIGNsYW5nLg0KPiANCj4gU2ln
-bmVkLW9mZi1ieTogSmFuLVNpbW9uIE1sbGVyIDxkbDlwZkBnbXguZGU+DQo+IFNpZ25lZC1vZmYt
-Ynk6IEJlaGFuIFdlYnN0ZXIgPGJlaGFud0Bjb252ZXJzZWluY29kZS5jb20+DQo+IFNpZ25lZC1v
-ZmYtYnk6IFZpbmNpdXMgVGludGkgPHZpbmljaXVzdGludGlAZ21haWwuY29tPg0KPiBTaWduZWQt
-b2ZmLWJ5OiBNYXJrIENoYXJsZWJvaXMgPGNoYXJsZWJtQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICBu
-ZXQvbWFjODAyMTEvYWVzX2NjbS5jIHwgNDAgKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0t
-LS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIyIGluc2VydGlvbnMoKyksIDE4IGRlbGV0
-aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9hZXNfY2NtLmMgYi9uZXQv
-bWFjODAyMTEvYWVzX2NjbS5jDQo+IGluZGV4IDdjN2RmNDcuLjIwNTIxZjkgMTAwNjQ0DQo+IC0t
-LSBhL25ldC9tYWM4MDIxMS9hZXNfY2NtLmMNCj4gKysrIGIvbmV0L21hYzgwMjExL2Flc19jY20u
-Yw0KPiBAQCAtMjMsMTIgKzIzLDE0IEBAIHZvaWQgaWVlZTgwMjExX2Flc19jY21fZW5jcnlwdChz
-dHJ1Y3QgY3J5cHRvX2FlYWQgKnRmbSwgdTggKmJfMCwgdTggKmFhZCwNCj4gIAkJCSAgICAgICB1
-OCAqZGF0YSwgc2l6ZV90IGRhdGFfbGVuLCB1OCAqbWljKQ0KPiAgew0KPiAgCXN0cnVjdCBzY2F0
-dGVybGlzdCBhc3NvYywgcHQsIGN0WzJdOw0KPiAtCXN0cnVjdCB7DQo+IC0JCXN0cnVjdCBhZWFk
-X3JlcXVlc3QJcmVxOw0KPiAtCQl1OAkJCXByaXZbY3J5cHRvX2FlYWRfcmVxc2l6ZSh0Zm0pXTsN
-Cj4gLQl9IGFlYWRfcmVxOw0KPiANCj4gLQltZW1zZXQoJmFlYWRfcmVxLCAwLCBzaXplb2YoYWVh
-ZF9yZXEpKTsNCj4gKwljaGFyIGFlYWRfcmVxX2RhdGFbc2l6ZW9mKHN0cnVjdCBhZWFkX3JlcXVl
-c3QpICsNCj4gKwkJY3J5cHRvX2FlYWRfcmVxc2l6ZSh0Zm0pXQ0KPiArCQlfX2FsaWduZWQoX19h
-bGlnbm9mX18oc3RydWN0IGFlYWRfcmVxdWVzdCkpOw0KPiArDQo+ICsJc3RydWN0IGFlYWRfcmVx
-dWVzdCAqYWVhZF9yZXEgPSAodm9pZCAqKSBhZWFkX3JlcV9kYXRhOw0KPiArDQo+ICsJbWVtc2V0
-KGFlYWRfcmVxLCAwLCBzaXplb2YoYWVhZF9yZXFfZGF0YSkpOw0KDQpJdCBzZWVtcyB0byBtZSB0
-aGF0IHRoZSB1bmRlcmx5aW5nIGZ1bmN0aW9uKHMpIG91Z2h0IHRvIGJlIGNoYW5nZWQgc28gdGhh
-dA0KdGhpcyBpc24ndCBuZWVkZWQuDQpQYXNzaW5nIGFuIGV4dHJhIHBhcmFtZXRlciB3b3VsZCBw
-cm9iYWJseSBjb3N0IHZlcnkgbGl0dGxlLg0KDQoJRGF2aWQNCg==
+The ERP configuration is now done outside RF code in both rtl8180
+and rtl8187 drivers.
+
+The conf_erp callback in common RF ops struct is now useless.
+Remove it.
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl818x.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
+index fa7f7f6..1815b15 100644
+--- a/drivers/net/wireless/rtl818x/rtl818x.h
++++ b/drivers/net/wireless/rtl818x/rtl818x.h
+@@ -192,7 +192,6 @@ struct rtl818x_rf_ops {
+ 	void (*init)(struct ieee80211_hw *);
+ 	void (*stop)(struct ieee80211_hw *);
+ 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
+-	void (*conf_erp)(struct ieee80211_hw *, struct ieee80211_bss_conf *);
+ 	u8 (*calc_rssi)(u8 agc, u8 sq);
+ };
+ 
+-- 
+1.8.3.2
+
