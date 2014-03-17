@@ -1,52 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:62308 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbaCKNZk convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24137 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753066AbaCQNev (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 09:25:40 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so8473036obc.29
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 06:25:39 -0700 (PDT)
+	Mon, 17 Mar 2014 09:34:51 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 06/21] wil6210: update target reset to support new HW
+Date: Mon, 17 Mar 2014 15:34:10 +0200
+Message-ID: <1395063265-6522-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_145649_839809_73D999B6)
+In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1394543651.30155.3.camel@jlt4.sipsolutions.net>
-References: <1394176178-8504-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQkVfgkMR_cvv5dUNkzLd7KrDQ7VMYKucJybpF0aAWpESA@mail.gmail.com>
-	<1394543651.30155.3.camel@jlt4.sipsolutions.net>
-Date: Tue, 11 Mar 2014 14:25:39 +0100
-Message-ID: <CA+BoTQk19_p8WcUpUbRNTZgStNMfYcSZEUhbEB9G6i0mvYy-=w@mail.gmail.com> (sfid-20140311_142543_469848_3B67BEFA)
-Subject: Re: [PATCH] mac80211: fix possible NULL dereference
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2014 14:14, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2014-03-11 at 12:30 +0100, Michal Kazior wrote:
->> On 7 March 2014 08:09, Michal Kazior <michal.kazior@tieto.com> wrote:
->> > If chanctx is missing on a given vif then the band
->> > is assumed to be 2GHz. However if hw doesn't
->> > support 2GHz band then mac80211 ended up with a
->> > NULL dereference.
->
->> Drop this, please. There are more places that need sband to be
->> NULL-checked. I'll send out a more thorough patch later.
->
-> Ok. However, I'm not sure that we should ever really run into this? At
-> least with Luca's patches we want to not go through NULL state to start
-> with.
+Support for new chip revision. Revision read from the
+internal register, PCIE config's "revision id" register
+do not indicate HW version properly
 
-Current channel reservation patches do a sequence of
-unassign_vif_chanctx() followed by assign_vif_chanctx(). This implies
-you have no chanctx for a split second. All places that aren't
-protected by chanctx_mtx (i.e. RCU) can get NULL chanctx during the
-reassignment.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c     | 29 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  4 ++++
+ 3 files changed, 34 insertions(+), 1 deletion(-)
 
-One way to trigger that would be to spam-call ieee80211_get_station().
-If you get a NULL chanctx and you have 5GHz only hardware you get NULL
-dereference kernel splat.
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 4cc1b78..8644418 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -230,14 +230,22 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 
+ static void wil_target_reset(struct wil6210_priv *wil)
+ {
++	int delay = 100;
++	u32 baud_rate;
++	u32 rev_id;
++
+ 	wil_dbg_misc(wil, "Resetting...\n");
+ 
++	/* register read */
++#define R(a) ioread32(wil->csr + HOSTADDR(a))
+ 	/* register write */
+ #define W(a, v) iowrite32(v, wil->csr + HOSTADDR(a))
+ 	/* register set = read, OR, write */
+ #define S(a, v) iowrite32(ioread32(wil->csr + HOSTADDR(a)) | v, \
+ 		wil->csr + HOSTADDR(a))
+ 
++	wil->hw_version = R(RGF_FW_REV_ID);
++	rev_id = wil->hw_version & 0xff;
+ 	/* hpal_perst_from_pad_src_n_mask */
+ 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT(6));
+ 	/* car_perst_rst_src_n_mask */
+@@ -257,11 +265,30 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000001);
+-	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00000080);
++	if (rev_id == 1) {
++		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00000080);
++	} else {
++		W(RGF_LOS_COUNTER_CTL, BIT(6) | BIT(8));
++		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000);
++	}
+ 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 
++	/* wait until device ready. Use baud rate */
++	do {
++		msleep(1);
++		baud_rate = R(RGF_USER_SERIAL_BAUD_RATE);
++		if (delay-- < 0) {
++			wil_err(wil, "Reset not completed\n");
++			return;
++		}
++	} while (baud_rate != 0x15e);
++
++	if (rev_id == 2)
++		W(RGF_LOS_COUNTER_CTL, BIT(8));
++
+ 	wil_dbg_misc(wil, "Reset completed\n");
+ 
++#undef R
+ #undef W
+ #undef S
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index eeceab3..d96e811 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -74,6 +74,8 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
+ 	if (rc)
+ 		goto release_irq;
+ 
++	wil_info(wil, "HW version: 0x%08x\n", wil->hw_version);
++
+ 	return 0;
+ 
+  release_irq:
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 11e0898..14f861c 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -74,6 +74,9 @@ struct RGF_ICR {
+ } __packed;
+ 
+ /* registers - FW addresses */
++#define RGF_FW_REV_ID			(0x880a8c) /* chip revision */
++#define RGF_USER_SERIAL_BAUD_RATE	(0x880050)
++#define RGF_LOS_COUNTER_CTL		(0x882dc4)
+ #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
+ #define RGF_USER_USER_ICR		(0x880b4c) /* struct RGF_ICR */
+ 	#define BIT_USER_USER_ICR_SW_INT_2	BIT(18)
+@@ -342,6 +345,7 @@ struct wil6210_priv {
+ 	void __iomem *csr;
+ 	ulong status;
+ 	u32 fw_version;
++	u32 hw_version;
+ 	u8 n_mids; /* number of additional MIDs as reported by FW */
+ 	/* profile */
+ 	u32 monitor_flags;
+-- 
+1.8.3.2
 
-With multi-vif CSA the vulnerability timeframe will increase.
-
-
-Michał
