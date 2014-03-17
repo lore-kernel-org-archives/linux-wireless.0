@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:39314 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbaCGCv1 (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:32971 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325AbaCQTnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 21:51:27 -0500
-Received: by mail-ob0-f182.google.com with SMTP id uz6so3595236obc.27
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 18:51:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <530CD45A.8050803@wwwdotorg.org>
-References: <1392900697-27577-1-git-send-email-heikki.krogerus@linux.intel.com>
-	<1392900697-27577-3-git-send-email-heikki.krogerus@linux.intel.com>
-	<53062F97.3050407@wwwdotorg.org>
-	<CAGb2v66-tDZhrm9dnXe+PdQTaLZbw20sw3uYzLor2eXpVWmPMA@mail.gmail.com>
-	<5306E599.7020605@wwwdotorg.org>
-	<CACRpkdZBvKU31EDX=6=wVLXaQDAqD6VHtaE_mGnFLr1UYQAH9g@mail.gmail.com>
-	<530CD45A.8050803@wwwdotorg.org>
-Date: Fri, 7 Mar 2014 10:51:27 +0800
-Message-ID: <CACRpkdZo1UHyCHe20LqRefCvS9BOT-2XeQXiZzLDQzUz4=Yc-w@mail.gmail.com> (sfid-20140307_035132_406527_A07CEDFC)
-Subject: Re: [PATCH 2/4] net: rfkill: gpio: remove gpio names
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Alexandre Courbot <gnurou@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Gross <mark.gross@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Mar 2014 15:43:00 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v4 2/4] mac80211: set NET_NAME_USER for user-space created ifs
+Date: Mon, 17 Mar 2014 20:42:36 +0100
+Message-Id: <1395085358-1171-3-git-send-email-dh.herrmann@gmail.com> (sfid-20140317_204322_142993_EAA854A6)
+In-Reply-To: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
+References: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 1:35 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-> On 02/25/2014 02:13 AM, Linus Walleij wrote:
+The nl80211 interface allows creating new netdevs from user-space. The
+name is *always* provided by user-space, so we should set NET_NAME_USER to
+provide that information via sysfs. But we must not set it for the default
+wlan%d names as these are kernel-provided names.
 
->> So it is basically there to satisfy the habit in some device
->> tree bindings to name gpio arrays instead of just passing gpios = <...>;
->> (The latter should be encouraged going forward.)
->
-> Do you really want to switch from named GPIO lookups to index-based GPIO
-> lookups?
+This allows udev to not rename dynamically created wifi devices (like wifi
+P2P devices).
 
-I don't know what I want. I only know that ACPI and DT people
-are starting to step on each others feet.
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
+---
+ net/mac80211/cfg.c         | 2 +-
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/iface.c       | 2 ++
+ net/mac80211/main.c        | 2 +-
+ 4 files changed, 5 insertions(+), 2 deletions(-)
 
-> Index-based lookups make it much harder to extend the DT
-> binding in a backwards-compatible fashion, especially in the face of
-> optional GPIOs (of which all of CD, WP, power are).
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1acb291..34f10fe 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -31,7 +31,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int err;
+ 
+-	err = ieee80211_if_add(local, name, &wdev, type, params);
++	err = ieee80211_if_add(local, name, NET_NAME_USER, &wdev, type, params);
+ 	if (err)
+ 		return ERR_PTR(err);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0d1a0f8..96f453a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1469,6 +1469,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ int ieee80211_iface_init(void);
+ void ieee80211_iface_exit(void);
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
++		     unsigned char name_assign_type,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params);
+ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b8d331e..fe84853 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1574,6 +1574,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ }
+ 
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
++		     unsigned char name_assign_type,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params)
+ {
+@@ -1617,6 +1618,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 					+ IEEE80211_ENCRYPT_HEADROOM;
+ 		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+ 
++		ndev->name_assign_type = name_assign_type;
+ 		ret = dev_alloc_name(ndev, ndev->name);
+ 		if (ret < 0) {
+ 			free_netdev(ndev);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b055f6a5..ee32a83 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1012,7 +1012,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	/* add one default STA interface if supported */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
+-		result = ieee80211_if_add(local, "wlan%d", NULL,
++		result = ieee80211_if_add(local, "wlan%d", NET_NAME_ENUM, NULL,
+ 					  NL80211_IFTYPE_STATION, NULL);
+ 		if (result)
+ 			wiphy_warn(local->hw.wiphy,
+-- 
+1.9.0
 
-You're probably right. At the same time it makes the world complex
-for the ambition to use the same interface for DT and ACPI alike.
-
-Yours,
-Linus Walleij
