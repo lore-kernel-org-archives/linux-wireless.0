@@ -1,42 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:41780 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbaCNUsr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:45887 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932391AbaCQJdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 16:48:47 -0400
-Received: by mail-lb0-f173.google.com with SMTP id p9so2180356lbv.32
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 13:48:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
- <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
- <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 14 Mar 2014 13:48:26 -0700
-Message-ID: <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com> (sfid-20140314_214851_495791_18D20074)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-To: Colleen T <colleen@cozybit.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 17 Mar 2014 05:33:46 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 3/3] ath9k: Fix temperature compensation
+Date: Mon, 17 Mar 2014 15:02:48 +0530
+Message-Id: <1395048768-25245-3-git-send-email-sujith@msujith.org> (sfid-20140317_103350_009297_DD3340D4)
+In-Reply-To: <1395048768-25245-1-git-send-email-sujith@msujith.org>
+References: <1395048768-25245-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 1:30 PM, Colleen T <colleen@cozybit.com> wrote:
-> This commit -- 5a970df8990d173e7e4092952f2e3da1de69b27d -- is causing
-> a regression on mac80211-next/master in our mesh test framework on
-> qemu.  We are using cfg80211 as a module.
->
-> In /etc/default/crda, I have:
-> REGDOMAIN=US
->
-> I can trigger the oops by loading mac80211_hwsim with three or more radios:
->
->> modprobe mac80211_hwsim radios=3
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+The registers for temperature compensation need to
+be programmed only for active chains. Use the TX chainmask
+to make sure that this is done properly for QCA953x.
 
-Thanks for reporting this, I'll take a look at this right away. Are
-you using wireless-testing or mac80211-next? What sha1sum are you on?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 59 +++++++++++++++-----------
+ 1 file changed, 35 insertions(+), 24 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index d7625ec..235053b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4792,43 +4792,54 @@ static void ar9003_hw_power_control_override(struct ath_hw *ah,
+ 
+ tempslope:
+ 	if (AR_SREV_9550(ah) || AR_SREV_9531(ah)) {
++		u8 txmask = (eep->baseEepHeader.txrxMask & 0xf0) >> 4;
++
+ 		/*
+ 		 * AR955x has tempSlope register for each chain.
+ 		 * Check whether temp_compensation feature is enabled or not.
+ 		 */
+ 		if (eep->baseEepHeader.featureEnable & 0x1) {
+ 			if (frequency < 4000) {
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      eep->base_ext2.tempSlopeLow);
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      temp_slope);
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      eep->base_ext2.tempSlopeHigh);
++				if (txmask & BIT(0))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      eep->base_ext2.tempSlopeLow);
++				if (txmask & BIT(1))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      temp_slope);
++				if (txmask & BIT(2))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      eep->base_ext2.tempSlopeHigh);
+ 			} else {
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      temp_slope);
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      temp_slope1);
+-				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
+-					      AR_PHY_TPC_19_ALPHA_THERM,
+-					      temp_slope2);
++				if (txmask & BIT(0))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      temp_slope);
++				if (txmask & BIT(1))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      temp_slope1);
++				if (txmask & BIT(2))
++					REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
++						      AR_PHY_TPC_19_ALPHA_THERM,
++						      temp_slope2);
+ 			}
+ 		} else {
+ 			/*
+ 			 * If temp compensation is not enabled,
+ 			 * set all registers to 0.
+ 			 */
+-			REG_RMW_FIELD(ah, AR_PHY_TPC_19,
+-				      AR_PHY_TPC_19_ALPHA_THERM, 0);
+-			REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
+-				      AR_PHY_TPC_19_ALPHA_THERM, 0);
+-			REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
+-				      AR_PHY_TPC_19_ALPHA_THERM, 0);
++			if (txmask & BIT(0))
++				REG_RMW_FIELD(ah, AR_PHY_TPC_19,
++					      AR_PHY_TPC_19_ALPHA_THERM, 0);
++			if (txmask & BIT(1))
++				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B1,
++					      AR_PHY_TPC_19_ALPHA_THERM, 0);
++			if (txmask & BIT(2))
++				REG_RMW_FIELD(ah, AR_PHY_TPC_19_B2,
++					      AR_PHY_TPC_19_ALPHA_THERM, 0);
+ 		}
+ 	} else {
+ 		REG_RMW_FIELD(ah, AR_PHY_TPC_19,
+-- 
+1.9.0
+
