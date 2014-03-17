@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:42778 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235AbaCEX0X (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9677 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932702AbaCQNey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 18:26:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 3/3] rtlwifi: rtl8723be: Fix smatch warnings
-Date: Wed,  5 Mar 2014 17:26:01 -0600
-Message-Id: <1394061961-11682-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140306_002635_166760_F5F8EBC8)
-In-Reply-To: <1394061961-11682-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1394061961-11682-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 17 Mar 2014 09:34:54 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 08/21] wil6210: report reset time
+Date: Mon, 17 Mar 2014 15:34:12 +0200
+Message-ID: <1395063265-6522-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_145650_102865_4BF1EDFF)
+In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
+Useful to detect hardware problems
 
-drivers/net/wireless/rtlwifi/rtl8723be/fw.c:208 _rtl8723be_fill_h2c_command() warn: variable dereferenced before check 'rtlhal' (see line 69)
-drivers/net/wireless/rtlwifi/rtl8723be/hw.c:1732 _rtl8723be_read_adapter_info() error: __builtin_memcpy() '&rtlefuse->efuse_map[0][0]' too small (256 vs 512)
-
-The first one is fixed by removing two pointless tests for NULL pointers.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723be/fw.c | 8 --------
- drivers/net/wireless/rtlwifi/wifi.h         | 2 +-
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
-index 0f3522d..f856be6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
-@@ -201,14 +201,6 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			 "pHalData->last_hmeboxnum  = %d\n",
- 			 rtlhal->last_hmeboxnum);
- 	}
--	if (!rtlpriv) {
--		pr_err("rtlpriv bad\n");
--		return;
--	}
--	if (!rtlhal) {
--		pr_err("rtlhal bad\n");
--		return;
--	}
- 	spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
- 	rtlhal->h2c_setinprogress = false;
- 	spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 0b4d641..6965afd 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1587,7 +1587,7 @@ struct rtl_dm {
- 	u64 last_rx_ok_cnt;
- };
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8644418..1f9f1d2 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -230,7 +230,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
  
--#define	EFUSE_MAX_LOGICAL_SIZE			256
-+#define	EFUSE_MAX_LOGICAL_SIZE			512
+ static void wil_target_reset(struct wil6210_priv *wil)
+ {
+-	int delay = 100;
++	int delay = 0;
+ 	u32 baud_rate;
+ 	u32 rev_id;
  
- struct rtl_efuse {
- 	bool autoLoad_ok;
+@@ -277,7 +277,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	do {
+ 		msleep(1);
+ 		baud_rate = R(RGF_USER_SERIAL_BAUD_RATE);
+-		if (delay-- < 0) {
++		if (delay++ > 100) {
+ 			wil_err(wil, "Reset not completed\n");
+ 			return;
+ 		}
+@@ -286,7 +286,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
+ 	if (rev_id == 2)
+ 		W(RGF_LOS_COUNTER_CTL, BIT(8));
+ 
+-	wil_dbg_misc(wil, "Reset completed\n");
++	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay);
+ 
+ #undef R
+ #undef W
 -- 
-1.8.4.5
+1.8.3.2
 
