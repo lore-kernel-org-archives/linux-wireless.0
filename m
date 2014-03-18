@@ -1,55 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60487 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255AbaCTQAP (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:40770 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbaCRN7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 12:00:15 -0400
-Date: Thu, 20 Mar 2014 11:53:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-03-19
-Message-ID: <20140320155350.GA12987@tuxdriver.com> (sfid-20140320_170036_190372_925EBAE7)
-References: <1395261190.4142.34.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395261190.4142.34.camel@jlt4.sipsolutions.net>
+	Tue, 18 Mar 2014 09:59:08 -0400
+Received: by mail-ee0-f47.google.com with SMTP id b15so5365821eek.20
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:07 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 02/21] cfg80211: allow drivers to iterate over matching combinations
+Date: Tue, 18 Mar 2014 14:53:05 +0100
+Message-Id: <1395150804-24090-3-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150216_014592_0C62A73F)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 09:33:10PM +0100, Johannes Berg wrote:
-> John,
-> 
-> Following your announcement, I figured I should get some code to you
-> still, if only because I'm lazy and don't want to disentangle the code I
-> already have later to break it up into fixes and features ...
-> 
-> This has a whole bunch of bugfixes for things that went into -next
-> previously as well as some other bugfixes I didn't want to rush into
-> 3.14 at this point. The rest of it is some cleanups and a few small
-> features, the biggest of which is probably Janusz's regulatory DFS CAC
-> time code.
-> 
-> Please let me know if there's any problem.
-> 
-> johannes
-> 
-> ---
-> 
-> The following changes since commit 6658ab80fd4ef940fc2366ddb66690a15ea69c18:
-> 
->   mac80211: ibss: handle cfg80211_chandef_dfs_required() error codes (2014-02-21 09:37:46 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 73fb08e24ae840bc518facc2c605dd6bb3751fec:
-> 
->   cfg80211: remove macro ASSERT_RDEV_LOCK(rdev) (2014-03-19 21:29:58 +0100)
+The patch splits cfg80211_check_combinations()
+into an iterator function and a simple iteration
+user.
 
-Pulling now...
+This makes it possible for drivers to asses how
+many channels can use given iftype setup. This in
+turn can be used for future
+multi-interface/multi-channel channel switching.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
+ net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 64 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 23a72e2..f3411c9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4705,6 +4705,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 				const u8 radar_detect,
+ 				const int iftype_num[NUM_NL80211_IFTYPES]);
+ 
++/**
++ * cfg80211_iter_combinations - iterate over matching combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ * @iter: function to call for each matching combination
++ * @data: pointer to pass to iter function
++ *
++ * This function can be called by the driver to check what possible
++ * combinations it fits in at a given moment, e.g. for channel switching
++ * purposes.
++ */
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b9deec2..804ba31 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1248,10 +1248,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
+-int cfg80211_check_combinations(struct wiphy *wiphy,
+-				const int num_different_channels,
+-				const u8 radar_detect,
+-				const int iftype_num[NUM_NL80211_IFTYPES])
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data)
+ {
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+@@ -1308,13 +1311,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 		/* This combination covered all interface types and
+ 		 * supported the requested numbers, so we're good.
+ 		 */
+-		kfree(limits);
+-		return 0;
++
++		(*iter)(c, data);
+  cont:
+ 		kfree(limits);
+ 	}
+ 
+-	return -EBUSY;
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_iter_combinations);
++
++static void
++cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
++			  void *data)
++{
++	int *num = data;
++	(*num)++;
++}
++
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int err, num = 0;
++
++	err = cfg80211_iter_combinations(wiphy, num_different_channels,
++					 radar_detect, iftype_num,
++					 cfg80211_iter_sum_ifcombs, &num);
++	if (err)
++		return err;
++	if (num == 0)
++		return -EBUSY;
++
++	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_check_combinations);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.3
+
