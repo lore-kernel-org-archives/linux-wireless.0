@@ -1,44 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:61821 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbaCaLkU convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:63591 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757811AbaCRT0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:40:20 -0400
-Received: by mail-wi0-f175.google.com with SMTP id cc10so3115458wib.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:40:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1396263984.4478.13.camel@dubbel>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	<1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	<1396259841-6359-2-git-send-email-michal.kazior@tieto.com>
-	<1396263984.4478.13.camel@dubbel>
-Date: Mon, 31 Mar 2014 13:40:17 +0200
-Message-ID: <CA+BoTQnN8qAmFLe9WgX_zjjy+QrphOhixPWX+CPWij4SJLK7vw@mail.gmail.com> (sfid-20140331_134029_983384_E5EFCC54)
-Subject: Re: [PATCH v3 1/4] mac80211: fix CSA tx queue locking
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Mar 2014 15:26:10 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x13so6459853wgg.9
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 03/14] staging: vt6656: rxtx: Replace wRTSTxRrvTime*
+Date: Tue, 18 Mar 2014 19:24:57 +0000
+Message-Id: <1395170708-2990-3-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202615_141339_8247A72B)
+In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 March 2014 13:06, Luca Coelho <luca@coelho.fi> wrote:
-> On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
->> It was possible for tx queues to be stuck locked
->
-> I would still prefer to use "stopped" instead of locked here (and in the
-> subject).  But that's just me...
+Fix base type to __le16 and remove camel case.
 
-Ah, I totally missed this one.
+Camel case changes
+wRTSTxRrvTime* -> rts_rrv_time*
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 10 +++++-----
+ drivers/staging/vt6656/rxtx.h |  8 ++++----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
->> if AP CSA finalization failed. In that case
->> stop_ap nor do_stop woke the queues up.
->
-> Maybe "In that case *neither* stop_ap nor do_stop"...?
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 1a29251..51aa77c 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -816,11 +816,11 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_rts *pBuf =
+ 					&tx_buffer->tx_head.tx_rts.rts;
+ 
+-			pBuf->wRTSTxRrvTime_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
++			pBuf->rts_rrv_time_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 					byPktType, cbFrameSize, wCurrentRate);
+-			pBuf->wRTSTxRrvTime_ba = s_uGetRTSCTSRsvTime(pDevice, 1,
++			pBuf->rts_rrv_time_ba = s_uGetRTSCTSRsvTime(pDevice, 1,
+ 					byPktType, cbFrameSize, wCurrentRate);
+-			pBuf->wRTSTxRrvTime_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
++			pBuf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+ 			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
+@@ -880,7 +880,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+ 							tx_head.tx_ab.ab;
+ 
+-			pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
++			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+ 			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
+@@ -914,7 +914,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+ 							tx_head.tx_ab.ab;
+ 
+-			pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
++			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+ 			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index bb2d0ce..1e8f5e2 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -53,9 +53,9 @@ struct vnt_mic_hdr {
+ 
+ /* RsvTime buffer header */
+ struct vnt_rrv_time_rts {
+-	u16 wRTSTxRrvTime_ba;
+-	u16 wRTSTxRrvTime_aa;
+-	u16 wRTSTxRrvTime_bb;
++	__le16 rts_rrv_time_ba;
++	__le16 rts_rrv_time_aa;
++	__le16 rts_rrv_time_bb;
+ 	u16 wReserved;
+ 	u16 wTxRrvTime_b;
+ 	u16 wTxRrvTime_a;
+@@ -69,7 +69,7 @@ struct vnt_rrv_time_cts {
+ } __packed;
+ 
+ struct vnt_rrv_time_ab {
+-	u16 wRTSTxRrvTime;
++	__le16 rts_rrv_time;
+ 	u16 wTxRrvTime;
+ } __packed;
+ 
+-- 
+1.9.0
 
-I'll respin later unless Johannes decides it's fine as it is.
-
-
-Michał
