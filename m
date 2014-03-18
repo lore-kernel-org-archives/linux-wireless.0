@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53596 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594AbaCUQaz (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62859 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754891AbaCRN7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 12:30:55 -0400
-Message-ID: <532C6921.5080803@candelatech.com> (sfid-20140321_173059_464133_DA3485B1)
-Date: Fri, 21 Mar 2014 09:30:25 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: add the Rx rate in FW stats
-References: <1395396014-24631-1-git-send-email-yeohchunyeow@gmail.com> <CA+BoTQ=X=UxikrVrmr3hyQgjN2Tg5aeW5Ok7b+23n9X6bxRshA@mail.gmail.com> <87a9cja596.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a9cja596.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 18 Mar 2014 09:59:35 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so5301114eei.5
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:34 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 21/21] cfg80211: remove channel_switch combination check
+Date: Tue, 18 Mar 2014 14:53:24 +0100
+Message-Id: <1395150804-24090-22-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145944_216553_939EC9E1)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/21/2014 09:25 AM, Kalle Valo wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
-> 
->> The main problem here is there are subtle yet crazy binary
->> incompatibilities between these firmwares.
->>
->> The best way would probably be to implement wmi as an abstraction
->> layer with completely different backends for different firmware
->> branches/revisions. Otherwise you sign up for some pain..
-> 
-> Yeah, I'm starting to believe that we will need something like that.
-> Other option is just to duplicate wmi.c and wmi.h for each interface
-> version. More code, but we get to keep more hair ;)
-> 
-> But we need to talk a lot more about this. For this patch in question we
-> should be able to manage with the current method of handling
-> differences.
+Make the driver responsible for making sure it is
+capable of performing the switch. It might as well
+accept a request but then disconnect an interface
+if some requirements are not met.
 
-Lets not duplicate any more code than we have to.  Hopefully we can
-get a solid firmware built that everyone can use and let the old firmware
-support eventually go away.  In the meantime, we can add hacks as needed
-to deal with firmware differences.
+In that case userspace should be prepared for an
+appropriate event (AP/IBSS/mesh being stopped/left).
 
-Thanks,
-Ben
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/nl80211.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5465e0e..6b7ded9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5921,17 +5921,6 @@ skip_beacons:
+ 		params.radar_required = true;
+ 	}
+ 
+-	/* TODO: I left this here for now.  With channel switch, the
+-	 * verification is a bit more complicated, because we only do
+-	 * it later when the channel switch really happens.
+-	 */
+-	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+-					   params.chandef.chan,
+-					   CHAN_MODE_SHARED,
+-					   radar_detect_width);
+-	if (err)
+-		return err;
+-
+ 	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
+ 		params.block_tx = true;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.5.3
 
