@@ -1,101 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53691 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756520AbaCEMK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 07:10:57 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:54411 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756258AbaCROqj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 10:46:39 -0400
+Received: by mail-ee0-f54.google.com with SMTP id d49so5467870eek.13
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:38 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
-Subject: [RFC/RFT 1/9] iwlegacy: add pkt pointer to command
-Date: Wed,  5 Mar 2014 13:13:26 +0100
-Message-Id: <1394021614-11514-2-git-send-email-sgruszka@redhat.com> (sfid-20140305_131059_622992_053933B6)
-In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
-References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/35] iwlwifi: mvm: remove using max_duration in firmware API
+Date: Tue, 18 Mar 2014 16:45:33 +0200
+Message-Id: <1395153939-23897-29-git-send-email-egrumbach@gmail.com> (sfid-20140318_154710_905060_CB303348)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is preparation for further changes, replacing CMD_WANT_SKB and
-reply_patch from command to make RX memory management simpler.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The firmware decided to not implement this API in this way,
+so for now remove setting the field completely. This will
+allow the firmware to change how to use this field later.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlegacy/common.c |  8 +++++---
- drivers/net/wireless/iwlegacy/common.h | 16 +++++++++-------
- 2 files changed, 14 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/constants.h |  2 --
+ drivers/net/wireless/iwlwifi/mvm/quota.c     | 22 +---------------------
+ 2 files changed, 1 insertion(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 4f42174..31b9623 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -372,14 +372,14 @@ il_send_cmd_sync(struct il_priv *il, struct il_host_cmd *cmd)
- 	goto out;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index 921b177..5168569 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -79,8 +79,6 @@
+ #define IWL_MVM_PS_SNOOZE_WINDOW		50
+ #define IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW		25
+ #define IWL_MVM_LOWLAT_QUOTA_MIN_PERCENT	64
+-#define IWL_MVM_LOWLAT_SINGLE_BINDING_MAXDUR	24 /* TU */
+-#define IWL_MVM_LOWLAT_DUAL_BINDING_MAXDUR	24 /* TU */
+ #define IWL_MVM_BT_COEX_SYNC2SCO		1
+ #define IWL_MVM_BT_COEX_CORUNNING		1
+ #define IWL_MVM_BT_COEX_MPLUT			1
+diff --git a/drivers/net/wireless/iwlwifi/mvm/quota.c b/drivers/net/wireless/iwlwifi/mvm/quota.c
+index 06d8429..7ec62ef 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/quota.c
++++ b/drivers/net/wireless/iwlwifi/mvm/quota.c
+@@ -180,7 +180,6 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *newvif)
+ 		.colors = { -1, -1, -1, -1 },
+ 		.new_vif = newvif,
+ 	};
+-	u32 ll_max_duration;
  
- cancel:
--	if (cmd->flags & CMD_WANT_SKB) {
-+	if (cmd->flags & (CMD_WANT_SKB | CMD_COPY_PKT)) {
- 		/*
- 		 * Cancel the CMD_WANT_SKB flag for the cmd in the
- 		 * TX cmd queue. Otherwise in case the cmd comes
- 		 * in later, it will possibly set an invalid
- 		 * address (cmd->meta.source).
- 		 */
--		il->txq[il->cmd_queue].meta[cmd_idx].flags &= ~CMD_WANT_SKB;
-+		il->txq[il->cmd_queue].meta[cmd_idx].flags &= ~(CMD_WANT_SKB | CMD_COPY_PKT);
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -199,21 +198,6 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *newvif)
+ 		iwl_mvm_quota_iterator(&data, newvif->addr, newvif);
  	}
- fail:
- 	if (cmd->reply_page) {
-@@ -3172,7 +3172,7 @@ il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd)
  
- 	memset(out_meta, 0, sizeof(*out_meta));	/* re-initialize to NULL */
- 	out_meta->flags = cmd->flags | CMD_MAPPED;
--	if (cmd->flags & CMD_WANT_SKB)
-+	if (cmd->flags & (CMD_WANT_SKB | CMD_COPY_PKT))
- 		out_meta->source = cmd;
- 	if (cmd->flags & CMD_ASYNC)
- 		out_meta->callback = cmd->callback;
-@@ -3319,6 +3319,8 @@ il_tx_cmd_complete(struct il_priv *il, struct il_rx_buf *rxb)
- 	if (meta->flags & CMD_WANT_SKB) {
- 		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
- 		rxb->page = NULL;
-+	} else if (meta->flags & CMD_COPY_PKT) {
-+		memcpy(meta->source->pkt_ptr, pkt, sizeof(*pkt));
- 	} else if (meta->callback)
- 		meta->callback(il, cmd, pkt);
+-	switch (data.n_low_latency_bindings) {
+-	case 0: /* no low latency - use default */
+-		ll_max_duration = 0;
+-		break;
+-	case 1: /* SingleBindingLowLatencyMode */
+-		ll_max_duration = IWL_MVM_LOWLAT_SINGLE_BINDING_MAXDUR;
+-		break;
+-	case 2: /* DualBindingLowLatencyMode */
+-		ll_max_duration = IWL_MVM_LOWLAT_DUAL_BINDING_MAXDUR;
+-		break;
+-	default: /* MultiBindingLowLatencyMode */
+-		ll_max_duration = 0;
+-		break;
+-	}
+-
+ 	/*
+ 	 * The FW's scheduling session consists of
+ 	 * IWL_MVM_MAX_QUOTA fragments. Divide these fragments
+@@ -287,11 +271,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *newvif)
+ 			  "Binding=%d, quota=%u > max=%u\n",
+ 			  idx, le32_to_cpu(cmd.quotas[idx].quota), QUOTA_100);
  
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index dfb13c7..51f0100 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -542,13 +542,14 @@ struct il_frame {
- };
+-		if (data.n_interfaces[i] && !data.low_latency[i])
+-			cmd.quotas[idx].max_duration =
+-				cpu_to_le32(ll_max_duration);
+-		else
+-			cmd.quotas[idx].max_duration = cpu_to_le32(0);
++		cmd.quotas[idx].max_duration = cpu_to_le32(0);
  
- enum {
--	CMD_SYNC = 0,
--	CMD_SIZE_NORMAL = 0,
--	CMD_NO_SKB = 0,
--	CMD_SIZE_HUGE = (1 << 0),
--	CMD_ASYNC = (1 << 1),
--	CMD_WANT_SKB = (1 << 2),
--	CMD_MAPPED = (1 << 3),
-+	CMD_SYNC =		0,
-+	CMD_SIZE_NORMAL =	0,
-+	CMD_NO_SKB =		0,
-+	CMD_SIZE_HUGE =		(1 << 0),
-+	CMD_ASYNC =		(1 << 1),
-+	CMD_WANT_SKB =		(1 << 2),
-+	CMD_MAPPED =		(1 << 3),
-+	CMD_COPY_PKT =		(1 << 4),
- };
- 
- #define DEF_CMD_PAYLOAD_SIZE 320
-@@ -577,6 +578,7 @@ struct il_device_cmd {
- struct il_host_cmd {
- 	const void *data;
- 	unsigned long reply_page;
-+	struct il_rx_pkt *pkt_ptr;
- 	void (*callback) (struct il_priv *il, struct il_device_cmd *cmd,
- 			  struct il_rx_pkt *pkt);
- 	u32 flags;
+ 		idx++;
+ 	}
 -- 
-1.7.11.7
+1.8.3.2
 
