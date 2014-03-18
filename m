@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbaC1Ikr (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:49407 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126AbaCROqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 04:40:47 -0400
-Message-ID: <1395996044.4175.6.camel@jlt4.sipsolutions.net> (sfid-20140328_094052_333552_C6B6C40F)
-Subject: Re: [PATCH 3/3 v2] cfg80211: slightly clean up of
- cfg80211_sme_connect()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 09:40:44 +0100
-In-Reply-To: <ab90c7d3201a2a7dac6deb52e15a1d67b7049f96.1395240451.git.gamerh2o@gmail.com> (sfid-20140319_160344_083919_61D82047)
-References: <1395239207.4142.25.camel@jlt4.sipsolutions.net>
-	 <ab90c7d3201a2a7dac6deb52e15a1d67b7049f96.1395240451.git.gamerh2o@gmail.com>
-	 (sfid-20140319_160344_083919_61D82047)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Mar 2014 10:46:25 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so4776914eek.35
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:24 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/35] iwlwifi: mvm: don't fail completely if led mode is not supported
+Date: Tue, 18 Mar 2014 16:45:26 +0200
+Message-Id: <1395153939-23897-22-git-send-email-egrumbach@gmail.com> (sfid-20140318_154819_008583_30D50A3A)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-03-19 at 23:02 +0800, Zhao, Gang wrote:
-> Wdev->ssid_len has already been set in cfg80211_connect() and is equal
-> to connect->ssid_len. Use wdev->ssid_len instead of connect->ssid_len
-> so it will be consistent with previous ssid assignment statement.
-> 
-> If bss is found in cfg80211_get_conn_bss(), wdev->conn->state is set
-> to CFG80211_CONN_AUTHENTICATE_NEXT in there. So it's not needed to set
-> it manually to CFG80211_CONN_AUTHENTICATE_NEXT if bss is found in that
-> function.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Applied.
+Blink led mode is not supported by iwlmvm. This doesn't mean
+that we should prevent any operation if it is selected by
+the user.
+Instead of failing without any notice to the user, fallback
+to the default mode (RF mode) if the blink mode
+is selected and print an error to inform the user.
 
-johannes
+Reported-by: Steven Haigh <netwiz@crc.id.au>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/led.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/led.c b/drivers/net/wireless/iwlwifi/mvm/led.c
+index 6b4ea6b..e3b3cf4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/led.c
++++ b/drivers/net/wireless/iwlwifi/mvm/led.c
+@@ -94,6 +94,8 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
+ 	int ret;
+ 
+ 	switch (mode) {
++	case IWL_LED_BLINK:
++		IWL_ERR(mvm, "Blink led mode not supported, used default\n");
+ 	case IWL_LED_DEFAULT:
+ 	case IWL_LED_RF_STATE:
+ 		mode = IWL_LED_RF_STATE;
+-- 
+1.8.3.2
 
