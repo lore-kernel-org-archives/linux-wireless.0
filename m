@@ -1,128 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58616 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbaCXT2o (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:58375 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380AbaCROpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 15:28:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/4 v2] ath10k:  better firmware loading error messages
-Date: Mon, 24 Mar 2014 12:20:41 -0700
-Message-Id: <1395688844-24640-2-git-send-email-greearb@candelatech.com> (sfid-20140324_202848_043835_9927EF03)
-In-Reply-To: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
-References: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
+	Tue, 18 Mar 2014 10:45:51 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so5497277eek.10
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:50 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/35] iwlwifi: nvm: fix VHT capability antenna-dependent fields
+Date: Tue, 18 Mar 2014 16:45:09 +0200
+Message-Id: <1395153939-23897-5-git-send-email-egrumbach@gmail.com> (sfid-20140318_154555_306168_0A983BA6)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Let user know the name of the board file if it is not
-found, and make it easier to determine the firmware
-api being used.
+As the antenna dependent fields depend on the firmware file and not
+the NVM, use those fields in the VHT capability creation.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Additionally, fix the STBC and antenna pattern consistency fields.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-v2:  Incorporate Kalle's suggestions and sample code.
-
- drivers/net/wireless/ath/ath10k/core.c | 36 +++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 471c219..79c7d48 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -398,8 +398,8 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 	/* first fetch the firmware file (firmware-*.bin) */
- 	ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
- 	if (IS_ERR(ar->firmware)) {
--		ath10k_err("Could not fetch firmware file '%s': %ld\n",
--			   name, PTR_ERR(ar->firmware));
-+		ath10k_err("could not fetch firmware file '%s/%s': %ld\n",
-+			   ar->hw_params.fw.dir, name, PTR_ERR(ar->firmware));
- 		return PTR_ERR(ar->firmware);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index 2f962ec..6be30c6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -299,9 +299,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
  
-@@ -410,14 +410,14 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
- 
- 	if (len < magic_len) {
--		ath10k_err("firmware image too small to contain magic: %zu\n",
--			   len);
-+		ath10k_err("firmware file '%s/%s' too small to contain magic: %zu\n",
-+			   ar->hw_params.fw.dir, name, len);
- 		ret = -EINVAL;
- 		goto err;
- 	}
- 
- 	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
--		ath10k_err("Invalid firmware magic\n");
-+		ath10k_err("invalid firmware magic\n");
- 		ret = -EINVAL;
- 		goto err;
- 	}
-@@ -439,7 +439,7 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 		data += sizeof(*hdr);
- 
- 		if (len < ie_len) {
--			ath10k_err("Invalid length for FW IE %d (%zu < %zu)\n",
-+			ath10k_err("invalid length for FW IE %d (%zu < %zu)\n",
- 				   ie_id, len, ie_len);
- 			ret = -EINVAL;
- 			goto err;
-@@ -522,8 +522,8 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 	}
- 
- 	if (!ar->firmware_data || !ar->firmware_len) {
--		ath10k_warn("No ATH10K_FW_IE_FW_IMAGE found from %s, skipping\n",
--			    name);
-+		ath10k_warn("No ATH10K_FW_IE_FW_IMAGE found from '%s/%s', skipping\n",
-+			    ar->hw_params.fw.dir, name);
- 		ret = -ENOMEDIUM;
- 		goto err;
- 	}
-@@ -540,7 +540,9 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 					 ar->hw_params.fw.board);
- 	if (IS_ERR(ar->board)) {
- 		ret = PTR_ERR(ar->board);
--		ath10k_err("could not fetch board data (%d)\n", ret);
-+		ath10k_err("could not fetch board data '%s/%s' (%d)\n",
-+			   ar->hw_params.fw.dir, ar->hw_params.fw.board,
-+			   ret);
- 		goto err;
- 	}
- 
-@@ -558,19 +560,21 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 				  struct iwl_nvm_data *data,
+-				  struct ieee80211_sta_vht_cap *vht_cap)
++				  struct ieee80211_sta_vht_cap *vht_cap,
++				  u8 tx_chains, u8 rx_chains)
  {
- 	int ret;
+-	int num_ants = num_of_ant(data->valid_rx_ant);
++	int num_rx_ants = num_of_ant(rx_chains);
++	int num_tx_ants = num_of_ant(tx_chains);
  
-+	ar->fw_api = 2;
-+	ath10k_dbg(ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
-+
- 	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE);
--	if (ret == 0) {
--		ar->fw_api = 2;
--		goto out;
--	}
-+	if (ret == 0)
-+		goto success;
-+
-+	ar->fw_api = 1;
-+	ath10k_dbg(ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
+ 	vht_cap->vht_supported = true;
  
- 	ret = ath10k_core_fetch_firmware_api_1(ar);
- 	if (ret)
- 		return ret;
+@@ -311,8 +313,10 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 		       3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
+ 		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
  
--	ar->fw_api = 1;
--
--out:
-+success:
- 	ath10k_dbg(ATH10K_DBG_BOOT, "using fw api %d\n", ar->fw_api);
+-	if (num_ants > 1)
++	if (num_tx_ants > 1)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
++	else
++		vht_cap->cap |= IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
  
- 	return 0;
+ 	if (iwlwifi_mod_params.amsdu_size_8K)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991;
+@@ -327,10 +331,8 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
+ 
+-	if (num_ants == 1 ||
+-	    cfg->rx_with_siso_diversity) {
+-		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
+-				IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
++	if (num_rx_ants == 1 || cfg->rx_with_siso_diversity) {
++		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN;
+ 		/* this works because NOT_SUPPORTED == 3 */
+ 		vht_cap->vht_mcs.rx_mcs_map |=
+ 			cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << 2);
+@@ -375,7 +377,8 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 	iwl_init_ht_hw_capab(cfg, data, &sband->ht_cap, IEEE80211_BAND_5GHZ,
+ 			     tx_chains, rx_chains);
+ 	if (enable_vht)
+-		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap);
++		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap,
++				      tx_chains, rx_chains);
+ 
+ 	if (n_channels != n_used)
+ 		IWL_ERR_DEV(dev, "NVM: used only %d of %d channels\n",
 -- 
-1.7.11.7
+1.8.3.2
 
