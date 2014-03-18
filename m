@@ -1,41 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45566 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755441AbaC0SWs (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:45032 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754469AbaCRN7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 14:22:48 -0400
-Message-ID: <1395944562.4111.0.camel@jlt4.sipsolutions.net> (sfid-20140327_192257_931237_67906796)
-Subject: Re: [PATCH] mac80211: add vif to flush call
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 27 Mar 2014 19:22:42 +0100
-In-Reply-To: <53346ABB.1060907@broadcom.com>
-References: <1395912629-1458-1-git-send-email-egrumbach@gmail.com>
-	 <53346ABB.1060907@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Mar 2014 09:59:13 -0400
+Received: by mail-ee0-f47.google.com with SMTP id b15so5346985eek.6
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:12 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 06/21] mac80211: track reserved vifs in chanctx
+Date: Tue, 18 Mar 2014 14:53:09 +0100
+Message-Id: <1395150804-24090-7-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145931_957300_1470F98B)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-03-27 at 19:15 +0100, Arend van Spriel wrote:
-> On 03/27/14 10:30, Emmanuel Grumbach wrote:
-> > From: Emmanuel Grumbach<emmanuel.grumbach@intel.com>
-> >
-> > This will allow the low level driver to make decision based
-> > on the vif such as queues etc...
-> > Since the vif might be NULL, we can't add it to the tracing
-> > functions.
-> 
-> Although this argument sound fair my rule about interfaces is that a 
-> change should be needed, ie. a low-level driver that needs the info, 
-> instead of hypothetical use. You have one up your sleeve ? ;-)
+This can be useful.
 
-Yeah, we do have a change for iwlmvm in the pipeline - the reason we
-need the vif rather than just the queue bitmap there is that there are
-(aggregation) queues that are hidden from mac80211's view.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c        | 14 ++++++++++----
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       |  1 +
+ 3 files changed, 13 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index aca70a6..525739b 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -277,6 +277,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	INIT_LIST_HEAD(&ctx->assigned_vifs);
++	INIT_LIST_HEAD(&ctx->reserved_vifs);
+ 	ctx->conf.def = *chandef;
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+@@ -731,16 +732,19 @@ void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
+ 
+ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_chanctx *ctx = sdata->reserved_chanctx;
++
+ 	lockdep_assert_held(&sdata->local->chanctx_mtx);
+ 
+-	if (WARN_ON(!sdata->reserved_chanctx))
++	if (WARN_ON(!ctx))
+ 		return -EINVAL;
+ 
+-	if (--sdata->reserved_chanctx->refcount == 0)
+-		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
+-
++	list_del(&sdata->reserved_chanctx_list);
+ 	sdata->reserved_chanctx = NULL;
+ 
++	if (--ctx->refcount == 0)
++		ieee80211_free_chanctx(sdata->local, ctx);
++
+ 	return 0;
+ }
+ 
+@@ -788,6 +792,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	list_add(&sdata->reserved_chanctx_list, &new_ctx->reserved_vifs);
+ 	new_ctx->refcount++;
+ 	sdata->reserved_chanctx = new_ctx;
+ 	sdata->reserved_chandef = *chandef;
+@@ -837,6 +842,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 	ctx->refcount--;
+ 	sdata->reserved_chanctx = NULL;
+ 	sdata->radar_required = sdata->reserved_radar_required;
++	list_del(&sdata->reserved_chanctx_list);
+ 
+ 	if (old_ctx == ctx) {
+ 		/* This is our own context, just change it */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6e3d137..0701631 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -692,6 +692,7 @@ struct ieee80211_chanctx {
+ 	struct rcu_head rcu_head;
+ 
+ 	struct list_head assigned_vifs;
++	struct list_head reserved_vifs;
+ 
+ 	enum ieee80211_chanctx_mode mode;
+ 	int refcount;
+@@ -759,6 +760,7 @@ struct ieee80211_sub_if_data {
+ 	struct cfg80211_chan_def csa_chandef;
+ 
+ 	struct list_head assigned_chanctx_list;
++	struct list_head reserved_chanctx_list;
+ 
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3b5b6d3..d09185b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1292,6 +1292,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+ 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
+ 	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
++	INIT_LIST_HEAD(&sdata->reserved_chanctx_list);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
+-- 
+1.8.5.3
 
