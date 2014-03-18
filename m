@@ -1,79 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47267 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbaCaPsi (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:38536 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753672AbaCRI6Q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 11:48:38 -0400
-Message-ID: <53398E03.1090903@candelatech.com> (sfid-20140331_174842_323921_AAAABFE8)
-Date: Mon, 31 Mar 2014 08:47:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 18 Mar 2014 04:58:16 -0400
+Received: by mail-oa0-f43.google.com with SMTP id eb12so1584298oac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 01:58:15 -0700 (PDT)
 MIME-Version: 1.0
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Here are some ath10k performance graphs.
-References: <53390AE4.4030705@candelatech.com>
-In-Reply-To: <53390AE4.4030705@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1395132248.15856.21.camel@dubbel>
+References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
+	<1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
+	<CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com>
+	<1395130437.15856.13.camel@dubbel>
+	<CA+BoTQn5dB8-4U0X+_GX_J7rDctTpCWg8ydjSQbrEjMB28NKEA@mail.gmail.com>
+	<1395132248.15856.21.camel@dubbel>
+Date: Tue, 18 Mar 2014 09:58:15 +0100
+Message-ID: <CA+BoTQmLSxmNy+O9mj9MHxtLvE7SU6EfHrCGnZcBmrD3ktonjw@mail.gmail.com> (sfid-20140318_095830_069781_25843A8A)
+Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
+ combination check to mac80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
+	Eliad Peller <eliad@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2014 11:27 PM, Ben Greear wrote:
-> I finally have a firmware stable enough to do some throughput
-> tests (only locked station machine up once doing these!).
+On 18 March 2014 09:44, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2014-03-18 at 09:36 +0100, Michal Kazior wrote:
+>> On 18 March 2014 09:13, Coelho, Luciano <luciano.coelho@intel.com> wrote:
+>> > On Fri, 2014-03-14 at 09:40 +0100, Michal Kazior wrote:
+>> >> On 11 March 2014 15:16, Luciano Coelho <luciano.coelho@intel.com> wrote:
+>>
+>> [...]
+>>
+>> >> > +       list_for_each_entry(ctx, &local->chanctx_list, list) {
+>> >> > +               if (ctx->conf.radar_enabled)
+>> >> > +                       radar_detect |= BIT(ctx->conf.def.width);
+>> >>
+>> >> Is this really correct?
+>> >
+>> > I'm not sure anymore. :)
+>> >
+>> >
+>> >> The original behaviour was to:
+>> >>
+>> >>  for each wdev:
+>> >>    get_chan_state(..., &radar_width)
+>> >>
+>> >> where get_chan_state() ORs BIT(width) accordingly to iftype, etc.
+>> >>
+>> >> For 2 APs with different operational widths (e.g. 20 and 40) this means:
+>> >>
+>> >> a) old code: width_detect = BIT(WIDTH_20) | BIT(WIDTH_40)
+>> >> b) new code: width_detect = BIT(chanctx->width) which is BIT(WIDTH_40)
+>> >>
+>> >> I think radar_detect should be computed:
+>> >>
+>> >>  radar_detect = 0 // **
+>> >>  for each vif:
+>> >>   if vif.ctx == ctx && vif.radar_required:
+>> >>    radar_detect = BIT(vif.bss.width)
+>> >>
+>> >> ** you could argue to initialize with BIT(ctx->width), but all things
+>> >> seem to use ieee80211_vif_use_channel() (including CAC/radar
+>> >> detection) so bss_conf.chandef.width should be set correctly and
+>> >> iteration alone should suffice.
+>> >
+>> > But does this really make sense? This was more or less the idea I had
+>> > when I changed the cfg80211_chandef_dfs_required() to return a bit mask
+>> > (which I later reverted).
+>> >
+>> > I think the current behavior may be wrong.  In the old
+>> > cfg80211_can_use_iftype_chan() we match *any* of the bits in
+>> > radar_detect with the bits supported in the interface combinations.  So,
+>> > in your example, we would accept the combination even if the driver did
+>> > not support WIDTH_40 (because it would match WIDTH_20).  If the context
+>> > is set to WIDTH_40, don't we have to make sure the driver can detect
+>> > radars on that width?
+>>
+>> Fair point, but current behaviour of cfg80211_can_use_iftype_chan()
+>> doesn't seem like a correct one to me. It shouldn't match any but
+>> *all* of the radar_detect bits, no?
 >
-> I find the download test interesting where the rx link rate goes very low
-> after 12 or so stations.
->
-> tx link rate is not reported properly yet by ath10k, so ignore that.
->
-> http://www.candelatech.com/examples/cap-ath10k-tcp-download-open/
-> http://www.candelatech.com/examples/cap-ath10k-tcp-download-wpa2/
-> http://www.candelatech.com/examples/cap-ath10k-tcp-upload-open/
-> http://www.candelatech.com/examples/cap-ath10k-tcp-upload-wpa2/
+> I don't really know.  I think that if we're using 40MHz, we need to be
+> able to detect on the entire 40MHz, and that includes the 20MHz part as
+> well.  So being able to detect on 20MHz in that same channel context is
+> irrelevant, isn't it?
 
-Here are some UDP graphs, both with no encryption.  Upload is still
-significantly better than download, in this case, possibly because
-it is safe to send larger UDP PDUs (I used 9k) from stations.  Sending
-large MTUs too stations from wired ports causes too much loss because
-loss of a single sub-frame causes entire pkt to be dropped.  Previous
-detailed testing shows that is not the only problem, however.
+True but take this hypothetical case:
 
-http://www.candelatech.com/examples/cap-ath10k-udp-upload-open/
-http://www.candelatech.com/examples/cap-ath10k-udp-download-open/
+You have a driver combination that supports radar_detect only at
+40MHz. You start AP @ 40MHz with radar. You match the radar_detect.
+You start AP @ 20MHz with radar. You match again radar_detect (because
+there's the AP @ 40MHz running). You stop AP @ 40Mhz. You now have
+only an AP running at 20MHz which requires radar_detect for 20MHz but
+there's no combination to match that. Oops. We should've never allowed
+the AP @ 20MHz to start.
 
-All of these have a summary chart near the bottom that is generally
-more interesting than the individual pie charts, btw.
-
-I can get more throughput with carefully tuned individual connections
-for single-station tests, will post some of those when I get time
-to do some detailed testing.
-
-Thanks,
-Ben
-
->
-> Some notes are near the top of each report, and in general:
->
-> The station machine is sending to/from wired Eth1 to/from the
-> stations, ie it is both sides of the network.
-> The AP is configured as router.  Both systems are running
-> our customized 10.1.467-ct firmware, and near the latest ath10k kernel.  Station
-> machine is Fedora 17, AP is Fedora 19.  Both are 64-bit, CPU is a mobile core-i7,
-> 8GB RAM, SSD hard drives (not that it should matter).
->
-> Due to the vagaries of ath10k hardware and our firmware, we get hardware acceleration when
-> sending encrypted packets, but we have to decrypt received packets on the CPU.
->
-> I am not sure why open TCP throughput is so bad compared to upload.
-> I'll run some UDP tests when I get a chance.
->
->
-> Thanks,
-> Ben
->
+I doubt there's hardware that needs a combination like that but it
+just bothers me current structure and logic allows it.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Michał
