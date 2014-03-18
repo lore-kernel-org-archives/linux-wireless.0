@@ -1,66 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754078AbaCUMDd (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:57715 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756178AbaCROqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 08:03:33 -0400
-Message-ID: <1395403409.4164.4.camel@jlt4.sipsolutions.net> (sfid-20140321_130349_852084_621D244F)
-Subject: Re: [PATCH] mac80211: don't downgrade VHT20 to HT20
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 21 Mar 2014 13:03:29 +0100
-In-Reply-To: <CA+BoTQm_w4qk98pYbJ4Fz5NL-zTq7eCkAepOYGtd=LGVCLTU9A@mail.gmail.com> (sfid-20140320_103959_427442_78E9C470)
-References: <1393327628-1078-1-git-send-email-michal.kazior@tieto.com>
-	 <1393330040.4170.0.camel@jlt4.sipsolutions.net>
-	 <1393330210.4170.1.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnvSxOCxV4UwUmi2_if8NQWWJCht=urAewBZAiEJdHpZA@mail.gmail.com>
-	 <1395238934.4142.22.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQm_w4qk98pYbJ4Fz5NL-zTq7eCkAepOYGtd=LGVCLTU9A@mail.gmail.com>
-	 (sfid-20140320_103959_427442_78E9C470)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Mar 2014 10:46:22 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so5344741eek.25
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:21 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/35] iwlwifi: add rs_rate_scale_clear_tbl_windows helper function
+Date: Tue, 18 Mar 2014 16:45:25 +0200
+Message-Id: <1395153939-23897-21-git-send-email-egrumbach@gmail.com> (sfid-20140318_154636_474210_27DACDBF)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-03-20 at 10:39 +0100, Michal Kazior wrote:
+From: Eliad Peller <eliad@wizery.com>
 
-> >> The spec also defines VHT BSS operating channel width is derived from
-> >> HT Operation Element: STA Channel Width field (Table 10-19) and 20 MHz
-> >> is not forbidden for AP/mesh. hostapd seems to go in line with this
-> >> and allows VHT20 and VHT40.
-> >
-> > Yes but how is that related to the *capability* bit? You're talking
-> > about the HT/VHT operation information.
-> 
-> Good point.
-> 
-> Hostapd sets *both* HT Capability and HT Information IEs to "only
-> 20Mhz" for VHT20. I can see Cisco EA6500 do the same thing too.
+instead of duplicating the same loop multiple times,
+use a new function for it.
 
-That used to be fine for HT only, but I guess it's wrong for VHT. It
-also means that it cannot switch to 40 MHz on the fly later.
+this will be later used also for clearing other
+windows in the table.
 
-> > So are you saying the station isn't setting 20_40 capability? Or is
-> > something else unsetting the bit in case it's a 20MHz network?
-> 
-> In case of AP mode you get ht_capa/vht_capa from userspace (i.e.
-> hostapd). This would again imply hostapd does it wrong or is it
-> perhaps the interface describing HT/VHT state is insufficient? Should
-> mac80211 treat HT Capab and HT Info separately? Should they be passed
-> and processed separately?
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-It's possible that the interface is insufficient (*), but I'd argue that
-if that is the case then it'd be a question of setting the operation
-mode rather than any per-station information, since the per-station
-information should really be capabilities, while the current operation
-mode should be for the interface? If the kernel knows what it's
-operating as (*) and knows the station capabilities, everything else
-should be clear immediately, no?
-
-(*) right now I suspect that the channel bandwidth is used, which might
-be incorrect if we ever want to implement dynamic bandwidth switching in
-the AP
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 953c33f..568abd6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -503,6 +503,14 @@ static void rs_rate_scale_clear_window(struct iwl_rate_scale_data *window)
+ 	window->average_tpt = IWL_INVALID_VALUE;
+ }
+ 
++static void rs_rate_scale_clear_tbl_windows(struct iwl_scale_tbl_info *tbl)
++{
++	int i;
++
++	for (i = 0; i < IWL_RATE_COUNT; i++)
++		rs_rate_scale_clear_window(&tbl->win[i]);
++}
++
+ static inline u8 rs_is_valid_ant(u8 valid_antenna, u8 ant_type)
+ {
+ 	return (ant_type & valid_antenna) == ant_type;
+@@ -1370,7 +1378,6 @@ static u32 rs_bw_from_sta_bw(struct ieee80211_sta *sta)
+ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ {
+ 	struct iwl_scale_tbl_info *tbl;
+-	int i;
+ 	int active_tbl;
+ 	int flush_interval_passed = 0;
+ 	struct iwl_mvm *mvm;
+@@ -1431,9 +1438,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 
+ 				IWL_DEBUG_RATE(mvm,
+ 					       "LQ: stay in table clear win\n");
+-				for (i = 0; i < IWL_RATE_COUNT; i++)
+-					rs_rate_scale_clear_window(
+-						&(tbl->win[i]));
++				rs_rate_scale_clear_tbl_windows(tbl);
+ 			}
+ 		}
+ 
+@@ -1442,8 +1447,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 		 * "search" table). */
+ 		if (lq_sta->rs_state == RS_STATE_SEARCH_CYCLE_STARTED) {
+ 			IWL_DEBUG_RATE(mvm, "Clearing up window stats\n");
+-			for (i = 0; i < IWL_RATE_COUNT; i++)
+-				rs_rate_scale_clear_window(&(tbl->win[i]));
++			rs_rate_scale_clear_tbl_windows(tbl);
+ 		}
+ 	}
+ }
+@@ -1733,7 +1737,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	int low = IWL_RATE_INVALID;
+ 	int high = IWL_RATE_INVALID;
+ 	int index;
+-	int i;
+ 	struct iwl_rate_scale_data *window = NULL;
+ 	int current_tpt = IWL_INVALID_VALUE;
+ 	int low_tpt = IWL_INVALID_VALUE;
+@@ -2018,8 +2021,7 @@ lq_update:
+ 		if (lq_sta->search_better_tbl) {
+ 			/* Access the "search" table, clear its history. */
+ 			tbl = &(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
+-			for (i = 0; i < IWL_RATE_COUNT; i++)
+-				rs_rate_scale_clear_window(&(tbl->win[i]));
++			rs_rate_scale_clear_tbl_windows(tbl);
+ 
+ 			/* Use new "search" start rate */
+ 			index = tbl->rate.index;
+@@ -2340,8 +2342,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	lq_sta->lq.sta_id = sta_priv->sta_id;
+ 
+ 	for (j = 0; j < LQ_SIZE; j++)
+-		for (i = 0; i < IWL_RATE_COUNT; i++)
+-			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
++		rs_rate_scale_clear_tbl_windows(&lq_sta->lq_info[j]);
+ 
+ 	lq_sta->flush_timer = 0;
+ 
+-- 
+1.8.3.2
 
