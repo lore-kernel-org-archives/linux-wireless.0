@@ -1,90 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([5.45.105.125]:47513 "EHLO ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754166AbaCMSB7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 14:01:59 -0400
-Date: Thu, 13 Mar 2014 19:01:52 +0100
-From: Sebastian Reichel <sre@ring0.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Tony Lindgren <tony@atomide.com>, Luciano Coelho <luca@coelho.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RESEND] [PATCHv2 0/5] wl1251 device tree support
-Message-ID: <20140313180152.GA21701@earth.universe> (sfid-20140313_190225_187949_C98EB058)
-References: <20140125000929.GD25488@atomide.com>
- <1392419156-14394-1-git-send-email-sre@debian.org>
- <20140226194436.GA20992@earth.universe>
- <20140313170038.GA20372@earth.universe>
- <20140313172726.GC30579@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
-In-Reply-To: <20140313172726.GC30579@tuxdriver.com>
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:37325 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbaCRN71 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 09:59:27 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so5359004eek.24
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 15/21] mac80211: split CSA finalize function
+Date: Tue, 18 Mar 2014 14:53:18 +0100
+Message-Id: <1395150804-24090-16-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145936_823703_71560B9B)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Improves readability and modularity.
 
---IS0zKkzwUGydFO0o
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c | 61 +++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 37 insertions(+), 24 deletions(-)
 
-On Thu, Mar 13, 2014 at 01:27:27PM -0400, John W. Linville wrote:
-> On Thu, Mar 13, 2014 at 06:00:39PM +0100, Sebastian Reichel wrote:
-> > Hi,
-> >=20
-> > On Wed, Feb 26, 2014 at 08:44:36PM +0100, Sebastian Reichel wrote:
-> > > On Sat, Feb 15, 2014 at 12:05:51AM +0100, Sebastian Reichel wrote:
-> > > > The following patchset adds device tree support to the spi variant =
-of the
-> > > > wl1251 driver, which is used in the Nokia N900. Tony requested, tha=
-t you
-> > > > take the whole series even if that may introduce merge conflicts:
-> > > >=20
-> > > > > Sebastian, please resend the whole series to John and feel free t=
-o add my
-> > > > > acks.  It's best that John picks them all up, otherwise we'll hav=
-e the same
-> > > > > issue for v3.15. It seems that we should have just taken the merg=
-e conflict
-> > > > > rather than going back and forth with this.
-> > >=20
-> > > ping! Is there still anything wrong with this patchset?
-> >=20
-> > ping! This patchset is quite old now. Please pull it into
-> > wireless-next, so that it can appear in 3.15.
-> >=20
-> > -- Sebastian
->=20
-> These are already in wireless-next...
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4cc4149..5f63e1d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3051,25 +3051,11 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL(ieee80211_csa_finish);
+ 
+-static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
++static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
++					  u32 *changed)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	int err, changed = 0;
+-
+-	sdata_assert_lock(sdata);
+-	lockdep_assert_held(&local->mtx);
+-
+-	sdata->radar_required = sdata->csa_radar_required;
+-	err = ieee80211_vif_change_channel(sdata, &changed);
+-	if (WARN_ON(err < 0))
+-		return;
+-
+-	if (!local->use_chanctx) {
+-		local->_oper_chandef = sdata->csa_chandef;
+-		ieee80211_hw_config(local, 0);
+-	}
++	int err;
+ 
+-	sdata->vif.csa_active = false;
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+ 		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
+@@ -3077,30 +3063,57 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 		sdata->u.ap.next_beacon = NULL;
+ 
+ 		if (err < 0)
+-			return;
+-		changed |= err;
++			return err;
++		*changed |= err;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		err = ieee80211_ibss_finish_csa(sdata);
+ 		if (err < 0)
+-			return;
+-		changed |= err;
++			return err;
++		*changed |= err;
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		err = ieee80211_mesh_finish_csa(sdata);
+ 		if (err < 0)
+-			return;
+-		changed |= err;
++			return err;
++		*changed |= err;
+ 		break;
+ #endif
+ 	default:
+ 		WARN_ON(1);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	u32 changed = 0;
++	int err;
++
++	sdata_assert_lock(sdata);
++	lockdep_assert_held(&local->mtx);
++
++	sdata->radar_required = sdata->csa_radar_required;
++	err = ieee80211_vif_change_channel(sdata, &changed);
++	if (WARN_ON(err < 0))
+ 		return;
++
++	if (!local->use_chanctx) {
++		local->_oper_chandef = sdata->csa_chandef;
++		ieee80211_hw_config(local, 0);
+ 	}
+ 
+-	ieee80211_bss_info_change_notify(sdata, changed);
++	sdata->vif.csa_active = false;
++
++	err = ieee80211_set_after_csa_beacon(sdata, &changed);
++	if (err)
++		return;
+ 
++	ieee80211_bss_info_change_notify(sdata, changed);
+ 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+ }
+ 
+-- 
+1.8.5.3
 
-oops, sorry for the noise. I have checked the git repository and my
-mailbox before sending another ping, but overlooked the commits.
-
-Thanks for applying them.
-
--- Sebastian
-
---IS0zKkzwUGydFO0o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBCgAGBQJTIfKPAAoJENju1/PIO/qabJ0P/RO7ZR94Hp2AJ7Hd3w5Y2NHI
-TiIEHy+3sX4ghx5g/8WGbZwLaZlVLGNYl5MtkIl8seUVGvyQeh3OHZ6U1cykPoac
-eBEjUYynnibyeXIYf5yibVp9GFFg7Ik2RYTJklgMDTptVAcK7vzyZA6mpB9GlZWx
-f6Kyx/MPmDk62GLjYWC25s00fSonz77+K0gd1pQ07zRmZ8AmS+7pwR4Qt6Bx3Tl1
-vuSCN0679KJP2iDBuNlNm6A2uE+joa30W+9KR+lTUR0DHd93hUjPBbEwp687MQJ4
-uVoI6R1spA2EILKBaWgbfM4QYJxTPXFHbpSb6YcXBYg1ygwaAOa1RV6dTyGUDVFM
-+fYtJPGoZGM2v9aden7oFsv/iklc9Op6GExEuIx7Mz/0HvpH/BT8+6xeDolZxTkI
-SvNBeDDZoC2rXIQDJlQvGW4nTcu6MBXnFHIyg2kodP6trrOdYLoZbn8FdJ4LIkMz
-0J9CWhSpzhksLxP5ztSKlJPYG1Ir9mxvqasMT8pT5F6pa1LP/lt1DQOLSiwoe4+B
-A/1EY9fb8Hs+3h9uM5A6kp6jB3ShP0yczl3mOxD5dat9uQmqSJdQmVpgyMTX1J8o
-+bfnAutjFRz7w8/bAIUSywOkkN1dkmrAwwLDtOTq1kGNKMfZLK/yerM2zQvDSoAG
-e0GjYjNnu/pyqZUot6kd
-=0wKX
------END PGP SIGNATURE-----
-
---IS0zKkzwUGydFO0o--
