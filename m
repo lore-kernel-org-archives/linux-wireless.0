@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49812 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbaCXTXO (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:41653 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756333AbaCROq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 15:23:14 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/4 v2] ath10k:  add otp and firmware boot error messages
-Date: Mon, 24 Mar 2014 12:20:42 -0700
-Message-Id: <1395688844-24640-3-git-send-email-greearb@candelatech.com> (sfid-20140324_202318_780670_DDF97405)
-In-Reply-To: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
-References: <1395688844-24640-1-git-send-email-greearb@candelatech.com>
+	Tue, 18 Mar 2014 10:46:56 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so5451483eek.38
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:55 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/35] iwlwifi: mvm: ignore unchanged low-latency flag
+Date: Tue, 18 Mar 2014 16:45:38 +0200
+Message-Id: <1395153939-23897-34-git-send-email-egrumbach@gmail.com> (sfid-20140318_154704_714509_404FFFA9)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-If OTP or firmware fails to load properly, print out some
-extra info in the kernel logs.
+If the low-latency update is called but there's no change then
+ignore the update instead of triggering all the required work.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/utils.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 79c7d48..da59c8a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -255,7 +255,8 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
- 	/* OTP is optional */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index c28da90..d619851 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -612,6 +612,9 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- 	if (!ar->otp_data || !ar->otp_len) {
--		ath10k_warn("Not running otp, calibration will be incorrect!\n");
-+		ath10k_warn("Not running otp, calibration will be incorrect (otp-data %p otp_len %zd)!\n",
-+			    ar->otp_data, ar->otp_len);
- 		return 0;
- 	}
+ 	lockdep_assert_held(&mvm->mutex);
  
-@@ -585,16 +586,22 @@ static int ath10k_init_download_firmware(struct ath10k *ar)
- 	int ret;
++	if (mvmvif->low_latency == value)
++		return 0;
++
+ 	mvmvif->low_latency = value;
  
- 	ret = ath10k_download_board_data(ar);
--	if (ret)
-+	if (ret) {
-+		ath10k_err("failed to download board data: %d\n", ret);
- 		return ret;
-+	}
- 
- 	ret = ath10k_download_and_run_otp(ar);
--	if (ret)
-+	if (ret) {
-+		ath10k_err("failed to run otp: %d\n", ret);
- 		return ret;
-+	}
- 
- 	ret = ath10k_download_fw(ar);
--	if (ret)
-+	if (ret) {
-+		ath10k_err("failed to download firmware: %d\n", ret);
- 		return ret;
-+	}
- 
- 	return ret;
- }
+ 	res = iwl_mvm_update_quotas(mvm, NULL);
 -- 
-1.7.11.7
+1.8.3.2
 
