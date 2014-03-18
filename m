@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:58266 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294AbaCVJCb (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:41025 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756298AbaCROqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2014 05:02:31 -0400
-Received: by mail-we0-f181.google.com with SMTP id q58so2133229wes.26
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:30 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/10] staging: vt6656: rxtx struct vnt_tx_buffer Replace wTxByteCount
-Date: Sat, 22 Mar 2014 09:01:28 +0000
-Message-Id: <1395478892-3419-6-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100235_237997_1D47A0EA)
-In-Reply-To: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
-References: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 18 Mar 2014 10:46:51 -0400
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 35/35] iwlwifi: mvm: disable uAPSD due to bugs in the firmware
+Date: Tue, 18 Mar 2014 16:45:39 +0200
+Message-Id: <1395153939-23897-35-git-send-email-egrumbach@gmail.com> (sfid-20140318_154703_042493_391B3DC9)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with tx_byte_count with base type __le16.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-In nsDMA_tx_packet and bRelayPacketSend provide endian correction.
+The current firmware advertises support for uAPSD, but
+critical bugs force us to disable the feature.
+When a fixed firmware will be available, we will be able to
+re-enable uAPSD.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> [3.13+]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 8 ++++----
- drivers/staging/vt6656/rxtx.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 1624efb..c17c3da 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1605,7 +1605,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 	}
-     }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index dbe6ff8..110bb3f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -295,7 +295,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	    !iwlwifi_mod_params.sw_crypto)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
  
--    pTX_Buffer->wTxByteCount = cpu_to_le16((u16)(cbReqCount));
-+    pTX_Buffer->tx_byte_count = cpu_to_le16((u16)(cbReqCount));
-     pTX_Buffer->byPKTNO = (u8) (((wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->byType = 0x00;
- 
-@@ -2045,7 +2045,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 	}
-     }
- 
--    pTX_Buffer->wTxByteCount = cpu_to_le16((u16)(cbReqCount));
-+    pTX_Buffer->tx_byte_count = cpu_to_le16((u16)(cbReqCount));
-     pTX_Buffer->byPKTNO = (u8) (((wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
-     pTX_Buffer->byType = 0x00;
- 
-@@ -2437,7 +2437,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-     }
- 
-     pTX_Buffer->byPKTNO = (u8) (((pDevice->wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
--    pTX_Buffer->wTxByteCount = (u16)BytesToWrite;
-+    pTX_Buffer->tx_byte_count = cpu_to_le16((u16)BytesToWrite);
- 
-     pContext->pPacket = skb;
-     pContext->type = CONTEXT_DATA_PACKET;
-@@ -2591,7 +2591,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     }
- 
-     pTX_Buffer->byPKTNO = (u8) (((pDevice->wCurrentRate<<4) &0x00F0) | ((pDevice->wSeqCounter - 1) & 0x000F));
--    pTX_Buffer->wTxByteCount = (u16)BytesToWrite;
-+    pTX_Buffer->tx_byte_count = cpu_to_le16((u16)BytesToWrite);
- 
-     pContext->pPacket = NULL;
-     pContext->type = CONTEXT_DATA_PACKET;
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index d7e4273..0233761 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -225,7 +225,7 @@ struct vnt_tx_fifo_head {
- struct vnt_tx_buffer {
- 	u8 byType;
- 	u8 byPKTNO;
--	u16 wTxByteCount;
-+	__le16 tx_byte_count;
- 	struct vnt_tx_fifo_head fifo_head;
- 	union vnt_tx_head tx_head;
- } __packed;
+-	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT) {
++	if (0 && mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT) {
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
+ 		hw->uapsd_queues = IWL_UAPSD_AC_INFO;
+ 		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
 -- 
-1.9.0
+1.8.3.2
 
