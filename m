@@ -1,120 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:35180 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933904AbaCUNxl (ORCPT
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:38069 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbaCRQDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:41 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so1827946eek.41
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:40 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 07/13] mac80211: improve find_chanctx() for reservations
-Date: Fri, 21 Mar 2014 14:47:25 +0100
-Message-Id: <1395409651-26120-8-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145351_465177_E5E86B5E)
-In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 18 Mar 2014 12:03:46 -0400
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P2Nj=Mv+DPuZvRrWxn74LSmW2X7_OvSbv=L733jNidc8A@mail.gmail.com>
+References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
+ <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
+ <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
+ <CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com>
+ <CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com>
+ <CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com>
+ <CANqatMDjzBfuzFYZLSp67YROpnYAqvZGe9pY2C5qTqxu0RnOMw@mail.gmail.com> <CANUX_P2Nj=Mv+DPuZvRrWxn74LSmW2X7_OvSbv=L733jNidc8A@mail.gmail.com>
+From: Shuduo Sang <sangshuduo@gmail.com>
+Date: Wed, 19 Mar 2014 00:03:05 +0800
+Message-ID: <CANqatMDC7DjJE3kgD5f91UHaDGcjv51BKqFZquy7gR3k9BnjgA@mail.gmail.com> (sfid-20140318_170351_856066_1C110EA1)
+Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
+ X1 carbon
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-usb <linux-usb@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tedd <tedd.an@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Relax ieee80211_find_chanctx(). If chanctx
-reservation chandef is compatible with
-current-future assigned interfaces chandef then
-allow it to be used by new interfaces.
+On Mon, Mar 10, 2014 at 9:52 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, Mar 10, 2014 at 3:20 PM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+>> On Mon, Mar 10, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
+>>>>>>>> can't resume after suspend recently. I tried many ways including
+>>>>>>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
+>>>>>>>> happens. I found it will not happen when I turn off WIFI device or USB
+>>>>>>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
+>>>>>>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
+>>>>>>>> Anyone has some ideas to fix it or debug it?
+>>>>>>>>
+>>>>>>>> Thanks,
+>>>>>>>> Shuduo
+>>>>>>>>
+>>>>>>>
+>>>>>>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
+>>>>>>> How do you disable WiFi? Rfkill or removing iwlwifi?
+>>>>>>>
+>>>>>>
+>>>>>> I have disabled WIFI device in BIOS, then its suspend/resume works.
+>>>>>>
+>>>>>
+>>>>> Do you have any logs to share?
+>>>>> I supposed you tested 3.13.6 right?
+>>>>
+>>>> Attach dmesg output. If any other log you need, I can capture too.
+>>>> Actually I tried 3.14-rc6, 3.13.6 and 3.11.10.
+>>>
+>>> This looks healthy.
+>>>
+>>>     Suspending console(s) (use no_console_suspend to debug)
+>>>
+>>> can you use no_console_suspend?
+>>
+>> Yes, this log is already output from the kernel I compile with
+>> no_console_suspend.
+>
+> Hmm... weird...
+> Don't know how we can debug this further then...
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c | 56 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 29 insertions(+), 27 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 99df19c..1361788 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -28,6 +28,29 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
- 	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
- }
- 
-+static const struct cfg80211_chan_def *
-+ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx,
-+				   const struct cfg80211_chan_def *compat)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	list_for_each_entry(sdata, &ctx->reserved_vifs,
-+			    reserved_chanctx_list) {
-+		if (!compat)
-+			compat = &sdata->reserved_chandef;
-+
-+		compat = cfg80211_chandef_compatible(&sdata->reserved_chandef,
-+						     compat);
-+		if (!compat)
-+			break;
-+	}
-+
-+	return compat;
-+}
-+
- static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
- {
- 	switch (sta->bandwidth) {
-@@ -181,27 +204,6 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 	}
- }
- 
--static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
--					  struct ieee80211_chanctx *ctx)
--{
--	struct ieee80211_sub_if_data *sdata;
--	bool ret = false;
--
--	lockdep_assert_held(&local->chanctx_mtx);
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--		if (sdata->reserved_chanctx == ctx) {
--			ret = true;
--			break;
--		}
--	}
--
--	rcu_read_unlock();
--	return ret;
--}
--
- static struct ieee80211_chanctx *
- ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       const struct cfg80211_chan_def *chandef,
-@@ -217,18 +219,18 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		const struct cfg80211_chan_def *compat;
- 
--		/* We don't support chanctx reservation for multiple
--		 * vifs yet, so don't allow reserved chanctxs to be
--		 * reused.
--		 */
--		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
--		    ieee80211_chanctx_is_reserved(local, ctx))
-+		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 			continue;
- 
- 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
- 		if (!compat)
- 			continue;
- 
-+		compat = ieee80211_chanctx_reserved_chandef(local, ctx,
-+							    compat);
-+		if (!compat)
-+			continue;
-+
- 		ieee80211_change_chanctx(local, ctx, compat);
- 
- 		return ctx;
--- 
-1.8.5.3
-
+Update: The defect in BIOS be found finally.
