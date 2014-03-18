@@ -1,93 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:38447 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbaCFWqd (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:45719 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756201AbaCROq2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 17:46:33 -0500
-Received: by mail-wg0-f45.google.com with SMTP id l18so3538799wgh.28
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 14:46:32 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/5] staging: vt6655: 64 bit fixes TKIP mic correct sizeof long.
-Date: Thu,  6 Mar 2014 22:44:24 +0000
-Message-Id: <1394145865-3748-4-git-send-email-tvboxspy@gmail.com> (sfid-20140306_234636_458858_C233C3B2)
-In-Reply-To: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
-References: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 18 Mar 2014 10:46:28 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so4744148eek.21
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:27 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/35] iwlwifi: mvm: Change beacon filter enablement condition
+Date: Tue, 18 Mar 2014 16:45:27 +0200
+Message-Id: <1395153939-23897-23-git-send-email-egrumbach@gmail.com> (sfid-20140318_154639_095288_E939EC49)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct to endian base type __le32.
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Enable beacon filter only if at least one beacon from candidate
+AP is received before or after association. Check this condition before
+enabling BF upon secured association completion. Add BF enablement to
+mac80211 event that indicates beacon is received after association.
+Too early beacon filtering enablement can lead to disconnection due to
+missing AP's beacon after association.
+
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6655/dpc.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 7663856..771bf35 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -729,27 +729,27 @@ device_receive_frame(
- 	// Soft MIC
- 	if ((pKey != NULL) && (pKey->byCipherSuite == KEY_CTL_TKIP)) {
- 		if (bIsWEP) {
--			unsigned long *pdwMIC_L;
--			unsigned long *pdwMIC_R;
--			unsigned long dwMIC_Priority;
--			unsigned long dwMICKey0 = 0, dwMICKey1 = 0;
-+			__le32 *pdwMIC_L;
-+			__le32 *pdwMIC_R;
-+			__le32 dwMIC_Priority;
-+			__le32 dwMICKey0 = 0, dwMICKey1 = 0;
- 			u32 dwLocalMIC_L = 0;
- 			u32 dwLocalMIC_R = 0;
- 			viawget_wpa_header *wpahdr;
- 
- 			if (pMgmt->eCurrMode == WMAC_MODE_ESS_AP) {
--				dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[24]));
--				dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[28]));
-+				dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[24]));
-+				dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[28]));
- 			} else {
- 				if (pDevice->pMgmt->eAuthenMode == WMAC_AUTH_WPANONE) {
--					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[16]));
--					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[20]));
-+					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[16]));
-+					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[20]));
- 				} else if ((pKey->dwKeyIndex & BIT28) == 0) {
--					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[16]));
--					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[20]));
-+					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[16]));
-+					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[20]));
- 				} else {
--					dwMICKey0 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[24]));
--					dwMICKey1 = cpu_to_le32(*(unsigned long *)(&pKey->abyKey[28]));
-+					dwMICKey0 = cpu_to_le32(*(u32 *)(&pKey->abyKey[24]));
-+					dwMICKey1 = cpu_to_le32(*(u32 *)(&pKey->abyKey[28]));
- 				}
- 			}
- 
-@@ -763,14 +763,14 @@ device_receive_frame(
- 			MIC_vGetMIC(&dwLocalMIC_L, &dwLocalMIC_R);
- 			MIC_vUnInit();
- 
--			pdwMIC_L = (unsigned long *)(skb->data + 4 + FrameSize);
--			pdwMIC_R = (unsigned long *)(skb->data + 4 + FrameSize + 4);
-+			pdwMIC_L = (__le32 *)(skb->data + 4 + FrameSize);
-+			pdwMIC_R = (__le32 *)(skb->data + 4 + FrameSize + 4);
- 			//DBG_PRN_GRP12(("RxL: %lx, RxR: %lx\n", *pdwMIC_L, *pdwMIC_R));
- 			//DBG_PRN_GRP12(("LocalL: %lx, LocalR: %lx\n", dwLocalMIC_L, dwLocalMIC_R));
- 			//DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "dwMICKey0= %lx,dwMICKey1= %lx \n", dwMICKey0, dwMICKey1);
- 
--			if ((cpu_to_le32(*pdwMIC_L) != dwLocalMIC_L) ||
--			    (cpu_to_le32(*pdwMIC_R) != dwLocalMIC_R) ||
-+			if ((le32_to_cpu(*pdwMIC_L) != dwLocalMIC_L) ||
-+			    (le32_to_cpu(*pdwMIC_R) != dwLocalMIC_R) ||
- 			    pDevice->bRxMICFail) {
- 				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "MIC comparison is fail!\n");
- 				pDevice->bRxMICFail = false;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index de0e0df..66760e0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1237,6 +1237,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		 */
+ 		iwl_mvm_remove_time_event(mvm, mvmvif,
+ 					  &mvmvif->time_event_data);
++		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, CMD_SYNC));
+ 	} else if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS |
+ 			      BSS_CHANGED_QOS)) {
+ 		ret = iwl_mvm_power_update_mac(mvm, vif);
+@@ -1611,7 +1612,9 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 	} else if (old_state == IEEE80211_STA_ASSOC &&
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
+ 		/* enable beacon filtering */
+-		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, CMD_SYNC));
++		if (vif->bss_conf.dtim_period)
++			WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif,
++							     CMD_SYNC));
+ 		ret = 0;
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+ 		   new_state == IEEE80211_STA_ASSOC) {
 -- 
-1.9.0
+1.8.3.2
 
