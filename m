@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:18868 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408AbaC3Ufj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 16:35:39 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@meshcoding.com>
-Subject: [RFCv2 0/6] Export the expected throughput
-Date: Sun, 30 Mar 2014 22:34:58 +0200
-Message-Id: <1396211704-4677-1-git-send-email-antonio@meshcoding.com> (sfid-20140330_223544_136497_62488751)
+Received: from mga02.intel.com ([134.134.136.20]:61413 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755507AbaCRPGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 11:06:35 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v10 0/4] mac802111: channel context reservation
+Date: Tue, 18 Mar 2014 17:03:02 +0200
+Message-Id: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160638_288822_5C81F28F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "Expected throughput" towards a generic wireless peer is
-a value that can be used by other kernel components to
-achieve different goals.
-In particular we have 802.11s and batman-adv which will
-iuse this estimation to compute their throughput based
-metric. Therefore with this patchset I wanted to export
-this result and make it available for future use.
+One more small fix to a WARN_ON detected by Michal.  One change in
+patch 3/4 (which also goes into 4/4).
 
-Changes included in this patchset:
-- add the new get_expected_throughput() RC API
-- export the result of such API via cfg80211::get_station()
-- implement the get_expected_throughput() RC API for minstrel(_ht)
+--
+Luca.
 
+Luciano Coelho (4):
+  mac80211: split ieee80211_vif_change_channel in two
+  mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
+  mac80211: implement chanctx reservation
+  mac80211: allow reservation of a running chanctx
 
-For what concerns Minstrel_HT I decided to directly re-use the
-throughput value computed by the algorithm itself with
-minstrel_ht_calc_tp() for max_tp_rate.
-
-For the legacy Minstrel instead I computed the expected
-throughput as the product of the max_tp bitrate multplied
-by its probability of success.
-
-
-I am not entirely sure about passing sband as third parameter
-to get_expected_throughput()..maybe somebody can suggest a
-better solution.
-
-
-
-Cheers,
-
-
-Antonio Quartulli (6):
-  cfg80211: export expected throughput through get_station()
-  mac80211: add new RC API to retrieve expected throughput
-  mac80211: export expected throughput in set_sta_info()
-  mac80211: minstrel - implement get_expected_throughput() API
-  mac80211: minstrel_ht - implement get_expected_throughput() API
-  cfg80211: implement cfg80211_get_station cfg80211 API
-
- include/net/cfg80211.h             | 74 +++++++++++++++++++++++---------------
- include/net/mac80211.h             |  3 ++
- net/mac80211/cfg.c                 | 17 +++++++++
- net/mac80211/rc80211_minstrel.c    | 15 ++++++++
- net/mac80211/rc80211_minstrel_ht.c | 19 ++++++++++
- net/wireless/util.c                | 18 ++++++++++
- 6 files changed, 118 insertions(+), 28 deletions(-)
+ include/net/mac80211.h     |   7 +
+ net/mac80211/chan.c        | 367 +++++++++++++++++++++++++++++++++------------
+ net/mac80211/ieee80211_i.h |  13 ++
+ 3 files changed, 294 insertions(+), 93 deletions(-)
 
 -- 
-1.8.3.2
+1.9.0
 
