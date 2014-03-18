@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:47097 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbaCJH1r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 03:27:47 -0400
+Received: from mga09.intel.com ([134.134.136.24]:3374 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751534AbaCRIOB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 04:14:01 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
+	Eliad Peller <eliad@wizery.com>
+Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
+ combination check to mac80211
+Date: Tue, 18 Mar 2014 08:13:57 +0000
+Message-ID: <1395130437.15856.13.camel@dubbel> (sfid-20140318_091408_201799_EB7327FA)
+References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
+	 <1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
+	 <CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
-	<CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
-	<CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
-Date: Mon, 10 Mar 2014 09:27:45 +0200
-Message-ID: <CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com> (sfid-20140310_082751_934769_3EF375B7)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Shuduo Sang <sangshuduo@gmail.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 8:49 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
-> On Mon, Mar 10, 2014 at 2:11 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> Hi,
->>
->> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
->>> Hi,
->>>
->>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
->>> can't resume after suspend recently. I tried many ways including
->>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
->>> happens. I found it will not happen when I turn off WIFI device or USB
->>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
->>> USB side. Since Windows 7 works good so I suppose no hardware issue.
->>> Anyone has some ideas to fix it or debug it?
->>>
->>> Thanks,
->>> Shuduo
->>>
->>
->> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
->> How do you disable WiFi? Rfkill or removing iwlwifi?
->>
->
-> I have disabled WIFI device in BIOS, then its suspend/resume works.
->
-
-Do you have any logs to share?
-I supposed you tested 3.13.6 right?
+T24gRnJpLCAyMDE0LTAzLTE0IGF0IDA5OjQwICswMTAwLCBNaWNoYWwgS2F6aW9yIHdyb3RlOg0K
+PiBPbiAxMSBNYXJjaCAyMDE0IDE1OjE2LCBMdWNpYW5vIENvZWxobyA8bHVjaWFuby5jb2VsaG9A
+aW50ZWwuY29tPiB3cm90ZToNCj4gDQo+IFsuLi5dDQo+IA0KPiA+ICtpbnQgaWVlZTgwMjExX2No
+ZWNrX2NvbWJpbmF0aW9ucyhzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCj4g
+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBzdHJ1Y3QgY2ZnODAyMTFf
+Y2hhbl9kZWYgKmNoYW5kZWYsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ZW51bSBpZWVlODAyMTFfY2hhbmN0eF9tb2RlIGNoYW5tb2RlLA0KPiA+ICsgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIHU4IHJhZGFyX2RldGVjdCkNCj4gPiArew0KPiA+ICsgICAgICAg
+c3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwgPSBzZGF0YS0+bG9jYWw7DQo+ID4gKyAgICAg
+ICBzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YV9pdGVyOw0KPiA+ICsgICAgICAg
+ZW51bSBubDgwMjExX2lmdHlwZSBpZnR5cGUgPSBzZGF0YS0+d2Rldi5pZnR5cGU7DQo+ID4gKyAg
+ICAgICBpbnQgbnVtW05VTV9OTDgwMjExX0lGVFlQRVNdOw0KPiA+ICsgICAgICAgc3RydWN0IGll
+ZWU4MDIxMV9jaGFuY3R4ICpjdHg7DQo+ID4gKyAgICAgICBpbnQgbnVtX2RpZmZlcmVudF9jaGFu
+bmVscyA9IDE7DQo+ID4gKyAgICAgICBpbnQgdG90YWwgPSAxOw0KPiA+ICsNCj4gPiArICAgICAg
+IGxvY2tkZXBfYXNzZXJ0X2hlbGQoJmxvY2FsLT5jaGFuY3R4X210eCk7DQo+ID4gKw0KPiA+ICsg
+ICAgICAgaWYgKFdBUk5fT04oaHdlaWdodDMyKHJhZGFyX2RldGVjdCkgPiAxKSkNCj4gPiArICAg
+ICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQo+ID4gKw0KPiA+ICsgICAgICAgaWYgKFdBUk5f
+T04oY2hhbm1vZGUgPT0gSUVFRTgwMjExX0NIQU5DVFhfU0hBUkVEICYmICFjaGFuZGVmLT5jaGFu
+KSkNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQo+ID4gKw0KPiA+ICsgICAg
+ICAgaWYgKFdBUk5fT04oaWZ0eXBlID49IE5VTV9OTDgwMjExX0lGVFlQRVMpKQ0KPiA+ICsgICAg
+ICAgICAgICAgICByZXR1cm4gLUVJTlZBTDsNCj4gPiArDQo+ID4gKyAgICAgICAvKiBBbHdheXMg
+YWxsb3cgc29mdHdhcmUgaWZ0eXBlcyAqLw0KPiA+ICsgICAgICAgaWYgKGxvY2FsLT5ody53aXBo
+eS0+c29mdHdhcmVfaWZ0eXBlcyAmIEJJVChpZnR5cGUpKSB7DQo+ID4gKyAgICAgICAgICAgICAg
+IGlmIChyYWRhcl9kZXRlY3QpDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIC1F
+SU5WQUw7DQo+ID4gKyAgICAgICAgICAgICAgIHJldHVybiAwOw0KPiA+ICsgICAgICAgfQ0KPiA+
+ICsNCj4gPiArICAgICAgIG1lbXNldChudW0sIDAsIHNpemVvZihudW0pKTsNCj4gPiArDQo+ID4g
+KyAgICAgICBpZiAoaWZ0eXBlICE9IE5MODAyMTFfSUZUWVBFX1VOU1BFQ0lGSUVEKQ0KPiA+ICsg
+ICAgICAgICAgICAgICBudW1baWZ0eXBlXSA9IDE7DQo+ID4gKw0KPiANCj4gPiArICAgICAgIGxp
+c3RfZm9yX2VhY2hfZW50cnkoY3R4LCAmbG9jYWwtPmNoYW5jdHhfbGlzdCwgbGlzdCkgew0KPiA+
+ICsgICAgICAgICAgICAgICBpZiAoY3R4LT5jb25mLnJhZGFyX2VuYWJsZWQpDQo+ID4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgcmFkYXJfZGV0ZWN0IHw9IEJJVChjdHgtPmNvbmYuZGVmLndpZHRo
+KTsNCj4gDQo+IElzIHRoaXMgcmVhbGx5IGNvcnJlY3Q/DQoNCkknbSBub3Qgc3VyZSBhbnltb3Jl
+LiA6KQ0KDQoNCj4gVGhlIG9yaWdpbmFsIGJlaGF2aW91ciB3YXMgdG86DQo+IA0KPiAgZm9yIGVh
+Y2ggd2RldjoNCj4gICAgZ2V0X2NoYW5fc3RhdGUoLi4uLCAmcmFkYXJfd2lkdGgpDQo+IA0KPiB3
+aGVyZSBnZXRfY2hhbl9zdGF0ZSgpIE9ScyBCSVQod2lkdGgpIGFjY29yZGluZ2x5IHRvIGlmdHlw
+ZSwgZXRjLg0KPiANCj4gRm9yIDIgQVBzIHdpdGggZGlmZmVyZW50IG9wZXJhdGlvbmFsIHdpZHRo
+cyAoZS5nLiAyMCBhbmQgNDApIHRoaXMgbWVhbnM6DQo+IA0KPiBhKSBvbGQgY29kZTogd2lkdGhf
+ZGV0ZWN0ID0gQklUKFdJRFRIXzIwKSB8IEJJVChXSURUSF80MCkNCj4gYikgbmV3IGNvZGU6IHdp
+ZHRoX2RldGVjdCA9IEJJVChjaGFuY3R4LT53aWR0aCkgd2hpY2ggaXMgQklUKFdJRFRIXzQwKQ0K
+PiANCj4gSSB0aGluayByYWRhcl9kZXRlY3Qgc2hvdWxkIGJlIGNvbXB1dGVkOg0KPiANCj4gIHJh
+ZGFyX2RldGVjdCA9IDAgLy8gKioNCj4gIGZvciBlYWNoIHZpZjoNCj4gICBpZiB2aWYuY3R4ID09
+IGN0eCAmJiB2aWYucmFkYXJfcmVxdWlyZWQ6DQo+ICAgIHJhZGFyX2RldGVjdCA9IEJJVCh2aWYu
+YnNzLndpZHRoKQ0KPiANCj4gKiogeW91IGNvdWxkIGFyZ3VlIHRvIGluaXRpYWxpemUgd2l0aCBC
+SVQoY3R4LT53aWR0aCksIGJ1dCBhbGwgdGhpbmdzDQo+IHNlZW0gdG8gdXNlIGllZWU4MDIxMV92
+aWZfdXNlX2NoYW5uZWwoKSAoaW5jbHVkaW5nIENBQy9yYWRhcg0KPiBkZXRlY3Rpb24pIHNvIGJz
+c19jb25mLmNoYW5kZWYud2lkdGggc2hvdWxkIGJlIHNldCBjb3JyZWN0bHkgYW5kDQo+IGl0ZXJh
+dGlvbiBhbG9uZSBzaG91bGQgc3VmZmljZS4NCg0KQnV0IGRvZXMgdGhpcyByZWFsbHkgbWFrZSBz
+ZW5zZT8gVGhpcyB3YXMgbW9yZSBvciBsZXNzIHRoZSBpZGVhIEkgaGFkDQp3aGVuIEkgY2hhbmdl
+ZCB0aGUgY2ZnODAyMTFfY2hhbmRlZl9kZnNfcmVxdWlyZWQoKSB0byByZXR1cm4gYSBiaXQgbWFz
+aw0KKHdoaWNoIEkgbGF0ZXIgcmV2ZXJ0ZWQpLg0KDQpJIHRoaW5rIHRoZSBjdXJyZW50IGJlaGF2
+aW9yIG1heSBiZSB3cm9uZy4gIEluIHRoZSBvbGQNCmNmZzgwMjExX2Nhbl91c2VfaWZ0eXBlX2No
+YW4oKSB3ZSBtYXRjaCAqYW55KiBvZiB0aGUgYml0cyBpbg0KcmFkYXJfZGV0ZWN0IHdpdGggdGhl
+IGJpdHMgc3VwcG9ydGVkIGluIHRoZSBpbnRlcmZhY2UgY29tYmluYXRpb25zLiAgU28sDQppbiB5
+b3VyIGV4YW1wbGUsIHdlIHdvdWxkIGFjY2VwdCB0aGUgY29tYmluYXRpb24gZXZlbiBpZiB0aGUg
+ZHJpdmVyIGRpZA0Kbm90IHN1cHBvcnQgV0lEVEhfNDAgKGJlY2F1c2UgaXQgd291bGQgbWF0Y2gg
+V0lEVEhfMjApLiAgSWYgdGhlIGNvbnRleHQNCmlzIHNldCB0byBXSURUSF80MCwgZG9uJ3Qgd2Ug
+aGF2ZSB0byBtYWtlIHN1cmUgdGhlIGRyaXZlciBjYW4gZGV0ZWN0DQpyYWRhcnMgb24gdGhhdCB3
+aWR0aD8NCg0KLS0NCkNoZWVycywNCkx1Y2EuDQo=
