@@ -1,128 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:48954 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757811AbaCRT0M (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:38282 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791AbaCRPwj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:12 -0400
-Received: by mail-wg0-f46.google.com with SMTP id b13so6404908wgh.5
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:11 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/14] staging: vt6656: rxtx: Replace wTxRrvTime*
-Date: Tue, 18 Mar 2014 19:24:58 +0000
-Message-Id: <1395170708-2990-4-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202618_274839_25F94CFA)
-In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
-References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 18 Mar 2014 11:52:39 -0400
+Received: by mail-ie0-f173.google.com with SMTP id rl12so7370139iec.4
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 08:52:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 18 Mar 2014 17:52:39 +0200
+Message-ID: <CAB3XZEfb4Vh29-f-vkRY8--UUyN5cHR_nKy+AW_dVFWGXpE25A@mail.gmail.com> (sfid-20140318_165243_774259_E80147BE)
+Subject: Re: [RFC 00/21] cfg80211/mac80211: multi-vif csa
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix base type to __le16 and remove camel case.
+hi,
 
-Camel case changes
-wTxRrvTime* -> rrv_time*
+On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> I'm aware this is rather huge. I'm hoping I can
+> get some early feedback before all other patches
+> I'm depending on are finally merged into
+> mac80211-next.
+>
+> Considering current dependency hell of all related
+> the patchsets I'm duplicating some of my patches
+> I've posted on the mailing list here. Hopefully
+> this is sane enough for reviewing purposes.
+>
+> The patchset alone is based on:
+>  * mac80211-next/master
+>  * VLAN chanctx copy refactor
+>  * Luca's intf combination patches
+>  * Luca's chanctx reservation patches
+>
+it could be nice to have some unified branch somewhere with all these
+patchsets. :)
+(i tried doing it locally, but encountered merging errors)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 16 ++++++++--------
- drivers/staging/vt6656/rxtx.h | 10 +++++-----
- 2 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 51aa77c..9846c90 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -823,9 +823,9 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			pBuf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
- 
--			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
- 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
--			pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
- 					PK_TYPE_11B, cbFrameSize,
- 					pDevice->byTopCCKBasicRate, bNeedACK);
- 
-@@ -846,9 +846,9 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_cts *pBuf = &tx_buffer->
- 							tx_head.tx_cts.cts;
- 
--			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
- 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
--			pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
- 				PK_TYPE_11B, cbFrameSize,
- 					pDevice->byTopCCKBasicRate, bNeedACK);
- 
-@@ -883,7 +883,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 2,
- 				byPktType, cbFrameSize, wCurrentRate);
- 
--			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
- 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
- 
- 			/* Fill RTS */
-@@ -894,7 +894,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
- 							tx_head.tx_ab.ab;
- 
--			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
- 				PK_TYPE_11A, cbFrameSize,
- 					wCurrentRate, bNeedACK);
- 
-@@ -917,7 +917,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
- 
--			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
- 				PK_TYPE_11B, cbFrameSize, wCurrentRate,
- 								bNeedACK);
- 
-@@ -929,7 +929,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
- 							tx_head.tx_ab.ab;
- 
--			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
-+			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
- 				PK_TYPE_11B, cbFrameSize,
- 					wCurrentRate, bNeedACK);
- 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 1e8f5e2..f0ab2a3 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -57,20 +57,20 @@ struct vnt_rrv_time_rts {
- 	__le16 rts_rrv_time_aa;
- 	__le16 rts_rrv_time_bb;
- 	u16 wReserved;
--	u16 wTxRrvTime_b;
--	u16 wTxRrvTime_a;
-+	__le16 rrv_time_b;
-+	__le16 rrv_time_a;
- } __packed;
- 
- struct vnt_rrv_time_cts {
- 	u16 wCTSTxRrvTime_ba;
- 	u16 wReserved;
--	u16 wTxRrvTime_b;
--	u16 wTxRrvTime_a;
-+	__le16 rrv_time_b;
-+	__le16 rrv_time_a;
- } __packed;
- 
- struct vnt_rrv_time_ab {
- 	__le16 rts_rrv_time;
--	u16 wTxRrvTime;
-+	__le16 rrv_time;
- } __packed;
- 
- /* TX data header */
--- 
-1.9.0
-
+Eliad.
