@@ -1,130 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:43189 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965399AbaCUNxo (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:33003 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757839AbaCRT03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:44 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so1849474eek.13
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 09/13] mac80211: split ieee80211_new_chanctx()
-Date: Fri, 21 Mar 2014 14:47:27 +0100
-Message-Id: <1395409651-26120-10-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145358_979062_7D982DAB)
-In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 18 Mar 2014 15:26:29 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so6399620wgh.10
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:28 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/14] staging: vt6656: Correct return type s_uGetRTSCTSDuration.
+Date: Tue, 18 Mar 2014 19:25:05 +0000
+Message-Id: <1395170708-2990-11-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202636_816052_F3AFAE56)
+In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a little too much. Split it up so
-the code can be easily reused in the future.
+s_uGetRTSCTSDuration always returns in __le16 type
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/chan.c | 56 ++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 43 insertions(+), 13 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index b82e0c1..561d7c1 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -345,19 +345,17 @@ static bool ieee80211_is_radar_required(struct ieee80211_local *local)
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 63bffc2..850d1b9 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -132,7 +132,7 @@ static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ static u16 s_uGetDataDuration(struct vnt_private *pDevice,
+ 	u8 byPktType, int bNeedAck);
+ 
+-static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
++static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
+ 	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
+ 	int bNeedAck, u8 byFBOption);
+ 
+@@ -430,7 +430,7 @@ static u16 s_uGetDataDuration(struct vnt_private *pDevice,
  }
  
- static struct ieee80211_chanctx *
--ieee80211_new_chanctx(struct ieee80211_local *local,
--		      const struct cfg80211_chan_def *chandef,
--		      enum ieee80211_chanctx_mode mode)
-+ieee80211_alloc_chanctx(struct ieee80211_local *local,
-+			const struct cfg80211_chan_def *chandef,
-+			enum ieee80211_chanctx_mode mode)
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+-static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
++static __le16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
+ 	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
+ 	u8 byFBOption)
  {
- 	struct ieee80211_chanctx *ctx;
--	u32 changed;
--	int err;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
- 	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
- 	if (!ctx)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	INIT_LIST_HEAD(&ctx->assigned_vifs);
- 	INIT_LIST_HEAD(&ctx->reserved_vifs);
-@@ -367,31 +365,63 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->mode = mode;
- 	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
-+
-+	return ctx;
-+}
-+
-+static int ieee80211_add_chanctx(struct ieee80211_local *local,
-+				 struct ieee80211_chanctx *ctx)
-+{
-+	u32 changed;
-+	int err;
-+
-+	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
- 	if (!local->use_chanctx)
- 		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
- 
--	/* we hold the mutex to prevent idle from changing */
--	lockdep_assert_held(&local->mtx);
- 	/* turn idle off *before* setting channel -- some drivers need that */
- 	changed = ieee80211_idle_off(local);
- 	if (changed)
- 		ieee80211_hw_config(local, changed);
- 
- 	if (!local->use_chanctx) {
--		local->_oper_chandef = *chandef;
-+		local->_oper_chandef = ctx->conf.def;
- 		ieee80211_hw_config(local, 0);
- 	} else {
- 		err = drv_add_chanctx(local, ctx);
- 		if (err) {
--			kfree(ctx);
- 			ieee80211_recalc_idle(local);
--			return ERR_PTR(err);
-+			return err;
- 		}
- 	}
- 
--	/* and keep the mutex held until the new chanctx is on the list */
--	list_add_rcu(&ctx->list, &local->chanctx_list);
-+	return 0;
-+}
-+
-+static struct ieee80211_chanctx *
-+ieee80211_new_chanctx(struct ieee80211_local *local,
-+		      const struct cfg80211_chan_def *chandef,
-+		      enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_chanctx *ctx;
-+	int err;
-+
-+	lockdep_assert_held(&local->mtx);
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	ctx = ieee80211_alloc_chanctx(local, chandef, mode);
-+	if (!ctx)
-+		return ERR_PTR(-ENOMEM);
- 
-+	err = ieee80211_add_chanctx(local, ctx);
-+	if (err) {
-+		kfree(ctx);
-+		return ERR_PTR(err);
-+	}
-+
-+	list_add_rcu(&ctx->list, &local->chanctx_list);
- 	return ctx;
- }
- 
 -- 
-1.8.5.3
+1.9.0
 
