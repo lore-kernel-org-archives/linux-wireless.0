@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:39097 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675AbaCJGLq (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:59597 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756478AbaCRQmA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 02:11:46 -0400
+	Tue, 18 Mar 2014 12:42:00 -0400
+Received: by mail-ie0-f180.google.com with SMTP id as1so7427801iec.39
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 09:42:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
-Date: Mon, 10 Mar 2014 08:11:44 +0200
-Message-ID: <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com> (sfid-20140310_071218_077071_43B0517D)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Shuduo Sang <sangshuduo@gmail.com>
-Cc: linux-usb@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
+In-Reply-To: <1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 18 Mar 2014 18:42:00 +0200
+Message-ID: <CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com> (sfid-20140318_174205_812488_FC9BD45D)
+Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Relax ieee80211_find_chanctx(). If chanctx
+> reservation chandef is compatible with
+> current-future assigned interfaces chandef then
+> allow it to be used by new interfaces.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+[...]
 
-On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
-> Hi,
->
-> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
-> can't resume after suspend recently. I tried many ways including
-> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
-> happens. I found it will not happen when I turn off WIFI device or USB
-> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
-> USB side. Since Windows 7 works good so I suppose no hardware issue.
-> Anyone has some ideas to fix it or debug it?
->
-> Thanks,
-> Shuduo
->
+> +static const struct cfg80211_chan_def *
+> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
+> +                                  struct ieee80211_chanctx *ctx,
+> +                                  const struct cfg80211_chan_def *compat)
+> +{
+> +       struct ieee80211_sub_if_data *sdata;
+> +
+> +       lockdep_assert_held(&local->chanctx_mtx);
+> +
+> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
+> +                           reserved_chanctx_list) {
+> +               if (!compat)
+> +                       compat = &sdata->reserved_chandef;
+this check is redundant.
 
-If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
-How do you disable WiFi? Rfkill or removing iwlwifi?
-
->
-> lspci -vnn output:
-> ..
-> sniped
-> ..
-> 00:1d.0 USB controller: Intel Corporation Lynx Point-LP USB EHCI #1
-> (rev 04) (prog-if 20 [EHCI])
-> Subsystem: Lenovo Device 2218
-> Flags: bus master, medium devsel, latency 0, IRQ 23
-> Memory at f052d000 (32-bit, non-prefetchable) [size=1K]
-> Capabilities: [50] Power Management version 3
-> Capabilities: [58] Debug port: BAR=1 offset=00a0
-> Capabilities: [98] PCI Advanced Features
-> Kernel driver in use: ehci-pci
-> ..
-> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)
-> Subsystem: Intel Corporation Dual Band Wireless-AC 7260
-> Flags: bus master, fast devsel, latency 0, IRQ 59
-> Memory at f0400000 (64-bit, non-prefetchable) [size=8K]
-> Capabilities: [c8] Power Management version 3
-> Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-> Capabilities: [40] Express Endpoint, MSI 00
-> Capabilities: [100] Advanced Error Reporting
-> Capabilities: [140] Device Serial Number 7c-7a-91-ff-ff-5e-4c-cd
-> Capabilities: [14c] Latency Tolerance Reporting
-> Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
-> Kernel driver in use: iwlwifi
-> Kernel modules: iwlwifi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eliad.
