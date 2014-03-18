@@ -1,114 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20084 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756731AbaCTJSN (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:43057 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754617AbaCRN7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 05:18:13 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/4] brcmfmac: only show error message when brcmf_sdiod_regrw_helper() fails
-Date: Thu, 20 Mar 2014 10:18:02 +0100
-Message-ID: <1395307083-31523-4-git-send-email-arend@broadcom.com> (sfid-20140320_101824_297408_0BD657C8)
-In-Reply-To: <1395307083-31523-1-git-send-email-arend@broadcom.com>
-References: <1395307083-31523-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 18 Mar 2014 09:59:17 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so5340184eek.23
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:16 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 08/21] mac80211: improve chanctx reservation lookup
+Date: Tue, 18 Mar 2014 14:53:11 +0100
+Message-Id: <1395150804-24090-9-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150215_407204_E8AF959A)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the function brcmf_sdiod_request_data() an error message is logged,
-but the calling function retries it. This patch will only log an error
-message when retry limit is reached. The low-level error is still
-logged by a SDIO debug message.
+Use a separate function to look for reservation
+chanctx. For multi-interface/channel reservation
+search sematics differ slightly.
 
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The new routine allows reservations to be merged
+with chanctx that are already reserved by other
+interface(s).
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   41 +++++++++++-----------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ net/mac80211/chan.c | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 90 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 6e8718b..a16e644 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -269,26 +269,17 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 		break;
- 	}
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 08c7653..f6d8610 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -51,6 +51,95 @@ ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
+ 	return compat;
+ }
  
--	if (ret) {
--		/*
--		 * SleepCSR register access can fail when
--		 * waking up the device so reduce this noise
--		 * in the logs.
--		 */
--		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", fn, addr, ret);
--		else
--			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", fn, addr, ret);
--	}
-+	if (ret)
-+		brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
-+			  write ? "write" : "read", fn, addr, ret);
++static const struct cfg80211_chan_def *
++ieee80211_chanctx_non_reserved_chandef(struct ieee80211_local *local,
++				       struct ieee80211_chanctx *ctx,
++				       const struct cfg80211_chan_def *compat)
++{
++	struct ieee80211_sub_if_data *sdata;
 +
- 	return ret;
- }
- 
- static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 				   u8 regsz, void *data, bool write)
- {
--	u8 func_num;
-+	u8 func;
- 	s32 retry = 0;
- 	int ret;
- 
-@@ -302,9 +293,9 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	 * The rest: function 1 silicon backplane core registers
- 	 */
- 	if ((addr & ~REG_F0_REG_MASK) == 0)
--		func_num = SDIO_FUNC_0;
-+		func = SDIO_FUNC_0;
- 	else
--		func_num = SDIO_FUNC_1;
-+		func = SDIO_FUNC_1;
- 
- 	do {
- 		if (!write)
-@@ -312,16 +303,26 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		/* for retry wait for 1 ms till bus get settled down */
- 		if (retry)
- 			usleep_range(1000, 2000);
--		ret = brcmf_sdiod_request_data(sdiodev, func_num, addr, regsz,
-+		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
- 					       data, write);
- 	} while (ret != 0 && ret != -ENOMEDIUM &&
- 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
- 
- 	if (ret == -ENOMEDIUM)
- 		brcmf_bus_change_state(sdiodev->bus_if, BRCMF_BUS_NOMEDIUM);
--	else if (ret != 0)
--		brcmf_err("failed with %d\n", ret);
--
-+	else if (ret != 0) {
-+		/*
-+		 * SleepCSR register access can fail when
-+		 * waking up the device so reduce this noise
-+		 * in the logs.
-+		 */
-+		if (addr != SBSDIO_FUNC1_SLEEPCSR)
-+			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
-+				  write ? "write" : "read", func, addr, ret);
-+		else
-+			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
-+				  write ? "write" : "read", func, addr, ret);
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(sdata, &ctx->assigned_vifs,
++			    assigned_chanctx_list) {
++		if (rcu_access_pointer(sdata->reserved_chanctx) != NULL)
++			continue;
++
++		if (!compat)
++			compat = &sdata->vif.bss_conf.chandef;
++
++		compat = cfg80211_chandef_compatible(
++				&sdata->vif.bss_conf.chandef, compat);
++		if (!compat)
++			break;
 +	}
- 	return ret;
- }
++
++	return compat;
++}
++
++static const struct cfg80211_chan_def *
++ieee80211_chanctx_combined_chandef(struct ieee80211_local *local,
++				   struct ieee80211_chanctx *ctx,
++				   const struct cfg80211_chan_def *compat)
++{
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	compat = ieee80211_chanctx_reserved_chandef(local, ctx, compat);
++	if (!compat)
++		return NULL;
++
++	compat = ieee80211_chanctx_non_reserved_chandef(local, ctx, compat);
++	if (!compat)
++		return NULL;
++
++	return compat;
++}
++
++static bool
++ieee80211_chanctx_can_reserve_chandef(struct ieee80211_local *local,
++				      struct ieee80211_chanctx *ctx,
++				      const struct cfg80211_chan_def *def)
++{
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	if (ieee80211_chanctx_combined_chandef(local, ctx, NULL) &&
++	    ieee80211_chanctx_combined_chandef(local, ctx, def))
++		return true;
++
++	if (!list_empty(&ctx->reserved_vifs) &&
++	    ieee80211_chanctx_reserved_chandef(local, ctx, NULL) &&
++	    ieee80211_chanctx_reserved_chandef(local, ctx, def))
++		return true;
++
++	return false;
++}
++
++static struct ieee80211_chanctx *
++ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
++				   const struct cfg80211_chan_def *chandef,
++				   enum ieee80211_chanctx_mode mode)
++{
++	struct ieee80211_chanctx *ctx;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	if (mode == IEEE80211_CHANCTX_EXCLUSIVE)
++		return NULL;
++
++	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
++			continue;
++
++		if (!ieee80211_chanctx_can_reserve_chandef(local, ctx,
++							   chandef))
++			continue;
++
++		return ctx;
++	}
++
++	return NULL;
++}
++
+ static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
+ {
+ 	switch (sta->bandwidth) {
+@@ -771,8 +860,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
  
+ 	curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
+-	/* try to find another context with the chandef we want */
+-	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
++	new_ctx = ieee80211_find_reservation_chanctx(local, chandef, mode);
+ 	if (!new_ctx) {
+ 		if (curr_ctx->refcount == 1 &&
+ 		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
 -- 
-1.7.9.5
+1.8.5.3
 
