@@ -1,89 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:59748 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbaCAUR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:26 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 17/23] ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_ap
-Date: Sat,  1 Mar 2014 21:16:00 +0100
-Message-Id: <1393704966-13985-18-git-send-email-linux@rempel-privat.de> (sfid-20140301_214710_677419_450C31DA)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:42102 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755966AbaCROqD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 10:46:03 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so5404854eek.18
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:01 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/35] iwlwifi: mvm: wait for stop sched-scan completion
+Date: Tue, 18 Mar 2014 16:45:15 +0200
+Message-Id: <1395153939-23897-11-git-send-email-egrumbach@gmail.com> (sfid-20140318_154610_178707_D669592F)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 31 +++++++++----------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
+From: Arik Nemtsov <arik@wizery.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index b9b03c1..b23231f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -107,22 +107,19 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 				       struct ath_beacon_config *bss_conf)
+cfg80211 assumes a scheduled scan is stopped synchronously. Wait for the
+FW before returning to caller.
+
+Don't do anything in the async handler in the stop-from-above flow.
+There's no need to call the mac80211 sched-scan completion as the
+cleanup will be automatic. Make sure the async handler is called before
+the next incoming scan changes the scan_status by flushing the async
+handlers after all invocations.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 24 +++++------------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  7 ++++-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 42 ++++++++++++++++++++++-------
+ 3 files changed, 46 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 41b9e65..fff66ab 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1419,8 +1419,6 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 			       struct cfg80211_scan_request *req)
  {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
--	enum ath9k_int imask = 0;
--	u32 nexttbtt, intval, tsftu;
--	__be32 htc_imask = 0;
-+	u32 tsftu;
- 	int ret __attribute__ ((unused));
--	u8 cmd_rsp;
- 	u64 tsf;
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+-	struct iwl_notification_wait wait_scan_done;
+-	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
+ 	int ret;
  
--	intval = bss_conf->beacon_interval;
--	intval /= ATH9K_HTC_MAX_BCN_VIF;
--	nexttbtt = intval;
-+	bss_conf->intval = bss_conf->beacon_interval;
-+	bss_conf->intval /= ATH9K_HTC_MAX_BCN_VIF;
-+	bss_conf->nexttbtt = bss_conf->intval;
+ 	if (req->n_channels == 0 || req->n_channels > MAX_NUM_SCAN_CHANNELS)
+@@ -1430,22 +1428,11 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
  
- 	/*
- 	 * To reduce beacon misses under heavy TX load,
- 	 * set the beacon response time to a larger value.
- 	 */
--	if (intval > DEFAULT_SWBA_RESPONSE)
-+	if (bss_conf->intval > DEFAULT_SWBA_RESPONSE)
- 		priv->ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
- 	else
- 		priv->ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
-@@ -137,25 +134,19 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 		tsf = ath9k_hw_gettsf64(priv->ah);
- 		tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
- 		do {
--			nexttbtt += intval;
--		} while (nexttbtt < tsftu);
-+			bss_conf->nexttbtt += bss_conf->intval;
-+		} while (bss_conf->nexttbtt < tsftu);
- 	}
- 
- 	if (bss_conf->enable_beacon)
--		imask |= ATH9K_INT_SWBA;
-+		priv->ah->imask = ATH9K_INT_SWBA;
- 
- 	ath_dbg(common, CONFIG,
- 		"AP Beacon config, intval: %d, nexttbtt: %u, resp_time: %d imask: 0x%x\n",
--		bss_conf->beacon_interval, nexttbtt,
--		priv->ah->config.sw_beacon_response_time, imask);
-+		bss_conf->beacon_interval, bss_conf->nexttbtt,
-+		priv->ah->config.sw_beacon_response_time, priv->ah->imask);
- 
--	ath9k_htc_beaconq_config(priv);
+ 	switch (mvm->scan_status) {
+ 	case IWL_MVM_SCAN_SCHED:
+-		iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
+-					   scan_done_notif,
+-					   ARRAY_SIZE(scan_done_notif),
+-					   NULL, NULL);
+-		iwl_mvm_sched_scan_stop(mvm);
+-		ret = iwl_wait_notification(&mvm->notif_wait,
+-					    &wait_scan_done, HZ);
++		ret = iwl_mvm_sched_scan_stop(mvm);
+ 		if (ret) {
+ 			ret = -EBUSY;
+ 			goto out;
+ 		}
+-		/* iwl_mvm_rx_scan_offload_complete_notif() will be called
+-		 * soon but will not reset the scan status as it won't be
+-		 * IWL_MVM_SCAN_SCHED any more since we queue the next scan
+-		 * immediately (below)
+-		 */
+ 		break;
+ 	case IWL_MVM_SCAN_NONE:
+ 		break;
+@@ -1461,7 +1448,8 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+ out:
+ 	mutex_unlock(&mvm->mutex);
 -
--	WMI_CMD(WMI_DISABLE_INTR_CMDID);
--	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
--	priv->beacon.bmisscnt = 0;
--	htc_imask = cpu_to_be32(imask);
--	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
-+	ath9k_htc_beacon_init(priv, bss_conf, false);
++	/* make sure to flush the Rx handler before the next scan arrives */
++	iwl_mvm_wait_for_async_handlers(mvm);
+ 	return ret;
  }
  
- static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+@@ -1751,12 +1739,14 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	int ret;
+ 
+ 	mutex_lock(&mvm->mutex);
+-	iwl_mvm_sched_scan_stop(mvm);
++	ret = iwl_mvm_sched_scan_stop(mvm);
+ 	mutex_unlock(&mvm->mutex);
++	iwl_mvm_wait_for_async_handlers(mvm);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 3511bf7..4da53c3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -712,6 +712,11 @@ static inline const char *iwl_mvm_get_tx_fail_reason(u32 status) { return ""; }
+ int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, bool sync);
+ void iwl_mvm_async_handlers_purge(struct iwl_mvm *mvm);
+ 
++static inline void iwl_mvm_wait_for_async_handlers(struct iwl_mvm *mvm)
++{
++	flush_work(&mvm->async_handlers_wk);
++}
++
+ /* Statistics */
+ int iwl_mvm_rx_reply_statistics(struct iwl_mvm *mvm,
+ 				struct iwl_rx_cmd_buffer *rxb,
+@@ -813,7 +818,7 @@ int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
+ 				       struct cfg80211_sched_scan_request *req);
+ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 			     struct cfg80211_sched_scan_request *req);
+-void iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
++int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm);
+ int iwl_mvm_rx_sched_scan_results(struct iwl_mvm *mvm,
+ 				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index b4c9fb6..a2cd54b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -519,10 +519,11 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
+ 		       scan_notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
+ 		       "completed" : "aborted");
+ 
+-	/* might already be something else again, don't reset if so */
+-	if (mvm->scan_status == IWL_MVM_SCAN_SCHED)
++	/* only call mac80211 completion if the stop was initiated by FW */
++	if (mvm->scan_status == IWL_MVM_SCAN_SCHED) {
+ 		mvm->scan_status = IWL_MVM_SCAN_NONE;
+-	ieee80211_sched_scan_stopped(mvm->hw);
++		ieee80211_sched_scan_stopped(mvm->hw);
++	}
+ 
+ 	return 0;
+ }
+@@ -894,26 +895,49 @@ static int iwl_mvm_send_sched_scan_abort(struct iwl_mvm *mvm)
+ 		 * microcode has notified us that a scan is completed.
+ 		 */
+ 		IWL_DEBUG_SCAN(mvm, "SCAN OFFLOAD ABORT ret %d.\n", status);
+-		ret = -EIO;
++		ret = -ENOENT;
+ 	}
+ 
+ 	return ret;
+ }
+ 
+-void iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
++int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm)
+ {
+ 	int ret;
++	struct iwl_notification_wait wait_scan_done;
++	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	if (mvm->scan_status != IWL_MVM_SCAN_SCHED) {
+ 		IWL_DEBUG_SCAN(mvm, "No offloaded scan to stop\n");
+-		return;
++		return 0;
+ 	}
+ 
++	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
++				   scan_done_notif,
++				   ARRAY_SIZE(scan_done_notif),
++				   NULL, NULL);
++
+ 	ret = iwl_mvm_send_sched_scan_abort(mvm);
+-	if (ret)
++	if (ret) {
+ 		IWL_DEBUG_SCAN(mvm, "Send stop offload scan failed %d\n", ret);
+-	else
+-		IWL_DEBUG_SCAN(mvm, "Successfully sent stop offload scan\n");
++		iwl_remove_notification(&mvm->notif_wait, &wait_scan_done);
++		return ret;
++	}
++
++	IWL_DEBUG_SCAN(mvm, "Successfully sent stop offload scan\n");
++
++	ret = iwl_wait_notification(&mvm->notif_wait, &wait_scan_done, 1 * HZ);
++	if (ret)
++		return ret;
++
++	/*
++	 * Clear the scan status so the next scan requests will succeed. This
++	 * also ensures the Rx handler doesn't do anything, as the scan was
++	 * stopped from above.
++	 */
++	mvm->scan_status = IWL_MVM_SCAN_NONE;
++
++	return 0;
+ }
 -- 
-1.9.0
+1.8.3.2
 
