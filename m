@@ -1,604 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:63716 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754098AbaCJP1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 11:27:12 -0400
-Received: by mail-pb0-f53.google.com with SMTP id rp16so7385318pbb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 08:27:11 -0700 (PDT)
-From: fariyaf@gmail.com
+Received: from mga02.intel.com ([134.134.136.20]:61413 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755507AbaCRPGg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 11:06:36 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH v4 10/11] rsi: Remaining SDIO functionality.
-Date: Mon, 10 Mar 2014 20:56:38 +0530
-Message-Id: <1394465199-10042-11-git-send-email-fariyaf@gmail.com> (sfid-20140310_162726_761314_A6D93D91)
-In-Reply-To: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
-References: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v10 2/4] mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
+Date: Tue, 18 Mar 2014 17:03:04 +0200
+Message-Id: <1395154986-13810-3-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160640_561286_DD4233DF)
+In-Reply-To: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
+References: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+Combine the functions into one, so that we can switch from one context
+to the other without having to unassign and assign separately.  This
+is needed by the channel reservation functionality because otherwise
+we have a small period of time when the chanctx is set to NULL, which
+can cause problems if someone else is trying to dereference it.
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
-
-This patch adds the functions required by the rsi_sdio module.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  566 +++++++++++++++++++++++++++
- 1 files changed, 566 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+ net/mac80211/chan.c | 85 +++++++++++++++++++++++++++--------------------------
+ 1 file changed, 43 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-new file mode 100644
-index 0000000..3fdbd25
---- /dev/null
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -0,0 +1,566 @@
-+/**
-+ * Copyright (c) 2014 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
-+ */
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index ef77703..5fa12f1 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -294,32 +294,6 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 	ieee80211_recalc_idle(local);
+ }
+ 
+-static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+-					struct ieee80211_chanctx *ctx)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	int ret;
+-
+-	lockdep_assert_held(&local->chanctx_mtx);
+-
+-	ret = drv_assign_vif_chanctx(local, sdata, ctx);
+-	if (ret)
+-		return ret;
+-
+-	rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
+-	ctx->refcount++;
+-
+-	ieee80211_recalc_txpower(sdata);
+-	ieee80211_recalc_chanctx_min_def(local, ctx);
+-	sdata->vif.bss_conf.idle = false;
+-
+-	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
+-	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
+-
+-	return 0;
+-}
+-
+ static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 					      struct ieee80211_chanctx *ctx)
+ {
+@@ -378,30 +352,57 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
+ 	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RADAR);
+ }
+ 
+-static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+-					   struct ieee80211_chanctx *ctx)
++static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_chanctx *new_ctx)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *curr_ctx = NULL;
++	int ret = 0;
+ 
+-	lockdep_assert_held(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
+ 
+-	ctx->refcount--;
+-	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
++	if (conf) {
++		curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
+-	sdata->vif.bss_conf.idle = true;
++		curr_ctx->refcount--;
++		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
++		conf = NULL;
++	}
+ 
+-	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
+-	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
++	if (new_ctx) {
++		ret = drv_assign_vif_chanctx(local, sdata, new_ctx);
++		if (ret)
++			goto out;
 +
-+#include <linux/firmware.h>
-+#include "rsi_sdio.h"
-+#include "rsi_common.h"
++		new_ctx->refcount++;
++		conf = &new_ctx->conf;
++	}
+ 
+-	drv_unassign_vif_chanctx(local, sdata, ctx);
++out:
++	rcu_assign_pointer(sdata->vif.chanctx_conf, conf);
 +
-+/**
-+ * rsi_sdio_master_access_msword() - This function sets the AHB master access
-+ *				     MS word in the SDIO slave registers.
-+ * @adapter: Pointer to the adapter structure.
-+ * @ms_word: ms word need to be initialized.
-+ *
-+ * Return: status: 0 on success, -1 on failure.
-+ */
-+static int rsi_sdio_master_access_msword(struct rsi_hw *adapter,
-+					 u16 ms_word)
-+{
-+	u8 byte;
-+	u8 function = 0;
-+	int status = 0;
++	sdata->vif.bss_conf.idle = !conf;
+ 
+-	if (ctx->refcount > 0) {
+-		ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
+-		ieee80211_recalc_smps_chanctx(local, ctx);
+-		ieee80211_recalc_radar_chanctx(local, ctx);
+-		ieee80211_recalc_chanctx_min_def(local, ctx);
++	if (curr_ctx && curr_ctx->refcount > 0) {
++		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
++		ieee80211_recalc_smps_chanctx(local, curr_ctx);
++		ieee80211_recalc_radar_chanctx(local, curr_ctx);
++		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
+ 	}
 +
-+	byte = (u8)(ms_word & 0x00FF);
-+
-+	rsi_dbg(INIT_ZONE,
-+		"%s: MASTER_ACCESS_MSBYTE:0x%x\n", __func__, byte);
-+
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_MASTER_ACCESS_MSBYTE,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: fail to access MASTER_ACCESS_MSBYTE\n",
-+			__func__);
-+		return -1;
++	if (new_ctx && new_ctx->refcount > 0) {
++		ieee80211_recalc_txpower(sdata);
++		ieee80211_recalc_chanctx_min_def(local, new_ctx);
 +	}
 +
-+	byte = (u8)(ms_word >> 8);
++	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		ieee80211_bss_info_change_notify(sdata,
++						 BSS_CHANGED_IDLE);
 +
-+	rsi_dbg(INIT_ZONE, "%s:MASTER_ACCESS_LSBYTE:0x%x\n", __func__, byte);
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_MASTER_ACCESS_LSBYTE,
-+				    &byte);
-+	return status;
-+}
-+
-+/**
-+ * rsi_copy_to_card() - This function includes the actual funtionality of
-+ *			copying the TA firmware to the card.Basically this
-+ *			function includes opening the TA file,reading the
-+ *			TA file and writing their values in blocks of data.
-+ * @common: Pointer to the driver private structure.
-+ * @fw: Pointer to the firmware value to be written.
-+ * @len: length of firmware file.
-+ * @num_blocks: Number of blocks to be written to the card.
-+ *
-+ * Return: 0 on success and -1 on failure.
-+ */
-+static int rsi_copy_to_card(struct rsi_common *common,
-+			    const u8 *fw,
-+			    u32 len,
-+			    u32 num_blocks)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	u32 indx, ii;
-+	u32 block_size = dev->tx_blk_size;
-+	u32 lsb_address;
-+	__le32 data[] = { TA_HOLD_THREAD_VALUE, TA_SOFT_RST_CLR,
-+			  TA_PC_ZERO, TA_RELEASE_THREAD_VALUE };
-+	u32 address[] = { TA_HOLD_THREAD_REG, TA_SOFT_RESET_REG,
-+			  TA_TH0_PC_REG, TA_RELEASE_THREAD_REG };
-+	u32 base_address;
-+	u16 msb_address;
-+
-+	base_address = TA_LOAD_ADDRESS;
-+	msb_address = base_address >> 16;
-+
-+	for (indx = 0, ii = 0; ii < num_blocks; ii++, indx += block_size) {
-+		lsb_address = ((u16) base_address | RSI_SD_REQUEST_MASTER);
-+		if (rsi_write_register_multiple(adapter,
-+						lsb_address,
-+						(u8 *)(fw + indx),
-+						block_size)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to load %s blk\n", __func__,
-+				FIRMWARE_RSI9113);
-+			return -1;
-+		}
-+		rsi_dbg(INIT_ZONE, "%s: loading block: %d\n", __func__, ii);
-+		base_address += block_size;
-+		if ((base_address >> 16) != msb_address) {
-+			msb_address += 1;
-+			if (rsi_sdio_master_access_msword(adapter,
-+							  msb_address)) {
-+				rsi_dbg(ERR_ZONE,
-+					"%s: Unable to set ms word reg\n",
-+					__func__);
-+				return -1;
-+			}
-+		}
-+	}
-+
-+	if (len % block_size) {
-+		lsb_address = ((u16) base_address | RSI_SD_REQUEST_MASTER);
-+		if (rsi_write_register_multiple(adapter,
-+						lsb_address,
-+						(u8 *)(fw + indx),
-+						len % block_size)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to load f/w\n", __func__);
-+			return -1;
-+		}
-+	}
-+	rsi_dbg(INIT_ZONE,
-+		"%s: Succesfully loaded TA instructions\n", __func__);
-+
-+	if (rsi_sdio_master_access_msword(adapter, TA_BASE_ADDR)) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Unable to set ms word to common reg\n",
-+			__func__);
-+		return -1;
-+	}
-+
-+	for (ii = 0; ii < ARRAY_SIZE(data); ii++) {
-+		/* Bringing TA out of reset */
-+		if (rsi_write_register_multiple(adapter,
-+						(address[ii] |
-+						RSI_SD_REQUEST_MASTER),
-+						(u8 *)&data[ii],
-+						4)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to hold TA threads\n", __func__);
-+			return -1;
-+		}
-+	}
-+
-+	rsi_dbg(INIT_ZONE, "%s: loaded firmware\n", __func__);
-+	return 0;
-+}
-+
-+/**
-+ * rsi_load_ta_instructions() - This function includes the actual funtionality
-+ *				of loading the TA firmware.This function also
-+ *				includes opening the TA file,reading the TA
-+ *				file and writing their value in blocks of data.
-+ * @common: Pointer to the driver private structure.
-+ *
-+ * Return: status: 0 on success, -1 on failure.
-+ */
-+static int rsi_load_ta_instructions(struct rsi_common *common)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	u32 len;
-+	u32 num_blocks;
-+	const u8 *fw;
-+	const struct firmware *fw_entry = NULL;
-+	u32 block_size = dev->tx_blk_size;
-+	int status = 0;
-+	u32 base_address;
-+	u16 msb_address;
-+
-+	if (rsi_sdio_master_access_msword(adapter, TA_BASE_ADDR)) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Unable to set ms word to common reg\n",
-+			__func__);
-+		return -1;
-+	}
-+	base_address = TA_LOAD_ADDRESS;
-+	msb_address = (base_address >> 16);
-+
-+	if (rsi_sdio_master_access_msword(adapter, msb_address)) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Unable to set ms word reg\n", __func__);
-+		return -1;
-+	}
-+
-+	status = request_firmware(&fw_entry, FIRMWARE_RSI9113, adapter->device);
-+	if (status < 0) {
-+		rsi_dbg(ERR_ZONE, "%s Firmware file %s not found\n",
-+			__func__, FIRMWARE_RSI9113);
-+		return status;
-+	}
-+
-+	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	len = fw_entry->size;
-+
-+	if (len % 4)
-+		len += (4 - (len % 4));
-+
-+	num_blocks = (len / block_size);
-+
-+	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
-+	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
-+
-+	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	release_firmware(fw_entry);
-+	return status;
-+}
-+
-+/**
-+ * rsi_process_pkt() - This Function reads rx_blocks register and figures out
-+ *		       the size of the rx pkt.
-+ * @common: Pointer to the driver private structure.
-+ *
-+ * Return: 0 on success, -1 on failure.
-+ */
-+static int rsi_process_pkt(struct rsi_common *common)
-+{
-+	struct rsi_hw *adapter = common->priv;
-+	u8 num_blks = 0;
-+	u32 rcv_pkt_len = 0;
-+	int status = 0;
-+
-+	status = rsi_read_register(adapter,
-+				   SDIO_RX_NUM_BLOCKS_REG,
-+				   &num_blks);
-+
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to read pkt length from the card:\n",
-+			__func__);
-+		return status;
-+	}
-+	rcv_pkt_len = (num_blks * 256);
-+
-+	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
-+	if (!common->rx_data_pkt) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
-+			__func__);
-+		return -1;
-+	}
-+
-+	status = rsi_host_intf_read_pkt(adapter,
-+					common->rx_data_pkt,
-+					rcv_pkt_len);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to read packet from card\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	status = rsi_read_pkt(common, rcv_pkt_len);
-+	kfree(common->rx_data_pkt);
-+	return status;
-+
-+fail:
-+	kfree(common->rx_data_pkt);
-+	return -1;
-+}
-+
-+/**
-+ * rsi_init_sdio_slave_regs() - This function does the actual initialization
-+ *				of SDBUS slave registers.
-+ * @adapter: Pointer to the adapter structure.
-+ *
-+ * Return: status: 0 on success, -1 on failure.
-+ */
-+int rsi_init_sdio_slave_regs(struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	u8 function = 0;
-+	u8 byte;
-+	int status = 0;
-+
-+	if (dev->next_read_delay) {
-+		byte = dev->next_read_delay;
-+		status = rsi_write_register(adapter,
-+					    function,
-+					    SDIO_NXT_RD_DELAY2,
-+					    &byte);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to write SDIO_NXT_RD_DELAY2\n",
-+				__func__);
-+			return -1;
-+		}
-+	}
-+
-+	if (dev->sdio_high_speed_enable) {
-+		rsi_dbg(INIT_ZONE, "%s: Enabling SDIO High speed\n", __func__);
-+		byte = 0x3;
-+
-+		status = rsi_write_register(adapter,
-+					    function,
-+					    SDIO_REG_HIGH_SPEED,
-+					    &byte);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to enable SDIO high speed\n",
-+				__func__);
-+			return -1;
-+		}
-+	}
-+
-+	/* This tells SDIO FIFO when to start read to host */
-+	rsi_dbg(INIT_ZONE, "%s: Initialzing SDIO read start level\n", __func__);
-+	byte = 0x24;
-+
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_READ_START_LVL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_READ_START_LVL\n", __func__);
-+		return -1;
-+	}
-+
-+	rsi_dbg(INIT_ZONE, "%s: Initialzing FIFO ctrl registers\n", __func__);
-+	byte = (128 - 32);
-+
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_READ_FIFO_CTL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_READ_FIFO_CTL\n", __func__);
-+		return -1;
-+	}
-+
-+	byte = 32;
-+	status = rsi_write_register(adapter,
-+				    function,
-+				    SDIO_WRITE_FIFO_CTL,
-+				    &byte);
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to write SDIO_WRITE_FIFO_CTL\n", __func__);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * rsi_interrupt_handler() - This function read and process SDIO interrupts.
-+ * @adapter: Pointer to the adapter structure.
-+ *
-+ * Return: None.
-+ */
-+void rsi_interrupt_handler(struct rsi_hw *adapter)
-+{
-+	struct rsi_common *common = adapter->priv;
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	int status;
-+	enum sdio_interrupt_type isr_type;
-+	u8 isr_status = 0;
-+	u8 fw_status = 0;
-+
-+	dev->rx_info.sdio_int_counter++;
-+
-+	do {
-+		mutex_lock(&common->tx_rxlock);
-+		status = rsi_read_register(common->priv,
-+						   RSI_FN1_INT_REGISTER,
-+						   &isr_status);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to Read Intr Status Register\n",
-+				__func__);
-+			mutex_unlock(&common->tx_rxlock);
-+			return;
-+		}
-+
-+		if (isr_status == 0) {
-+			rsi_set_event(&common->tx_thread.event);
-+			dev->rx_info.sdio_intr_status_zero++;
-+			mutex_unlock(&common->tx_rxlock);
-+			return;
-+		}
-+
-+		rsi_dbg(ISR_ZONE, "%s: Intr_status = %x %d %d\n",
-+			__func__, isr_status, (1 << MSDU_PKT_PENDING),
-+			(1 << FW_ASSERT_IND));
-+
-+		do {
-+			RSI_GET_SDIO_INTERRUPT_TYPE(isr_status, isr_type);
-+
-+			switch (isr_type) {
-+			case BUFFER_AVAILABLE:
-+				dev->rx_info.watch_bufferfull_count = 0;
-+				dev->rx_info.buffer_full = false;
-+				dev->rx_info.mgmt_buffer_full = false;
-+				rsi_ack_interrupt(common->priv,
-+						  (1 << PKT_BUFF_AVAILABLE));
-+				rsi_set_event((&common->tx_thread.event));
-+				rsi_dbg(ISR_ZONE,
-+					"%s: ==> BUFFER_AVILABLE <==\n",
-+					__func__);
-+				dev->rx_info.buf_avilable_counter++;
-+				break;
-+
-+			case FIRMWARE_ASSERT_IND:
-+				rsi_dbg(ERR_ZONE,
-+					"%s: ==> FIRMWARE Assert <==\n",
-+					__func__);
-+				status = rsi_read_register(common->priv,
-+							SDIO_FW_STATUS_REG,
-+							&fw_status);
-+				if (status) {
-+					rsi_dbg(ERR_ZONE,
-+						"%s: Failed to read f/w reg\n",
-+						__func__);
-+				} else {
-+					rsi_dbg(ERR_ZONE,
-+						"%s: Firmware Status is 0x%x\n",
-+						__func__ , fw_status);
-+					rsi_ack_interrupt(common->priv,
-+							  (1 << FW_ASSERT_IND));
-+				}
-+
-+				common->fsm_state = FSM_CARD_NOT_READY;
-+				break;
-+
-+			case MSDU_PACKET_PENDING:
-+				rsi_dbg(ISR_ZONE, "Pkt pending interrupt\n");
-+				dev->rx_info.total_sdio_msdu_pending_intr++;
-+
-+				status = rsi_process_pkt(common);
-+				if (status) {
-+					rsi_dbg(ERR_ZONE,
-+						"%s: Failed to read pkt\n",
-+						__func__);
-+					mutex_unlock(&common->tx_rxlock);
-+					return;
-+				}
-+				break;
-+			default:
-+				rsi_ack_interrupt(common->priv,
-+						  isr_status);
-+				dev->rx_info.total_sdio_unknown_intr++;
-+				isr_status = 0;
-+				rsi_dbg(ISR_ZONE,
-+					"Unknown Interrupt %x\n",
-+					isr_status);
-+				break;
-+			}
-+			isr_status ^= BIT(isr_type - 1);
-+		} while (isr_status);
-+		mutex_unlock(&common->tx_rxlock);
-+	} while (1);
-+}
-+
-+/**
-+ * rsi_device_init() - This Function Initializes The HAL.
-+ * @common: Pointer to the driver private structure.
-+ *
-+ * Return: 0 on success, -1 on failure.
-+ */
-+int rsi_device_init(struct rsi_common *common)
-+{
-+	if (rsi_load_ta_instructions(common))
-+		return -1;
-+
-+	if (rsi_sdio_master_access_msword(common->priv, MISC_CFG_BASE_ADDR)) {
-+		rsi_dbg(ERR_ZONE, "%s: Unable to set ms word reg\n",
-+			__func__);
-+		return -1;
-+	}
-+	rsi_dbg(INIT_ZONE,
-+		"%s: Setting ms word to 0x41050000\n", __func__);
-+
-+	return 0;
-+}
-+
-+/**
-+ * rsi_read_buffer_status_register() - This function is used to the read buffer
-+ *				       status register and set relevant fields
-+ *				       in rsi_91x_sdiodev struct.
-+ * @adapter: Pointer to the driver hw structure.
-+ * @q_num: The Q number whose status is to be found.
-+ *
-+ * Return: status: -1 on failure or else queue full/stop is indicated.
-+ */
-+int rsi_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num)
-+{
-+	struct rsi_common *common = adapter->priv;
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+	u8 buf_status = 0;
-+	int status = 0;
-+
-+	status = rsi_read_register(common->priv,
-+				   RSI_DEVICE_BUFFER_STATUS_REGISTER,
-+				   &buf_status);
-+
-+	if (status) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Failed to read status register\n", __func__);
-+		return -1;
-+	}
-+
-+	if (buf_status & (BIT(PKT_MGMT_BUFF_FULL))) {
-+		if (!dev->rx_info.mgmt_buffer_full)
-+			dev->rx_info.mgmt_buf_full_counter++;
-+		dev->rx_info.mgmt_buffer_full = true;
-+	} else {
-+		dev->rx_info.mgmt_buffer_full = false;
-+	}
-+
-+	if (buf_status & (BIT(PKT_BUFF_FULL))) {
-+		if (!dev->rx_info.buffer_full)
-+			dev->rx_info.buf_full_counter++;
-+		dev->rx_info.buffer_full = true;
-+	} else {
-+		dev->rx_info.buffer_full = false;
-+	}
-+
-+	if (buf_status & (BIT(PKT_BUFF_SEMI_FULL))) {
-+		if (!dev->rx_info.semi_buffer_full)
-+			dev->rx_info.buf_semi_full_counter++;
-+		dev->rx_info.semi_buffer_full = true;
-+	} else {
-+		dev->rx_info.semi_buffer_full = false;
-+	}
-+
-+	if ((q_num == MGMT_SOFT_Q) && (dev->rx_info.mgmt_buffer_full))
-+		return QUEUE_FULL;
-+
-+	if (dev->rx_info.buffer_full)
-+		return QUEUE_FULL;
-+
-+	return QUEUE_NOT_FULL;
-+}
-+
-+/**
-+ * rsi_determine_event_timeout() - This Function determines the event
-+ *				   timeout duration.
-+ * @adapter: Pointer to the adapter structure.
-+ *
-+ * Return: timeout duration is returned.
-+ */
-+int rsi_determine_event_timeout(struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
-+
-+	/* Once buffer full is seen, event timeout to occur every 2 msecs */
-+	if (dev->rx_info.buffer_full)
-+		return 2;
-+
-+	return EVENT_WAIT_FOREVER;
-+}
++	return ret;
+ }
+ 
+ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+@@ -419,7 +420,7 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
+-	ieee80211_unassign_vif_chanctx(sdata, ctx);
++	ieee80211_assign_vif_chanctx(sdata, NULL);
+ 	if (ctx->refcount == 0)
+ 		ieee80211_free_chanctx(local, ctx);
+ }
 -- 
-1.7.5.4
+1.9.0
 
