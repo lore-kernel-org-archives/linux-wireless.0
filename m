@@ -1,41 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:35414 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541AbaCYIyG (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:48954 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757811AbaCRT0M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 04:54:06 -0400
-Received: by mail-vc0-f182.google.com with SMTP id ks9so170283vcb.13
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:54:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
-Date: Tue, 25 Mar 2014 16:54:06 +0800
-Message-ID: <CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com> (sfid-20140325_095414_864387_ACABE8A4)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 18 Mar 2014 15:26:12 -0400
+Received: by mail-wg0-f46.google.com with SMTP id b13so6404908wgh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:11 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/14] staging: vt6656: rxtx: Replace wTxRrvTime*
+Date: Tue, 18 Mar 2014 19:24:58 +0000
+Message-Id: <1395170708-2990-4-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202618_274839_25F94CFA)
+In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->> BTW, I also saw that the same happen to latest AP firmware whenever
->> the peer stats is more than 1. But since the first peer stats is self
->> stats, so it is ok to overwrite it.
->
-> I disagree. Why do you think it is okay to overwrite self peer stats?
->
-Because TxRate, RxRate, RSSI are all no value, just the MAC address.
+Fix base type to __le16 and remove camel case.
 
-> Btw. 10.1 firmware has more pdev stats which breaks parsing of peer entries...
+Camel case changes
+wTxRrvTime* -> rrv_time*
 
-Yes, let me investigate further.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 16 ++++++++--------
+ drivers/staging/vt6656/rxtx.h | 10 +++++-----
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
------
-Chun-Yeow
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 51aa77c..9846c90 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -823,9 +823,9 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			pBuf->rts_rrv_time_bb = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+-			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
+ 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
+-			pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
+ 					PK_TYPE_11B, cbFrameSize,
+ 					pDevice->byTopCCKBasicRate, bNeedACK);
+ 
+@@ -846,9 +846,9 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_cts *pBuf = &tx_buffer->
+ 							tx_head.tx_cts.cts;
+ 
+-			pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time_a = vnt_rxtx_rsvtime_le16(pDevice,
+ 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
+-			pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time_b = vnt_rxtx_rsvtime_le16(pDevice,
+ 				PK_TYPE_11B, cbFrameSize,
+ 					pDevice->byTopCCKBasicRate, bNeedACK);
+ 
+@@ -883,7 +883,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+-			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+ 				byPktType, cbFrameSize, wCurrentRate, bNeedACK);
+ 
+ 			/* Fill RTS */
+@@ -894,7 +894,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+ 							tx_head.tx_ab.ab;
+ 
+-			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+ 				PK_TYPE_11A, cbFrameSize,
+ 					wCurrentRate, bNeedACK);
+ 
+@@ -917,7 +917,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			pBuf->rts_rrv_time = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+ 
+-			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+ 				PK_TYPE_11B, cbFrameSize, wCurrentRate,
+ 								bNeedACK);
+ 
+@@ -929,7 +929,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			struct vnt_rrv_time_ab *pBuf = &tx_buffer->
+ 							tx_head.tx_ab.ab;
+ 
+-			pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice,
++			pBuf->rrv_time = vnt_rxtx_rsvtime_le16(pDevice,
+ 				PK_TYPE_11B, cbFrameSize,
+ 					wCurrentRate, bNeedACK);
+ 
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 1e8f5e2..f0ab2a3 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -57,20 +57,20 @@ struct vnt_rrv_time_rts {
+ 	__le16 rts_rrv_time_aa;
+ 	__le16 rts_rrv_time_bb;
+ 	u16 wReserved;
+-	u16 wTxRrvTime_b;
+-	u16 wTxRrvTime_a;
++	__le16 rrv_time_b;
++	__le16 rrv_time_a;
+ } __packed;
+ 
+ struct vnt_rrv_time_cts {
+ 	u16 wCTSTxRrvTime_ba;
+ 	u16 wReserved;
+-	u16 wTxRrvTime_b;
+-	u16 wTxRrvTime_a;
++	__le16 rrv_time_b;
++	__le16 rrv_time_a;
+ } __packed;
+ 
+ struct vnt_rrv_time_ab {
+ 	__le16 rts_rrv_time;
+-	u16 wTxRrvTime;
++	__le16 rrv_time;
+ } __packed;
+ 
+ /* TX data header */
+-- 
+1.9.0
+
