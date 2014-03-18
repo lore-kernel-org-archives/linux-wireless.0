@@ -1,117 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:34475 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbaC1PPW convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:42983 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbaCRN7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 11:15:22 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so3610206wgh.4
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 08:15:20 -0700 (PDT)
-Content-Type: text/plain; charset=US-ASCII
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: Setting txpower fails?
-From: Bruno Antunes <baantunes@gmail.com>
-In-Reply-To: <53358EFB.1030308@candelatech.com>
-Date: Fri, 28 Mar 2014 15:15:17 +0000
-Cc: linux-wireless@vger.kernel.org, sedat.dilek@gmail.com
-Message-Id: <E322ACF2-B0A6-45D9-93C8-85F68176DCB2@gmail.com> (sfid-20140328_161539_069901_0AB4FBE2)
-References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com> <533584BF.70604@candelatech.com> <4CC49FDB-1767-4A3F-9C1D-8F8DCF612233@gmail.com> <53358920.6030304@candelatech.com> <8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com> <53358EFB.1030308@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
+	Tue, 18 Mar 2014 09:59:06 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so5498841eek.9
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:04 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 00/21] cfg80211/mac80211: multi-vif csa
+Date: Tue, 18 Mar 2014 14:53:03 +0100
+Message-Id: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145923_928583_9701DB2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-On 28 Mar, 2014, at 15:02 , Ben Greear <greearb@candelatech.com> wrote:
+I'm aware this is rather huge. I'm hoping I can
+get some early feedback before all other patches
+I'm depending on are finally merged into
+mac80211-next.
 
-> On 03/28/2014 07:49 AM, Bruno Antunes wrote:
->> 
->> On 28 Mar, 2014, at 14:37 , Ben Greear <greearb@candelatech.com> wrote:
->> 
->>> On 03/28/2014 07:29 AM, Bruno Antunes wrote:
->>>> Hi Ben,
->>>> I think you are missing some parameters
->>>> 
->>>> On 28 Mar, 2014, at 14:18 , Ben Greear <greearb@candelatech.com> wrote:
->>>> 
->>>>> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
->>>>>> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
->>>>>>> Any idea why this isn't working?
->>>>>>> 
->>>>>>> Kernel is 3.9.11+, driver is ath9k.
->>>>>>> 
->>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0
->>>>>>> wlan0     IEEE 802.11abgn  ESSID:off/any
->>>>>>>           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>>>>>>           Retry short limit:7   RTS thr:off   Fragment thr:off
->>>>>>>           Encryption key:off
->>>>>>>           Power Management:off
->>>>>>> 
->>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
->>>> 
->>>> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
->>>> 
->>>>  It should be something like:
->>>> 
->>>> iw dev wlan0 set txpower fixed 1000
->>> 
->>> Ok, that doesn't give an error, but 'iwconfig' still shows 16 dBm,
->>> and I don't see any way to get 'iw' to print out the power itself?
->>> 
->>> So, not sure if it is really working or not.
->> It works , at least on iw 3.10.
->> 
->> If you have debug enabled you can see the value changing.
-> 
-> Just for posterity's sake, it seems you should really be looking
-> at user_power_level:
-> 
-> [root@ct523-9292 lanforge]# iw dev wlan0 set txpower fixed 1000
-> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/txpower
-> 0
-> [root@ct523-9292 lanforge]#
-> 
-> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/user_power_level
-> 10
-> 
-Not on all systems...
+Considering current dependency hell of all related
+the patchsets I'm duplicating some of my patches
+I've posted on the mailing list here. Hopefully
+this is sane enough for reviewing purposes.
 
-root@RSPro2:/etc/config#  iw dev adhoc0 set txpower fixed 700
-root@RSPro2:/etc/config# cat /sys/kernel/debug/ieee80211/phy0/netdev\:adhoc0/txpower 
-7
-root@RSPro2:/etc/config# cat /sys/kernel/debug/ieee80211/phy0/netdev\:adhoc0/user_power_level 
-7
+The patchset alone is based on:
+ * mac80211-next/master
+ * VLAN chanctx copy refactor
+ * Luca's intf combination patches
+ * Luca's chanctx reservation patches
 
-Bruno
+I've skipped the 'cfg80211_stop_iface()' since it
+depends on a patch from Johannes that hasn't been
+merged yet either.
 
-> Thanks,
-> Ben
-> 
->> 
->> On a openwrt system
->> 
->> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 900
->> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
->> 9
->> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 1500
->> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
->> 15
->> 
->> And the received power changes on the station confirming that is making effect.
->> 
->> Bruno
->> 
->>> 
->>> Thanks,
->>> Ben
->>> 
->>> 
->>> --
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>> 
-> 
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
+As some probably suspect I've tested this mostly
+with ath10k and iwl/mvm. I've been able to
+successfully switch multi-BSS AP and perform
+AP-follows-STA.
+
+There's a WARN_ON related to chanctx recalc, but
+being aware Zhao has some patches around recalc
+stuff I decided to ignore it for now.
+
+
+Michal Kazior (21):
+  mac80211: add support for radar detection for reservations
+  cfg80211: allow drivers to iterate over matching combinations
+  mac80211: add max channel calculation utility function
+  mac80211: prevent chanctx overcommit
+  mac80211: track assigned vifs in chanctx
+  mac80211: track reserved vifs in chanctx
+  mac80211: improve find_chanctx() for reservations
+  mac80211: improve chanctx reservation lookup
+  mac80211: split ieee80211_new_chanctx()
+  mac80211: split ieee80211_free_chanctx()
+  mac80211: fix racy usage of chanctx->refcount
+  mac80211: compute chanctx refcount on-the-fly
+  mac80211: implement multi-vif in-place reservations
+  mac80211: fix CSA tx queue locking
+  mac80211: split CSA finalize function
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  mac80211: ignore cqm during csa
+  mac80211: remove old unused channel switching code
+  cfg80211: remove channel_switch combination check
+
+ include/net/cfg80211.h     |  27 ++
+ include/net/mac80211.h     |  11 +-
+ net/mac80211/cfg.c         | 212 +++++++++++----
+ net/mac80211/chan.c        | 663 +++++++++++++++++++++++++++++++--------------
+ net/mac80211/ieee80211_i.h |  25 +-
+ net/mac80211/iface.c       |   9 +
+ net/mac80211/mlme.c        | 117 +++++---
+ net/mac80211/util.c        |  80 +++++-
+ net/wireless/nl80211.c     |  11 -
+ net/wireless/util.c        |  44 ++-
+ 10 files changed, 867 insertions(+), 332 deletions(-)
+
+-- 
+1.8.5.3
 
