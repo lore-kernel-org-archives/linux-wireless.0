@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zhbdzmsp-mail13.bluewin.ch ([195.186.99.121]:53506 "EHLO
-	zhbdzmsp-mail13.bluewin.ch" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750706AbaCQSto (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64608 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756279AbaCROqn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 14:49:44 -0400
-Message-ID: <5327421C.2040603@weiss.ch> (sfid-20140317_194949_917940_0CD2CAE6)
-Date: Mon, 17 Mar 2014 19:42:36 +0100
-From: Rolf Anderegg <rolf.anderegg@weiss.ch>
-Reply-To: <rolf.anderegg@weiss.ch>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-Subject: ath5k: SIOCGIWFREQ ioctl EINVAL
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 18 Mar 2014 10:46:43 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so5439635eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:43 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/35] iwlwifi: mvm: fix theoretical NULL ptr dereference
+Date: Tue, 18 Mar 2014 16:45:36 +0200
+Message-Id: <1395153939-23897-32-git-send-email-egrumbach@gmail.com> (sfid-20140318_154700_361142_8C037B72)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was lately required to move to a newer kernel (3.12.10-rt15) on an Intel Atom
-setup. All is working fine, including the wireless module (ath5k) acting as an
-access point on my bridge, using hostapd:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-:~$ lspci
-...
-03:00.0 Ethernet controller: Qualcomm Atheros AR5212/AR5213 Wireless Network
-Adapter (rev 01)
-	Subsystem: D-Link System Inc AirPlus DWL-G520 Wireless PCI Adapter (rev. B)
-	Flags: bus master, fast Back2Back, medium devsel, latency 168, IRQ 20
-	Memory at d0000000 (32-bit, non-prefetchable) [size=64K]
-	Kernel driver in use: ath5k
-	Kernel modules: ath5k
-...
-:~$ iwconfig ath0
-ath0      IEEE 802.11bg  Mode:Master  Tx-Power=27 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:on
+mvmsta could have been NULL / ERR.
 
-:~$ iwlist ath0 f
-ath0      11 channels in total; available frequencies :
-          Channel 01 : 2.412 GHz
-          Channel 02 : 2.417 GHz
-          Channel 03 : 2.422 GHz
-          Channel 04 : 2.427 GHz
-          Channel 05 : 2.432 GHz
-          Channel 06 : 2.437 GHz
-          Channel 07 : 2.442 GHz
-          Channel 08 : 2.447 GHz
-          Channel 09 : 2.452 GHz
-          Channel 10 : 2.457 GHz
-          Channel 11 : 2.462 GHz
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index f64e972..9b59e1d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -312,6 +312,11 @@ static ssize_t iwl_dbgfs_reduced_txp_write(struct ieee80211_vif *vif,
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, mvmvif->ap_sta_id);
++	if (IS_ERR_OR_NULL(mvmsta)) {
++		mutex_unlock(&mvm->mutex);
++		return -ENOTCONN;
++	}
++
+ 	mvmsta->bt_reduced_txpower_dbg = false;
+ 	ret = iwl_mvm_bt_coex_reduced_txp(mvm, mvmvif->ap_sta_id,
+ 					  reduced_tx_power);
+-- 
+1.8.3.2
 
-However, as can be seen above I am now unable to read the current
-channel/frequency info within iwlist, iwconfig or any other tool; ioctl on
-SIOCGIWFREQ seems to fail with EINVAL (Invalid argument):
-
-:~$ strace iwconfig ath0
-...
-ioctl(3, SIOCGIWFREQ, 0xbfc8f41c)       = -1 EINVAL (Invalid argument)
-...
-
-I also have a a USB wireless stick (based on AR9271, using module ath9k_htc) at
-hand, also working fine in same setup, but no chance to read SIOCGIWFREQ.
-Why could this be? Has anything changed in the atheros wireless section
-regarding this?
-Thanks in advance,
-
-Rolf Anderegg
