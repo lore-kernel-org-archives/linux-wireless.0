@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16495 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088AbaCXKGk (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:54827 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380AbaCROpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 06:06:40 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: introduce rx_status htt template
-References: <1395394437-4048-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Mon, 24 Mar 2014 12:06:34 +0200
-In-Reply-To: <1395394437-4048-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Fri, 21 Mar 2014 10:33:56 +0100")
-Message-ID: <87ior37vx1.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_110644_463546_B5CC9CE3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 18 Mar 2014 10:45:45 -0400
+Received: by mail-ee0-f49.google.com with SMTP id c41so5377056eek.22
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:44 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/35] iwlwifi: pcie: suppress ACPI related error message
+Date: Tue, 18 Mar 2014 16:45:06 +0200
+Message-Id: <1395153939-23897-2-git-send-email-egrumbach@gmail.com> (sfid-20140318_154549_119760_E8D28D42)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Introduce rx_status htt template instead of
-> stack version.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+This message triggers on systems that don't support the API,
+so suppress them when not debugging as it's not useful to
+see it there.
 
-Why? What's the benefit from doing this?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 0f52e96..22b6b7e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -448,7 +448,8 @@ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ 
+ 	pxsx_handle = ACPI_HANDLE(&pdev->dev);
+ 	if (!pxsx_handle) {
+-		IWL_ERR(trans, "Could not retrieve root port ACPI handle");
++		IWL_DEBUG_INFO(trans,
++			       "Could not retrieve root port ACPI handle");
+ 		return;
+ 	}
+ 
 -- 
-Kalle Valo
+1.8.3.2
+
