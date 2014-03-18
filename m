@@ -1,37 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20283 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbaC1O46 (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:46040 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754645AbaCRN7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:56:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k:  Fix getting stats from firmware.
-References: <1395427642-30884-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 28 Mar 2014 16:56:53 +0200
-In-Reply-To: <1395427642-30884-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Fri, 21 Mar 2014 11:47:22
-	-0700")
-Message-ID: <87fvm2v0ay.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_155703_195687_FF7F5A28)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 18 Mar 2014 09:59:19 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so4722382eek.40
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:18 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 10/21] mac80211: split ieee80211_free_chanctx()
+Date: Tue, 18 Mar 2014 14:53:13 +0100
+Message-Id: <1395150804-24090-11-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150214_916948_F78AF67F)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+The function did a little too much. Split it up so
+the code can be easily reused in the future.
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> Tested on 10.x firmware, and others report it at least
-> makes older firmware no more broken than it already was.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->
-> v2:  Remove spurious comment.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-Thanks, applied.
-
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 1982e33..623df6f 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -433,14 +433,11 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	return ctx;
+ }
+ 
+-static void ieee80211_free_chanctx(struct ieee80211_local *local,
+-				   struct ieee80211_chanctx *ctx)
++static void ieee80211_del_chanctx(struct ieee80211_local *local,
++				  struct ieee80211_chanctx *ctx)
+ {
+-	bool check_single_channel = false;
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+-	WARN_ON_ONCE(ctx->refcount != 0);
+-
+ 	if (!local->use_chanctx) {
+ 		struct cfg80211_chan_def *chandef = &local->_oper_chandef;
+ 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
+@@ -450,8 +447,9 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 		/* NOTE: Disabling radar is only valid here for
+ 		 * single channel context. To be sure, check it ...
+ 		 */
+-		if (local->hw.conf.radar_enabled)
+-			check_single_channel = true;
++		WARN_ON(local->hw.conf.radar_enabled &&
++			!list_empty(&local->chanctx_list));
++
+ 		local->hw.conf.radar_enabled = false;
+ 
+ 		ieee80211_hw_config(local, 0);
+@@ -459,13 +457,19 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 		drv_remove_chanctx(local, ctx);
+ 	}
+ 
+-	list_del_rcu(&ctx->list);
+-	kfree_rcu(ctx, rcu_head);
++	ieee80211_recalc_idle(local);
++}
+ 
+-	/* throw a warning if this wasn't the only channel context. */
+-	WARN_ON(check_single_channel && !list_empty(&local->chanctx_list));
++static void ieee80211_free_chanctx(struct ieee80211_local *local,
++				   struct ieee80211_chanctx *ctx)
++{
++	lockdep_assert_held(&local->chanctx_mtx);
+ 
+-	ieee80211_recalc_idle(local);
++	WARN_ON_ONCE(ctx->refcount != 0);
++
++	list_del_rcu(&ctx->list);
++	ieee80211_del_chanctx(local, ctx);
++	kfree_rcu(ctx, rcu_head);
+ }
+ 
+ static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
 -- 
-Kalle Valo
+1.8.5.3
+
