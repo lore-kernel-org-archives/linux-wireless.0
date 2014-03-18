@@ -1,254 +1,488 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5536 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933495AbaCQNfU (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:55640 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756028AbaCROqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:35:20 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 21/21] wil6210: fix race between disconnect and Tx NAPI
-Date: Mon, 17 Mar 2014 15:34:25 +0200
-Message-ID: <1395063265-6522-22-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143529_680029_B3CED3B7)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 18 Mar 2014 10:46:06 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so5557449eek.9
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:05 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/35] iwlwifi: mvm: BT Coex add support for Co-running block
+Date: Tue, 18 Mar 2014 16:45:17 +0200
+Message-Id: <1395153939-23897-13-git-send-email-egrumbach@gmail.com> (sfid-20140318_155650_086570_F81DA7BC)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When disconnecting some CID, corresponded Tx vring get released. During vring
-release, all descriptors get freed. It is possible that Tx NAPI working on the same
-vring simultaneously. If it happens, descriptor may be double freed.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-To protect from the race above, make sure NAPI won't process the same vring.
-Introduce 'enabled' flag in the struct vring_tx_data. Proceed with Tx NAPI only if
-'enabled' flag set. Prior to Tx vring release, clear this flag and make sure NAPI
-get synchronized.
+7265 features a new calibration which is called antenna
+coupling. The purpose of this calibration (which isn't
+really a calibration), is to measure the isolation between
+the antennas and that can give us useful information for
+the Coex modules.
 
-NAPI enablement status protected by wil->mutex, add protection where it was
-missing and check for it.
+With this information, we can tune the LookUpTables (LUTs)
+that define the BT / WiFi contention policy.
 
-During reset, disconnect all peers first, then proceed with the Rx vring. It allows for
-the disconnect flow to observe proper 'wil->status' and correctly notify cfg80211 about
-connection status change
+The LUTs currently contain dummy values - but they will be
+updated soon.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+While at it, change the current code to stop duplicate the
+host command while sending. This was needed back then, when
+the command was short enough to be allocated on the stack.
+Since then, the command grew a lot and is now allocated on
+the heap - hence we can use the NOCOPY option instead.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |  4 ++++
- drivers/net/wireless/ath/wil6210/main.c     | 17 +++++++++++++----
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 ++
- drivers/net/wireless/ath/wil6210/txrx.c     | 17 +++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++++++++
- drivers/net/wireless/ath/wil6210/wmi.c      |  2 ++
- 6 files changed, 47 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c        | 291 +++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/constants.h      |   1 +
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c        |   3 +
+ drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h |   2 +
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h         |   1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h            |   5 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c            |   3 +
+ 7 files changed, 303 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index ed5a7e1..4806a49 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -674,7 +674,11 @@ static int wil_cfg80211_del_station(struct wiphy *wiphy,
- 				    struct net_device *dev, u8 *mac)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+
-+	mutex_lock(&wil->mutex);
- 	wil6210_disconnect(wil, mac);
-+	mutex_unlock(&wil->mutex);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 0005d9b..95f4efe 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -133,7 +133,9 @@ static void wil_disconnect_worker(struct work_struct *work)
- 	struct wil6210_priv *wil = container_of(work,
- 			struct wil6210_priv, disconnect_worker);
- 
-+	mutex_lock(&wil->mutex);
- 	_wil6210_disconnect(wil, NULL);
-+	mutex_unlock(&wil->mutex);
- }
- 
- static void wil_connect_timer_fn(ulong x)
-@@ -260,7 +262,9 @@ void wil_priv_deinit(struct wil6210_priv *wil)
- {
- 	cancel_work_sync(&wil->disconnect_worker);
- 	cancel_work_sync(&wil->fw_error_worker);
-+	mutex_lock(&wil->mutex);
- 	wil6210_disconnect(wil, NULL);
-+	mutex_unlock(&wil->mutex);
- 	wmi_event_flush(wil);
- 	destroy_workqueue(wil->wmi_wq_conn);
- 	destroy_workqueue(wil->wmi_wq);
-@@ -374,10 +378,14 @@ int wil_reset(struct wil6210_priv *wil)
- {
- 	int rc;
- 
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
-+
-+	cancel_work_sync(&wil->disconnect_worker);
-+	wil6210_disconnect(wil, NULL);
-+
- 	wil->status = 0; /* prevent NAPI from being scheduled */
- 	if (test_bit(wil_status_napi_en, &wil->status)) {
- 		napi_synchronize(&wil->napi_rx);
--		napi_synchronize(&wil->napi_tx);
- 	}
- 
- 	if (wil->scan_request) {
-@@ -387,9 +395,6 @@ int wil_reset(struct wil6210_priv *wil)
- 		wil->scan_request = NULL;
- 	}
- 
--	cancel_work_sync(&wil->disconnect_worker);
--	wil6210_disconnect(wil, NULL);
--
- 	wil6210_disable_irq(wil);
- 
- 	wmi_event_flush(wil);
-@@ -447,6 +452,8 @@ static int __wil_up(struct wil6210_priv *wil)
- 	struct wireless_dev *wdev = wil->wdev;
- 	int rc;
- 
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
-+
- 	rc = wil_reset(wil);
- 	if (rc)
- 		return rc;
-@@ -506,6 +513,8 @@ int wil_up(struct wil6210_priv *wil)
- 
- static int __wil_down(struct wil6210_priv *wil)
- {
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
-+
- 	clear_bit(wil_status_napi_en, &wil->status);
- 	napi_disable(&wil->napi_rx);
- 	napi_disable(&wil->napi_tx);
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index c609761..58fc096 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -70,7 +70,9 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 		goto stop_master;
- 
- 	/* need reset here to obtain MAC */
-+	mutex_lock(&wil->mutex);
- 	rc = wil_reset(wil);
-+	mutex_unlock(&wil->mutex);
- 	if (rc)
- 		goto release_irq;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index cfd36cc..c8c5474 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -618,6 +618,7 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
- 		struct wmi_vring_cfg_done_event cmd;
- 	} __packed reply;
- 	struct vring *vring = &wil->vring_tx[id];
-+	struct vring_tx_data *txdata = &wil->vring_tx_data[id];
- 
- 	if (vring->va) {
- 		wil_err(wil, "Tx ring [%d] already allocated\n", id);
-@@ -625,6 +626,7 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
- 		goto out;
- 	}
- 
-+	memset(txdata, 0, sizeof(*txdata));
- 	vring->size = size;
- 	rc = wil_vring_alloc(wil, vring);
- 	if (rc)
-@@ -648,6 +650,8 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
- 	}
- 	vring->hwtail = le32_to_cpu(reply.cmd.tx_vring_tail_ptr);
- 
-+	txdata->enabled = 1;
-+
- 	return 0;
-  out_free:
- 	wil_vring_free(wil, vring, 1);
-@@ -660,9 +664,16 @@ void wil_vring_fini_tx(struct wil6210_priv *wil, int id)
- {
- 	struct vring *vring = &wil->vring_tx[id];
- 
-+	WARN_ON(!mutex_is_locked(&wil->mutex));
-+
- 	if (!vring->va)
- 		return;
- 
-+	/* make sure NAPI won't touch this vring */
-+	wil->vring_tx_data[id].enabled = 0;
-+	if (test_bit(wil_status_napi_en, &wil->status))
-+		napi_synchronize(&wil->napi_tx);
-+
- 	wil_vring_free(wil, vring, 1);
- }
- 
-@@ -1028,6 +1039,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct device *dev = wil_to_dev(wil);
- 	struct vring *vring = &wil->vring_tx[ringid];
-+	struct vring_tx_data *txdata = &wil->vring_tx_data[ringid];
- 	int done = 0;
- 	int cid = wil->vring2cid_tid[ringid][0];
- 	struct wil_net_stats *stats = &wil->sta[cid].stats;
-@@ -1038,6 +1050,11 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 		return 0;
- 	}
- 
-+	if (!txdata->enabled) {
-+		wil_info(wil, "Tx irq[%d]: vring disabled\n", ringid);
-+		return 0;
-+	}
-+
- 	wil_dbg_txrx(wil, "%s(%d)\n", __func__, ringid);
- 
- 	while (!wil_vring_is_empty(vring)) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index fb1006b..2a2dec7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -243,6 +243,14 @@ struct vring {
- 	struct wil_ctx *ctx; /* ctx[size] - software context */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+index 38a54a3..4ae3c85 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+@@ -305,6 +305,215 @@ static const __le32 iwl_bt_mprio_lut[BT_COEX_MULTI_PRIO_LUT_SIZE] = {
+ 	cpu_to_le32(0x33113311),
  };
  
-+/**
-+ * Additional data for Tx Vring
-+ */
-+struct vring_tx_data {
-+	int enabled;
-+
++struct corunning_block_luts {
++	u8 range;
++	__le32 lut20[BT_COEX_CORUN_LUT_SIZE];
 +};
 +
- enum { /* for wil6210_priv.status */
- 	wil_status_fwready = 0,
- 	wil_status_fwconnecting,
-@@ -386,6 +394,7 @@ struct wil6210_priv {
- 	/* DMA related */
- 	struct vring vring_rx;
- 	struct vring vring_tx[WIL6210_MAX_TX_RINGS];
-+	struct vring_tx_data vring_tx_data[WIL6210_MAX_TX_RINGS];
- 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
- 	struct wil_sta_info sta[WIL6210_MAX_CID];
- 	/* scan */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 58c3afc..2ba56ee 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -462,7 +462,9 @@ static void wmi_evt_disconnect(struct wil6210_priv *wil, int id,
++/*
++ * Ranges for the antenna coupling calibration / co-running block LUT:
++ *		LUT0: [ 0, 12[
++ *		LUT1: [12, 20[
++ *		LUT2: [20, 21[
++ *		LUT3: [21, 23[
++ *		LUT4: [23, 27[
++ *		LUT5: [27, 30[
++ *		LUT6: [30, 32[
++ *		LUT7: [32, 33[
++ *		LUT8: [33, - [
++ */
++static const struct corunning_block_luts antenna_coupling_ranges[] = {
++	{
++		.range = 0,
++		.lut20 = {
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 12,
++		.lut20 = {
++			cpu_to_le32(0x00000001),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 20,
++		.lut20 = {
++			cpu_to_le32(0x00000002),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 21,
++		.lut20 = {
++			cpu_to_le32(0x00000003),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 23,
++		.lut20 = {
++			cpu_to_le32(0x00000004),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 27,
++		.lut20 = {
++			cpu_to_le32(0x00000005),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 30,
++		.lut20 = {
++			cpu_to_le32(0x00000006),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 32,
++		.lut20 = {
++			cpu_to_le32(0x00000007),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++	{
++		.range = 33,
++		.lut20 = {
++			cpu_to_le32(0x00000008),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
++		},
++	},
++};
++
+ static enum iwl_bt_coex_lut_type
+ iwl_get_coex_type(struct iwl_mvm *mvm, const struct ieee80211_vif *vif)
+ {
+@@ -390,8 +599,6 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 					    BT_VALID_LUT |
+ 					    BT_VALID_WIFI_RX_SW_PRIO_BOOST |
+ 					    BT_VALID_WIFI_TX_SW_PRIO_BOOST |
+-					    BT_VALID_CORUN_LUT_20 |
+-					    BT_VALID_CORUN_LUT_40 |
+ 					    BT_VALID_ANT_ISOLATION |
+ 					    BT_VALID_ANT_ISOLATION_THRS |
+ 					    BT_VALID_TXTX_DELTA_FREQ_THRS |
+@@ -401,6 +608,12 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 	if (IWL_MVM_BT_COEX_SYNC2SCO)
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
  
- 	wil->sinfo_gen++;
++	if (IWL_MVM_BT_COEX_CORUNNING) {
++		bt_cmd->valid_bit_msk = cpu_to_le32(BT_VALID_CORUN_LUT_20 |
++						    BT_VALID_CORUN_LUT_40);
++		bt_cmd->flags |= cpu_to_le32(BT_COEX_CORUNNING);
++	}
++
+ 	if (mvm->cfg->bt_shared_single_ant)
+ 		memcpy(&bt_cmd->decision_lut, iwl_single_shared_ant,
+ 		       sizeof(iwl_single_shared_ant));
+@@ -408,6 +621,12 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 		memcpy(&bt_cmd->decision_lut, iwl_combined_lookup,
+ 		       sizeof(iwl_combined_lookup));
  
-+	mutex_lock(&wil->mutex);
- 	wil6210_disconnect(wil, evt->bssid);
-+	mutex_unlock(&wil->mutex);
++	/* Take first Co-running block LUT to get started */
++	memcpy(bt_cmd->bt4_corun_lut20, antenna_coupling_ranges[0].lut20,
++	       sizeof(bt_cmd->bt4_corun_lut20));
++	memcpy(bt_cmd->bt4_corun_lut40, antenna_coupling_ranges[0].lut20,
++	       sizeof(bt_cmd->bt4_corun_lut40));
++
+ 	memcpy(&bt_cmd->bt_prio_boost, iwl_bt_prio_boost,
+ 	       sizeof(iwl_bt_prio_boost));
+ 	memcpy(&bt_cmd->bt4_multiprio_lut, iwl_bt_mprio_lut,
+@@ -498,7 +717,7 @@ int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id, bool enable)
+ 	struct iwl_host_cmd cmd = {
+ 		.id = BT_CONFIG,
+ 		.len = { sizeof(*bt_cmd), },
+-		.dataflags = { IWL_HCMD_DFL_DUP, },
++		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
+ 		.flags = CMD_ASYNC,
+ 	};
+ 	struct iwl_mvm_sta *mvmsta;
+@@ -993,3 +1212,69 @@ void iwl_mvm_bt_coex_vif_change(struct iwl_mvm *mvm)
+ 
+ 	iwl_mvm_bt_coex_notif_handle(mvm);
  }
++
++int iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
++				  struct iwl_rx_cmd_buffer *rxb,
++				  struct iwl_device_cmd *dev_cmd)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	u32 ant_isolation = le32_to_cpup((void *)pkt->data);
++	u8 __maybe_unused lower_bound, upper_bound;
++	u8 lut;
++
++	struct iwl_bt_coex_cmd *bt_cmd;
++	struct iwl_host_cmd cmd = {
++		.id = BT_CONFIG,
++		.len = { sizeof(*bt_cmd), },
++		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
++		.flags = CMD_SYNC,
++	};
++
++	if (!IWL_MVM_BT_COEX_CORUNNING)
++		return 0;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	if (ant_isolation ==  mvm->last_ant_isol)
++		return 0;
++
++	for (lut = 0; lut < ARRAY_SIZE(antenna_coupling_ranges) - 1; lut++)
++		if (ant_isolation < antenna_coupling_ranges[lut + 1].range)
++			break;
++
++	lower_bound = antenna_coupling_ranges[lut].range;
++
++	if (lut < ARRAY_SIZE(antenna_coupling_ranges) - 1)
++		upper_bound = antenna_coupling_ranges[lut + 1].range;
++	else
++		upper_bound = antenna_coupling_ranges[lut].range;
++
++	IWL_DEBUG_COEX(mvm, "Antenna isolation=%d in range [%d,%d[, lut=%d\n",
++		       ant_isolation, lower_bound, upper_bound, lut);
++
++	mvm->last_ant_isol = ant_isolation;
++
++	if (mvm->last_corun_lut == lut)
++		return 0;
++
++	mvm->last_corun_lut = lut;
++
++	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_KERNEL);
++	if (!bt_cmd)
++		return 0;
++	cmd.data[0] = bt_cmd;
++
++	bt_cmd->flags = cpu_to_le32(BT_COEX_NW);
++	bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_ENABLE |
++					     BT_VALID_CORUN_LUT_20 |
++					     BT_VALID_CORUN_LUT_40);
++
++	/* For the moment, use the same LUT for 20GHz and 40GHz */
++	memcpy(bt_cmd->bt4_corun_lut20, antenna_coupling_ranges[lut].lut20,
++	       sizeof(bt_cmd->bt4_corun_lut20));
++
++	memcpy(bt_cmd->bt4_corun_lut40, antenna_coupling_ranges[lut].lut20,
++	       sizeof(bt_cmd->bt4_corun_lut40));
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index 2d133b1..37d5f35 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -82,5 +82,6 @@
+ #define IWL_MVM_LOWLAT_SINGLE_BINDING_MAXDUR	24 /* TU */
+ #define IWL_MVM_LOWLAT_DUAL_BINDING_MAXDUR	24 /* TU */
+ #define IWL_MVM_BT_COEX_SYNC2SCO		1
++#define IWL_MVM_BT_COEX_CORUNNING		1
  
- static void wmi_evt_notify(struct wil6210_priv *wil, int id, void *d, int len)
+ #endif /* __MVM_CONSTANTS_H */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index e3b42b4..21ef8da 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -350,6 +350,9 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
+ 			 le32_to_cpu(notif->secondary_ch_lut));
+ 	pos += scnprintf(buf+pos, bufsz-pos, "bt_activity_grading = %d\n",
+ 			 le32_to_cpu(notif->bt_activity_grading));
++	pos += scnprintf(buf+pos, bufsz-pos,
++			 "antenna isolation = %d CORUN LUT index = %d\n",
++			 mvm->last_ant_isol, mvm->last_corun_lut);
+ 
+ 	mutex_unlock(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h
+index 20b723d..32156d7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-bt-coex.h
+@@ -77,6 +77,7 @@
+  * @BT_COEX_3W:
+  * @BT_COEX_NW:
+  * @BT_COEX_SYNC2SCO:
++ * @BT_COEX_CORUNNING:
+  *
+  * The COEX_MODE must be set for each command. Even if it is not changed.
+  */
+@@ -88,6 +89,7 @@ enum iwl_bt_coex_flags {
+ 	BT_COEX_3W			= 0x2 << BT_COEX_MODE_POS,
+ 	BT_COEX_NW			= 0x3 << BT_COEX_MODE_POS,
+ 	BT_COEX_SYNC2SCO		= BIT(7),
++	BT_COEX_CORUNNING		= BIT(8),
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 807fa52..703168b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -95,6 +95,7 @@ enum {
+ 	/* PHY context commands */
+ 	PHY_CONTEXT_CMD = 0x8,
+ 	DBG_CFG = 0x9,
++	ANTENNA_COUPLING_NOTIFICATION = 0xa,
+ 
+ 	/* station table */
+ 	ADD_STA_KEY = 0x17,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index e5c1db9..18939dc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -597,6 +597,8 @@ struct iwl_mvm {
+ 	u8 bt_kill_msk;
+ 	struct iwl_bt_coex_profile_notif last_bt_notif;
+ 	struct iwl_bt_coex_ci_cmd last_bt_ci_cmd;
++	u32 last_ant_isol;
++	u8 last_corun_lut;
+ 
+ 	/* Thermal Throttling and CTkill */
+ 	struct iwl_mvm_tt_mgmt thermal_throttle;
+@@ -750,6 +752,9 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 			struct iwl_device_cmd *cmd);
+ int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 			 struct iwl_device_cmd *cmd);
++int iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
++				  struct iwl_rx_cmd_buffer *rxb,
++				  struct iwl_device_cmd *cmd);
+ int iwl_mvm_rx_fw_error(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 			  struct iwl_device_cmd *cmd);
+ int iwl_mvm_rx_card_state_notif(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 39279e1..75fbc40 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -220,6 +220,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(BT_PROFILE_NOTIFICATION, iwl_mvm_rx_bt_coex_notif, true),
+ 	RX_HANDLER(BEACON_NOTIFICATION, iwl_mvm_rx_beacon_notif, false),
+ 	RX_HANDLER(STATISTICS_NOTIFICATION, iwl_mvm_rx_statistics, true),
++	RX_HANDLER(ANTENNA_COUPLING_NOTIFICATION,
++		   iwl_mvm_rx_ant_coupling_notif, true),
+ 
+ 	RX_HANDLER(TIME_EVENT_NOTIFICATION, iwl_mvm_rx_time_event_notif, false),
+ 
+@@ -321,6 +323,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
+ 	CMD(MAC_PM_POWER_TABLE),
+ 	CMD(BT_COEX_CI),
+ 	CMD(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION),
++	CMD(ANTENNA_COUPLING_NOTIFICATION),
+ };
+ #undef CMD
+ 
 -- 
 1.8.3.2
 
