@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge20.ethz.ch ([82.130.99.26]:25079 "EHLO edge20.ethz.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbaC3LnP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 07:43:15 -0400
-Date: Sun, 30 Mar 2014 13:37:02 +0200
-Subject: Re: tx_retries and tx_failures on iwlwifi
-From: Daniel Sim <simd@student.ethz.ch>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	" ilw@linux.intel.com" <ilw@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <fe413605-8f49-491e-87f2-7bfd1c90ef66@CAS20.d.ethz.ch> (sfid-20140330_134319_239434_B675596F)
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:57605 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757723AbaCRWOy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 18:14:54 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so5867458eek.18
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 15:14:53 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC] bcma: gpio: register 32 GPIOs on BCM5357
+Date: Tue, 18 Mar 2014 23:14:42 +0100
+Message-Id: <1395180882-10950-1-git-send-email-zajec5@gmail.com> (sfid-20140318_231458_705415_5636E947)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRW1tYW51ZWwsCgo+Cj4gVGhlIGRlZmF1bHQgbnVtYmVyIG9mIHJldHJpZXMgaXMgMTYuIFRo
-ZSByZWFzb24geW91IGhhdmUgb2RkIG51bWJlcnMgCj4gaXMgYmVjYXVzZSB3ZSBkb24ndCByZXBv
-cnQgdGhpcyBwcm9wZXJseS4gVGhlIGJpZyBwcm9ibGVtIGlzIGFib3V0IAo+IEFNUERVIG1haW5s
-eSAtIHRoZSBmcmFtZXMgYXJlIHBpY2tlZCB1cCBieSB0aGUgSFcgYW5kIHJldHJhbnNtaXNzaW9u
-cyAKPiBhcmUgaGFuZGxlZCBieSB0aGUgRlcgLyBIVy4gV2hpbGUgd2Uga25vdyBob3cgbWFueSBw
-YWNrZXRzIGZhaWxlZCB2cy4gCj4gaG93IG1hbnkgd2VyZSBzZW50IChmb3IgcmF0ZSBjb250cm9s
-IHB1cnBvc2VzKSwgd2UgY2FuJ3Qga25vdyBleGFjdGx5IAo+IHdoYXQgZnJhbWUgd2UgcmV0cmFu
-c21pdHRlZCBhbmQgaG93IG1hbnkgdGltZXMgKHdlbGwuLi4gd2UgY2FuIC0gYnV0IAo+IGl0IGlz
-IG5vdCB0cml2aWFsKS4gU2luY2UgdGhlIHRoZSBvbmx5IHdheSB0byB0ZWxsIG1hYzgwMjExIC8g
-Y2ZnODAyMTEgCj4gLyBpdyBpcyBwZXItcGFja2V0IChpbiBpZWVlODAyMTFfdHhfc3RhdHVzIGlu
-IGVhY2ggVHggc3RhdHVzIGZvciBlYWNoIAo+IHBhY2tldCksIHRoZSBpbmZvcm1hdGlvbiB0aGVy
-ZSBpcyBub3QgYWNjdXJhdGUuIAo+Cj4gSSB3YW50IHRvIGhvcGUgdGhhdCBpZiB5b3UgZGlzYWJs
-ZWQgQU1QRFUgKFR4KSB5b3UnbGwgZ2V0IG1vcmUgCj4gYWNjdXJhdGUgcmVzdWx0cyAtIEkgaGF2
-ZW4ndCB0ZXN0ZWQgbXlzZWxmIHRob3VnaC4KCkRvZXMgdGhpcyBtZWFuIHRoYXQgaWYgQU1QRFUg
-aXMgZGlzYWJsZWQsIHRoZSByZXRyYW5zbWlzc2lvbnMgd2lsbCBiZSBlaXRoZXIgaGFuZGxlZCBp
-biBzb2Z0d2FyZSwgb3IgdGhlIGhhcmR3YXJlIHdpbGwgcmVwb3J0IHJldHJhbnNtaXNzaW9ucyBt
-b3JlIGFjY3VyYXRlbHk/CgpIb3cgc2hvdWxkIEkgZGlzYWJsZSBBTVBEVT8KCkRhbmllbAo=
+Some Broadcom boards have more GPIOs available. For example Linksys
+E3200 home router is based on SoC id 0x5357, package 0x0A and uses GPIO
+23 to reset internal USB WiFi (gpio23=wombo_reset).
+---
+ drivers/bcma/driver_gpio.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 25f9887..d7f81ad 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -218,7 +218,14 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ #if IS_BUILTIN(CONFIG_BCMA_HOST_SOC)
+ 	chip->to_irq		= bcma_gpio_to_irq;
+ #endif
+-	chip->ngpio		= 16;
++	switch (cc->core->bus->chipinfo.id) {
++	case BCMA_CHIP_ID_BCM5357:
++		chip->ngpio	= 32;
++		break;
++	default:
++		chip->ngpio	= 16;
++	}
++
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+ 	 * a random base number. */
+-- 
+1.8.4.5
 
