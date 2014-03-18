@@ -1,57 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54153 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932391AbaCQJdo (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:57957 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbaCRN7M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 05:33:44 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/3] ath9k: Disable AR_INTR_SYNC_HOST1_FATAL for QCA953x
-Date: Mon, 17 Mar 2014 15:02:47 +0530
-Message-Id: <1395048768-25245-2-git-send-email-sujith@msujith.org> (sfid-20140317_103347_721002_703FF58E)
-In-Reply-To: <1395048768-25245-1-git-send-email-sujith@msujith.org>
-References: <1395048768-25245-1-git-send-email-sujith@msujith.org>
+	Tue, 18 Mar 2014 09:59:12 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so5498955eek.9
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:11 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 05/21] mac80211: track assigned vifs in chanctx
+Date: Tue, 18 Mar 2014 14:53:08 +0100
+Message-Id: <1395150804-24090-6-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150215_565236_EA347FFE)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This can be useful.
 
-Along with AR9340 and AR955x, this is also needed for
-the QCA953x SoC.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  | 2 +-
- drivers/net/wireless/ath/ath9k/mac.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/chan.c        | 4 ++++
+ net/mac80211/ieee80211_i.h | 4 ++++
+ net/mac80211/iface.c       | 1 +
+ 3 files changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d91403f..c8a9dfa 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -882,7 +882,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index c1284f2..aca70a6 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -276,6 +276,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
  
--	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
-+	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 5f72758..51ce36f 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -827,7 +827,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 		return;
++	INIT_LIST_HEAD(&ctx->assigned_vifs);
+ 	ctx->conf.def = *chandef;
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+@@ -420,6 +421,7 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 		curr_ctx->refcount--;
+ 		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
+ 		conf = NULL;
++		list_del(&sdata->assigned_chanctx_list);
  	}
  
--	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
-+	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 	if (new_ctx) {
+@@ -429,6 +431,8 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
  
- 	async_mask = AR_INTR_MAC_IRQ;
+ 		new_ctx->refcount++;
+ 		conf = &new_ctx->conf;
++		list_add(&sdata->assigned_chanctx_list,
++			 &new_ctx->assigned_vifs);
+ 	}
+ 
+ out:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d4b3fe4..6e3d137 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -691,6 +691,8 @@ struct ieee80211_chanctx {
+ 	struct list_head list;
+ 	struct rcu_head rcu_head;
+ 
++	struct list_head assigned_vifs;
++
+ 	enum ieee80211_chanctx_mode mode;
+ 	int refcount;
+ 	bool driver_present;
+@@ -756,6 +758,8 @@ struct ieee80211_sub_if_data {
+ 	bool csa_radar_required;
+ 	struct cfg80211_chan_def csa_chandef;
+ 
++	struct list_head assigned_chanctx_list;
++
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+ 	struct cfg80211_chan_def reserved_chandef;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 384f663..3b5b6d3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1291,6 +1291,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+ 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
++	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
 -- 
-1.9.0
+1.8.5.3
 
