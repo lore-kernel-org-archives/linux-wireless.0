@@ -1,74 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:52015 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbaCAUR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:59 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 23/23] ath9k_htc: move DEFAULT_SWBA_RESPONSE check to ath9k_htc_beacon_init
-Date: Sat,  1 Mar 2014 21:16:06 +0100
-Message-Id: <1393704966-13985-24-git-send-email-linux@rempel-privat.de> (sfid-20140301_214708_975233_5E66EFF5)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37290 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407AbaCRLta (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 07:49:30 -0400
+Message-ID: <532832C1.2050901@broadcom.com> (sfid-20140318_124933_826269_3CDDD1F8)
+Date: Tue, 18 Mar 2014 12:49:21 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] brcm: add firmware for the BCM43362 WLAN device
+References: <1393014109-4712-1-git-send-email-arend@broadcom.com> <1394993460.15764.89.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1394993460.15764.89.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... to remove some more dups.
+On 16/03/14 19:11, Ben Hutchings wrote:
+> On Fri, 2014-02-21 at 21:21 +0100, Arend van Spriel wrote:
+>> This patch adds firmware for the BCM43362 for which recently
+>> support has been added to the brcmfmac driver.
+>>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>>   WHENCE                      |    1 +
+>>   brcm/brcmfmac43362-sdio.bin |  Bin 0 -> 219557 bytes
+>>   2 files changed, 1 insertion(+)
+>>   create mode 100644 brcm/brcmfmac43362-sdio.bin
+> [...]
+>
+> Applied, thanks.  Sorry for the delay.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+No problem. Support is added in 3.14 so still ahead of the release.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index cbaf4e0..e8b6ec3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -74,6 +74,11 @@ static void ath9k_htc_beacon_init(struct ath9k_htc_priv *priv,
- 	__be32 htc_imask = 0;
- 	u8 cmd_rsp;
- 
-+	if (conf->intval >= TU_TO_USEC(DEFAULT_SWBA_RESPONSE))
-+		ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
-+	else
-+		ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	if (reset_tsf)
- 		ath9k_hw_reset_tsf(ah);
-@@ -110,15 +115,6 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 	ah->imask = 0;
- 
- 	ath9k_cmn_beacon_config_ap(ah, conf, ATH9K_HTC_MAX_BCN_VIF);
--	/*
--	 * To reduce beacon misses under heavy TX load,
--	 * set the beacon response time to a larger value.
--	 */
--	if (conf->intval >= TU_TO_USEC(DEFAULT_SWBA_RESPONSE))
--		ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
--	else
--		ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
--
- 	ath9k_htc_beacon_init(priv, conf, false);
- }
- 
-@@ -129,14 +125,6 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 	ah->imask = 0;
- 
- 	ath9k_cmn_beacon_config_adhoc(ah, conf);
--	/*
--	 * Only one IBSS interfce is allowed.
--	 */
--	if (conf->intval >= TU_TO_USEC(DEFAULT_SWBA_RESPONSE))
--		ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
--	else
--		ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
--
- 	ath9k_htc_beacon_init(priv, conf, conf->ibss_creator);
- }
- 
--- 
-1.9.0
-
+Thanks,
+Arend
