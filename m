@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753360AbaCCNSI (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:56215 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380AbaCROpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 08:18:08 -0500
-Message-ID: <1393852684.10039.11.camel@jlt4.sipsolutions.net> (sfid-20140303_141811_992954_847A3E9E)
-Subject: Re: [PATCH] cfg80211: fix cfg80211_leave() locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 03 Mar 2014 14:18:04 +0100
-In-Reply-To: <CA+BoTQk96KiL11N6X_8vx8S380vyaLMu0hU0P=dDUV4_fjw5fw@mail.gmail.com> (sfid-20140303_140715_936464_F062B634)
-References: <1393599480-27908-1-git-send-email-michal.kazior@tieto.com>
-	 <1393851336.10039.1.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk96KiL11N6X_8vx8S380vyaLMu0hU0P=dDUV4_fjw5fw@mail.gmail.com>
-	 (sfid-20140303_140715_936464_F062B634)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 18 Mar 2014 10:45:43 -0400
+Received: by mail-ee0-f47.google.com with SMTP id b15so5422859eek.20
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:45:42 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/35] iwlwifi: mvm: init drv_stats_lock
+Date: Tue, 18 Mar 2014 16:45:05 +0200
+Message-Id: <1395153939-23897-1-git-send-email-egrumbach@gmail.com> (sfid-20140318_154547_404859_68C860B7)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-03 at 14:07 +0100, Michal Kazior wrote:
-> On 3 March 2014 13:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Fri, 2014-02-28 at 15:58 +0100, Michal Kazior wrote:
-> >> The beacon_interval was set unprotected by
-> >> wdev.mtx. This could possibly lead to inconsistent
-> >> cfg80211 states.
-> >
-> > Why not just this patch? The beacon_interval is already set to 0 in
-> > stop_ap(), and is irrelevant for the other modes.
-> >
-> > diff --git a/net/wireless/core.c b/net/wireless/core.c
-> > index 010892b81a06..a3bf18d11609 100644
-> > --- a/net/wireless/core.c
-> > +++ b/net/wireless/core.c
-> > @@ -788,8 +788,6 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
-> >         default:
-> >                 break;
-> >         }
-> > -
-> > -       wdev->beacon_interval = 0;
-> >  }
-> >
-> >  static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
-> >
-> >
-> > johannes
-> 
-> Good point. I was focused on locking changes (for my other patch) and
-> noticed the beacon_interval being unprotected and didn't look more
-> into it. Should I respin or are you going to apply your patch
-> yourself? Either way is fine with me.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've got it.
+Otherwise lockdep complains about the lock, I'm not sure
+why we didn't see this before.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index e0ff43e..41c6370 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -1049,6 +1049,8 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	struct dentry *bcast_dir __maybe_unused;
+ 	char buf[100];
+ 
++	spin_lock_init(&mvm->drv_stats_lock);
++
+ 	mvm->debugfs_dir = dbgfs_dir;
+ 
+ 	MVM_DEBUGFS_ADD_FILE(tx_flush, mvm->debugfs_dir, S_IWUSR);
+-- 
+1.8.3.2
 
