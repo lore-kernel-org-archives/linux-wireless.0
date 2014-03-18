@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:38541 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbaCYJPm (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:64538 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126AbaCROqS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 05:15:42 -0400
-Subject: [PATCH 7/8] ath10k: add module parameter values to the pci info print
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 25 Mar 2014 11:15:40 +0200
-Message-ID: <20140325091540.16651.32712.stgit@potku.adurom.net> (sfid-20140325_101545_358891_1DB37D3F)
-In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
-References: <20140325091311.16651.15747.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 18 Mar 2014 10:46:18 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so4757662eek.7
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:17 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/35] iwlwifi: mvm: don't enable protection for all AMPDUs
+Date: Tue, 18 Mar 2014 16:45:23 +0200
+Message-Id: <1395153939-23897-19-git-send-email-egrumbach@gmail.com> (sfid-20140318_155649_516954_29403111)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hopefully this makes it easier to debug problems in the future.
+From: Eyal Shapira <eyal@wizery.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Currently RTS protection was done whenever trasnmitting an AMPDU.
+This limits throughput in cases where there's no need for protection.
+Disable this too inclusive protection for now.
+
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/tx.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 5842fa51f9c5..783cfa035b11 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1952,7 +1952,9 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
- 		irq_mode = "legacy";
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index 0e3f45a..21ab59c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -127,9 +127,6 @@ static void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		tx_cmd->pm_frame_timeout = 0;
+ 	}
  
- 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
--		ath10k_info("pci irq %s\n", irq_mode);
-+		ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
-+			    irq_mode, ath10k_pci_irq_mode,
-+			    ath10k_pci_reset_mode);
- 
- 	return 0;
- 
+-	if (info->flags & IEEE80211_TX_CTL_AMPDU)
+-		tx_flags |= TX_CMD_FLG_PROT_REQUIRE;
+-
+ 	if (ieee80211_is_data(fc) && len > mvm->rts_threshold &&
+ 	    !is_multicast_ether_addr(ieee80211_get_DA(hdr)))
+ 		tx_flags |= TX_CMD_FLG_PROT_REQUIRE;
+-- 
+1.8.3.2
 
