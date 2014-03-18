@@ -1,48 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:57605 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757723AbaCRWOy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 18:14:54 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so5867458eek.18
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 15:14:53 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:35305 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756133AbaCRPGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 11:06:52 -0400
+From: Luciano Coelho <luciano.coelho@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC] bcma: gpio: register 32 GPIOs on BCM5357
-Date: Tue, 18 Mar 2014 23:14:42 +0100
-Message-Id: <1395180882-10950-1-git-send-email-zajec5@gmail.com> (sfid-20140318_231458_705415_5636E947)
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Subject: [PATCH v10 4/4] mac80211: allow reservation of a running chanctx
+Date: Tue, 18 Mar 2014 17:03:06 +0200
+Message-Id: <1395154986-13810-5-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160655_404491_565221BC)
+In-Reply-To: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
+References: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some Broadcom boards have more GPIOs available. For example Linksys
-E3200 home router is based on SoC id 0x5357, package 0x0A and uses GPIO
-23 to reset internal USB WiFi (gpio23=wombo_reset).
----
- drivers/bcma/driver_gpio.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+With single-channel drivers, we need to be able to change a running
+chanctx if we want to use chanctx reservation.  Not all drivers may be
+able to do this, so add a flag that indicates support for it.
 
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 25f9887..d7f81ad 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -218,7 +218,14 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- #if IS_BUILTIN(CONFIG_BCMA_HOST_SOC)
- 	chip->to_irq		= bcma_gpio_to_irq;
- #endif
--	chip->ngpio		= 16;
-+	switch (cc->core->bus->chipinfo.id) {
-+	case BCMA_CHIP_ID_BCM5357:
-+		chip->ngpio	= 32;
-+		break;
-+	default:
-+		chip->ngpio	= 16;
+Changing a running chanctx can also be used as an optimization in
+multi-channel drivers when the context needs to be reserved for future
+usage.
+
+Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
+reserved so nobody else can use it (since we know it's going to
+change).  In the future, we may allow several vifs to use the same
+reservation as long as they plan to use the chanctx on the same
+future channel.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In v3:
+
+   * reworded the TODO, slightly;
+
+In v4:
+
+   * remove IEEE80211_CHANCTX_RESERVED and the reserved_mode element;
+   * increase refcount also for "in-place" changes;
+   * stop queues also before doing an "in-place" change;
+   * refactor ieee80211_use_reserved_chanctx() a bit to fit "in-place"
+     better;
+
+In v5:
+
+   * fix checkpatch warnings;
+
+In v6:
+
+   * return ret in ieee80211_chanctx_is_reserved();
+   * check if sdata is running in ieee80211_chanctx_is_reserved();
+   * keep check for IEEE80211_CHANCTX_EXCLUSIVE in
+     ieee80211_find_channel();
+   * use break instead of goto out in ieee80211_chanctx_is_reserved();
+
+In v8:
+
+   * don't remove recalc functions;
+
+In v9:
+
+   * one more fix for my major v7 rebase screw-up;
+---
+ include/net/mac80211.h |  7 +++++
+ net/mac80211/chan.c    | 79 ++++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 68 insertions(+), 18 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 86faa41..b35c608 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1553,6 +1553,12 @@ struct ieee80211_tx_control {
+  *	for a single active channel while using channel contexts. When support
+  *	is not enabled the default action is to disconnect when getting the
+  *	CSA frame.
++ *
++ * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
++ *	channel context on-the-fly.  This is needed for channel switch
++ *	on single-channel hardware.  It can also be used as an
++ *	optimization in certain channel switch cases with
++ *	multi-channel.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1584,6 +1590,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
+ 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
++	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
+ };
+ 
+ /**
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f7e581b..4d7be8e 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -162,6 +162,27 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 	}
+ }
+ 
++static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
++					  struct ieee80211_chanctx *ctx)
++{
++	struct ieee80211_sub_if_data *sdata;
++	bool ret = false;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++		if (sdata->reserved_chanctx == ctx) {
++			ret = true;
++			break;
++		}
 +	}
 +
- 	/* There is just one SoC in one device and its GPIO addresses should be
- 	 * deterministic to address them more easily. The other buses could get
- 	 * a random base number. */
++	rcu_read_unlock();
++	return ret;
++}
++
+ static struct ieee80211_chanctx *
+ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		       const struct cfg80211_chan_def *chandef,
+@@ -177,7 +198,12 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		const struct cfg80211_chan_def *compat;
+ 
+-		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
++		/* We don't support chanctx reservation for multiple
++		 * vifs yet, so don't allow reserved chanctxs to be
++		 * reused.
++		 */
++		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
++		    ieee80211_chanctx_is_reserved(local, ctx))
+ 			continue;
+ 
+ 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
+@@ -695,11 +721,20 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	/* try to find another context with the chandef we want */
+ 	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
+ 	if (!new_ctx) {
+-		/* create a new context */
+-		new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+-		if (IS_ERR(new_ctx)) {
+-			ret = PTR_ERR(new_ctx);
+-			goto out;
++		if (curr_ctx->refcount == 1 &&
++		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
++			/* if we're the only users of the chanctx and
++			 * the driver supports changing a running
++			 * context, reserve our current context
++			 */
++			new_ctx = curr_ctx;
++		} else {
++			/* create a new context and reserve it */
++			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
++			if (IS_ERR(new_ctx)) {
++				ret = PTR_ERR(new_ctx);
++				goto out;
++			}
+ 		}
+ 	}
+ 
+@@ -747,22 +782,30 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
+ 
+-	/* unref our reservation before assigning */
++	/* unref our reservation */
+ 	ctx->refcount--;
+ 	sdata->reserved_chanctx = NULL;
+ 
+-	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
+-	if (old_ctx->refcount == 0)
+-		ieee80211_free_chanctx(local, old_ctx);
+-	if (ret) {
+-		/* if assign fails refcount stays the same */
+-		if (ctx->refcount == 0)
+-			ieee80211_free_chanctx(local, ctx);
+-		goto out;
+-	}
++	if (old_ctx == ctx) {
++		/* This is our own context, just change it */
++		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
++						     &tmp_changed);
++		if (ret)
++			goto out;
++	} else {
++		ret = ieee80211_assign_vif_chanctx(sdata, ctx);
++		if (old_ctx->refcount == 0)
++			ieee80211_free_chanctx(local, old_ctx);
++		if (ret) {
++			/* if assign fails refcount stays the same */
++			if (ctx->refcount == 0)
++				ieee80211_free_chanctx(local, ctx);
++			goto out;
++		}
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP)
+-		__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
++		if (sdata->vif.type == NL80211_IFTYPE_AP)
++			__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
++	}
+ 
+ 	*changed = tmp_changed;
+ 
 -- 
-1.8.4.5
+1.9.0
 
