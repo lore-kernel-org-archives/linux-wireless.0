@@ -1,37 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37123 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752682AbaCMNdu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 09:33:50 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:57849 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756252AbaCROqd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Mar 2014 10:46:33 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so4832430eek.12
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:32 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v9 0/4] mac802111: channel context reservation
-Date: Thu, 13 Mar 2014 15:33:37 +0200
-Message-Id: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com> (sfid-20140313_143353_461056_3E5304EF)
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/35] iwlwifi: mvm: configure protocol offloading on D0i3
+Date: Tue, 18 Mar 2014 16:45:30 +0200
+Message-Id: <1395153939-23897-26-git-send-email-egrumbach@gmail.com> (sfid-20140318_154658_926655_510692CF)
+In-Reply-To: <53285AF8.7050305@gmail.com>
+References: <53285AF8.7050305@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Eliad Peller <eliad@wizery.com>
 
-Another version with more rebase fixes.  Thanks Michal for all the reviews!
+Enable protocol offloading (arp and NS) on D0i3.
 
---
-Cheers,
-Luca.
+The offloading allows the fw answer NS and arp requests
+without waking up the host.
 
-Luciano Coelho (4):
-  mac80211: split ieee80211_vif_change_channel in two
-  mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
-  mac80211: implement chanctx reservation
-  mac80211: allow reservation of a running chanctx
+Since protocol offloading is saved between D0i3
+entries, we have to explicitly disable it in
+case we don't want it.
 
- include/net/mac80211.h     |   7 +
- net/mac80211/chan.c        | 366 +++++++++++++++++++++++++++++++++------------
- net/mac80211/ieee80211_i.h |  13 ++
- 3 files changed, 293 insertions(+), 93 deletions(-)
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c         |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h        |  5 ++++-
+ drivers/net/wireless/iwlwifi/mvm/offloading.c | 13 +++++++------
+ drivers/net/wireless/iwlwifi/mvm/ops.c        |  1 +
+ 4 files changed, 13 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 02fb950..e56f5a0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1031,7 +1031,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out;
+ 
+-	ret = iwl_mvm_send_proto_offload(mvm, vif);
++	ret = iwl_mvm_send_proto_offload(mvm, vif, false, CMD_SYNC);
+ 	if (ret)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index d4f3c95..46fe817 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -906,7 +906,10 @@ iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ #endif
+ void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
+ 				struct iwl_wowlan_config_cmd_v2 *cmd);
+-int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
++			       struct ieee80211_vif *vif,
++			       bool disable_offloading,
++			       u32 cmd_flags);
+ 
+ /* D0i3 */
+ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/offloading.c b/drivers/net/wireless/iwlwifi/mvm/offloading.c
+index 9ec5a59..9bfb95e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/offloading.c
++++ b/drivers/net/wireless/iwlwifi/mvm/offloading.c
+@@ -81,7 +81,10 @@ void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
+ 	}
+ }
+ 
+-int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
++			       struct ieee80211_vif *vif,
++			       bool disable_offloading,
++			       u32 cmd_flags)
+ {
+ 	union {
+ 		struct iwl_proto_offload_cmd_v1 v1;
+@@ -91,7 +94,7 @@ int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	} cmd = {};
+ 	struct iwl_host_cmd hcmd = {
+ 		.id = PROT_OFFLOAD_CONFIG_CMD,
+-		.flags = CMD_SYNC,
++		.flags = cmd_flags,
+ 		.data[0] = &cmd,
+ 		.dataflags[0] = IWL_HCMD_DFL_DUP,
+ 	};
+@@ -204,10 +207,8 @@ int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		memcpy(common->arp_mac_addr, vif->addr, ETH_ALEN);
+ 	}
+ 
+-	if (!enabled)
+-		return 0;
+-
+-	common->enabled = cpu_to_le32(enabled);
++	if (!disable_offloading)
++		common->enabled = cpu_to_le32(enabled);
+ 
+ 	hcmd.len[0] = size;
+ 	return iwl_mvm_send_cmd(mvm, &hcmd);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index a3e21f1..10846b6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -905,6 +905,7 @@ static void iwl_mvm_enter_d0i3_iterator(void *_data, u8 *mac,
+ 		data->disable_offloading = true;
+ 
+ 	iwl_mvm_update_d0i3_power_mode(mvm, vif, true, flags);
++	iwl_mvm_send_proto_offload(mvm, vif, data->disable_offloading, flags);
+ 
+ 	/*
+ 	 * on init/association, mvm already configures POWER_TABLE_CMD
 -- 
-1.9.0
+1.8.3.2
 
