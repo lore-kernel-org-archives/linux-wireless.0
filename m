@@ -1,111 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58659 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751481AbaCSFYO (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:46669 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381AbaCSIpL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 01:24:14 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: update MCS set as per RX-STBC bit from hostapd
-Date: Tue, 18 Mar 2014 22:24:10 -0700
-Message-ID: <1395206650-11812-1-git-send-email-bzhao@marvell.com> (sfid-20140319_062418_407305_6AEAE25A)
+	Wed, 19 Mar 2014 04:45:11 -0400
+Received: by mail-oa0-f46.google.com with SMTP id i7so8020188oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:45:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAB3XZEdq=m2oFggRLRaJiMto3q37SFPU2u4uk2LkDqYJ4vt0ow@mail.gmail.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395150804-24090-9-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEdq=m2oFggRLRaJiMto3q37SFPU2u4uk2LkDqYJ4vt0ow@mail.gmail.com>
+Date: Wed, 19 Mar 2014 09:45:10 +0100
+Message-ID: <CA+BoTQkiic-LROVE-sN58p=Gx15eov+c6_2+JMiS3AmWUUCgqQ@mail.gmail.com> (sfid-20140319_094516_964952_A7E56454)
+Subject: Re: [RFC 08/21] mac80211: improve chanctx reservation lookup
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maithili Hinge <maithili@marvell.com>
+On 18 March 2014 17:57, Eliad Peller <eliad@wizery.com> wrote:
+> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Use a separate function to look for reservation
+>> chanctx. For multi-interface/channel reservation
+>> search sematics differ slightly.
+>>
+>> The new routine allows reservations to be merged
+>> with chanctx that are already reserved by other
+>> interface(s).
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+> [...]
+>
+>> +static const struct cfg80211_chan_def *
+>> +ieee80211_chanctx_non_reserved_chandef(struct ieee80211_local *local,
+>> +                                      struct ieee80211_chanctx *ctx,
+>> +                                      const struct cfg80211_chan_def *compat)
+>> +{
+>> +       struct ieee80211_sub_if_data *sdata;
+>> +
+>> +       lockdep_assert_held(&local->chanctx_mtx);
+>> +
+>> +       list_for_each_entry(sdata, &ctx->assigned_vifs,
+>> +                           assigned_chanctx_list) {
+>> +               if (rcu_access_pointer(sdata->reserved_chanctx) != NULL)
+>> +                       continue;
+> this is not rcu pointer...
 
-To set AP in 1X1 or 2X2 mode through hostapd, we need to set
-RX-STBC* in hostapd.conf file. Depending upon RX-STBC bit in
-ht_cap IE received from hostapd, we need to update mcs set in
-bss_cfg appropriately before starting AP.
+Good catch, thanks! I must've missed this while rebasing.
 
-Signed-off-by: Maithili Hinge <maithili@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |  6 +++---
- drivers/net/wireless/mwifiex/fw.h       |  5 +++++
- drivers/net/wireless/mwifiex/uap_cmd.c  | 20 ++++++++++++++++++++
- 3 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ee45d62..21ee27a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2100,10 +2100,10 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_40;
- 
--	if (ISSUPP_RXSTBC(adapter->hw_dot_11n_dev_cap))
--		ht_info->cap |= 1 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+	if (adapter->user_dev_mcs_support == HT_STREAM_2X2)
-+		ht_info->cap |= 3 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 	else
--		ht_info->cap &= ~(3 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
-+		ht_info->cap |= 1 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 
- 	if (ISSUPP_TXSTBC(adapter->hw_dot_11n_dev_cap))
- 		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 341e419..b485dc1 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -202,6 +202,11 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define MWIFIEX_DEF_AMPDU	IEEE80211_HT_AMPDU_PARM_FACTOR
- 
-+#define GET_RXSTBC(x) (x & IEEE80211_HT_CAP_RX_STBC)
-+#define MWIFIEX_RX_STBC1	0x0100
-+#define MWIFIEX_RX_STBC12	0x0200
-+#define MWIFIEX_RX_STBC123	0x0300
-+
- /* dev_cap bitmap
-  * BIT
-  * 0-16		reserved
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a6a6a53..9be6544 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -159,6 +159,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 		      struct cfg80211_ap_settings *params)
- {
- 	const u8 *ht_ie;
-+	u16 cap_info;
- 
- 	if (!ISSUPP_11NENABLED(priv->adapter->fw_cap_info))
- 		return;
-@@ -168,6 +169,25 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 	if (ht_ie) {
- 		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
- 		       sizeof(struct ieee80211_ht_cap));
-+		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
-+		memset(&bss_cfg->ht_cap.mcs, 0,
-+		       priv->adapter->number_of_antenna);
-+		switch (GET_RXSTBC(cap_info)) {
-+		case MWIFIEX_RX_STBC1:
-+			/* HT_CAP 1X1 mode */
-+			memset(&bss_cfg->ht_cap.mcs, 0xff, 1);
-+			break;
-+		case MWIFIEX_RX_STBC12:	/* fall through */
-+		case MWIFIEX_RX_STBC123:
-+			/* HT_CAP 2X2 mode */
-+			memset(&bss_cfg->ht_cap.mcs, 0xff, 2);
-+			break;
-+		default:
-+			dev_warn(priv->adapter->dev,
-+				 "Unsupported RX-STBC, default to 2x2\n");
-+			memset(&bss_cfg->ht_cap.mcs, 0xff, 2);
-+			break;
-+		}
- 		priv->ap_11n_enabled = 1;
- 	} else {
- 		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
--- 
-1.8.2.3
+>> +static bool
+>> +ieee80211_chanctx_can_reserve_chandef(struct ieee80211_local *local,
+>> +                                     struct ieee80211_chanctx *ctx,
+>> +                                     const struct cfg80211_chan_def *def)
+>> +{
+>> +       lockdep_assert_held(&local->chanctx_mtx);
+>> +
+>> +       if (ieee80211_chanctx_combined_chandef(local, ctx, NULL) &&
+>> +           ieee80211_chanctx_combined_chandef(local, ctx, def))
+>> +               return true;
+>> +
+> what's the reason for calling it with NULL?
+>
+>> +       if (!list_empty(&ctx->reserved_vifs) &&
+>> +           ieee80211_chanctx_reserved_chandef(local, ctx, NULL) &&
+>> +           ieee80211_chanctx_reserved_chandef(local, ctx, def))
+>> +               return true;
+> and this seems redundant as _combined_chandef() should already check for it?
 
+Hmm, good point. I'll get rid of these redundant checks.
+
+
+Michał
