@@ -1,94 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:51752 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965429AbaCUNhW (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:43901 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758484AbaCSItj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:37:22 -0400
-Received: by mail-ee0-f44.google.com with SMTP id e49so1819779eek.31
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:37:21 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/4] mac80211: disconnect iface if CSA unexpectedly fails
-Date: Fri, 21 Mar 2014 14:31:15 +0100
-Message-Id: <1395408675-26013-5-git-send-email-michal.kazior@tieto.com> (sfid-20140321_143732_620829_E3A71B5D)
-In-Reply-To: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
- <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 19 Mar 2014 04:49:39 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so6401479eei.28
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:37 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC v2 6/8] ath10k: kill not needed fields from htt_rx_info
+Date: Wed, 19 Mar 2014 09:49:01 +0100
+Message-Id: <1395218943-31704-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_095004_768367_0A5EF1AB)
+In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to leave a cripled
-interface running.
+Kill rates, tsf, fcs_err, mic_err, amsdu_more, encrypt_type
+from htt_rx_info and setup this directly in ieee80211_rx_status.
 
-As a side effect this will unblock tx queues with
-CSA reason immediately after failure instead of
-until after userspace requests interface to stop.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/cfg.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    |   12 ---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  128 ++++++++++++++++--------------
+ 2 files changed, 70 insertions(+), 70 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 65768ef..64e152d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3088,7 +3088,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 9f5da2b..870f807 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1176,18 +1176,6 @@ struct htt_peer_unmap_event {
+ struct htt_rx_info {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_rx_status rx_status;
+-	enum htt_rx_mpdu_status status;
+-	enum htt_rx_mpdu_encrypt_type encrypt_type;
+-	struct {
+-		u8 info0;
+-		u32 info1;
+-		u32 info2;
+-	} rate;
+-
+-	u32 tsf;
+-	bool fcs_err;
+-	bool amsdu_more;
+-	bool mic_err;
+ };
  
--static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ struct ath10k_htt_txbuf {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 4797b59..1af1021 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -655,14 +655,12 @@ static const u8 rx_legacy_rate_idx[] = {
+ 	5,	/* 0x0F  - 9Mbps   */
+ };
+ 
+-static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
++static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 				  enum ieee80211_band band,
++				  u8 info0, u32 info1, u32 info2,
+ 				  struct ieee80211_rx_status *status)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
-@@ -3100,7 +3100,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	if (WARN_ON(err < 0))
--		return;
-+		return err;
+ 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+-	u8 info0 = info->rate.info0;
+-	u32 info1 = info->rate.info1;
+-	u32 info2 = info->rate.info2;
+ 	u8 preamble = 0;
  
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3111,10 +3111,12 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 
- 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
- 	if (err)
--		return;
-+		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-+
-+	return 0;
+ 	/* Check if valid fields */
+@@ -749,6 +747,23 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
+ 	}
  }
  
- void ieee80211_csa_finalize_work(struct work_struct *work)
-@@ -3123,6 +3125,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     csa_finalize_work);
- 	struct ieee80211_local *local = sdata->local;
-+	int err;
++static void ath10k_htt_rx_h_protected(struct ath10k_htt *htt,
++				      struct htt_rx_info *info,
++				      enum htt_rx_mpdu_encrypt_type enctype)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
++
++
++	if (enctype == HTT_RX_MPDU_ENCRYPT_NONE)
++		return;
++
++	info->rx_status.flag |= RX_FLAG_DECRYPTED |
++				RX_FLAG_IV_STRIPPED |
++				RX_FLAG_MMIC_STRIPPED;
++	hdr->frame_control = __cpu_to_le16(__le16_to_cpu(hdr->frame_control) &
++					   ~IEEE80211_FCTL_PROTECTED);
++}
++
+ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
+ 				    struct ieee80211_rx_status *status)
+ {
+@@ -772,36 +787,10 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
+ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ {
+ 	struct ieee80211_rx_status *status;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
  
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
-@@ -3134,7 +3137,13 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	if (!ieee80211_sdata_running(sdata))
- 		goto unlock;
+ 	status = IEEE80211_SKB_RXCB(info->skb);
+ 	memcpy(status, &info->rx_status, sizeof(*status));
  
--	ieee80211_csa_finalize(sdata);
-+	err = ieee80211_csa_finalize(sdata);
-+	if (err) {
-+		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
-+		cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev);
-+		goto unlock;
+-	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
+-		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
+-				RX_FLAG_MMIC_STRIPPED;
+-		hdr->frame_control = __cpu_to_le16(
+-				__le16_to_cpu(hdr->frame_control) &
+-				~IEEE80211_FCTL_PROTECTED);
+-	}
+-
+-	if (info->mic_err)
+-		status->flag |= RX_FLAG_MMIC_ERROR;
+-
+-	if (info->fcs_err)
+-		status->flag |= RX_FLAG_FAILED_FCS_CRC;
+-
+-	if (info->amsdu_more)
+-		status->flag |= RX_FLAG_AMSDU_MORE;
+-
+-	ath10k_htt_rx_h_rates(ar, info, status->band, status);
+-
+-	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+-		/* TSF available only in 32-bit */
+-		status->mactime = info->tsf & 0xffffffff;
+-		status->flag |= RX_FLAG_MACTIME_END;
+-	}
+-
+ 	ath10k_dbg(ATH10K_DBG_DATA,
+ 		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
+ 		   info->skb,
+@@ -815,7 +804,8 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		   status->rate_idx,
+ 		   status->vht_nss,
+ 		   status->freq,
+-		   status->band, status->flag, info->fcs_err);
++		   status->band, status->flag,
++		   !!(status->flag & RX_FLAG_FAILED_FCS_CRC));
+ 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
+ 			info->skb->data, info->skb->len);
+ 
+@@ -915,12 +905,12 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 		}
+ 
+ 		info->skb = skb;
+-		info->encrypt_type = enctype;
++		ath10k_htt_rx_h_protected(htt, info, enctype);
+ 		skb = skb->next;
+ 		info->skb->next = NULL;
+ 
+ 		if (skb)
+-			info->amsdu_more = true;
++			info->rx_status.flag |= RX_FLAG_AMSDU_MORE;
+ 
+ 		ath10k_process_rx(htt->ar, info);
+ 	}
+@@ -995,7 +985,7 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 	}
+ 
+ 	info->skb = skb;
+-	info->encrypt_type = enctype;
++	ath10k_htt_rx_h_protected(htt, info, enctype);
+ 
+ 	ath10k_process_rx(htt->ar, info);
+ }
+@@ -1140,11 +1130,9 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
+ 
+ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 					struct sk_buff *head,
+-					struct htt_rx_info *info,
++					enum htt_rx_mpdu_status status,
+ 					bool channel_set)
+ {
+-	enum htt_rx_mpdu_status status = info->status;
+-
+ 	if (!head) {
+ 		ath10k_warn("htt rx no data!\n");
+ 		return false;
+@@ -1198,11 +1186,12 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ {
+ 	struct htt_rx_info info;
+ 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
++	enum htt_rx_mpdu_status status;
+ 	struct ieee80211_hdr *hdr;
+ 	int num_mpdu_ranges;
+ 	int fw_desc_len;
+ 	u8 *fw_desc;
+-	bool channel_set;
++	bool channel_set, fcs_err, mic_err;
+ 	int i, j;
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+@@ -1220,12 +1209,22 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+ 	info.rx_status.signal += rx->ppdu.combined_rssi;
+ 
++	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
++		/* TSF available only in 32-bit */
++		info.rx_status.mactime =
++				__le32_to_cpu(rx->ppdu.tsf) & 0xffffffff;
++		info.rx_status.flag |= RX_FLAG_MACTIME_END;
 +	}
 +
- 	if (!ieee80211_csa_needs_block_tx(local))
- 		ieee80211_wake_queues_by_reason(&local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
+ 	channel_set = ath10k_htt_rx_h_channel(htt->ar, &info.rx_status);
+ 
+-	info.rate.info0 = rx->ppdu.info0;
+-	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
+-	info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
+-	info.tsf = __le32_to_cpu(rx->ppdu.tsf);
++	if (channel_set) {
++		ath10k_htt_rx_h_rates(htt->ar, info.rx_status.band,
++				      rx->ppdu.info0,
++				      __le32_to_cpu(rx->ppdu.info1),
++				      __le32_to_cpu(rx->ppdu.info2),
++				      &info.rx_status);
++	}
+ 
+ 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
+ 			rx, sizeof(*rx) +
+@@ -1233,7 +1232,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				num_mpdu_ranges));
+ 
+ 	for (i = 0; i < num_mpdu_ranges; i++) {
+-		info.status = mpdu_ranges[i].mpdu_range_status;
++		status = mpdu_ranges[i].mpdu_range_status;
+ 
+ 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
+ 			struct sk_buff *msdu_head, *msdu_tail;
+@@ -1248,7 +1247,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 							 &msdu_tail);
+ 
+ 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
+-							 &info,
++							 status,
+ 							 channel_set)) {
+ 				ath10k_htt_rx_free_msdu_chain(msdu_head);
+ 				continue;
+@@ -1261,14 +1260,28 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			}
+ 
+ 			info.skb     = msdu_head;
+-			info.fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
+-			info.mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
+ 
+-			if (info.fcs_err)
++			/* Clean per-mpdu specyfic flags */
++			info.rx_status.flag &= ~(RX_FLAG_AMSDU_MORE |
++						 RX_FLAG_FAILED_FCS_CRC |
++						 RX_FLAG_MMIC_ERROR |
++						 RX_FLAG_DECRYPTED |
++						 RX_FLAG_IV_STRIPPED |
++						 RX_FLAG_MMIC_STRIPPED);
++
++			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
++			if (fcs_err)
++				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
++
++			mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
++			if (mic_err)
++				info.rx_status.flag |= RX_FLAG_MMIC_ERROR;
++
++			if (fcs_err)
+ 				ath10k_dbg(ATH10K_DBG_HTT,
+ 					   "htt rx has FCS err\n");
+ 
+-			if (info.mic_err)
++			if (mic_err)
+ 				ath10k_dbg(ATH10K_DBG_HTT,
+ 					   "htt rx has MIC err\n");
+ 
+@@ -1288,6 +1301,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 				struct htt_rx_fragment_indication *frag)
+ {
+ 	struct sk_buff *msdu_head, *msdu_tail;
++	enum htt_rx_mpdu_encrypt_type enctype;
+ 	struct htt_rx_desc *rxd;
+ 	enum rx_msdu_decap_format fmt;
+ 	struct htt_rx_info info = {};
+@@ -1341,15 +1355,13 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 	}
+ 
+ 	info.skb = msdu_head;
+-	info.status = HTT_RX_IND_MPDU_STATUS_OK;
+-	info.encrypt_type = MS(__le32_to_cpu(rxd->mpdu_start.info0),
+-				RX_MPDU_START_INFO0_ENCRYPT_TYPE);
++	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
++		     RX_MPDU_START_INFO0_ENCRYPT_TYPE);
++	ath10k_htt_rx_h_protected(htt, &info, enctype);
+ 	info.skb->ip_summed = ath10k_htt_rx_get_csum_state(info.skb);
+ 
+-	if (tkip_mic_err) {
++	if (tkip_mic_err)
+ 		ath10k_warn("tkip mic error\n");
+-		info.status = HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR;
+-	}
+ 
+ 	if (decrypt_err) {
+ 		ath10k_warn("decryption err in fragmented rx\n");
+@@ -1357,9 +1369,9 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 		goto end;
+ 	}
+ 
+-	if (info.encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
++	if (enctype != HTT_RX_MPDU_ENCRYPT_NONE) {
+ 		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-		paramlen = ath10k_htt_rx_crypto_param_len(info.encrypt_type);
++		paramlen = ath10k_htt_rx_crypto_param_len(enctype);
+ 
+ 		/* It is more efficient to move the header than the payload */
+ 		memmove((void *)info.skb->data + paramlen,
+@@ -1373,11 +1385,11 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 	trim  = 4;
+ 
+ 	/* remove crypto trailer */
+-	trim += ath10k_htt_rx_crypto_tail_len(info.encrypt_type);
++	trim += ath10k_htt_rx_crypto_tail_len(enctype);
+ 
+ 	/* last fragment of TKIP frags has MIC */
+ 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
+-	    info.encrypt_type == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
++	    enctype == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
+ 		trim += 8;
+ 
+ 	if (trim > info.skb->len) {
 -- 
-1.8.5.3
+1.7.9.5
 
