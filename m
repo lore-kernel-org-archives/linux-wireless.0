@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:57753 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbaCBHux (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30909 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756938AbaCSLOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Mar 2014 02:50:53 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 19 Mar 2014 07:14:55 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] wireless: max MSDU size for DMG networks
+Date: Wed, 19 Mar 2014 13:14:40 +0200
+Message-ID: <1395227680-30007-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140319_121522_735482_2B463D0F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21266.58035.719712.344551@gargle.gargle.HOWL> (sfid-20140302_085122_900813_74D02304)
-Date: Sun, 2 Mar 2014 13:20:11 +0530
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 00/23] ath9k|ath9k_htc: move dups to common-beacon
-In-Reply-To: <5312DD46.3030800@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-	<21266.37896.937680.416439@gargle.gargle.HOWL>
-	<5312DD46.3030800@rempel-privat.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel wrote:
-> I was thinking about it too, but suddenly i don't have enough time and
-> experience to do it. Beside, there is no need to write usb layer. It is
-> clean and separate from other part of the driver. But the HTC/WMI
-> interface is not completely separate.
+In the 802.11ad, aka DMG (Dynamic Multi-Gigabit), aka 60Ghz
+spec, maximum MSDU size extended to 7920 bytes.
+add #define for this.
 
-Sure. It is just another option to consider.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/linux/ieee80211.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> Now about bigger picture. Right now i work only on ath9k<>ath9k_htc
-> dups. But there are lots of dup code in ath9k itself. For example
-> *_phy.c, *_initvals.h. Here are some examples:
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 0629904..f194ccb 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -154,6 +154,10 @@ static inline u16 ieee80211_sn_sub(u16 sn1, u16 sn2)
+    802.11e clarifies the figure in section 7.1.2. The frame body is
+    up to 2304 octets long (maximum MSDU size) plus any crypt overhead. */
+ #define IEEE80211_MAX_DATA_LEN		2304
++/* 802.11ad extends maximum MSDU size for DMG (freq > 40Ghz) networks
++ * to 7920 bytes, see 8.2.3 General frame format
++ */
++#define IEEE80211_MAX_DATA_LEN_DMG	7920
+ /* 30 byte 4 addr hdr, 2 byte QoS, 2304 byte MSDU, 12 byte crypt, 4 byte FCS */
+ #define IEEE80211_MAX_FRAME_LEN		2352
+ 
+-- 
+1.8.3.2
 
-We already have duplicate detection for initvals. It is part of
-the initvals tool in qca-swiss-army-knife.
-
-Sujith
