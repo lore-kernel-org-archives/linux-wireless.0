@@ -1,61 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:46740 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757844AbaCRT0f (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:51687 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755680AbaCSIjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:35 -0400
-Received: by mail-wg0-f46.google.com with SMTP id b13so6405251wgh.5
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/14] staging: vt6656: s_uGetRTSCTSRsvTime fix return.
-Date: Tue, 18 Mar 2014 19:25:08 +0000
-Message-Id: <1395170708-2990-14-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202649_550546_38E7A23A)
-In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
-References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 19 Mar 2014 04:39:16 -0400
+Received: by mail-la0-f48.google.com with SMTP id gf5so5562078lab.21
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:39:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87a9cxhwzh.fsf@kamboji.qca.qualcomm.com>
+References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	<87a9cxhwzh.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 19 Mar 2014 09:39:14 +0100
+Message-ID: <CALhHN=p5E55ia5PvfdOoLBizrUywmPsayg8BD5R_A1wsAE2FEQ@mail.gmail.com> (sfid-20140319_093922_124055_72816C14)
+Subject: Re: [RFC 00/14] ath10k: Refactor rx path little bit
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always returns to __le16 type
+On 11 March 2014 11:04, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>
+>> Refactor rx path, mainly split/reduce calculation we
+>> did before. Now we caculate variable/flags only once
+>> per-ppdu, while before we did some calculations for
+>> each mpdu. Kill some not needed code and fill directly
+>> ieee80211_rx_status structure.
+>> TP veryfication required.
+>>
+>> Janusz Dziedzic (14):
+>>   ath10k: add ath10k_htt_rx_amsdu_allowed function
+>>   ath10k: Fill per-ppdu info in rx_info only once
+>>   ath10k: move rx related functions to htt_rx.c
+>>   ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+>>   ath10k: introduce ieee80211_rx_status to htt_rx_info
+>>   ath10k: kill signal field in htt_rx_info
+>>   ath10k: setup rx channel per ppdu
+>>   ath10k: kill rate substruct and tsf from htt_rx_info
+>>   ath10k: kill fcs_err from htt_rx_info
+>>   ath10k: kill mic_err/amsdu_more from htt_rx_info
+>>   ath10k: kill status from htt_rx_info
+>>   ath10k: kill encrypt_type from htt_rx_info
+>>   ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
+>>   ath10k: improve way we play with attention flags
+>
+> I did now a quick review:
+>
+> I didn't fully understand your idea with rx status template.
+>
+Mainly I split calculations we have to do per-ppdu and per-mpdu.
+Before, we did calculation for each mpdu even that wasn't required. In
+case of heavy
+traffic we will have eg. 15 mpdus in one ppdu. In case of attention flags
+we did 4 times __cpu_to_le32() for each rx`ed packet - while one calculation
+will be enough. For me this seems like resources (CPU) usage improvement.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+After some refactoring tries I decided to introduce this
+ieee80211_rx_status template. Seems this is easiest option here.
+This will be also similar code as we have already for fragmented RX packets.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 924d9a2..3840323 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -118,7 +118,7 @@ static void s_vSWencryption(struct vnt_private *pDevice,
- static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
- 	u32 cbFrameLength, u16 wRate, int bNeedAck);
- 
--static u16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
-+static __le16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
- 	u8 rsv_type, u8 pkt_type, u32 frame_lenght, u16 current_rate);
- 
- static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-@@ -367,7 +367,7 @@ static __le16 vnt_rxtx_rsvtime_le16(struct vnt_private *priv, u8 pkt_type,
- }
- 
- //byFreqType: 0=>5GHZ 1=>2.4GHZ
--static u16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
-+static __le16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
- 	u8 rsv_type, u8 pkt_type, u32 frame_lenght, u16 current_rate)
- {
- 	u32 rrv_time, rts_time, cts_time, ack_time, data_time;
-@@ -402,7 +402,7 @@ static u16 s_uGetRTSCTSRsvTime(struct vnt_private *priv,
- 
- 		rrv_time = cts_time + ack_time + data_time + 2 * priv->uSIFS;
- 
--		return rrv_time;
-+		return cpu_to_le16((u16)rrv_time);
- 	}
- 
- 	rrv_time = rts_time + cts_time + ack_time + data_time + 3 * priv->uSIFS;
--- 
-1.9.0
+Some patches are just some code cleanup (moving code, grouping in
+function etc...)
 
+> I think the patchset is too long, it will be easier if you split these
+> into two. First set with all the easy and obvious stuff and a second one
+> for the rx status template.
+>
+Will send V2
+
+> Some of the patches are missing commit logs. Even if the patch is
+> obvious, please write a small commit log. Just oneliner would be enough.
+>
+> I would prefer the commit logs to answer more why the change is needed.
+>
+> --
+> Kalle Valo
