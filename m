@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:51122 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbaC3Vbf (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:53272 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758491AbaCSIte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 17:31:35 -0400
-Message-ID: <53388D35.8080902@lwfinger.net> (sfid-20140330_233319_982024_36E8C56C)
-Date: Sun, 30 Mar 2014 16:31:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_probe()
-References: <1396038375-18122-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1396038375-18122-1-git-send-email-khoroshilov@ispras.ru>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 19 Mar 2014 04:49:34 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so6337829eei.14
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:33 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC v2 2/8] ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+Date: Wed, 19 Mar 2014 09:48:57 +0100
+Message-Id: <1395218943-31704-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_094958_419748_30CAAA68)
+In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2014 03:26 PM, Alexey Khoroshilov wrote:
-> If allocation of io_dmabuf fails, rtl8187_probe() calls usb_put_dev(udev)
-> while usb_get_dev(udev) is not called yet. As a result refcnt is decremented
-> incorrectly and usb_dev can be used after memory deallocation.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-> ---
+No functional changes.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Thanks,
-
-Larry
-
->   drivers/net/wireless/rtl818x/rtl8187/dev.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> index fd78df813a85..d7f540a9dc9b 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> @@ -1636,10 +1636,10 @@ static int rtl8187_probe(struct usb_interface *intf,
->
->    err_free_dmabuf:
->   	kfree(priv->io_dmabuf);
-> - err_free_dev:
-> -	ieee80211_free_hw(dev);
->   	usb_set_intfdata(intf, NULL);
->   	usb_put_dev(udev);
-> + err_free_dev:
-> +	ieee80211_free_hw(dev);
->   	return err;
->   }
->
->
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c07fc8f..fd14c3a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -655,9 +655,9 @@ static const u8 rx_legacy_rate_idx[] = {
+ 	5,	/* 0x0F  - 9Mbps   */
+ };
+ 
+-static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
+-			     enum ieee80211_band band,
+-			     struct ieee80211_rx_status *status)
++static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
++				  enum ieee80211_band band,
++				  struct ieee80211_rx_status *status)
+ {
+ 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+ 	u8 info0 = info->rate.info0;
+@@ -789,7 +789,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		return;
+ 	}
+ 
+-	process_rx_rates(ar, info, ch->band, status);
++	ath10k_htt_rx_h_rates(ar, info, ch->band, status);
+ 	status->band = ch->band;
+ 	status->freq = ch->center_freq;
+ 
+-- 
+1.7.9.5
 
