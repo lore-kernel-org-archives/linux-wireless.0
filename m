@@ -1,102 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:62202 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbaCGW24 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 17:28:56 -0500
-Received: by mail-pa0-f47.google.com with SMTP id lj1so4724528pab.6
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 14:28:56 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH] iw: embrace the Developer Certificate of Origin for contributions
-Date: Fri,  7 Mar 2014 14:28:50 -0800
-Message-Id: <1394231330-4215-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140307_232900_461629_A39E0717)
+Received: from mx0.aculab.com ([213.249.233.131]:33114 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S933957AbaCSOLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2014 10:11:18 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 18527-01 for <linux-wireless@vger.kernel.org>;
+ Wed, 19 Mar 2014 14:11:14 +0000 (GMT)
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'behanw@converseincode.com'" <behanw@converseincode.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"davem@davemloft.net" <davem@davemloft.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"pageexec@freemail.hu" <pageexec@freemail.hu>,
+	=?utf-8?B?SmFuLVNpbW9uIE3DtmxsZXI=?= <dl9pf@gmx.de>,
+	=?utf-8?B?Vmluw61jaXVzIFRpbnRp?= <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Subject: RE: [PATCH v3] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+Date: Wed, 19 Mar 2014 14:09:57 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D0F6E11D1@AcuExch.aculab.com> (sfid-20140319_151141_594476_2309905F)
+References: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
+ <1395199933-4686-1-git-send-email-behanw@converseincode.com>
+In-Reply-To: <1395199933-4686-1-git-send-email-behanw@converseincode.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-
-The Linux kernel started to embrace a light weight development contribution
-agreement process called the Developer Certificate of Origin (DCO) circa
-2004. Attorneys all over the planet have conferred a lot of respect and
-appreciation for this document and it provides a light weight alternative to
-cumbersome and controversial Contribution License Agreements (CLAs).
-
-Similar to streamlining FOSS licenses we also all stand to gain from
-streamlining a light weight contribution agreement process for development
-and in light of this the the Linux Foundation recently has made the DCO a
-standalone project [0] so that any FOSS project under any FOSS license can
-take advantage of the same gains. The motivation and intent is documented
-only currently on my blog post [1].
-
-Lets take advantage of the new shiny DCO and embrace it for contributions.
-
-[0] http://developercertificate.org/
-[1] http://www.do-not-panic.com/2014/02/developer-certificate-of-origin.html
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- CONTRIBUTING | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
- create mode 100644 CONTRIBUTING
-
-diff --git a/CONTRIBUTING b/CONTRIBUTING
-new file mode 100644
-index 0000000..f288959
---- /dev/null
-+++ b/CONTRIBUTING
-@@ -0,0 +1,49 @@
-+
-+This project embraces the Developer Certificate of Origin (DCO) for
-+contributions. This means you must agree to the following prior to submitting
-+patches, if you agree with this developer certificate you acknowledge this by
-+adding a Signed-off-by tag to your patch commit log. Every submitted patch
-+must have this.
-+
-+The source for the DCO:
-+
-+http://developercertificate.org/
-+
-+-----------------------------------------------------------------------
-+
-+Developer Certificate of Origin
-+Version 1.1
-+
-+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-+660 York Street, Suite 102,
-+San Francisco, CA 94110 USA
-+
-+Everyone is permitted to copy and distribute verbatim copies of this
-+license document, but changing it is not allowed.
-+
-+
-+Developer's Certificate of Origin 1.1
-+
-+By making a contribution to this project, I certify that:
-+
-+(a) The contribution was created in whole or in part by me and I
-+    have the right to submit it under the open source license
-+    indicated in the file; or
-+
-+(b) The contribution is based upon previous work that, to the best
-+    of my knowledge, is covered under an appropriate open source
-+    license and I have the right under that license to submit that
-+    work with modifications, whether created in whole or in part
-+    by me, under the same open source license (unless I am
-+    permitted to submit under a different license), as indicated
-+    in the file; or
-+
-+(c) The contribution was provided directly to me by some other
-+    person who certified (a), (b) or (c) and I have not modified
-+    it.
-+
-+(d) I understand and agree that this project and the contribution
-+    are public and that a record of the contribution (including all
-+    personal information I submit with it, including my sign-off) is
-+    maintained indefinitely and may be redistributed consistent with
-+    this project or the open source license(s) involved.
--- 
-1.9.0
-
+RnJvbTogYmVoYW53QGNvbnZlcnNlaW5jb2RlLmNvbQ0KPiBSZXBsYWNlZCB0aGUgdXNlIG9mIGEg
+VmFyaWFibGUgTGVuZ3RoIEFycmF5IEluIFN0cnVjdCAoVkxBSVMpIHdpdGggYSBDOTkNCj4gY29t
+cGxpYW50IGVxdWl2YWxlbnQuIFRoaXMgaXMgdGhlIG9yaWdpbmFsIFZMQUlTIHN0cnVjdC4NCj4g
+DQo+IHN0cnVjdCB7DQo+IAlzdHJ1Y3QgYWVhZF9yZXF1ZXN0ICAgICByZXE7DQo+IAl1OCAgICAg
+ICAgICAgICAgICAgICAgICBwcml2W2NyeXB0b19hZWFkX3JlcXNpemUodGZtKV07DQo+IH0gYWVh
+ZF9yZXE7DQo+IA0KPiBUaGlzIHBhdGNoIGluc3RlYWQgYWxsb2NhdGVzIHRoZSBhcHByb3ByaWF0
+ZSBhbW91bnQgb2YgbWVtb3J5IHVzaW5nIGFuIGNoYXINCj4gYXJyYXkuDQo+IA0KPiBUaGUgbmV3
+IGNvZGUgY2FuIGJlIGNvbXBpbGVkIHdpdGggYm90aCBnY2MgYW5kIGNsYW5nLg0KPiANCj4gU2ln
+bmVkLW9mZi1ieTogSmFuLVNpbW9uIE1sbGVyIDxkbDlwZkBnbXguZGU+DQo+IFNpZ25lZC1vZmYt
+Ynk6IEJlaGFuIFdlYnN0ZXIgPGJlaGFud0Bjb252ZXJzZWluY29kZS5jb20+DQo+IFNpZ25lZC1v
+ZmYtYnk6IFZpbmNpdXMgVGludGkgPHZpbmljaXVzdGludGlAZ21haWwuY29tPg0KPiBTaWduZWQt
+b2ZmLWJ5OiBNYXJrIENoYXJsZWJvaXMgPGNoYXJsZWJtQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICBu
+ZXQvbWFjODAyMTEvYWVzX2NjbS5jIHwgNDAgKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0t
+LS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIyIGluc2VydGlvbnMoKyksIDE4IGRlbGV0
+aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9hZXNfY2NtLmMgYi9uZXQv
+bWFjODAyMTEvYWVzX2NjbS5jDQo+IGluZGV4IDdjN2RmNDcuLjIwNTIxZjkgMTAwNjQ0DQo+IC0t
+LSBhL25ldC9tYWM4MDIxMS9hZXNfY2NtLmMNCj4gKysrIGIvbmV0L21hYzgwMjExL2Flc19jY20u
+Yw0KPiBAQCAtMjMsMTIgKzIzLDE0IEBAIHZvaWQgaWVlZTgwMjExX2Flc19jY21fZW5jcnlwdChz
+dHJ1Y3QgY3J5cHRvX2FlYWQgKnRmbSwgdTggKmJfMCwgdTggKmFhZCwNCj4gIAkJCSAgICAgICB1
+OCAqZGF0YSwgc2l6ZV90IGRhdGFfbGVuLCB1OCAqbWljKQ0KPiAgew0KPiAgCXN0cnVjdCBzY2F0
+dGVybGlzdCBhc3NvYywgcHQsIGN0WzJdOw0KPiAtCXN0cnVjdCB7DQo+IC0JCXN0cnVjdCBhZWFk
+X3JlcXVlc3QJcmVxOw0KPiAtCQl1OAkJCXByaXZbY3J5cHRvX2FlYWRfcmVxc2l6ZSh0Zm0pXTsN
+Cj4gLQl9IGFlYWRfcmVxOw0KPiANCj4gLQltZW1zZXQoJmFlYWRfcmVxLCAwLCBzaXplb2YoYWVh
+ZF9yZXEpKTsNCj4gKwljaGFyIGFlYWRfcmVxX2RhdGFbc2l6ZW9mKHN0cnVjdCBhZWFkX3JlcXVl
+c3QpICsNCj4gKwkJY3J5cHRvX2FlYWRfcmVxc2l6ZSh0Zm0pXQ0KPiArCQlfX2FsaWduZWQoX19h
+bGlnbm9mX18oc3RydWN0IGFlYWRfcmVxdWVzdCkpOw0KPiArDQo+ICsJc3RydWN0IGFlYWRfcmVx
+dWVzdCAqYWVhZF9yZXEgPSAodm9pZCAqKSBhZWFkX3JlcV9kYXRhOw0KPiArDQo+ICsJbWVtc2V0
+KGFlYWRfcmVxLCAwLCBzaXplb2YoYWVhZF9yZXFfZGF0YSkpOw0KDQpJdCBzZWVtcyB0byBtZSB0
+aGF0IHRoZSB1bmRlcmx5aW5nIGZ1bmN0aW9uKHMpIG91Z2h0IHRvIGJlIGNoYW5nZWQgc28gdGhh
+dA0KdGhpcyBpc24ndCBuZWVkZWQuDQpQYXNzaW5nIGFuIGV4dHJhIHBhcmFtZXRlciB3b3VsZCBw
+cm9iYWJseSBjb3N0IHZlcnkgbGl0dGxlLg0KDQoJRGF2aWQNCg==
