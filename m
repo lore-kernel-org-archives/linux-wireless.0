@@ -1,95 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48907 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaC1NCA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:02:00 -0400
-Message-ID: <1396011717.4175.20.camel@jlt4.sipsolutions.net> (sfid-20140328_140205_609318_9618C76E)
-Subject: Re: [PATCH v2 3/7] mac80211: use chanctx reservation for AP CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 14:01:57 +0100
-In-Reply-To: <1395409941-26303-4-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145812_036753_6C8DF103)
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409941-26303-4-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140321_145812_036753_6C8DF103)
+Received: from dedo.coelho.fi ([88.198.205.34]:39195 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933380AbaCSODe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Mar 2014 10:03:34 -0400
+Message-ID: <1395237785.2854.13.camel@dubbel> (sfid-20140319_150336_783440_D2890616)
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
+	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
+Date: Wed, 19 Mar 2014 16:03:05 +0200
+In-Reply-To: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
+References: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: [PATCH v10 0/4] mac802111: channel context reservation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-21 at 14:52 +0100, Michal Kazior wrote:
-> Channel switch finalization is now 2-step. First
-> step is when driver calls csa_finish(), the other
-> is when reservation is actually finalized (which
-> be defered for in-place reservation).
+On Tue, 2014-03-18 at 17:03 +0200, Luciano Coelho wrote:
+> One more small fix to a WARN_ON detected by Michal.  One change in
+> patch 3/4 (which also goes into 4/4).
 > 
-> This implies driver must not call csa_finish()
-> more than once for each channel_switch request.
+> --
+> Luca.
 > 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  net/mac80211/cfg.c  | 62 ++++++++++++++++++++++++++++++++++++-----------------
->  net/mac80211/chan.c | 11 +++++++++-
->  2 files changed, 52 insertions(+), 21 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 0c68269..ba544d3 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -3096,17 +3096,25 @@ static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->  
->  	sdata_assert_lock(sdata);
->  	lockdep_assert_held(&local->mtx);
-> +	lockdep_assert_held(&local->mtx);
-
-duplicate
- 
-> -	sdata->radar_required = sdata->csa_radar_required;
-> -	err = ieee80211_vif_change_channel(sdata, &changed);
-> -	if (WARN_ON(err < 0))
-> -		return err;
-> +	/* using reservation isn't immediate as it may be deferred until later
-> +	 * with multi-vif. once reservation is complete it will re-schedule the
-> +	 * work with no reserved_chanctx so verify chandef to check if it
-> +	 * completed successfully */
-
-style issue here also
+> Luciano Coelho (4):
+>   mac80211: split ieee80211_vif_change_channel in two
+>   mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
+>   mac80211: implement chanctx reservation
+>   mac80211: allow reservation of a running chanctx
 
 
-> -	if (num_chanctx > 1)
-> -		return -EBUSY;
-> +	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
-> +					    chanctx->mode,
-> +					    params->radar_required);
-> +	if (err) {
-> +		mutex_unlock(&local->chanctx_mtx);
-> +		return err;
-> +	}
->  
-> -	/* don't allow another channel switch if one is already active. */
-> -	if (sdata->vif.csa_active)
-> -		return -EBUSY;
-> +	/* if reservation is invalid then this will fail */
-> +	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
-> +	if (err) {
-> +		ieee80211_vif_unreserve_chanctx(sdata);
-> +		mutex_unlock(&local->chanctx_mtx);
-> +		return err;
-> +	}
->  
->  	err = ieee80211_set_csa_beacon(sdata, params, &changed);
-> -	if (err)
-> +	if (err) {
-> +		ieee80211_vif_unreserve_chanctx(sdata);
-> +		mutex_unlock(&local->chanctx_mtx);
->  		return err;
-> +	}
+Applied this series to my mac80211-next-csa.git tree.
 
-All those error cases could be converted to 'goto' instead of
-duplicating the unlock/unreserve.
-
-johannes
+--
+Luca.
 
