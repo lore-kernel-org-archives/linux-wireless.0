@@ -1,130 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:49553 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535AbaCHB0G (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:42261 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758599AbaCSKSL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 20:26:06 -0500
-Received: by mail-pb0-f54.google.com with SMTP id ma3so4949534pbc.27
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 17:26:06 -0800 (PST)
-From: behanw@converseincode.com
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
-	pageexec@freemail.hu,
-	=?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>,
-	Behan Webster <behanw@converseincode.com>,
-	=?UTF-8?q?Vin=C3=ADcius=20Tinti?= <viniciustinti@gmail.com>,
-	Mark Charlebois <charlebm@gmail.com>
-Subject: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-Date: Fri,  7 Mar 2014 17:26:00 -0800
-Message-Id: <1394241960-1764-1-git-send-email-behanw@converseincode.com> (sfid-20140308_022700_984641_0B3BC758)
-In-Reply-To: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
-References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
+	Wed, 19 Mar 2014 06:18:11 -0400
+Received: by mail-ie0-f180.google.com with SMTP id as1so8588136iec.39
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 03:18:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CA+BoTQnNXb=sm=k=fFmYd=e1pOVTRX3MhwMgmhUeWD=2Nuy_8A@mail.gmail.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395150804-24090-4-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
+	<CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com>
+	<CAB3XZEckstWFB-2CmWg7JeoyT0bTUgSh5bXqZxADUHiurZgnhw@mail.gmail.com>
+	<CA+BoTQnNXb=sm=k=fFmYd=e1pOVTRX3MhwMgmhUeWD=2Nuy_8A@mail.gmail.com>
+Date: Wed, 19 Mar 2014 12:18:09 +0200
+Message-ID: <CAB3XZEe2ie8eHGrKLBkn6juQ5wGGfdOMirSj5vCEBAixZHHvuw@mail.gmail.com> (sfid-20140319_111815_007841_C50E75C7)
+Subject: Re: [RFC 03/21] mac80211: add max channel calculation utility function
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jan-Simon Möller <dl9pf@gmx.de>
+On Wed, Mar 19, 2014 at 10:54 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 19 March 2014 09:43, Eliad Peller <eliad@wizery.com> wrote:
+>> On Wed, Mar 19, 2014 at 10:32 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> On 18 March 2014 17:17, Eliad Peller <eliad@wizery.com> wrote:
+>>>> hi,
+>>>>
+>>>> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>>> The utility function has no uses yet. It is aimed
+>>>>> at future chanctx reservation management and
+>>>>> channel switching.
+>>>>>
+>>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>>>> ---
+>>>> [...]
+>>>>
+>>>>> +int ieee80211_max_num_channels(struct ieee80211_local *local)
+>>>>> +{
+>>>>> +       struct ieee80211_sub_if_data *sdata;
+>>>>> +       int num[NUM_NL80211_IFTYPES] = {};
+>>>>> +       struct ieee80211_chanctx *ctx;
+>>>>> +       int num_different_channels = 0;
+>>>>> +       u8 radar_detect = 0;
+>>>>> +       u32 max_num_different_channels = 1;
+>>>>> +       int err;
+>>>>> +
+>>>>> +       lockdep_assert_held(&local->chanctx_mtx);
+>>>>> +
+>>>>> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
+>>>>> +               num_different_channels++;
+>>>>> +
+>>>> this doesn't seem correct - i think we can have multiple channel
+>>>> contexts with the same channel (e.g. due to exclusive mode)?
+>>>
+>>> Hmm, does it even make sense to consider chanctx mode here?
+>>>
+>> i don't think you should consider the chancx mode, but keep track of
+>> the used channels.
+>> if you have 2 different channel contexts with the same channel (e.g.
+>> due to exclusive mode), you have to make sure you don't count the same
+>> channel twice. you shouldn't care about the actual reason for it.
+>
+> I disagree. There's a reason why we have exclusive chanctx mode.
+>
+> If you insist on counting compatible chandefs you can lead to
+> overcommit if your exclusive chanctx bound interface decides to switch
+> to another channel.
+>
+ok. fair point. i guess you're right.
 
-Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
-compliant equivalent. This is the original VLAIS struct.
-
-struct {
-	struct aead_request     req;
-	u8                      priv[crypto_aead_reqsize(tfm)];
-} aead_req;
-
-This patch instead allocates the appropriate amount of memory using an char
-array.
-
-The new code can be compiled with both gcc and clang.
-
-Signed-off-by: Jan-Simon Möller <dl9pf@gmx.de>
-Signed-off-by: Behan Webster <behanw@converseincode.com>
-Signed-off-by: Vinícius Tinti <viniciustinti@gmail.com>
-Signed-off-by: Mark Charlebois <charlebm@gmail.com>
----
- net/mac80211/aes_ccm.c | 40 ++++++++++++++++++++++------------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
-
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index 7c7df47..3317578 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -23,12 +23,14 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 			       u8 *data, size_t data_len, u8 *mic)
- {
- 	struct scatterlist assoc, pt, ct[2];
--	struct {
--		struct aead_request	req;
--		u8			priv[crypto_aead_reqsize(tfm)];
--	} aead_req;
- 
--	memset(&aead_req, 0, sizeof(aead_req));
-+	char aead_req_data[sizeof(struct aead_request) +
-+				crypto_aead_reqsize(tfm) +
-+				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
-+
-+	struct aead_request *aead_req = (void *) aead_req_data;
-+
-+	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
- 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-@@ -36,23 +38,25 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
- 
--	aead_request_set_tfm(&aead_req.req, tfm);
--	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
--	aead_request_set_crypt(&aead_req.req, &pt, ct, data_len, b_0);
-+	aead_request_set_tfm(aead_req, tfm);
-+	aead_request_set_assoc(aead_req, &assoc, assoc.length);
-+	aead_request_set_crypt(aead_req, &pt, ct, data_len, b_0);
- 
--	crypto_aead_encrypt(&aead_req.req);
-+	crypto_aead_encrypt(aead_req);
- }
- 
- int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 			      u8 *data, size_t data_len, u8 *mic)
- {
- 	struct scatterlist assoc, pt, ct[2];
--	struct {
--		struct aead_request	req;
--		u8			priv[crypto_aead_reqsize(tfm)];
--	} aead_req;
- 
--	memset(&aead_req, 0, sizeof(aead_req));
-+	char aead_req_data[sizeof(struct aead_request) +
-+				crypto_aead_reqsize(tfm) +
-+				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
-+
-+	struct aead_request *aead_req = (void *) aead_req_data;
-+
-+	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
- 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-@@ -60,12 +64,12 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
- 
--	aead_request_set_tfm(&aead_req.req, tfm);
--	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
--	aead_request_set_crypt(&aead_req.req, ct, &pt,
-+	aead_request_set_tfm(aead_req, tfm);
-+	aead_request_set_assoc(aead_req, &assoc, assoc.length);
-+	aead_request_set_crypt(aead_req, ct, &pt,
- 			       data_len + IEEE80211_CCMP_MIC_LEN, b_0);
- 
--	return crypto_aead_decrypt(&aead_req.req);
-+	return crypto_aead_decrypt(aead_req);
- }
- 
- struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
--- 
-1.8.3.2
-
+Eliad.
