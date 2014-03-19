@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:56012 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757219AbaCDMws (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:35769 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222AbaCSKxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 07:52:48 -0500
-Received: by mail-ee0-f52.google.com with SMTP id e49so1430483eek.25
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 04:52:47 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 02/14] ath10k: Fill per-ppdu info in rx_info only once
-Date: Tue,  4 Mar 2014 13:52:15 +0100
-Message-Id: <1393937548-7482-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140304_135326_194691_5A3A84BD)
-In-Reply-To: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 19 Mar 2014 06:53:50 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so8700001ieb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 03:53:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQ=VSfN9KjAsGEsU0dnRTuUXagW8Kc7ThWDw_MzVycWknA@mail.gmail.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395150804-24090-8-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEern9n0HZtMui1nGZvsx0wOR_L1EbTJt5gR30VebWAizg@mail.gmail.com>
+	<CA+BoTQ=-aw6hv9jjA60f+JgZsFdCqSE3cwZ4OdQfRaV6fe9s9g@mail.gmail.com>
+	<CAB3XZEc0YpByFSu2QaPJ0VtACVRrJoQGfWKtC-qSPD1q1xKg1w@mail.gmail.com>
+	<CA+BoTQ=VSfN9KjAsGEsU0dnRTuUXagW8Kc7ThWDw_MzVycWknA@mail.gmail.com>
+Date: Wed, 19 Mar 2014 12:53:50 +0200
+Message-ID: <CAB3XZEfU6h20kLPBw2k3Z3Z3am857uLAamW0wAd+g1Q7KcYJEQ@mail.gmail.com> (sfid-20140319_115354_271706_7BD4823E)
+Subject: Re: [RFC 07/21] mac80211: improve find_chanctx() for reservations
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't fill this for each msdu, while this is the
-same.
+On Wed, Mar 19, 2014 at 11:00 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 19 March 2014 09:47, Eliad Peller <eliad@wizery.com> wrote:
+>> On Wed, Mar 19, 2014 at 10:34 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> On 18 March 2014 17:42, Eliad Peller <eliad@wizery.com> wrote:
+>>>> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>>> Relax ieee80211_find_chanctx(). If chanctx
+>>>>> reservation chandef is compatible with
+>>>>> current-future assigned interfaces chandef then
+>>>>> allow it to be used by new interfaces.
+>>>>>
+>>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>>>> ---
+>>>> [...]
+>>>>
+>>>>> +static const struct cfg80211_chan_def *
+>>>>> +ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
+>>>>> +                                  struct ieee80211_chanctx *ctx,
+>>>>> +                                  const struct cfg80211_chan_def *compat)
+>>>>> +{
+>>>>> +       struct ieee80211_sub_if_data *sdata;
+>>>>> +
+>>>>> +       lockdep_assert_held(&local->chanctx_mtx);
+>>>>> +
+>>>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs,
+>>>>> +                           reserved_chanctx_list) {
+>>>>> +               if (!compat)
+>>>>> +                       compat = &sdata->reserved_chandef;
+>>>> this check is redundant.
+>>>
+>>> It isn't. The function can be called with compat == NULL. You don't
+>>> want to call cfg80211_chandef_compatible() with a NULL chandef.
+>>>
+>> at least this patch has an explicit check for compat not being NULL
+>> (before calling the function).
+>> since this function checks chandef compatibility with current
+>> reserved chandefs, i don't see why anyone would call it with NULL?
+>
+> Fair argument if you treat the patch separately from the whole patchset.
+>
+> This is later called with NULL (patch: implement multi-vif in-place
+> reservations).
+>
+> I could make a if (WARN_ON(!compat)) return NULL; guard condition at
+> the function start but I prefer the current way as it has wider
+> appliance for code reuse.
+>
+ok. i haven't passed through all the patches yet.
+if you use it later with NULL there's no reason to change it.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 68a058d..0d0862d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -980,6 +980,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			     HTT_RX_INDICATION_INFO1_NUM_MPDU_RANGES);
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
-+	/* Fill this once, while this is per-ppdu */
-+	info.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-+	info.signal += rx->ppdu.combined_rssi;
-+
-+	info.rate.info0 = rx->ppdu.info0;
-+	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
-+	info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
-+	info.tsf = __le32_to_cpu(rx->ppdu.tsf);
-+
- 	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
- 			rx, sizeof(*rx) +
- 			(sizeof(struct htt_rx_indication_mpdu_range) *
-@@ -1019,14 +1028,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				ath10k_dbg(ATH10K_DBG_HTT,
- 					   "htt rx has MIC err\n");
- 
--			info.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
--			info.signal += rx->ppdu.combined_rssi;
--
--			info.rate.info0 = rx->ppdu.info0;
--			info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
--			info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
--			info.tsf = __le32_to_cpu(rx->ppdu.tsf);
--
- 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
- 
- 			if (ath10k_htt_rx_hdr_is_amsdu(hdr))
--- 
-1.7.9.5
-
+Eliad.
