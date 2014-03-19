@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:55353 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073AbaCCVnI (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63776 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752870AbaCSFT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 16:43:08 -0500
-Date: Mon, 03 Mar 2014 16:43:06 -0500 (EST)
-Message-Id: <20140303.164306.910146738456793917.davem@davemloft.net> (sfid-20140303_224318_091279_EF489315)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless 2014-03-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140303194432.GD26300@tuxdriver.com>
-References: <20140303194432.GD26300@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 19 Mar 2014 01:19:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: handle extended scan event for AP interface
+Date: Tue, 18 Mar 2014 22:19:16 -0700
+Message-ID: <1395206358-11573-1-git-send-email-bzhao@marvell.com> (sfid-20140319_061929_943252_86C12022)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 3 Mar 2014 14:44:32 -0500
+From: Avinash Patil <patila@marvell.com>
 
-> Please pull this batch of fixes intended for the 3.14 stream...
-> 
-> For the mac80211 bits, Johannes says:
-> 
-> "This time I have a fix to get out of an 'infinite error state' in case
-> regulatory domain updates failed and two fixes for VHT associations: one
-> to not disconnect immediately when the AP uses more bandwidth than the
-> new regdomain would allow after a change due to association country
-> information getting used, and one for an issue in the code where
-> mac80211 doesn't correctly ignore a reserved field and then uses an HT
-> instead of VHT association."
-> 
-> For the iwlwifi bits, Emmanuel says:
-> 
-> "Johannes fixes a long standing bug in the AMPDU status reporting.
-> Max fixes the listen time which was way too long and causes trouble
-> to several APs."
-> 
-> Along with those, Bing Zhao marks the mwifiex_usb driver as _not_
-> supporting USB autosuspend after a number of problems with that have
-> been reported.
-> 
-> Please let me know if there are problems!
+Stations associated to mwifiex AP would not be able to ping AP
+after scan was issued on AP interface. This happened because
+there was no handling of extended scan event in AP. This patch
+adds this handling and fixes ping failure issue.
 
-Pulled, thanks John.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_event.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index ae50e91..92e77a3 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -166,6 +166,12 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 			mwifiex_11n_ba_stream_timeout(priv, ba_timeout);
+ 		}
+ 		break;
++	case EVENT_EXT_SCAN_REPORT:
++		dev_dbg(adapter->dev, "event: EXT_SCAN Report\n");
++		if (adapter->ext_scan)
++			return mwifiex_handle_event_ext_scan_report(priv,
++						adapter->event_skb->data);
++		break;
+ 	default:
+ 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+ 			eventcause);
+-- 
+1.8.2.3
+
