@@ -1,82 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:38329 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124AbaB1X77 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47995 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613AbaCST77 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 18:59:59 -0500
-Received: by mail-wg0-f46.google.com with SMTP id z12so1148739wgg.29
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 15:59:58 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/9] staging: vt6656: clean up device_free_rx_bufs.
-Date: Fri, 28 Feb 2014 23:58:35 +0000
-Message-Id: <1393631919-16182-5-git-send-email-tvboxspy@gmail.com> (sfid-20140301_010006_737314_950308FC)
-In-Reply-To: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
-References: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 19 Mar 2014 15:59:59 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1WQMed-0000Pc-2s
+	for linux-wireless@vger.kernel.org; Wed, 19 Mar 2014 15:59:59 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s2JJxVC9013670
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 15:59:31 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s2JJxVk0013669
+	for linux-wireless@vger.kernel.org; Wed, 19 Mar 2014 15:59:31 -0400
+Date: Wed, 19 Mar 2014 15:59:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.15 needs to be posted _now_
+Message-ID: <20140319195930.GD3355@tuxdriver.com> (sfid-20140319_210005_097510_B1B232A8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cleanup white space and camel case.
+You may have noticed that Linus has released 3.14-rc7, and "with
+some luck...this is the last rc".  So, the merge window is around
+the corner!
 
-Camel case changes
-pDevice -> priv
-pRCB -> rcb
+For those that need a reminder, the opening of the merge window is
+a _deadline_ for new features.  Once the merge window opens, only
+fixes will be accepted for 3.15.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.15.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+You have been warned...this means you!
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index e991618..58fb377 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -767,26 +767,28 @@ static void device_free_tx_bufs(struct vnt_private *pDevice)
-     return;
- }
- 
--static void device_free_rx_bufs(struct vnt_private *pDevice)
-+static void device_free_rx_bufs(struct vnt_private *priv)
- {
--	struct vnt_rcb *pRCB;
-+	struct vnt_rcb *rcb;
- 	int ii;
- 
--    for (ii = 0; ii < pDevice->cbRD; ii++) {
-+	for (ii = 0; ii < priv->cbRD; ii++) {
-+		rcb = priv->apRCB[ii];
- 
--        pRCB = pDevice->apRCB[ii];
--	/* deallocate URBs */
--        if (pRCB->pUrb) {
--            usb_kill_urb(pRCB->pUrb);
--            usb_free_urb(pRCB->pUrb);
--        }
--	/* deallocate skb */
--        if (pRCB->skb)
--            dev_kfree_skb(pRCB->skb);
--    }
--    kfree(pDevice->pRCBMem);
-+		/* deallocate URBs */
-+		if (rcb->pUrb) {
-+			usb_kill_urb(rcb->pUrb);
-+			usb_free_urb(rcb->pUrb);
-+		}
- 
--    return;
-+		/* deallocate skb */
-+		if (rcb->skb)
-+			dev_kfree_skb(rcb->skb);
-+	}
-+
-+	kfree(priv->pRCBMem);
-+
-+	return;
- }
- 
- static void usb_device_reset(struct vnt_private *pDevice)
+John
 -- 
-1.9.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
