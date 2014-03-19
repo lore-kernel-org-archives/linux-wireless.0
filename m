@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:59670 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068AbaC1HkZ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965087AbaCSOZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:40:25 -0400
-Received: by mail-ee0-f42.google.com with SMTP id d17so3703758eek.15
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 00:40:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/3] ath10k: deinit copy engine before resetting
-Date: Fri, 28 Mar 2014 08:34:25 +0100
-Message-Id: <1395992065-10086-4-git-send-email-michal.kazior@tieto.com> (sfid-20140328_084032_070667_29D3ACEF)
-In-Reply-To: <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
-References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
- <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 19 Mar 2014 10:25:04 -0400
+Message-ID: <1395239100.4142.23.camel@jlt4.sipsolutions.net> (sfid-20140319_152510_005594_E2F1E2F0)
+Subject: Re: [PATCH 1/3] cfg80211: remove unnecessary check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Mar 2014 15:25:00 +0100
+In-Reply-To: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com> (sfid-20140319_100449_864887_42B63984)
+References: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com>
+	 (sfid-20140319_100449_864887_42B63984)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since copy engine allocation has been revised the
-ath10k_pci_ce_deinit() now simply zeroes copy
-engine registers. It's probably a good idea to do
-that before reseting for a more graceful device
-reset.
+On Wed, 2014-03-19 at 17:04 +0800, Zhao, Gang wrote:
+> RCU pointer bss->pub.beacon_ies is checked before in previous
+> statement:
+> 
+> if (rcu_access_pointer(bss->pub.beacon_ies))
+> 	continue;
+> 
+> There is no need to check it twice(and in the wrong way :) ).
 
-Before ath10k_pci_ce_deinit() freed copy engine
-ringbuffer memory so it was required to call it
-after resetting. Otherwise it was possible for
-device to access unmapped/freed copy engine
-ringbuffer memory.
+Applied.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * added as a result of splitting another patch
-
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 10bf612..52c8c0d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2000,9 +2000,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
- 	ath10k_pci_free_early_irq(ar);
- 	ath10k_pci_kill_tasklet(ar);
- 	ath10k_pci_deinit_irq(ar);
-+	ath10k_pci_ce_deinit(ar);
- 	ath10k_pci_warm_reset(ar);
- 
--	ath10k_pci_ce_deinit(ar);
- 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
- 		ath10k_do_pci_sleep(ar);
- }
--- 
-1.8.5.3
+johannes
 
