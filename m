@@ -1,80 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:51687 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755680AbaCSIjQ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58659 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751481AbaCSFYO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:39:16 -0400
-Received: by mail-la0-f48.google.com with SMTP id gf5so5562078lab.21
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:39:14 -0700 (PDT)
+	Wed, 19 Mar 2014 01:24:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: update MCS set as per RX-STBC bit from hostapd
+Date: Tue, 18 Mar 2014 22:24:10 -0700
+Message-ID: <1395206650-11812-1-git-send-email-bzhao@marvell.com> (sfid-20140319_062418_407305_6AEAE25A)
 MIME-Version: 1.0
-In-Reply-To: <87a9cxhwzh.fsf@kamboji.qca.qualcomm.com>
-References: <1393937548-7482-1-git-send-email-janusz.dziedzic@tieto.com>
-	<87a9cxhwzh.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 19 Mar 2014 09:39:14 +0100
-Message-ID: <CALhHN=p5E55ia5PvfdOoLBizrUywmPsayg8BD5R_A1wsAE2FEQ@mail.gmail.com> (sfid-20140319_093922_124055_72816C14)
-Subject: Re: [RFC 00/14] ath10k: Refactor rx path little bit
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2014 11:04, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->
->> Refactor rx path, mainly split/reduce calculation we
->> did before. Now we caculate variable/flags only once
->> per-ppdu, while before we did some calculations for
->> each mpdu. Kill some not needed code and fill directly
->> ieee80211_rx_status structure.
->> TP veryfication required.
->>
->> Janusz Dziedzic (14):
->>   ath10k: add ath10k_htt_rx_amsdu_allowed function
->>   ath10k: Fill per-ppdu info in rx_info only once
->>   ath10k: move rx related functions to htt_rx.c
->>   ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
->>   ath10k: introduce ieee80211_rx_status to htt_rx_info
->>   ath10k: kill signal field in htt_rx_info
->>   ath10k: setup rx channel per ppdu
->>   ath10k: kill rate substruct and tsf from htt_rx_info
->>   ath10k: kill fcs_err from htt_rx_info
->>   ath10k: kill mic_err/amsdu_more from htt_rx_info
->>   ath10k: kill status from htt_rx_info
->>   ath10k: kill encrypt_type from htt_rx_info
->>   ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
->>   ath10k: improve way we play with attention flags
->
-> I did now a quick review:
->
-> I didn't fully understand your idea with rx status template.
->
-Mainly I split calculations we have to do per-ppdu and per-mpdu.
-Before, we did calculation for each mpdu even that wasn't required. In
-case of heavy
-traffic we will have eg. 15 mpdus in one ppdu. In case of attention flags
-we did 4 times __cpu_to_le32() for each rx`ed packet - while one calculation
-will be enough. For me this seems like resources (CPU) usage improvement.
+From: Maithili Hinge <maithili@marvell.com>
 
-After some refactoring tries I decided to introduce this
-ieee80211_rx_status template. Seems this is easiest option here.
-This will be also similar code as we have already for fragmented RX packets.
+To set AP in 1X1 or 2X2 mode through hostapd, we need to set
+RX-STBC* in hostapd.conf file. Depending upon RX-STBC bit in
+ht_cap IE received from hostapd, we need to update mcs set in
+bss_cfg appropriately before starting AP.
 
-Some patches are just some code cleanup (moving code, grouping in
-function etc...)
+Signed-off-by: Maithili Hinge <maithili@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |  6 +++---
+ drivers/net/wireless/mwifiex/fw.h       |  5 +++++
+ drivers/net/wireless/mwifiex/uap_cmd.c  | 20 ++++++++++++++++++++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
 
-> I think the patchset is too long, it will be easier if you split these
-> into two. First set with all the easy and obvious stuff and a second one
-> for the rx status template.
->
-Will send V2
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ee45d62..21ee27a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2100,10 +2100,10 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 
+-	if (ISSUPP_RXSTBC(adapter->hw_dot_11n_dev_cap))
+-		ht_info->cap |= 1 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
++	if (adapter->user_dev_mcs_support == HT_STREAM_2X2)
++		ht_info->cap |= 3 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 	else
+-		ht_info->cap &= ~(3 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
++		ht_info->cap |= 1 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 
+ 	if (ISSUPP_TXSTBC(adapter->hw_dot_11n_dev_cap))
+ 		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 341e419..b485dc1 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -202,6 +202,11 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ #define MWIFIEX_DEF_AMPDU	IEEE80211_HT_AMPDU_PARM_FACTOR
+ 
++#define GET_RXSTBC(x) (x & IEEE80211_HT_CAP_RX_STBC)
++#define MWIFIEX_RX_STBC1	0x0100
++#define MWIFIEX_RX_STBC12	0x0200
++#define MWIFIEX_RX_STBC123	0x0300
++
+ /* dev_cap bitmap
+  * BIT
+  * 0-16		reserved
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a6a6a53..9be6544 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -159,6 +159,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 		      struct cfg80211_ap_settings *params)
+ {
+ 	const u8 *ht_ie;
++	u16 cap_info;
+ 
+ 	if (!ISSUPP_11NENABLED(priv->adapter->fw_cap_info))
+ 		return;
+@@ -168,6 +169,25 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 	if (ht_ie) {
+ 		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
+ 		       sizeof(struct ieee80211_ht_cap));
++		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
++		memset(&bss_cfg->ht_cap.mcs, 0,
++		       priv->adapter->number_of_antenna);
++		switch (GET_RXSTBC(cap_info)) {
++		case MWIFIEX_RX_STBC1:
++			/* HT_CAP 1X1 mode */
++			memset(&bss_cfg->ht_cap.mcs, 0xff, 1);
++			break;
++		case MWIFIEX_RX_STBC12:	/* fall through */
++		case MWIFIEX_RX_STBC123:
++			/* HT_CAP 2X2 mode */
++			memset(&bss_cfg->ht_cap.mcs, 0xff, 2);
++			break;
++		default:
++			dev_warn(priv->adapter->dev,
++				 "Unsupported RX-STBC, default to 2x2\n");
++			memset(&bss_cfg->ht_cap.mcs, 0xff, 2);
++			break;
++		}
+ 		priv->ap_11n_enabled = 1;
+ 	} else {
+ 		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
+-- 
+1.8.2.3
 
-> Some of the patches are missing commit logs. Even if the patch is
-> obvious, please write a small commit log. Just oneliner would be enough.
->
-> I would prefer the commit logs to answer more why the change is needed.
->
-> --
-> Kalle Valo
