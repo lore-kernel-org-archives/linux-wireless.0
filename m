@@ -1,322 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:56991 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbaCXMDN (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:64957 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758530AbaCSItl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 08:03:13 -0400
-Received: by mail-ob0-f173.google.com with SMTP id gq1so5558328obb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 05:03:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1384765780.22010.42.camel@porter.coelho.fi>
-References: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com>
-	<1384765780.22010.42.camel@porter.coelho.fi>
-Date: Mon, 24 Mar 2014 20:03:12 +0800
-Message-ID: <CADqH6VxgwbZkFgEkpiaabKekijeU+e=DMg0VVHoiXBQmjQfE0Q@mail.gmail.com> (sfid-20140324_130318_223900_B3805963)
-Subject: Re: WL12xx support for WL1270 and ti-connectivity firmware
-From: Jaya Kumar <jayakumar.lkml@gmail.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 19 Mar 2014 04:49:41 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so6336200eek.11
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:39 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC v2 8/8] ath10k: improve way we play with attention flags
+Date: Wed, 19 Mar 2014 09:49:03 +0100
+Message-Id: <1395218943-31704-8-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_094948_472150_21A9814B)
+In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 5:09 PM, Luca Coelho <luca@coelho.fi> wrote:
->
-> Same as above... If this wl1270 is indeed based on the wl1271, it should
-> probably work.  With the driver you may need to add some new SDIO IDs
-> for it to be recognized though.
->
+Remove almost the same code, and do only once
+__le32_to_cpu() conversion.
 
-Hi,
-
-I'm now bringing up the board with the wl1270. I'm using 3.0.35 (stuck
-on this kernel version due to other drivers). The good news is that
-the chip is detected and wl12xx/wl12xx_sdio loads. However, I haven't
-been able to get it to get any scan results and can't associate with
-any AP (even open).
-
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
-mmc1: card claims to support voltages below the defined range. These
-will be ignored.
-mmc1: queuing unknown CIS tuple 0x91 (3 bytes)
-mmc1: new SDIO card at address 0001
-...
-I'm using ti-linux-firmware-wl12xx-r3-m1-rc2.tar.gz for the nvs and fw files.
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   89 +++++++-----------------------
+ 1 file changed, 19 insertions(+), 70 deletions(-)
 
-root@freescale ~$ modprobe wl12xx
-root@freescale ~$ modprobe wl12xx_sdio
-add wake up source irq 106
-wl1271: loaded
-wl1271: initialized
-root@freescale ~$ ifconfig wlan0 up
-wl1271: firmware booted (Rev 6.1.5.50.69)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 8bccba5..665a256 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -994,62 +994,6 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 	ath10k_process_rx(htt->ar, info);
+ }
+ 
+-static bool ath10k_htt_rx_has_decrypt_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_DECRYPT_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_has_fcs_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_FCS_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_has_mic_err(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_TKIP_MIC_ERR)
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool ath10k_htt_rx_is_mgmt(struct sk_buff *skb)
+-{
+-	struct htt_rx_desc *rxd;
+-	u32 flags;
+-
+-	rxd = (void *)skb->data - sizeof(*rxd);
+-	flags = __le32_to_cpu(rxd->attention.flags);
+-
+-	if (flags & RX_ATTENTION_FLAGS_MGMT_TYPE)
+-		return true;
+-
+-	return false;
+-}
+-
+ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb)
+ {
+ 	struct htt_rx_desc *rxd;
+@@ -1135,7 +1079,8 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
+ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 					struct sk_buff *head,
+ 					enum htt_rx_mpdu_status status,
+-					bool channel_set)
++					bool channel_set,
++					u32 attention)
+ {
+ 	if (head->len == 0) {
+ 		ath10k_dbg(ATH10K_DBG_HTT,
+@@ -1143,7 +1088,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 		return false;
+ 	}
+ 
+-	if (ath10k_htt_rx_has_decrypt_err(head)) {
++	if (attention & RX_ATTENTION_FLAGS_DECRYPT_ERR) {
+ 		ath10k_dbg(ATH10K_DBG_HTT,
+ 			   "htt rx dropping due to decrypt-err\n");
+ 		return false;
+@@ -1156,7 +1101,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
+ 
+ 	/* Skip mgmt frames while we handle this in WMI */
+ 	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
+-	    ath10k_htt_rx_is_mgmt(head)) {
++	    attention & RX_ATTENTION_FLAGS_MGMT_TYPE) {
+ 		ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
+ 		return false;
+ 	}
+@@ -1185,12 +1130,14 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ {
+ 	struct htt_rx_info info;
+ 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
++	struct htt_rx_desc *rxd;
+ 	enum htt_rx_mpdu_status status;
+ 	struct ieee80211_hdr *hdr;
+ 	int num_mpdu_ranges;
++	u32 attention;
+ 	int fw_desc_len;
+ 	u8 *fw_desc;
+-	bool channel_set, fcs_err, mic_err;
++	bool channel_set;
+ 	int i, j;
+ 	int ret;
+ 
+@@ -1252,9 +1199,15 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				continue;
+ 			}
+ 
++			rxd = container_of((void *) msdu_head->data,
++					   struct htt_rx_desc,
++					   msdu_payload);
++			attention = __le32_to_cpu(rxd->attention.flags);
++
+ 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
+ 							 status,
+-							 channel_set)) {
++							 channel_set,
++							 attention)) {
+ 				ath10k_htt_rx_free_msdu_chain(msdu_head);
+ 				continue;
+ 			}
+@@ -1275,21 +1228,17 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 						 RX_FLAG_IV_STRIPPED |
+ 						 RX_FLAG_MMIC_STRIPPED);
+ 
+-			fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
+-			if (fcs_err)
++			if (attention & RX_ATTENTION_FLAGS_FCS_ERR) {
+ 				info.rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+-
+-			mic_err = ath10k_htt_rx_has_mic_err(msdu_head);
+-			if (mic_err)
+-				info.rx_status.flag |= RX_FLAG_MMIC_ERROR;
+-
+-			if (fcs_err)
+ 				ath10k_dbg(ATH10K_DBG_HTT,
+ 					   "htt rx has FCS err\n");
++			}
+ 
+-			if (mic_err)
++			if (attention & RX_ATTENTION_FLAGS_TKIP_MIC_ERR) {
++				info.rx_status.flag |= RX_FLAG_MMIC_ERROR;
+ 				ath10k_dbg(ATH10K_DBG_HTT,
+ 					   "htt rx has MIC err\n");
++			}
+ 
+ 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
+ 
+-- 
+1.7.9.5
 
-root@freescale ~$ iwlist wlan0 scan
-wlan0     No scan results
----
-
-I retried with debug_level=256 (scan debug) and I see a lot of output
-appended below. I haven't figured out how to interpret them yet. I'd
-be grateful for any advice/suggestions on this.
-
-Thanks,
-jaya
-
-root@freescale ~$ modprobe wl12xx debug_level=256
-root@freescale ~$ modprobe wl12xx_sdio
-add wake up source irq 106
-wl1271: loaded
-wl1271: initialized
-root@freescale ~$ ifconfig wlan0 up
-wl1271: firmware booted (Rev 6.1.5.50.69)
-root@freescale ~$ iwlist wlan0 scan
-wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 02 04 0b 16
-wl1271: PROBE REQ: 00000020: 0c 12 18 24 32 04 30 48 60 6c 2d 1a 30 01 18 ff
-wl1271: PROBE REQ: 00000030: 00 00 00 00 00 00 00 00 00 48 00 01 00 00 00 00
-wl1271: PROBE REQ: 00000040: 00 00 00 00 00 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 04 00 0b 02
-wl1271: SCAN: 00000010: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 4c 1d 00 00
-wl1271: SCAN: 00000040: 30 75 00 00 ff ff ff ff ff ff 00 14 01 00 00 00
-wl1271: SCAN: 00000050: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 02 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 03 00 00 00 4c 1d 00 00 30 75 00 00
-wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 04 00 00 00 4c 1d 00 00
-wl1271: SCAN: 00000090: 30 75 00 00 ff ff ff ff ff ff 00 14 05 00 00 00
-wl1271: SCAN: 000000a0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 000000b0: 06 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 000000c0: ff ff 00 14 07 00 00 00 4c 1d 00 00 30 75 00 00
-wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 08 00 00 00 4c 1d 00 00
-wl1271: SCAN: 000000e0: 30 75 00 00 ff ff ff ff ff ff 00 14 09 00 00 00
-wl1271: SCAN: 000000f0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000100: 0a 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 00000110: ff ff 00 14 0b 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 02 04 0b 16
-wl1271: PROBE REQ: 00000020: 0c 12 18 24 32 04 30 48 60 6c 2d 1a 30 01 18 ff
-wl1271: PROBE REQ: 00000030: 00 00 00 00 00 00 00 00 00 48 00 01 00 00 00 00
-wl1271: PROBE REQ: 00000040: 00 00 00 00 00 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 03 02
-wl1271: SCAN: 00000010: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 a0 86 01 00
-wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 0c 00 00 00
-wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 0d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 0e 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 0c 12 18 24
-wl1271: PROBE REQ: 00000020: 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000030: 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 0c 02
-wl1271: SCAN: 00000010: 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 01 00 01 00 a0 86 01 00
-wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 24 00 00 00
-wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 26 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 28 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 2a 00 00 00 a0 86 01 00
-wl1271: SCAN: 00000090: a0 86 01 00 ff ff ff ff ff ff 00 14 2c 00 00 00
-wl1271: SCAN: 000000a0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 000000b0: 2e 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 000000c0: ff ff 00 14 30 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 95 00 00 00 a0 86 01 00
-wl1271: SCAN: 000000e0: a0 86 01 00 ff ff ff ff ff ff 00 14 99 00 00 00
-wl1271: SCAN: 000000f0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000100: 9d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000110: ff ff 00 14 a1 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 00000120: ff ff ff ff ff ff 00 14 a5 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-wlan0     No scan results
-
-root@freescale ~$ iwconfig wlan0 essid testingopen ap any
-wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
-wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 02 04 0b 16 0c 12 18 24 32
-wl1271: PROBE REQ: 00000030: 04 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00
-wl1271: PROBE REQ: 00000040: 00 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000050: 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 04 00 0b 02
-wl1271: SCAN: 00000010: 01 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
-wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 4c 1d 00 00
-wl1271: SCAN: 00000040: 30 75 00 00 ff ff ff ff ff ff 00 14 01 00 00 00
-wl1271: SCAN: 00000050: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 02 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 03 00 00 00 4c 1d 00 00 30 75 00 00
-wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 04 00 00 00 4c 1d 00 00
-wl1271: SCAN: 00000090: 30 75 00 00 ff ff ff ff ff ff 00 14 05 00 00 00
-wl1271: SCAN: 000000a0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 000000b0: 06 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 000000c0: ff ff 00 14 07 00 00 00 4c 1d 00 00 30 75 00 00
-wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 08 00 00 00 4c 1d 00 00
-wl1271: SCAN: 000000e0: 30 75 00 00 ff ff ff ff ff ff 00 14 09 00 00 00
-wl1271: SCAN: 000000f0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000100: 0a 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
-wl1271: SCAN: 00000110: ff ff 00 14 0b 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-root@freescale ~$ wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff
-ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
-wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 02 04 0b 16 0c 12 18 24 32
-wl1271: PROBE REQ: 00000030: 04 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00
-wl1271: PROBE REQ: 00000040: 00 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000050: 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 03 02
-wl1271: SCAN: 00000010: 01 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
-wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 a0 86 01 00
-wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 0c 00 00 00
-wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 0d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 0e 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
-wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
-wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 0c 12 18 24 30 48 60 6c 2d
-wl1271: PROBE REQ: 00000030: 1a 30 01 18 ff 00 00 00 00 00 00 00 00 00 48 00
-wl1271: PROBE REQ: 00000040: 01 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 0c 02
-wl1271: SCAN: 00000010: 08 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
-wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 01 00 01 00 a0 86 01 00
-wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 24 00 00 00
-wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000060: 26 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000070: ff ff 00 14 28 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 2a 00 00 00 a0 86 01 00
-wl1271: SCAN: 00000090: a0 86 01 00 ff ff ff ff ff ff 00 14 2c 00 00 00
-wl1271: SCAN: 000000a0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 000000b0: 2e 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 000000c0: ff ff 00 14 30 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 95 00 00 00 a0 86 01 00
-wl1271: SCAN: 000000e0: a0 86 01 00 ff ff ff ff ff ff 00 14 99 00 00 00
-wl1271: SCAN: 000000f0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
-wl1271: SCAN: 00000100: 9d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
-wl1271: SCAN: 00000110: ff ff 00 14 a1 00 00 00 a0 86 01 00 a0 86 01 00
-wl1271: SCAN: 00000120: ff ff ff ff ff ff 00 14 a5 00 00 00 00 00 00 00
-wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
-
-root@freescale ~$ iwconfig
-lo        no wireless extensions.
-
-usb0      no wireless extensions.
-
-wlan0     IEEE 802.11abgn  ESSID:"testingopen"
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
