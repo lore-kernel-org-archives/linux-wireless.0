@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14781 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbaCLIwU (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38021 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965087AbaCSOZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 04:52:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Jones Desougi <jones.desougi@27m.se>
-CC: Joe Perches <joe@perches.com>, <ath6kl@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/6] ath6kl: use braces on both arms of if statement
-References: <20140309065606.10793.67068.stgit@x230>
-	<20140309065717.10793.76274.stgit@x230>
-	<1394401348.6972.50.camel@joe-AO722> <53201F25.30200@27m.se>
-Date: Wed, 12 Mar 2014 10:52:11 +0200
-In-Reply-To: <53201F25.30200@27m.se> (Jones Desougi's message of "Wed, 12 Mar
-	2014 09:47:33 +0100")
-Message-ID: <87iorjg5ok.fsf@kamboji.qca.qualcomm.com> (sfid-20140312_095227_115021_7E388B9D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 19 Mar 2014 10:25:19 -0400
+Message-ID: <1395239116.4142.24.camel@jlt4.sipsolutions.net> (sfid-20140319_152523_030154_F8B6E204)
+Subject: Re: [PATCH 2/3] cfg80211: remove macro ASSERT_RDEV_LOCK(rdev)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Mar 2014 15:25:16 +0100
+In-Reply-To: <c7fac3c56875d3466c480456b092ef4bac7a75c8.1395219362.git.gamerh2o@gmail.com> (sfid-20140319_100452_095529_65A8A2E1)
+References: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com>
+	 <c7fac3c56875d3466c480456b092ef4bac7a75c8.1395219362.git.gamerh2o@gmail.com>
+	 (sfid-20140319_100452_095529_65A8A2E1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jones Desougi <jones.desougi@27m.se> writes:
+On Wed, 2014-03-19 at 17:04 +0800, Zhao, Gang wrote:
+> Macro ASSERT_RDEV_LOCK(rdev) is equal to ASSERT_RTNL(), so replace it
+> with ASSERT_RTNL() and remove it.
 
-> That inverts the meaning of the condition though.
->
->
-> On 03/09/2014 10:42 PM, Joe Perches wrote:
-> ...
->> -	if (bss == NULL) {
-> ...
->> -	} else
->> +	if (!bss) {
->
->         if (bss) {
+Applied.
 
-Yeah, that was buggy. Thanks for pointing it out.
+johannes
 
--- 
-Kalle Valo
