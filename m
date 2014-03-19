@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:53032 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933390AbaCQOeV (ORCPT
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:63586 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932721AbaCSMlM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 10:34:21 -0400
-Received: by mail-we0-f181.google.com with SMTP id q58so4557120wes.40
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 07:34:20 -0700 (PDT)
+	Wed, 19 Mar 2014 08:41:12 -0400
+Received: by mail-yh0-f45.google.com with SMTP id a41so8429603yho.32
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 05:41:11 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 17 Mar 2014 19:34:19 +0500
-Message-ID: <CAJbgrxdpsW3iLrarGuCvxQZxS_hmrqD0hh+7-VdYRY1wJqCfmg@mail.gmail.com> (sfid-20140317_153428_879449_90250592)
-Subject: Google Summer of Code idea
-From: Haris Choudhary <haris05ch@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CA+BoTQmaxQj+Bv_dQz-+UmrG+7rmz_pTAZAGLY9_Mi_k7JP6HA@mail.gmail.com>
+References: <20140313082431.10798.10888.stgit@potku.adurom.net>
+	<87pplih81g.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmaxQj+Bv_dQz-+UmrG+7rmz_pTAZAGLY9_Mi_k7JP6HA@mail.gmail.com>
+Date: Wed, 19 Mar 2014 14:41:11 +0200
+Message-ID: <CANe27jJgu7QP9r7GGvnDnDp=7aVmMaJLGPqJVPRyo-E8epYACA@mail.gmail.com> (sfid-20140319_134116_527153_C26E481A)
+Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
+From: Jouni Malinen <jkmalinen@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Mar 19, 2014 at 11:16 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>
+> On 19 March 2014 10:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> > Fengguan's buildbot got warnings here and I assume they are coming from
+> > smatch:
+> >
+> > drivers/net/wireless/ath/ath10k/debug.c:500 ath10k_write_simulate_fw_crash() error: strncmp() '"hard"' too small (5 vs 32)
+> > drivers/net/wireless/ath/ath10k/debug.c:497 ath10k_write_simulate_fw_crash() error: strncmp() '"soft"' too small (5 vs 32)
+> >
+> > I wanted to use strncmp() instead of strcmp(), but I'm not sure what to
+> > do here. In my opinion it's guaranteed that the string "hard" is null
+> > terminated, so it shouldn't matter even if strlen("soft") (5) is less
+> > than sizeof(buf) (32), right? Or am I missing something here?
+>
+> Hmm.. strncmp() compares *at most* n chars. The above means you can
+> overflow the const char[] "hard" and "soft" if `buf` is longer than
+> those. strncmp() must be passed the smallest length of either
+> argument.
 
-I had a Google summer of code project idea for the linux wireless module.
+No you cannot. strncmp() will stop at '\0' from either buffer. If buf
+is nul terminated, I see no point in using strncmp here (i.e., strcmp
+should be used instead). If buf is not nul terminated, the length to
+strncmp() must be the correct length of data in that buf, not
+sizeof(buf). In either case, the current version here is incorrect
+(even if it could not result in a buffer read overflow in practice).
 
-Basically, having conducted research in wireless networks before. I
-wanted to make a user friendly ath9k driver that can apply various
-changes to the ath9k source code and disable/enable backoff, disable
-carrier-sensing, print out various statements such as bitmaps etc.
-
-I am really interested in doing a project for the wireless linux
-community so I am open to more ideas.
-
-I can draft out a more formal proposal to my idea if needed.
-
-Regards,
-Haris
+- Jouni
