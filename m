@@ -1,87 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:36676 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbaCYJrt convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757962AbaCSI2w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 05:47:49 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so234444obc.29
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 02:47:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj984srRCqzFmzjGuE2nFLrC-V+PEgDPC-mejsZnfGH52g_Q@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
-	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
-	<CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
-	<CA+BoTQmNVHj-rNvVgvTx=Adq6J1kpra2qwi3Pmzh2G2Npn-jGg@mail.gmail.com>
-	<CAEFj984srRCqzFmzjGuE2nFLrC-V+PEgDPC-mejsZnfGH52g_Q@mail.gmail.com>
-Date: Tue, 25 Mar 2014 10:47:49 +0100
-Message-ID: <CA+BoTQnG4QAYrinu3LLj9PbSAdvuUzqyAZQvgrWme5Qd2Hpq6Q@mail.gmail.com> (sfid-20140325_104753_245222_63F0644B)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-2
+	Wed, 19 Mar 2014 04:28:52 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: verify deauthentication and return error on failure
+Date: Wed, 19 Mar 2014 09:28:49 +0100
+Message-Id: <1395217729-13565-1-git-send-email-johannes@sipsolutions.net> (sfid-20140319_092858_551105_A3D36DB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2014 10:38, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> I don't think that's true for 10.1 firmware and AP interface types.
->
-> I try to play around with 10.1 firmware as AP (3 connected STAs) and I
-> get the following:
->
-> The first WMI_UPDATE_STATS_EVENTID as follow:
-> [ 338.290000] ath10k: pdev 0 vdev 0 peer 3
-> [  338.300000] ath10k: MAC 04:f0:21:0c:a5:44
-> [  338.300000] ath10k: RSSI 60
-> [  338.300000] ath10k: Tx 1170000
-> [  338.310000] ath10k: Rx 1170000
-> [  338.310000] ath10k: MAC 04:f0:21:0c:a5:19
-> [  338.320000] ath10k: RSSI 64
-> [  338.320000] ath10k: Tx 1300000
-> [  338.320000] ath10k: Rx 975000
-> [  338.320000] ath10k: MAC 04:f0:21:0c:a5:1c
-> [  338.330000] ath10k: RSSI 71
-> [  338.330000] ath10k: Tx 975000
-> [  338.330000] ath10k: Rx 1300000
->
-> I think that above is correct.
->
-> The second WMI_UPDATE_STATS_EVENTID as follow:
-> [  338.340000] ath10k: pdev 1 vdev 0 peer 1
-> [  338.350000] ath10k: MAC a8:02:00:00:00:00
-> [  338.350000] ath10k: RSSI 0
-> [  338.350000] ath10k: Tx 565
-> [  338.360000] ath10k: Rx 0
->
-> Although indicating 1 peer, but the data seems to be not the peer
-> stats, not even self STA stats. Any idea?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes.
+When still authenticating the mac80211 code handling a deauthentication
+requests from userspace doesn't verify that the request is valid in any
+way, fix that. Additionally, it never returns an error, even if there's
+no connection or authentication attempt, fix that as well.
 
-The second stats event has pdev stats. As per my other mail, 10.1 has
-extra pdev stats. Since ath10k doesn't account that it reads peer
-stats too early from the buffer. What you see is a tail of pdev stats
-for 10.1.
+While at it, move the message to not print a message in the error case
+and to distinguish between the two cases.
 
-You can try the following to test *10.1*:
+Also simplify the code by duplicating the cfg80211 call.
 
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2804,6 +2804,12 @@ struct wmi_pdev_stats {
-        __le32 phy_err_count;  /* Phy error count */
-        __le32 chan_tx_pwr;    /* channel tx power */
-        struct wal_dbg_stats wal; /* WAL dbg stats */
-+       __le32 ack_rx_bad;
-+       __le32 rts_bad;
-+       __le32 rts_good;
-+       __le32 fcs_bad;
-+       __le32 no_beacons;
-+       __le32 mib_int_count;
- } __packed;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 423816f18b55..5ade21eb3602 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4393,37 +4393,41 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	bool tx = !req->local_state_change;
+-	bool report_frame = false;
+ 
+-	sdata_info(sdata,
+-		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
+-		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
++	if (ifmgd->auth_data &&
++	    ether_addr_equal(ifmgd->auth_data->bss->bssid, req->bssid)) {
++		sdata_info(sdata,
++			   "aborting authentication with %pM by local choice (Reason: %u=%s)\n",
++			   req->bssid, req->reason_code,
++			   ieee80211_get_reason_code_string(req->reason_code));
+ 
+-	if (ifmgd->auth_data) {
+ 		drv_mgd_prepare_tx(sdata->local, sdata);
+ 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
+ 					       IEEE80211_STYPE_DEAUTH,
+ 					       req->reason_code, tx,
+ 					       frame_buf);
+ 		ieee80211_destroy_auth_data(sdata, false);
++		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
++				      IEEE80211_DEAUTH_FRAME_LEN);
+ 
+-		report_frame = true;
+-		goto out;
++		return 0;
+ 	}
+ 
+ 	if (ifmgd->associated &&
+ 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
++		sdata_info(sdata,
++			   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
++			   req->bssid, req->reason_code,
++			   ieee80211_get_reason_code_string(req->reason_code));
++
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       req->reason_code, tx, frame_buf);
+-		report_frame = true;
+-	}
+-
+- out:
+-	if (report_frame)
+ 		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+ 				      IEEE80211_DEAUTH_FRAME_LEN);
++		return 0;
++	}
+ 
+-	return 0;
++	return -ENOTCONN;
+ }
+ 
+ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+-- 
+1.8.5.3
 
-Micha³
