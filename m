@@ -1,54 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34897 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbaCUN6H (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37162 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756193AbaCSKJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:58:07 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so1836002eei.33
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:58:06 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Wed, 19 Mar 2014 06:09:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/7] cfg80211/mac80211: implement multi-vif csa
-Date: Fri, 21 Mar 2014 14:52:14 +0100
-Message-Id: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145813_224964_D2C6C53A)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.14] mac80211: fix suspend vs. authentication race
+Date: Wed, 19 Mar 2014 11:08:57 +0100
+Message-Id: <1395223737-1222-1-git-send-email-johannes@sipsolutions.net> (sfid-20140319_110907_570833_96E6381F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is another part of my recent RFC. This is
-just the channel switching part.
+Since Stanislaw's patch removing the quiescing code, mac80211 had
+a race regarding suspend vs. authentication: as cfg80211 doesn't
+track authentication attempts, it can't abort them. Therefore the
+attempts may be kept running while suspending, which can lead to
+all kinds of issues, in at least some cases causing an error in
+iwlmvm firmware.
 
-This is based on my patchset implementing
-multi-vif chanctx reservations.
+Fix this by aborting the authentication attempt when suspending.
 
+Cc: stable@vger.kernel.org
+Fixes: 12e7f517029d ("mac80211: cleanup generic suspend/resume procedures")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 28 ++++++++++++++++++++++++++++
+ net/mac80211/pm.c          | 14 +++++++++++---
+ 3 files changed, 40 insertions(+), 3 deletions(-)
 
-v2:
- * add radar_detect fix patch (wasn't present in
-   the big RFC)
-
-
-Michal Kazior (7):
-  cfg80211: fix radar_detect combination checking
-  mac80211: make check_combinations() aware of chanctx reservation
-  mac80211: use chanctx reservation for AP CSA
-  mac80211: use chanctx reservation for STA CSA
-  mac80211: ignore cqm during csa
-  mac80211: remove old unused channel switching code
-  cfg80211: remove channel_switch combination check
-
- net/mac80211/cfg.c         | 63 +++++++++++++++++++----------
- net/mac80211/chan.c        | 79 +++++++-----------------------------
- net/mac80211/ieee80211_i.h |  5 ---
- net/mac80211/mlme.c        | 99 ++++++++++++++++++++++++++++++----------------
- net/mac80211/util.c        | 37 ++++++++++++++++-
- net/wireless/nl80211.c     | 11 ------
- net/wireless/util.c        |  2 +-
- 7 files changed, 156 insertions(+), 140 deletions(-)
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8603dfb52b3a..562cedde0ada 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1391,6 +1391,7 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mgd_conn_tx_status(struct ieee80211_sub_if_data *sdata,
+ 				  __le16 fc, bool acked);
++void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
+ 
+ /* IBSS code */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5ade21eb3602..a6fec72d5567 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3576,6 +3576,34 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ }
+ 
+ #ifdef CONFIG_PM
++void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++
++	sdata_lock(sdata);
++
++	if (ifmgd->auth_data) {
++		/*
++		 * If we are trying to authenticate while suspending, cfg80211
++		 * won't know and won't actually abort those attempts, thus we
++		 * need to do that ourselves.
++		 */
++
++		drv_mgd_prepare_tx(sdata->local, sdata);
++		ieee80211_send_deauth_disassoc(sdata,
++					       ifmgd->auth_data->bss->bssid,
++					       IEEE80211_STYPE_DEAUTH,
++					       WLAN_REASON_DEAUTH_LEAVING,
++					       false, frame_buf);
++		ieee80211_destroy_auth_data(sdata, false);
++		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
++				      IEEE80211_DEAUTH_FRAME_LEN);
++	}
++
++	sdata_unlock(sdata);
++}
++
+ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index af64fb8e8add..d478b880a0af 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -100,10 +100,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	/* remove all interfaces that were created in the driver */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata) ||
+-		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-		    sdata->vif.type == NL80211_IFTYPE_MONITOR)
++		if (!ieee80211_sdata_running(sdata))
+ 			continue;
++		switch (sdata->vif.type) {
++		case NL80211_IFTYPE_AP_VLAN:
++		case NL80211_IFTYPE_MONITOR:
++			continue;
++		case NL80211_IFTYPE_STATION:
++			ieee80211_mgd_quiesce(sdata);
++			break;
++		default:
++			break;
++		}
+ 
+ 		drv_remove_interface(local, sdata);
+ 	}
 -- 
 1.8.5.3
 
