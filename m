@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41685 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:37873 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752716AbaCGO2A (ORCPT
+	with ESMTP id S933853AbaCSNwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 09:28:00 -0500
-Message-ID: <1394202477.4653.4.camel@jlt4.sipsolutions.net> (sfid-20140307_152804_511407_477C951D)
-Subject: Re: [RFC PATCH 2/8] nl80211: Add attributes describing channel
- bandwidth
+	Wed, 19 Mar 2014 09:52:09 -0400
+Message-ID: <1395237113.4142.5.camel@jlt4.sipsolutions.net> (sfid-20140319_145236_813708_6237C20B)
+Subject: Re: [PATCH v3] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Michal Sojka <sojkam1@fel.cvut.cz>,
-	s.sander@nordsys.de, jan-niklas.meier@volkswagen.de
-Date: Fri, 07 Mar 2014 15:27:57 +0100
-In-Reply-To: <1394199475-5208-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143806_016638_D28BD455)
-References: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1394199475-5208-3-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140307_143806_016638_D28BD455)
+To: behanw@converseincode.com
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	dwmw2@infradead.org, pageexec@freemail.hu,
+	Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>,
+	=?ISO-8859-1?Q?Vin=EDcius?= Tinti <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Date: Wed, 19 Mar 2014 14:51:53 +0100
+In-Reply-To: <1395199933-4686-1-git-send-email-behanw@converseincode.com> (sfid-20140319_043225_892297_337F53BC)
+References: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com>
+	 <1395199933-4686-1-git-send-email-behanw@converseincode.com>
+	 (sfid-20140319_043225_892297_337F53BC)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-07 at 14:37 +0100, Rostislav Lisovy wrote:
-> These attributes are used to report back to userspace
-> the information about the bandwidth allowed in
-> a particular channel
+I'm confused.
 
-> +	NL80211_FREQUENCY_ATTR_NO_20MHZ,
-> +	NL80211_FREQUENCY_ATTR_NO_10MHZ,
+On Tue, 2014-03-18 at 20:32 -0700, behanw@converseincode.com wrote:
 
-This makes some sense, but I think such channels should be excluded by
-default from the channel list in nl80211.c because they will break old
-tools - you should include them only in the 'split wiphy info' case.
+
+>  	struct scatterlist assoc, pt, ct[2];
+> -	struct {
+> -		struct aead_request	req;
+> -		u8			priv[crypto_aead_reqsize(tfm)];
+> -	} aead_req;
+>  
+> -	memset(&aead_req, 0, sizeof(aead_req));
+> +	char aead_req_data[sizeof(struct aead_request) +
+> +		crypto_aead_reqsize(tfm)]
+> +		__aligned(__alignof__(struct aead_request));
+
+This looks fine, though I'd argue the blank lines before/after it
+shouldn't be there, and the indentation should be a bit different, but I
+was willing to clean that up.
+
+>  int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+>  			      u8 *data, size_t data_len, u8 *mic)
+>  {
+>  	struct scatterlist assoc, pt, ct[2];
+> -	struct {
+> -		struct aead_request	req;
+> -		u8			priv[crypto_aead_reqsize(tfm)];
+> -	} aead_req;
+>  
+> -	memset(&aead_req, 0, sizeof(aead_req));
+> +	char aead_req_data[sizeof(struct aead_request) +
+> +				crypto_aead_reqsize(tfm) +
+> +				CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+
+But why does the second instance use a completely different size/align?
 
 johannes
 
