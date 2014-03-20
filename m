@@ -1,67 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:57328 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760838AbaCUN6P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:58:15 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so1832605eek.35
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:58:14 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:8735 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756610AbaCTL1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2014 07:27:05 -0400
+Date: Thu, 20 Mar 2014 11:16:42 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 5/7] mac80211: ignore cqm during csa
-Date: Fri, 21 Mar 2014 14:52:19 +0100
-Message-Id: <1395409941-26303-6-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145822_479766_24419403)
-In-Reply-To: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+Cc: Pedro Francisco <pedrogfrancisco@GMAIL.COM>
+Subject: Re: [RFC/RFT 0/9] iwlegacy rework rx allocation
+Message-ID: <20140320101604.GA5989@redhat.com> (sfid-20140320_122711_910235_AFBDFB22)
+References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not guaranteed that multi-vif channel
-switching is tightly synchronized. It makes sense
-to ignore cqm (missing beacons, et al) while csa
-is progressing and re-check it after it completes.
+On Wed, Mar 05, 2014 at 01:13:25PM +0100, Stanislaw Gruszka wrote:
+> Those patches replace compicated rx allocation algoritm with
+> simple one which always assure we have RX buffers ready for 
+> firmware. This fix long standing problem with microcode errors
+> when system is under load.
+> 
+> I tested them only on 4965.  
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/mlme.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Unfortunately they do not solve firmware error happened randomly, which
+I hoped they solve. I need more testing of that issue. For now I pushed
+those patches and bunch of others at https://github.com/sgruszka/iwlegacy
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a5b23a1..4304988 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -974,6 +974,9 @@ cleanup:
- 
- 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
- 
-+	ieee80211_sta_reset_beacon_monitor(sdata);
-+	ieee80211_sta_reset_conn_monitor(sdata);
-+
- out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	mutex_unlock(&local->mtx);
-@@ -3555,6 +3558,9 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
- 
-+	if (sdata->vif.csa_active)
-+		return;
-+
- 	sdata->u.mgd.connection_loss = false;
- 	ieee80211_queue_work(&sdata->local->hw,
- 			     &sdata->u.mgd.beacon_connection_loss_work);
-@@ -3570,6 +3576,9 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
- 
-+	if (sdata->vif.csa_active)
-+		return;
-+
- 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
- }
- 
--- 
-1.8.5.3
-
+Stanislaw 
