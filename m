@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:49123 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701AbaCEBnS (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:37928 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756155AbaCTTs0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 20:43:18 -0500
-Received: by mail-oa0-f47.google.com with SMTP id i11so389016oag.20
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Mar 2014 17:43:17 -0800 (PST)
+	Thu, 20 Mar 2014 15:48:26 -0400
+Message-ID: <532B4606.3030303@lwfinger.net> (sfid-20140320_204850_487088_556BE92D)
+Date: Thu, 20 Mar 2014 14:48:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <530D218E.9010007@wwwdotorg.org>
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com>
-	<1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com>
-	<530D218E.9010007@wwwdotorg.org>
-Date: Wed, 5 Mar 2014 09:43:16 +0800
-Message-ID: <CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com> (sfid-20140305_024342_365688_5C06C69A)
-Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Peter Wu <peter@lekensteyn.nl>,
+	John W Linville <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Chaoming_Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lekensteyn@gmail.com
+Subject: Re: [PATCH 0/3] rtlwifi (and staging rtl8821ae) cleanups
+References: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl>
+In-Reply-To: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 7:04 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-
->> -     gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
->> +     gpio = devm_gpiod_get_index(&pdev->dev, NULL, 0);
+On 03/20/2014 01:52 PM, Peter Wu wrote:
+> Hi,
 >
-> I think the correct fix here is to look up the GPIO by name rather than
-> by index, but simply hard-code the name rather than generating it with
-> sprintf(). Index lookups are hard to expand compatibly, but named-based
-> lookups scale much better.
+> The first patch of these series was NAKed some weeks ago because it would
+> conflict with the new rtl8723be driver. Since those changes are in wireless-next
+> now, I have adjusted that patch to take care of rtl8723be.
 >
-> In other words, I rather specifically disagree with using a plain
-> "gpios" property in any future DT binding, but would strongly prefer
-> e.g. reset-gpios/shutdown-gpios or gpios/gpio-names.
+> The other two patches to the staging driver is similar to the rtlwifi changes.
+> I am not sure who to send these two patches to. Greg is the staging maintainer,
+> but John takes wireless patches, so I have included both of you.
+>
+> All patches are compile-tested on top of v3.14-rc2-938-g67b3bd4.
+>
+> I also found the following (unrelated to my patches) warning while compiling the
+> staging driver, perhaps it needs a closer look?
 
-If I understand the situation correctly it's like ACPI does not have named
-GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
-to the work of abstracting the access to GPIO handlers so that drivers
-need not know whether ACPI or DT is used for describing the hardware.
+Peter,
 
-We could do worse. Like putting the GPIOs in a differently indexed order
-in DT vs ACPI.
+Your Patch 1/3 applies cleanly and I think it is OK, but if you are going to do 
+cleanups on the wireless tree, you should be working from the latest version of 
+wireless-testing git repo. We are on 3.14-rc7 and there are several recent 
+commits that might have conflicted.
 
-I have no strong opinion really, I just see that people doing DT and ACPI
-HW descriptions need to cooperate if they want to share infrastructure
-or we have to give up that pipe dream and let each HW description
-method have its own unique probe()-runpath. Which would be the result
-in this driver if we persist on using named GPIOs.
+As for the changes to staging/rtl8821ae (No. 2 & 3), once Linus starts the merge 
+that will precede the release of 3.15-rc2, the entire code for rtl8821ae will be 
+replaced. A cleaned-up version was nearly ready for the regular wireless tree in 
+time to make 3.15, but it did not get enough testing. As a result, that driver 
+will be in testing for one more cycle. By 3.16, it should reside in the regular 
+tree and be out of staging.
 
-Yours,
-Linus Walleij
+Pushing patches that affect both the regular tree and staging is complicated and 
+should be avoided whenever possible.
+
+Larry
+
+
+
