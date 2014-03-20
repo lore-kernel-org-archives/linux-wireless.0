@@ -1,44 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59329 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816AbaCXWVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 18:21:25 -0400
-Message-ID: <5330AFC6.60205@candelatech.com> (sfid-20140324_232157_370196_51ADD76B)
-Date: Mon, 24 Mar 2014 15:20:54 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from lekensteyn.nl ([178.21.112.251]:38953 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759782AbaCTVCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2014 17:02:06 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chaoming_Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] rtlwifi (and staging rtl8821ae) cleanups
+Date: Thu, 20 Mar 2014 22:01:49 +0100
+Message-ID: <1944222.25WC2qyDiY@al> (sfid-20140320_220233_851420_4A431363)
+In-Reply-To: <532B4606.3030303@lwfinger.net>
+References: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl> <532B4606.3030303@lwfinger.net>
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
-References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com> <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2014 01:24 PM, Janusz Dziedzic wrote:
-> RSSI and RATES fields are valid only when START_VALID
-> bit is set. So, in current implementation we have to
-> remember/caclulate them when START_VALID and report the same
-> when only END_VALID is set.
-> Currently during heavy traffic we could have:
-> - 10 packets with START_VALID - correct RSSI and RATES
-> - 10 packets with END_VALID
-> - 10 packets with START_VALID - correct RSSI and RATES
-> - 10 packets with END_VALID
+On Thursday 20 March 2014 14:48:22 Larry Finger wrote:
+> On 03/20/2014 01:52 PM, Peter Wu wrote:
+> > Hi,
+> > 
+> > The first patch of these series was NAKed some weeks ago because it would
+> > conflict with the new rtl8723be driver. Since those changes are in
+> > wireless-next now, I have adjusted that patch to take care of rtl8723be.
+> > 
+> > The other two patches to the staging driver is similar to the rtlwifi
+> > changes. I am not sure who to send these two patches to. Greg is the
+> > staging maintainer, but John takes wireless patches, so I have included
+> > both of you.
+> > 
+> > All patches are compile-tested on top of v3.14-rc2-938-g67b3bd4.
+> > 
+> > I also found the following (unrelated to my patches) warning while
+> > compiling the staging driver, perhaps it needs a closer look?
+> 
+> Peter,
+> 
+> Your Patch 1/3 applies cleanly and I think it is OK, but if you are going to
+> do cleanups on the wireless tree, you should be working from the latest
+> version of wireless-testing git repo. We are on 3.14-rc7 and there are
+> several recent commits that might have conflicted.
 
-I applied all 8 of these patches to my tree, and it does fix the problems I saw with
-rx-rate and signal being broken (perhaps because I am using raw rx mode for
-my stations).
+The changes are not new, just updated for the latest wireless-next. I did test 
+it on wireless-next, apparently it has not synced with Linus' tree yet:
 
-I'll leave these in my tree and will let you know if I see any
-problems that might be related to them.
+$ git describe wireless-next/master 
+v3.14-rc2-938-g67b3bd4
+$ git log --oneline -n4 rtlwifi-wireless-next 
+cb39071 staging/rtl8821ae: remove unused allow_all_destaddr function
+607693e staging/rtl8821ae: avoid accessing RCR directly
+7db8deb rtlwifi: remove unused allow_all_destaddr functions
+67b3bd4 brcmfmac: fallback to mimo_bw_cap for older firmwares
+
+> As for the changes to staging/rtl8821ae (No. 2 & 3), once Linus starts the
+> merge that will precede the release of 3.15-rc2, the entire code for
+> rtl8821ae will be replaced. A cleaned-up version was nearly ready for the
+> regular wireless tree in time to make 3.15, but it did not get enough
+> testing. As a result, that driver will be in testing for one more cycle. By
+> 3.16, it should reside in the regular tree and be out of staging.
+
+I must be missing something, since I subscribed to linux-wireless this month, 
+I have not seen discussions about a replacement for rtl8821ae. Is this driver 
+not published yet?
+
+> Pushing patches that affect both the regular tree and staging is complicated
+> and should be avoided whenever possible.
+
+Ok, I kept those in separate patches, but will send different series next time 
+if it is preferred.
 
 Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Peter
 
