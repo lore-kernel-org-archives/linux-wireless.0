@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:49354 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaCHEeY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 23:34:24 -0500
-Received: by mail-pa0-f50.google.com with SMTP id kq14so5046798pab.9
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 20:34:24 -0800 (PST)
-From: "Zhao\, Gang" <gamerh2o@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
-References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
-	<1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
-	<1394203467.4653.15.camel@jlt4.sipsolutions.net>
-Date: Sat, 08 Mar 2014 12:34:17 +0800
-In-Reply-To: <1394203467.4653.15.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Fri, 07 Mar 2014 15:44:27 +0100")
-Message-ID: <87ha79s3zq.fsf@will.lan> (sfid-20140308_053451_710773_648C40EA)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lekensteyn.nl ([178.21.112.251]:32948 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759340AbaCTSwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Mar 2014 14:52:44 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Chaoming_Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lekensteyn@gmail.com
+Subject: [PATCH 2/3] staging/rtl8821ae: avoid accessing RCR directly
+Date: Thu, 20 Mar 2014 19:52:23 +0100
+Message-Id: <1395341544-21464-3-git-send-email-peter@lekensteyn.nl> (sfid-20140320_195248_890086_5D6AE22D)
+In-Reply-To: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl>
+References: <1395341544-21464-1-git-send-email-peter@lekensteyn.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-07 at 22:44:27 +0800, Johannes Berg wrote:
-[...]
-> Of course I don't mind if you want to just wait for me to be back, I'm
-> happy to do the merging and then complain about patches that need
-> rebasing, just be warned that that would likely only happen after the
-> 17th.
+Similar to "rtlwifi: avoid accessing RCR directly", this patch avoids
+accessing receive_config directly and uses get_hw_reg. There is no
+functional change.
 
-My patch "mac80211: refactor recalculate channel context functions" can
-wait, and I can rebase them if needed.
+Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+---
+ drivers/staging/rtl8821ae/rtl8821ae/hw.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
->
-> johannes
+diff --git a/drivers/staging/rtl8821ae/rtl8821ae/hw.c b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
+index 5ed7a11..e4dbf05 100644
+--- a/drivers/staging/rtl8821ae/rtl8821ae/hw.c
++++ b/drivers/staging/rtl8821ae/rtl8821ae/hw.c
+@@ -1633,12 +1633,13 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
+ void rtl8821ae_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	u32 reg_rcr = rtlpci->receive_config;
++	u32 reg_rcr;
+ 
+ 	if (rtlpriv->psc.rfpwr_state != ERFON)
+ 		return;
+ 
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *)(&reg_rcr));
++
+ 	if (check_bssid == true) {
+ 		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
+-- 
+1.9.1
+
