@@ -1,82 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:37840 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbaCKNFY (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:20797 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbaCTJSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 09:05:24 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 1/5] cfg80211: Add attributes describing prohibited channel bandwidth
-Date: Tue, 11 Mar 2014 14:05:10 +0100
-Message-Id: <1394543114-6700-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140311_140834_770682_7EA1D78A)
-In-Reply-To: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Thu, 20 Mar 2014 05:18:10 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/4] brcmfmac: OBSS configuration and other cleanup
+Date: Thu, 20 Mar 2014 10:17:59 +0100
+Message-ID: <1395307083-31523-1-git-send-email-arend@broadcom.com> (sfid-20140320_101818_771597_9498B613)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since there are channels which have only 10 or 5 MHz bandwidth,
-we have to keep track about this information (and be able to
-report it via netlink to userspace).
+Hope this series is still in the _now_. Just a couple of small
+patches that are ready for the v3.15 stream.
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
----
- include/net/cfg80211.h       | 6 ++++++
- include/uapi/linux/nl80211.h | 6 ++++++
- 2 files changed, 12 insertions(+)
+The series applies to the master branch of the wireless-next
+repository.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b1f84b0..f5ecd6c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -109,6 +109,10 @@ enum ieee80211_band {
-  *	channel as the control or any of the secondary channels.
-  *	This may be due to the driver or due to regulatory bandwidth
-  *	restrictions.
-+ * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
-+ *     on this channel.
-+ * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-+ *     on this channel.
-  */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED		= 1<<0,
-@@ -120,6 +124,8 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_NO_OFDM		= 1<<6,
- 	IEEE80211_CHAN_NO_80MHZ		= 1<<7,
- 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
-+	IEEE80211_CHAN_NO_20MHZ		= 1<<9,
-+	IEEE80211_CHAN_NO_10MHZ		= 1<<10,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 91054fd..0748026 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2304,6 +2304,10 @@ enum nl80211_band_attr {
-  * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
-  *	using this channel as the primary or any of the secondary channels
-  *	isn't possible
-+ * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
-+ *     on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
-+ *     on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -2322,6 +2326,8 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
- 	NL80211_FREQUENCY_ATTR_NO_80MHZ,
- 	NL80211_FREQUENCY_ATTR_NO_160MHZ,
-+	NL80211_FREQUENCY_ATTR_NO_20MHZ,
-+	NL80211_FREQUENCY_ATTR_NO_10MHZ,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+Arend van Spriel (3):
+  brcmfmac: reinit watchdog completion after handling watchdog
+  brcmfmac: only show error message when brcmf_sdiod_regrw_helper()
+    fails
+  brcmfmac: fallback to mimo_bw_cap for older firmwares
+
+Daniel Kim (1):
+  brcmfmac: Enable 40MHz bandwidth in 2GHz band and OBSS scanning
+    operations
+
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   41 ++++++++++----------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    1 +
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |   10 +++++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   36 +++++++++++++++++
+ 4 files changed, 68 insertions(+), 20 deletions(-)
+
 -- 
-1.8.5.1
+1.7.9.5
 
