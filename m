@@ -1,85 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:43798 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696AbaCKLuv (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45818 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420AbaCUP5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 07:50:51 -0400
-Received: by mail-we0-f170.google.com with SMTP id w61so9937404wes.29
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2014 04:50:50 -0700 (PDT)
-Message-ID: <531EF845.2050609@gmail.com> (sfid-20140311_125054_733023_5CF85CD9)
-Date: Tue, 11 Mar 2014 13:49:25 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 21 Mar 2014 11:57:10 -0400
+Message-ID: <532C6138.7010201@candelatech.com> (sfid-20140321_165715_091042_CC058F0B)
+Date: Fri, 21 Mar 2014 08:56:40 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2014-03-11
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G"
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
+References: <1395360324-20433-1-git-send-email-greearb@candelatech.com> <CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
+In-Reply-To: <CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 03/20/2014 11:33 PM, Michal Kazior wrote:
+> On 21 March 2014 01:05,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Make the request command object the right size so that
+>> firmware will not just throw it away.
+>> Tested customized and upstream firmware.
+> 
+> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
 
-Hi John,
+The firmware source I have checks in such a way that sending too
+large of a cmd should be fine, only too small of a command packet
+causes it to be ignored.
 
-One more bugfix - this bug has been there forever, so it might not be all=
- that much important. Your call.
+I do not have the 636 firmware to test against.
 
-We were sending a host command while the mutex wasn't held. This led to h=
-ard-to-catch races.
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/wmi.h | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index fa1b9e0..4946471 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -2766,6 +2766,11 @@ enum wmi_stats_id {
+>>         WMI_REQUEST_AP_STAT     = 0x02
+>>  };
+>>
+>> +struct wlan_inst_rssi_args {
+>> +       __le16 cfg_retry_count;
+>> +       __le16 retry_count;
+>> +};
+>> +
+>>  struct wmi_request_stats_cmd {
+>>         __le32 stats_id;
+>>
+>> @@ -2773,6 +2778,12 @@ struct wmi_request_stats_cmd {
+>>          * Space to add parameters like
+>>          * peer mac addr
+>>          */
+> 
+> You can probably remove the comment now :-)
 
-Please pull - thanks.
+Ok, I can do that.
+
+Thanks,
+Ben
 
 
-The following changes since commit acfcd9ed588465e48efe5ceb67177096d51c95=
-a9:
 
-  iwlwifi: fix and add 7265 series HW IDs (2014-03-04 19:30:06 +0200)
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- for-john
-
-for you to fetch changes up to 82e5a649453a3cf23516277abb84273768a1592b:
-
-  iwlwifi: dvm: take mutex when sending SYNC BT config command (2014-03-1=
-1 13:15:16 +0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: dvm: take mutex when sending SYNC BT config command
-
- drivers/net/wireless/iwlwifi/dvm/main.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-
---nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTHvh+AAoJEC0Llv5uNjIBHfwP/353u0D8zlcZGzyOEbN6ORbk
-A8QjWShnPol4GOAPZ9f4WAf7oO8aBfvgZKMUzAaLB5B58FIr5YZ5VgnZvdN6UDSc
-/cQ9fR6oL5kXcGEEmJOW0krp6sOJd/Mpml/Oazk8KQfFBF3pmwf8PbvfDaETkaQP
-pNsdAmr0r4RralDatfyza4wo0BKvU95e6JUj1vag3+hFWmBx78y6H2nu0mCEt8U5
-BvM5TTOHtTTL+D2BZqRZ8ghiOy03TaEQbkzCUAh1A+Sx+b++ILsJ4nw6Y8K6Apim
-5UdCWPJjZGm26VQuTLce20a6+wx6XDYalTYLikH9Sk/z39BPFyKohOvoF5P6/wmJ
-TASJ4SMbrUiBywGQwsjp5c/wdlBycAMhaQo2Dn1Oc1GysMqb8Uss/56BQ9nzI6eD
-B2dn4XvTGyxpf+pi6fravBYYQ9JpKFKHTCsyBsdcrnbEZl/01U3kCSyxuC2mcQh+
-VpLLltUrtlZ8QNRUxgwuGcUWBsQYNamuQRbiXTwwFMbyI0zlax55lX2VoHKN/Lx8
-76Lhs9pMXiJcNqhcrldClvm+msFw2nrj7prAeEJwa8IcD/HqdGNYrSSc5scQW1gZ
-qw7Wu+oxsVfUAJUMjAqLbt01BYUB/SkbwXRpfa8724k8AIZTG7XLP61zp0pXdt0z
-87fV37t7g+NEbBpppubl
-=oGcH
------END PGP SIGNATURE-----
-
---nu2JUB1x4pGTTlqhbGgWLVOtV0iTmJV3G--
