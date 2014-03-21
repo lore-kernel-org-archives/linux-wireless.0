@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:37899 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527AbaCJGzK (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:57642 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbaCUFe6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 02:55:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
- <CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
-From: Shuduo Sang <sangshuduo@gmail.com>
-Date: Mon, 10 Mar 2014 14:49:24 +0800
-Message-ID: <CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com> (sfid-20140310_075515_925356_7F336A48)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 21 Mar 2014 01:34:58 -0400
+Received: by mail-pb0-f45.google.com with SMTP id uo5so1956836pbc.4
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Mar 2014 22:34:57 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: fix the peer mac address in getting stats
+Date: Fri, 21 Mar 2014 13:34:36 +0800
+Message-Id: <1395380076-4306-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140321_063509_903482_7D16BCE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 2:11 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Hi,
->
-> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
->> Hi,
->>
->> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
->> can't resume after suspend recently. I tried many ways including
->> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
->> happens. I found it will not happen when I turn off WIFI device or USB
->> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
->> USB side. Since Windows 7 works good so I suppose no hardware issue.
->> Anyone has some ideas to fix it or debug it?
->>
->> Thanks,
->> Shuduo
->>
->
-> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
-> How do you disable WiFi? Rfkill or removing iwlwifi?
->
+Using the macro to convert the MAC address from WMI word
+format to char array has lead to the wrong peer mac
+address printed out while retrieving the peer stats from
+FW. Fix this.
 
-I have disabled WIFI device in BIOS, then its suspend/resume works.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    4 ++--
+ drivers/net/wireless/ath/ath10k/wmi.h   |   10 ----------
+ 2 files changed, 2 insertions(+), 12 deletions(-)
 
->>
->> lspci -vnn output:
->> ..
->> sniped
->> ..
->> 00:1d.0 USB controller: Intel Corporation Lynx Point-LP USB EHCI #1
->> (rev 04) (prog-if 20 [EHCI])
->> Subsystem: Lenovo Device 2218
->> Flags: bus master, medium devsel, latency 0, IRQ 23
->> Memory at f052d000 (32-bit, non-prefetchable) [size=1K]
->> Capabilities: [50] Power Management version 3
->> Capabilities: [58] Debug port: BAR=1 offset=00a0
->> Capabilities: [98] PCI Advanced Features
->> Kernel driver in use: ehci-pci
->> ..
->> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)
->> Subsystem: Intel Corporation Dual Band Wireless-AC 7260
->> Flags: bus master, fast devsel, latency 0, IRQ 59
->> Memory at f0400000 (64-bit, non-prefetchable) [size=8K]
->> Capabilities: [c8] Power Management version 3
->> Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->> Capabilities: [40] Express Endpoint, MSI 00
->> Capabilities: [100] Advanced Error Reporting
->> Capabilities: [140] Device Serial Number 7c-7a-91-ff-ff-5e-4c-cd
->> Capabilities: [14c] Latency Tolerance Reporting
->> Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
->> Kernel driver in use: iwlwifi
->> Kernel modules: iwlwifi
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 6debd28..f95defa 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -252,8 +252,8 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 			peer_stats = (struct wmi_peer_stats *)tmp;
+ 			s = &stats->peer_stat[i];
+ 
+-			WMI_MAC_ADDR_TO_CHAR_ARRAY(&peer_stats->peer_macaddr,
+-						   s->peer_macaddr);
++			memcpy(s->peer_macaddr, &peer_stats->peer_macaddr.addr,
++			       ETH_ALEN);
+ 			s->peer_rssi = __le32_to_cpu(peer_stats->peer_rssi);
+ 			s->peer_tx_rate =
+ 				__le32_to_cpu(peer_stats->peer_tx_rate);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e78a7ad..084bcc5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -198,16 +198,6 @@ struct wmi_mac_addr {
+ 	} __packed;
+ } __packed;
+ 
+-/* macro to convert MAC address from WMI word format to char array */
+-#define WMI_MAC_ADDR_TO_CHAR_ARRAY(pwmi_mac_addr, c_macaddr) do { \
+-	(c_macaddr)[0] =  ((pwmi_mac_addr)->word0) & 0xff; \
+-	(c_macaddr)[1] = (((pwmi_mac_addr)->word0) >> 8) & 0xff; \
+-	(c_macaddr)[2] = (((pwmi_mac_addr)->word0) >> 16) & 0xff; \
+-	(c_macaddr)[3] = (((pwmi_mac_addr)->word0) >> 24) & 0xff; \
+-	(c_macaddr)[4] =  ((pwmi_mac_addr)->word1) & 0xff; \
+-	(c_macaddr)[5] = (((pwmi_mac_addr)->word1) >> 8) & 0xff; \
+-	} while (0)
+-
+ struct wmi_cmd_map {
+ 	u32 init_cmdid;
+ 	u32 start_scan_cmdid;
+-- 
+1.7.9.5
+
