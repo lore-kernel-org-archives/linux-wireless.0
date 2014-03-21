@@ -1,55 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63776 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752870AbaCSFT0 (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:33124 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498AbaCUGjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 01:19:26 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: handle extended scan event for AP interface
-Date: Tue, 18 Mar 2014 22:19:16 -0700
-Message-ID: <1395206358-11573-1-git-send-email-bzhao@marvell.com> (sfid-20140319_061929_943252_86C12022)
+	Fri, 21 Mar 2014 02:39:39 -0400
+Received: by mail-pb0-f42.google.com with SMTP id rr13so2028593pbb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Mar 2014 23:39:39 -0700 (PDT)
+From: behanw@converseincode.com
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
+	pageexec@freemail.hu,
+	=?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>,
+	Behan Webster <behanw@converseincode.com>,
+	=?UTF-8?q?Vin=C3=ADcius=20Tinti?= <viniciustinti@gmail.com>,
+	Mark Charlebois <charlebm@gmail.com>
+Subject: [PATCH v4] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
+Date: Thu, 20 Mar 2014 23:39:32 -0700
+Message-Id: <1395383972-20372-1-git-send-email-behanw@converseincode.com> (sfid-20140321_073943_923803_3C4802C2)
+In-Reply-To: <1395237113.4142.5.camel@jlt4.sipsolutions.net>
+References: <1395237113.4142.5.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Jan-Simon Möller <dl9pf@gmx.de>
 
-Stations associated to mwifiex AP would not be able to ping AP
-after scan was issued on AP interface. This happened because
-there was no handling of extended scan event in AP. This patch
-adds this handling and fixes ping failure issue.
+Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
+compliant equivalent. This is the original VLAIS struct.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+struct {
+	struct aead_request     req;
+	u8                      priv[crypto_aead_reqsize(tfm)];
+} aead_req;
+
+This patch instead allocates the appropriate amount of memory using an char
+array.
+
+The new code can be compiled with both gcc and clang.
+
+Signed-off-by: Jan-Simon Möller <dl9pf@gmx.de>
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+Signed-off-by: Vinícius Tinti <viniciustinti@gmail.com>
+Signed-off-by: Mark Charlebois <charlebm@gmail.com>
 ---
- drivers/net/wireless/mwifiex/uap_event.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/mac80211/aes_ccm.c | 37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index ae50e91..92e77a3 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -166,6 +166,12 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 			mwifiex_11n_ba_stream_timeout(priv, ba_timeout);
- 		}
- 		break;
-+	case EVENT_EXT_SCAN_REPORT:
-+		dev_dbg(adapter->dev, "event: EXT_SCAN Report\n");
-+		if (adapter->ext_scan)
-+			return mwifiex_handle_event_ext_scan_report(priv,
-+						adapter->event_skb->data);
-+		break;
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 7c7df47..71e2abd 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -23,12 +23,12 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			       u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+-	struct {
+-		struct aead_request	req;
+-		u8			priv[crypto_aead_reqsize(tfm)];
+-	} aead_req;
+ 
+-	memset(&aead_req, 0, sizeof(aead_req));
++	char aead_req_data[sizeof(struct aead_request) +
++				crypto_aead_reqsize(tfm)]
++				__aligned(__alignof__(struct aead_request));
++	struct aead_request *aead_req = (void *) aead_req_data;
++	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -36,23 +36,22 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(&aead_req.req, tfm);
+-	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
+-	aead_request_set_crypt(&aead_req.req, &pt, ct, data_len, b_0);
++	aead_request_set_tfm(aead_req, tfm);
++	aead_request_set_assoc(aead_req, &assoc, assoc.length);
++	aead_request_set_crypt(aead_req, &pt, ct, data_len, b_0);
+ 
+-	crypto_aead_encrypt(&aead_req.req);
++	crypto_aead_encrypt(aead_req);
+ }
+ 
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+-	struct {
+-		struct aead_request	req;
+-		u8			priv[crypto_aead_reqsize(tfm)];
+-	} aead_req;
+-
+-	memset(&aead_req, 0, sizeof(aead_req));
++	char aead_req_data[sizeof(struct aead_request) +
++				crypto_aead_reqsize(tfm)]
++				__aligned(__alignof__(struct aead_request));
++	struct aead_request *aead_req = (void *) aead_req_data;
++	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -60,12 +59,12 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(&aead_req.req, tfm);
+-	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
+-	aead_request_set_crypt(&aead_req.req, ct, &pt,
++	aead_request_set_tfm(aead_req, tfm);
++	aead_request_set_assoc(aead_req, &assoc, assoc.length);
++	aead_request_set_crypt(aead_req, ct, &pt,
+ 			       data_len + IEEE80211_CCMP_MIC_LEN, b_0);
+ 
+-	return crypto_aead_decrypt(&aead_req.req);
++	return crypto_aead_decrypt(aead_req);
+ }
+ 
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
 -- 
-1.8.2.3
+1.8.3.2
 
