@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31846 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757168AbaCDOwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 09:52:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:64430 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbaCUJcp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2014 05:32:45 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so1575011eek.38
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:44 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] mac80211: ignore probe response from adjacent channels
-Date: Tue,  4 Mar 2014 16:50:14 +0200
-Message-Id: <1393944614-4465-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140304_155254_012164_F343CB52)
-In-Reply-To: <1393944614-4465-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1393944614-4465-1-git-send-email-emmanuel.grumbach@intel.com>
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/8] ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+Date: Fri, 21 Mar 2014 10:32:15 +0100
+Message-Id: <1395394341-3958-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103251_826389_AF2443AF)
+In-Reply-To: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This logic is already implemented in ieee80211_rx_mgmt_beacon.
-The purpose is to ignore probe responses that are received
-on adjacent channels. This can happen in 2.4GHz since
-channels overlap.
+No functional changes.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/mlme.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e3f71b0..d982d61 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2805,6 +2805,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 					 struct sk_buff *skb)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c07fc8f..fd14c3a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -655,9 +655,9 @@ static const u8 rx_legacy_rate_idx[] = {
+ 	5,	/* 0x0F  - 9Mbps   */
+ };
+ 
+-static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
+-			     enum ieee80211_band band,
+-			     struct ieee80211_rx_status *status)
++static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
++				  enum ieee80211_band band,
++				  struct ieee80211_rx_status *status)
  {
- 	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_if_managed *ifmgd;
- 	struct ieee80211_rx_status *rx_status = (void *) skb->cb;
- 	size_t baselen, len = skb->len;
-@@ -2814,6 +2815,19 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+ 	u8 info0 = info->rate.info0;
+@@ -789,7 +789,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		return;
+ 	}
  
- 	sdata_assert_lock(sdata);
- 
-+	rcu_read_lock();
-+	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+	if (!chanctx_conf) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	if (rx_status->freq != chanctx_conf->def.chan->center_freq) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	rcu_read_unlock();
-+
- 	if (!ether_addr_equal(mgmt->da, sdata->vif.addr))
- 		return; /* ignore ProbeResp to foreign address */
+-	process_rx_rates(ar, info, ch->band, status);
++	ath10k_htt_rx_h_rates(ar, info, ch->band, status);
+ 	status->band = ch->band;
+ 	status->freq = ch->center_freq;
  
 -- 
-1.8.3.2
+1.7.9.5
 
