@@ -1,81 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42289 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753445AbaCXSds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 14:33:48 -0400
-In-Reply-To: <CADqH6VxgwbZkFgEkpiaabKekijeU+e=DMg0VVHoiXBQmjQfE0Q@mail.gmail.com>
-References: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com> <1384765780.22010.42.camel@porter.coelho.fi> <CADqH6VxgwbZkFgEkpiaabKekijeU+e=DMg0VVHoiXBQmjQfE0Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-From: Luca Coelho <luca@coelho.fi>
-Date: Mon, 24 Mar 2014 20:32:47 +0200
-To: Jaya Kumar <jayakumar.lkml@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Message-ID: <a84c8a1f-f71b-48ca-9c8e-782c19aef609@email.android.com> (sfid-20140324_193351_503431_C7E3C8F2)
-Subject: Re: WL12xx support for WL1270 and ti-connectivity firmware
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:37086 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965722AbaCUN6O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2014 09:58:14 -0400
+Received: by mail-ee0-f44.google.com with SMTP id e49so1834203eek.17
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:58:13 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/7] mac80211: use chanctx reservation for STA CSA
+Date: Fri, 21 Mar 2014 14:52:18 +0100
+Message-Id: <1395409941-26303-5-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145821_153494_C7460BED)
+In-Reply-To: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+ <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On March 24, 2014 2:03:12 PM EET, Jaya Kumar <jayakumar.lkml@gmail.com> wrote:
->On Mon, Nov 18, 2013 at 5:09 PM, Luca Coelho <luca@coelho.fi> wrote:
->>
->> Same as above... If this wl1270 is indeed based on the wl1271, it
->should
->> probably work.  With the driver you may need to add some new SDIO IDs
->> for it to be recognized though.
->>
->
->Hi,
->
->I'm now bringing up the board with the wl1270. I'm using 3.0.35 (stuck
->on this kernel version due to other drivers).
+Channel switch finalization is now 2-step. First
+step is when driver calls chswitch_done(), the
+other is when reservation is actually finalized
+(which be defered for in-place reservation).
 
-Do you mean out-of-tree drivers? If they were in the mainline you should be able to upgrade.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c |  4 +++
+ net/mac80211/mlme.c | 90 ++++++++++++++++++++++++++++++++---------------------
+ 2 files changed, 59 insertions(+), 35 deletions(-)
 
-Anyway, you should at least try to use compat (now called backport) to get the latest wireless stuff.
-
-> The good news is that
->the chip is detected and wl12xx/wl12xx_sdio loads. However, I haven't
->been able to get it to get any scan results and can't associate with
->any AP (even open).
-
-Usually this happens because you're not getting any interrupts. Are you sure the WLAN IRQ GPIO is correctly configured?
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index c171837..faf2a05 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -964,6 +964,10 @@ ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_queue_work(&sdata->local->hw,
+ 				     &sdata->csa_finalize_work);
+ 		break;
++	case NL80211_IFTYPE_STATION:
++		ieee80211_queue_work(&sdata->local->hw,
++				     &sdata->u.mgd.chswitch_work);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5079454..a5b23a1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -917,54 +917,66 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_sub_if_data, u.mgd.chswitch_work);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	u32 changed = 0;
+ 	int ret;
  
-
-
->---
->mmc1: card claims to support voltages below the defined range. These
->will be ignored.
->mmc1: queuing unknown CIS tuple 0x91 (3 bytes)
->mmc1: new SDIO card at address 0001
->...
->I'm using ti-linux-firmware-wl12xx-r3-m1-rc2.tar.gz for the nvs and fw
->files.
->
->root@freescale ~$ modprobe wl12xx
->root@freescale ~$ modprobe wl12xx_sdio
->add wake up source irq 106
->wl1271: loaded
->wl1271: initialized
->root@freescale ~$ ifconfig wlan0 up
->wl1271: firmware booted (Rev 6.1.5.50.69)
->
->root@freescale ~$ iwlist wlan0 scan
-
-You should really be using the iw tool instead of the old wireless-tools.  This probably won't make a difference in your case, but there's no reason to use a tool that had been deprecated for years...
-
-
->wlan0     No scan results
->---
->
->I retried with debug_level=256 (scan debug) and I see a lot of output
->appended below. I haven't figured out how to interpret them yet. I'd
->be grateful for any advice/suggestions on this.
-
-There's nothing very useful in those kids
-It just shows that the scan command was issued but you never got the scan complete interrupt.
-
---
-Luca.
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+ 
+ 	sdata_lock(sdata);
++	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
++
+ 	if (!ifmgd->associated)
++		goto cleanup;
++
++	if (!sdata->vif.csa_active)
++		goto cleanup;
++
++	/* using reservation isn't immediate as it may be deferred until later
++	 * with multi-vif. once reservation is complete it will re-schedule the
++	 * work with no reserved_chanctx so verify chandef to check if it
++	 * completed successfully */
++
++	if (sdata->reserved_chanctx) {
++		ret = ieee80211_vif_use_reserved_context(sdata);
++		if (ret) {
++			sdata_info(sdata,
++				   "failed to use reserved channel context, disconnecting (err=%d)\n",
++				   ret);
++			ieee80211_queue_work(&sdata->local->hw,
++					     &ifmgd->csa_connection_drop_work);
++			goto cleanup;
++		}
++
+ 		goto out;
++	}
+ 
+-	mutex_lock(&local->mtx);
+-	ret = ieee80211_vif_change_channel(sdata, &changed);
+-	mutex_unlock(&local->mtx);
+-	if (ret) {
++	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
++					&sdata->csa_chandef)) {
+ 		sdata_info(sdata,
+-			   "vif channel switch failed, disconnecting\n");
++			   "failed to finalize channel switch, disconnecting\n");
+ 		ieee80211_queue_work(&sdata->local->hw,
+ 				     &ifmgd->csa_connection_drop_work);
+-		goto out;
+-	}
+-
+-	if (!local->use_chanctx) {
+-		local->_oper_chandef = sdata->csa_chandef;
+-		/* Call "hw_config" only if doing sw channel switch.
+-		 * Otherwise update the channel directly
+-		 */
+-		if (!local->ops->channel_switch)
+-			ieee80211_hw_config(local, 0);
+-		else
+-			local->hw.conf.chandef = local->_oper_chandef;
++		goto cleanup;
+ 	}
+ 
+ 	/* XXX: shouldn't really modify cfg80211-owned data! */
+ 	ifmgd->associated->channel = sdata->csa_chandef.chan;
+ 
+-	ieee80211_bss_info_change_notify(sdata, changed);
+-
+- out:
+-	mutex_lock(&local->mtx);
++cleanup:
+ 	sdata->vif.csa_active = false;
++
+ 	/* XXX: wait for a beacon first? */
+ 	if (!ieee80211_csa_needs_block_tx(local))
+ 		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
+-	mutex_unlock(&local->mtx);
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
++
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ }
+ 
+@@ -1001,6 +1013,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct cfg80211_bss *cbss = ifmgd->associated;
++	struct ieee80211_chanctx_conf *conf;
+ 	struct ieee80211_chanctx *chanctx;
+ 	enum ieee80211_band current_band;
+ 	struct ieee80211_csa_ie csa_ie;
+@@ -1045,6 +1058,19 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+ 
+ 	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		sdata_info(sdata,
++			   "no channel context assigned to vif?, disconnecting\n");
++		ieee80211_queue_work(&local->hw,
++				     &ifmgd->csa_connection_drop_work);
++		mutex_unlock(&local->chanctx_mtx);
++		return;
++	}
++
++	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
++
+ 	if (local->use_chanctx) {
+ 		u32 num_chanctx = 0;
+ 		list_for_each_entry(chanctx, &local->chanctx_list, list)
+@@ -1061,17 +1087,12 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	if (WARN_ON(!rcu_access_pointer(sdata->vif.chanctx_conf))) {
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
+-		mutex_unlock(&local->chanctx_mtx);
+-		return;
+-	}
+-	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
+-			       struct ieee80211_chanctx, conf);
+-	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
++	res = ieee80211_vif_reserve_chanctx(sdata, &csa_ie.chandef,
++					    chanctx->mode, false);
++	if (res) {
+ 		sdata_info(sdata,
+-			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
++			   "failed to reserve channel context for channel switch, disconnecting (err=%d)\n",
++			   res);
+ 		ieee80211_queue_work(&local->hw,
+ 				     &ifmgd->csa_connection_drop_work);
+ 		mutex_unlock(&local->chanctx_mtx);
+@@ -1079,10 +1100,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	mutex_unlock(&local->chanctx_mtx);
+ 
+-	sdata->csa_chandef = csa_ie.chandef;
+-
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = true;
++	sdata->csa_chandef = csa_ie.chandef;
+ 	sdata->csa_block_tx = csa_ie.mode;
+ 
+ 	if (sdata->csa_block_tx)
+-- 
+1.8.5.3
 
