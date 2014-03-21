@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25614 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753611AbaCLNGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 09:06:14 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v7 1/4] mac80211: split ieee80211_vif_change_channel in two
-Date: Wed, 12 Mar 2014 15:06:06 +0200
-Message-Id: <1394629569-13798-2-git-send-email-luciano.coelho@intel.com> (sfid-20140312_140622_370267_4A504C78)
-In-Reply-To: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
-References: <1394629569-13798-1-git-send-email-luciano.coelho@intel.com>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:53086 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760135AbaCUJcq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2014 05:32:46 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so1569645eek.23
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:45 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 3/8] ath10k: introduce ieee80211_rx_status to htt_rx_info
+Date: Fri, 21 Mar 2014 10:32:16 +0100
+Message-Id: <1395394341-3958-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103254_010511_BF47F528)
+In-Reply-To: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
+Will be used as a template, and final storage for
+rx_status.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    |    2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index fdbb932..ef77703 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 654867f..e80f033 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -21,6 +21,7 @@
+ #include <linux/bug.h>
+ #include <linux/interrupt.h>
+ #include <linux/dmapool.h>
++#include <net/mac80211.h>
  
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
+ #include "htc.h"
+ #include "rx_desc.h"
+@@ -1174,6 +1175,7 @@ struct htt_peer_unmap_event {
  
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
+ struct htt_rx_info {
+ 	struct sk_buff *skb;
++	struct ieee80211_rx_status rx_status;
+ 	enum htt_rx_mpdu_status status;
+ 	enum htt_rx_mpdu_encrypt_type encrypt_type;
+ 	s8 signal;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index fd14c3a..f18e41c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -756,7 +756,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
  
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
+ 	status = IEEE80211_SKB_RXCB(info->skb);
+-	memset(status, 0, sizeof(*status));
++	memcpy(status, &info->rx_status, sizeof(*status));
  
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
-+	return 0;
-+}
-+
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
+ 	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
+ 		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
 -- 
-1.9.0
+1.7.9.5
 
