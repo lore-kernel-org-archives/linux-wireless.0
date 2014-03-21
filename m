@@ -1,132 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4524 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755539AbaCEMLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 07:11:16 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:45105 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933626AbaCUNxi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Mar 2014 09:53:38 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so1828068eek.23
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:37 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>
-Subject: [RFC/RFT 7/9] iwlegacy: get rit of CMD_WANT_SKB
-Date: Wed,  5 Mar 2014 13:13:32 +0100
-Message-Id: <1394021614-11514-8-git-send-email-sgruszka@redhat.com> (sfid-20140305_131120_697967_CBE03633)
-In-Reply-To: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
-References: <1394021614-11514-1-git-send-email-sgruszka@redhat.com>
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 05/13] mac80211: track assigned vifs in chanctx
+Date: Fri, 21 Mar 2014 14:47:23 +0100
+Message-Id: <1395409651-26120-6-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145343_206831_56302880)
+In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+ <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c | 34 ++++++++--------------------------
- drivers/net/wireless/iwlegacy/common.h |  6 ++----
- 2 files changed, 10 insertions(+), 30 deletions(-)
+This can be useful.
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 92979e0..f938641 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -285,9 +285,6 @@ il_send_cmd_async(struct il_priv *il, struct il_host_cmd *cmd)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c        | 4 ++++
+ net/mac80211/ieee80211_i.h | 4 ++++
+ net/mac80211/iface.c       | 1 +
+ 3 files changed, 9 insertions(+)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 6b993f9..38d3010 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -270,6 +270,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
  
- 	BUG_ON(!(cmd->flags & CMD_ASYNC));
- 
--	/* An asynchronous command can not expect an SKB to be set. */
--	BUG_ON(cmd->flags & CMD_WANT_SKB);
--
- 	/* Assign a generic callback if one is not provided */
- 	if (!cmd->callback)
- 		cmd->callback = il_generic_cmd_callback;
-@@ -353,38 +350,27 @@ il_send_cmd_sync(struct il_priv *il, struct il_host_cmd *cmd)
- 		IL_ERR("Command %s aborted: RF KILL Switch\n",
- 		       il_get_cmd_string(cmd->id));
- 		ret = -ECANCELED;
--		goto fail;
-+		goto out;
- 	}
- 	if (test_bit(S_FW_ERROR, &il->status)) {
- 		IL_ERR("Command %s failed: FW Error\n",
- 		       il_get_cmd_string(cmd->id));
- 		ret = -EIO;
--		goto fail;
--	}
--	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
--		IL_ERR("Error: Response NULL in '%s'\n",
--		       il_get_cmd_string(cmd->id));
--		ret = -EIO;
--		goto cancel;
-+		goto out;
++	INIT_LIST_HEAD(&ctx->assigned_vifs);
+ 	ctx->conf.def = *chandef;
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+@@ -414,6 +415,7 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 		curr_ctx->refcount--;
+ 		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
+ 		conf = NULL;
++		list_del(&sdata->assigned_chanctx_list);
  	}
  
- 	ret = 0;
- 	goto out;
+ 	if (new_ctx) {
+@@ -423,6 +425,8 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
  
- cancel:
--	if (cmd->flags & (CMD_WANT_SKB | CMD_COPY_PKT)) {
-+	if (cmd->flags & CMD_COPY_PKT) {
- 		/*
--		 * Cancel the CMD_WANT_SKB flag for the cmd in the
-+		 * Cancel the CMD_COPY_PKT flag for the cmd in the
- 		 * TX cmd queue. Otherwise in case the cmd comes
- 		 * in later, it will possibly set an invalid
- 		 * address (cmd->meta.source).
- 		 */
--		il->txq[il->cmd_queue].meta[cmd_idx].flags &= ~(CMD_WANT_SKB | CMD_COPY_PKT);
--	}
--fail:
--	if (cmd->reply_page) {
--		il_free_pages(il, cmd->reply_page);
--		cmd->reply_page = 0;
-+		il->txq[il->cmd_queue].meta[cmd_idx].flags &= ~CMD_COPY_PKT;
+ 		new_ctx->refcount++;
+ 		conf = &new_ctx->conf;
++		list_add(&sdata->assigned_chanctx_list,
++			 &new_ctx->assigned_vifs);
  	}
+ 
  out:
- 	return ret;
-@@ -3179,7 +3165,7 @@ il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a96e375..cd776c1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -691,6 +691,8 @@ struct ieee80211_chanctx {
+ 	struct list_head list;
+ 	struct rcu_head rcu_head;
  
- 	memset(out_meta, 0, sizeof(*out_meta));	/* re-initialize to NULL */
- 	out_meta->flags = cmd->flags | CMD_MAPPED;
--	if (cmd->flags & (CMD_WANT_SKB | CMD_COPY_PKT))
-+	if (cmd->flags & CMD_COPY_PKT)
- 		out_meta->source = cmd;
- 	if (cmd->flags & CMD_ASYNC)
- 		out_meta->callback = cmd->callback;
-@@ -3322,13 +3308,9 @@ il_tx_cmd_complete(struct il_priv *il, struct il_rx_buf *rxb)
- 	pci_unmap_single(il->pci_dev, dma_unmap_addr(meta, mapping),
- 			 dma_unmap_len(meta, len), PCI_DMA_BIDIRECTIONAL);
++	struct list_head assigned_vifs;
++
+ 	enum ieee80211_chanctx_mode mode;
+ 	int refcount;
+ 	bool driver_present;
+@@ -757,6 +759,8 @@ struct ieee80211_sub_if_data {
+ 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
+ 	struct cfg80211_chan_def csa_chandef;
  
--	/* Input error checking is done when commands are added to queue. */
--	if (meta->flags & CMD_WANT_SKB) {
--		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
--		rxb->page = NULL;
--	} else if (meta->flags & CMD_COPY_PKT) {
-+	if (meta->flags & CMD_COPY_PKT)
- 		memcpy(meta->source->pkt_ptr, pkt, sizeof(*pkt));
--	} else if (meta->callback)
-+	else if (meta->callback)
- 		meta->callback(il, cmd, pkt);
++	struct list_head assigned_chanctx_list;
++
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+ 	struct cfg80211_chan_def reserved_chandef;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 7ab702a..b130be3 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1296,6 +1296,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+ 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
++	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
  
- 	spin_lock_irqsave(&il->hcmd_lock, flags);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 51f0100..41996e9 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -547,9 +547,8 @@ enum {
- 	CMD_NO_SKB =		0,
- 	CMD_SIZE_HUGE =		(1 << 0),
- 	CMD_ASYNC =		(1 << 1),
--	CMD_WANT_SKB =		(1 << 2),
--	CMD_MAPPED =		(1 << 3),
--	CMD_COPY_PKT =		(1 << 4),
-+	CMD_MAPPED =		(1 << 2),
-+	CMD_COPY_PKT =		(1 << 3),
- };
- 
- #define DEF_CMD_PAYLOAD_SIZE 320
-@@ -577,7 +576,6 @@ struct il_device_cmd {
- 
- struct il_host_cmd {
- 	const void *data;
--	unsigned long reply_page;
- 	struct il_rx_pkt *pkt_ptr;
- 	void (*callback) (struct il_priv *il, struct il_device_cmd *cmd,
- 			  struct il_rx_pkt *pkt);
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
 -- 
-1.7.11.7
+1.8.5.3
 
