@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49515 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591AbaC2Thj (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:45630 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753981AbaCUO6p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2014 15:37:39 -0400
-Date: Sat, 29 Mar 2014 15:37:37 -0400 (EDT)
-Message-Id: <20140329.153737.671362434625537776.davem@davemloft.net> (sfid-20140329_203821_337644_20704853)
-To: teg@jklm.no
-Cc: dh.herrmann@gmail.com, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAG-2HqWQsLPaaHxMFn5Bha0BGKSAVZV9n87KTCsbQ1ewktzZvA@mail.gmail.com>
-References: <CAG-2HqVQ-MAZgsZAkykvVtbtYgDA3bfJA5rEqpdX5vBqPTjLJg@mail.gmail.com>
-	<20140328.214254.1620280677250220442.davem@davemloft.net>
-	<CAG-2HqWQsLPaaHxMFn5Bha0BGKSAVZV9n87KTCsbQ1ewktzZvA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 21 Mar 2014 10:58:45 -0400
+Received: by mail-oa0-f43.google.com with SMTP id eb12so2646540oac.16
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 07:58:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1395411440.4164.15.camel@jlt4.sipsolutions.net>
+References: <1395410520-26939-1-git-send-email-michal.kazior@tieto.com>
+	<1395411440.4164.15.camel@jlt4.sipsolutions.net>
+Date: Fri, 21 Mar 2014 15:58:44 +0100
+Message-ID: <CA+BoTQk5RiFPjDGMSwFHd6GGt=x9M6QXGZcdENtMjQrDcORicg@mail.gmail.com> (sfid-20140321_155849_300912_43F8C9F9)
+Subject: Re: [PATCH] ath10k: dont call csa_finish more than once
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tom Gundersen <teg@jklm.no>
-Date: Sat, 29 Mar 2014 10:46:02 +0100
+On 21 March 2014 15:17, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-03-21 at 15:02 +0100, Michal Kazior wrote:
+>> Driver is supposed to call it only once for each
+>> scheduled channel_switch_beacon().
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>> This is required for multi-vif csa but since that
+>> isn't merged yet I'm not including any specifics
+>> in the commit log itself.
+>>
+>> Preventing multiple ieee80211_csa_finish() calls
+>> sounds like a good idea in general to me.
+>
+> Didn't we have this discussion on the hwsim patch before?
 
-> The issue I see with that is that there are several ways to generate
-> predictable names, and the user may want to chose between them, so
-> this is arguably policy that should not be in the kernel. If you don't
-> think that's a problem, I'd be happy to submit a patch to move all
-> this logic from udev to the kernel, just let me know how you see it.
+Oh. I'm not aware of the discussion. Probably missed it.
 
-Unfortunately, we have already allowed this kind of thing for setting
-MAC addresses so I guess I'll have to allow your changes to be applied.
 
-But before I ask you to resubmit, do you have full buy-in from the
-udev folks for this facility?
+> I'd argue that if all drivers must track this, then the mac80211 API is
+> defective.
 
-Thanks.
+I can make this a mac80211 patch then?
+
+
+Michał
