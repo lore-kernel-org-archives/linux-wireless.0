@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5731 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbaC1OGr (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:34897 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbaCUN6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:06:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
-References: <20140328132849.31620.78501.stgit@potku.adurom.net>
-	<CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
-Date: Fri, 28 Mar 2014 16:06:42 +0200
-In-Reply-To: <CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 28 Mar 2014 14:53:40 +0100")
-Message-ID: <87wqfev2ml.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_150651_098124_B70C72E5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 21 Mar 2014 09:58:07 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so1836002eei.33
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:58:06 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/7] cfg80211/mac80211: implement multi-vif csa
+Date: Fri, 21 Mar 2014 14:52:14 +0100
+Message-Id: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145813_224964_D2C6C53A)
+In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> From: Bartosz Markowski <bartosz.markowski@tieto.com>
->>
->> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
->> can return per-VDEV statistics. Using debugfs we can fetch this info now.
->>
->> This is a backward compatible change. In case of older FW the VDEV
->> statistics are simply not returned.
->>
->> kvalo: remove struct wmi_peer_stats_common cast from
->> ath10k_debug_read_target_stats()
->
-> I just glanced over the patch and I don't think this is correct.
->
-> Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
+This is another part of my recent RFC. This is
+just the channel switching part.
 
-Ok, I need to take a closer look at this. If someone else wants to look
-at this instead, feel free to do that :)
+This is based on my patchset implementing
+multi-vif chanctx reservations.
+
+
+v2:
+ * add radar_detect fix patch (wasn't present in
+   the big RFC)
+
+
+Michal Kazior (7):
+  cfg80211: fix radar_detect combination checking
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  mac80211: ignore cqm during csa
+  mac80211: remove old unused channel switching code
+  cfg80211: remove channel_switch combination check
+
+ net/mac80211/cfg.c         | 63 +++++++++++++++++++----------
+ net/mac80211/chan.c        | 79 +++++++-----------------------------
+ net/mac80211/ieee80211_i.h |  5 ---
+ net/mac80211/mlme.c        | 99 ++++++++++++++++++++++++++++++----------------
+ net/mac80211/util.c        | 37 ++++++++++++++++-
+ net/wireless/nl80211.c     | 11 ------
+ net/wireless/util.c        |  2 +-
+ 7 files changed, 156 insertions(+), 140 deletions(-)
 
 -- 
-Kalle Valo
+1.8.5.3
+
