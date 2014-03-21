@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3836 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbaC1Hlo (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39527 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbaCUQEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:41:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: unify warning messages in mac.c
-References: <1395673555-24848-1-git-send-email-kvalo@qca.qualcomm.com>
-Date: Fri, 28 Mar 2014 09:41:39 +0200
-In-Reply-To: <1395673555-24848-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
-	Valo's message of "Mon, 24 Mar 2014 17:05:55 +0200")
-Message-ID: <877g7eydl8.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_084157_918344_7DBD7796)
+	Fri, 21 Mar 2014 12:04:10 -0400
+Message-ID: <532C62DE.6060309@candelatech.com> (sfid-20140321_170415_810137_5B0206CA)
+Date: Fri, 21 Mar 2014 09:03:42 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
+References: <1395360324-20433-1-git-send-email-greearb@candelatech.com> <CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com> <CAEFj98541uEFjHxjzUeim4nrjELToYrnbJTGuR5WgzwRvF9gkw@mail.gmail.com>
+In-Reply-To: <CAEFj98541uEFjHxjzUeim4nrjELToYrnbJTGuR5WgzwRvF9gkw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On 03/20/2014 11:41 PM, Yeoh Chun-Yeow wrote:
+>>
+>> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
+>>
+> Nope. Tested with 636 not working.
 
-> Currently there are different styles used for warning messages, unify them to
-> look similar. The style basically is:
->
-> 1) start with a verb (if possible)
->
-> 2) lower case letters
->
-> 3) use plain english as much as possible
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Does the existing code work with 636?  If so, we can add two different cmd
+structs and use the smaller one with 636, and the one I modified with
+10.x firmware?
 
-Applied.
+Thanks,
+Ben
+
+> 
+> ----
+> Chun-Yeow
+> 
+
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
