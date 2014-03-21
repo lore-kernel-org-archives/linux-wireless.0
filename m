@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:41852 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbaC1P7K convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:55129 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbaCUJcm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 11:59:10 -0400
-Received: by mail-bk0-f45.google.com with SMTP id na10so929107bkb.18
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 08:59:08 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Pekka =?ISO-8859-1?Q?Pietik=E4inen?= <pp@ee.oulu.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [linux-firmware] Bump carl9170 1.9.6 -> 1.9.9?
-Date: Fri, 28 Mar 2014 14:18:17 +0100
-Message-ID: <3136247.FK8ifUDRkI@debian64> (sfid-20140328_165926_420273_730AFA12)
-In-Reply-To: <53342374.7010602@ee.oulu.fi>
-References: <53342374.7010602@ee.oulu.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+	Fri, 21 Mar 2014 05:32:42 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so1569557eek.23
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:32:41 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 0/8] ath10k: refactor htt_rx path
+Date: Fri, 21 Mar 2014 10:32:13 +0100
+Message-Id: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_103248_430209_97CFAE85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, March 27, 2014 03:11:16 PM Pekka Pietikäinen wrote:
-> linux-firmware seems to ship an oldish carl9170-1.fw, which seems to
-> work ok except for spewing a lot of
-> 
-> "[1889329.659407] ieee80211 phy0: invalid plcp cck rate (0)." messages.
-In case of carl9170, these messages indicate that some non-802.11 transmitter
-is near by (and confusing the chip a bit). These messages (and the associated
-issues) can magically appear and disappear... So, chances are that they reappear
-sometime later. There's little the firmware can do here.
+This patchset remove htt_rx_info and intoduce usage
+of ieee80211_rx_status template. Introduce calculation
+split for per-ppdu and per-mpdu. Remove not needed
+calculation we did before for each mpdu. Before we
+did calculation for each mpdu and in case of heavy
+traffic we could have eg. 15mpdus in one ppdu.
 
-> Grabbing 1.9.9 seems to make them go away and the driver works just as
-> well :-)
-> 
-> Any chance of someone bumping the version so the newer firmware gets
-> shipped by distros?
-Oh, I tried that back in October 2013.
-<http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
+This ieee80211_rx_status template will be also required
+to fix rates, rssi we will report to mac80211. I will
+send this patches soon.
 
-But no agreement has been reached. And 1.9.6 is good enough to download
-the later firmware releases though. I'm sorry, but that's how it is at the moment.
-But if you want to help, you could make a patch (the way Rick/Ben wants it) and
-post it here (linux-wireless@vger.kernel.org). I can't do it, I tried and failed several
-times. If you are interested: The firmware is under GPLv2, no sign-offs or acks
-(from QCA, me or anyone else) is needed, you (or anyone else interested) can
-go right ahead. 
+First two patches - no functional changes.
 
-Regards,
+Tested on AP135, didn't notice any TP drop with this patchset.
 
-Christian
+Base on:
+[PATCH 1/2] ath10k: add ath10k_htt_rx_amsdu_allowed function
+[PATCH 2/2] ath10k: Fill per-ppdu info in rx_info only once
+I send before.
+
+Please review.
+
+Janusz Dziedzic (8):
+  ath10k: move rx related functions to htt_rx.c
+  ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+  ath10k: introduce ieee80211_rx_status to htt_rx_info
+  ath10k: setup rx channel per ppdu
+  ath10k: kill not needed fields from htt_rx_info
+  ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
+  ath10k: improve way we play with attention flags
+  ath10k: finally kill htt_rx_info
+
+ drivers/net/wireless/ath/ath10k/htt.h    |   18 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  440 ++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/txrx.c   |  183 -------------
+ drivers/net/wireless/ath/ath10k/txrx.h   |    1 -
+ 4 files changed, 299 insertions(+), 343 deletions(-)
+
+-- 
+1.7.9.5
+
