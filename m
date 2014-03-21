@@ -1,94 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:51989 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754693AbaCZNFr (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50125 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbaCUQMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 09:05:47 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v5 3/4] ath6kl: set NET_NAME_USER for P2P ifs
-Date: Wed, 26 Mar 2014 14:05:16 +0100
-Message-Id: <1395839117-20090-4-git-send-email-dh.herrmann@gmail.com> (sfid-20140326_140625_009847_FFACA7CE)
-In-Reply-To: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
-References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+	Fri, 21 Mar 2014 12:12:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
+References: <1395360324-20433-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
+	<CAEFj98541uEFjHxjzUeim4nrjELToYrnbJTGuR5WgzwRvF9gkw@mail.gmail.com>
+	<532C62DE.6060309@candelatech.com>
+Date: Fri, 21 Mar 2014 18:12:17 +0200
+In-Reply-To: <532C62DE.6060309@candelatech.com> (Ben Greear's message of "Fri,
+	21 Mar 2014 09:03:42 -0700")
+Message-ID: <87eh1va5um.fsf@kamboji.qca.qualcomm.com> (sfid-20140321_171228_646440_65154FE8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P2P netdevs and other devices that are created via nl80211 from user-space
-have a name provided by user-space. Therefore, set NET_NAME_USER so this
-is correctly shown in sysfs.
+Ben Greear <greearb@candelatech.com> writes:
 
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 5 ++++-
- drivers/net/wireless/ath/ath6kl/cfg80211.h | 1 +
- drivers/net/wireless/ath/ath6kl/core.c     | 4 ++--
- 3 files changed, 7 insertions(+), 3 deletions(-)
+> On 03/20/2014 11:41 PM, Yeoh Chun-Yeow wrote:
+>>>
+>>> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
+>>>
+>> Nope. Tested with 636 not working.
+>
+> Does the existing code work with 636?  If so, we can add two different cmd
+> structs and use the smaller one with 636, and the one I modified with
+> 10.x firmware?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index c2c6f46..131d8ab 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1512,7 +1512,8 @@ static struct wireless_dev *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	wdev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
-+	wdev = ath6kl_interface_add(ar, name, NET_NAME_USER, type,
-+				    if_idx, nw_type);
- 	if (!wdev)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -3630,6 +3631,7 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
- }
- 
- struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
-+					  unsigned char name_assign_type,
- 					  enum nl80211_iftype type,
- 					  u8 fw_vif_idx, u8 nw_type)
- {
-@@ -3666,6 +3668,7 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
- 			ndev->dev_addr[4] ^= 0x80;
- 	}
- 
-+	ndev->name_assign_type = name_assign_type;
- 	init_netdev(ndev);
- 
- 	ath6kl_init_control_info(vif);
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index b59becd..5aa57a7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -25,6 +25,7 @@ enum ath6kl_cfg_suspend_mode {
- };
- 
- struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
-+					  unsigned char name_assign_type,
- 					  enum nl80211_iftype type,
- 					  u8 fw_vif_idx, u8 nw_type);
- void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 4b46adb..3cc8145 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -195,8 +195,8 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- 	rtnl_lock();
- 
- 	/* Add an initial station interface */
--	wdev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
--				    INFRA_NETWORK);
-+	wdev = ath6kl_interface_add(ar, "wlan%d", NET_NAME_ENUM,
-+				    NL80211_IFTYPE_STATION, 0, INFRA_NETWORK);
- 
- 	rtnl_unlock();
- 
+For this issue that would be the best approach. See Marek P's patch
+"ath10k: update regulatory domain settings for 10.x firmware" (not yet
+applied, still in ath-next-test branch) as an example how this can be
+done.
+
 -- 
-1.9.1
-
+Kalle Valo
