@@ -1,124 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:37872 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756305AbaCDIH7 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43413 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbaCUS4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 03:07:59 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, bzhao@marvell.com, arend@broadcom.com
-Subject: [PATCH v8 0/5] cfg80211/mac80211: move interface combinations check to mac80211
-Date: Tue,  4 Mar 2014 10:07:49 +0200
-Message-Id: <1393920474-4935-1-git-send-email-luca@coelho.fi> (sfid-20140304_090803_107642_C767B757)
+	Fri, 21 Mar 2014 14:56:52 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/3] ath10k:  Add debugging for tx-credits usage.
+Date: Fri, 21 Mar 2014 11:55:48 -0700
+Message-Id: <1395428150-31996-1-git-send-email-greearb@candelatech.com> (sfid-20140321_195655_892743_A9AFE1EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Hi,
+This helps track tx credits accounting and usage.  If
+firmware hangs or otherwise fails to return credits, one
+can more easily see the last few command types that
+was send to the firmware.
 
-In v8:
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c    | 16 ++++++++++------
+ drivers/net/wireless/ath/ath10k/htc.h    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  8 ++++----
+ drivers/net/wireless/ath/ath10k/wmi.c    |  2 +-
+ 4 files changed, 16 insertions(+), 12 deletions(-)
 
-   * fixed rebasing mistakes when setting radar_detect_width in
-     patches 3/5 and 4/5;
-
-In v7:
-
-   * added a new patch to get rid of some more combination checks in
-     cfg80211 (Johannes);
-   * remove local argument from ieee80211_check_combinations();
-   * remove redundant arguments from cfg80211_check_combinations();
-     (Johannes);
-   * change cfg80211_chandef_dfs_required() back to returning only 0
-     or 1 instead of the channel width bitmap (Johannes);
-   * remove a useless TODO in the cfg80211 doc (Johannes);
-
-In v6:
-
-   * fix typo in the interface counting code
-     s/sdata-vif.chanctx_conf/sdata_iter-vif.chanctx_conf/
-
-In v5:
-
-   * use local and sdata in ibss when calling
-     ieee80211_check_combinations();
-   * use the radar detection widths from all existing contexts,
-     regardless of whether we can share an existing context or if the
-     context is exclusive (thanks Michal!);
-
-In v4:
-
-   * rebased the remaining patches on top of what Johannes applied;
-   * lots of other small changes in response to Johannes's comments.
-     See each individual patch for detailed lists of changed (thanks
-     Johannes!);
-
-In v3:
-
-   * move the "pass the mode argument..." change to the right patch;
-
-In v2:
-
-   * lock the chanctx mutex in ieee80211_ibss_join() before calling
-     ieee80211_check_combinations().
-
-   * pass the mode argument instead of IEEE80211_CHANCTX_SHARED to
-     ieee80211_check_combinations() in ieee80211_vif_use_channel();
-
-As Johannes suggested earlier, this patchset moves the interface
-combinations check from cfg80211 to mac80211.  This is needed to
-simplify the channel switch code.
-
-There are still some cases where cfg80211 may need to check the
-interface combinations (ie. when adding or changing an interface), so
-I created a helper function that can be called by cfg80211 itself or
-the drivers (such as mac80211).
-
-Also, for now, I only moved the check in the cases where
-ieee80211_vif_use_channel() is called and for IBSS join.  The channel
-switch stuff, which will be trickier, is still missing.  These will be
-handled separately and it doesn't really hurt to leave it as it is,
-except because it's a bit inconsistent.
-
-I had to shuffle some code around to make this whole thing a bit
-cleaner, including the check for whether radar detection is needed.
-
-This is not very thoroughly tested yet, I have just done some checks
-with AP and STA with and without chanctx and with 1 or 2 different
-channels.  This part seems to work, please test the rest. :)
-
-I'll try to add some hwsim tests to test this more thoroughly.
-
-Luca.
-
-Luciano Coelho (5):
-  cfg80211: refactor cfg80211_can_use_iftype_chan()
-  cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
-  cfg80211/mac80211: move interface counting for combination check to
-    mac80211
-  cfg80211/mac80211: move combination check to mac80211 for ibss
-  cfg80211/mac80211: move more combination checks to mac80211
-
- Documentation/DocBook/80211.tmpl |   1 +
- include/net/cfg80211.h           |  31 +++++++--
- net/mac80211/cfg.c               |  11 +++-
- net/mac80211/chan.c              |  17 +++++
- net/mac80211/ibss.c              |  63 ++++++++++++------
- net/mac80211/ieee80211_i.h       |   4 ++
- net/mac80211/iface.c             |   6 +-
- net/mac80211/mesh.c              |   9 +--
- net/mac80211/util.c              |  76 +++++++++++++++++++++
- net/wireless/chan.c              |  75 ++++++++++++++++-----
- net/wireless/core.c              |  11 +---
- net/wireless/core.h              |  29 --------
- net/wireless/ibss.c              |  24 -------
- net/wireless/mesh.c              |  25 -------
- net/wireless/mlme.c              |  14 +---
- net/wireless/nl80211.c           |  59 +++++------------
- net/wireless/util.c              | 138 ++++++++++++++++++++++-----------------
- 17 files changed, 343 insertions(+), 250 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index ba3084c..bca5c41 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -121,7 +121,7 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 
+ int ath10k_htc_send(struct ath10k_htc *htc,
+ 		    enum ath10k_htc_ep_id eid,
+-		    struct sk_buff *skb)
++		    struct sk_buff *skb, int dbg)
+ {
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
+@@ -167,6 +167,10 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 			goto err_pull;
+ 		}
+ 		ep->tx_credits -= credits;
++		ath10k_dbg(ATH10K_DBG_HTC,
++			   "ep %d used %d credits, remaining %d dbg %d (0x%x)\n",
++			   eid, credits, ep->tx_credits, dbg, dbg);
++
+ 		spin_unlock_bh(&htc->tx_lock);
+ 	}
+ 
+@@ -244,13 +248,13 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 		if (report->eid >= ATH10K_HTC_EP_COUNT)
+ 			break;
+ 
+-		ath10k_dbg(ATH10K_DBG_HTC, "ep %d got %d credits\n",
+-			   report->eid, report->credits);
+-
+ 		ep = &htc->endpoint[report->eid];
+ 		ep->tx_credits += report->credits;
+ 		htc->ar->no_tx_credits_at = 0;
+ 
++		ath10k_dbg(ATH10K_DBG_HTC, "ep %d got %d credits tot %d\n",
++			   report->eid, report->credits, ep->tx_credits);
++
+ 		if (ep->ep_ops.ep_tx_credits) {
+ 			spin_unlock_bh(&htc->tx_lock);
+ 			ep->ep_ops.ep_tx_credits(htc->ar);
+@@ -680,7 +684,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 
+ 	reinit_completion(&htc->ctl_resp);
+ 
+-	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
++	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+ 	if (status) {
+ 		kfree_skb(skb);
+ 		return status;
+@@ -826,7 +830,7 @@ int ath10k_htc_start(struct ath10k_htc *htc)
+ 
+ 	ath10k_dbg(ATH10K_DBG_HTC, "HTC is using TX credit flow control\n");
+ 
+-	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
++	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+ 	if (status) {
+ 		kfree_skb(skb);
+ 		return status;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 4716d33..b86dc2b 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -356,7 +356,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 			       struct ath10k_htc_svc_conn_req  *conn_req,
+ 			       struct ath10k_htc_svc_conn_resp *conn_resp);
+ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
+-		    struct sk_buff *packet);
++		    struct sk_buff *packet, int dbg);
+ void ath10k_htc_stop(struct ath10k_htc *htc);
+ struct sk_buff *ath10k_htc_alloc_skb(int size);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 7a3e2e4..22a4542 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -173,7 +173,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt)
+ 	cmd = (struct htt_cmd *)skb->data;
+ 	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_VERSION_REQ;
+ 
+-	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb, __LINE__);
+ 	if (ret) {
+ 		dev_kfree_skb_any(skb);
+ 		return ret;
+@@ -212,7 +212,7 @@ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie)
+ 	req->cookie_lsb = cpu_to_le32(cookie & 0xffffffff);
+ 	req->cookie_msb = cpu_to_le32((cookie & 0xffffffff00000000ULL) >> 32);
+ 
+-	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb, __LINE__);
+ 	if (ret) {
+ 		ath10k_warn("failed to send htt type stats request: %d", ret);
+ 		dev_kfree_skb_any(skb);
+@@ -298,7 +298,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 
+ #undef desc_offset
+ 
+-	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb, __LINE__);
+ 	if (ret) {
+ 		dev_kfree_skb_any(skb);
+ 		return ret;
+@@ -360,7 +360,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ 	skb_cb->htt.txbuf = NULL;
+ 
+-	res = ath10k_htc_send(&htt->ar->htc, htt->eid, txdesc);
++	res = ath10k_htc_send(&htt->ar->htc, htt->eid, txdesc, __LINE__);
+ 	if (res)
+ 		goto err_unmap_msdu;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 8b99e17..a8827e2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -544,7 +544,7 @@ static int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+ 	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
+ 
+ 	memset(skb_cb, 0, sizeof(*skb_cb));
+-	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
++	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb, 0x71100000 | cmd_id);
+ 	trace_ath10k_wmi_cmd(cmd_id, skb->data, skb->len, ret);
+ 
+ 	if (ret)
 -- 
-1.8.5.3
+1.7.11.7
 
