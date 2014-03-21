@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:64997 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbaC3KNI convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:43142 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760353AbaCUJeV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 06:13:08 -0400
-Received: by mail-lb0-f171.google.com with SMTP id w7so4939980lbi.16
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Mar 2014 03:13:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <554FD98DB8827B47BDFF0FDF5415A43B035FCF36@MBX13.d.ethz.ch>
-References: <554FD98DB8827B47BDFF0FDF5415A43B035FCF36@MBX13.d.ethz.ch>
-Date: Sun, 30 Mar 2014 13:13:06 +0300
-Message-ID: <CANUX_P0ngyCde5E=QbAN-KBy_h6YyLzLJJrJhfuR+oNrrrLGmQ@mail.gmail.com> (sfid-20140330_121342_440463_31876077)
-Subject: Re: tx_retries and tx_failures on iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sim Daniel <simd@student.ethz.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 21 Mar 2014 05:34:21 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so1573340eek.35
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 02:34:20 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] ath10k: fix rssi and rate reporting
+Date: Fri, 21 Mar 2014 10:33:57 +0100
+Message-Id: <1395394437-4048-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140321_104447_901807_661C6209)
+In-Reply-To: <1395394437-4048-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395394437-4048-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> According to the documentation,
-> - tx_failed is the "number of failed transmissions (retries exceeded, no ACK)".
-> - tx_retries is the "cumulative retry counts".
->
-> Since the default number of retries seems to be 7, I would expect tx_retries to be at least 7 times tx_failed. However, on my computer tx_retries is about 20 times **less**  tx_failed. This doesn't make sense to me. Shouldn't the tx_failed counter increment only after a certain number of retries? And therefore be less than tx_retries?
+RSSI and RATE fields are valid only when START_VALID
+bit is set. So, in current implementation we have to
+remember/caclulate them when START_VALID and report the same
+when only END_VALID is set. In other case during high
+RX traffic we will report invalid RSSI (-95) and RATE (6Mbps)
+when only END_VALID bit set.
 
-The default number of retries is 16. The reason you have odd numbers
-is because we don't report this properly. The big problem is about
-AMPDU mainly - the frames are picked up by the HW and retransmissions
-are handled by the FW / HW. While we know how many packets failed vs.
-how many were sent (for rate control purposes), we can't know exactly
-what frame we retransmitted and how many times (well... we can - but
-it is not trivial). Since the the only way to tell mac80211 / cfg80211
-/ iw is per-packet (in ieee80211_tx_status in each Tx status for each
-packet), the information there is not accurate.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-I want to hope that if you disabled AMPDU (Tx) you'll get more
-accurate results - I haven't tested myself though.
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 4f1cc67..5a4310f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+-	memset(rx_status, 0, sizeof(*rx_status));
+-
+ 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
+ 	fw_desc = (u8 *)&rx->fw_desc;
+ 
+@@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+ 
+ 	/* Fill this once, while this is per-ppdu */
+-	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+-	rx_status->signal += rx->ppdu.combined_rssi;
++	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
++		memset(rx_status, 0, sizeof(*rx_status));
++		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
++				     rx->ppdu.combined_rssi;
++	}
+ 
+ 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+ 		/* TSF available only in 32-bit */
+-- 
+1.7.9.5
+
