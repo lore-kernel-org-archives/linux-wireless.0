@@ -1,149 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:52452 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099AbaCSGKM (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:37992 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760951AbaCUNxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 02:10:12 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so6280247eek.9
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 23:10:10 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 1/2] ath10k: add ath10k_htt_rx_amsdu_allowed function
-Date: Wed, 19 Mar 2014 07:09:40 +0100
-Message-Id: <1395209381-26782-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_071019_521778_8383FBEB)
+	Fri, 21 Mar 2014 09:53:47 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so1867344eei.28
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:46 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 11/13] mac80211: fix racy usage of chanctx->refcount
+Date: Fri, 21 Mar 2014 14:47:29 +0100
+Message-Id: <1395409651-26120-12-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145424_865867_4E79FB72)
+In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+ <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce ath10k_htt_rx_amsdu_allowed() function, that
-group code for checking if skip amsdu packets.
+Channel context refcount is protected by
+chanctx_mtx. Accessing the value without holding
+the mutex is racy. RCU section didn't guarantee
+anything here.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Theoretically ieee80211_channel_switch() could
+fail to see refcount change and read "1" instead
+of, e.g. "2". This means mac80211 could accept CSA
+even though it shouldn't have.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |   95 ++++++++++++++++--------------
- 1 file changed, 51 insertions(+), 44 deletions(-)
+v2:
+ * use rcu_dereference_protected()
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index cdcbe2d..9cd54a9 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -952,6 +952,55 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
- 	return 0;
- }
- 
-+static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
-+					struct sk_buff *head,
-+					struct htt_rx_info *info)
-+{
-+	enum htt_rx_mpdu_status status = info->status;
-+
-+	if (!head) {
-+		ath10k_warn("htt rx no data!\n");
-+		return false;
-+	}
-+
-+	if (head->len == 0) {
-+		ath10k_dbg(ATH10K_DBG_HTT,
-+			   "htt rx dropping due to zero-len\n");
-+		return false;
-+	}
-+
-+	if (ath10k_htt_rx_has_decrypt_err(head)) {
-+		ath10k_dbg(ATH10K_DBG_HTT,
-+			   "htt rx dropping due to decrypt-err\n");
-+		return false;
-+	}
-+
-+	/* Skip mgmt frames while we handle this in WMI */
-+	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
-+	    ath10k_htt_rx_is_mgmt(head)) {
-+		ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
-+		return false;
-+	}
-+
-+	if (status != HTT_RX_IND_MPDU_STATUS_OK &&
-+	    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
-+	    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
-+	    !htt->ar->monitor_enabled) {
-+		ath10k_dbg(ATH10K_DBG_HTT,
-+			   "htt rx ignoring frame w/ status %d\n",
-+			   status);
-+		return false;
-+	}
-+
-+	if (test_bit(ATH10K_CAC_RUNNING, &htt->ar->dev_flags)) {
-+		ath10k_dbg(ATH10K_DBG_HTT,
-+			   "htt rx CAC running\n");
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				  struct htt_rx_indication *rx)
+ net/mac80211/cfg.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 64e152d..328c9a3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3282,7 +3282,7 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
  {
-@@ -984,7 +1033,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
++	struct ieee80211_chanctx_conf *conf;
+ 	struct ieee80211_chanctx *chanctx;
+ 	int err, num_chanctx, changed = 0;
  
- 		for (j = 0; j < mpdu_ranges[i].mpdu_count; j++) {
- 			struct sk_buff *msdu_head, *msdu_tail;
--			enum htt_rx_mpdu_status status;
- 			int msdu_chaining;
+@@ -3299,23 +3299,24 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				       &sdata->vif.bss_conf.chandef))
+ 		return -EINVAL;
  
- 			msdu_head = NULL;
-@@ -995,49 +1043,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 							 &msdu_head,
- 							 &msdu_tail);
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
+ 	}
  
--			if (!msdu_head) {
--				ath10k_warn("htt rx no data!\n");
--				continue;
--			}
--
--			if (msdu_head->len == 0) {
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx dropping due to zero-len\n");
--				ath10k_htt_rx_free_msdu_chain(msdu_head);
--				continue;
--			}
--
--			if (ath10k_htt_rx_has_decrypt_err(msdu_head)) {
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx dropping due to decrypt-err\n");
--				ath10k_htt_rx_free_msdu_chain(msdu_head);
--				continue;
--			}
--
--			status = info.status;
--
--			/* Skip mgmt frames while we handle this in WMI */
--			if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
--			    ath10k_htt_rx_is_mgmt(msdu_head)) {
--				ath10k_dbg(ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
--				ath10k_htt_rx_free_msdu_chain(msdu_head);
--				continue;
--			}
--
--			if (status != HTT_RX_IND_MPDU_STATUS_OK &&
--			    status != HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR &&
--			    status != HTT_RX_IND_MPDU_STATUS_ERR_INV_PEER &&
--			    !htt->ar->monitor_enabled) {
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx ignoring frame w/ status %d\n",
--					   status);
--				ath10k_htt_rx_free_msdu_chain(msdu_head);
--				continue;
--			}
--
--			if (test_bit(ATH10K_CAC_RUNNING, &htt->ar->dev_flags)) {
--				ath10k_dbg(ATH10K_DBG_HTT,
--					   "htt rx CAC running\n");
-+			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
-+							 &info)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
- 			}
+ 	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
++	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
+ 	}
+ 	num_chanctx = 0;
+ 	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
+ 		num_chanctx++;
+-	rcu_read_unlock();
++	mutex_unlock(&local->chanctx_mtx);
+ 
+ 	if (num_chanctx > 1)
+ 		return -EBUSY;
 -- 
-1.7.9.5
+1.8.5.3
 
