@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18032 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759160AbaCTXYL (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:57328 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760838AbaCUN6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 19:24:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: scan command preparation failure handling
-Date: Thu, 20 Mar 2014 16:23:48 -0700
-Message-ID: <1395357830-15722-1-git-send-email-bzhao@marvell.com> (sfid-20140321_002416_831739_0F2CBD53)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 21 Mar 2014 09:58:15 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so1832605eek.35
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:58:14 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 5/7] mac80211: ignore cqm during csa
+Date: Fri, 21 Mar 2014 14:52:19 +0100
+Message-Id: <1395409941-26303-6-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145822_479766_24419403)
+In-Reply-To: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+ <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+It is not guaranteed that multi-vif channel
+switching is tightly synchronized. It makes sense
+to ignore cqm (missing beacons, et al) while csa
+is progressing and re-check it after it completes.
 
-When scan request is received, scan commands are prepared and
-queued into scan pending queue. There is a corner case when
-command nodes are full. So we stop queueing further scan
-commands and return an error. This patch makes sure that
-currently queued commands in scan pending queue are also freed
-in this case.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/scan.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index f139244..a5ecd83 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -591,9 +591,12 @@ mwifiex_scan_channel_list(struct mwifiex_private *priv,
- 			  *chan_tlv_out,
- 			  struct mwifiex_chan_scan_param_set *scan_chan_list)
- {
-+	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret = 0;
- 	struct mwifiex_chan_scan_param_set *tmp_chan_list;
- 	struct mwifiex_chan_scan_param_set *start_chan;
-+	struct cmd_ctrl_node *cmd_node, *tmp_node;
-+	unsigned long flags;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a5b23a1..4304988 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -974,6 +974,9 @@ cleanup:
  
- 	u32 tlv_idx, rates_size, cmd_no;
- 	u32 total_scan_time;
-@@ -748,8 +751,19 @@ mwifiex_scan_channel_list(struct mwifiex_private *priv,
- 		scan_cfg_out->tlv_buf_len -=
- 			    sizeof(struct mwifiex_ie_types_header) + rates_size;
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
  
--		if (ret)
-+		if (ret) {
-+			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-+			list_for_each_entry_safe(cmd_node, tmp_node,
-+						 &adapter->scan_pending_q,
-+						 list) {
-+				list_del(&cmd_node->list);
-+				cmd_node->wait_q_enabled = false;
-+				mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+			}
-+			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
-+					       flags);
- 			break;
-+		}
- 	}
++	ieee80211_sta_reset_beacon_monitor(sdata);
++	ieee80211_sta_reset_conn_monitor(sdata);
++
+ out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+@@ -3555,6 +3558,9 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
  
- 	if (ret)
++	if (sdata->vif.csa_active)
++		return;
++
+ 	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->u.mgd.beacon_connection_loss_work);
+@@ -3570,6 +3576,9 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
++	if (sdata->vif.csa_active)
++		return;
++
+ 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
+ }
+ 
 -- 
-1.8.2.3
+1.8.5.3
 
