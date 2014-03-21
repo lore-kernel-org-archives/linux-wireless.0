@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:65213 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbaCHXAU (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46510 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbaCUSr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 18:00:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <531B934C.31666.37555A14@pageexec.freemail.hu>
-References: <1394177091.4653.1.camel@jlt4.sipsolutions.net>
-	<1394241960-1764-1-git-send-email-behanw@converseincode.com>
-	<CABikg9y_j-SDOsMj1C5uogP0HNj6bsB_ySVFtAh_oNgZ0swd=g@mail.gmail.com>
-	<531B934C.31666.37555A14@pageexec.freemail.hu>
-Date: Sun, 9 Mar 2014 00:00:19 +0100
-Message-ID: <CABikg9x+Z95bHcDc6iu5hBvRNO-ibM8-34_qA+OA_FjB52SPMw@mail.gmail.com> (sfid-20140309_000120_147521_1EBE2732)
-Subject: Re: [PATCH v2] mac80211: LLVMLinux: Remove VLAIS usage from mac80211
-From: Sergei Antonov <saproj@gmail.com>
-To: pageexec@freemail.hu
-Cc: behanw@converseincode.com, John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	=?UTF-8?Q?Jan=2DSimon_M=C3=B6ller?= <dl9pf@gmx.de>,
-	=?UTF-8?Q?Vin=C3=ADcius_Tinti?= <viniciustinti@gmail.com>,
-	Mark Charlebois <charlebm@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 21 Mar 2014 14:47:58 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] ath10k:  Fix getting stats from firmware.
+Date: Fri, 21 Mar 2014 11:47:22 -0700
+Message-Id: <1395427642-30884-1-git-send-email-greearb@candelatech.com> (sfid-20140321_194803_011238_93D7A00D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2014 23:01, PaX Team <pageexec@freemail.hu> wrote:
-> On 8 Mar 2014 at 21:29, Sergei Antonov wrote:
->
->> > -       memset(&aead_req, 0, sizeof(aead_req));
->> > +       char aead_req_data[sizeof(struct aead_request) +
->> > +                               crypto_aead_reqsize(tfm) +
->> > +                               CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
->                                                      ^^^^^^^^^^^^^^^^^^^^
-> wouldn't the underlined attribute ensure the required alignment?
-Yes. Sorry, I overlooked it.
+From: Ben Greear <greearb@candelatech.com>
 
-I would remove unneeded CRYPTO_MINALIGN and get the alignment from the
-target structure:
-        char aead_req_data[sizeof(struct aead_request) +
-                           crypto_aead_reqsize(tfm)]
-                __attribute__((__aligned__(__alignof__(struct aead_request))));
+Tested on 10.x firmware, and others report it at least
+makes older firmware no more broken than it already was.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  Remove spurious comment.
+
+ drivers/net/wireless/ath/ath10k/wmi.h | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index fa1b9e0..c11f49a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2766,13 +2766,20 @@ enum wmi_stats_id {
+ 	WMI_REQUEST_AP_STAT	= 0x02
+ };
+ 
++struct wlan_inst_rssi_args {
++	__le16 cfg_retry_count;
++	__le16 retry_count;
++};
++
+ struct wmi_request_stats_cmd {
+ 	__le32 stats_id;
+ 
+-	/*
+-	 * Space to add parameters like
+-	 * peer mac addr
+-	 */
++	__le32 vdev_id;
++	/* peer MAC address */
++	struct wmi_mac_addr peer_macaddr;
++
++	/* Instantaneous RSSI arguments */
++	struct wlan_inst_rssi_args inst_rssi_args;
+ } __packed;
+ 
+ /* Suspend option */
+-- 
+1.7.11.7
+
