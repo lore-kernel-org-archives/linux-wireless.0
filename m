@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:58514 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbaC2TtL (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:45574 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754428AbaCUQsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Mar 2014 15:49:11 -0400
-Received: by mail-wg0-f51.google.com with SMTP id k14so4502333wgh.34
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2014 12:49:09 -0700 (PDT)
+	Fri, 21 Mar 2014 12:48:10 -0400
+Received: by mail-vc0-f180.google.com with SMTP id lf12so2933862vcb.11
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 09:48:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140329.153737.671362434625537776.davem@davemloft.net>
-References: <CAG-2HqVQ-MAZgsZAkykvVtbtYgDA3bfJA5rEqpdX5vBqPTjLJg@mail.gmail.com>
- <20140328.214254.1620280677250220442.davem@davemloft.net> <CAG-2HqWQsLPaaHxMFn5Bha0BGKSAVZV9n87KTCsbQ1ewktzZvA@mail.gmail.com>
- <20140329.153737.671362434625537776.davem@davemloft.net>
-From: Kay Sievers <kay@vrfy.org>
-Date: Sat, 29 Mar 2014 20:48:47 +0100
-Message-ID: <CAPXgP11ce5zXePU=idVqXRREpXpNTa4HBcvyq_hh1pdiVJme8Q@mail.gmail.com> (sfid-20140329_205001_163167_1361040C)
-Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
-To: David Miller <davem@davemloft.net>
-Cc: Tom Gundersen <teg@jklm.no>,
-	David Herrmann <dh.herrmann@gmail.com>, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAEFj985WKAOp9vewgZW8LYB9KdUxh2GJG5uhAjRdCSiAd-y1sQ@mail.gmail.com>
+References: <1395360324-20433-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
+	<CAEFj98541uEFjHxjzUeim4nrjELToYrnbJTGuR5WgzwRvF9gkw@mail.gmail.com>
+	<532C62DE.6060309@candelatech.com>
+	<87eh1va5um.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj985WKAOp9vewgZW8LYB9KdUxh2GJG5uhAjRdCSiAd-y1sQ@mail.gmail.com>
+Date: Sat, 22 Mar 2014 00:48:09 +0800
+Message-ID: <CAEFj985bx2ZK-Y08yrJirqNhBQFt_CF_1hGPaj_qTRSvnU4DJw@mail.gmail.com> (sfid-20140321_174814_599951_0114C76C)
+Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 29, 2014 at 8:37 PM, David Miller <davem@davemloft.net> wrote:
-> From: Tom Gundersen <teg@jklm.no>
-> Date: Sat, 29 Mar 2014 10:46:02 +0100
+BTW, is anyone ever tested the get stats for firmware 636 before your
+patch and getting positive results?
+
+---
+Chun-Yeow
+
+On Sat, Mar 22, 2014 at 12:42 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Hi, Ben
 >
->> The issue I see with that is that there are several ways to generate
->> predictable names, and the user may want to chose between them, so
->> this is arguably policy that should not be in the kernel. If you don't
->> think that's a problem, I'd be happy to submit a patch to move all
->> this logic from udev to the kernel, just let me know how you see it.
+> I did a quick check again on STA mode. With or without your patch, the
+> printed peer stats are both identical but both wrong. See below:
 >
-> Unfortunately, we have already allowed this kind of thing for setting
-> MAC addresses so I guess I'll have to allow your changes to be applied.
+>              ath10k PEER stats
+>              =================
 >
-> But before I ask you to resubmit, do you have full buy-in from the
-> udev folks for this facility?
-
-Absolutely, it is very useful to have.
-
-Today, there is no way for userland to distinguish explicitly
-requested and predictable names provided by tools, from unpredictable
-names composed by the kernel itself by adding an unpredictable
-enumeration number.
-
-It allows us the work around the common problems in general purpose
-Linux, where we have no strong dependencies, not necessarily central
-management, and loose coupling between components.
-
-This information will allow us to apply best-effort or common sense to
-the default udev device name policies, like:
-  - leave the name alone if someone has asked explicitly for that name
-  - leave the name alone if someone else has already renamed it after
-its first creation
-
-So, having that information in /sys would be very welcome from udev's
-point of view.
-
-Thanks,
-Kay
+>               Peer MAC address 00:00:00:00:00:00
+>                      Peer RSSI 256
+>                   Peer TX rate 0
+>
+>               Peer MAC address 00:00:00:00:04:f0
+>                      Peer RSSI 17317
+>                   Peer TX rate 73
+>
+> So I think that your patch makes no difference but do indeed providing
+> "correct" peer stats on latest AP firmware.
+>
+> After applying the "ath10k: add the Rx rate in FW stats", I am able to
+> get the Tx and Rx Rate for all connected STAs to my AP.
+>
+> ---
+> Chun-Yeow
+>
+> On Sat, Mar 22, 2014 at 12:12 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>> On 03/20/2014 11:41 PM, Yeoh Chun-Yeow wrote:
+>>>>>
+>>>>> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
+>>>>>
+>>>> Nope. Tested with 636 not working.
+>>>
+>>> Does the existing code work with 636?  If so, we can add two different cmd
+>>> structs and use the smaller one with 636, and the one I modified with
+>>> 10.x firmware?
+>>
+>> For this issue that would be the best approach. See Marek P's patch
+>> "ath10k: update regulatory domain settings for 10.x firmware" (not yet
+>> applied, still in ath-next-test branch) as an example how this can be
+>> done.
+>>
+>> --
+>> Kalle Valo
