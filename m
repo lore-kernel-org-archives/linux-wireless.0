@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783AbaCER6T (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:43882 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912AbaCVJCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 12:58:19 -0500
-Message-ID: <1394042296.5275.45.camel@jlt4.sipsolutions.net> (sfid-20140305_185824_269698_56A0D8B7)
-Subject: Re: [PATCH 3.14.0-rc5 v3 3/10] rsi: Adding core and main files
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Fariya Fathima <fariya.f@redpinesignals.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Mar 2014 18:58:16 +0100
-In-Reply-To: <-1822952301-40502@mail.redpinesignals.com>
-References: <-1822952301-40502@mail.redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 22 Mar 2014 05:02:36 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so2184261wgh.23
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:35 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/10] staging: vt6656: vnt_fill_ieee80211_rts replace TYPE_CTL_RTS macro
+Date: Sat, 22 Mar 2014 09:01:31 +0000
+Message-Id: <1395478892-3419-9-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100243_786357_C2436BC1)
+In-Reply-To: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
+References: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Replace with IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS from linux/ieee80211.h
+to get value of TYPE_CTL_RTS and endian correct to frame_control.
 
-[please don't send HTML emails, the list will drop those]
+Remove old macros in tether.h
 
-> In our code, we do fill in skb->priority field as you have seen. Once
-> the pkt comes over to my driver, I thought I could over-write the
-> priority field as I don't see this field being used again by the
-> mac80211 stack. Even in case there is a failure and I call the
-> ieee80211_free_txskb( ), I don't see that field being used.
-> Considering this, can I not re-use the field within my driver or am I
-> missing something in here?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c   | 3 ++-
+ drivers/staging/vt6656/tether.h | 2 --
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-No, I guess you can do that. However, there are cases where the packet
-could potentially be reprocessed by mac80211, notably in the AP-side
-code for handling powersave clients (ieee80211_sta_ps_deliver_response).
-These code paths aren't executed for your driver right now, so this
-isn't really a concern, but if you plan on adding AP/GO support then it
-might be worth using a field inside skb->cb instead where you already
-have other fields.
-
-IOW, it's fine right now, but if you extend your code in the future you
-may run into hard to debug issues with it.
-
-johannes
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 2b67b1b..ac60999 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -551,7 +551,8 @@ static int vnt_fill_ieee80211_rts(struct vnt_private *priv,
+ 		__le16 duration)
+ {
+ 	rts->duration = duration;
+-	rts->frame_control = TYPE_CTL_RTS;
++	rts->frame_control =
++		cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS);
+ 
+ 	if (priv->op_mode == NL80211_IFTYPE_ADHOC ||
+ 				priv->op_mode == NL80211_IFTYPE_AP)
+diff --git a/drivers/staging/vt6656/tether.h b/drivers/staging/vt6656/tether.h
+index aec6b56..f42edda 100644
+--- a/drivers/staging/vt6656/tether.h
++++ b/drivers/staging/vt6656/tether.h
+@@ -60,7 +60,6 @@
+ #define TYPE_DATE_NULL      0x4800
+ 
+ #define TYPE_CTL_PSPOLL     0xa400
+-#define TYPE_CTL_RTS        0xb400
+ #define TYPE_CTL_CTS        0xc400
+ #define TYPE_CTL_ACK        0xd400
+ 
+@@ -91,7 +90,6 @@
+ #define TYPE_DATE_NULL      0x0048
+ 
+ #define TYPE_CTL_PSPOLL     0x00a4
+-#define TYPE_CTL_RTS        0x00b4
+ #define TYPE_CTL_CTS        0x00c4
+ #define TYPE_CTL_ACK        0x00d4
+ 
+-- 
+1.9.0
 
