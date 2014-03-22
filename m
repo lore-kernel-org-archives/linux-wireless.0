@@ -1,92 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34424 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933941AbaCSQGe (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62565 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaCVR6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 12:06:34 -0400
-Message-ID: <5329C069.7010604@candelatech.com> (sfid-20140319_170638_441057_D292925D)
-Date: Wed, 19 Mar 2014 09:06:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 22 Mar 2014 13:58:35 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so2903794eei.33
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 10:58:34 -0700 (PDT)
+Message-ID: <532DCF45.70509@gmail.com> (sfid-20140322_185902_666505_33989539)
+Date: Sat, 22 Mar 2014 19:58:29 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] ath10k: fix rssi and rate reporting
-References: <1395237135-18159-1-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1395237135-18159-1-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: ben@decadent.org.uk
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com, dwmw2@infradead.org
+Subject: pull request: firmware for Intel wireless 7265
+References: <532DCDB6.4080409@gmail.com>
+In-Reply-To: <532DCDB6.4080409@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="ANpPSEP11InqCXirJ69XbqHUGAfhUwxJf"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/2014 06:52 AM, Janusz Dziedzic wrote:
-> RSSI and RATE fields are valid only when
-> START_VALID bit is set.
-> So, in current implementation we have to remember
-> rssi and rates we have when START_VALID and report
-> the same also when END_VALID bit is set.
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt.h    |    3 +++
->  drivers/net/wireless/ath/ath10k/htt_rx.c |   41 +++++++++++++++---------------
->  2 files changed, 24 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-> index 870f807..bd3e537 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt.h
-> +++ b/drivers/net/wireless/ath/ath10k/htt.h
-> @@ -1278,6 +1278,9 @@ struct ath10k_htt {
->  	struct tasklet_struct txrx_compl_task;
->  	struct sk_buff_head tx_compl_q;
->  	struct sk_buff_head rx_compl_q;
-> +
-> +	/* rx_info template */
-> +	struct htt_rx_info rx_info;
->  };
->  
->  #define RX_HTT_HDR_STATUS_LEN 64
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 665a256..6e33475 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1128,7 +1128,6 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
->  static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  				  struct htt_rx_indication *rx)
->  {
-> -	struct htt_rx_info info;
->  	struct htt_rx_indication_mpdu_range *mpdu_ranges;
->  	struct htt_rx_desc *rxd;
->  	enum htt_rx_mpdu_status status;
-> @@ -1143,7 +1142,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  
->  	lockdep_assert_held(&htt->rx_ring.lock);
->  
-> -	memset(&info, 0, sizeof(info));
->  
->  	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
->  	fw_desc = (u8 *)&rx->fw_desc;
-> @@ -1153,24 +1151,27 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
->  	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
->  
->  	/* Fill this once, while this is per-ppdu */
-> -	info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-> -	info.rx_status.signal += rx->ppdu.combined_rssi;
-> +	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
-> +		memset(&htt->rx_info, 0, sizeof(htt->rx_info));
-> +		htt->rx_info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-> +		htt->rx_info.rx_status.signal += rx->ppdu.combined_rssi;
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--ANpPSEP11InqCXirJ69XbqHUGAfhUwxJf
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Maybe do the above as:
-                htt->rx_info.rx_status.signal = ATH10K_DEFAULT_NOISE_FLOOR
-			+ rx->ppdu.combined_rssi;
+Hi Ben,
 
-?
+This adds the firmware for a new Intel Wireless device: 7265.
+
+Thanks!
+
+The following changes since commit dec41bce44e0dff6a2c3358a958fadf22bf588=
+58:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/=
+egrumbach/linux-firmware (2014-03-16 18:12:54 +0000)
+
+are available in the git repository at:
 
 
-Thanks,
-Ben
+  git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.=
+git master
+
+for you to fetch changes up to 7c9322ffc746f897db884aacbcf9c115fc840209:
+
+  iwlwifi: add firmware for 7265 (2014-03-22 19:45:06 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: add firmware for 7265
+
+ WHENCE               |   3 +++
+ iwlwifi-7265-8.ucode | Bin 0 -> 690452 bytes
+ 2 files changed, 3 insertions(+)
+ create mode 100644 iwlwifi-7265-8.ucode
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--ANpPSEP11InqCXirJ69XbqHUGAfhUwxJf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTLc9HAAoJEC0Llv5uNjIBPpgP/1eEkzpBnhx43Q1MvQtSiC82
+ww6jDJZ8DAyyuQQLXspWp82tDFGRLxeBOUHDNapT5AhQULvviOcrpIZLtHvaZmkb
+HpgznpTdeWVPdif3Pt4KOGTcYxQqbmW2ygnH+Mk987O6f6KNSGAV5Mjil+NJ2uzk
+Xcjo1ZiCtJNrfyeoyZ5xbSB4dbogM1dwXfSMInAeYCSLMCO6ke1Ouc6FRwBAH/P4
+cu4VKlQb+ymMf4PgxRVG16IDewHHCQdeDj/LXWjfoS+oXOezNNDuZixpXYxGs9xp
+BrTDHJRa+AKbMrx1hgz0fk46EVOt4+qeNw7S/1Iwn48LwZ2doPQQE/0+iYIE3hjF
+dVxYgpfQRKEIyN6t50aVAS5ZrcVVB/R5bW413NYM9jKDCq5Imc0jhX5P5rWUQrzH
+48TIXwNewUQkZ23p0Yk58cYi+Ta3RoUxdO5+fVgFi30kOld3ysqLnSEkzCraSHoz
+3zyai+bNJBFAwqSIQ3AdHVr4DiOZKnjoSLMIKpdyJ5jHOaTtFS9PM5hQ76W/R0B6
+FY4oFQE++QLoXOst8j/sG85u2ys8xatOMIfo7GeChAlFPgOEFfNN1I77dWC2H+xc
+MTeghI1HroadOyG/nQdnNcGdTE1+1TVYKOcJgBuFlQa5ATg/LSPuuN9yeJL2pt5m
+d346KGyiqH30rKQCnNa7
+=oXlx
+-----END PGP SIGNATURE-----
+
+--ANpPSEP11InqCXirJ69XbqHUGAfhUwxJf--
