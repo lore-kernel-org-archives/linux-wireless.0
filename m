@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48926 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290AbaC1NIc (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:54270 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaCVRvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:08:32 -0400
-Message-ID: <1396012109.4175.26.camel@jlt4.sipsolutions.net> (sfid-20140328_140834_947301_941C4AA5)
-Subject: Re: [PATCH v2 07/13] mac80211: improve find_chanctx() for
- reservations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 14:08:29 +0100
-In-Reply-To: <1395409651-26120-8-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145340_786158_B396141D)
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-8-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20140321_145340_786158_B396141D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 22 Mar 2014 13:51:53 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so2912566eek.4
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 10:51:52 -0700 (PDT)
+Message-ID: <532DCDB6.4080409@gmail.com> (sfid-20140322_185157_156677_1EA660DB)
+Date: Sat, 22 Mar 2014 19:51:50 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: ilw@linux.intel.com
+Subject: [ANN] Firmware for new device - Intel Wireless 7265
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
-> Relax ieee80211_find_chanctx(). If chanctx
-> reservation chandef is compatible with
-> current-future assigned interfaces chandef then
-> allow it to be used by new interfaces.
+Hi,
 
-Err, I don't understand. Could you elaborate?
+we have released the firmware needed by the new Intel Wireless 7265 device.
+This firmware / device is supported starting 3.13 kernel.
 
-johannes
+The firmware is available at:
 
+http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7265-ucode-22.24.8.0.tgz
+
+Pull request to linux-firmware.git will follow.
