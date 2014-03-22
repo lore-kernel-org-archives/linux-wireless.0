@@ -1,212 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35305 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756133AbaCRPGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 11:06:52 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v10 4/4] mac80211: allow reservation of a running chanctx
-Date: Tue, 18 Mar 2014 17:03:06 +0200
-Message-Id: <1395154986-13810-5-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160655_404491_565221BC)
-In-Reply-To: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
-References: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:43159 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbaCVJCX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Mar 2014 05:02:23 -0400
+Received: by mail-we0-f178.google.com with SMTP id u56so2168144wes.37
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:21 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 02/10] staging: vt6656: rxtx s_vFillTxKey Fix pdwIV base type
+Date: Sat, 22 Mar 2014 09:01:24 +0000
+Message-Id: <1395478892-3419-2-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100227_221737_8EFBF5AA)
+In-Reply-To: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
+References: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With single-channel drivers, we need to be able to change a running
-chanctx if we want to use chanctx reservation.  Not all drivers may be
-able to do this, so add a flag that indicates support for it.
+Use base type __le32 and endian correct changed values.
 
-Changing a running chanctx can also be used as an optimization in
-multi-channel drivers when the context needs to be reserved for future
-usage.
+Correct endian conversions to cpu_to_le32.
 
-Introduce IEEE80211_CHANCTX_RESERVED chanctx mode to mark a channel as
-reserved so nobody else can use it (since we know it's going to
-change).  In the future, we may allow several vifs to use the same
-reservation as long as they plan to use the chanctx on the same
-future channel.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-In v3:
+ drivers/staging/vt6656/rxtx.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-   * reworded the TODO, slightly;
-
-In v4:
-
-   * remove IEEE80211_CHANCTX_RESERVED and the reserved_mode element;
-   * increase refcount also for "in-place" changes;
-   * stop queues also before doing an "in-place" change;
-   * refactor ieee80211_use_reserved_chanctx() a bit to fit "in-place"
-     better;
-
-In v5:
-
-   * fix checkpatch warnings;
-
-In v6:
-
-   * return ret in ieee80211_chanctx_is_reserved();
-   * check if sdata is running in ieee80211_chanctx_is_reserved();
-   * keep check for IEEE80211_CHANCTX_EXCLUSIVE in
-     ieee80211_find_channel();
-   * use break instead of goto out in ieee80211_chanctx_is_reserved();
-
-In v8:
-
-   * don't remove recalc functions;
-
-In v9:
-
-   * one more fix for my major v7 rebase screw-up;
----
- include/net/mac80211.h |  7 +++++
- net/mac80211/chan.c    | 79 ++++++++++++++++++++++++++++++++++++++------------
- 2 files changed, 68 insertions(+), 18 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 86faa41..b35c608 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1553,6 +1553,12 @@ struct ieee80211_tx_control {
-  *	for a single active channel while using channel contexts. When support
-  *	is not enabled the default action is to disconnect when getting the
-  *	CSA frame.
-+ *
-+ * @IEEE80211_HW_CHANGE_RUNNING_CHANCTX: The hardware can change a
-+ *	channel context on-the-fly.  This is needed for channel switch
-+ *	on single-channel hardware.  It can also be used as an
-+ *	optimization in certain channel switch cases with
-+ *	multi-channel.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1584,6 +1590,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
- 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
- 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
-+	IEEE80211_HW_CHANGE_RUNNING_CHANCTX		= 1<<29,
- };
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 9f80a7a..f2f96ee 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -181,7 +181,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 	struct vnt_mic_hdr *mic_hdr)
+ {
+ 	u8 *pbyBuf = (u8 *)&fifo_head->adwTxKey[0];
+-	u32 *pdwIV = (u32 *)pbyIVHead;
++	__le32 *pdwIV = (__le32 *)pbyIVHead;
+ 	u32 *pdwExtIV = (u32 *)((u8 *)pbyIVHead + 4);
+ 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyHdrBuf;
+ 	__le32 rev_iv_counter;
+@@ -191,7 +191,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 		return;
  
- /**
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f7e581b..4d7be8e 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -162,6 +162,27 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 	}
- }
+ 	rev_iv_counter = cpu_to_le32(pDevice->dwIVCounter);
+-	*pdwIV = pDevice->dwIVCounter;
++	*pdwIV = cpu_to_le32(pDevice->dwIVCounter);
+ 	pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
  
-+static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
-+					  struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	bool ret = false;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+		if (sdata->reserved_chanctx == ctx) {
-+			ret = true;
-+			break;
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+	return ret;
-+}
-+
- static struct ieee80211_chanctx *
- ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       const struct cfg80211_chan_def *chandef,
-@@ -177,7 +198,12 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		const struct cfg80211_chan_def *compat;
- 
--		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
-+		/* We don't support chanctx reservation for multiple
-+		 * vifs yet, so don't allow reserved chanctxs to be
-+		 * reused.
-+		 */
-+		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
-+		    ieee80211_chanctx_is_reserved(local, ctx))
- 			continue;
- 
- 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
-@@ -695,11 +721,20 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 	/* try to find another context with the chandef we want */
- 	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
- 	if (!new_ctx) {
--		/* create a new context */
--		new_ctx = ieee80211_new_chanctx(local, chandef, mode);
--		if (IS_ERR(new_ctx)) {
--			ret = PTR_ERR(new_ctx);
--			goto out;
-+		if (curr_ctx->refcount == 1 &&
-+		    (local->hw.flags & IEEE80211_HW_CHANGE_RUNNING_CHANCTX)) {
-+			/* if we're the only users of the chanctx and
-+			 * the driver supports changing a running
-+			 * context, reserve our current context
-+			 */
-+			new_ctx = curr_ctx;
-+		} else {
-+			/* create a new context and reserve it */
-+			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
-+			if (IS_ERR(new_ctx)) {
-+				ret = PTR_ERR(new_ctx);
-+				goto out;
-+			}
+ 	switch (pTransmitKey->byCipherSuite) {
+@@ -213,9 +213,8 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 			memcpy(pDevice->abyPRNG, pbyBuf, 16);
  		}
- 	}
+ 		/* Append IV after Mac Header */
+-		*pdwIV &= WEP_IV_MASK;
+-		*pdwIV |= (u32)pDevice->byKeyIndex << 30;
+-		*pdwIV = cpu_to_le32(*pdwIV);
++		*pdwIV &= cpu_to_le32(WEP_IV_MASK);
++		*pdwIV |= cpu_to_le32((u32)pDevice->byKeyIndex << 30);
  
-@@ -747,22 +782,30 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 		pDevice->dwIVCounter++;
+ 		if (pDevice->dwIVCounter > WEP_IV_MASK)
+@@ -256,7 +255,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 		*(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) &
+ 							0xc0) | 0x20);
  
- 	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
+-		*pdwIV |= cpu_to_le16((u16)(pTransmitKey->wTSC15_0));
++		*pdwIV |= cpu_to_le32((u32)(pTransmitKey->wTSC15_0));
  
--	/* unref our reservation before assigning */
-+	/* unref our reservation */
- 	ctx->refcount--;
- 	sdata->reserved_chanctx = NULL;
- 
--	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
--	if (old_ctx->refcount == 0)
--		ieee80211_free_chanctx(local, old_ctx);
--	if (ret) {
--		/* if assign fails refcount stays the same */
--		if (ctx->refcount == 0)
--			ieee80211_free_chanctx(local, ctx);
--		goto out;
--	}
-+	if (old_ctx == ctx) {
-+		/* This is our own context, just change it */
-+		ret = __ieee80211_vif_change_channel(sdata, old_ctx,
-+						     &tmp_changed);
-+		if (ret)
-+			goto out;
-+	} else {
-+		ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-+		if (old_ctx->refcount == 0)
-+			ieee80211_free_chanctx(local, old_ctx);
-+		if (ret) {
-+			/* if assign fails refcount stays the same */
-+			if (ctx->refcount == 0)
-+				ieee80211_free_chanctx(local, ctx);
-+			goto out;
-+		}
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP)
--		__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-+		if (sdata->vif.type == NL80211_IFTYPE_AP)
-+			__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-+	}
- 
- 	*changed = tmp_changed;
- 
+ 		/* Append IV&ExtIV after Mac Header */
+ 		*pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
 -- 
 1.9.0
 
