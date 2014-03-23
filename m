@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:44346 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090AbaCPVxt (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:64623 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbaCWShD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2014 17:53:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <1394997429.15764.116.camel@deadeye.wl.decadent.org.uk>
-References: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com>
-	<1394990490-1076-2-git-send-email-dh.herrmann@gmail.com>
-	<1394997429.15764.116.camel@deadeye.wl.decadent.org.uk>
-Date: Sun, 16 Mar 2014 22:53:48 +0100
-Message-ID: <CANq1E4R8WAWu5_V+_D_8e+u0hmhayi4Ueh7pDwcbvGwp=KTRBw@mail.gmail.com> (sfid-20140316_225419_527943_58C7158C)
-Subject: Re: [PATCH v2 1/4] net: add name_assign_type netdev attribute
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: netdev <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 23 Mar 2014 14:37:03 -0400
+From: Monam Agarwal <monamagarwal123@gmail.com>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+	ilw@linux.intel.com, linville@tuxdriver.com, eliad@wizery.com,
+	eytan.lifshitz@intel.com, eyal@wizery.com, Max.Stepanov@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless: Use RCU_INIT_POINTER(x, NULL) in iwlwifi/mvm/sta.c
+Date: Mon, 24 Mar 2014 00:05:56 +0530
+Message-Id: <1395599756-7861-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_193709_474129_73738C82)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
 
-On Sun, Mar 16, 2014 at 8:17 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
-> On Sun, 2014-03-16 at 18:21 +0100, David Herrmann wrote:
-> [...]
->> --- a/include/linux/netdevice.h
->> +++ b/include/linux/netdevice.h
->> @@ -74,6 +74,11 @@ void netdev_set_default_ethtool_ops(struct net_device *dev,
->>  #define NET_RX_SUCCESS               0       /* keep 'em coming, baby */
->>  #define NET_RX_DROP          1       /* packet dropped */
->>
->> +/* interface name assignment types */
->> +#define NET_NAME_ENUM                0       /* enumerated by kernel (default) */
->> +#define NET_NAME_USER                1       /* provided by user-space */
->> +#define NET_NAME_RENAMED     2       /* renamed by user-space */
-> [...]
->
-> I think these definitions should be put in a UAPI header.  Even if the
-> names don't end up being used by userland, that would make it clear that
-> the numbers are a stable ABI.
+The rcu_assign_pointer() ensures that the initialization of a structure       
+is carried out before storing a pointer to that structure. 
+And in the case of the NULL pointer, there is no structure to initialize. 
+So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
 
-I tried to follow addr_assign_type as closely as possible. The
-NET_ADDR_* constants are only defined internally either. I am fine
-with exporting the constants, just want to make sure there's no reason
-to hide them that I'm not aware of.
+Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Thanks
-David
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 2677d1c..b793775 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -498,7 +498,7 @@ void iwl_mvm_sta_drained_wk(struct work_struct *wk)
+ 				sta_id);
+ 			continue;
+ 		}
+-		rcu_assign_pointer(mvm->fw_id_to_mac_id[sta_id], NULL);
++		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta_id], NULL);
+ 		clear_bit(sta_id, mvm->sta_drained);
+ 	}
+ 
+@@ -557,7 +557,7 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 	} else {
+ 		spin_unlock_bh(&mvm_sta->lock);
+ 		ret = iwl_mvm_rm_sta_common(mvm, mvm_sta->sta_id);
+-		rcu_assign_pointer(mvm->fw_id_to_mac_id[mvm_sta->sta_id], NULL);
++		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[mvm_sta->sta_id], NULL);
+ 	}
+ 
+ 	return ret;
+@@ -571,7 +571,7 @@ int iwl_mvm_rm_sta_id(struct iwl_mvm *mvm,
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	rcu_assign_pointer(mvm->fw_id_to_mac_id[sta_id], NULL);
++	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta_id], NULL);
+ 	return ret;
+ }
+ 
+@@ -593,7 +593,7 @@ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
+ 
+ void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
+ {
+-	rcu_assign_pointer(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
++	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
+ 	memset(sta, 0, sizeof(struct iwl_mvm_int_sta));
+ 	sta->sta_id = IWL_MVM_STATION_COUNT;
+ }
+-- 
+1.7.9.5
+
