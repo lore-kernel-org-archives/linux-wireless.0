@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:36239 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbaCJJIs (ORCPT
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:33445 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaCWTVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 05:08:48 -0400
-Received: by mail-ee0-f49.google.com with SMTP id c41so2938873eek.22
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 02:08:46 -0700 (PDT)
-Message-ID: <1394442523.18265.9.camel@dubbel> (sfid-20140310_100855_592590_8AE34AD5)
-Subject: Re: [PATCH v5 2/3] mac80211: implement chanctx reservation
-From: Luca Coelho <lrothc@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Mon, 10 Mar 2014 11:08:43 +0200
-In-Reply-To: <CA+BoTQmOPZGLt0Bv+YSZcXVif65G6+tRP0sbhcJEvz65FjABRg@mail.gmail.com>
-References: <1394017904-4012-1-git-send-email-luca@coelho.fi>
-	 <1394017904-4012-3-git-send-email-luca@coelho.fi>
-	 <CA+BoTQkb95xGNtVUxvn_u==P6fuy-h0iNAp8pGEcq8m0ZUm-7A@mail.gmail.com>
-	 <1394174912.4192.9.camel@dubbel>
-	 <CA+BoTQmOPZGLt0Bv+YSZcXVif65G6+tRP0sbhcJEvz65FjABRg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 23 Mar 2014 15:21:22 -0400
+From: Monam Agarwal <monamagarwal123@gmail.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] net/mac80211: Use RCU_INIT_POINTER(x, NULL) in scan.c
+Date: Mon, 24 Mar 2014 00:50:22 +0530
+Message-Id: <1395602422-14534-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_202150_687612_DF8A461C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-10 at 08:03 +0100, Michal Kazior wrote:
-> On 7 March 2014 07:48, Luca Coelho <luca@coelho.fi> wrote:
-> > On Wed, 2014-03-05 at 13:04 +0100, Michal Kazior wrote:
-> >> On 5 March 2014 12:11, Luca Coelho <luca@coelho.fi> wrote:
-> >>
-> >> [...]
-> >>
-> >> > +       /* unref our reservation before assigning */
-> >> > +       ctx->refcount--;
-> >> > +       sdata->reserved_chanctx = NULL;
-> >> > +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-> >> > +       if (ret) {
-> >> > +               /* if assign fails refcount stays the same */
-> >> > +               if (ctx->refcount == 0)
-> >> > +                       ieee80211_free_chanctx(local, ctx);
-> >> > +               goto out_wake;
-> >> > +       }
-> >>
-> >> This actually won't work if there are AP VLANs (I noticed that yesterday).
-> >>
-> >> You can't call ieee80211_vif_copy_chanctx_to_vlans() here due to
-> >> current locking requirements. I have a patch for that though ;-) I'll
-> >> send it soon.
-> >
-> > How is this related to this patch?
-> >
-> > Anyway, good to know that you have fixed it. :)
-> 
-> If you re-assign a chanctx of an AP that has VLANs you leave VLANs
-> with the old chanctx pointer. Those pointers should be updated or else
-> you'll end up dereferencing an invalid pointer.
+This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
 
-I see.  So, I need to call ieee80211_vif_copy_chanctx_to_vlans() here,
-but to do that I need your patch that allows it to be called without the
-RTNL.
+The rcu_assign_pointer() ensures that the initialization of a structure       
+is carried out before storing a pointer to that structure. 
+And in the case of the NULL pointer, there is no structure to initialize. 
+So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
 
-So, now this series will depend on that patch, I'll talk to Johannes.
+Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+---
+ net/mac80211/scan.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
---
-Luca.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 836f500..f9f078b 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -309,7 +309,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 	if (local->scan_req != local->int_scan_req)
+ 		cfg80211_scan_done(local->scan_req, aborted);
+ 	local->scan_req = NULL;
+-	rcu_assign_pointer(local->scan_sdata, NULL);
++	RCU_INIT_POINTER(local->scan_sdata, NULL);
+ 
+ 	local->scanning = 0;
+ 	local->scan_chandef.chan = NULL;
+@@ -559,7 +559,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_recalc_idle(local);
+ 
+ 		local->scan_req = NULL;
+-		rcu_assign_pointer(local->scan_sdata, NULL);
++		RCU_INIT_POINTER(local->scan_sdata, NULL);
+ 	}
+ 
+ 	return rc;
+@@ -773,7 +773,7 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		int rc;
+ 
+ 		local->scan_req = NULL;
+-		rcu_assign_pointer(local->scan_sdata, NULL);
++		RCU_INIT_POINTER(local->scan_sdata, NULL);
+ 
+ 		rc = __ieee80211_start_scan(sdata, req);
+ 		if (rc) {
+@@ -1014,7 +1014,7 @@ out_free:
+ 
+ 	if (ret) {
+ 		/* Clean in case of failure after HW restart or upon resume. */
+-		rcu_assign_pointer(local->sched_scan_sdata, NULL);
++		RCU_INIT_POINTER(local->sched_scan_sdata, NULL);
+ 		local->sched_scan_req = NULL;
+ 	}
+ 
+@@ -1087,7 +1087,7 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	rcu_assign_pointer(local->sched_scan_sdata, NULL);
++	RCU_INIT_POINTER(local->sched_scan_sdata, NULL);
+ 
+ 	/* If sched scan was aborted by the driver. */
+ 	local->sched_scan_req = NULL;
+-- 
+1.7.9.5
 
