@@ -1,138 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:49618 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753824AbaCXUYH (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35736 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaCWTRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 16:24:07 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so4902183eek.13
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 13:24:06 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 4/8] ath10k: setup rx channel per ppdu
-Date: Mon, 24 Mar 2014 21:23:18 +0100
-Message-Id: <1395692603-4693-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140324_212428_397895_8FAE365F)
-In-Reply-To: <1395692603-4693-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395692603-4693-1-git-send-email-janusz.dziedzic@tieto.com>
+	Sun, 23 Mar 2014 15:17:00 -0400
+From: Monam Agarwal <monamagarwal123@gmail.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] net/mac80211: Use RCU_INIT_POINTER(x, NULL) in debugfs.c
+Date: Mon, 24 Mar 2014 00:45:59 +0530
+Message-Id: <1395602159-13427-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_201734_277061_95BA03DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup band and frequency in ieee80211_rx_status
-only once - for ppdu.
+This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+The rcu_assign_pointer() ensures that the initialization of a structure       
+is carried out before storing a pointer to that structure. 
+And in the case of the NULL pointer, there is no structure to initialize. 
+So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+
+Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |   51 +++++++++++++++++++-----------
- 1 file changed, 33 insertions(+), 18 deletions(-)
+ net/mac80211/debugfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f18e41c..4ca19f9 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -749,10 +749,29 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
- 	}
- }
- 
-+static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
-+				    struct ieee80211_rx_status *status)
-+{
-+	struct ieee80211_channel *ch;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ch = ar->scan_channel;
-+	if (!ch)
-+		ch = ar->rx_channel;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (!ch)
-+		return false;
-+
-+	status->band = ch->band;
-+	status->freq = ch->center_freq;
-+
-+	return true;
-+}
-+
- static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- {
- 	struct ieee80211_rx_status *status;
--	struct ieee80211_channel *ch;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
- 
- 	status = IEEE80211_SKB_RXCB(info->skb);
-@@ -777,21 +796,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 
- 	status->signal = info->signal;
- 
--	spin_lock_bh(&ar->data_lock);
--	ch = ar->scan_channel;
--	if (!ch)
--		ch = ar->rx_channel;
--	spin_unlock_bh(&ar->data_lock);
--
--	if (!ch) {
--		ath10k_warn("no channel configured; ignoring frame!\n");
--		dev_kfree_skb_any(info->skb);
--		return;
--	}
--
--	ath10k_htt_rx_h_rates(ar, info, ch->band, status);
--	status->band = ch->band;
--	status->freq = ch->center_freq;
-+	ath10k_htt_rx_h_rates(ar, info, status->band, status);
- 
- 	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
- 		/* TSF available only in 32-bit */
-@@ -1137,7 +1142,8 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
- 
- static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 					struct sk_buff *head,
--					struct htt_rx_info *info)
-+					struct htt_rx_info *info,
-+					bool channel_set)
- {
- 	enum htt_rx_mpdu_status status = info->status;
- 
-@@ -1158,6 +1164,11 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 		return false;
- 	}
- 
-+	if (!channel_set) {
-+		ath10k_warn("no channel configured; ignoring frame!\n");
-+		return false;
-+	}
-+
- 	/* Skip mgmt frames while we handle this in WMI */
- 	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
- 	    ath10k_htt_rx_is_mgmt(head)) {
-@@ -1193,6 +1204,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	int num_mpdu_ranges;
- 	int fw_desc_len;
- 	u8 *fw_desc;
-+	bool channel_set;
- 	int i, j;
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
-@@ -1210,6 +1222,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	info.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
- 	info.signal += rx->ppdu.combined_rssi;
- 
-+	channel_set = ath10k_htt_rx_h_channel(htt->ar, &info.rx_status);
-+
- 	info.rate.info0 = rx->ppdu.info0;
- 	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
- 	info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
-@@ -1236,7 +1250,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 							 &msdu_tail);
- 
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
--							 &info)) {
-+							 &info,
-+							 channel_set)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
- 			}
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index fa16e54..0e963bc 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -128,7 +128,7 @@ static ssize_t sta_tx_latency_stat_write(struct file *file,
+ 	if (!strcmp(buf, TX_LATENCY_DISABLED)) {
+ 		if (!tx_latency)
+ 			goto unlock;
+-		rcu_assign_pointer(local->tx_latency, NULL);
++		RCU_INIT_POINTER(local->tx_latency, NULL);
+ 		synchronize_rcu();
+ 		kfree(tx_latency);
+ 		goto unlock;
 -- 
 1.7.9.5
 
