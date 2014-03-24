@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:38237 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755461AbaCROsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:48:35 -0400
-Message-ID: <1395154087.15856.45.camel@dubbel> (sfid-20140318_154838_451997_47A8A861)
-From: Luca Coelho <luca@coelho.fi>
+Received: from mail.candelatech.com ([208.74.158.172]:39601 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675AbaCXQui (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2014 12:50:38 -0400
+Message-ID: <53306239.2020006@candelatech.com> (sfid-20140324_175059_432744_B2FEC4F7)
+Date: Mon, 24 Mar 2014 09:50:01 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Tue, 18 Mar 2014 16:48:07 +0200
-In-Reply-To: <CA+BoTQkpjC+LeWfNvaNXTwTsHgWAg7-umDnq4CjWk1oBvvo+9g@mail.gmail.com>
-References: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
-	 <1394717621-5608-4-git-send-email-luciano.coelho@intel.com>
-	 <CA+BoTQkpjC+LeWfNvaNXTwTsHgWAg7-umDnq4CjWk1oBvvo+9g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v9 3/4] mac80211: implement chanctx reservation
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k: Add debugging for tx-credits usage.
+References: <1395428150-31996-1-git-send-email-greearb@candelatech.com> <871txr7svw.fsf@kamboji.qca.qualcomm.com> <CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>
+In-Reply-To: <CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-03-18 at 15:10 +0100, Michal Kazior wrote:
-> On 13 March 2014 14:33, Luciano Coelho <luciano.coelho@intel.com> wrote:
-> 
-> [...]
-> 
-> > +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-> > +       if (old_ctx->refcount == 0)
-> > +               ieee80211_free_chanctx(local, old_ctx);
-> > +       if (ret) {
-> > +               /* if assign fails refcount stays the same */
-> > +               if (ctx->refcount == 0)
-> > +                       ieee80211_free_chanctx(local, ctx);
-> > +               goto out;
-> > +       }
-> > +
-> > +       __ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-> 
-> I'm sorry I didn't notice that this earlier :-( but this should be
-> guarded by if (sdata->vif.type == NL80211_IFTYPE_AP). Otherwise you
-> hit WARN_ON for non-AP (e.g. STA) chanctx reservation.
+On 03/24/2014 04:21 AM, Michal Kazior wrote:
+> On 24 March 2014 12:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-Yeah, how didn't I notice that? Though this WARN_ON is unnecessary in my
-opinion, because what happens now is that we have to check for the same
-thing (ie. sdata->vif.type) twice.
+>>> -     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
+>>> +     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+>>
+>> Using line numbers in debug messages is very cumbersome. Some people
+>> cherry pick patches, have their own changes and whatnot which will make
+>> it more difficult to read the debug logs. Isn't there any better way to
+>> do this?
+> 
+> I would prefer to explicitly wait for tx credit replenishment in
+> ath10k_wmi_cmd_send() after a command is sent instead of all these
+> prints. This way you can get a full call trace if it times out.
 
-Thanks for catching it! I'll fix.
+Would that be a performance problem (by effectively allowing only a single
+item to be sent to the firmware at any given time?)
 
---
-Luca.
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
