@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:55337 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbaC1OuC convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:40794 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109AbaCXUZN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:50:02 -0400
-Received: by mail-we0-f182.google.com with SMTP id p61so2781559wes.13
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:50:00 -0700 (PDT)
-Content-Type: text/plain; charset=US-ASCII
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: Setting txpower fails?
-From: Bruno Antunes <baantunes@gmail.com>
-In-Reply-To: <53358920.6030304@candelatech.com>
-Date: Fri, 28 Mar 2014 14:49:58 +0000
-Cc: linux-wireless@vger.kernel.org, sedat.dilek@gmail.com
-Message-Id: <8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com> (sfid-20140328_155007_819287_01307E54)
-References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com> <533584BF.70604@candelatech.com> <4CC49FDB-1767-4A3F-9C1D-8F8DCF612233@gmail.com> <53358920.6030304@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
+	Mon, 24 Mar 2014 16:25:13 -0400
+Received: by mail-ee0-f54.google.com with SMTP id d49so4940823eek.27
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 13:25:12 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
+Date: Mon, 24 Mar 2014 21:24:58 +0100
+Message-Id: <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140324_212521_424705_8B8F9E2E)
+In-Reply-To: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+RSSI and RATES fields are valid only when START_VALID
+bit is set. So, in current implementation we have to
+remember/caclulate them when START_VALID and report the same
+when only END_VALID is set.
+Currently during heavy traffic we could have:
+- 10 packets with START_VALID - correct RSSI and RATES
+- 10 packets with END_VALID
+- 10 packets with START_VALID - correct RSSI and RATES
+- 10 packets with END_VALID
+...
+Next using monitor interface we will see:
+- 10 packets with correct rssi/rates
+- 10 packets with rssi=-95/rate=6Mbps
 
-On 28 Mar, 2014, at 14:37 , Ben Greear <greearb@candelatech.com> wrote:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-> On 03/28/2014 07:29 AM, Bruno Antunes wrote:
->> Hi Ben,
->> I think you are missing some parameters
->> 
->> On 28 Mar, 2014, at 14:18 , Ben Greear <greearb@candelatech.com> wrote:
->> 
->>> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
->>>> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
->>>>> Any idea why this isn't working?
->>>>> 
->>>>> Kernel is 3.9.11+, driver is ath9k.
->>>>> 
->>>>> [root@ct523-9292 lanforge]# iwconfig wlan0
->>>>> wlan0     IEEE 802.11abgn  ESSID:off/any
->>>>>           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>>>>           Retry short limit:7   RTS thr:off   Fragment thr:off
->>>>>           Encryption key:off
->>>>>           Power Management:off
->>>>> 
->>>>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
->> 
->> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
->> 
->>  It should be something like:
->> 
->> iw dev wlan0 set txpower fixed 1000
-> 
-> Ok, that doesn't give an error, but 'iwconfig' still shows 16 dBm,
-> and I don't see any way to get 'iw' to print out the power itself?
-> 
-> So, not sure if it is really working or not.
-It works , at least on iw 3.10.
-
-If you have debug enabled you can see the value changing.
-
-On a openwrt system
-
-root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 900
-root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
-9
-root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 1500
-root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
-15
-
-And the received power changes on the station confirming that is making effect.
-
-Bruno
-
-> 
-> Thanks,
-> Ben
-> 
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index be25e16..f7ecc10 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+-	memset(rx_status, 0, sizeof(*rx_status));
+-
+ 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
+ 	fw_desc = (u8 *)&rx->fw_desc;
+ 
+@@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+ 
+ 	/* Fill this once, while this is per-ppdu */
+-	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+-	rx_status->signal += rx->ppdu.combined_rssi;
++	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
++		memset(rx_status, 0, sizeof(*rx_status));
++		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
++				     rx->ppdu.combined_rssi;
++	}
+ 
+ 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+ 		/* TSF available only in 32-bit */
+-- 
+1.7.9.5
 
