@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:35665 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758391AbaCSJEr (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:36868 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbaCXI7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 05:04:47 -0400
-Received: by mail-pb0-f51.google.com with SMTP id uo5so8630019pbc.38
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 02:04:47 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/3] cfg80211: remove unnecessary check
-Date: Wed, 19 Mar 2014 17:04:35 +0800
-Message-Id: <195ce75d7f8c2db484ccea7453147289e880c148.1395219362.git.gamerh2o@gmail.com> (sfid-20140319_100452_933448_8E2678EE)
+	Mon, 24 Mar 2014 04:59:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
+References: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
+Date: Mon, 24 Mar 2014 09:59:18 +0100
+Message-ID: <CANq1E4Rb=gqmo+9xGnuC9N2gWb2TqOskaMDhFU9wn28z+HZa4g@mail.gmail.com> (sfid-20140324_095942_716169_171F9849)
+Subject: Re: [PATCH v4 0/4] Provide netdev naming-policy via sysfs
+From: David Herrmann <dh.herrmann@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>, Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	David Herrmann <dh.herrmann@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RCU pointer bss->pub.beacon_ies is checked before in previous
-statement:
+Hi Dave
 
-if (rcu_access_pointer(bss->pub.beacon_ies))
-	continue;
+Any comments on this?
 
-There is no need to check it twice(and in the wrong way :) ).
+Thanks
+David
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/wireless/scan.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d1ed4ae..7297d18 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -659,9 +659,6 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *dev,
- 			continue;
- 		if (ssidlen && ie[1] != ssidlen)
- 			continue;
--		/* that would be odd ... */
--		if (bss->pub.beacon_ies)
--			continue;
- 		if (WARN_ON_ONCE(bss->pub.hidden_beacon_bss))
- 			continue;
- 		if (WARN_ON_ONCE(!list_empty(&bss->hidden_list)))
--- 
-1.8.5.3
-
+On Mon, Mar 17, 2014 at 8:42 PM, David Herrmann <dh.herrmann@gmail.com> wrote:
+> Hi
+>
+> This is v4 of the netdev naming-policy series. You can find v1 here:
+>   http://thread.gmane.org/gmane.linux.kernel/1657015
+> Changes since v1:
+>   - fix mac80211 core to set NET_NAME_ENUM for wlan%d kernel-provided names
+>   - acked-by udev developers
+>   - avoid padding after name_assign_type in "struct net_device" (David Laight)
+>   - move API constants to uapi header (Ben Hutchings)
+>
+>
+> This series implements a new sysfs attribute for netdevs called
+> "name_assign_type". It provides an integer that describes where an interface
+> name comes from. See Patch #1 for a description of this attribute. It is
+> modelled after the existing "addr_assign_type" attribute.
+>
+> The main use-case is to allow udev to skip applying reliable ifnames to virtual
+> devices. For instance, if wifi-P2P devices are created, wpas already provides a
+> suitable naming-policy and udev shouldn't touch these devices. Same is true for
+> other virtual devices.
+> The idea is that if a device-name was provided by user-space, we should always
+> prefer fixing this naming-policy instead of making udev rename the device. For
+> kernel provided names that's hardly possible, though. Providing the
+> naming-policy source via sysfs is thus a simple way to see whether renames are
+> needed.
+>
+> Additionally, this field allows to detect whether a netdev has been manually
+> renamed, which is quite useful for debugging and during crash-recovery.
+> Furthermore, it fixes real udev bugs if a netdev is already renamed in the
+> initrd and udev only runs in the real root. Detecting renames avoids overwriting
+> custom user provided names.
+>
+> Thanks
+> David
+>
+> David Herrmann (4):
+>   net: add name_assign_type netdev attribute
+>   mac80211: set NET_NAME_USER for user-space created ifs
+>   ath6kl: set NET_NAME_USER for P2P ifs
+>   brcmfmac: set NET_NAME_USER for P2P ifs
+>
+>  drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
+>  drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
+>  drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
+>  drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+>  include/linux/netdevice.h                     | 2 ++
+>  include/uapi/linux/netdevice.h                | 4 ++++
+>  net/core/dev.c                                | 7 +++++++
+>  net/core/net-sysfs.c                          | 2 ++
+>  net/core/rtnetlink.c                          | 2 ++
+>  net/mac80211/cfg.c                            | 2 +-
+>  net/mac80211/ieee80211_i.h                    | 1 +
+>  net/mac80211/iface.c                          | 2 ++
+>  net/mac80211/main.c                           | 2 +-
+>  13 files changed, 30 insertions(+), 5 deletions(-)
+>
+> --
+> 1.9.0
+>
