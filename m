@@ -1,367 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53739 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755644AbaCOQSZ (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:61500 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623AbaCXUYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Mar 2014 12:18:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/5] brcmfmac: Protect tx seq number for data and control
-Date: Sat, 15 Mar 2014 17:18:18 +0100
-Message-ID: <1394900301-15417-3-git-send-email-arend@broadcom.com> (sfid-20140315_171832_932975_336A1DBA)
-In-Reply-To: <1394900301-15417-1-git-send-email-arend@broadcom.com>
-References: <1394900301-15417-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Mar 2014 16:24:02 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so4874342eek.38
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 13:24:00 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 1/8] ath10k: move rx related functions to htt_rx.c
+Date: Mon, 24 Mar 2014 21:23:15 +0100
+Message-Id: <1395692603-4693-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140324_212409_128998_8DA162BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+No functional changes.
 
-SDIO tx uses a sequence number which is common for data
-and control. This requires that access to this sequence number
-is protected. A mutex was used to achieve this, but it also
-required the reordering of code for tx control.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  214 ++++++++++----------
- 1 file changed, 108 insertions(+), 106 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  183 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/txrx.c   |  183 ------------------------------
+ drivers/net/wireless/ath/ath10k/txrx.h   |    1 -
+ 3 files changed, 183 insertions(+), 184 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 4aa8678..bcdaf72 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -458,10 +458,11 @@ struct brcmf_sdio {
- 	bool alp_only;		/* Don't use HT clock (ALP only) */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a407d98..c07fc8f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -636,6 +636,189 @@ struct amsdu_subframe_hdr {
+ 	__be16 len;
+ } __packed;
  
- 	u8 *ctrl_frame_buf;
--	u32 ctrl_frame_len;
-+	u16 ctrl_frame_len;
- 	bool ctrl_frame_stat;
- 
--	spinlock_t txqlock;
-+	spinlock_t txq_lock;		/* protect bus->txq */
-+	struct semaphore tx_seq_lock;	/* protect bus->tx_seq */
- 	wait_queue_head_t ctrl_wait;
- 	wait_queue_head_t dcmd_resp_wait;
- 
-@@ -2316,13 +2317,15 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	/* Send frames until the limit or some other event */
- 	for (cnt = 0; (cnt < maxframes) && data_ok(bus);) {
- 		pkt_num = 1;
--		__skb_queue_head_init(&pktq);
-+		if (down_interruptible(&bus->tx_seq_lock))
-+			return cnt;
- 		if (bus->txglom)
- 			pkt_num = min_t(u8, bus->tx_max - bus->tx_seq,
- 					bus->sdiodev->txglomsz);
- 		pkt_num = min_t(u32, pkt_num,
- 				brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol));
--		spin_lock_bh(&bus->txqlock);
-+		__skb_queue_head_init(&pktq);
-+		spin_lock_bh(&bus->txq_lock);
- 		for (i = 0; i < pkt_num; i++) {
- 			pkt = brcmu_pktq_mdeq(&bus->txq, tx_prec_map,
- 					      &prec_out);
-@@ -2330,11 +2333,15 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 				break;
- 			__skb_queue_tail(&pktq, pkt);
- 		}
--		spin_unlock_bh(&bus->txqlock);
--		if (i == 0)
-+		spin_unlock_bh(&bus->txq_lock);
-+		if (i == 0) {
-+			up(&bus->tx_seq_lock);
- 			break;
-+		}
- 
- 		ret = brcmf_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
-+		up(&bus->tx_seq_lock);
++static const u8 rx_legacy_rate_idx[] = {
++	3,	/* 0x00  - 11Mbps  */
++	2,	/* 0x01  - 5.5Mbps */
++	1,	/* 0x02  - 2Mbps   */
++	0,	/* 0x03  - 1Mbps   */
++	3,	/* 0x04  - 11Mbps  */
++	2,	/* 0x05  - 5.5Mbps */
++	1,	/* 0x06  - 2Mbps   */
++	0,	/* 0x07  - 1Mbps   */
++	10,	/* 0x08  - 48Mbps  */
++	8,	/* 0x09  - 24Mbps  */
++	6,	/* 0x0A  - 12Mbps  */
++	4,	/* 0x0B  - 6Mbps   */
++	11,	/* 0x0C  - 54Mbps  */
++	9,	/* 0x0D  - 36Mbps  */
++	7,	/* 0x0E  - 18Mbps  */
++	5,	/* 0x0F  - 9Mbps   */
++};
 +
- 		cnt += i;
- 
- 		/* In poll mode, need to check for other events */
-@@ -2363,6 +2370,68 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	return cnt;
- }
- 
-+static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
++static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
++			     enum ieee80211_band band,
++			     struct ieee80211_rx_status *status)
 +{
-+	u8 doff;
-+	u16 pad;
-+	uint retries = 0;
-+	struct brcmf_sdio_hdrinfo hd_info = {0};
-+	int ret;
++	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
++	u8 info0 = info->rate.info0;
++	u32 info1 = info->rate.info1;
++	u32 info2 = info->rate.info2;
++	u8 preamble = 0;
 +
-+	brcmf_dbg(TRACE, "Enter\n");
++	/* Check if valid fields */
++	if (!(info0 & HTT_RX_INDICATION_INFO0_START_VALID))
++		return;
 +
-+	/* Back the pointer to make room for bus header */
-+	frame -= bus->tx_hdrlen;
-+	len += bus->tx_hdrlen;
++	preamble = MS(info1, HTT_RX_INDICATION_INFO1_PREAMBLE_TYPE);
 +
-+	/* Add alignment padding (optional for ctl frames) */
-+	doff = ((unsigned long)frame % bus->head_align);
-+	if (doff) {
-+		frame -= doff;
-+		len += doff;
-+		memset(frame + bus->tx_hdrlen, 0, doff);
++	switch (preamble) {
++	case HTT_RX_LEGACY:
++		cck = info0 & HTT_RX_INDICATION_INFO0_LEGACY_RATE_CCK;
++		rate = MS(info0, HTT_RX_INDICATION_INFO0_LEGACY_RATE);
++		rate_idx = 0;
++
++		if (rate < 0x08 || rate > 0x0F)
++			break;
++
++		switch (band) {
++		case IEEE80211_BAND_2GHZ:
++			if (cck)
++				rate &= ~BIT(3);
++			rate_idx = rx_legacy_rate_idx[rate];
++			break;
++		case IEEE80211_BAND_5GHZ:
++			rate_idx = rx_legacy_rate_idx[rate];
++			/* We are using same rate table registering
++			   HW - ath10k_rates[]. In case of 5GHz skip
++			   CCK rates, so -4 here */
++			rate_idx -= 4;
++			break;
++		default:
++			break;
++		}
++
++		status->rate_idx = rate_idx;
++		break;
++	case HTT_RX_HT:
++	case HTT_RX_HT_WITH_TXBF:
++		/* HT-SIG - Table 20-11 in info1 and info2 */
++		mcs = info1 & 0x1F;
++		nss = mcs >> 3;
++		bw = (info1 >> 7) & 1;
++		sgi = (info2 >> 7) & 1;
++
++		status->rate_idx = mcs;
++		status->flag |= RX_FLAG_HT;
++		if (sgi)
++			status->flag |= RX_FLAG_SHORT_GI;
++		if (bw)
++			status->flag |= RX_FLAG_40MHZ;
++		break;
++	case HTT_RX_VHT:
++	case HTT_RX_VHT_WITH_TXBF:
++		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
++		   TODO check this */
++		mcs = (info2 >> 4) & 0x0F;
++		nss = ((info1 >> 10) & 0x07) + 1;
++		bw = info1 & 3;
++		sgi = info2 & 1;
++
++		status->rate_idx = mcs;
++		status->vht_nss = nss;
++
++		if (sgi)
++			status->flag |= RX_FLAG_SHORT_GI;
++
++		switch (bw) {
++		/* 20MHZ */
++		case 0:
++			break;
++		/* 40MHZ */
++		case 1:
++			status->flag |= RX_FLAG_40MHZ;
++			break;
++		/* 80MHZ */
++		case 2:
++			status->vht_flag |= RX_VHT_FLAG_80MHZ;
++		}
++
++		status->flag |= RX_FLAG_VHT;
++		break;
++	default:
++		break;
 +	}
-+
-+	/* Round send length to next SDIO block */
-+	pad = 0;
-+	if (bus->roundup && bus->blocksize && (len > bus->blocksize)) {
-+		pad = bus->blocksize - (len % bus->blocksize);
-+		if ((pad > bus->roundup) || (pad >= bus->blocksize))
-+			pad = 0;
-+	} else if (len % bus->head_align) {
-+		pad = bus->head_align - (len % bus->head_align);
-+	}
-+	len += pad;
-+
-+	hd_info.len = len - pad;
-+	hd_info.channel = SDPCM_CONTROL_CHANNEL;
-+	hd_info.dat_offset = doff + bus->tx_hdrlen;
-+	hd_info.seq_num = bus->tx_seq;
-+	hd_info.lastfrm = true;
-+	hd_info.tail_pad = pad;
-+	brcmf_sdio_hdpack(bus, frame, &hd_info);
-+
-+	if (bus->txglom)
-+		brcmf_sdio_update_hwhdr(frame, len);
-+
-+	brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_CTL_ON(),
-+			   frame, len, "Tx Frame:\n");
-+	brcmf_dbg_hex_dump(!(BRCMF_BYTES_ON() && BRCMF_CTL_ON()) &&
-+			   BRCMF_HDRS_ON(),
-+			   frame, min_t(u16, len, 16), "TxHdr:\n");
-+
-+	do {
-+		ret = brcmf_sdiod_send_buf(bus->sdiodev, frame, len);
-+
-+		if (ret < 0)
-+			brcmf_sdio_txfail(bus);
-+		else
-+			bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQ_WRAP;
-+	} while (ret < 0 && retries++ < TXRETRIES);
-+
-+	return ret;
 +}
 +
- static void brcmf_sdio_bus_stop(struct device *dev)
++static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
++{
++	struct ieee80211_rx_status *status;
++	struct ieee80211_channel *ch;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
++
++	status = IEEE80211_SKB_RXCB(info->skb);
++	memset(status, 0, sizeof(*status));
++
++	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
++		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
++				RX_FLAG_MMIC_STRIPPED;
++		hdr->frame_control = __cpu_to_le16(
++				__le16_to_cpu(hdr->frame_control) &
++				~IEEE80211_FCTL_PROTECTED);
++	}
++
++	if (info->mic_err)
++		status->flag |= RX_FLAG_MMIC_ERROR;
++
++	if (info->fcs_err)
++		status->flag |= RX_FLAG_FAILED_FCS_CRC;
++
++	if (info->amsdu_more)
++		status->flag |= RX_FLAG_AMSDU_MORE;
++
++	status->signal = info->signal;
++
++	spin_lock_bh(&ar->data_lock);
++	ch = ar->scan_channel;
++	if (!ch)
++		ch = ar->rx_channel;
++	spin_unlock_bh(&ar->data_lock);
++
++	if (!ch) {
++		ath10k_warn("no channel configured; ignoring frame!\n");
++		dev_kfree_skb_any(info->skb);
++		return;
++	}
++
++	process_rx_rates(ar, info, ch->band, status);
++	status->band = ch->band;
++	status->freq = ch->center_freq;
++
++	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
++		/* TSF available only in 32-bit */
++		status->mactime = info->tsf & 0xffffffff;
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
++
++	ath10k_dbg(ATH10K_DBG_DATA,
++		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
++		   info->skb,
++		   info->skb->len,
++		   status->flag == 0 ? "legacy" : "",
++		   status->flag & RX_FLAG_HT ? "ht" : "",
++		   status->flag & RX_FLAG_VHT ? "vht" : "",
++		   status->flag & RX_FLAG_40MHZ ? "40" : "",
++		   status->vht_flag & RX_VHT_FLAG_80MHZ ? "80" : "",
++		   status->flag & RX_FLAG_SHORT_GI ? "sgi " : "",
++		   status->rate_idx,
++		   status->vht_nss,
++		   status->freq,
++		   status->band, status->flag, info->fcs_err);
++	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
++			info->skb->data, info->skb->len);
++
++	ieee80211_rx(ar->hw, info->skb);
++}
++
+ static int ath10k_htt_rx_nwifi_hdrlen(struct ieee80211_hdr *hdr)
  {
- 	u32 local_hostintmask;
-@@ -2596,26 +2665,23 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 
- 	brcmf_sdio_clrintr(bus);
- 
--	if (data_ok(bus) && bus->ctrl_frame_stat &&
--	    (bus->clkstate == CLK_AVAIL)) {
--
--		sdio_claim_host(bus->sdiodev->func[1]);
--		err = brcmf_sdiod_send_buf(bus->sdiodev, bus->ctrl_frame_buf,
--					   (u32)bus->ctrl_frame_len);
--
--		if (err < 0)
--			brcmf_sdio_txfail(bus);
--		else
--			bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQ_WRAP;
-+	if (bus->ctrl_frame_stat && (bus->clkstate == CLK_AVAIL) &&
-+	    (down_interruptible(&bus->tx_seq_lock) == 0)) {
-+		if (data_ok(bus)) {
-+			sdio_claim_host(bus->sdiodev->func[1]);
-+			err = brcmf_sdio_tx_ctrlframe(bus,  bus->ctrl_frame_buf,
-+						      bus->ctrl_frame_len);
-+			sdio_release_host(bus->sdiodev->func[1]);
- 
--		sdio_release_host(bus->sdiodev->func[1]);
--		bus->ctrl_frame_stat = false;
--		brcmf_sdio_wait_event_wakeup(bus);
-+			bus->ctrl_frame_stat = false;
-+			brcmf_sdio_wait_event_wakeup(bus);
-+		}
-+		up(&bus->tx_seq_lock);
- 	}
- 	/* Send queued frames (limit 1 if rx may still be pending) */
--	else if ((bus->clkstate == CLK_AVAIL) && !atomic_read(&bus->fcstate) &&
--		 brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) && txlimit
--		 && data_ok(bus)) {
-+	if ((bus->clkstate == CLK_AVAIL) && !atomic_read(&bus->fcstate) &&
-+	    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) && txlimit &&
-+	    data_ok(bus)) {
- 		framecnt = bus->rxpending ? min(txlimit, bus->txminmax) :
- 					    txlimit;
- 		brcmf_sdio_sendfromq(bus, framecnt);
-@@ -2649,7 +2715,6 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
--	ulong flags;
- 
- 	brcmf_dbg(TRACE, "Enter: pkt: data %p len %d\n", pkt->data, pkt->len);
- 
-@@ -2665,7 +2730,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	bus->sdcnt.fcqueued++;
- 
- 	/* Priority based enq */
--	spin_lock_irqsave(&bus->txqlock, flags);
-+	spin_lock_bh(&bus->txq_lock);
- 	/* reset bus_flags in packet cb */
- 	*(u16 *)(pkt->cb) = 0;
- 	if (!brcmf_c_prec_enq(bus->sdiodev->dev, &bus->txq, pkt, prec)) {
-@@ -2680,7 +2745,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 		bus->txoff = true;
- 		brcmf_txflowblock(bus->sdiodev->dev, true);
- 	}
--	spin_unlock_irqrestore(&bus->txqlock, flags);
-+	spin_unlock_bh(&bus->txq_lock);
- 
- #ifdef DEBUG
- 	if (pktq_plen(&bus->txq, prec) > qcount[prec])
-@@ -2775,87 +2840,27 @@ break2:
+ 	/* nwifi header is padded to 4 bytes. this fixes 4addr rx */
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 0541dd9..82669a7 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -100,189 +100,6 @@ exit:
+ 		wake_up(&htt->empty_tx_wq);
  }
- #endif				/* DEBUG */
  
--static int brcmf_sdio_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
+-static const u8 rx_legacy_rate_idx[] = {
+-	3,	/* 0x00  - 11Mbps  */
+-	2,	/* 0x01  - 5.5Mbps */
+-	1,	/* 0x02  - 2Mbps   */
+-	0,	/* 0x03  - 1Mbps   */
+-	3,	/* 0x04  - 11Mbps  */
+-	2,	/* 0x05  - 5.5Mbps */
+-	1,	/* 0x06  - 2Mbps   */
+-	0,	/* 0x07  - 1Mbps   */
+-	10,	/* 0x08  - 48Mbps  */
+-	8,	/* 0x09  - 24Mbps  */
+-	6,	/* 0x0A  - 12Mbps  */
+-	4,	/* 0x0B  - 6Mbps   */
+-	11,	/* 0x0C  - 54Mbps  */
+-	9,	/* 0x0D  - 36Mbps  */
+-	7,	/* 0x0E  - 18Mbps  */
+-	5,	/* 0x0F  - 9Mbps   */
+-};
+-
+-static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
+-			     enum ieee80211_band band,
+-			     struct ieee80211_rx_status *status)
 -{
--	int ret;
+-	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+-	u8 info0 = info->rate.info0;
+-	u32 info1 = info->rate.info1;
+-	u32 info2 = info->rate.info2;
+-	u8 preamble = 0;
 -
--	bus->ctrl_frame_stat = false;
--	ret = brcmf_sdiod_send_buf(bus->sdiodev, frame, len);
+-	/* Check if valid fields */
+-	if (!(info0 & HTT_RX_INDICATION_INFO0_START_VALID))
+-		return;
 -
--	if (ret < 0)
--		brcmf_sdio_txfail(bus);
--	else
--		bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQ_WRAP;
+-	preamble = MS(info1, HTT_RX_INDICATION_INFO1_PREAMBLE_TYPE);
 -
--	return ret;
+-	switch (preamble) {
+-	case HTT_RX_LEGACY:
+-		cck = info0 & HTT_RX_INDICATION_INFO0_LEGACY_RATE_CCK;
+-		rate = MS(info0, HTT_RX_INDICATION_INFO0_LEGACY_RATE);
+-		rate_idx = 0;
+-
+-		if (rate < 0x08 || rate > 0x0F)
+-			break;
+-
+-		switch (band) {
+-		case IEEE80211_BAND_2GHZ:
+-			if (cck)
+-				rate &= ~BIT(3);
+-			rate_idx = rx_legacy_rate_idx[rate];
+-			break;
+-		case IEEE80211_BAND_5GHZ:
+-			rate_idx = rx_legacy_rate_idx[rate];
+-			/* We are using same rate table registering
+-			   HW - ath10k_rates[]. In case of 5GHz skip
+-			   CCK rates, so -4 here */
+-			rate_idx -= 4;
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		status->rate_idx = rate_idx;
+-		break;
+-	case HTT_RX_HT:
+-	case HTT_RX_HT_WITH_TXBF:
+-		/* HT-SIG - Table 20-11 in info1 and info2 */
+-		mcs = info1 & 0x1F;
+-		nss = mcs >> 3;
+-		bw = (info1 >> 7) & 1;
+-		sgi = (info2 >> 7) & 1;
+-
+-		status->rate_idx = mcs;
+-		status->flag |= RX_FLAG_HT;
+-		if (sgi)
+-			status->flag |= RX_FLAG_SHORT_GI;
+-		if (bw)
+-			status->flag |= RX_FLAG_40MHZ;
+-		break;
+-	case HTT_RX_VHT:
+-	case HTT_RX_VHT_WITH_TXBF:
+-		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
+-		   TODO check this */
+-		mcs = (info2 >> 4) & 0x0F;
+-		nss = ((info1 >> 10) & 0x07) + 1;
+-		bw = info1 & 3;
+-		sgi = info2 & 1;
+-
+-		status->rate_idx = mcs;
+-		status->vht_nss = nss;
+-
+-		if (sgi)
+-			status->flag |= RX_FLAG_SHORT_GI;
+-
+-		switch (bw) {
+-		/* 20MHZ */
+-		case 0:
+-			break;
+-		/* 40MHZ */
+-		case 1:
+-			status->flag |= RX_FLAG_40MHZ;
+-			break;
+-		/* 80MHZ */
+-		case 2:
+-			status->vht_flag |= RX_VHT_FLAG_80MHZ;
+-		}
+-
+-		status->flag |= RX_FLAG_VHT;
+-		break;
+-	default:
+-		break;
+-	}
 -}
 -
- static int
- brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+-void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+-{
+-	struct ieee80211_rx_status *status;
+-	struct ieee80211_channel *ch;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
+-
+-	status = IEEE80211_SKB_RXCB(info->skb);
+-	memset(status, 0, sizeof(*status));
+-
+-	if (info->encrypt_type != HTT_RX_MPDU_ENCRYPT_NONE) {
+-		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
+-				RX_FLAG_MMIC_STRIPPED;
+-		hdr->frame_control = __cpu_to_le16(
+-				__le16_to_cpu(hdr->frame_control) &
+-				~IEEE80211_FCTL_PROTECTED);
+-	}
+-
+-	if (info->mic_err)
+-		status->flag |= RX_FLAG_MMIC_ERROR;
+-
+-	if (info->fcs_err)
+-		status->flag |= RX_FLAG_FAILED_FCS_CRC;
+-
+-	if (info->amsdu_more)
+-		status->flag |= RX_FLAG_AMSDU_MORE;
+-
+-	status->signal = info->signal;
+-
+-	spin_lock_bh(&ar->data_lock);
+-	ch = ar->scan_channel;
+-	if (!ch)
+-		ch = ar->rx_channel;
+-	spin_unlock_bh(&ar->data_lock);
+-
+-	if (!ch) {
+-		ath10k_warn("no channel configured; ignoring frame!\n");
+-		dev_kfree_skb_any(info->skb);
+-		return;
+-	}
+-
+-	process_rx_rates(ar, info, ch->band, status);
+-	status->band = ch->band;
+-	status->freq = ch->center_freq;
+-
+-	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+-		/* TSF available only in 32-bit */
+-		status->mactime = info->tsf & 0xffffffff;
+-		status->flag |= RX_FLAG_MACTIME_END;
+-	}
+-
+-	ath10k_dbg(ATH10K_DBG_DATA,
+-		   "rx skb %p len %u %s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i\n",
+-		   info->skb,
+-		   info->skb->len,
+-		   status->flag == 0 ? "legacy" : "",
+-		   status->flag & RX_FLAG_HT ? "ht" : "",
+-		   status->flag & RX_FLAG_VHT ? "vht" : "",
+-		   status->flag & RX_FLAG_40MHZ ? "40" : "",
+-		   status->vht_flag & RX_VHT_FLAG_80MHZ ? "80" : "",
+-		   status->flag & RX_FLAG_SHORT_GI ? "sgi " : "",
+-		   status->rate_idx,
+-		   status->vht_nss,
+-		   status->freq,
+-		   status->band, status->flag, info->fcs_err);
+-	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
+-			info->skb->data, info->skb->len);
+-
+-	ieee80211_rx(ar->hw, info->skb);
+-}
+-
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+ 				     const u8 *addr)
  {
--	u8 *frame;
--	u16 len, pad;
--	uint retries = 0;
--	u8 doff = 0;
--	int ret = -1;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
--	struct brcmf_sdio_hdrinfo hd_info = {0};
-+	int ret = -1;
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
+index 356dc9c..aee3e20 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.h
++++ b/drivers/net/wireless/ath/ath10k/txrx.h
+@@ -21,7 +21,6 @@
  
- 	brcmf_dbg(TRACE, "Enter\n");
+ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 			  const struct htt_tx_done *tx_done);
+-void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info);
  
--	/* Back the pointer to make a room for bus header */
--	frame = msg - bus->tx_hdrlen;
--	len = (msglen += bus->tx_hdrlen);
--
--	/* Add alignment padding (optional for ctl frames) */
--	doff = ((unsigned long)frame % bus->head_align);
--	if (doff) {
--		frame -= doff;
--		len += doff;
--		msglen += doff;
--		memset(frame, 0, doff + bus->tx_hdrlen);
--	}
--	/* precondition: doff < bus->head_align */
--	doff += bus->tx_hdrlen;
--
--	/* Round send length to next SDIO block */
--	pad = 0;
--	if (bus->roundup && bus->blocksize && (len > bus->blocksize)) {
--		pad = bus->blocksize - (len % bus->blocksize);
--		if ((pad > bus->roundup) || (pad >= bus->blocksize))
--			pad = 0;
--	} else if (len % bus->head_align) {
--		pad = bus->head_align - (len % bus->head_align);
--	}
--	len += pad;
--
--	/* precondition: IS_ALIGNED((unsigned long)frame, 2) */
--
--	/* Make sure backplane clock is on */
--	sdio_claim_host(bus->sdiodev->func[1]);
--	brcmf_sdio_bus_sleep(bus, false, false);
--	sdio_release_host(bus->sdiodev->func[1]);
--
--	hd_info.len = (u16)msglen;
--	hd_info.channel = SDPCM_CONTROL_CHANNEL;
--	hd_info.dat_offset = doff;
--	hd_info.seq_num = bus->tx_seq;
--	hd_info.lastfrm = true;
--	hd_info.tail_pad = pad;
--	brcmf_sdio_hdpack(bus, frame, &hd_info);
--
--	if (bus->txglom)
--		brcmf_sdio_update_hwhdr(frame, len);
-+	if (down_interruptible(&bus->tx_seq_lock))
-+		return -EINTR;
- 
- 	if (!data_ok(bus)) {
- 		brcmf_dbg(INFO, "No bus credit bus->tx_max %d, bus->tx_seq %d\n",
- 			  bus->tx_max, bus->tx_seq);
--		bus->ctrl_frame_stat = true;
-+		up(&bus->tx_seq_lock);
- 		/* Send from dpc */
--		bus->ctrl_frame_buf = frame;
--		bus->ctrl_frame_len = len;
-+		bus->ctrl_frame_buf = msg;
-+		bus->ctrl_frame_len = msglen;
-+		bus->ctrl_frame_stat = true;
- 
- 		wait_event_interruptible_timeout(bus->ctrl_wait,
- 						 !bus->ctrl_frame_stat,
-@@ -2866,22 +2871,18 @@ brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 			ret = 0;
- 		} else {
- 			brcmf_dbg(SDIO, "ctrl_frame_stat == true\n");
-+			bus->ctrl_frame_stat = false;
-+			if (down_interruptible(&bus->tx_seq_lock))
-+				return -EINTR;
- 			ret = -1;
- 		}
- 	}
--
- 	if (ret == -1) {
--		brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_CTL_ON(),
--				   frame, len, "Tx Frame:\n");
--		brcmf_dbg_hex_dump(!(BRCMF_BYTES_ON() && BRCMF_CTL_ON()) &&
--				   BRCMF_HDRS_ON(),
--				   frame, min_t(u16, len, 16), "TxHdr:\n");
--
--		do {
--			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = brcmf_sdio_tx_frame(bus, frame, len);
--			sdio_release_host(bus->sdiodev->func[1]);
--		} while (ret < 0 && retries++ < TXRETRIES);
-+		sdio_claim_host(bus->sdiodev->func[1]);
-+		brcmf_sdio_bus_sleep(bus, false, false);
-+		ret = brcmf_sdio_tx_ctrlframe(bus, msg, msglen);
-+		sdio_release_host(bus->sdiodev->func[1]);
-+		up(&bus->tx_seq_lock);
- 	}
- 
- 	if (ret)
-@@ -4052,7 +4053,8 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- 	spin_lock_init(&bus->rxctl_lock);
--	spin_lock_init(&bus->txqlock);
-+	spin_lock_init(&bus->txq_lock);
-+	sema_init(&bus->tx_seq_lock, 1);
- 	init_waitqueue_head(&bus->ctrl_wait);
- 	init_waitqueue_head(&bus->dcmd_resp_wait);
- 
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+ 				     const u8 *addr);
 -- 
 1.7.9.5
 
