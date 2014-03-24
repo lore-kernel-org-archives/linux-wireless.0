@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46063 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759656AbaCUAGJ (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:48876 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801AbaCXKRa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 20:06:09 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Fix getting stats from firmware.
-Date: Thu, 20 Mar 2014 17:05:24 -0700
-Message-Id: <1395360324-20433-1-git-send-email-greearb@candelatech.com> (sfid-20140321_010620_275409_1B8F43DF)
+	Mon, 24 Mar 2014 06:17:30 -0400
+Received: by mail-la0-f47.google.com with SMTP id y1so3440089lam.20
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 03:17:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87vbv46klt.fsf@kamboji.qca.qualcomm.com>
+References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1395394341-3958-5-git-send-email-janusz.dziedzic@tieto.com>
+	<87vbv46klt.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 24 Mar 2014 11:17:28 +0100
+Message-ID: <CALhHN=q0bK3qUDRtm-_zRKs-RFCpiVcGHihQPuHvMW7CVLiePg@mail.gmail.com> (sfid-20140324_111732_830529_F3BFB9B2)
+Subject: Re: [PATCH 4/8] ath10k: setup rx channel per ppdu
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 24 March 2014 09:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>
+>> Setup band and frequency in ieee80211_rx_status
+>> only once - for ppdu.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> [...]
+>
+>> @@ -775,23 +794,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+>>       if (info->amsdu_more)
+>>               status->flag |= RX_FLAG_AMSDU_MORE;
+>>
+>> -     status->signal = info->signal;
+>
+> What about the signal, how is it set now? I don't see that anywhere in
+> this patch.
+>
+This belongs to next patch - will fix it.
 
-Make the request command object the right size so that
-firmware will not just throw it away.
-Tested customized and upstream firmware.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index fa1b9e0..4946471 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2766,6 +2766,11 @@ enum wmi_stats_id {
- 	WMI_REQUEST_AP_STAT	= 0x02
- };
- 
-+struct wlan_inst_rssi_args {
-+	__le16 cfg_retry_count;
-+	__le16 retry_count;
-+};
-+
- struct wmi_request_stats_cmd {
- 	__le32 stats_id;
- 
-@@ -2773,6 +2778,12 @@ struct wmi_request_stats_cmd {
- 	 * Space to add parameters like
- 	 * peer mac addr
- 	 */
-+	__le32 vdev_id;
-+	/* peer MAC address */
-+	struct wmi_mac_addr peer_macaddr;
-+
-+	/* Instantaneous RSSI arguments */
-+	struct wlan_inst_rssi_args inst_rssi_args;
- } __packed;
- 
- /* Suspend option */
--- 
-1.7.11.7
-
+BR
+janusz
