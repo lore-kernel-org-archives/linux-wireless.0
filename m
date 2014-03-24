@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:56020 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbaCAUQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:16:52 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 07/23] ath9k_htc: add ATH_OP_PRIM_STA_VIF
-Date: Sat,  1 Mar 2014 21:15:50 +0100
-Message-Id: <1393704966-13985-8-git-send-email-linux@rempel-privat.de> (sfid-20140301_211655_140147_5484F08C)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55724 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322AbaCXJkd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2014 05:40:33 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 7/8] ath10k: improve way we play with attention flags
+References: <1395394341-3958-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1395394341-3958-8-git-send-email-janusz.dziedzic@tieto.com>
+Date: Mon, 24 Mar 2014 11:40:10 +0200
+In-Reply-To: <1395394341-3958-8-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Fri, 21 Mar 2014 10:32:20 +0100")
+Message-ID: <87mwgg6ikl.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_104036_839087_97D6680F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we will need it to make common-beacon code work.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> Remove almost the same code, and do only once
+> __le32_to_cpu() conversion.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6e17c08..b82a7c4 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1478,6 +1478,7 @@ static void ath9k_htc_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 		common->curaid = bss_conf->aid;
- 		common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
-+		set_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags);
- 	}
- }
- 
-@@ -1510,6 +1511,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		bss_conf->assoc ?
- 			priv->num_sta_assoc_vif++ : priv->num_sta_assoc_vif--;
- 
-+		if (!bss_conf->assoc)
-+			clear_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags);
-+
- 		if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
- 			ath9k_htc_choose_set_bssid(priv);
- 			if (bss_conf->assoc && (priv->num_sta_assoc_vif == 1))
+This patch introduces one checkpatch warning:
+
+drivers/net/wireless/ath/ath10k/htt_rx.c:1209: CHECK: No space is necessary after a cast
+
 -- 
-1.9.0
-
+Kalle Valo
