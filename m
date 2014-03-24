@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:52908 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbaCAUQh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:16:37 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 00/23] ath9k|ath9k_htc: move dups to common-beacon
-Date: Sat,  1 Mar 2014 21:15:43 +0100
-Message-Id: <1393704966-13985-1-git-send-email-linux@rempel-privat.de> (sfid-20140301_211641_524191_F187745D)
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:58988 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090AbaCXLti (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2014 07:49:38 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ma3so5392417pbc.27
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 04:49:38 -0700 (PDT)
+Date: Mon, 24 Mar 2014 19:49:23 +0800
+From: Adam Lee <adam.lee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH] rtlwifi: add MSI interrupts support
+Message-ID: <20140324114923.GA3650@adam-laptop> (sfid-20140324_124947_506421_A6DD7DC6)
+References: <1395640841-14477-1-git-send-email-adam.lee@canonical.com>
+ <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Next patch set. It removes only easy duplicats of beacon code. Other parts of
-need deeper rework to make it compatible with ath9k.
+On Mon, Mar 24, 2014 at 07:34:44PM +0800, Adam Lee wrote:
+> Add MSI interrupts support, enable it when msi_support flag is true,
+> also could fallback to pin-based interrupts mode if MSI mode fails.
+> 
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+> ---
+>  drivers/net/wireless/rtlwifi/pci.c | 63 ++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 61 insertions(+), 2 deletions(-)
 
-Oleksij Rempel (23):
-  ath9k: move struct ath_beacon_config to common
-  ath9k_htc: use common ath_beacon_config
-  ath9k_htc: move beaconq to struct htc_beacon
-  ath9k_htc: use ath_beacon_conf.enable_beacon
-  ath9k: move sc_flags to ath_common
-  ath9k_htc: use common->op_flags
-  ath9k_htc: add ATH_OP_PRIM_STA_VIF
-  ath9k: remove unused bc_tstamp
-  ath9k_htc: sync beacon slot code with ath9k
-  ath9k: remove unused beacon_qi
-  ath9k|ath9k_htc: move IEEE80211_MS_TO_TU to common
-  ath9k-common: add nexttbtt and intval to ath_beacon_config
-  ath9k: move ath9k_beacon_config_sta to common-beacon
-  ath9k_htc: use ath9k_cmn_beacon_config_sta
-  ath9k: move ath9k_beacon_config_adhoc to common
-  ath9k_htc: add ath9k_htc_beacon_init (but not use it)
-  ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_ap
-  ath9k_htc: use ath9k_htc_beacon_init in ath9k_htc_beacon_config_adhoc
-  ath9k_htc: use ath9k_cmn_beacon_config_adhoc
-  ath9k: move ath9k_beacon_config_ap common
-  ath9k: remove unused ath9k_get_next_tbtt
-  ath9k_htc: use ath9k_cmn_beacon_config_ap
-  ath9k_htc: move DEFAULT_SWBA_RESPONSE check to ath9k_htc_beacon_init
+This is the base of "[PATCH] rtlwifi: rtl8188ee: enable MSI interrupts
+support" in thread. We met this issue[1] while enabling some HP
+notebooks, whose wifi hardware modules can't get AP scan results with
+pin-based interrupts.
 
- drivers/net/wireless/ath/ath.h                  |  10 +
- drivers/net/wireless/ath/ath9k/Makefile         |   3 +-
- drivers/net/wireless/ath/ath9k/ahb.c            |   7 +-
- drivers/net/wireless/ath/ath9k/ath9k.h          |  22 ---
- drivers/net/wireless/ath/ath9k/beacon.c         | 165 ++--------------
- drivers/net/wireless/ath/ath9k/common-beacon.c  | 180 +++++++++++++++++
- drivers/net/wireless/ath/ath9k/common-beacon.h  |  26 +++
- drivers/net/wireless/ath/ath9k/common.h         |  14 ++
- drivers/net/wireless/ath/ath9k/debug.c          |   2 +-
- drivers/net/wireless/ath/ath9k/htc.h            |  25 +--
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 252 ++++++------------------
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  10 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  53 +++--
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   3 +-
- drivers/net/wireless/ath/ath9k/link.c           |  16 +-
- drivers/net/wireless/ath/ath9k/main.c           |  45 +++--
- drivers/net/wireless/ath/ath9k/mci.c            |   2 +-
- drivers/net/wireless/ath/ath9k/pci.c            |   8 +-
- drivers/net/wireless/ath/ath9k/xmit.c           |   9 +-
- 19 files changed, 413 insertions(+), 439 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/common-beacon.c
- create mode 100644 drivers/net/wireless/ath/ath9k/common-beacon.h
+Submitting these two patches ahead of RealTek's schedule so we can fix
+it sooner for non-preload distro users.
+
+[1] https://bugs.launchpad.net/bugs/1296591
 
 -- 
-1.9.0
-
+Adam Lee
