@@ -1,100 +1,322 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:42253 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbaCNIkb convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:56991 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbaCXMDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 04:40:31 -0400
-Received: by mail-ob0-f176.google.com with SMTP id wp18so2235080obc.35
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 01:40:31 -0700 (PDT)
+	Mon, 24 Mar 2014 08:03:13 -0400
+Received: by mail-ob0-f173.google.com with SMTP id gq1so5558328obb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 05:03:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
-References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
-	<1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
-Date: Fri, 14 Mar 2014 09:40:31 +0100
-Message-ID: <CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com> (sfid-20140314_094155_735494_5DC4A121)
-Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
- combination check to mac80211
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-	Eliad Peller <eliad@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1384765780.22010.42.camel@porter.coelho.fi>
+References: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com>
+	<1384765780.22010.42.camel@porter.coelho.fi>
+Date: Mon, 24 Mar 2014 20:03:12 +0800
+Message-ID: <CADqH6VxgwbZkFgEkpiaabKekijeU+e=DMg0VVHoiXBQmjQfE0Q@mail.gmail.com> (sfid-20140324_130318_223900_B3805963)
+Subject: Re: WL12xx support for WL1270 and ti-connectivity firmware
+From: Jaya Kumar <jayakumar.lkml@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2014 15:16, Luciano Coelho <luciano.coelho@intel.com> wrote:
+On Mon, Nov 18, 2013 at 5:09 PM, Luca Coelho <luca@coelho.fi> wrote:
+>
+> Same as above... If this wl1270 is indeed based on the wl1271, it should
+> probably work.  With the driver you may need to add some new SDIO IDs
+> for it to be recognized though.
+>
 
-[...]
+Hi,
 
-> +int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
-> +                                const struct cfg80211_chan_def *chandef,
-> +                                enum ieee80211_chanctx_mode chanmode,
-> +                                u8 radar_detect)
-> +{
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_sub_if_data *sdata_iter;
-> +       enum nl80211_iftype iftype = sdata->wdev.iftype;
-> +       int num[NUM_NL80211_IFTYPES];
-> +       struct ieee80211_chanctx *ctx;
-> +       int num_different_channels = 1;
-> +       int total = 1;
-> +
-> +       lockdep_assert_held(&local->chanctx_mtx);
-> +
-> +       if (WARN_ON(hweight32(radar_detect) > 1))
-> +               return -EINVAL;
-> +
-> +       if (WARN_ON(chanmode == IEEE80211_CHANCTX_SHARED && !chandef->chan))
-> +               return -EINVAL;
-> +
-> +       if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
-> +               return -EINVAL;
-> +
-> +       /* Always allow software iftypes */
-> +       if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
-> +               if (radar_detect)
-> +                       return -EINVAL;
-> +               return 0;
-> +       }
-> +
-> +       memset(num, 0, sizeof(num));
-> +
-> +       if (iftype != NL80211_IFTYPE_UNSPECIFIED)
-> +               num[iftype] = 1;
-> +
+I'm now bringing up the board with the wl1270. I'm using 3.0.35 (stuck
+on this kernel version due to other drivers). The good news is that
+the chip is detected and wl12xx/wl12xx_sdio loads. However, I haven't
+been able to get it to get any scan results and can't associate with
+any AP (even open).
 
-> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
-> +               if (ctx->conf.radar_enabled)
-> +                       radar_detect |= BIT(ctx->conf.def.width);
+---
+mmc1: card claims to support voltages below the defined range. These
+will be ignored.
+mmc1: queuing unknown CIS tuple 0x91 (3 bytes)
+mmc1: new SDIO card at address 0001
+...
+I'm using ti-linux-firmware-wl12xx-r3-m1-rc2.tar.gz for the nvs and fw files.
 
-Is this really correct?
+root@freescale ~$ modprobe wl12xx
+root@freescale ~$ modprobe wl12xx_sdio
+add wake up source irq 106
+wl1271: loaded
+wl1271: initialized
+root@freescale ~$ ifconfig wlan0 up
+wl1271: firmware booted (Rev 6.1.5.50.69)
 
-The original behaviour was to:
+root@freescale ~$ iwlist wlan0 scan
+wlan0     No scan results
+---
 
- for each wdev:
-   get_chan_state(..., &radar_width)
+I retried with debug_level=256 (scan debug) and I see a lot of output
+appended below. I haven't figured out how to interpret them yet. I'd
+be grateful for any advice/suggestions on this.
 
-where get_chan_state() ORs BIT(width) accordingly to iftype, etc.
+Thanks,
+jaya
 
-For 2 APs with different operational widths (e.g. 20 and 40) this means:
+root@freescale ~$ modprobe wl12xx debug_level=256
+root@freescale ~$ modprobe wl12xx_sdio
+add wake up source irq 106
+wl1271: loaded
+wl1271: initialized
+root@freescale ~$ ifconfig wlan0 up
+wl1271: firmware booted (Rev 6.1.5.50.69)
+root@freescale ~$ iwlist wlan0 scan
+wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 02 04 0b 16
+wl1271: PROBE REQ: 00000020: 0c 12 18 24 32 04 30 48 60 6c 2d 1a 30 01 18 ff
+wl1271: PROBE REQ: 00000030: 00 00 00 00 00 00 00 00 00 48 00 01 00 00 00 00
+wl1271: PROBE REQ: 00000040: 00 00 00 00 00 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 04 00 0b 02
+wl1271: SCAN: 00000010: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 4c 1d 00 00
+wl1271: SCAN: 00000040: 30 75 00 00 ff ff ff ff ff ff 00 14 01 00 00 00
+wl1271: SCAN: 00000050: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 02 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 03 00 00 00 4c 1d 00 00 30 75 00 00
+wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 04 00 00 00 4c 1d 00 00
+wl1271: SCAN: 00000090: 30 75 00 00 ff ff ff ff ff ff 00 14 05 00 00 00
+wl1271: SCAN: 000000a0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 000000b0: 06 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 000000c0: ff ff 00 14 07 00 00 00 4c 1d 00 00 30 75 00 00
+wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 08 00 00 00 4c 1d 00 00
+wl1271: SCAN: 000000e0: 30 75 00 00 ff ff ff ff ff ff 00 14 09 00 00 00
+wl1271: SCAN: 000000f0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000100: 0a 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 00000110: ff ff 00 14 0b 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 02 04 0b 16
+wl1271: PROBE REQ: 00000020: 0c 12 18 24 32 04 30 48 60 6c 2d 1a 30 01 18 ff
+wl1271: PROBE REQ: 00000030: 00 00 00 00 00 00 00 00 00 48 00 01 00 00 00 00
+wl1271: PROBE REQ: 00000040: 00 00 00 00 00 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 03 02
+wl1271: SCAN: 00000010: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 a0 86 01 00
+wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 0c 00 00 00
+wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 0d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 0e 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 00 01 08 0c 12 18 24
+wl1271: PROBE REQ: 00000020: 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000030: 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 0c 02
+wl1271: SCAN: 00000010: 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 01 00 01 00 a0 86 01 00
+wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 24 00 00 00
+wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 26 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 28 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 2a 00 00 00 a0 86 01 00
+wl1271: SCAN: 00000090: a0 86 01 00 ff ff ff ff ff ff 00 14 2c 00 00 00
+wl1271: SCAN: 000000a0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 000000b0: 2e 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 000000c0: ff ff 00 14 30 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 95 00 00 00 a0 86 01 00
+wl1271: SCAN: 000000e0: a0 86 01 00 ff ff ff ff ff ff 00 14 99 00 00 00
+wl1271: SCAN: 000000f0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000100: 9d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000110: ff ff 00 14 a1 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 00000120: ff ff ff ff ff ff 00 14 a5 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
+wlan0     No scan results
 
-a) old code: width_detect = BIT(WIDTH_20) | BIT(WIDTH_40)
-b) new code: width_detect = BIT(chanctx->width) which is BIT(WIDTH_40)
+root@freescale ~$ iwconfig wlan0 essid testingopen ap any
+wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
+wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 02 04 0b 16 0c 12 18 24 32
+wl1271: PROBE REQ: 00000030: 04 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00
+wl1271: PROBE REQ: 00000040: 00 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000050: 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 04 00 0b 02
+wl1271: SCAN: 00000010: 01 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
+wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 4c 1d 00 00
+wl1271: SCAN: 00000040: 30 75 00 00 ff ff ff ff ff ff 00 14 01 00 00 00
+wl1271: SCAN: 00000050: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 02 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 03 00 00 00 4c 1d 00 00 30 75 00 00
+wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 04 00 00 00 4c 1d 00 00
+wl1271: SCAN: 00000090: 30 75 00 00 ff ff ff ff ff ff 00 14 05 00 00 00
+wl1271: SCAN: 000000a0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 000000b0: 06 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 000000c0: ff ff 00 14 07 00 00 00 4c 1d 00 00 30 75 00 00
+wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 08 00 00 00 4c 1d 00 00
+wl1271: SCAN: 000000e0: 30 75 00 00 ff ff ff ff ff ff 00 14 09 00 00 00
+wl1271: SCAN: 000000f0: 4c 1d 00 00 30 75 00 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000100: 0a 00 00 00 4c 1d 00 00 30 75 00 00 ff ff ff ff
+wl1271: SCAN: 00000110: ff ff 00 14 0b 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
+root@freescale ~$ wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff
+ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
+wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 02 04 0b 16 0c 12 18 24 32
+wl1271: PROBE REQ: 00000030: 04 30 48 60 6c 2d 1a 30 01 18 ff 00 00 00 00 00
+wl1271: PROBE REQ: 00000040: 00 00 00 00 48 00 01 00 00 00 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000050: 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 03 02
+wl1271: SCAN: 00000010: 01 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
+wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 00 00 01 00 a0 86 01 00
+wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 0c 00 00 00
+wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 0d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 0e 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: PROBE REQ: 00000000: 40 00 00 00 ff ff ff ff ff ff de ad be ef 00 00
+wl1271: PROBE REQ: 00000010: ff ff ff ff ff ff 00 00 00 0b 74 65 73 74 69 6e
+wl1271: PROBE REQ: 00000020: 67 6f 70 65 6e 01 08 0c 12 18 24 30 48 60 6c 2d
+wl1271: PROBE REQ: 00000030: 1a 30 01 18 ff 00 00 00 00 00 00 00 00 00 48 00
+wl1271: PROBE REQ: 00000040: 01 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000000: 00 00 00 00 08 00 00 00 14 02 00 00 05 00 0c 02
+wl1271: SCAN: 00000010: 08 00 00 00 00 0b 00 00 74 65 73 74 69 6e 67 6f
+wl1271: SCAN: 00000020: 70 65 6e 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000030: 00 00 00 00 00 00 00 00 01 00 01 00 a0 86 01 00
+wl1271: SCAN: 00000040: a0 86 01 00 ff ff ff ff ff ff 00 14 24 00 00 00
+wl1271: SCAN: 00000050: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000060: 26 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000070: ff ff 00 14 28 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 00000080: ff ff ff ff ff ff 00 14 2a 00 00 00 a0 86 01 00
+wl1271: SCAN: 00000090: a0 86 01 00 ff ff ff ff ff ff 00 14 2c 00 00 00
+wl1271: SCAN: 000000a0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 000000b0: 2e 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 000000c0: ff ff 00 14 30 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 000000d0: ff ff ff ff ff ff 00 14 95 00 00 00 a0 86 01 00
+wl1271: SCAN: 000000e0: a0 86 01 00 ff ff ff ff ff ff 00 14 99 00 00 00
+wl1271: SCAN: 000000f0: a0 86 01 00 a0 86 01 00 ff ff ff ff ff ff 00 14
+wl1271: SCAN: 00000100: 9d 00 00 00 a0 86 01 00 a0 86 01 00 ff ff ff ff
+wl1271: SCAN: 00000110: ff ff 00 14 a1 00 00 00 a0 86 01 00 a0 86 01 00
+wl1271: SCAN: 00000120: ff ff ff ff ff ff 00 14 a5 00 00 00 00 00 00 00
+wl1271: SCAN: 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+wl1271: SCAN: 00000210: 00 00 00 00 00 00 00 00 00 00 00 00
 
-I think radar_detect should be computed:
+root@freescale ~$ iwconfig
+lo        no wireless extensions.
 
- radar_detect = 0 // **
- for each vif:
-  if vif.ctx == ctx && vif.radar_required:
-   radar_detect = BIT(vif.bss.width)
+usb0      no wireless extensions.
 
-** you could argue to initialize with BIT(ctx->width), but all things
-seem to use ieee80211_vif_use_channel() (including CAC/radar
-detection) so bss_conf.chandef.width should be set correctly and
-iteration alone should suffice.
-
-
-Michał
+wlan0     IEEE 802.11abgn  ESSID:"testingopen"
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
