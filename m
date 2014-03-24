@@ -1,112 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43666 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbaCKPdZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48347 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752653AbaCXQ7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 11:33:25 -0400
-Subject: [PATCH 1/2] ath10k: separate result parameter in ath10k_bmi_execute()
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Mar 2014 17:33:19 +0200
-Message-ID: <20140311153318.7148.47415.stgit@potku.adurom.net> (sfid-20140311_163328_214322_D8DD4829)
+	Mon, 24 Mar 2014 12:59:20 -0400
+Message-ID: <5330644F.5050906@candelatech.com> (sfid-20140324_175923_880701_0671DBF5)
+Date: Mon, 24 Mar 2014 09:58:55 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath10k:  Add debugging for tx-credits usage.
+References: <1395428150-31996-1-git-send-email-greearb@candelatech.com> <871txr7svw.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <871txr7svw.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's just cleaner to have separate argument for the parameter and result. Also
-fix returned error value if response length is invalid.
+On 03/24/2014 04:12 AM, Kalle Valo wrote:
+> greearb@candelatech.com writes:
+> 
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> This helps track tx credits accounting and usage.  If
+>> firmware hangs or otherwise fails to return credits, one
+>> can more easily see the last few command types that
+>> was send to the firmware.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> 
+> This patchset didn't apply, and the sha1 ids were useless so that 3-way
+> merge didn't work. Can you rebase, please? And better yet if you rebase
+> in top of my master branch.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/bmi.c  |   13 ++++++++-----
- drivers/net/wireless/ath/ath10k/bmi.h  |    2 +-
- drivers/net/wireless/ath/ath10k/core.c |    6 ++----
- 3 files changed, 11 insertions(+), 10 deletions(-)
+I will do this.  I must have some conflicting patch between your top of
+tree and this patch in my tree...
 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
-index a1f099628850..17d221abd58c 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.c
-+++ b/drivers/net/wireless/ath/ath10k/bmi.c
-@@ -175,7 +175,7 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
- 	return 0;
- }
- 
--int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
-+int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result)
- {
- 	struct bmi_cmd cmd;
- 	union bmi_resp resp;
-@@ -184,7 +184,7 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
- 	int ret;
- 
- 	ath10k_dbg(ATH10K_DBG_BMI, "bmi execute address 0x%x param 0x%x\n",
--		   address, *param);
-+		   address, param);
- 
- 	if (ar->bmi.done_sent) {
- 		ath10k_warn("command disallowed\n");
-@@ -193,7 +193,7 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
- 
- 	cmd.id            = __cpu_to_le32(BMI_EXECUTE);
- 	cmd.execute.addr  = __cpu_to_le32(address);
--	cmd.execute.param = __cpu_to_le32(*param);
-+	cmd.execute.param = __cpu_to_le32(param);
- 
- 	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen, &resp, &resplen);
- 	if (ret) {
-@@ -204,10 +204,13 @@ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param)
- 	if (resplen < sizeof(resp.execute)) {
- 		ath10k_warn("invalid execute response length (%d)\n",
- 			    resplen);
--		return ret;
-+		return -EIO;
- 	}
- 
--	*param = __le32_to_cpu(resp.execute.result);
-+	*result = __le32_to_cpu(resp.execute.result);
-+
-+	ath10k_dbg(ATH10K_DBG_BMI, "bmi execute result 0x%x\n", *result);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-index 8d81ce1cec21..3a9bdf51c96a 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.h
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -217,7 +217,7 @@ int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
- 		ret;							\
- 	})
- 
--int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 *param);
-+int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result);
- int ath10k_bmi_lz_stream_start(struct ath10k *ar, u32 address);
- int ath10k_bmi_lz_data(struct ath10k *ar, const void *buffer, u32 length);
- int ath10k_bmi_fast_download(struct ath10k *ar, u32 address,
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index ebc5fc2ede75..602fb9644cbf 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -249,8 +249,7 @@ exit:
- 
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
--	u32 address = ar->hw_params.patch_load_addr;
--	u32 exec_param;
-+	u32 result, address = ar->hw_params.patch_load_addr;
- 	int ret;
- 
- 	/* OTP is optional */
-@@ -264,8 +263,7 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
- 		goto exit;
- 	}
- 
--	exec_param = 0;
--	ret = ath10k_bmi_execute(ar, address, &exec_param);
-+	ret = ath10k_bmi_execute(ar, address, 0, &result);
- 	if (ret) {
- 		ath10k_err("could not execute otp (%d)\n", ret);
- 		goto exit;
+>> -	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
+>> +	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+> 
+> Using line numbers in debug messages is very cumbersome. Some people
+> cherry pick patches, have their own changes and whatnot which will make
+> it more difficult to read the debug logs. Isn't there any better way to
+> do this?
+
+It is nasty, but I wanted to keep performance overhead light.
+I could do an enum instead if you think that would be an improvement.
+
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>> @@ -544,7 +544,7 @@ static int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+>>  	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
+>>  
+>>  	memset(skb_cb, 0, sizeof(*skb_cb));
+>> -	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
+>> +	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb, 0x71100000 | cmd_id);
+>>  	trace_ath10k_wmi_cmd(cmd_id, skb->data, skb->len, ret);
+> 
+> What does 0x71100000 stand for?
+
+It's just something that is easily grepped for, and is obviously not
+a line number.
+
+Hopefully someone will have a better idea how to do this sort of thing,
+as my patch is pretty far down the slope towards total hack :)
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
