@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:53771 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbaCJHDx convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:44073 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752087AbaCXOwp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 03:03:53 -0400
-Received: by mail-ob0-f175.google.com with SMTP id uy5so6530293obc.6
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 00:03:53 -0700 (PDT)
+	Mon, 24 Mar 2014 10:52:45 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i7so5888513oag.23
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 07:52:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1394174912.4192.9.camel@dubbel>
-References: <1394017904-4012-1-git-send-email-luca@coelho.fi>
-	<1394017904-4012-3-git-send-email-luca@coelho.fi>
-	<CA+BoTQkb95xGNtVUxvn_u==P6fuy-h0iNAp8pGEcq8m0ZUm-7A@mail.gmail.com>
-	<1394174912.4192.9.camel@dubbel>
-Date: Mon, 10 Mar 2014 08:03:53 +0100
-Message-ID: <CA+BoTQmOPZGLt0Bv+YSZcXVif65G6+tRP0sbhcJEvz65FjABRg@mail.gmail.com> (sfid-20140310_080356_781153_F7D72DB7)
-Subject: Re: [PATCH v5 2/3] mac80211: implement chanctx reservation
+In-Reply-To: <5330420E.7020204@broadcom.com>
+References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+	<1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	<1395408675-26013-4-git-send-email-michal.kazior@tieto.com>
+	<5330420E.7020204@broadcom.com>
+Date: Mon, 24 Mar 2014 15:52:44 +0100
+Message-ID: <CA+BoTQm2eJFNTN06RdDVGmnLKyOyJaiuwGZ3+t1TgOCnxyQNbw@mail.gmail.com> (sfid-20140324_155255_861544_896C1870)
+Subject: Re: [PATCH v2 3/4] cfg80211: export interface stopping function
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
+To: Arend van Spriel <arend@broadcom.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 March 2014 07:48, Luca Coelho <luca@coelho.fi> wrote:
-> On Wed, 2014-03-05 at 13:04 +0100, Michal Kazior wrote:
->> On 5 March 2014 12:11, Luca Coelho <luca@coelho.fi> wrote:
->>
->> [...]
->>
->> > +       /* unref our reservation before assigning */
->> > +       ctx->refcount--;
->> > +       sdata->reserved_chanctx = NULL;
->> > +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
->> > +       if (ret) {
->> > +               /* if assign fails refcount stays the same */
->> > +               if (ctx->refcount == 0)
->> > +                       ieee80211_free_chanctx(local, ctx);
->> > +               goto out_wake;
->> > +       }
->>
->> This actually won't work if there are AP VLANs (I noticed that yesterday).
->>
->> You can't call ieee80211_vif_copy_chanctx_to_vlans() here due to
->> current locking requirements. I have a patch for that though ;-) I'll
->> send it soon.
->
-> How is this related to this patch?
->
-> Anyway, good to know that you have fixed it. :)
+On 24 March 2014 15:32, Arend van Spriel <arend@broadcom.com> wrote:
+> On 21/03/14 14:31, Michal Kazior wrote:
 
-If you re-assign a chanctx of an AP that has VLANs you leave VLANs
-with the old chanctx pointer. Those pointers should be updated or else
-you'll end up dereferencing an invalid pointer.
+[...]
+
+>> --- a/net/wireless/core.c
+>> +++ b/net/wireless/core.c
+>> @@ -748,23 +748,23 @@ void cfg80211_update_iface_num(struct
+>> cfg80211_registered_device *rdev,
+>>                 rdev->num_running_monitor_ifaces += num;
+>>   }
+>>
+>> -void cfg80211_leave(struct cfg80211_registered_device *rdev,
+>> -                   struct wireless_dev *wdev)
+>> +void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+>> +                     struct wireless_dev *wdev)
+>>   {
+>>         struct net_device *dev = wdev->netdev;
+>>
+>>         ASSERT_RTNL();
+>
+>
+> If you have the assert check here do you need to do it from the call sites
+> as well?
+
+I just tend to propagate lockdeps asserts up. It's easier to get the
+idea of locking at a quick glance and it causes lockdep to splat
+sooner if you have lots of conditionals (i.e. before you hit a very
+specific if-else-codepath). I'll remove this redundancy when I re-spin
+unless someone objects?
+
+
+>> +       ASSERT_WDEV_LOCK(wdev);
+>
+>
+> So you are changing behaviour here by requiring the wdev to be locked.
+
+It doesn't change much in practice. Notice that prior to the patch all
+switch-cases performed wdev_lock() already (either on site, or callees
+did that immediately). This simply moves the locking outside the
+__cfg80211_leave() so it's possible to call it from the event worker.
+__cfg80211_stop_sched_scan() doesn't care about wdev lock so it's okay
+I guess?
 
 
 Michał
