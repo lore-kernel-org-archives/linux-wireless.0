@@ -1,43 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933597AbaCSNzw (ORCPT
+Received: from smtprelay0006.hostedemail.com ([216.40.44.6]:59593 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753753AbaCXRqY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 09:55:52 -0400
-Message-ID: <1395237348.4142.6.camel@jlt4.sipsolutions.net> (sfid-20140319_145556_525623_F274BDB2)
-Subject: Re: [PATCH] mac80211: fix WPA with VLAN on AP side with ps-sta again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linville@tuxdriver.com, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Wed, 19 Mar 2014 14:55:48 +0100
-In-Reply-To: <1394114923-6380-1-git-send-email-michael-dev@fami-braun.de> (sfid-20140306_151702_591608_F07B3386)
-References: <1394114923-6380-1-git-send-email-michael-dev@fami-braun.de>
-	 (sfid-20140306_151702_591608_F07B3386)
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 24 Mar 2014 13:46:24 -0400
+Message-ID: <1395683180.13968.61.camel@joe-AO722> (sfid-20140324_184744_059439_6785977C)
+Subject: [PATCH net-next] rtlwifi: Remove addressof casts to same type
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Mon, 24 Mar 2014 10:46:20 -0700
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-03-06 at 15:08 +0100, Michael Braun wrote:
-> commit de74a1d9032f4d37ea453ad2a647e1aff4cd2591
->   "mac80211: fix WPA with VLAN on AP side with ps-sta"
-> fixed an issue where queued multicast packets would
-> be sent out encrypted with the key of an other bss.
-> 
-> commit "7cbf9d017dbb5e3276de7d527925d42d4c11e732"
->   "mac80211: fix oops on mesh PS broadcast forwarding"
-> essentially reverted it, because vif.type cannot be AP_VLAN
-> due to the check to vif.type in ieee80211_get_buffered_bc before.
-> 
-> As the later commit intended to fix the MESH case, fix it
-> by checking for IFTYPE_AP instead of IFTYPE_AP_VLAN.
+Using addressof then casting to the original type is pointless,
+so remove these unnecessary casts.
 
-Applied.
+Done via coccinelle script:
 
-> Fixes: 7cbf9d017dbb
+$ cat typecast.cocci 
+@@
+type T;
+T foo;
+@@
 
-I added the commit subject to this.
+-	(T *)&foo
++	&foo
 
-johannes
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/rtlwifi/pci.c          | 4 ++--
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 9 ++++-----
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 7 +++----
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 7 +++----
+ 4 files changed, 12 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index f26f4ff..7d71170 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1509,10 +1509,10 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
+ 
+ 	if (rtlpriv->use_new_trx_flow) {
+ 		rtlpriv->cfg->ops->set_desc(hw, (u8 *)pdesc, true,
+-					    HW_DESC_OWN, (u8 *)&hw_queue);
++					    HW_DESC_OWN, &hw_queue);
+ 	} else {
+ 		rtlpriv->cfg->ops->set_desc(hw, (u8 *)pdesc, true,
+-					    HW_DESC_OWN, (u8 *)&temp_one);
++					    HW_DESC_OWN, &temp_one);
+ 	}
+ 
+ 	if ((ring->entries - skb_queue_len(&ring->queue)) < 2 &&
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index bd2a26b..5a30e4e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -1828,7 +1828,7 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+ 	/*customer ID*/
+-	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
++	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+ 	if (rtlefuse->eeprom_oemid == 0xFF)
+ 		rtlefuse->eeprom_oemid = 0;
+ 
+@@ -1845,7 +1845,7 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 		 "dev_addr: %pM\n", rtlefuse->dev_addr);
+ 	/*channel plan */
+-	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
++	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+ 	/* set channel paln to world wide 13 */
+ 	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
+ 	/*tx power*/
+@@ -1857,7 +1857,7 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 						 rtlefuse->autoload_failflag,
+ 						 hwinfo);
+ 	/*board type*/
+-	rtlefuse->board_type = (((*(u8 *)&hwinfo[jj]) & 0xE0) >> 5);
++	rtlefuse->board_type = (hwinfo[jj] & 0xE0) >> 5;
+ 	/*Wake on wlan*/
+ 	rtlefuse->wowlan_enable = ((hwinfo[kk] & 0x40) >> 6);
+ 	/*parse xtal*/
+@@ -2223,8 +2223,7 @@ void rtl88ee_update_channel_access_setting(struct ieee80211_hw *hw)
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	u16 sifs_timer;
+ 
+-	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME,
+-				      (u8 *)&mac->slot_time);
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME, &mac->slot_time);
+ 	if (!mac->ht_enable)
+ 		sifs_timer = 0x0a0a;
+ 	else
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+index f4c9852..dd383b1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+@@ -1628,10 +1628,10 @@ static void _rtl8723ae_read_adapter_info(struct ieee80211_hw *hw,
+ 	rtl8723ae_read_bt_coexist_info_from_hwpg(hw,
+ 			rtlefuse->autoload_failflag, hwinfo);
+ 
+-	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
++	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+ 	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+ 	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
++	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+@@ -2051,8 +2051,7 @@ void rtl8723ae_update_channel_access_setting(struct ieee80211_hw *hw)
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	u16 sifs_timer;
+ 
+-	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME,
+-				      (u8 *)&mac->slot_time);
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME, &mac->slot_time);
+ 	if (!mac->ht_enable)
+ 		sifs_timer = 0x0a0a;
+ 	else
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+index 7e70c71..223728d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+@@ -1783,10 +1783,10 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 						 rtlefuse->autoload_failflag,
+ 						 hwinfo);
+ 
+-	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
++	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+ 	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+ 	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
++	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+@@ -2252,8 +2252,7 @@ void rtl8723be_update_channel_access_setting(struct ieee80211_hw *hw)
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	u16 sifs_timer;
+ 
+-	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME,
+-				      (u8 *)&mac->slot_time);
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME, &mac->slot_time);
+ 	if (!mac->ht_enable)
+ 		sifs_timer = 0x0a0a;
+ 	else
+
 
