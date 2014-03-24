@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:39136 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758500AbaCSIth (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57363 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbaCXLZP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:49:37 -0400
-Received: by mail-ee0-f49.google.com with SMTP id c41so6301375eek.36
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:36 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC v2 4/8] ath10k: kill signal field in htt_rx_info
-Date: Wed, 19 Mar 2014 09:48:59 +0100
-Message-Id: <1395218943-31704-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_094954_630948_370BD35B)
-In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+	Mon, 24 Mar 2014 07:25:15 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k:  add otp and firmware boot error messages.
+References: <1395428150-31996-1-git-send-email-greearb@candelatech.com>
+	<1395428150-31996-3-git-send-email-greearb@candelatech.com>
+Date: Mon, 24 Mar 2014 13:25:09 +0200
+In-Reply-To: <1395428150-31996-3-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Fri, 21 Mar 2014 11:55:50
+	-0700")
+Message-ID: <87siq76dpm.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_122519_611279_4363C5D3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup signal field directly in ieee80211_rx_status.
+greearb@candelatech.com writes:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |    1 -
- drivers/net/wireless/ath/ath10k/htt_rx.c |    6 ++----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+> From: Ben Greear <greearb@candelatech.com>
+>
+> If OTP or firmware fails to load properly, print out some
+> extra info in the kernel logs.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index e80f033..9f5da2b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1178,7 +1178,6 @@ struct htt_rx_info {
- 	struct ieee80211_rx_status rx_status;
- 	enum htt_rx_mpdu_status status;
- 	enum htt_rx_mpdu_encrypt_type encrypt_type;
--	s8 signal;
- 	struct {
- 		u8 info0;
- 		u32 info1;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f18e41c..415ef1c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -775,8 +775,6 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	if (info->amsdu_more)
- 		status->flag |= RX_FLAG_AMSDU_MORE;
- 
--	status->signal = info->signal;
--
- 	spin_lock_bh(&ar->data_lock);
- 	ch = ar->scan_channel;
- 	if (!ch)
-@@ -1207,8 +1205,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
- 	/* Fill this once, while this is per-ppdu */
--	info.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
--	info.signal += rx->ppdu.combined_rssi;
-+	info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
-+	info.rx_status.signal += rx->ppdu.combined_rssi;
- 
- 	info.rate.info0 = rx->ppdu.info0;
- 	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
+[...]
+
+> @@ -597,12 +598,16 @@ static int ath10k_init_download_firmware(struct ath10k *ar)
+>  		return ret;
+>  
+>  	ret = ath10k_download_and_run_otp(ar);
+> -	if (ret)
+> +	if (ret) {
+> +		ath10k_err("boot otp execute result %d\n", ret);
+>  		return ret;
+> +	}
+
+"failed to run otp: %d\n"
+
+>  	ret = ath10k_download_fw(ar);
+> -	if (ret)
+> +	if (ret) {
+> +		ath10k_err("boot download firmware result %d\n", ret);
+>  		return ret;
+> +	}
+
+"failed to download firmware: %d\n"
+
+And I think you should add the same for ath10k_download_board_data()
+call before these two, it neither prints anything when an error happens.
+
 -- 
-1.7.9.5
-
+Kalle Valo
