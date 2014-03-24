@@ -1,79 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:46669 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381AbaCSIpL convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7186 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaCXIW2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:45:11 -0400
-Received: by mail-oa0-f46.google.com with SMTP id i7so8020188oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:45:10 -0700 (PDT)
+	Mon, 24 Mar 2014 04:22:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix the peer mac address in getting stats
+References: <1395380076-4306-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
+Date: Mon, 24 Mar 2014 10:22:22 +0200
+In-Reply-To: <CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 21 Mar 2014 07:51:22 +0100")
+Message-ID: <87d2hc80qp.fsf@kamboji.qca.qualcomm.com> (sfid-20140324_092233_819646_2AD97C05)
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEdq=m2oFggRLRaJiMto3q37SFPU2u4uk2LkDqYJ4vt0ow@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-9-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEdq=m2oFggRLRaJiMto3q37SFPU2u4uk2LkDqYJ4vt0ow@mail.gmail.com>
-Date: Wed, 19 Mar 2014 09:45:10 +0100
-Message-ID: <CA+BoTQkiic-LROVE-sN58p=Gx15eov+c6_2+JMiS3AmWUUCgqQ@mail.gmail.com> (sfid-20140319_094516_964952_A7E56454)
-Subject: Re: [RFC 08/21] mac80211: improve chanctx reservation lookup
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 March 2014 17:57, Eliad Peller <eliad@wizery.com> wrote:
-> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> Use a separate function to look for reservation
->> chanctx. For multi-interface/channel reservation
->> search sematics differ slightly.
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> On 21 March 2014 06:34, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+>> Using the macro to convert the MAC address from WMI word
+>> format to char array has lead to the wrong peer mac
+>> address printed out while retrieving the peer stats from
+>> FW. Fix this.
 >>
->> The new routine allows reservations to be merged
->> with chanctx that are already reserved by other
->> interface(s).
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 >> ---
-> [...]
+>>  drivers/net/wireless/ath/ath10k/debug.c |    4 ++--
+>>  drivers/net/wireless/ath/ath10k/wmi.h   |   10 ----------
+>>  2 files changed, 2 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+>> index 6debd28..f95defa 100644
+>> --- a/drivers/net/wireless/ath/ath10k/debug.c
+>> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+>> @@ -252,8 +252,8 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+>>                         peer_stats = (struct wmi_peer_stats *)tmp;
+>>                         s = &stats->peer_stat[i];
+>>
+>> -                       WMI_MAC_ADDR_TO_CHAR_ARRAY(&peer_stats->peer_macaddr,
+>> -                                                  s->peer_macaddr);
+>> +                       memcpy(s->peer_macaddr, &peer_stats->peer_macaddr.addr,
+>> +                              ETH_ALEN);
 >
->> +static const struct cfg80211_chan_def *
->> +ieee80211_chanctx_non_reserved_chandef(struct ieee80211_local *local,
->> +                                      struct ieee80211_chanctx *ctx,
->> +                                      const struct cfg80211_chan_def *compat)
->> +{
->> +       struct ieee80211_sub_if_data *sdata;
->> +
->> +       lockdep_assert_held(&local->chanctx_mtx);
->> +
->> +       list_for_each_entry(sdata, &ctx->assigned_vifs,
->> +                           assigned_chanctx_list) {
->> +               if (rcu_access_pointer(sdata->reserved_chanctx) != NULL)
->> +                       continue;
-> this is not rcu pointer...
+> I noticed checkpatch started suggesting to prefer ether_addr_copy()
+> over memcpy(). Not a big deal though.
 
-Good catch, thanks! I must've missed this while rebasing.
+Yeah, especially that I haven't updated my checkpatch for few months and
+I don't see this warning yet :) (I'll try to keep ath10k checkpatch
+clean whenever possible.)
 
+We need to switch ath10k to use ether_addr_copy() everywhere in a
+separate patch anyway.
 
->> +static bool
->> +ieee80211_chanctx_can_reserve_chandef(struct ieee80211_local *local,
->> +                                     struct ieee80211_chanctx *ctx,
->> +                                     const struct cfg80211_chan_def *def)
->> +{
->> +       lockdep_assert_held(&local->chanctx_mtx);
->> +
->> +       if (ieee80211_chanctx_combined_chandef(local, ctx, NULL) &&
->> +           ieee80211_chanctx_combined_chandef(local, ctx, def))
->> +               return true;
->> +
-> what's the reason for calling it with NULL?
+> Other than that the patch looks good.
 >
->> +       if (!list_empty(&ctx->reserved_vifs) &&
->> +           ieee80211_chanctx_reserved_chandef(local, ctx, NULL) &&
->> +           ieee80211_chanctx_reserved_chandef(local, ctx, def))
->> +               return true;
-> and this seems redundant as _combined_chandef() should already check for it?
+> Reviewed-By: Michał Kazior <michal.kazior@tieto.com>
 
-Hmm, good point. I'll get rid of these redundant checks.
+Thanks, I added this to the patch.
 
+Let's just hope that the l with the extra line doesn't cause any charset
+problems :) BTW, what is the name of the character? Never seen that
+before.
 
-Michał
+-- 
+Kalle Valo
