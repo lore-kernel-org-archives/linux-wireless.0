@@ -1,108 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:56366 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbaCFWr3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 17:47:29 -0500
-Received: by mail-wg0-f51.google.com with SMTP id k14so1613706wgh.10
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 14:47:28 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/5] staging: vt6655: 64 bit fix sizeof long TKIP mic
-Date: Thu,  6 Mar 2014 22:44:25 +0000
-Message-Id: <1394145865-3748-5-git-send-email-tvboxspy@gmail.com> (sfid-20140306_234732_464812_A60F66A3)
-In-Reply-To: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
-References: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:42002 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751959AbaCXIiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2014 04:38:05 -0400
+Message-ID: <1395650268.4515.21.camel@dubbel> (sfid-20140324_093811_248677_572097B9)
+From: Luca Coelho <luca@coelho.fi>
+To: "Berg, Johannes" <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 24 Mar 2014 10:37:48 +0200
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-sDS4tPg/YP4klQzWtpjr"
+Mime-Version: 1.0
+Subject: pull request: mac80211-next-csa 2014-03-24
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change to u32 and fix debug message format
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+--=-sDS4tPg/YP4klQzWtpjr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 222c224..c2653eb 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1257,11 +1257,11 @@ s_cbFillTxBufHead(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyT
- //    unsigned char abyTmp[8];
- //    unsigned long dwCRC;
- 	unsigned int cbMICHDR = 0;
--	unsigned long dwMICKey0, dwMICKey1;
--	unsigned long dwMIC_Priority;
-+	u32 dwMICKey0, dwMICKey1;
-+	u32 dwMIC_Priority;
- 	u32 *pdwMIC_L;
- 	u32 *pdwMIC_R;
--	unsigned long dwSafeMIC_L, dwSafeMIC_R; //Fix "Last Frag Size" < "MIC length".
-+	u32 dwSafeMIC_L, dwSafeMIC_R; /* Fix "Last Frag Size" < "MIC length". */
- 	bool bMIC2Frag = false;
- 	unsigned int uMICFragLen = 0;
- 	unsigned int uMACfragNum = 1;
-@@ -1434,21 +1434,21 @@ s_cbFillTxBufHead(PSDevice pDevice, unsigned char byPktType, unsigned char *pbyT
- //////////////////////////////////////////////////////////////////
- 	if ((bNeedEncrypt == true) && (pTransmitKey != NULL) && (pTransmitKey->byCipherSuite == KEY_CTL_TKIP)) {
- 		if (pDevice->pMgmt->eAuthenMode == WMAC_AUTH_WPANONE) {
--			dwMICKey0 = *(unsigned long *)(&pTransmitKey->abyKey[16]);
--			dwMICKey1 = *(unsigned long *)(&pTransmitKey->abyKey[20]);
-+			dwMICKey0 = *(u32 *)(&pTransmitKey->abyKey[16]);
-+			dwMICKey1 = *(u32 *)(&pTransmitKey->abyKey[20]);
- 		} else if ((pTransmitKey->dwKeyIndex & AUTHENTICATOR_KEY) != 0) {
--			dwMICKey0 = *(unsigned long *)(&pTransmitKey->abyKey[16]);
--			dwMICKey1 = *(unsigned long *)(&pTransmitKey->abyKey[20]);
-+			dwMICKey0 = *(u32 *)(&pTransmitKey->abyKey[16]);
-+			dwMICKey1 = *(u32 *)(&pTransmitKey->abyKey[20]);
- 		} else {
--			dwMICKey0 = *(unsigned long *)(&pTransmitKey->abyKey[24]);
--			dwMICKey1 = *(unsigned long *)(&pTransmitKey->abyKey[28]);
-+			dwMICKey0 = *(u32 *)(&pTransmitKey->abyKey[24]);
-+			dwMICKey1 = *(u32 *)(&pTransmitKey->abyKey[28]);
- 		}
- 		// DO Software Michael
- 		MIC_vInit(dwMICKey0, dwMICKey1);
- 		MIC_vAppend((unsigned char *)&(psEthHeader->abyDstAddr[0]), 12);
- 		dwMIC_Priority = 0;
- 		MIC_vAppend((unsigned char *)&dwMIC_Priority, 4);
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "MIC KEY: %lX, %lX\n", dwMICKey0, dwMICKey1);
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "MIC KEY: %X, %X\n", dwMICKey0, dwMICKey1);
- 	}
- 
- ///////////////////////////////////////////////////////////////////
-@@ -2592,8 +2592,8 @@ vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb, unsigned char *pbMPDU, un
- 	unsigned int uPadding = 0;
- 	unsigned int cbMICHDR = 0;
- 	unsigned int uLength = 0;
--	unsigned long dwMICKey0, dwMICKey1;
--	unsigned long dwMIC_Priority;
-+	u32 dwMICKey0, dwMICKey1;
-+	u32 dwMIC_Priority;
- 	u32 *pdwMIC_L;
- 	u32 *pdwMIC_R;
- 	unsigned short wTxBufSize;
-@@ -2841,15 +2841,15 @@ vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb, unsigned char *pbMPDU, un
- 		}
- 
- 		if ((pTransmitKey != NULL) && (pTransmitKey->byCipherSuite == KEY_CTL_TKIP)) {
--			dwMICKey0 = *(unsigned long *)(&pTransmitKey->abyKey[16]);
--			dwMICKey1 = *(unsigned long *)(&pTransmitKey->abyKey[20]);
-+			dwMICKey0 = *(u32 *)(&pTransmitKey->abyKey[16]);
-+			dwMICKey1 = *(u32 *)(&pTransmitKey->abyKey[20]);
- 
- 			// DO Software Michael
- 			MIC_vInit(dwMICKey0, dwMICKey1);
- 			MIC_vAppend((unsigned char *)&(sEthHeader.abyDstAddr[0]), 12);
- 			dwMIC_Priority = 0;
- 			MIC_vAppend((unsigned char *)&dwMIC_Priority, 4);
--			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "DMA0_tx_8021:MIC KEY: %lX, %lX\n", dwMICKey0, dwMICKey1);
-+			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "DMA0_tx_8021:MIC KEY: %X, %X\n", dwMICKey0, dwMICKey1);
- 
- 			uLength = cbHeaderSize + cbMacHdLen + uPadding + cbIVlen;
- 
--- 
-1.9.0
+Hi Johannes,
+
+As we agreed, I'm sending you a pull request with the channel-switch
+stuff Micha=C5=82 and I have been working on.
+
+This includes my combination and reservation patchsets and the VLAN copy
+chanctx from Micha=C5=82 that my reservation patchset depends on.
+
+Please pull.
+
+The following changes since commit 73fb08e24ae840bc518facc2c605dd6bb3751fec=
+:
+
+  cfg80211: remove macro ASSERT_RDEV_LOCK(rdev) (2014-03-19 21:29:58 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/mac80211-next-csa.git =
+for-johannes
+
+for you to fetch changes up to 5824e703a7a1dbd766aa445fff8518ddf90468be:
+
+  mac80211: allow reservation of a running chanctx (2014-03-24 10:18:32 +02=
+00)
+
+----------------------------------------------------------------
+Luciano Coelho (9):
+      cfg80211: refactor cfg80211_can_use_iftype_chan()
+      cfg80211/mac80211: refactor cfg80211_chandef_dfs_required()
+      cfg80211/mac80211: move interface counting for combination check to m=
+ac80211
+      cfg80211/mac80211: move combination check to mac80211 for ibss
+      cfg80211/mac80211: move more combination checks to mac80211
+      mac80211: split ieee80211_vif_change_channel in two
+      mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
+      mac80211: implement chanctx reservation
+      mac80211: allow reservation of a running chanctx
+
+Michal Kazior (1):
+      mac80211: protect AP VLAN list with local->mtx
+
+ Documentation/DocBook/80211.tmpl |   1 +
+ include/net/cfg80211.h           |  31 ++++++-
+ include/net/mac80211.h           |   7 ++
+ net/mac80211/cfg.c               |  16 +++-
+ net/mac80211/chan.c              | 384 +++++++++++++++++++++++++++++++++++=
+++++++++++++++++++++++-------------------
+ net/mac80211/ibss.c              |  64 +++++++++----
+ net/mac80211/ieee80211_i.h       |  21 ++++-
+ net/mac80211/iface.c             |  15 ++-
+ net/mac80211/mesh.c              |   9 +-
+ net/mac80211/util.c              |  76 +++++++++++++++
+ net/wireless/chan.c              |  74 +++++++++++----
+ net/wireless/core.c              |  11 +--
+ net/wireless/core.h              |  29 ------
+ net/wireless/ibss.c              |  24 -----
+ net/wireless/mesh.c              |  25 -----
+ net/wireless/mlme.c              |  14 +--
+ net/wireless/nl80211.c           |  59 ++++--------
+ net/wireless/util.c              | 139 ++++++++++++++++------------
+ 18 files changed, 651 insertions(+), 348 deletions(-)
+
+
+--=-sDS4tPg/YP4klQzWtpjr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABAgAGBQJTL+7cAAoJEKFHnKIaPMX6BW4P/j44aGIch7o4BwGYizLttSUq
+8qIyVhp8RZOEIrR2xxWKdwSne+p7hiyIGBKqQGVPW6majd8TvRE5str1iphn0X5s
+cU+oJfGDJyaR2Y8iIM9z8ZNxAf1nLrY05PwnntSDcrY0oPG2X+HuCepzkonATuJZ
+LKizcS+HIaf9z7bNKHsYee9AfqFhCGEHam2AZNlKcC6+gySXjnbDxDJ+oMRgsnPG
+ylv5WqD+3RjqoW/kezdLTX7hIEtrOuJgfbXiUlcP9q8nsyQ3tedAnddNfSTfdHUu
+GwgP7EfT6/RDF8vL8qw3mGyHpRwNowL7BKsbtxNB/4ykLOB3aLYTNgO/ldkcYhUS
+tqMkqCW70deQPPW5wYZZuMSytmWzGST2VbqjV+BoBQ2ZC6/on32LHR6YxiynyQ3m
+E4rNqRm0cm8NyOMz0MIvMWynk2qsV6dlVNAn6+HFqseI/Zj8DZ5RBUvNG63BI4Sy
+JQZxGPx7PTTPFx0FHVhH87/fzt9Fnym91wbrReJGIITNFa6vM1jaF5/DzkXXqg1a
+MQtGx9w+n+VQ1HzVMckEQjhCedndBoWt2xXvDbkxqUJXDWFYFnzB1qfQ0E5OfoNw
+4ktLdl6b/KGN1fEmix+Upy/BwWo9kZ+fdf0cq9t0Yn9NRPOj/+gXkyehlC6pefyf
+Idx9ms6cV+rqw5U/JjbJ
+=hIS2
+-----END PGP SIGNATURE-----
+
+--=-sDS4tPg/YP4klQzWtpjr--
 
