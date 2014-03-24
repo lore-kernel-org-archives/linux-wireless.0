@@ -1,43 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51372 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754126AbaCMRaN (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:46975 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752087AbaCXOCW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 13:30:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gang Zhao <gamerh2o@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wlan-ng: fixup staging driver for removal of ieee80211_dsss_chan_to_freq
-Date: Thu, 13 Mar 2014 13:16:15 -0400
-Message-Id: <1394730975-20389-1-git-send-email-linville@tuxdriver.com> (sfid-20140313_183049_361466_DB640178)
+	Mon, 24 Mar 2014 10:02:22 -0400
+Received: by mail-oa0-f52.google.com with SMTP id l6so5859073oag.11
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 07:02:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1395669396.4515.62.camel@dubbel>
+References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
+	<1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	<1395408675-26013-4-git-send-email-michal.kazior@tieto.com>
+	<1395669396.4515.62.camel@dubbel>
+Date: Mon, 24 Mar 2014 15:02:21 +0100
+Message-ID: <CA+BoTQ=G=fXBiQ7cGi2KT2B3RP9_9_AW-mL0-ucUYCK0OYUOHQ@mail.gmail.com> (sfid-20140324_150234_129636_0E81E8B4)
+Subject: Re: [PATCH v2 3/4] cfg80211: export interface stopping function
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 3ebe8e257307a87c33460aa7d2b75dadd374ed9c ("ieee80211: remove
-function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}") removed
-ieee80211_dsss_chan_to_freq, but it neglected to account for this
-staging driver...
+On 24 March 2014 14:56, Luca Coelho <luca@coelho.fi> wrote:
+> On Fri, 2014-03-21 at 14:31 +0100, Michal Kazior wrote:
+>> This exports a new cfg80211_stop_iface() function.
+>>
+>> This is intended for driver internal interface
+>> combination management and channel switching.
+>>
+>> Due to locking issues (it re-enters driver) the
+>> call is asynchronous and uses cfg80211 event
+>> list/worker.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>
+> Looks good to me, with a couple of nitpicks.
+>
+> [...]
+>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+>> index 2f28ac4..7f0cbfb 100644
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -4705,6 +4705,21 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+>>                               const u8 radar_detect,
+>>                               const int iftype_num[NUM_NL80211_IFTYPES]);
+>>
+>> +/*
+>> + * cfg80211_stop_iface - stop given interface
+>> + *
+>> + * @wiphy: the wiphy
+>> + * @wdev: wireless device
+>> + *
+>> + * Stop interface as if AP was stopped, IBSS/mesh left, STA disconnected.
+>
+> This is not very clear.  Maybe you should say that this allows the
+> driver to _trigger_ an interface to be stopped, so that it's clear that
+> all the stopping flow will take place.
 
-Cc: Zhao, Gang <gamerh2o@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/staging/wlan-ng/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah, it's async so "trigger" makes more sense.
 
-diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
-index a7d24c95191d..7dd2b95416e8 100644
---- a/drivers/staging/wlan-ng/cfg80211.c
-+++ b/drivers/staging/wlan-ng/cfg80211.c
-@@ -416,7 +416,7 @@ static int prism2_scan(struct wiphy *wiphy,
- 		memcpy(&ie_buf[2], &(msg2.ssid.data.data), msg2.ssid.data.len);
- 		bss = cfg80211_inform_bss(wiphy,
- 			ieee80211_get_channel(wiphy,
--			      ieee80211_dsss_chan_to_freq(msg2.dschannel.data)),
-+			      ieee80211_channel_to_frequency(msg2.dschannel.data, IEEE80211_BAND_2GHZ)),
- 			(const u8 *) &(msg2.bssid.data.data),
- 			msg2.timestamp.data, msg2.capinfo.data,
- 			msg2.beaconperiod.data,
--- 
-1.8.5.3
 
+>> + *
+>> + * This is intended for channel switching and internal driver interface
+>> + * combination management.
+>
+> Not sure you need to say when this is needed.  The driver could call it
+> for any internal reason.
+
+I'll remove this sentence then unless someone has an objection? :-)
+
+
+> [...]
+>> @@ -789,6 +788,37 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+>>       wdev->beacon_interval = 0;
+>>  }
+>>
+>> +void cfg80211_leave(struct cfg80211_registered_device *rdev,
+>> +                 struct wireless_dev *wdev)
+>> +{
+>> +     ASSERT_RTNL();
+>> +
+>> +     wdev_lock(wdev);
+>> +     __cfg80211_leave(rdev, wdev);
+>> +     wdev_unlock(wdev);
+>> +}
+>> +
+>> +void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+>> +{
+>> +     struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+>> +     struct cfg80211_event *ev;
+>> +     unsigned long flags;
+>> +
+>> +     trace_cfg80211_stop_iface(wiphy, wdev);
+>> +
+>> +     ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
+>
+> Is there any reason why you don't pass the GFP type to this function, as
+> in all other functions that allow the driver to queue events?
+
+Not really. I'll add the argument.
+
+
+Michał
