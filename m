@@ -1,48 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:52236 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbaCFKwP (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:33800 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753113AbaCXPOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 05:52:15 -0500
+	Mon, 24 Mar 2014 11:14:10 -0400
+Message-ID: <53304BBE.6040403@lwfinger.net> (sfid-20140324_161422_615904_1AEC3D9B)
+Date: Mon, 24 Mar 2014 10:14:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20140228092203.GA2974@piout.net>
-References: <1375189476-21557-1-git-send-email-coelho@ti.com>
- <CAGm1_kvdzkvzEEymQ+H0XiKugifHF27KDz3jwX5Frg_U=S7KgA@mail.gmail.com> <20140228092203.GA2974@piout.net>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Thu, 6 Mar 2014 11:51:54 +0100
-Message-ID: <CAGm1_kv_byZMme0amziQt57Wng+b342hPf5MKrJn2iFRvdyR5Q@mail.gmail.com> (sfid-20140306_115232_638279_45AC4D6A)
-Subject: Re: [PATCH v4 0/8] wilink: add device tree support
-To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Cc: mark.rutland@arm.com, nm@ti.com,
-	Mike Turquette <mturquette@linaro.org>,
-	linux-doc@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
-	linux-wireless@vger.kernel.org, "Nori, Sekhar" <nsekhar@ti.com>,
-	kernel list <linux-kernel@vger.kernel.org>, balbi@ti.com,
-	Javier Martinez Canillas <martinez.javier@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-omap@vger.kernel.org, luca@coelho.fi,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Adam Lee <adam.lee@canonical.com>, linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] rtlwifi: add MSI interrupts support
+References: <1395640841-14477-1-git-send-email-adam.lee@canonical.com> <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
+In-Reply-To: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 28, 2014 at 10:22 AM, Alexandre Belloni
-<alexandre.belloni@free-electrons.com> wrote:
-> On 28/02/2014 at 08:26:46 +0100, Yegor Yefremov wrote :
->>
->> What is the state of the series? Who is now responsible for the
->> patches? What issues were still not handled?
->>
+On 03/24/2014 06:34 AM, Adam Lee wrote:
+> Add MSI interrupts support, enable it when msi_support flag is true,
+> also could fallback to pin-based interrupts mode if MSI mode fails.
 >
-> We probably want to end that discussion before taking those bindings in:
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232185.html
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+
+Your first patch turns on MSI support unconditionally. That implies that there 
+are no harmful effects for attempting to use MSI on a box where it is not 
+needed, and/or not implemented. If that is the case, then the msi_support bool 
+should be eliminated, your first patch dropped, and this one revised 
+appropriately. Driver rtl8723be added this bool, but never uses it. Once that 
+driver reaches mainline, a patch can be prepared to remove the variable.
+
+I think this patch should be applied to stable. Applying it back to 3.10+ should 
+be far enough. That will pick up the initial submission of the RTL8188EE driver. 
+Boxes that need MSI interrupts are not likely to use any of the older chips.
+
+There are some additional in-line comments below.
+
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c | 63 ++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 61 insertions(+), 2 deletions(-)
 >
-> I've hit the issue, precisely using those bindings.
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index f26f4ff..dd8497a 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -1853,6 +1853,63 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+>   	return true;
+>   }
+>
+> +static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
+> +	int ret;
 
-The discussion seems to flow down. The last message was about "Mon Feb
-17 18:25:11 EST 2014".
+I like a blank line between the declarations and the code.
 
-Btw is TI going to assign a new maintainer for Wilink stuff? As Luca
-has left TI, the driver is marked as "Orphan".
+> +	ret = pci_enable_msi(rtlpci->pdev);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
+> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
+> +	if (ret < 0) {
+> +		pci_disable_msi(rtlpci->pdev);
+> +		return ret;
+> +	}
+> +
+> +	rtlpci->using_msi = true;
+> +
+> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
+> +			("MSI Interrupt Mode!\n"));
 
-Yegor
+Doesn't checkpatch.pl complain about the alignment here?
+
+> +	return 0;
+> +}
+> +
+> +static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
+> +	int ret;
+> +
+> +	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
+> +			  IRQF_SHARED, KBUILD_MODNAME, hw);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	rtlpci->using_msi = false;
+> +	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
+> +		 ("Pin-based Interrupt Mode!\n"));
+> +	return 0;
+> +}
+> +
+> +static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
+> +{
+> +	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+> +	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
+> +	int ret;
+> +	if (rtlpci->msi_support == true) {
+
+As discussed above, this test is not needed. If it were, the current version of 
+checkpatch.pl complains about the "== true" part.
+
+> +		ret = rtl_pci_intr_mode_msi(hw);
+> +		if (ret < 0)
+> +			ret = rtl_pci_intr_mode_legacy(hw);
+> +	} else {
+> +		ret = rtl_pci_intr_mode_legacy(hw);
+> +	}
+> +	return ret;
+> +}
+> +
+>   int rtl_pci_probe(struct pci_dev *pdev,
+>   			    const struct pci_device_id *id)
+>   {
+> @@ -1995,8 +2052,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+>   	}
+>
+>   	rtlpci = rtl_pcidev(pcipriv);
+> -	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
+> -			  IRQF_SHARED, KBUILD_MODNAME, hw);
+> +	err = rtl_pci_intr_mode_decide(hw);
+>   	if (err) {
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+>   			 "%s: failed to register IRQ handler\n",
+> @@ -2064,6 +2120,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+>   		rtlpci->irq_alloc = 0;
+>   	}
+>
+> +	if (rtlpci->using_msi == true)
+
+Again "if (rtlpci->using_msi)" is preferred.
+
+> +		pci_disable_msi(rtlpci->pdev);
+> +
+>   	list_del(&rtlpriv->list);
+>   	if (rtlpriv->io.pci_mem_start != 0) {
+>   		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
+>
+
+When you resubmit, use "[PATCH V2]" in the subject, and use the proper CC stable 
+with [3.10+] following the address.
+
+Larry
+
