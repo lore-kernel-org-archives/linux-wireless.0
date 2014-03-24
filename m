@@ -1,94 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757962AbaCSI2w (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:44007 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824AbaCXUYD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:28:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: verify deauthentication and return error on failure
-Date: Wed, 19 Mar 2014 09:28:49 +0100
-Message-Id: <1395217729-13565-1-git-send-email-johannes@sipsolutions.net> (sfid-20140319_092858_551105_A3D36DB9)
+	Mon, 24 Mar 2014 16:24:03 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so4919166eei.14
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 13:24:02 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 2/8] ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+Date: Mon, 24 Mar 2014 21:23:16 +0100
+Message-Id: <1395692603-4693-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140324_212411_896492_5E69EA30)
+In-Reply-To: <1395692603-4693-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1395692603-4693-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+No functional changes.
 
-When still authenticating the mac80211 code handling a deauthentication
-requests from userspace doesn't verify that the request is valid in any
-way, fix that. Additionally, it never returns an error, even if there's
-no connection or authentication attempt, fix that as well.
-
-While at it, move the message to not print a message in the error case
-and to distinguish between the two cases.
-
-Also simplify the code by duplicating the cfg80211 call.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/mlme.c | 30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 423816f18b55..5ade21eb3602 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4393,37 +4393,41 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 	bool tx = !req->local_state_change;
--	bool report_frame = false;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c07fc8f..fd14c3a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -655,9 +655,9 @@ static const u8 rx_legacy_rate_idx[] = {
+ 	5,	/* 0x0F  - 9Mbps   */
+ };
  
--	sdata_info(sdata,
--		   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
--		   req->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
-+	if (ifmgd->auth_data &&
-+	    ether_addr_equal(ifmgd->auth_data->bss->bssid, req->bssid)) {
-+		sdata_info(sdata,
-+			   "aborting authentication with %pM by local choice (Reason: %u=%s)\n",
-+			   req->bssid, req->reason_code,
-+			   ieee80211_get_reason_code_string(req->reason_code));
- 
--	if (ifmgd->auth_data) {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
- 					       req->reason_code, tx,
- 					       frame_buf);
- 		ieee80211_destroy_auth_data(sdata, false);
-+		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
-+				      IEEE80211_DEAUTH_FRAME_LEN);
- 
--		report_frame = true;
--		goto out;
-+		return 0;
+-static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
+-			     enum ieee80211_band band,
+-			     struct ieee80211_rx_status *status)
++static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
++				  enum ieee80211_band band,
++				  struct ieee80211_rx_status *status)
+ {
+ 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+ 	u8 info0 = info->rate.info0;
+@@ -789,7 +789,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		return;
  	}
  
- 	if (ifmgd->associated &&
- 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
-+		sdata_info(sdata,
-+			   "deauthenticating from %pM by local choice (Reason: %u=%s)\n",
-+			   req->bssid, req->reason_code,
-+			   ieee80211_get_reason_code_string(req->reason_code));
-+
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, tx, frame_buf);
--		report_frame = true;
--	}
--
-- out:
--	if (report_frame)
- 		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
- 				      IEEE80211_DEAUTH_FRAME_LEN);
-+		return 0;
-+	}
+-	process_rx_rates(ar, info, ch->band, status);
++	ath10k_htt_rx_h_rates(ar, info, ch->band, status);
+ 	status->band = ch->band;
+ 	status->freq = ch->center_freq;
  
--	return 0;
-+	return -ENOTCONN;
- }
- 
- int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.5.3
+1.7.9.5
 
