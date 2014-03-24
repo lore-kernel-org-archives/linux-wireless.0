@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39601 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbaCXQui (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:51142 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbaCXIao convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 12:50:38 -0400
-Message-ID: <53306239.2020006@candelatech.com> (sfid-20140324_175059_432744_B2FEC4F7)
-Date: Mon, 24 Mar 2014 09:50:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 24 Mar 2014 04:30:44 -0400
+Received: by mail-oa0-f49.google.com with SMTP id h16so5432986oag.36
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 01:30:44 -0700 (PDT)
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+In-Reply-To: <87d2hc80qp.fsf@kamboji.qca.qualcomm.com>
+References: <1395380076-4306-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmLfdkyN8yC8m-i_yXbhQ3UYVj1kPrdFmYSyLONCC=Kig@mail.gmail.com>
+	<87d2hc80qp.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 24 Mar 2014 09:30:44 +0100
+Message-ID: <CA+BoTQktUw+VhNfAWNJEECGjL9mTGPLTxBsrGOdzJtArjuC11A@mail.gmail.com> (sfid-20140324_093048_827745_DED6E9C5)
+Subject: Re: [PATCH] ath10k: fix the peer mac address in getting stats
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
 	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: Add debugging for tx-credits usage.
-References: <1395428150-31996-1-git-send-email-greearb@candelatech.com> <871txr7svw.fsf@kamboji.qca.qualcomm.com> <CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>
-In-Reply-To: <CA+BoTQmquq7dXTV0sSV1mJ0+8-9OuiCnqz2iN8VNO4J3iaeexQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2014 04:21 AM, Michal Kazior wrote:
-> On 24 March 2014 12:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+On 24 March 2014 09:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 
->>> -     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
->>> +     status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
+[...]
+
+>> Other than that the patch looks good.
 >>
->> Using line numbers in debug messages is very cumbersome. Some people
->> cherry pick patches, have their own changes and whatnot which will make
->> it more difficult to read the debug logs. Isn't there any better way to
->> do this?
-> 
-> I would prefer to explicitly wait for tx credit replenishment in
-> ath10k_wmi_cmd_send() after a command is sent instead of all these
-> prints. This way you can get a full call trace if it times out.
+>> Reviewed-By: Michał Kazior <michal.kazior@tieto.com>
+>
+> Thanks, I added this to the patch.
+>
+> Let's just hope that the l with the extra line doesn't cause any charset
+> problems :) BTW, what is the name of the character? Never seen that
+> before.
 
-Would that be a performance problem (by effectively allowing only a single
-item to be sent to the firmware at any given time?)
+http://www.fileformat.info/info/unicode/char/142/index.htm
 
-Thanks,
-Ben
+I don't care much if you s/ł/l/. I already commit patches with an l.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Michał
