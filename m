@@ -1,110 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35727 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbaCJP1O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 11:27:14 -0400
-Received: by mail-pa0-f43.google.com with SMTP id bj1so7411962pad.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Mar 2014 08:27:14 -0700 (PDT)
-From: fariyaf@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH v4 11/11] rsi: Makefile and Kconfig
-Date: Mon, 10 Mar 2014 20:56:39 +0530
-Message-Id: <1394465199-10042-12-git-send-email-fariyaf@gmail.com> (sfid-20140310_162727_409845_05D297F4)
-In-Reply-To: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
-References: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33962 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750936AbaCXWXd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Mar 2014 18:23:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Joe Perches <joe@perches.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 24 Mar 2014 15:23:26 -0700
+Subject: RE: [PATCH net-next 6/7] mwifiex: Remove casts of pointer to same
+ type
+Message-ID: <477F20668A386D41ADCC57781B1F70430F53F34172@SC-VEXCH1.marvell.com> (sfid-20140324_232405_289410_20CF6254)
+References: <cover.1395692043.git.joe@perches.com>
+ <6acb416fd1434c218ce14f2dd0878e561cc5ff9e.1395692043.git.joe@perches.com>
+In-Reply-To: <6acb416fd1434c218ce14f2dd0878e561cc5ff9e.1395692043.git.joe@perches.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+Hi Joe,
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
+Thanks for the patch.
 
-This patch contains changes/additions related to Makefile and Kconfig.
----
- drivers/net/wireless/Kconfig      |    1 +
- drivers/net/wireless/Makefile     |    1 +
- drivers/net/wireless/rsi/Kconfig  |   30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/Makefile |   12 ++++++++++++
- 4 files changed, 44 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/Kconfig
- create mode 100644 drivers/net/wireless/rsi/Makefile
+> Casting a pointer to a pointer of the same type is pointless,
+> so remove these unnecessary casts.
+> 
+> Done via coccinelle script:
+> 
+> $ cat typecast_2.cocci
+> @@
+> type T;
+> T *foo;
+> @@
+> 
+> -	(T *)foo
+> +	foo
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 200020e..784d66e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -281,5 +281,6 @@ source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
- source "drivers/net/wireless/cw1200/Kconfig"
-+source "drivers/net/wireless/rsi/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 0fab227..0c88916 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -59,3 +59,4 @@ obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
- 
- obj-$(CONFIG_CW1200)	+= cw1200/
-+obj-$(CONFIG_RSI_91X)	+= rsi/
-diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
-new file mode 100644
-index 0000000..d0551c4
---- /dev/null
-+++ b/drivers/net/wireless/rsi/Kconfig
-@@ -0,0 +1,30 @@
-+config RSI_91X
-+	tristate "Redpine Signals Inc 91x WLAN driver support"
-+	depends on MAC80211
-+	---help---
-+	  This option enabes support for RSI 1x1 devices.
-+	  Select M (recommended), if you have a RSI 1x1 wireless module.
-+
-+config RSI_DEBUGFS
-+	bool "Redpine Signals Inc debug support"
-+	depends on RSI_91X
-+	default y
-+	---help---
-+	 Say Y, if you would like to enable debug support. This option
-+	 creates debugfs entries 
-+
-+config RSI_SDIO
-+	tristate "Redpine Signals SDIO bus support"
-+	depends on MMC && RSI_91X
-+	default m
-+	---help---
-+	  This option enables the SDIO bus support in rsi drivers.
-+	  Select M (recommended), if you have a RSI 1x1 wireless module.
-+
-+config RSI_USB
-+	tristate "Redpine Signals USB bus support"
-+	depends on USB && RSI_91X
-+	default m
-+	---help---
-+	  This option enables the USB bus support in rsi drivers.
-+	  Select M (recommended), if you have a RSI 1x1 wireless module.
-diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
-new file mode 100644
-index 0000000..b7d7a56
---- /dev/null
-+++ b/drivers/net/wireless/rsi/Makefile
-@@ -0,0 +1,12 @@
-+rsi_91x-y			+= rsi_91x_main.o
-+rsi_91x-y			+= rsi_91x_core.o
-+rsi_91x-y			+= rsi_91x_mac80211.o
-+rsi_91x-y			+= rsi_91x_mgmt.o
-+rsi_91x-y			+= rsi_91x_pkt.o
-+rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
-+
-+rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
-+rsi_sdio-y			+= rsi_91x_sdio.o rsi_91x_sdio_ops.o
-+obj-$(CONFIG_RSI_91X) 		+= rsi_91x.o
-+obj-$(CONFIG_RSI_SDIO)		+= rsi_sdio.o
-+obj-$(CONFIG_RSI_USB)		+= rsi_usb.o
--- 
-1.7.5.4
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/pcie.c | 6 +++---
+>  drivers/net/wireless/mwifiex/scan.c | 2 +-
+>  drivers/net/wireless/mwifiex/tdls.c | 6 +++---
+>  3 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index 9f1683b..c0c598d 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -1009,7 +1009,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
+>  		card->tx_buf_list[wrdoneidx] = NULL;
+> 
+>  		if (reg->pfu_enabled) {
+> -			desc2 = (void *)card->txbd_ring[wrdoneidx];
+> +			desc2 = card->txbd_ring[wrdoneidx];
+>  			memset(desc2, 0, sizeof(*desc2));
+>  		} else {
+>  			desc = card->txbd_ring[wrdoneidx];
+> @@ -1094,7 +1094,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+>  		card->tx_buf_list[wrindx] = skb;
+> 
+>  		if (reg->pfu_enabled) {
+> -			desc2 = (void *)card->txbd_ring[wrindx];
+> +			desc2 = card->txbd_ring[wrindx];
+>  			desc2->paddr = buf_pa;
+>  			desc2->len = (u16)skb->len;
+>  			desc2->frag_len = (u16)skb->len;
+> @@ -1254,7 +1254,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+>  		card->rx_buf_list[rd_index] = skb_tmp;
+> 
+>  		if (reg->pfu_enabled) {
+> -			desc2 = (void *)card->rxbd_ring[rd_index];
+> +			desc2 = card->rxbd_ring[rd_index];
+>  			desc2->paddr = buf_pa;
+>  			desc2->len = skb_tmp->len;
+>  			desc2->frag_len = skb_tmp->len;
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index f139244..825aeec 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -1653,7 +1653,7 @@ mwifiex_parse_single_response_buf(struct mwifiex_private *priv, u8 **bss_info,
+>  	curr_bcn_bytes -= ETH_ALEN;
+> 
+>  	if (!ext_scan) {
+> -		rssi = (s32) *(u8 *)current_ptr;
+> +		rssi = (s32) *current_ptr;
+>  		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
+>  		current_ptr += sizeof(u8);
+>  		curr_bcn_bytes -= sizeof(u8);
+> diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+> index 8cec6e4..97662a1 100644
+> --- a/drivers/net/wireless/mwifiex/tdls.c
+> +++ b/drivers/net/wireless/mwifiex/tdls.c
+> @@ -730,13 +730,13 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
+> 
+>  	if (len < (sizeof(struct ethhdr) + 3))
+>  		return;
+> -	if (*(u8 *)(buf + sizeof(struct ethhdr)) != WLAN_TDLS_SNAP_RFTYPE)
+> +	if (*(buf + sizeof(struct ethhdr)) != WLAN_TDLS_SNAP_RFTYPE)
+>  		return;
+> -	if (*(u8 *)(buf + sizeof(struct ethhdr) + 1) != WLAN_CATEGORY_TDLS)
+> +	if (*(buf + sizeof(struct ethhdr) + 1) != WLAN_CATEGORY_TDLS)
+>  		return;
+> 
+>  	peer = buf + ETH_ALEN;
+> -	action = *(u8 *)(buf + sizeof(struct ethhdr) + 2);
+> +	action = *(buf + sizeof(struct ethhdr) + 2);
+> 
+>  	/* just handle TDLS setup request/response/confirm */
+>  	if (action > WLAN_TDLS_SETUP_CONFIRM)
+> --
+> 1.8.1.2.459.gbcd45b4.dirty
 
