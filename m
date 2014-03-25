@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42552 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750830AbaCYH7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 03:59:35 -0400
-Message-ID: <1395734367.28231.57.camel@dubbel> (sfid-20140325_085938_410519_39CE1A3B)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Tue, 25 Mar 2014 09:59:27 +0200
-In-Reply-To: <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	 <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2 03/13] mac80211: prevent chanctx overcommit
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:57497 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548AbaCYJPr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 05:15:47 -0400
+Subject: [PATCH 8/8] ath10k: print chip id during boot
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 25 Mar 2014 11:15:46 +0200
+Message-ID: <20140325091546.16651.33866.stgit@potku.adurom.net> (sfid-20140325_101550_644901_1FE95177)
+In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
+References: <20140325091311.16651.15747.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
-> Do not allocate more channel contexts than a
-> driver is capable for currently matching interface
-> combination.
-> 
-> This allows the ieee80211_vif_reserve_chanctx() to
-> act as a guard against breaking interface
-> combinations.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
+This makes it easier to debug what kind of board is used.
 
-[...]
-> @@ -745,13 +764,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
->  			 * context, reserve our current context
->  			 */
->  			new_ctx = curr_ctx;
-> -		} else {
-> +		} else if (ieee80211_can_create_new_chanctx(local)) {
->  			/* create a new context and reserve it */
->  			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
->  			if (IS_ERR(new_ctx)) {
->  				ret = PTR_ERR(new_ctx);
->  				goto out;
->  			}
-> +		} else {
-> +			ret = -EBUSY;
-> +			goto out;
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-I'm not sure about this whole allowed channels counting thing.  Does it
-really matter what is the total number of allowed channels? I think the
-actual combinations is what should be checked here.
-
-Let's say the driver supports these combinations:
-
-1. num_different_channels = 2; limits max 2 APs;
-2. num_different_channels = 1; limits 1 AP, 1 STA;
-
-Then you're running on a single-channel with 1 AP and 1 STA.  The STA
-gets a CSA to move to a new channel.  If you only consider the
-max_num_channels you calculated, you will think that it is okay to
-switch, but it is not, because you cannot have 1 AP and 1 STA on
-different channels.
-
-Or am I missing something?
-
---
-Luca
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 471c219e5137..0077ba17e5c0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -844,9 +844,12 @@ int ath10k_core_start(struct ath10k *ar)
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
+ 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
+-		ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
+-			    ar->hw_params.name, ar->target_version,
+-			    ar->hw->wiphy->fw_version, ar->fw_api,
++		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
++			    ar->hw_params.name,
++			    ar->target_version,
++			    ar->chip_id,
++			    ar->hw->wiphy->fw_version,
++			    ar->fw_api,
+ 			    ar->htt.target_version_major,
+ 			    ar->htt.target_version_minor);
+ 
 
