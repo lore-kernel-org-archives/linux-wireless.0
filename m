@@ -1,150 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37123 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752410AbaCMNd5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 09:33:57 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v9 2/4] mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
-Date: Thu, 13 Mar 2014 15:33:39 +0200
-Message-Id: <1394717621-5608-3-git-send-email-luciano.coelho@intel.com> (sfid-20140313_143400_703302_F397F905)
-In-Reply-To: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
-References: <1394717621-5608-1-git-send-email-luciano.coelho@intel.com>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:45832 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbaCYJct convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 05:32:49 -0400
+Received: by mail-oa0-f54.google.com with SMTP id n16so215782oag.41
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 02:32:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140325091505.16651.15554.stgit@potku.adurom.net>
+References: <20140325091311.16651.15747.stgit@potku.adurom.net>
+	<20140325091505.16651.15554.stgit@potku.adurom.net>
+Date: Tue, 25 Mar 2014 10:32:49 +0100
+Message-ID: <CA+BoTQns9QXCctzrMzd5=o6EyA=d0TG-eLJw3hztE1-MD7HwkQ@mail.gmail.com> (sfid-20140325_103303_853166_B47180E9)
+Subject: Re: [PATCH 1/8] ath10k: cleanup ath10k_pci_wait_for_target_init()
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Combine the functions into one, so that we can switch from one context
-to the other without having to unassign and assign separately.  This
-is needed by the channel reservation functionality because otherwise
-we have a small period of time when the chanctx is set to NULL, which
-can cause problems if someone else is trying to dereference it.
+On 25 March 2014 10:15, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> ath10k_pci_wait_for_target_init() did really follow the style used elsewhere in
+> ath10k. Use ath10k_pci_read/write() wrappers, simplify the while loop and
+> improve warning messages.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c |   33 ++++++++++++++++++++-------------
+>  1 file changed, 20 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 9d242d801d9d..0425c76daf3f 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2385,30 +2385,37 @@ static int ath10k_pci_deinit_irq(struct ath10k *ar)
+>  static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+>  {
+>         struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+> -       int wait_limit = 300; /* 3 sec */
+> +       const int wait = 3000; /* ms */
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/chan.c | 85 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 43 insertions(+), 42 deletions(-)
+We probably should have a #define for this.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index ef77703..5fa12f1 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -294,32 +294,6 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 	ieee80211_recalc_idle(local);
- }
- 
--static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_chanctx *ctx)
--{
--	struct ieee80211_local *local = sdata->local;
--	int ret;
--
--	lockdep_assert_held(&local->chanctx_mtx);
--
--	ret = drv_assign_vif_chanctx(local, sdata, ctx);
--	if (ret)
--		return ret;
--
--	rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
--	ctx->refcount++;
--
--	ieee80211_recalc_txpower(sdata);
--	ieee80211_recalc_chanctx_min_def(local, ctx);
--	sdata->vif.bss_conf.idle = false;
--
--	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
--	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
--
--	return 0;
--}
--
- static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
- 					      struct ieee80211_chanctx *ctx)
- {
-@@ -378,30 +352,57 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
- 	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RADAR);
- }
- 
--static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
--					   struct ieee80211_chanctx *ctx)
-+static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_chanctx *new_ctx)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *curr_ctx = NULL;
-+	int ret = 0;
- 
--	lockdep_assert_held(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
- 
--	ctx->refcount--;
--	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
-+	if (conf) {
-+		curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--	sdata->vif.bss_conf.idle = true;
-+		curr_ctx->refcount--;
-+		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
-+		conf = NULL;
-+	}
- 
--	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
--	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
-+	if (new_ctx) {
-+		ret = drv_assign_vif_chanctx(local, sdata, new_ctx);
-+		if (ret)
-+			goto out;
-+
-+		new_ctx->refcount++;
-+		conf = &new_ctx->conf;
-+	}
- 
--	drv_unassign_vif_chanctx(local, sdata, ctx);
-+out:
-+	rcu_assign_pointer(sdata->vif.chanctx_conf, conf);
-+
-+	sdata->vif.bss_conf.idle = !conf;
- 
--	if (ctx->refcount > 0) {
--		ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
--		ieee80211_recalc_smps_chanctx(local, ctx);
--		ieee80211_recalc_radar_chanctx(local, ctx);
--		ieee80211_recalc_chanctx_min_def(local, ctx);
-+	if (curr_ctx && curr_ctx->refcount > 0) {
-+		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
-+		ieee80211_recalc_smps_chanctx(local, curr_ctx);
-+		ieee80211_recalc_radar_chanctx(local, curr_ctx);
-+		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
- 	}
-+
-+	if (new_ctx && new_ctx->refcount > 0) {
-+		ieee80211_recalc_txpower(sdata);
-+		ieee80211_recalc_chanctx_min_def(local, new_ctx);
-+	}
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		ieee80211_bss_info_change_notify(sdata,
-+						 BSS_CHANGED_IDLE);
-+
-+	return ret;
- }
- 
- static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-@@ -419,7 +420,7 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 
- 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--	ieee80211_unassign_vif_chanctx(sdata, ctx);
-+	ieee80211_assign_vif_chanctx(sdata, NULL);
- 	if (ctx->refcount == 0)
- 		ieee80211_free_chanctx(local, ctx);
- }
--- 
-1.9.0
 
+> +       unsigned long timeout;
+>         int ret;
+> +       u32 val;
+>
+>         ret = ath10k_pci_wake(ar);
+>         if (ret) {
+> -               ath10k_err("failed to wake up target: %d\n", ret);
+> +               ath10k_err("failed to wake up target for init: %d\n", ret);
+>                 return ret;
+>         }
+>
+> -       while (wait_limit-- &&
+> -              !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
+> -                FW_IND_INITIALIZED)) {
+> +       timeout = jiffies + msecs_to_jiffies(wait);
+> +
+> +       do {
+> +               val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
+> +               if (val == FW_IND_INITIALIZED)
+> +                       break;
+> +
+
+It might be worth to add:
+
+ if (val == 0xFFFFFFFF)
+   return -EIO;
+
+
+>                 if (ar_pci->num_msi_intrs == 0)
+>                         /* Fix potential race by repeating CORE_BASE writes */
+> -                       iowrite32(PCIE_INTR_FIRMWARE_MASK |
+> -                                 PCIE_INTR_CE_MASK_ALL,
+> -                                 ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+> -                                                PCIE_INTR_ENABLE_ADDRESS));
+> +                       ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
+> +                                              PCIE_INTR_FIRMWARE_MASK |
+> +                                              PCIE_INTR_CE_MASK_ALL);
+> +
+>                 mdelay(10);
+> -       }
+> +       } while (time_before(jiffies, timeout));
+>
+> -       if (wait_limit < 0) {
+> -               ath10k_err("target stalled\n");
+> -               ret = -EIO;
+> +       if (val != FW_IND_INITIALIZED) {
+> +               ath10k_err("failed to receive initialized event from target after %d ms: %d\n",
+> +                          wait, val);
+
+`val` is u32 so it shouldn't be %d. %08x makes most sense I guess.
+
+
+Michał
