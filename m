@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:45328 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbaCCQX0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 11:23:26 -0500
-Received: by mail-ee0-f54.google.com with SMTP id d49so900442eek.13
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Mar 2014 08:23:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140303154327.1290.67278.stgit@potku.adurom.net>
-References: <20140303154327.1290.67278.stgit@potku.adurom.net>
-Date: Mon, 3 Mar 2014 17:23:24 +0100
-Message-ID: <CA+BoTQmQndikH5uPDwBpstp9KmcD3tmHSGP5NpEreYEOtRm0sw@mail.gmail.com> (sfid-20140303_172332_721364_B3AB0D1A)
-Subject: Re: [PATCH] ath10k: unify warning messages in mac.c
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:42665 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752654AbaCYJpL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 05:45:11 -0400
+Message-ID: <1395740703.28231.71.camel@dubbel> (sfid-20140325_104519_094326_60A4B0FD)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 25 Mar 2014 11:45:03 +0200
+In-Reply-To: <CA+BoTQ=35sXg-ZLJoSLXdqrNnVO0ey1hBQxs2XALOtr3F4Hghw@mail.gmail.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
+	 <1395734367.28231.57.camel@dubbel>
+	 <CA+BoTQ=35sXg-ZLJoSLXdqrNnVO0ey1hBQxs2XALOtr3F4Hghw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 03/13] mac80211: prevent chanctx overcommit
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 March 2014 16:43, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Currently there are different styles used for warning messages, unify them to
-> look similar.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
+On Tue, 2014-03-25 at 09:37 +0100, Michal Kazior wrote:
+> On 25 March 2014 08:59, Luca Coelho <luca@coelho.fi> wrote:
+> > On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+> >> Do not allocate more channel contexts than a
+> >> driver is capable for currently matching interface
+> >> combination.
+> >>
+> >> This allows the ieee80211_vif_reserve_chanctx() to
+> >> act as a guard against breaking interface
+> >> combinations.
+> >>
+> >> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> >> ---
+> >
+> > [...]
+> >> @@ -745,13 +764,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+> >>                        * context, reserve our current context
+> >>                        */
+> >>                       new_ctx = curr_ctx;
+> >> -             } else {
+> >> +             } else if (ieee80211_can_create_new_chanctx(local)) {
+> >>                       /* create a new context and reserve it */
+> >>                       new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+> >>                       if (IS_ERR(new_ctx)) {
+> >>                               ret = PTR_ERR(new_ctx);
+> >>                               goto out;
+> >>                       }
+> >> +             } else {
+> >> +                     ret = -EBUSY;
+> >> +                     goto out;
+> >
+> > I'm not sure about this whole allowed channels counting thing.  Does it
+> > really matter what is the total number of allowed channels? I think the
+> > actual combinations is what should be checked here.
+> >
+> > Let's say the driver supports these combinations:
+> >
+> > 1. num_different_channels = 2; limits max 2 APs;
+> > 2. num_different_channels = 1; limits 1 AP, 1 STA;
+> >
+> > Then you're running on a single-channel with 1 AP and 1 STA.  The STA
+> > gets a CSA to move to a new channel.  If you only consider the
+> > max_num_channels you calculated, you will think that it is okay to
+> > switch, but it is not, because you cannot have 1 AP and 1 STA on
+> > different channels.
+> >
+> > Or am I missing something?
+> 
+> Yes. You're missing the fact, that ieee80211_max_num_channels() uses
+> current iftype set to narrow down matching combinations.
 
-[...]
+Exactly, that's what I was missing. :)
 
-This still seems inconsistent. I also don't like the capital letters
-(even for abbreviations) in these kind of messages, but that's just my
-OCD..
+--
+Luca.
 
-I think we should agree on one of the two approaches:
-
-a) start with a verb:
-
-"failed to add peer %pM on vdev %i: %d"
-"failed to initialize dfs pattern detector"
-"timed out while waiting for scan completion"
-
-b) start with a noun:
-
-"peer %pM on vdev %i could not be added: %d"
-"dfs pattern detector could not initialize"
-"scan timed out"
-
-These are still mixed.
-
-We could probably also limit the set of verbs, e.g. replace "could
-not" with "failed to" as it's practically the same thing (assuming we
-pick (a)).
-
-But then again, feel free to ignore my OCD :-)
-
-
-Michał
