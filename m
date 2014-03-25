@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27043 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335AbaCMMd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Mar 2014 08:33:27 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>
-Subject: [PATCH] mac80211: add status_driver_data array to ieee80211_tx_info
-Date: Thu, 13 Mar 2014 14:30:47 +0200
-Message-Id: <1394713847-12397-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140313_133331_626830_8D2C0B5E)
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39205 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbaCYJPD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 05:15:03 -0400
+Subject: [PATCH 0/8] ath10k: small cleanups to pci.c
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 25 Mar 2014 11:14:58 +0200
+Message-ID: <20140325091311.16651.15747.stgit@potku.adurom.net> (sfid-20140325_101509_457985_C75185EA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+While looking at the cold reset problem I did some cleanup
+to pci.c.
 
-Drivers might want to have private data in addition
-to all other ieee80211_tx_info.status fields.
-
-The current ieee80211_tx_info.rate_driver_data overlaps
-with some of the non-rate data (e.g. ampdu_ack_len), so
-it might not be good enough.
-
-Since we already know how much free bytes remained,
-simply use this size to define (void *) array.
-
-While on it, change ack_signal type from int to the more
-explicit s32 type.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
 ---
- include/net/mac80211.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2890188..1090855 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -697,11 +697,12 @@ struct ieee80211_tx_info {
- 		} control;
- 		struct {
- 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
--			int ack_signal;
-+			s32 ack_signal;
- 			u8 ampdu_ack_len;
- 			u8 ampdu_len;
- 			u8 antenna;
- 			/* 21 bytes free */
-+			void *status_driver_data[21 / sizeof(void *)];
- 		} status;
- 		struct {
- 			struct ieee80211_tx_rate driver_rates[
--- 
-1.8.3.2
+Kalle Valo (8):
+      ath10k: cleanup ath10k_pci_wait_for_target_init()
+      ath10k: add module parameter to disable cold reset
+      ath10k: fix name of target_ps module parameter
+      ath10k: advertise only firmware API 2 files
+      ath10k: delete ar_pci->fw_indicator_address
+      ath10k: improve pci debug messages
+      ath10k: add module parameter values to the pci info print
+      ath10k: print chip id during boot
+
+
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |    1 
+ drivers/net/wireless/ath/ath10k/pci.c  |  125 ++++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/pci.h  |    3 -
+ 4 files changed, 92 insertions(+), 46 deletions(-)
 
