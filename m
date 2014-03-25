@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48158 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076AbaCZLNR (ORCPT
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:38448 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785AbaCYKbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 07:13:17 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: split ce initialization and allocation
-References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
-	<1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
-	<87ppl9z54w.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnMZ+B0nC_MdYqKk6z1wH-bK47vE+Uknqnv+FpJRKaRjA@mail.gmail.com>
-Date: Wed, 26 Mar 2014 13:13:05 +0200
-In-Reply-To: <CA+BoTQnMZ+B0nC_MdYqKk6z1wH-bK47vE+Uknqnv+FpJRKaRjA@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 26 Mar 2014 11:05:23 +0100")
-Message-ID: <87d2h9yzzy.fsf@kamboji.qca.qualcomm.com> (sfid-20140326_121322_541429_88DC5373)
+	Tue, 25 Mar 2014 06:31:18 -0400
+Received: by mail-ve0-f175.google.com with SMTP id oz11so268641veb.20
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 03:31:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+BoTQnG4QAYrinu3LLj9PbSAdvuUzqyAZQvgrWme5Qd2Hpq6Q@mail.gmail.com>
+References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
+	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
+	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
+	<CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
+	<CA+BoTQmNVHj-rNvVgvTx=Adq6J1kpra2qwi3Pmzh2G2Npn-jGg@mail.gmail.com>
+	<CAEFj984srRCqzFmzjGuE2nFLrC-V+PEgDPC-mejsZnfGH52g_Q@mail.gmail.com>
+	<CA+BoTQnG4QAYrinu3LLj9PbSAdvuUzqyAZQvgrWme5Qd2Hpq6Q@mail.gmail.com>
+Date: Tue, 25 Mar 2014 18:31:17 +0800
+Message-ID: <CAEFj985jyNgSR18xuitL73mqwkgYSV=v7cXSDLVqE5wJfN3fpw@mail.gmail.com> (sfid-20140325_113142_432350_57F0A5D0)
+Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 26 March 2014 10:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> --- a/drivers/net/wireless/ath/ath10k/ce.h
->>> +++ b/drivers/net/wireless/ath/ath10k/ce.h
->>> @@ -104,7 +104,8 @@ struct ath10k_ce_ring {
->>>       void *shadow_base_unaligned;
->>>       struct ce_desc *shadow_base;
->>>
->>> -     void **per_transfer_context;
->>> +     /* keep last */
->>> +     void *per_transfer_context[0];
->>>  };
->>
->> If possible, I would prefer to have changes like this in a separate
->> patch as it makes easier to review. Or at least mention the change in
->> the commit log.
 >
-> The patch already alters the allocation code so I thought I'd squash
-> this here. You want me to just update the commit log or split it up?
-
-In this case updating the commit log is fine.
-
->>> @@ -2018,9 +2029,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
->>>       ath10k_pci_free_early_irq(ar);
->>>       ath10k_pci_kill_tasklet(ar);
->>>       ath10k_pci_deinit_irq(ar);
->>> +     ath10k_pci_ce_deinit(ar);
->>>       ath10k_pci_warm_reset(ar);
->>>
->>> -     ath10k_pci_ce_deinit(ar);
->>>       if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
->>>               ath10k_do_pci_sleep(ar);
->>>  }
->>
->> Why this?
+> The second stats event has pdev stats. As per my other mail, 10.1 has
+> extra pdev stats. Since ath10k doesn't account that it reads peer
+> stats too early from the buffer. What you see is a tail of pdev stats
+> for 10.1.
 >
-> ath10k_pci_ce_deinit() zeroes copy engine registers now so I thought
-> it's nice to have this done before reset.
+> You can try the following to test *10.1*:
 >
-> Before ath10k_pci_ce_deinit() freed memory so it was required to reset
-> the device beforehand. Otherwise you risked device accessing memory
-> that wasn't mapped nor allocated by the driver anymore.
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -2804,6 +2804,12 @@ struct wmi_pdev_stats {
+>         __le32 phy_err_count;  /* Phy error count */
+>         __le32 chan_tx_pwr;    /* channel tx power */
+>         struct wal_dbg_stats wal; /* WAL dbg stats */
+> +       __le32 ack_rx_bad;
+> +       __le32 rts_bad;
+> +       __le32 rts_good;
+> +       __le32 fcs_bad;
+> +       __le32 no_beacons;
+> +       __le32 mib_int_count;
+>  } __packed;
+>
 
-But can you split this change into it's own patch, please? Just in case
-if there are regressions, it's easier to find the culprit.
+Ok. Probably can come out with a patch extending the pdev stats on this.
 
--- 
-Kalle Valo
+I get the self STA stats as follow on 10.1 firmware:
+
+AP:
+[  754.280000] ath10k: pdev 1 vdev 0 peer 1
+[  754.280000] ath10k: MAC 04:f0:21:0c:a5:43
+[  754.280000] ath10k: RSSI 0
+[  754.290000] ath10k: Tx 6000
+[  754.290000] ath10k: Rx 0
+
+STA:
+[  880.060000] ath10k: pdev 1 vdev 0 peer 1
+[  880.060000] ath10k: MAC 00:00:00:00:00:01
+[  880.070000] ath10k: RSSI 0
+[  880.070000] ath10k: Tx 6000
+[  880.070000] ath10k: Rx 0
+
+Similar to 636. But on 636, I don't find any tx rate, only rssi.
+
+---
+Chun-Yeow
