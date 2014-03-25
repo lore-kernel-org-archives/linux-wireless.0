@@ -1,136 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:37962 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752565AbaCRJY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 05:24:56 -0400
-Message-ID: <1395134667.15856.32.camel@dubbel> (sfid-20140318_102501_507391_1871F059)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-	Eliad Peller <eliad@wizery.com>
-Date: Tue, 18 Mar 2014 11:24:27 +0200
-In-Reply-To: <CA+BoTQmLSxmNy+O9mj9MHxtLvE7SU6EfHrCGnZcBmrD3ktonjw@mail.gmail.com>
-References: <1394547394-3910-1-git-send-email-luciano.coelho@intel.com>
-	 <1394547394-3910-4-git-send-email-luciano.coelho@intel.com>
-	 <CA+BoTQ=i2yDeVQaaF3aWfKG+dcHCn9Gg_AZ+rSNDsmaE88o7Rw@mail.gmail.com>
-	 <1395130437.15856.13.camel@dubbel>
-	 <CA+BoTQn5dB8-4U0X+_GX_J7rDctTpCWg8ydjSQbrEjMB28NKEA@mail.gmail.com>
-	 <1395132248.15856.21.camel@dubbel>
-	 <CA+BoTQmLSxmNy+O9mj9MHxtLvE7SU6EfHrCGnZcBmrD3ktonjw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v10 3/5] cfg80211/mac80211: move interface counting for
- combination check to mac80211
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:21724 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754837AbaCYUpX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 16:45:23 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Daniel Kim <dekim@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH] brcmfmac: use mfp if required from user-space
+Date: Tue, 25 Mar 2014 21:45:09 +0100
+Message-ID: <1395780309-28896-1-git-send-email-arend@broadcom.com> (sfid-20140325_214605_117943_C296BA0E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-03-18 at 09:58 +0100, Michal Kazior wrote:
-> On 18 March 2014 09:44, Luca Coelho <luca@coelho.fi> wrote:
-> > On Tue, 2014-03-18 at 09:36 +0100, Michal Kazior wrote:
-> >> On 18 March 2014 09:13, Coelho, Luciano <luciano.coelho@intel.com> wrote:
-> >> > On Fri, 2014-03-14 at 09:40 +0100, Michal Kazior wrote:
-> >> >> On 11 March 2014 15:16, Luciano Coelho <luciano.coelho@intel.com> wrote:
-> >>
-> >> [...]
-> >>
-> >> >> > +       list_for_each_entry(ctx, &local->chanctx_list, list) {
-> >> >> > +               if (ctx->conf.radar_enabled)
-> >> >> > +                       radar_detect |= BIT(ctx->conf.def.width);
-> >> >>
-> >> >> Is this really correct?
-> >> >
-> >> > I'm not sure anymore. :)
-> >> >
-> >> >
-> >> >> The original behaviour was to:
-> >> >>
-> >> >>  for each wdev:
-> >> >>    get_chan_state(..., &radar_width)
-> >> >>
-> >> >> where get_chan_state() ORs BIT(width) accordingly to iftype, etc.
-> >> >>
-> >> >> For 2 APs with different operational widths (e.g. 20 and 40) this means:
-> >> >>
-> >> >> a) old code: width_detect = BIT(WIDTH_20) | BIT(WIDTH_40)
-> >> >> b) new code: width_detect = BIT(chanctx->width) which is BIT(WIDTH_40)
-> >> >>
-> >> >> I think radar_detect should be computed:
-> >> >>
-> >> >>  radar_detect = 0 // **
-> >> >>  for each vif:
-> >> >>   if vif.ctx == ctx && vif.radar_required:
-> >> >>    radar_detect = BIT(vif.bss.width)
-> >> >>
-> >> >> ** you could argue to initialize with BIT(ctx->width), but all things
-> >> >> seem to use ieee80211_vif_use_channel() (including CAC/radar
-> >> >> detection) so bss_conf.chandef.width should be set correctly and
-> >> >> iteration alone should suffice.
-> >> >
-> >> > But does this really make sense? This was more or less the idea I had
-> >> > when I changed the cfg80211_chandef_dfs_required() to return a bit mask
-> >> > (which I later reverted).
-> >> >
-> >> > I think the current behavior may be wrong.  In the old
-> >> > cfg80211_can_use_iftype_chan() we match *any* of the bits in
-> >> > radar_detect with the bits supported in the interface combinations.  So,
-> >> > in your example, we would accept the combination even if the driver did
-> >> > not support WIDTH_40 (because it would match WIDTH_20).  If the context
-> >> > is set to WIDTH_40, don't we have to make sure the driver can detect
-> >> > radars on that width?
-> >>
-> >> Fair point, but current behaviour of cfg80211_can_use_iftype_chan()
-> >> doesn't seem like a correct one to me. It shouldn't match any but
-> >> *all* of the radar_detect bits, no?
-> >
-> > I don't really know.  I think that if we're using 40MHz, we need to be
-> > able to detect on the entire 40MHz, and that includes the 20MHz part as
-> > well.  So being able to detect on 20MHz in that same channel context is
-> > irrelevant, isn't it?
-> 
-> True but take this hypothetical case:
-> 
-> You have a driver combination that supports radar_detect only at
-> 40MHz. You start AP @ 40MHz with radar. You match the radar_detect.
-> You start AP @ 20MHz with radar. You match again radar_detect (because
-> there's the AP @ 40MHz running). You stop AP @ 40Mhz. You now have
-> only an AP running at 20MHz which requires radar_detect for 20MHz but
-> there's no combination to match that. Oops. We should've never allowed
-> the AP @ 20MHz to start.
+From: Daniel Kim <dekim@broadcom.com>
 
-Yeah, this scenario is broken.  My patch series doesn't break it any
-more than it already is. :) Actually it improves this a bit, because the
-opposite scenario would work better:
+The struct cfg80211_connect_params indicate whether the connection
+should use management frame protection (mfp). If required set the
+MFP_CAPABLE flag in the firmware command. This is supported from
+user-space by wpa_supplicant since v2.1.
 
-A hardware that supports radar detect only at 20MHz.  You start AP at
-20MHz, everything is fine.  Now you start another AP at 40MHz, the
-current code would allow it (because it checks if *any* width matches).
-Oops! With my patches we wouldn't allow it, because the new chanctx
-would require 40MHz when you start the second AP and it wouldn't be
-allowed.
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John,
 
+I had this patch lingering but with the merge window sliding a bit I
+figured I could just as well submit it.
 
-> I doubt there's hardware that needs a combination like that but it
-> just bothers me current structure and logic allows it.
+The patch is for 3.15 and applies to the master branch of the
+wireless-next repository.
 
-Yeah, if you keep peeking into the DFS code you are probably going to
-find even worse things. :(
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 15 ++++++++++-----
+ drivers/net/wireless/brcm80211/include/brcmu_wifi.h   |  3 +++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-I guess the only good way to fix the scenario you described would be to
-recheck combinations whenever a vif gets removed from a chanctx as well.
-
-But maybe a better thing to do would be to change the
-radar_detect_widths bitmask into max_radar_detect_width or something.  I
-don't think it really makes sense to be able to detect radars on, say,
-40MHz but not on 20MHz.
-
-Anyway, this is a separate issue and I don't think it should block my
-series from going in.  Someone should fix DFS separately.  As Johannes
-would probably say, "patches welcome". :)
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index e0e649a..afb3d15 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1354,13 +1354,14 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
+ }
+ 
+ static s32
+-brcmf_set_set_cipher(struct net_device *ndev,
+-		     struct cfg80211_connect_params *sme)
++brcmf_set_wsec_mode(struct net_device *ndev,
++		     struct cfg80211_connect_params *sme, bool mfp)
+ {
+ 	struct brcmf_cfg80211_profile *profile = ndev_to_prof(ndev);
+ 	struct brcmf_cfg80211_security *sec;
+ 	s32 pval = 0;
+ 	s32 gval = 0;
++	s32 wsec;
+ 	s32 err = 0;
+ 
+ 	if (sme->crypto.n_ciphers_pairwise) {
+@@ -1412,7 +1413,12 @@ brcmf_set_set_cipher(struct net_device *ndev,
+ 	if (brcmf_find_wpsie(sme->ie, sme->ie_len) && !pval && !gval &&
+ 	    sme->privacy)
+ 		pval = AES_ENABLED;
+-	err = brcmf_fil_bsscfg_int_set(netdev_priv(ndev), "wsec", pval | gval);
++
++	if (mfp)
++		wsec = pval | gval | MFP_CAPABLE;
++	else
++		wsec = pval | gval;
++	err = brcmf_fil_bsscfg_int_set(netdev_priv(ndev), "wsec", wsec);
+ 	if (err) {
+ 		brcmf_err("error (%d)\n", err);
+ 		return err;
+@@ -1582,7 +1588,6 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	u32 ie_len;
+ 	struct brcmf_ext_join_params_le *ext_join_params;
+ 	u16 chanspec;
+-
+ 	s32 err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1651,7 +1656,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		goto done;
+ 	}
+ 
+-	err = brcmf_set_set_cipher(ndev, sme);
++	err = brcmf_set_wsec_mode(ndev, sme, sme->mfp == NL80211_MFP_REQUIRED);
+ 	if (err) {
+ 		brcmf_err("wl_set_set_cipher failed (%d)\n", err);
+ 		goto done;
+diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
+index 7ca2aa1..74419d4 100644
+--- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
++++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
+@@ -217,6 +217,9 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
+ #define WSEC_SWFLAG		0x0008
+ /* to go into transition mode without setting wep */
+ #define SES_OW_ENABLED		0x0040
++/* MFP */
++#define MFP_CAPABLE		0x0200
++#define MFP_REQUIRED		0x0400
+ 
+ /* WPA authentication mode bitvec */
+ #define WPA_AUTH_DISABLED	0x0000	/* Legacy (i.e., non-WPA) */
+-- 
+1.8.1.3
 
