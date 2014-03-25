@@ -1,47 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:41025 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756298AbaCROqv (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:54376 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548AbaCYJPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:51 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 35/35] iwlwifi: mvm: disable uAPSD due to bugs in the firmware
-Date: Tue, 18 Mar 2014 16:45:39 +0200
-Message-Id: <1395153939-23897-35-git-send-email-egrumbach@gmail.com> (sfid-20140318_154703_042493_391B3DC9)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Tue, 25 Mar 2014 05:15:07 -0400
+Subject: [PATCH 1/8] ath10k: cleanup ath10k_pci_wait_for_target_init()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 25 Mar 2014 11:15:05 +0200
+Message-ID: <20140325091505.16651.15554.stgit@potku.adurom.net> (sfid-20140325_101513_237738_A31D04B2)
+In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
+References: <20140325091311.16651.15747.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+ath10k_pci_wait_for_target_init() did really follow the style used elsewhere in
+ath10k. Use ath10k_pci_read/write() wrappers, simplify the while loop and
+improve warning messages.
 
-The current firmware advertises support for uAPSD, but
-critical bugs force us to disable the feature.
-When a fixed firmware will be available, we will be able to
-re-enable uAPSD.
-
-Cc: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/pci.c |   33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index dbe6ff8..110bb3f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -295,7 +295,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	    !iwlwifi_mod_params.sw_crypto)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 9d242d801d9d..0425c76daf3f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2385,30 +2385,37 @@ static int ath10k_pci_deinit_irq(struct ath10k *ar)
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	int wait_limit = 300; /* 3 sec */
++	const int wait = 3000; /* ms */
++	unsigned long timeout;
+ 	int ret;
++	u32 val;
  
--	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT) {
-+	if (0 && mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT) {
- 		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
- 		hw->uapsd_queues = IWL_UAPSD_AC_INFO;
- 		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
--- 
-1.8.3.2
+ 	ret = ath10k_pci_wake(ar);
+ 	if (ret) {
+-		ath10k_err("failed to wake up target: %d\n", ret);
++		ath10k_err("failed to wake up target for init: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	while (wait_limit-- &&
+-	       !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
+-		 FW_IND_INITIALIZED)) {
++	timeout = jiffies + msecs_to_jiffies(wait);
++
++	do {
++		val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
++		if (val == FW_IND_INITIALIZED)
++			break;
++
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			iowrite32(PCIE_INTR_FIRMWARE_MASK |
+-				  PCIE_INTR_CE_MASK_ALL,
+-				  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+-						 PCIE_INTR_ENABLE_ADDRESS));
++			ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
++					       PCIE_INTR_FIRMWARE_MASK |
++					       PCIE_INTR_CE_MASK_ALL);
++
+ 		mdelay(10);
+-	}
++	} while (time_before(jiffies, timeout));
+ 
+-	if (wait_limit < 0) {
+-		ath10k_err("target stalled\n");
+-		ret = -EIO;
++	if (val != FW_IND_INITIALIZED) {
++		ath10k_err("failed to receive initialized event from target after %d ms: %d\n",
++			   wait, val);
++		ret = -ETIMEDOUT;
+ 		goto out;
+ 	}
+ 
 
