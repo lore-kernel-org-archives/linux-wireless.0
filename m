@@ -1,144 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:47101 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbaCCMhS (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:42227 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752482AbaCYLSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 07:37:18 -0500
-Message-ID: <1393850234.13669.98.camel@dubbel> (sfid-20140303_133723_400570_F05D0655)
-Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Mon, 03 Mar 2014 14:37:14 +0200
-In-Reply-To: <CA+BoTQ=TL6my5F7RCME08ZgGw6dGGmyqmn4W-LB7WyVD7VPUOQ@mail.gmail.com>
-References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
-	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
-	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
-	 <1393589841.13669.32.camel@dubbel>
-	 <CA+BoTQmaF+johnB5ia+ez5dFKYPWWwk7E=482Q3hzLv=YvZAvQ@mail.gmail.com>
-	 <1393594886.13669.47.camel@dubbel>
-	 <CA+BoTQkafvtCDU5LkDcyVonO2T=koaBCWABzSQmnDOXJh=AvDA@mail.gmail.com>
-	 <1393597923.13669.65.camel@dubbel>
-	 <CA+BoTQk=YLd+bur3HkJ5jwrT-EYKMF8+nzJSX+bJP_psesuE5g@mail.gmail.com>
-	 <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
-	 <1393840630.13669.82.camel@dubbel>
-	 <CA+BoTQ=TL6my5F7RCME08ZgGw6dGGmyqmn4W-LB7WyVD7VPUOQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Mar 2014 07:18:20 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so303727eek.40
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 04:18:19 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()
+Date: Tue, 25 Mar 2014 12:12:22 +0100
+Message-Id: <1395745943-29492-2-git-send-email-michal.kazior@tieto.com> (sfid-20140325_121824_731434_AB44D0FC)
+In-Reply-To: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-03 at 11:38 +0100, Michal Kazior wrote:
-> On 3 March 2014 10:57, Luca Coelho <luca@coelho.fi> wrote:
-> > Hi Michał,
-> >
-> > I had a new idea.
-> >
-> >
-> > On Fri, 2014-02-28 at 17:31 +0200, Luca Coelho wrote:
-> >> But seriously, I'm almost fully convinced your approach is better. I'll try to spin without the RESERVED mode.
-> >>
-> >> But that probably will only happened Monday, because I'm already spinning down for the weekend.
-> >
-> > What about this: when we are reserving the chanctx, even if we're the
-> > only ones in it (and thus will change it on-the-fly), we increase the
-> > refcount.  This means that we would have refcount == 2, even though
-> > we're the only users, but that's aligned with what happens when we
-> > reserve a different chanctx.
-> >
-> > When we use the reservation, we do exactly the same thing as if we were
-> > moving to a new chanctx, but add a intermediate step where we check if
-> > the old ctx has refcount 0, in which case we change its channel:
-> >
-> > Reserving our own chanctx for future change:
-> >
-> > 1. new_ctx = old_ctx;
-> > 2. increase new_ctx.refcount (new.refcount == 2, old.refcount == 2);
-> 
-> I was thinking of doing it like this.
+This allows to use GFP_KERNEL allocation. This
+should decrease chance of allocation failure, e.g.
+during firmware recovery.
 
-Your previous comments have definitely influenced this idea. :)
+Reported-By: Avery Pennarun <apenwarr@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  | 53 +++++++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/pci.c | 22 ++++++++-------
+ 2 files changed, 37 insertions(+), 38 deletions(-)
 
-
-> > Using the reservation:
-> >
-> > 1. unassign the vif from the old chanctx (old.refcount == 1,
-> > new.refcount == 1);
-> > 2. we decrease the refcount of the new chanctx (new.refcount == 0,
-> > old.refcount == 0);
-> > 3. if (old.refcount == 0) means we were the only user, change channel;
-> > 4. we assign ourselves to the new chanctx (new.refcount == 1 again);
-> 
-> I didn't really consider unassigning vif from chanctx like that (since
-> the original single-channel channel non-chanctx hw doesn't do that).
-> If you assume it is safe to unassign the vif then the logic seems
-> plausible. I like it.
-
-I think in theory it should be okay.  I don't know if any driver does
-something funny with it, though.
-
-For drivers that don't implement the unassign_vif_chanctx op (like
-non-chanctx drivers), it should not be a problem.
-
-I think I could probably get rid of the
-IEEE80211_HW_CHANGE_RUNNING_CHANCTX flag I was going to introduce as
-well.
-
-
-
-> > This would make this whole thing pretty generic with only one extra if
-> > for the on-the-fly chanctx change case.
-> 
-> I'd rather call it "in place" chanctx change case :)
-
-Heheh, I didn't think about the term much and just assumed you'd
-understand what I meant. ;)
-
-
-> > If more vifs came and are changing the chanctx at the same time, it will
-> > be fine too because the channel will only change when the last reserver
-> > uses the reservation.
-> >
-> > Does this make sense?
-> 
-> Does the following match your idea of multi-vif reservation with the
-> refcount idea?
-> 
-> [2 vifs on chanctx->refcount==2]
-> * vif1 reserve (refcount==3)
-> * vif2 reserve (refcount==4)
-> * vif1 use reservation: (refcount==3)
->   * stop queues
->   * unassign vif (refcount==2)
->   * since refcount!=0 do nothing more
-> * vif3 use reservation: (refcount==1)
->   * unassign vif (refcount==0)
->   * since refcount==0 do:
->     * chanctx channel change
->     * vif1 assign (refcount==1)
->     * vif2 assign (refcount==2)
->     * wake queues
-
-Right, this is a good idea (better than what I wrote in my previous
-reply).  I just need to iterate all the vifs and assign the ones with
-matching reserved_chanctx (and no assigned chanctx) to this chanctx when
-refcount reaches 0.
-
-
-> Additionally you'd have to check after each "use reservation": if all
-> vifs with matching reserved_chanctx have no assigned chanctx but the
-> reserved_chanctx->refcount > 0, then disconnect all vifs with the
-> matching reserved_chanctx.
-
-I'm not sure I understood this part.  I think that when refcount reaches
-0 I should disconnect the ones that are still using this chanctx, right?
-All the ones that wanted to switch together, will have already done so
-(since the refcount reached 0).  If there's any remaining vif in the
-chanctx we want to change, disconnect them.
-
---
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index a79499c..653a240 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -843,7 +843,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 				   struct ath10k_ce_pipe *ce_state,
+ 				   const struct ce_attr *attr)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ath10k_ce_ring *src_ring;
+ 	unsigned int nentries = attr->src_nentries;
+ 	unsigned int ce_nbytes;
+@@ -885,10 +884,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 	 * coherent DMA are unsupported
+ 	 */
+ 	src_ring->base_addr_owner_space_unaligned =
+-		pci_alloc_consistent(ar_pci->pdev,
+-				     (nentries * sizeof(struct ce_desc) +
+-				      CE_DESC_RING_ALIGN),
+-				     &base_addr);
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
+ 	if (!src_ring->base_addr_owner_space_unaligned) {
+ 		kfree(ce_state->src_ring);
+ 		ce_state->src_ring = NULL;
+@@ -912,11 +911,11 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 		kmalloc((nentries * sizeof(struct ce_desc) +
+ 			 CE_DESC_RING_ALIGN), GFP_KERNEL);
+ 	if (!src_ring->shadow_base_unaligned) {
+-		pci_free_consistent(ar_pci->pdev,
+-				    (nentries * sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    src_ring->base_addr_owner_space,
+-				    src_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (nentries * sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  src_ring->base_addr_owner_space,
++				  src_ring->base_addr_ce_space);
+ 		kfree(ce_state->src_ring);
+ 		ce_state->src_ring = NULL;
+ 		return -ENOMEM;
+@@ -946,7 +945,6 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 				    struct ath10k_ce_pipe *ce_state,
+ 				    const struct ce_attr *attr)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ath10k_ce_ring *dest_ring;
+ 	unsigned int nentries = attr->dest_nentries;
+ 	unsigned int ce_nbytes;
+@@ -986,10 +984,10 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 	 * coherent DMA are unsupported
+ 	 */
+ 	dest_ring->base_addr_owner_space_unaligned =
+-		pci_alloc_consistent(ar_pci->pdev,
+-				     (nentries * sizeof(struct ce_desc) +
+-				      CE_DESC_RING_ALIGN),
+-				     &base_addr);
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
+ 	if (!dest_ring->base_addr_owner_space_unaligned) {
+ 		kfree(ce_state->dest_ring);
+ 		ce_state->dest_ring = NULL;
+@@ -1112,26 +1110,25 @@ out:
+ void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
+ 	if (ce_state->src_ring) {
+ 		kfree(ce_state->src_ring->shadow_base_unaligned);
+-		pci_free_consistent(ar_pci->pdev,
+-				    (ce_state->src_ring->nentries *
+-				     sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    ce_state->src_ring->base_addr_owner_space,
+-				    ce_state->src_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (ce_state->src_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->src_ring->base_addr_owner_space,
++				  ce_state->src_ring->base_addr_ce_space);
+ 		kfree(ce_state->src_ring);
+ 	}
+ 
+ 	if (ce_state->dest_ring) {
+-		pci_free_consistent(ar_pci->pdev,
+-				    (ce_state->dest_ring->nentries *
+-				     sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    ce_state->dest_ring->base_addr_owner_space,
+-				    ce_state->dest_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (ce_state->dest_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->dest_ring->base_addr_owner_space,
++				  ce_state->dest_ring->base_addr_ce_space);
+ 		kfree(ce_state->dest_ring);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 783cfa0..4cd3537 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -355,9 +355,10 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 	 *   2) Buffer in DMA-able space
+ 	 */
+ 	orig_nbytes = nbytes;
+-	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
+-							 orig_nbytes,
+-							 &ce_data_base);
++	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
++						       orig_nbytes,
++						       &ce_data_base,
++						       GFP_ATOMIC);
+ 
+ 	if (!data_buf) {
+ 		ret = -ENOMEM;
+@@ -455,8 +456,8 @@ done:
+ 			    address, ret);
+ 
+ 	if (data_buf)
+-		pci_free_consistent(ar_pci->pdev, orig_nbytes,
+-				    data_buf, ce_data_base);
++		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
++				  ce_data_base);
+ 
+ 	return ret;
+ }
+@@ -499,9 +500,10 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 	 *   2) Buffer in DMA-able space
+ 	 */
+ 	orig_nbytes = nbytes;
+-	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
+-							 orig_nbytes,
+-							 &ce_data_base);
++	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
++						       orig_nbytes,
++						       &ce_data_base,
++						       GFP_ATOMIC);
+ 	if (!data_buf) {
+ 		ret = -ENOMEM;
+ 		goto done;
+@@ -597,8 +599,8 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 
+ done:
+ 	if (data_buf) {
+-		pci_free_consistent(ar_pci->pdev, orig_nbytes, data_buf,
+-				    ce_data_base);
++		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
++				  ce_data_base);
+ 	}
+ 
+ 	if (ret != 0)
+-- 
+1.8.5.3
 
