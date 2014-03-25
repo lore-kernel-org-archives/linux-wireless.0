@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43673 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbaCKPda (ORCPT
+Received: from mail-ve0-f178.google.com ([209.85.128.178]:51317 "EHLO
+	mail-ve0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779AbaCYIde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 11:33:30 -0400
-Subject: [PATCH 2/2] ath10k: check otp.bin result
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Mar 2014 17:33:28 +0200
-Message-ID: <20140311153328.7148.50188.stgit@potku.adurom.net> (sfid-20140311_163333_987273_E2D00D34)
-In-Reply-To: <20140311153318.7148.47415.stgit@potku.adurom.net>
-References: <20140311153318.7148.47415.stgit@potku.adurom.net>
+	Tue, 25 Mar 2014 04:33:34 -0400
+Received: by mail-ve0-f178.google.com with SMTP id jw12so146346veb.9
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:33:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
+References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
+Date: Tue, 25 Mar 2014 16:33:34 +0800
+Message-ID: <CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com> (sfid-20140325_093348_015992_5A3B6CC7)
+Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we execute otp.bin in the target check that the result it returns doesn't
-contain an error. This is to make sure that we don't accidentally use invalid
-calibration data.
+Hi, Michal
 
-While at it, remove the useless label in the function and add few debug messages.
+> I suppose there's a limit how much peer entries firmware is able to
+> pack up into a single event. The second event you handle here is still
+> going to have some sort of a limit and you'll end up dropping results
+> again. The same probably goes with vdev stats (which aren't handled
+> yet, but hey).
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+vdev stats is not supported by firmware 999.999.0.636, am I right?
+BTW, I also saw that the same happen to latest AP firmware whenever
+the peer stats is more than 1. But since the first peer stats is self
+stats, so it is ok to overwrite it.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 602fb9644cbf..e8f419144db6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -254,23 +254,34 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
- 
- 	/* OTP is optional */
- 
--	if (!ar->otp_data || !ar->otp_len)
-+	if (!ar->otp_data || !ar->otp_len) {
-+		ath10k_warn("Not running otp, calibration will be incorrect!\n");
- 		return 0;
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot upload otp to 0x%x len %d\n",
-+		   address, ar->otp_len);
- 
- 	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
- 	if (ret) {
- 		ath10k_err("could not write otp (%d)\n", ret);
--		goto exit;
-+		return ret;
- 	}
- 
- 	ret = ath10k_bmi_execute(ar, address, 0, &result);
- 	if (ret) {
- 		ath10k_err("could not execute otp (%d)\n", ret);
--		goto exit;
-+		return ret;
- 	}
- 
--exit:
--	return ret;
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
-+
-+	if (result != 0) {
-+		ath10k_err("otp calibration failed: %d", result);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
- }
- 
- static int ath10k_download_fw(struct ath10k *ar)
+> I think a better approach would be to make read_target_stats *append*
+> data to the stats structure and make ath10k wait for more possible
+> events instead of being satisfied with just one.
+>
+> The way you do it now seems like you end up with the extra results
+> being shown upon *next* stat request-response.. i.e. you see old
+> results.
 
+Will take a look on this.
+
+----
+Chun-Yeow
