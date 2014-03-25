@@ -1,53 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60718 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932210AbaCQJdm (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:57276 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbaCYBsP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 05:33:42 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 1/3] ath9k: Add QCA953x WMAC platform support
-Date: Mon, 17 Mar 2014 15:02:46 +0530
-Message-Id: <1395048768-25245-1-git-send-email-sujith@msujith.org> (sfid-20140317_103346_379885_2E2B20C9)
+	Mon, 24 Mar 2014 21:48:15 -0400
+Received: by mail-ob0-f170.google.com with SMTP id uz6so6787792obc.15
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 18:48:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <a84c8a1f-f71b-48ca-9c8e-782c19aef609@email.android.com>
+References: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com>
+	<1384765780.22010.42.camel@porter.coelho.fi>
+	<CADqH6VxgwbZkFgEkpiaabKekijeU+e=DMg0VVHoiXBQmjQfE0Q@mail.gmail.com>
+	<a84c8a1f-f71b-48ca-9c8e-782c19aef609@email.android.com>
+Date: Tue, 25 Mar 2014 09:48:14 +0800
+Message-ID: <CADqH6VwvNPCeeXxSTYbbtQ8+Z=2ONXdfYDQUvqRv+W=FjsnC8w@mail.gmail.com> (sfid-20140325_024847_982984_FBF749AC)
+Subject: Re: WL12xx support for WL1270 and ti-connectivity firmware
+From: Jaya Kumar <jayakumar.lkml@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Mar 25, 2014 at 2:32 AM, Luca Coelho <luca@coelho.fi> wrote:
+>> The good news is that
+>>the chip is detected and wl12xx/wl12xx_sdio loads. However, I haven't
+>>been able to get it to get any scan results and can't associate with
+>>any AP (even open).
+>
+> Usually this happens because you're not getting any interrupts. Are you sure the WLAN IRQ GPIO is correctly configured?
+>
+> There's nothing very useful in those kids
+> It just shows that the scan command was issued but you never got the scan complete interrupt.
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ahb.c | 4 ++++
- drivers/net/wireless/ath/ath9k/hw.c  | 1 +
- 2 files changed, 5 insertions(+)
+Hi Luca,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 2dff276..61a1fff 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -39,6 +39,10 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
- 		.name = "qca955x_wmac",
- 		.driver_data = AR9300_DEVID_QCA955X,
- 	},
-+	{
-+		.name = "qca953x_wmac",
-+		.driver_data = AR9300_DEVID_AR953X,
-+	},
- 	{},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f9cd9d3..d91403f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3047,6 +3047,7 @@ static struct {
- 	{ AR_SREV_VERSION_9462,         "9462" },
- 	{ AR_SREV_VERSION_9550,         "9550" },
- 	{ AR_SREV_VERSION_9565,         "9565" },
-+	{ AR_SREV_VERSION_9531,         "9531" },
- };
- 
- /* For devices with external radios */
--- 
-1.9.0
+Thanks for your reply. I think the wlan irq gpio is configured. When I
+look at /proc/interrupts, I see it increasing each time I try to scan.
 
+I'll try to see how to switch to latest compat.
+
+Thanks,
+jaya
+
+root@freescale ~$ modprobe wl12xx
+root@freescale ~$ modprobe wl12xx_sdio
+add wake up source irq 106
+wl1271: loaded
+wl1271: initialized
+root@freescale ~$ cat /proc/interrupts
+           CPU0
+ 34:          0       GIC  sdma
+ 51:          0       GIC  snvs_rtc
+ 55:      48913       GIC  mmc0
+ 56:        148       GIC  mmc1
+ 58:         81       GIC  IMX-uart
+ 63:          2       GIC  spi_imx
+ 68:        257       GIC  imx-i2c
+ 69:          0       GIC  imx-i2c
+ 75:         33       GIC  usb_wakeup, fsl-usb2-udc
+ 87:        675       GIC  i.MX Timer Tick
+112:          0       GIC  imx2-wdt
+114:          0       GIC  imx-keypad
+121:          0       GIC  dvfs
+130:          0       GIC  pxp-irq
+391:          0      GPIO  wl1271
+Err:          0
+root@freescale ~$ ifconfig wlan0 up
+wl1271: firmware booted (Rev 6.1.5.50.69)
+root@freescale ~$ cat /proc/interrupts
+           CPU0
+ 34:          0       GIC  sdma
+ 51:          0       GIC  snvs_rtc
+ 55:      49888       GIC  mmc0
+ 56:       6032       GIC  mmc1
+ 58:        121       GIC  IMX-uart
+ 63:          2       GIC  spi_imx
+ 68:        257       GIC  imx-i2c
+ 69:          0       GIC  imx-i2c
+ 75:         34       GIC  usb_wakeup, fsl-usb2-udc
+ 87:        732       GIC  i.MX Timer Tick
+112:          0       GIC  imx2-wdt
+114:          0       GIC  imx-keypad
+121:          0       GIC  dvfs
+130:          0       GIC  pxp-irq
+391:          1      GPIO  wl1271
+Err:          0
+root@freescale ~$ iwlist wlan0 scan
+wlan0     No scan results
+
+root@freescale ~$ iw
+-sh: iw: command not found
+root@freescale ~$ cat /proc/interrupts
+           CPU0
+ 34:          0       GIC  sdma
+ 51:          0       GIC  snvs_rtc
+ 55:      60085       GIC  mmc0
+ 56:       6248       GIC  mmc1
+ 58:        176       GIC  IMX-uart
+ 63:          2       GIC  spi_imx
+ 68:        257       GIC  imx-i2c
+ 69:          0       GIC  imx-i2c
+ 75:         35       GIC  usb_wakeup, fsl-usb2-udc
+ 87:        806       GIC  i.MX Timer Tick
+112:          0       GIC  imx2-wdt
+114:          0       GIC  imx-keypad
+121:          0       GIC  dvfs
+130:          0       GIC  pxp-irq
+391:          7      GPIO  wl1271
+Err:          0
+
+root@freescale ~$ iwlist wlan0 scan
+wlan0     No scan results
+
+root@freescale ~$ cat /proc/interrupts
+           CPU0
+ 34:          0       GIC  sdma
+ 51:          0       GIC  snvs_rtc
+ 55:      64141       GIC  mmc0
+ 56:       6464       GIC  mmc1
+ 58:        246       GIC  IMX-uart
+ 63:          2       GIC  spi_imx
+ 68:        257       GIC  imx-i2c
+ 69:          0       GIC  imx-i2c
+ 75:         36       GIC  usb_wakeup, fsl-usb2-udc
+ 87:        930       GIC  i.MX Timer Tick
+112:          0       GIC  imx2-wdt
+114:          0       GIC  imx-keypad
+121:          0       GIC  dvfs
+130:          0       GIC  pxp-irq
+391:         13      GPIO  wl1271
+Err:          0
