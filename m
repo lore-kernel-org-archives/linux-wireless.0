@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:43097 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbaC1OYe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:24:34 -0400
-Received: by mail-vc0-f177.google.com with SMTP id if17so5850361vcb.36
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:24:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87wqfev2ml.fsf@kamboji.qca.qualcomm.com>
-References: <20140328132849.31620.78501.stgit@potku.adurom.net>
-	<CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
-	<87wqfev2ml.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Mar 2014 22:24:33 +0800
-Message-ID: <CAEFj985Xq-_QRmdOsFKEM0kA40TpgKL6t1DW8yXSPY6dn=R2LA@mail.gmail.com> (sfid-20140328_152437_028513_529CA392)
-Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from dedo.coelho.fi ([88.198.205.34]:42565 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751624AbaCYINb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 04:13:31 -0400
+Message-ID: <1395735204.28231.64.camel@dubbel> (sfid-20140325_091336_348574_1B69988C)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Tue, 25 Mar 2014 10:13:24 +0200
+In-Reply-To: <1395734367.28231.57.camel@dubbel>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
+	 <1395734367.28231.57.camel@dubbel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 03/13] mac80211: prevent chanctx overcommit
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 10:06 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> From: Bartosz Markowski <bartosz.markowski@tieto.com>
->>>
->>> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
->>> can return per-VDEV statistics. Using debugfs we can fetch this info now.
->>>
->>> This is a backward compatible change. In case of older FW the VDEV
->>> statistics are simply not returned.
->>>
->>> kvalo: remove struct wmi_peer_stats_common cast from
->>> ath10k_debug_read_target_stats()
->>
->> I just glanced over the patch and I don't think this is correct.
->>
->> Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
->
-> Ok, I need to take a closer look at this. If someone else wants to look
-> at this instead, feel free to do that :)
->
-I up two AP interfaces in same physical but not able to see two
-different vdev in get stats.
+On Tue, 2014-03-25 at 09:59 +0200, Luca Coelho wrote:
+> On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+> > @@ -745,13 +764,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+> >  			 * context, reserve our current context
+> >  			 */
+> >  			new_ctx = curr_ctx;
+> > -		} else {
+> > +		} else if (ieee80211_can_create_new_chanctx(local)) {
+> >  			/* create a new context and reserve it */
+> >  			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+> >  			if (IS_ERR(new_ctx)) {
+> >  				ret = PTR_ERR(new_ctx);
+> >  				goto out;
+> >  			}
+> > +		} else {
+> > +			ret = -EBUSY;
+> > +			goto out;
+> 
+> I'm not sure about this whole allowed channels counting thing.  Does it
+> really matter what is the total number of allowed channels? I think the
+> actual combinations is what should be checked here.
+> 
+> Let's say the driver supports these combinations:
+> 
+> 1. num_different_channels = 2; limits max 2 APs;
+> 2. num_different_channels = 1; limits 1 AP, 1 STA;
+> 
+> Then you're running on a single-channel with 1 AP and 1 STA.  The STA
+> gets a CSA to move to a new channel.  If you only consider the
+> max_num_channels you calculated, you will think that it is okay to
+> switch, but it is not, because you cannot have 1 AP and 1 STA on
+> different channels.
+> 
+> Or am I missing something?
 
-----
-Chun-Yeow
+Hmmm... okay, I guess this is a typical case of "move-or-die" for the
+AP.  Basically what we're saying here is that if the driver supports 2
+channels in any combination, we can always have 2 channel contexts as
+long as one of them is empty.
+
+I'm still not sure this would be valid, for instance, if the driver has
+problems with having one STA in a channel and an empty context in
+another channel, because we actually try to create that context in the
+driver before it's actually used...
+
+--
+Luca.
+
