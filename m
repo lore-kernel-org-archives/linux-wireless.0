@@ -1,75 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:35632 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281AbaCPRVu (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:54204 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235AbaCYKt6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Mar 2014 13:21:50 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v2 0/4] Provide netdev naming-policy via sysfs
-Date: Sun, 16 Mar 2014 18:21:26 +0100
-Message-Id: <1394990490-1076-1-git-send-email-dh.herrmann@gmail.com> (sfid-20140316_182307_768698_3BD79924)
+	Tue, 25 Mar 2014 06:49:58 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so269056pdj.36
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 03:49:58 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath10k: add extra pdev stats on 10.1 firmware
+Date: Tue, 25 Mar 2014 18:49:33 +0800
+Message-Id: <1395744573-13691-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140325_115425_214616_FA5C0179)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+As pointed out by Michal Kazior, add extra pdev stats
+for 10.1 firmware.
 
-This is v2 of the netdev naming-policy series. You can find v1 here:
-  http://thread.gmane.org/gmane.linux.kernel/1657015
-Changes in v2:
-  - fix mac80211 core to set NET_NAME_ENUM for wlan%d kernel-provided names
-  - acked-by udev developers
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  |    6 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   27 ++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/wmi.h   |   19 ++++++++++++++++++-
+ 3 files changed, 48 insertions(+), 4 deletions(-)
 
-
-This series implements a new sysfs attribute for netdevs called
-"name_assign_type". It provides an integer that describes where an interface
-name comes from. See Patch #1 for a description of this attribute. It is
-modelled after the existing "addr_assign_type" attribute.
-
-The main use-case is to allow udev to skip applying reliable ifnames to virtual
-devices. For instance, if wifi-P2P devices are created, wpas already provides a
-suitable naming-policy and udev shouldn't touch these devices. Same is true for
-other virtual devices.
-The idea is that if a device-name was provided by user-space, we should always
-prefer fixing this naming-policy instead of making udev rename the device. For
-kernel provided names that's hardly possible, though. Providing the
-naming-policy source via sysfs is thus a simple way to see whether renames are
-needed.
-
-Additionally, this field allows to detect whether a netdev has been manually
-renamed, which is quite useful for debugging and during crash-recovery.
-Furthermore, it fixes real udev bugs if a netdev is already renamed in the
-initrd and udev only runs in the real root. Detecting renames avoids overwriting
-custom user provided names.
-
-Thanks
-David
-
-David Herrmann (4):
-  net: add name_assign_type netdev attribute
-  mac80211: set NET_NAME_USER for user-space created ifs
-  ath6kl: set NET_NAME_USER for P2P ifs
-  brcmfmac: set NET_NAME_USER for P2P ifs
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
- drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
- drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
- include/linux/netdevice.h                     | 6 ++++++
- net/core/dev.c                                | 7 +++++++
- net/core/net-sysfs.c                          | 2 ++
- net/core/rtnetlink.c                          | 2 ++
- net/mac80211/cfg.c                            | 2 +-
- net/mac80211/ieee80211_i.h                    | 1 +
- net/mac80211/iface.c                          | 2 ++
- net/mac80211/main.c                           | 2 +-
- 12 files changed, 30 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8c5e84c..50fa048 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -131,6 +131,12 @@ struct ath10k_target_stats {
+ 	u32 cycle_count;
+ 	u32 phy_err_count;
+ 	u32 chan_tx_power;
++	u32 ack_rx_bad;
++	u32 rts_bad;
++	u32 rts_good;
++	u32 fcs_bad;
++	u32 no_beacons;
++	u32 mib_int_count;
+ 
+ 	/* PDEV TX stats */
+ 	s32 comp_queued;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 4a4072e..64335dd 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -161,7 +161,7 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 	u8 *tmp = ev->data;
+ 	struct ath10k_target_stats *stats;
+ 	int num_pdev_stats, num_vdev_stats, num_peer_stats;
+-	struct wmi_pdev_stats *ps;
++	struct wmi_pdev_stats_10x *ps;
+ 	int i;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+@@ -173,7 +173,7 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats); /* 0 or max peers */
+ 
+ 	if (num_pdev_stats) {
+-		ps = (struct wmi_pdev_stats *)tmp;
++		ps = (struct wmi_pdev_stats_10x *)tmp;
+ 
+ 		stats->ch_noise_floor = __le32_to_cpu(ps->chan_nf);
+ 		stats->tx_frame_count = __le32_to_cpu(ps->tx_frame_count);
+@@ -228,7 +228,18 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 		stats->phy_err_drop = __le32_to_cpu(ps->wal.rx.phy_err_drop);
+ 		stats->mpdu_errs = __le32_to_cpu(ps->wal.rx.mpdu_errs);
+ 
+-		tmp += sizeof(struct wmi_pdev_stats);
++		if (test_bit(ATH10K_FW_FEATURE_WMI_10X,
++			     ar->fw_features)) {
++			stats->ack_rx_bad = __le32_to_cpu(ps->ack_rx_bad);
++			stats->rts_bad = __le32_to_cpu(ps->rts_bad);
++			stats->rts_good = __le32_to_cpu(ps->rts_good);
++			stats->fcs_bad = __le32_to_cpu(ps->fcs_bad);
++			stats->no_beacons = __le32_to_cpu(ps->no_beacons);
++			stats->mib_int_count = __le32_to_cpu(ps->mib_int_count);
++			tmp += sizeof(struct wmi_pdev_stats_10x);
++		} else {
++			tmp += sizeof(struct wmi_pdev_stats_old);
++		}
+ 	}
+ 
+ 	/* 0 or max vdevs */
+@@ -334,6 +345,16 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 			 "Cycle count", fw_stats->cycle_count);
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
+ 			 "PHY error count", fw_stats->phy_err_count);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++			 "RTS bad count", fw_stats->rts_bad);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++			 "RTS good count", fw_stats->rts_good);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++			 "FCS bad count", fw_stats->fcs_bad);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++			 "No beacon count", fw_stats->no_beacons);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10u\n",
++			 "MIB int count", fw_stats->mib_int_count);
+ 
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	len += scnprintf(buf + len, buf_len - len, "%30s\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ff69a1b..f6dc92e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2833,7 +2833,7 @@ struct wmi_stats_event {
+  * PDEV statistics
+  * TODO: add all PDEV stats here
+  */
+-struct wmi_pdev_stats {
++struct wmi_pdev_stats_old {
+ 	__le32 chan_nf;        /* Channel noise floor */
+ 	__le32 tx_frame_count; /* TX frame count */
+ 	__le32 rx_frame_count; /* RX frame count */
+@@ -2844,6 +2844,23 @@ struct wmi_pdev_stats {
+ 	struct wal_dbg_stats wal; /* WAL dbg stats */
+ } __packed;
+ 
++struct wmi_pdev_stats_10x {
++	__le32 chan_nf;        /* Channel noise floor */
++	__le32 tx_frame_count; /* TX frame count */
++	__le32 rx_frame_count; /* RX frame count */
++	__le32 rx_clear_count; /* rx clear count */
++	__le32 cycle_count;    /* cycle count */
++	__le32 phy_err_count;  /* Phy error count */
++	__le32 chan_tx_pwr;    /* channel tx power */
++	struct wal_dbg_stats wal; /* WAL dbg stats */
++	__le32 ack_rx_bad;
++	__le32 rts_bad;
++	__le32 rts_good;
++	__le32 fcs_bad;
++	__le32 no_beacons;
++	__le32 mib_int_count;
++} __packed;
++
+ /*
+  * VDEV statistics
+  * TODO: add all VDEV stats here
 -- 
-1.9.0
+1.7.9.5
 
