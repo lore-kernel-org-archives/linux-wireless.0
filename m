@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42253 "EHLO
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:48493 "EHLO
 	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066AbaC1Hcf (ORCPT
+	with ESMTP id S1752548AbaCYJPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:32:35 -0400
-Subject: [PATCH v2 3/8] ath10k: fix name of target_ps module parameter
+	Tue, 25 Mar 2014 05:15:19 -0400
+Subject: [PATCH 3/8] ath10k: fix name of target_ps module parameter
 To: ath10k@lists.infradead.org
 From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 09:32:33 +0200
-Message-ID: <20140328073233.30438.28666.stgit@potku.adurom.net> (sfid-20140328_083238_500840_22CFBD11)
-In-Reply-To: <20140328073040.30438.17966.stgit@potku.adurom.net>
-References: <20140328073040.30438.17966.stgit@potku.adurom.net>
+Date: Tue, 25 Mar 2014 11:15:17 +0200
+Message-ID: <20140325091517.16651.58082.stgit@potku.adurom.net> (sfid-20140325_101523_806850_F76E8D52)
+In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
+References: <20140325091311.16651.15747.stgit@potku.adurom.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
@@ -26,7 +26,7 @@ Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 9dab859ed77b..670e6734a46b 100644
+index d968aedc4863..2c5a83d2748a 100644
 --- a/drivers/net/wireless/ath/ath10k/pci.c
 +++ b/drivers/net/wireless/ath/ath10k/pci.c
 @@ -44,12 +44,12 @@ enum ath10k_pci_reset_mode {
@@ -45,7 +45,7 @@ index 9dab859ed77b..670e6734a46b 100644
  
  module_param_named(irq_mode, ath10k_pci_irq_mode, uint, 0644);
  MODULE_PARM_DESC(irq_mode, "0: auto, 1: legacy, 2: msi (default: 0)");
-@@ -2531,7 +2531,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+@@ -2524,7 +2524,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
  		goto err_ar_pci;
  	}
  
