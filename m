@@ -1,79 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:55443 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbaCCJ5O (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:35577 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbaCYCtA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 04:57:14 -0500
-Message-ID: <1393840630.13669.82.camel@dubbel> (sfid-20140303_105721_687690_7850629B)
-Subject: Re: [RFC v2 3/4] mac80211: allow reservation of a running chanctx
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	sw@simonwunderlich.de,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Date: Mon, 03 Mar 2014 11:57:10 +0200
-In-Reply-To: <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
-References: <1393512081-31453-1-git-send-email-luca@coelho.fi>
-	 <1393512081-31453-4-git-send-email-luca@coelho.fi>
-	 <CA+BoTQ=yoYAcg8Jo2zoV76gmXe9UU1=wSi1CVWfwiRpqC7yr6w@mail.gmail.com>
-	 <1393589841.13669.32.camel@dubbel>
-	 <CA+BoTQmaF+johnB5ia+ez5dFKYPWWwk7E=482Q3hzLv=YvZAvQ@mail.gmail.com>
-	 <1393594886.13669.47.camel@dubbel>
-	 <CA+BoTQkafvtCDU5LkDcyVonO2T=koaBCWABzSQmnDOXJh=AvDA@mail.gmail.com>
-	 <1393597923.13669.65.camel@dubbel>
-	 <CA+BoTQk=YLd+bur3HkJ5jwrT-EYKMF8+nzJSX+bJP_psesuE5g@mail.gmail.com>
-	 <5cdea7fa-8919-48b0-898a-a03cbd26123d@email.android.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 24 Mar 2014 22:49:00 -0400
+Received: by mail-pd0-f172.google.com with SMTP id p10so6149179pdj.31
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 19:49:00 -0700 (PDT)
+From: Adam Lee <adam.lee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: [PATCH v2] rtlwifi: add MSI interrupts support
+Date: Tue, 25 Mar 2014 10:48:52 +0800
+Message-Id: <1395715732-9545-1-git-send-email-adam.lee@canonical.com> (sfid-20140325_034907_243412_5266302B)
+In-Reply-To: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
+References: <1395660884-15042-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michał,
+Add MSI interrupts support, enable it when msi_support flag is true,
+also could fallback to pin-based interrupts mode if MSI mode fails.
 
-I had a new idea.
+Signed-off-by: Adam Lee <adam.lee@canonical.com>
+Cc: <stable@vger.kernel.org> [3.10+]
+---
+ drivers/net/wireless/rtlwifi/pci.c | 65 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 63 insertions(+), 2 deletions(-)
 
-
-On Fri, 2014-02-28 at 17:31 +0200, Luca Coelho wrote:
-> But seriously, I'm almost fully convinced your approach is better. I'll try to spin without the RESERVED mode.
-> 
-> But that probably will only happened Monday, because I'm already spinning down for the weekend.
-
-What about this: when we are reserving the chanctx, even if we're the
-only ones in it (and thus will change it on-the-fly), we increase the
-refcount.  This means that we would have refcount == 2, even though
-we're the only users, but that's aligned with what happens when we
-reserve a different chanctx.
-
-When we use the reservation, we do exactly the same thing as if we were
-moving to a new chanctx, but add a intermediate step where we check if
-the old ctx has refcount 0, in which case we change its channel:
-
-Reserving our own chanctx for future change:
-
-1. new_ctx = old_ctx;
-2. increase new_ctx.refcount (new.refcount == 2, old.refcount == 2);
-
-
-Using the reservation:
-
-1. unassign the vif from the old chanctx (old.refcount == 1,
-new.refcount == 1);
-2. we decrease the refcount of the new chanctx (new.refcount == 0,
-old.refcount == 0);
-3. if (old.refcount == 0) means we were the only user, change channel;
-4. we assign ourselves to the new chanctx (new.refcount == 1 again);
-
-
-This would make this whole thing pretty generic with only one extra if
-for the on-the-fly chanctx change case.
-
-If more vifs came and are changing the chanctx at the same time, it will
-be fine too because the channel will only change when the last reserver
-uses the reservation.
-
-Does this make sense?
-
---
-Luca.
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index f26f4ff..155d010 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1853,6 +1853,65 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+ 	return true;
+ }
+ 
++static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	ret = pci_enable_msi(rtlpci->pdev);
++	if (ret < 0)
++		return ret;
++
++	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
++			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	if (ret < 0) {
++		pci_disable_msi(rtlpci->pdev);
++		return ret;
++	}
++
++	rtlpci->using_msi = true;
++
++	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
++		 "MSI Interrupt Mode!\n");
++	return 0;
++}
++
++static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
++			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	if (ret < 0)
++		return ret;
++
++	rtlpci->using_msi = false;
++	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
++		 "Pin-based Interrupt Mode!\n");
++	return 0;
++}
++
++static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	if (rtlpci->msi_support) {
++		ret = rtl_pci_intr_mode_msi(hw);
++		if (ret < 0)
++			ret = rtl_pci_intr_mode_legacy(hw);
++	} else {
++		ret = rtl_pci_intr_mode_legacy(hw);
++	}
++	return ret;
++}
++
+ int rtl_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id)
+ {
+@@ -1995,8 +2054,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	rtlpci = rtl_pcidev(pcipriv);
+-	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
+-			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	err = rtl_pci_intr_mode_decide(hw);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			 "%s: failed to register IRQ handler\n",
+@@ -2064,6 +2122,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+ 		rtlpci->irq_alloc = 0;
+ 	}
+ 
++	if (rtlpci->using_msi)
++		pci_disable_msi(rtlpci->pdev);
++
+ 	list_del(&rtlpriv->list);
+ 	if (rtlpriv->io.pci_mem_start != 0) {
+ 		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
+-- 
+1.9.1
 
