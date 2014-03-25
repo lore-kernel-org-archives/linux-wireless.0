@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:45065 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbaCAAAH (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:53135 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998AbaCYI5L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 19:00:07 -0500
-Received: by mail-we0-f174.google.com with SMTP id t60so1137101wes.33
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 16:00:06 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 8/9] staging: vt6656: dead code removetypedef struct tagSQuietControl
-Date: Fri, 28 Feb 2014 23:58:38 +0000
-Message-Id: <1393631919-16182-8-git-send-email-tvboxspy@gmail.com> (sfid-20140301_010016_095234_945FA3DD)
-In-Reply-To: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
-References: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 25 Mar 2014 04:57:11 -0400
+Received: by mail-oa0-f41.google.com with SMTP id j17so179548oag.28
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:57:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
+References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
+	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
+	<CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com>
+	<CAEFj9854WN5qJ4L4V1vkLeGhj=pstjoha19iJMQ8Vy-g24a66A@mail.gmail.com>
+Date: Tue, 25 Mar 2014 09:57:10 +0100
+Message-ID: <CA+BoTQmNVHj-rNvVgvTx=Adq6J1kpra2qwi3Pmzh2G2Npn-jGg@mail.gmail.com> (sfid-20140325_095720_129772_336D04A6)
+Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/device.h | 10 ----------
- 1 file changed, 10 deletions(-)
+On 25 March 2014 09:54, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>>
+>>> BTW, I also saw that the same happen to latest AP firmware whenever
+>>> the peer stats is more than 1. But since the first peer stats is self
+>>> stats, so it is ok to overwrite it.
+>>
+>> I disagree. Why do you think it is okay to overwrite self peer stats?
+>>
+> Because TxRate, RxRate, RSSI are all no value, just the MAC address.
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 1aad3d3..a9784ff 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -276,16 +276,6 @@ typedef struct tagSPMKIDCandidateEvent {
-     PMKID_CANDIDATE CandidateList[MAX_PMKIDLIST];
- } SPMKIDCandidateEvent, *PSPMKIDCandidateEvent;
- 
--/*++ 802.11h related */
--#define MAX_QUIET_COUNT     8
--
--typedef struct tagSQuietControl {
--    bool        bEnable;
--    u32       dwStartTime;
--    u8        byPeriod;
--    u16        wDuration;
--} SQuietControl, *PSQuietControl;
--
- /* The receive duplicate detection cache entry */
- typedef struct tagSCacheEntry{
-     u16        wFmSequence;
--- 
-1.9.0
+I don't think that's true for 10.1 firmware and AP interface types.
 
+
+Michał
