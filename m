@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33441 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbaCaLTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:19:24 -0400
-Message-ID: <53394F23.6080805@redhat.com> (sfid-20140331_131946_703598_3B2083C5)
-Date: Mon, 31 Mar 2014 13:18:59 +0200
-From: Denys Vlasenko <dvlasenk@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6598 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100AbaCYGwT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 02:52:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to simulate_fw_crash
+References: <20140313082431.10798.10888.stgit@potku.adurom.net>
+	<87pplih81g.fsf@kamboji.qca.qualcomm.com>
+	<20140321143737.GA5140@mwanda>
+Date: Tue, 25 Mar 2014 08:52:14 +0200
+In-Reply-To: <20140321143737.GA5140@mwanda> (Dan Carpenter's message of "Fri,
+	21 Mar 2014 17:37:38 +0300")
+Message-ID: <8738i64voh.fsf@kamboji.qca.qualcomm.com> (sfid-20140325_075223_655712_05BD9891)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save
- 440 bytes
-References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com> <53391B89.7010304@broadcom.com>
-In-Reply-To: <53391B89.7010304@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2014 09:38 AM, Arend van Spriel wrote:
-> On 30/03/14 23:31, Denys Vlasenko wrote:
->> Automated script discovered that without forced inlining,
->> gcc-4.7 generates smaller code for this function.
->>
->> There is no need to declare static functions inline anyway:
->> nowadays gcc detects single-callsite static functions
->> which benefit from inlining.
-> 
-> These patches look awfully familiar. I tend to object, but I don't know the details of this automated script.
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-The script removes "static" keyword, recompiles the .c file,
-compares the sizes, and if code size went down,
-creates a patch
+>> drivers/net/wireless/ath/ath10k/debug.c:500 ath10k_write_simulate_fw_crash() error: strncmp() '"hard"' too small (5 vs 32)
+>> drivers/net/wireless/ath/ath10k/debug.c:497 ath10k_write_simulate_fw_crash() error: strncmp() '"soft"' too small (5 vs 32)
+>> 
+>> I wanted to use strncmp() instead of strcmp(), but I'm not sure what to
+>> do here. In my opinion it's guaranteed that the string "hard" is null
+>> terminated, so it shouldn't matter even if strlen("soft") (5) is less
+>> than sizeof(buf) (32), right? Or am I missing something here?
+>> 
+>
+> I am on vacation until next week.  I didn't think these particular
+> emails went out automatically.
 
-> How about execution time or is this only compile tested?
+Actually that's true. Fengguang's bot sends me a build report after
+every build and I saw these warnings in that report.
 
-The change adds one pair of call/return instructions -
-probably around 5-10 CPU cycles.
+> Anyway, I have changed this in the latest smatch but it will take some
+> months for the kbuild bot to update.
+>
+> http://repo.or.cz/w/smatch.git/commitdiff/f10f27a7612c5b1e69b5d9080a0194d012beb6aa
+>
+> I'll take a closer look next week.
 
-The function in question is a part of firmware download logic,
-which is nowhere near being hot path/.
+Thanks!
 
-> The other thing is that you seem to rely on a specific gcc version.
-> What about pre-4.7? How about different architectures.
-> Was this determined on x86, arm, sparc, mips.
-> All these questions make me say 'nay'.
-
-Not making functions inline unless there is a good reason
-is a general good coding practice. It is not a compiler-
-or architecture-specific optimization.
+-- 
+Kalle Valo
