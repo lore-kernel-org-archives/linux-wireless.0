@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18691 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750850AbaCETiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 14:38:19 -0500
-Message-ID: <1394048380.2278.9.camel@dcbw.local> (sfid-20140305_203822_760823_413635B2)
-Subject: Re: WEP is not working on libertas drivers.
-From: Dan Williams <dcbw@redhat.com>
-To: Enric Balletbo Serra <eballetbo@gmail.com>
-Cc: david.abd@gmail.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Wed, 05 Mar 2014 13:39:40 -0600
-In-Reply-To: <CAFqH_52V8JPROp_cmJHsVEu4s+s20vbkWgL2xykDoJAAScWmVw@mail.gmail.com>
-References: <CAFqH_52V8JPROp_cmJHsVEu4s+s20vbkWgL2xykDoJAAScWmVw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:48499 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548AbaCYJPZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 05:15:25 -0400
+Subject: [PATCH 4/8] ath10k: advertise only firmware API 2 files
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 25 Mar 2014 11:15:23 +0200
+Message-ID: <20140325091523.16651.54201.stgit@potku.adurom.net> (sfid-20140325_101529_436144_5A39804A)
+In-Reply-To: <20140325091311.16651.15747.stgit@potku.adurom.net>
+References: <20140325091311.16651.15747.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-03-05 at 11:30 +0100, Enric Balletbo Serra wrote:
-> Hi all,
-> 
-> Due a customer requirement I need to configure and ad-hoc network with
-> wep encryption. This worked fine with a very old kernel (2.6.35) but
-> now that we need to update the kernel seems this
-> functionality is totally broken. I found some old messages[1] related
-> to this without response.
-> 
-> As I'm totally a newbie with this I would like to know if there is a
-> hard reason why this is still not working or the only reason is
-> because nobody spent time on this. In that case will be easy implement
-> this (some indication?)
+We do not really support older firmware API 1 anymore, so better remove
+MODULE_FIRMWARE() declarations for them and only list for API 2 files.
 
-This appears to be due to the conversion from the WEXT to cfg80211 a
-long time back.  I can confirm that it's broken.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c |    3 +--
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-There's a nice comment in ibss.c::lbs_ibss_start_new():
-
-/* TODO: mix in WLAN_CAPABILITY_PRIVACY */
-
-which pretty much means it isn't there.  If you wanted to fix this, what
-you'd do is you'd look at priv->wdev->connect_keys, and if that was !
-NULL, you'd run through each of the 6 keys and if at least one key was
-valid, you'd then set the PRIVACY bit in the beacon.  Then later after
-the join was successful, the kernel already calls the functions for
-uploading the keys to the driver
-(net/wireless/util.c::cfg80211_upload_connect_keys()).
-
-That's if you're *starting* a new adhoc network, which often you need to
-do.  Joining an existing adhoc network (if you can see one in scan
-results) should already work, unless libertas really really does want
-the keys to be set before the join happens.  If that's the case, then
-that would be a different fix.
-
-Dan
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 35fc44e281f5..007e855f4ba9 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -28,6 +28,7 @@
+ #define QCA988X_HW_2_0_CHIP_ID_REV	0x2
+ #define QCA988X_HW_2_0_FW_DIR		"ath10k/QCA988X/hw2.0"
+ #define QCA988X_HW_2_0_FW_FILE		"firmware.bin"
++#define QCA988X_HW_2_0_FW_2_FILE	"firmware-2.bin"
+ #define QCA988X_HW_2_0_OTP_FILE		"otp.bin"
+ #define QCA988X_HW_2_0_BOARD_DATA_FILE	"board.bin"
+ #define QCA988X_HW_2_0_PATCH_LOAD_ADDR	0x1234
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 2c5a83d2748a..e70dde1beaca 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2701,6 +2701,5 @@ module_exit(ath10k_pci_exit);
+ MODULE_AUTHOR("Qualcomm Atheros");
+ MODULE_DESCRIPTION("Driver support for Atheros QCA988X PCIe devices");
+ MODULE_LICENSE("Dual BSD/GPL");
+-MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_FW_FILE);
+-MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_OTP_FILE);
++MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_FW_2_FILE);
+ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_BOARD_DATA_FILE);
 
