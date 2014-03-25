@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48347 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653AbaCXQ7U (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:39669 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398AbaCYIpW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 12:59:20 -0400
-Message-ID: <5330644F.5050906@candelatech.com> (sfid-20140324_175923_880701_0671DBF5)
-Date: Mon, 24 Mar 2014 09:58:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 25 Mar 2014 04:45:22 -0400
+Received: by mail-ob0-f175.google.com with SMTP id uy5so159162obc.20
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:45:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] ath10k:  Add debugging for tx-credits usage.
-References: <1395428150-31996-1-git-send-email-greearb@candelatech.com> <871txr7svw.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871txr7svw.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
+References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
+	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
+	<CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com>
+Date: Tue, 25 Mar 2014 09:45:22 +0100
+Message-ID: <CA+BoTQn4ji2boTV8x-owO8PbaPm510wYEKmbKqf+VS+MS+DXnQ@mail.gmail.com> (sfid-20140325_094542_766085_75CF9A68)
+Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2014 04:12 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
-> 
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This helps track tx credits accounting and usage.  If
->> firmware hangs or otherwise fails to return credits, one
->> can more easily see the last few command types that
->> was send to the firmware.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> This patchset didn't apply, and the sha1 ids were useless so that 3-way
-> merge didn't work. Can you rebase, please? And better yet if you rebase
-> in top of my master branch.
+On 25 March 2014 09:33, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Hi, Michal
+>
+>> I suppose there's a limit how much peer entries firmware is able to
+>> pack up into a single event. The second event you handle here is still
+>> going to have some sort of a limit and you'll end up dropping results
+>> again. The same probably goes with vdev stats (which aren't handled
+>> yet, but hey).
+>
+> vdev stats is not supported by firmware 999.999.0.636, am I right?
 
-I will do this.  I must have some conflicting patch between your top of
-tree and this patch in my tree...
-
->> -	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
->> +	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb, __LINE__);
-> 
-> Using line numbers in debug messages is very cumbersome. Some people
-> cherry pick patches, have their own changes and whatnot which will make
-> it more difficult to read the debug logs. Isn't there any better way to
-> do this?
-
-It is nasty, but I wanted to keep performance overhead light.
-I could do an enum instead if you think that would be an improvement.
-
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -544,7 +544,7 @@ static int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
->>  	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
->>  
->>  	memset(skb_cb, 0, sizeof(*skb_cb));
->> -	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
->> +	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb, 0x71100000 | cmd_id);
->>  	trace_ath10k_wmi_cmd(cmd_id, skb->data, skb->len, ret);
-> 
-> What does 0x71100000 stand for?
-
-It's just something that is easily grepped for, and is obviously not
-a line number.
-
-Hopefully someone will have a better idea how to do this sort of thing,
-as my patch is pretty far down the slope towards total hack :)
-
-Thanks,
-Ben
+True, but once it is supported then it will most likely need the same
+treatment as peer stats.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> BTW, I also saw that the same happen to latest AP firmware whenever
+> the peer stats is more than 1. But since the first peer stats is self
+> stats, so it is ok to overwrite it.
 
+I disagree. Why do you think it is okay to overwrite self peer stats?
+
+Btw. 10.1 firmware has more pdev stats which breaks parsing of peer entries...
+
+
+Michał
