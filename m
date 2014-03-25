@@ -1,118 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:31428 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbaCTJSK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Mar 2014 05:18:10 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Daniel Kim <dekim@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/4] brcmfmac: Enable 40MHz bandwidth in 2GHz band and OBSS scanning operations
-Date: Thu, 20 Mar 2014 10:18:00 +0100
-Message-ID: <1395307083-31523-2-git-send-email-arend@broadcom.com> (sfid-20140320_101827_606177_1A96FFAD)
-In-Reply-To: <1395307083-31523-1-git-send-email-arend@broadcom.com>
-References: <1395307083-31523-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:42552 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750830AbaCYH7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Mar 2014 03:59:35 -0400
+Message-ID: <1395734367.28231.57.camel@dubbel> (sfid-20140325_085938_410519_39CE1A3B)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Tue, 25 Mar 2014 09:59:27 +0200
+In-Reply-To: <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-4-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 03/13] mac80211: prevent chanctx overcommit
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Kim <dekim@broadcom.com>
+On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+> Do not allocate more channel contexts than a
+> driver is capable for currently matching interface
+> combination.
+> 
+> This allows the ieee80211_vif_reserve_chanctx() to
+> act as a guard against breaking interface
+> combinations.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
 
-This patch enables 40MHz bandwidth in 2GHz band after checking whether
-cfg80211 allows it or not, and enables OBSS scanning operations to
-to support 20/40 BSS coexistence.
+[...]
+> @@ -745,13 +764,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+>  			 * context, reserve our current context
+>  			 */
+>  			new_ctx = curr_ctx;
+> -		} else {
+> +		} else if (ieee80211_can_create_new_chanctx(local)) {
+>  			/* create a new context and reserve it */
+>  			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+>  			if (IS_ERR(new_ctx)) {
+>  				ret = PTR_ERR(new_ctx);
+>  				goto out;
+>  			}
+> +		} else {
+> +			ret = -EBUSY;
+> +			goto out;
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Daniel Kim <dekim@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |   10 ++++++++
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   26 ++++++++++++++++++++
- 2 files changed, 36 insertions(+)
+I'm not sure about this whole allowed channels counting thing.  Does it
+really matter what is the total number of allowed channels? I think the
+actual combinations is what should be checked here.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index af17a5b..614e488 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-@@ -48,6 +48,11 @@
- 
- #define BRCMF_MAXRATES_IN_SET		16	/* max # of rates in rateset */
- 
-+/* OBSS Coex Auto/On/Off */
-+#define BRCMF_OBSS_COEX_AUTO		(-1)
-+#define BRCMF_OBSS_COEX_OFF		0
-+#define BRCMF_OBSS_COEX_ON		1
-+
- enum brcmf_fil_p2p_if_types {
- 	BRCMF_FIL_P2P_IF_CLIENT,
- 	BRCMF_FIL_P2P_IF_GO,
-@@ -87,6 +92,11 @@ struct brcmf_fil_bss_enable_le {
- 	__le32 enable;
- };
- 
-+struct brcmf_fil_bwcap_le {
-+	__le32 band;
-+	__le32 bw_cap;
-+};
-+
- /**
-  * struct tdls_iovar - common structure for tdls iovars.
-  *
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 9f75afb..428b4cb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -191,6 +191,7 @@ static struct ieee80211_supported_band __wl_band_2ghz = {
- 	.n_channels = ARRAY_SIZE(__wl_2ghz_channels),
- 	.bitrates = wl_g_rates,
- 	.n_bitrates = wl_g_rates_size,
-+	.ht_cap = {IEEE80211_HT_CAP_SUP_WIDTH_20_40, true},
- };
- 
- static struct ieee80211_supported_band __wl_band_5ghz_a = {
-@@ -4929,6 +4930,19 @@ static void init_vif_event(struct brcmf_cfg80211_vif_event *event)
- 	mutex_init(&event->vif_event_lock);
- }
- 
-+static int brcmf_set_bwcap(struct brcmf_if *ifp, u32 band, u32 bw_cap)
-+{
-+	struct brcmf_fil_bwcap_le band_bwcap;
-+	int err;
-+
-+	band_bwcap.band = cpu_to_le32(band);
-+	band_bwcap.bw_cap = cpu_to_le32(bw_cap);
-+	err = brcmf_fil_iovar_data_set(ifp, "bw_cap", &band_bwcap,
-+				       sizeof(band_bwcap));
-+
-+	return err;
-+}
-+
- struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 						  struct device *busdev)
- {
-@@ -4986,6 +5000,18 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 		goto cfg80211_p2p_attach_out;
- 	}
- 
-+	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
-+	 * setup 40MHz in 2GHz band and enable OBSS scanning.
-+	 */
-+	if (wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap.cap &
-+	    IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+		err = brcmf_set_bwcap(ifp, WLC_BAND_2G, WLC_BW_CAP_40MHZ);
-+		if (!err) {
-+			err = brcmf_fil_iovar_int_set(ifp, "obss_coex",
-+						      BRCMF_OBSS_COEX_AUTO);
-+		}
-+	}
-+
- 	err = brcmf_fil_iovar_int_set(ifp, "tdls_enable", 1);
- 	if (err) {
- 		brcmf_dbg(INFO, "TDLS not enabled (%d)\n", err);
--- 
-1.7.9.5
+Let's say the driver supports these combinations:
+
+1. num_different_channels = 2; limits max 2 APs;
+2. num_different_channels = 1; limits 1 AP, 1 STA;
+
+Then you're running on a single-channel with 1 AP and 1 STA.  The STA
+gets a CSA to move to a new channel.  If you only consider the
+max_num_channels you calculated, you will think that it is okay to
+switch, but it is not, because you cannot have 1 AP and 1 STA on
+different channels.
+
+Or am I missing something?
+
+--
+Luca
 
