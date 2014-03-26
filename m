@@ -1,63 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45364 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933490AbaCQNfH (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:45286 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756120AbaCZUDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 09:35:07 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 13/21] wil6210: fix memory leak in the AP flow
-Date: Mon, 17 Mar 2014 15:34:17 +0200
-Message-ID: <1395063265-6522-14-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140317_143519_437026_B808608A)
-In-Reply-To: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1395063265-6522-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 26 Mar 2014 16:03:13 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so2059987eek.39
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 13:03:12 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: [PATCH 19/20] rtl8180: enable rtl8187se support
+Date: Wed, 26 Mar 2014 21:04:23 +0100
+Message-Id: <1395864263-5181-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_210318_767882_6C62058E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When switching between STA and AP modes, memory allocated for Rx vring leaks
-This is because start_ap() allocates Rx vring but stop_ap() do not free it.
-Logically, Rx vring is not valid (HW can't use it anymore), so free it in reset()
-Also, check double init for Rx vring and bail out with -EINVAL
+Finally make rtl8187se works (hopefylly).
+This patch adds PCI ID for rtl8187, updates copyright notes and
+updates MODULE_DESCRIPTION.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 2 ++
- drivers/net/wireless/ath/wil6210/txrx.c | 5 +++++
- 2 files changed, 7 insertions(+)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 39 +++++++++++++++++++++++++++---
+ 1 file changed, 35 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 6847622..de952ab 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -343,6 +343,8 @@ int wil_reset(struct wil6210_priv *wil)
- 	/* TODO: put MAC in reset */
- 	wil_target_reset(wil);
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 2046fe2..98d8256f 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -1,15 +1,42 @@
  
-+	wil_rx_fini(wil);
-+
- 	/* init after reset */
- 	wil->pending_connect_cid = -1;
- 	reinit_completion(&wil->wmi_ready);
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 5cda0ea9..97d036ad 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -557,6 +557,11 @@ int wil_rx_init(struct wil6210_priv *wil)
- 	struct vring *vring = &wil->vring_rx;
- 	int rc;
+-/*
+- * Linux device driver for RTL8180 / RTL8185
++/* Linux device driver for RTL8180 / RTL8185 / RTL8187SE
+  *
+  * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
+- * Copyright 2007 Andrea Merello <andrea.merello@gmail.com>
++ * Copyright 2007,2014 Andrea Merello <andrea.merello@gmail.com>
+  *
+  * Based on the r8180 driver, which is:
+  * Copyright 2004-2005 Andrea Merello <andrea.merello@gmail.com>, et al.
+  *
+  * Thanks to Realtek for their support!
+  *
++ ************************************************************************
++ *
++ * The driver was extended to the RTL8187SE in 2014 by
++ * Andrea Merello <andrea.merello@gmail.com>
++ *
++ * based also on:
++ *  - portions of rtl8187se Linux staging driver, Copyright Realtek corp.
++ *  - other GPL, unpublished (until now), Linux driver code,
++ *    Copyright Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ * A huge thanks goes to Sara V. Nari who forgives me when I'm
++ * sitting in front of my laptop at evening, week-end, night...
++ *
++ * A special thanks goes to Antonio Cuni, who helped me with
++ * some python userspace stuff I used to debug RTL8187SE code, and who
++ * bought a laptop with an unsupported Wi-Fi card some years ago...
++ *
++ * Thanks to Larry Finger for writing some code for rtl8187se and for
++ * his suggestions.
++ *
++ * Thanks to Dan Carpenter for reviewing my initial patch and for his
++ * suggestions.
++ *
++ * Thanks to Bernhard Schiffner for his help in testing and for his
++ * suggestions.
++ *
++ ************************************************************************
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -33,10 +60,14 @@
  
-+	if (vring->va) {
-+		wil_err(wil, "Rx ring already allocated\n");
-+		return -EINVAL;
-+	}
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+ MODULE_AUTHOR("Andrea Merello <andrea.merello@gmail.com>");
+-MODULE_DESCRIPTION("RTL8180 / RTL8185 PCI wireless driver");
++MODULE_DESCRIPTION("RTL8180 / RTL8185 / RTL8187SE PCI wireless driver");
+ MODULE_LICENSE("GPL");
+ 
+ static DEFINE_PCI_DEVICE_TABLE(rtl8180_table) = {
 +
- 	vring->size = WIL6210_RX_RING_SIZE;
- 	rc = wil_vring_alloc(wil, vring);
- 	if (rc)
++	/* rtl8187se */
++	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8199) },
++
+ 	/* rtl8185 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8185) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x700f) },
 -- 
 1.8.3.2
 
