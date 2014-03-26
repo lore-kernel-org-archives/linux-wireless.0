@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:35274 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831AbaCKLxl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49480 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753102AbaCZJWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 07:53:41 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] iwlwifi: dvm: take mutex when sending SYNC BT config command
-Date: Tue, 11 Mar 2014 13:53:36 +0200
-Message-Id: <1394538816-21460-1-git-send-email-egrumbach@gmail.com> (sfid-20140311_125345_493991_88B9CD4C)
-In-Reply-To: <531EF845.2050609@gmail.com>
-References: <531EF845.2050609@gmail.com>
+	Wed, 26 Mar 2014 05:22:12 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: split ce initialization and allocation
+References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+	<1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 26 Mar 2014 11:22:07 +0200
+In-Reply-To: <1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 25 Mar 2014 12:12:23 +0100")
+Message-ID: <87ppl9z54w.fsf@kamboji.qca.qualcomm.com> (sfid-20140326_102217_090316_DB529CB4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-There is a flow in which we send the host command in SYNC
-mode, but we don't take priv->mutex.
+> Definitions by which copy engine structure are
+> allocated do not change so it doesn't make much
+> sense to re-create those structures each time
+> device is booted (e.g. due to firmware recovery).
+>
+> This should decrease chance of memory allocation
+> failures.
+>
+> Reported-By: Avery Pennarun <apenwarr@gmail.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=1046495
+[...]
 
-Cc: <stable@vger.kernel.org>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+> --- a/drivers/net/wireless/ath/ath10k/ce.h
+> +++ b/drivers/net/wireless/ath/ath10k/ce.h
+> @@ -104,7 +104,8 @@ struct ath10k_ce_ring {
+>  	void *shadow_base_unaligned;
+>  	struct ce_desc *shadow_base;
+>  
+> -	void **per_transfer_context;
+> +	/* keep last */
+> +	void *per_transfer_context[0];
+>  };
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index ba1b1ea..ea7e70c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -252,13 +252,17 @@ static void iwl_bg_bt_runtime_config(struct work_struct *work)
- 	struct iwl_priv *priv =
- 		container_of(work, struct iwl_priv, bt_runtime_config);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
- 	/* dont send host command if rf-kill is on */
- 	if (!iwl_is_ready_rf(priv))
--		return;
-+		goto out;
-+
- 	iwlagn_send_advance_bt_config(priv);
-+out:
-+	mutex_unlock(&priv->mutex);
- }
- 
- static void iwl_bg_bt_full_concurrency(struct work_struct *work)
+If possible, I would prefer to have changes like this in a separate
+patch as it makes easier to review. Or at least mention the change in
+the commit log.
+
+> @@ -2018,9 +2029,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+>  	ath10k_pci_free_early_irq(ar);
+>  	ath10k_pci_kill_tasklet(ar);
+>  	ath10k_pci_deinit_irq(ar);
+> +	ath10k_pci_ce_deinit(ar);
+>  	ath10k_pci_warm_reset(ar);
+>  
+> -	ath10k_pci_ce_deinit(ar);
+>  	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+>  		ath10k_do_pci_sleep(ar);
+>  }
+
+Why this?
+
 -- 
-1.8.3.2
-
+Kalle Valo
