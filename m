@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49480 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102AbaCZJWM (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:30229 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbaCZLk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 05:22:12 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: split ce initialization and allocation
-References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
-	<1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Mar 2014 11:22:07 +0200
-In-Reply-To: <1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 25 Mar 2014 12:12:23 +0100")
-Message-ID: <87ppl9z54w.fsf@kamboji.qca.qualcomm.com> (sfid-20140326_102217_090316_DB529CB4)
+	Wed, 26 Mar 2014 07:40:57 -0400
+Date: Wed, 26 Mar 2014 14:40:22 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH v2] ath10k: add soft/hard firmware crash option to
+ simulate_fw_crash
+Message-ID: <20140326114021.GK7045@mwanda> (sfid-20140326_124102_239609_16F9DF58)
+References: <20140313082431.10798.10888.stgit@potku.adurom.net>
+ <87pplih81g.fsf@kamboji.qca.qualcomm.com>
+ <20140321143737.GA5140@mwanda>
+ <8738i64voh.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8738i64voh.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, Mar 25, 2014 at 08:52:14AM +0200, Kalle Valo wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+> 
+> >> drivers/net/wireless/ath/ath10k/debug.c:500 ath10k_write_simulate_fw_crash() error: strncmp() '"hard"' too small (5 vs 32)
+> >> drivers/net/wireless/ath/ath10k/debug.c:497 ath10k_write_simulate_fw_crash() error: strncmp() '"soft"' too small (5 vs 32)
+> >> 
+> >> I wanted to use strncmp() instead of strcmp(), but I'm not sure what to
+> >> do here. In my opinion it's guaranteed that the string "hard" is null
+> >> terminated, so it shouldn't matter even if strlen("soft") (5) is less
+> >> than sizeof(buf) (32), right? Or am I missing something here?
+> >> 
+> >
+> > I am on vacation until next week.  I didn't think these particular
+> > emails went out automatically.
+> 
+> Actually that's true. Fengguang's bot sends me a build report after
+> every build and I saw these warnings in that report.
+> 
+> > Anyway, I have changed this in the latest smatch but it will take some
+> > months for the kbuild bot to update.
+> >
+> > http://repo.or.cz/w/smatch.git/commitdiff/f10f27a7612c5b1e69b5d9080a0194d012beb6aa
+> >
+> > I'll take a closer look next week.
+> 
+> Thanks!
 
-> Definitions by which copy engine structure are
-> allocated do not change so it doesn't make much
-> sense to re-create those structures each time
-> device is booted (e.g. due to firmware recovery).
->
-> This should decrease chance of memory allocation
-> failures.
->
-> Reported-By: Avery Pennarun <apenwarr@gmail.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Actually I was just looking for why the email went out but you already
+answered the question.  Eventually, this warning will go away when the
+build-bot updates.  (It's sort of painful to update because Smatch
+doesn't have stable releases).
 
-[...]
+regards,
+dan carpenter
 
-> --- a/drivers/net/wireless/ath/ath10k/ce.h
-> +++ b/drivers/net/wireless/ath/ath10k/ce.h
-> @@ -104,7 +104,8 @@ struct ath10k_ce_ring {
->  	void *shadow_base_unaligned;
->  	struct ce_desc *shadow_base;
->  
-> -	void **per_transfer_context;
-> +	/* keep last */
-> +	void *per_transfer_context[0];
->  };
-
-If possible, I would prefer to have changes like this in a separate
-patch as it makes easier to review. Or at least mention the change in
-the commit log.
-
-> @@ -2018,9 +2029,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
->  	ath10k_pci_free_early_irq(ar);
->  	ath10k_pci_kill_tasklet(ar);
->  	ath10k_pci_deinit_irq(ar);
-> +	ath10k_pci_ce_deinit(ar);
->  	ath10k_pci_warm_reset(ar);
->  
-> -	ath10k_pci_ce_deinit(ar);
->  	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
->  		ath10k_do_pci_sleep(ar);
->  }
-
-Why this?
-
--- 
-Kalle Valo
