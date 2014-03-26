@@ -1,59 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:45298 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbaCGNiD (ORCPT
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:35441 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbaCZSeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 08:38:03 -0500
-Received: by mail-ea0-f181.google.com with SMTP id k10so2339882eaj.40
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Mar 2014 05:38:02 -0800 (PST)
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de
-Subject: [RFC PATCH 0/8] Add new channel type -- 5MHz and 10MHz
-Date: Fri,  7 Mar 2014 14:37:47 +0100
-Message-Id: <1394199475-5208-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140307_143809_195570_0CD50492)
+	Wed, 26 Mar 2014 14:34:17 -0400
+Date: Wed, 26 Mar 2014 15:34:11 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-03-24
+Message-ID: <20140326183411.GB1741@joana> (sfid-20140326_193437_138538_57A5E1FD)
+References: <20140324173332.GA2214@joana>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+In-Reply-To: <20140324173332.GA2214@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds new channel types -- 5MHz and 10MHz.  Channels
-with such bandwidth are used in IEEE 802.11p with frequencies
-ranging from 5850 to 5925 MHz. Since OCB mode defined in 802.11p
-does not use beacons, the channel frequencies including the
-bandwidth should be set by all STAs before joining the network.
-This patchset adds the possibility of setting the channel
-bandwidth via netlink (i.e. from userspace).
 
-Potential issues:
-CRDA reports to the kernel the information about the maximum
-channel bandwidth allowed for some particular range of channels/
-frequencies. In case the maximum BW is usual 20 or 40 MHz, e.g.
-(2400 - 2483.5 @ 40), it is possible to configure a channel with
-5MHz or 10MHz in that range.  Is this behavior acceptable or
-should it be prevented?
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi John,
+
+2014-03-24 Gustavo Padovan <gustavo@padovan.org>:
+
+> Hi John,
+>=20
+> Here follow another set of patches to 3.15. This is mostly a bug fix pull
+> request with the exception of one commit from Marcel which adds tracking =
+to
+> the current configured LE scan type parameter.
+
+There is one more fix that we want to include in this pull request. Here
+follows a new pull request, please pull, Thanks.=20
+
+	Gustavo
+
+--
+The following changes since commit 40b552aa5a0bfa785bc7ddb5c2d7965b1e0bb08d:
+
+  Bluetooth: Enforce strict Secure Connections Only mode security (2014-03-=
+19 23:30:32 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.gi=
+t for-upstream
+
+for you to fetch changes up to e8b1ab9e6d30394e0df3e4f60bf56c4dc9bf0863:
+
+  Bluetooth: Fix returning peer address in pending connect state (2014-03-2=
+6 09:31:33 -0700)
+
+----------------------------------------------------------------
+Amitkumar Karwar (1):
+      Bluetooth: btmrvl: don't consume all vendor specific events
+
+Johan Hedberg (11):
+      Bluetooth: Fix passkey endianess in user_confirm and notify_passkey
+      Bluetooth: Fix address value for early disconnection events
+      Bluetooth: Fix potential NULL pointer dereference in SMP
+      Bluetooth: Add missing cmd_status handler for LE_Start_Encryption
+      Bluetooth: Fix SMP confirmation callback handling
+      Bluetooth: Add SMP flag to track which side is the initiator
+      Bluetooth: Don't try to confirm locally initiated SMP pairing
+      Bluetooth: Remove LTK re-encryption procedure
+      Bluetooth: Fix potential NULL pointer dereference in smp_conn_security
+      Bluetooth: Remove unnecessary assignment in SMP
+      Bluetooth: Fix returning peer address in pending connect state
+
+Marcel Holtmann (1):
+      Bluetooth: Track current configured LE scan type parameter
+
+Thomas Gleixner (1):
+      Bluetooth: bluecard: Use del_timer_sync() in teardown path
+
+ drivers/bluetooth/bluecard_cs.c  |  2 +-
+ drivers/bluetooth/btmrvl_main.c  | 11 +++---
+ include/net/bluetooth/hci_core.h |  3 +-
+ net/bluetooth/hci_event.c        | 63 +++++++++++++++++++++++++++++++-
+ net/bluetooth/l2cap_sock.c       |  3 +-
+ net/bluetooth/mgmt.c             | 20 ++--------
+ net/bluetooth/rfcomm/sock.c      |  3 +-
+ net/bluetooth/smp.c              | 87 ++++++++++++++++++------------------=
+--------
+ net/bluetooth/smp.h              |  7 +---
+ 9 files changed, 115 insertions(+), 84 deletions(-)
 
 
-Rostislav Lisovy (8):
-  nl80211: Add new channel types -- 5MHz and 10MHz
-  nl80211: Add attributes describing channel bandwidth
-  cfg80211: Add attributes describing channel bandwidth
-  cfg80211: Modify chandef related functions to work with 5/10MHz
-    channels
-  nl80211: Modify chandef related functions to work with 5/10MHz
-    channels
-  nl80211: Support for 5/10 MHz channels when reporting BW restrictions
-  cfg80211: Use 5MHz bandwidth when checking usable channels
-  mac80211: Update conf_is_ht() to work properly with 5/10MHz channels
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature
 
- include/net/cfg80211.h       | 10 ++++++++++
- include/net/mac80211.h       |  4 +++-
- include/uapi/linux/nl80211.h | 14 +++++++++++++-
- net/wireless/chan.c          | 10 ++++++++++
- net/wireless/nl80211.c       | 10 ++++++++++
- net/wireless/reg.c           | 22 +++++++++++++++-------
- 6 files changed, 61 insertions(+), 9 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
--- 
-1.8.5.1
+iQIcBAEBAgAGBQJTMx2iAAoJEPs3PUX4s20o0+kP/RMuRIbvYaOEUPfJe5QUrLEL
+AKtM+6lHuBR8T7eUTB4iYhZ2TBAuNNmwlHuRspG+Tku1lS4fbFwDdF+QYKketCU6
+QbMcbvk302Bz6+Bi7Y4QvX+LHH+KTQ7biUbpCwqTKzXD/VJGDFeLpR/vxH02zxxW
+GLGYwa3hAL9b/tgUllFl/67eAaomEiSrQh/Hwi5X/MpuEhIwlrv0ouOIqGZ0VxJh
+edRiF2h7QiFTO6FcigX5+yeTfNu0OmKEvK1qOJALNsHYQVHf3ffAQn8vTKwnUcuR
+lIG9m7Gw3JGuN7kcACgMB2MSDsfKWvTM/NbQLyZklPneJPsuLSfCPsP10vZGR6kX
+43LJJMr8ANinJ2+t8haIJrqjjsfFVGJ++MzLFXjjiJJk16IRndQ6nAgxa7ekMELj
+3aZHvKnZMQhrz1/VTqbcFv2+AShJF/JAGV00BY1QrsiboX5VjTgpPE71dLQDNDXU
+4e4l4FBCX5Lcv2SM1tA1f2wz5fWxrraH1CPaL3PBV2K5icFy+tU1HrrtpTWns0UP
+ZSNmB7DZJHA3N3ELMj7KBscV2SS2pIH3gJTZD0ntatpuQGI8IHfU6Sqn6A+FKSDt
+VFJM/7UvDEEdmGAAzFA3bNkGIS8b7S/5BlD/hZTHac+aI5zuZHlodVUV4vsq0077
+mLkZrV8k+DZEBT0Id9AN
+=qkBQ
+-----END PGP SIGNATURE-----
 
+--0F1p//8PRICkK4MW--
