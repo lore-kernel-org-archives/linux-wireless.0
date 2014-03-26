@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46274 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752748AbaCFKXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 05:23:04 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>
-Subject: RE: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Date: Thu, 6 Mar 2014 10:22:49 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D79687@HASMSX103.ger.corp.intel.com> (sfid-20140306_112315_196570_DBAA0D0A)
-References: <52B0B72A.5070704@gmail.com>
- <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
- <20140113111357.GA4611@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
- <20140113124049.GA5796@magnum.frso.rivierawaves.com>
- <52D83C56.5010706@gmail.com> <20140116214357.GA10376@gobelin>
- <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
- <20140306102102.GA15185@magnum.frso.rivierawaves.com>
-In-Reply-To: <20140306102102.GA15185@magnum.frso.rivierawaves.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:41518 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756281AbaCZUAK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Mar 2014 16:00:10 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so2059855eek.18
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 13:00:09 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: [PATCH 10/20] rtl8180: config carbus register for rtl8187se
+Date: Wed, 26 Mar 2014 21:01:19 +0100
+Message-Id: <1395864079-4742-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_210028_204697_78039086)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gSGksDQo+IA0KPiBUaGFua3MgZm9yIHRoZSB1cGRhdGUsIGluZGVlZCBtb25pdG9yIGlz
-IGluIGJldHRlciBzaGFwZSwgaG93ZXZlciBJIGFtDQo+IHN0aWxsIHNlZWluZyBzb21lIGlzc3Vl
-cy4NCj4gRS5nLiBzaG9ydC1ndWFyZCBvciA+IDIwTUh6IGJ3IGZyYW1lcyBhcmUgbm90IHZpc2li
-bGUgd2hlbiBub3QNCj4gYWdncmVnYXRlZCwgSSBzdGlsbCBzZWUgIk1pY3JvY29kZSBTVyBlcnJv
-ciBkZXRlY3RlZC4iIGJ1dCBpbiBhDQo+IGRpZmZlcmVudCBzY2VuYXJpbyAobW9uaXRvcmluZyB3
-aXRoIG1haW4gbWFuYWdlZCBpZmFjZSBkb3duLCB0aGVuIHVwcGluZw0KPiB0aGUgbWFpbiBtYW5h
-Z2VkIGlmYWNlIHVwKSwgaXQgYWxzbyBzZWVtcyB0aGF0IHdlIGZpbHRlciBvdXQgbWFueSBmcmFt
-ZXMNCj4gd2hlbiB0aGUgbWFpbiBtYW5hZ2VkIGlmYWNlIGlzIHVwIGFuZC9vcj8gYXNzb2NpYXRl
-ZC4NCj4gQWxzbywgSSBzdGFydGVkIHdvcmtpbmcgb24gQU1TRFVzIHRoaXMgd2VlayBhbmQgeWVz
-dGVyZGF5IG15IGxhcHRvcA0KPiBjcmFzaGVkIGltbWVkaWF0ZWx5IHdoZW4gbW9uaXRvcmluZy4g
-VGhpcyBtb3JuaW5nIEkgc2VlIHRoYXQgdGhpcw0KPiBoYXBwZW5zIHdoZW4gbXkgYWdncmVnYXRl
-cyBzdGFydCBnZXR0aW5nIGFib3ZlIHRoZSB+NGsgbGltaXQgYW5kDQo+IG1vZHByb2Jpbmcgd2l0
-aCBhbXNkdV9zaXplXzhLPTEgc2VlbXMgdG8gJ2ZpeCcgdGhlIGlzc3VlLCBJIGd1ZXNzIHNvbWUN
-Cj4gcGxhY2VzIG5lZWQgc29tZSBvZmxvd3MgY2hlY2tzLg0KPiBBbGwgdGhpcyB3aXRoIHdpcmVs
-ZXNzLW5leHRANzA0NDQ1ZDkgKGkuZS4gY2lyY2EgdGhlIHRpbWUgSSBnb3QgeW91cg0KPiBlbWFp
-bCkgYW5kIGZ3IDIyLjE1LjguMC4NCj4gDQoNClBsZWFzZSBwYXN0ZSB0aGUgZGF0YSBmb3IgdGhl
-IGZpcm13YXJlIGFzc2VydC4gQWxzbywgdGFrZSBodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQv
-bGludXgva2VybmVsL2dpdC9qYmVyZy9tYWM4MDIxMS5naXQvY29tbWl0Lz9pZD0xYzM3YTcyYzFi
-ZDBiODNiZThiOTVjZmY3ZjFiYzliMWYzMmJkNDMzIGludG8gYWNjb3VudC4NCg==
+configuration of carbus-related registers is different for
+rtl8187se.
+Introduce a dedicated function that does it for all cards in the
+proper way
+
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index eb86ede..06d3c30 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -601,6 +601,26 @@ static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
+ 	}
+ }
+ 
++static void rtl8180_config_cardbus(struct ieee80211_hw *dev)
++{
++	struct rtl8180_priv *priv = dev->priv;
++	u16 reg16;
++	u8 reg8;
++
++	reg8 = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	reg8 |= 1 << 1;
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg8);
++
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
++		rtl818x_iowrite16(priv, FEMR_SE, 0xffff);
++	} else {
++		reg16 = rtl818x_ioread16(priv, &priv->map->FEMR);
++			reg16 |= (1 << 15) | (1 << 14) | (1 << 4);
++		rtl818x_iowrite16(priv, &priv->map->FEMR, reg16);
++	}
++
++}
++
+ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+@@ -632,13 +652,7 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 	msleep(200);
+ 
+ 	if (rtl818x_ioread8(priv, &priv->map->CONFIG3) & (1 << 3)) {
+-		/* For cardbus */
+-		reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+-		reg |= 1 << 1;
+-		rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
+-		reg = rtl818x_ioread16(priv, &priv->map->FEMR);
+-		reg |= (1 << 15) | (1 << 14) | (1 << 4);
+-		rtl818x_iowrite16(priv, &priv->map->FEMR, reg);
++		rtl8180_config_cardbus(dev);
+ 	}
+ 
+ 	rtl818x_iowrite8(priv, &priv->map->MSR, 0);
+-- 
+1.8.3.2
+
