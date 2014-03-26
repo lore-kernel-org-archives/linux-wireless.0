@@ -1,150 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [143.182.124.21] ([143.182.124.21]:17554 "EHLO mga03.intel.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754481AbaCLOhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 10:37:37 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v8 2/4] mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
-Date: Wed, 12 Mar 2014 16:37:19 +0200
-Message-Id: <1394635041-2561-3-git-send-email-luciano.coelho@intel.com> (sfid-20140312_153749_815172_6572ADCC)
-In-Reply-To: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
-References: <1394635041-2561-1-git-send-email-luciano.coelho@intel.com>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:61607 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756170AbaCZUC4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Mar 2014 16:02:56 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so2106123eei.28
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 13:02:55 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: [PATCH 18/20] rtl8180: detect rtl8187se card
+Date: Wed, 26 Mar 2014 21:04:05 +0100
+Message-Id: <1395864245-5132-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_210300_804867_35DBFF24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Combine the functions into one, so that we can switch from one context
-to the other without having to unassign and assign separately.  This
-is needed by the channel reservation functionality because otherwise
-we have a small period of time when the chanctx is set to NULL, which
-can cause problems if someone else is trying to dereference it.
+Add case to detect the rtl8187se card and its RF frontend.
+In this case set also accordingly mac80211 queue number.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- net/mac80211/chan.c | 85 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 43 insertions(+), 42 deletions(-)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index ef77703..5fa12f1 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -294,32 +294,6 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 	ieee80211_recalc_idle(local);
- }
- 
--static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_chanctx *ctx)
--{
--	struct ieee80211_local *local = sdata->local;
--	int ret;
--
--	lockdep_assert_held(&local->chanctx_mtx);
--
--	ret = drv_assign_vif_chanctx(local, sdata, ctx);
--	if (ret)
--		return ret;
--
--	rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
--	ctx->refcount++;
--
--	ieee80211_recalc_txpower(sdata);
--	ieee80211_recalc_chanctx_min_def(local, ctx);
--	sdata->vif.bss_conf.idle = false;
--
--	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
--	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
--
--	return 0;
--}
--
- static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
- 					      struct ieee80211_chanctx *ctx)
- {
-@@ -378,30 +352,57 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
- 	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RADAR);
- }
- 
--static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
--					   struct ieee80211_chanctx *ctx)
-+static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_chanctx *new_ctx)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *curr_ctx = NULL;
-+	int ret = 0;
- 
--	lockdep_assert_held(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
- 
--	ctx->refcount--;
--	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
-+	if (conf) {
-+		curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--	sdata->vif.bss_conf.idle = true;
-+		curr_ctx->refcount--;
-+		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
-+		conf = NULL;
-+	}
- 
--	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
--	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
-+	if (new_ctx) {
-+		ret = drv_assign_vif_chanctx(local, sdata, new_ctx);
-+		if (ret)
-+			goto out;
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index a14dfd9..2046fe2 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -1740,6 +1740,12 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 		chip_name = "RTL8185vD";
+ 		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8185;
+ 		break;
 +
-+		new_ctx->refcount++;
-+		conf = &new_ctx->conf;
-+	}
- 
--	drv_unassign_vif_chanctx(local, sdata, ctx);
-+out:
-+	rcu_assign_pointer(sdata->vif.chanctx_conf, conf);
++	case RTL818X_TX_CONF_RTL8187SE:
++		chip_name = "RTL8187SE";
++		priv->chip_family = RTL818X_CHIP_FAMILY_RTL8187SE;
++		break;
 +
-+	sdata->vif.bss_conf.idle = !conf;
+ 	default:
+ 		printk(KERN_ERR "%s (rtl8180): Unknown chip! (0x%x)\n",
+ 		       pci_name(pdev), reg >> 25);
+@@ -1753,7 +1759,10 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 	 * with mac80211, however the beacon queue is an exception and it
+ 	 * is mapped on the highst tx ring IDX.
+ 	 */
+-	dev->queues = RTL8180_NR_TX_QUEUES - 1;
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE)
++		dev->queues = RTL8187SE_NR_TX_QUEUES - 1;
++	else
++		dev->queues = RTL8180_NR_TX_QUEUES - 1;
  
--	if (ctx->refcount > 0) {
--		ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
--		ieee80211_recalc_smps_chanctx(local, ctx);
--		ieee80211_recalc_radar_chanctx(local, ctx);
--		ieee80211_recalc_chanctx_min_def(local, ctx);
-+	if (curr_ctx && curr_ctx->refcount > 0) {
-+		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
-+		ieee80211_recalc_smps_chanctx(local, curr_ctx);
-+		ieee80211_recalc_radar_chanctx(local, curr_ctx);
-+		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
- 	}
-+
-+	if (new_ctx && new_ctx->refcount > 0) {
-+		ieee80211_recalc_txpower(sdata);
-+		ieee80211_recalc_chanctx_min_def(local, new_ctx);
-+	}
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		ieee80211_bss_info_change_notify(sdata,
-+						 BSS_CHANGED_IDLE);
-+
-+	return ret;
- }
- 
- static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-@@ -419,7 +420,7 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 
- 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--	ieee80211_unassign_vif_chanctx(sdata, ctx);
-+	ieee80211_assign_vif_chanctx(sdata, NULL);
- 	if (ctx->refcount == 0)
- 		ieee80211_free_chanctx(local, ctx);
- }
+ 	if (priv->chip_family != RTL818X_CHIP_FAMILY_RTL8180) {
+ 		priv->band.n_bitrates = ARRAY_SIZE(rtl818x_rates);
+@@ -1773,7 +1782,11 @@ static int rtl8180_probe(struct pci_dev *pdev,
+ 		break;
+ 	case 5:	priv->rf = &grf5101_rf_ops;
+ 		break;
+-	case 9:	priv->rf = rtl8180_detect_rf(dev);
++	case 9:
++		if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE)
++			priv->rf = rtl8187se_detect_rf(dev);
++		else
++			priv->rf = rtl8180_detect_rf(dev);
+ 		break;
+ 	case 10:
+ 		rf_name = "RTL8255";
 -- 
-1.9.0
+1.8.3.2
 
