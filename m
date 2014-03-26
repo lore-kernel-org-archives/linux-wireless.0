@@ -1,89 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:41818 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753043AbaCaLn0 (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:58238 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753126AbaCZT6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:43:26 -0400
-Received: by mail-we0-f174.google.com with SMTP id t60so4556422wes.5
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:25 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 10/13] mac80211: split ieee80211_free_chanctx()
-Date: Mon, 31 Mar 2014 12:39:28 +0200
-Message-Id: <1396262371-6466-11-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134448_579221_6DBF1099)
-In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
- <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 26 Mar 2014 15:58:43 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d17so2090167eek.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:58:42 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: [PATCH 05/20] rtl8180: support for rtl8187se RX descriptors
+Date: Wed, 26 Mar 2014 20:59:52 +0100
+Message-Id: <1395863992-4536-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205855_427568_06D015A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a little too much. Split it up so
-the code can be easily reused in the future.
+Currently RX status descriptor and RX command descriptor are
+represented using the same struct type.
+This patch splits this by introducing different types for
+rx status and command descriptor.
+Doing this make it possible to handle rtl8187se RX descriptors
+easier.
+This patch do also this by adding specific cases where needed.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- net/mac80211/chan.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ drivers/net/wireless/rtl818x/rtl8180/dev.c     | 52 +++++++++++++++++++-------
+ drivers/net/wireless/rtl818x/rtl8180/rtl8180.h | 23 +++++++++---
+ 2 files changed, 57 insertions(+), 18 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 8e207c0..fc67d4e 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -425,14 +425,11 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	return ctx;
- }
- 
--static void ieee80211_free_chanctx(struct ieee80211_local *local,
--				   struct ieee80211_chanctx *ctx)
-+static void ieee80211_del_chanctx(struct ieee80211_local *local,
-+				  struct ieee80211_chanctx *ctx)
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 6b237ed..867ec07 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -129,14 +129,30 @@ void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
+ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
  {
--	bool check_single_channel = false;
- 	lockdep_assert_held(&local->chanctx_mtx);
+ 	struct rtl8180_priv *priv = dev->priv;
++	struct rtl818x_rx_cmd_desc *cmd_desc;
+ 	unsigned int count = 32;
+ 	u8 signal, agc, sq;
+ 	dma_addr_t mapping;
  
--	WARN_ON_ONCE(ctx->refcount != 0);
--
- 	if (!local->use_chanctx) {
- 		struct cfg80211_chan_def *chandef = &local->_oper_chandef;
- 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-@@ -442,8 +439,9 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		/* NOTE: Disabling radar is only valid here for
- 		 * single channel context. To be sure, check it ...
- 		 */
--		if (local->hw.conf.radar_enabled)
--			check_single_channel = true;
-+		WARN_ON(local->hw.conf.radar_enabled &&
-+			!list_empty(&local->chanctx_list));
+ 	while (count--) {
+-		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
++		void *entry = priv->rx_ring + priv->rx_idx * priv->rx_ring_sz;
+ 		struct sk_buff *skb = priv->rx_buf[priv->rx_idx];
+-		u32 flags = le32_to_cpu(entry->flags);
++		u32 flags, flags2;
++		u64 tsft;
 +
- 		local->hw.conf.radar_enabled = false;
++		if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE) {
++			struct rtl8187se_rx_desc *desc = entry;
++
++			flags = le32_to_cpu(desc->flags);
++			flags2 = le32_to_cpu(desc->flags2);
++			tsft = le64_to_cpu(desc->tsft);
++		} else {
++			struct rtl8180_rx_desc *desc = entry;
++
++			flags = le32_to_cpu(desc->flags);
++			flags2 = le32_to_cpu(desc->flags2);
++			tsft = le64_to_cpu(desc->tsft);
++		}
  
- 		ieee80211_hw_config(local, 0);
-@@ -451,13 +449,19 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		drv_remove_chanctx(local, ctx);
+ 		if (flags & RTL818X_RX_DESC_FLAG_OWN)
+ 			return;
+@@ -146,7 +162,6 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 				      RTL818X_RX_DESC_FLAG_RX_ERR)))
+ 			goto done;
+ 		else {
+-			u32 flags2 = le32_to_cpu(entry->flags2);
+ 			struct ieee80211_rx_status rx_status = {0};
+ 			struct sk_buff *new_skb = dev_alloc_skb(MAX_RX_SIZE);
+ 
+@@ -178,14 +193,18 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 					signal = 90 - clamp_t(u8, agc, 25, 90);
+ 				else
+ 					signal = 95 - clamp_t(u8, agc, 30, 95);
+-			} else {
++			} else if (priv->chip_family ==
++				   RTL818X_CHIP_FAMILY_RTL8180) {
+ 				sq = flags2 & 0xff;
+ 				signal = priv->rf->calc_rssi(agc, sq);
++			} else {
++				/* TODO: rtl8187se rssi */
++				signal = 10;
+ 			}
+ 			rx_status.signal = signal;
+ 			rx_status.freq = dev->conf.chandef.chan->center_freq;
+ 			rx_status.band = dev->conf.chandef.chan->band;
+-			rx_status.mactime = le64_to_cpu(entry->tsft);
++			rx_status.mactime = tsft;
+ 			rx_status.flag |= RX_FLAG_MACTIME_START;
+ 			if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
+ 				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+@@ -199,11 +218,13 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 		}
+ 
+ 	done:
+-		entry->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
+-		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
++		cmd_desc = entry;
++		cmd_desc->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
++		cmd_desc->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
+ 					   MAX_RX_SIZE);
+ 		if (priv->rx_idx == 31)
+-			entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
++			cmd_desc->flags |=
++				cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
+ 		priv->rx_idx = (priv->rx_idx + 1) % 32;
+ 	}
+ }
+@@ -529,11 +550,16 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+-	struct rtl8180_rx_desc *entry;
++	struct rtl818x_rx_cmd_desc *entry;
+ 	int i;
+ 
++	if (priv->chip_family == RTL818X_CHIP_FAMILY_RTL8187SE)
++		priv->rx_ring_sz = sizeof(struct rtl8187se_rx_desc);
++	else
++		priv->rx_ring_sz = sizeof(struct rtl8180_rx_desc);
++
+ 	priv->rx_ring = pci_alloc_consistent(priv->pdev,
+-					     sizeof(*priv->rx_ring) * 32,
++					     priv->rx_ring_sz * 32,
+ 					     &priv->rx_ring_dma);
+ 
+ 	if (!priv->rx_ring || (unsigned long)priv->rx_ring & 0xFF) {
+@@ -541,13 +567,13 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ 		return -ENOMEM;
  	}
  
--	list_del_rcu(&ctx->list);
--	kfree_rcu(ctx, rcu_head);
-+	ieee80211_recalc_idle(local);
-+}
+-	memset(priv->rx_ring, 0, sizeof(*priv->rx_ring) * 32);
++	memset(priv->rx_ring, 0, priv->rx_ring_sz * 32);
+ 	priv->rx_idx = 0;
  
--	/* throw a warning if this wasn't the only channel context. */
--	WARN_ON(check_single_channel && !list_empty(&local->chanctx_list));
-+static void ieee80211_free_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	lockdep_assert_held(&local->chanctx_mtx);
+ 	for (i = 0; i < 32; i++) {
+ 		struct sk_buff *skb = dev_alloc_skb(MAX_RX_SIZE);
+ 		dma_addr_t *mapping;
+-		entry = &priv->rx_ring[i];
++		entry = priv->rx_ring + priv->rx_ring_sz*i;
+ 		if (!skb) {
+ 			wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
+ 			return -ENOMEM;
+@@ -587,7 +613,7 @@ static void rtl8180_free_rx_ring(struct ieee80211_hw *dev)
+ 		kfree_skb(skb);
+ 	}
  
--	ieee80211_recalc_idle(local);
-+	WARN_ON_ONCE(ctx->refcount != 0);
-+
-+	list_del_rcu(&ctx->list);
-+	ieee80211_del_chanctx(local, ctx);
-+	kfree_rcu(ctx, rcu_head);
+-	pci_free_consistent(priv->pdev, sizeof(*priv->rx_ring) * 32,
++	pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
+ 			    priv->rx_ring, priv->rx_ring_dma);
+ 	priv->rx_ring = NULL;
  }
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+index 47a084c..d866cc6 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
++++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+@@ -55,13 +55,25 @@ struct rtl8180_tx_desc {
+ 	__le16 frag_qsize;
+ } __packed;
  
- static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
++struct rtl818x_rx_cmd_desc {
++	__le32 flags;
++	u32 reserved;
++	__le32 rx_buf;
++} __packed;
++
+ struct rtl8180_rx_desc {
+ 	__le32 flags;
+ 	__le32 flags2;
+-	union {
+-		__le32 rx_buf;
+-		__le64 tsft;
+-	};
++	__le64 tsft;
++
++} __packed;
++
++struct rtl8187se_rx_desc {
++	__le32 flags;
++	__le64 tsft;
++	__le32 flags2;
++	__le32 flags3;
++	u32 reserved[3];
+ } __packed;
+ 
+ struct rtl8180_tx_ring {
+@@ -88,7 +100,8 @@ struct rtl8180_priv {
+ 
+ 	/* rtl8180 driver specific */
+ 	spinlock_t lock;
+-	struct rtl8180_rx_desc *rx_ring;
++	void *rx_ring;
++	u8 rx_ring_sz;
+ 	dma_addr_t rx_ring_dma;
+ 	unsigned int rx_idx;
+ 	struct sk_buff *rx_buf[32];
 -- 
-1.8.5.3
+1.8.3.2
 
