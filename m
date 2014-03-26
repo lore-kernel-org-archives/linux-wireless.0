@@ -1,47 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbaCKQ3I (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:59221 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753739AbaCZNFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 12:29:08 -0400
-Message-ID: <1394555345.30155.9.camel@jlt4.sipsolutions.net> (sfid-20140311_172916_767548_95097405)
-Subject: Re: [PATCH] mac80211: fix possible NULL dereference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 11 Mar 2014 18:29:05 +0200
-In-Reply-To: <CA+BoTQk19_p8WcUpUbRNTZgStNMfYcSZEUhbEB9G6i0mvYy-=w@mail.gmail.com> (sfid-20140311_142541_678765_EF7494BB)
-References: <1394176178-8504-1-git-send-email-michal.kazior@tieto.com>
-	 <CA+BoTQkVfgkMR_cvv5dUNkzLd7KrDQ7VMYKucJybpF0aAWpESA@mail.gmail.com>
-	 <1394543651.30155.3.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQk19_p8WcUpUbRNTZgStNMfYcSZEUhbEB9G6i0mvYy-=w@mail.gmail.com>
-	 (sfid-20140311_142541_678765_EF7494BB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Mar 2014 09:05:43 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v5 1/4] net: add name_assign_type netdev attribute
+Date: Wed, 26 Mar 2014 14:05:14 +0100
+Message-Id: <1395839117-20090-2-git-send-email-dh.herrmann@gmail.com> (sfid-20140326_140625_673382_BCA275A6)
+In-Reply-To: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-03-11 at 14:25 +0100, Michal Kazior wrote:
+The name_assign_type attribute gives hints where the interface name of a
+given net-device comes from. Three different values are currently defined:
+  NET_NAME_ENUM:
+    This is the default. The ifname is provided by the kernel with an
+    enumerated suffix. Names may be reused and unstable.
+  NET_NAME_USER:
+    The ifname was provided by user-space during net-device setup.
+  NET_NAME_RENAMED:
+    The net-device has been renamed via RTNL. Once this type is set, it
+    cannot change again.
 
-> > Ok. However, I'm not sure that we should ever really run into this? At
-> > least with Luca's patches we want to not go through NULL state to start
-> > with.
-> 
-> Current channel reservation patches do a sequence of
-> unassign_vif_chanctx() followed by assign_vif_chanctx(). This implies
-> you have no chanctx for a split second. All places that aren't
-> protected by chanctx_mtx (i.e. RCU) can get NULL chanctx during the
-> reassignment.
-> 
-> One way to trigger that would be to spam-call ieee80211_get_station().
-> If you get a NULL chanctx and you have 5GHz only hardware you get NULL
-> dereference kernel splat.
-> 
-> With multi-vif CSA the vulnerability timeframe will increase.
+This attribute comes in handy for reliable net-device names. If an ifname
+is provided by user-space, we can safely assume that the naming-policy
+avoids reuse and is stable. Only if it was set by the kernel, the
+interfaces might need to be renamed.
 
-Luca is just fixing his patches to not go through the NULL state and
-directly go from the old to the new context, so that will no longer be a
-concern.
+The NET_NAME_RENAMED value allows us to detect whether some-one else
+already renamed the device, in which case we shouldn't touch it again. The
+NET_NAME_USER value allows us to detect whether some other naming policy
+created the device, in which case there's no need to rename it.
 
-johannes
+The most significant use-case is to detect virtual wifi-P2P devices, which
+are named by wpa_supplicant et al. We shouldn't rename them as wpas
+already provides a proper naming-policy.
+
+Note that this patch only provides the core infrastructure. The different
+net-dev types need to be manually fixed to use NET_NAME_USER instead of
+the default (NET_NAME_ENUM). NET_NAME_ENUM is the least restrictive,
+though, so it seems safe to use it as fallback for non-converted net-dev
+types.
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
+---
+ include/linux/netdevice.h      | 2 ++
+ include/uapi/linux/netdevice.h | 4 ++++
+ net/core/dev.c                 | 7 +++++++
+ net/core/net-sysfs.c           | 2 ++
+ net/core/rtnetlink.c           | 2 ++
+ 5 files changed, 17 insertions(+)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 4b6d12c..48e1c15 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -1376,6 +1376,8 @@ struct net_device {
+ 	struct kset		*queues_kset;
+ #endif
+ 
++	unsigned char		name_assign_type; /* name assignment type */
++
+ 	bool			uc_promisc;
+ 	unsigned int		promiscuity;
+ 	unsigned int		allmulti;
+diff --git a/include/uapi/linux/netdevice.h b/include/uapi/linux/netdevice.h
+index 6b9500b..ea963e4 100644
+--- a/include/uapi/linux/netdevice.h
++++ b/include/uapi/linux/netdevice.h
+@@ -36,6 +36,10 @@
+ /* Initial net device group. All devices belong to group 0 by default. */
+ #define INIT_NETDEV_GROUP	0
+ 
++/* interface name assignment types (sysfs name_assign_type attribute) */
++#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
++#define NET_NAME_USER		1	/* provided by user-space */
++#define NET_NAME_RENAMED	2	/* renamed by user-space */
+ 
+ 
+ /* Media selection options. */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 55f8e64..ee0231e 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1083,6 +1083,7 @@ static int dev_get_valid_name(struct net *net,
+ int dev_change_name(struct net_device *dev, const char *newname)
+ {
+ 	char oldname[IFNAMSIZ];
++	unsigned char old_assign_type;
+ 	int err = 0;
+ 	int ret;
+ 	struct net *net;
+@@ -1109,10 +1110,14 @@ int dev_change_name(struct net_device *dev, const char *newname)
+ 		return err;
+ 	}
+ 
++	old_assign_type = dev->name_assign_type;
++	dev->name_assign_type = NET_NAME_RENAMED;
++
+ rollback:
+ 	ret = device_rename(&dev->dev, dev->name);
+ 	if (ret) {
+ 		memcpy(dev->name, oldname, IFNAMSIZ);
++		dev->name_assign_type = old_assign_type;
+ 		write_seqcount_end(&devnet_rename_seq);
+ 		return ret;
+ 	}
+@@ -1141,6 +1146,8 @@ rollback:
+ 			write_seqcount_begin(&devnet_rename_seq);
+ 			memcpy(dev->name, oldname, IFNAMSIZ);
+ 			memcpy(oldname, newname, IFNAMSIZ);
++			dev->name_assign_type = old_assign_type;
++			old_assign_type = NET_NAME_RENAMED;
+ 			goto rollback;
+ 		} else {
+ 			pr_err("%s: name change rollback failed: %d\n",
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index daed9a6..886403e 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -105,6 +105,7 @@ static ssize_t netdev_store(struct device *dev, struct device_attribute *attr,
+ 
+ NETDEVICE_SHOW_RO(dev_id, fmt_hex);
+ NETDEVICE_SHOW_RO(dev_port, fmt_dec);
++NETDEVICE_SHOW_RO(name_assign_type, fmt_dec);
+ NETDEVICE_SHOW_RO(addr_assign_type, fmt_dec);
+ NETDEVICE_SHOW_RO(addr_len, fmt_dec);
+ NETDEVICE_SHOW_RO(iflink, fmt_dec);
+@@ -377,6 +378,7 @@ static struct attribute *net_class_attrs[] = {
+ 	&dev_attr_dev_port.attr,
+ 	&dev_attr_iflink.attr,
+ 	&dev_attr_ifindex.attr,
++	&dev_attr_name_assign_type.attr,
+ 	&dev_attr_addr_assign_type.attr,
+ 	&dev_attr_addr_len.attr,
+ 	&dev_attr_link_mode.attr,
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index e7c6006..4dd2a64 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -1967,6 +1967,8 @@ replay:
+ 		}
+ 
+ 		dev->ifindex = ifm->ifi_index;
++		if (tb[IFLA_IFNAME])
++			dev->name_assign_type = NET_NAME_USER;
+ 
+ 		if (ops->newlink) {
+ 			err = ops->newlink(net, dev, tb, data);
+-- 
+1.9.1
 
