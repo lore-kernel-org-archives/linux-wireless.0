@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:36868 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbaCXI7T (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:64843 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645AbaCZT6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 04:59:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
-References: <1395085358-1171-1-git-send-email-dh.herrmann@gmail.com>
-Date: Mon, 24 Mar 2014 09:59:18 +0100
-Message-ID: <CANq1E4Rb=gqmo+9xGnuC9N2gWb2TqOskaMDhFU9wn28z+HZa4g@mail.gmail.com> (sfid-20140324_095942_716169_171F9849)
-Subject: Re: [PATCH v4 0/4] Provide netdev naming-policy via sysfs
-From: David Herrmann <dh.herrmann@gmail.com>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>, Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	David Herrmann <dh.herrmann@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 Mar 2014 15:58:16 -0400
+Received: by mail-ee0-f43.google.com with SMTP id e53so2074465eek.2
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:58:15 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: [PATCH 04/20] rtl8180: add basic rate configuration support for rtl8187se
+Date: Wed, 26 Mar 2014 20:59:25 +0100
+Message-Id: <1395863965-4487-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205827_731092_A8374158)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave
+Basic rate configuration is a bit different for rtl8187se.
+Adding this also fixes the gcc warning introduced in last patch
+about unhandled case in switch.
 
-Any comments on this?
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Thanks
-David
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 767e104..6b237ed 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -412,7 +412,6 @@ static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
+ 		reg &= ~3;
+ 		reg |= max;
+ 		rtl818x_iowrite16(priv, &priv->map->BRSR, reg);
+-
+ 		break;
+ 
+ 	case RTL818X_CHIP_FAMILY_RTL8185:
+@@ -420,6 +419,11 @@ static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
+ 		rtl818x_iowrite16(priv, &priv->map->BRSR, rates_mask);
+ 		rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (max << 4) | min);
+ 		break;
++
++	case RTL818X_CHIP_FAMILY_RTL8187SE:
++		/* in 8187se this is a BITMAP */
++		rtl818x_iowrite16(priv, &priv->map->BRSR_8187SE, rates_mask);
++		break;
+ 	}
+ }
+ 
+-- 
+1.8.3.2
 
-On Mon, Mar 17, 2014 at 8:42 PM, David Herrmann <dh.herrmann@gmail.com> wrote:
-> Hi
->
-> This is v4 of the netdev naming-policy series. You can find v1 here:
->   http://thread.gmane.org/gmane.linux.kernel/1657015
-> Changes since v1:
->   - fix mac80211 core to set NET_NAME_ENUM for wlan%d kernel-provided names
->   - acked-by udev developers
->   - avoid padding after name_assign_type in "struct net_device" (David Laight)
->   - move API constants to uapi header (Ben Hutchings)
->
->
-> This series implements a new sysfs attribute for netdevs called
-> "name_assign_type". It provides an integer that describes where an interface
-> name comes from. See Patch #1 for a description of this attribute. It is
-> modelled after the existing "addr_assign_type" attribute.
->
-> The main use-case is to allow udev to skip applying reliable ifnames to virtual
-> devices. For instance, if wifi-P2P devices are created, wpas already provides a
-> suitable naming-policy and udev shouldn't touch these devices. Same is true for
-> other virtual devices.
-> The idea is that if a device-name was provided by user-space, we should always
-> prefer fixing this naming-policy instead of making udev rename the device. For
-> kernel provided names that's hardly possible, though. Providing the
-> naming-policy source via sysfs is thus a simple way to see whether renames are
-> needed.
->
-> Additionally, this field allows to detect whether a netdev has been manually
-> renamed, which is quite useful for debugging and during crash-recovery.
-> Furthermore, it fixes real udev bugs if a netdev is already renamed in the
-> initrd and udev only runs in the real root. Detecting renames avoids overwriting
-> custom user provided names.
->
-> Thanks
-> David
->
-> David Herrmann (4):
->   net: add name_assign_type netdev attribute
->   mac80211: set NET_NAME_USER for user-space created ifs
->   ath6kl: set NET_NAME_USER for P2P ifs
->   brcmfmac: set NET_NAME_USER for P2P ifs
->
->  drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
->  drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
->  drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
->  drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
->  include/linux/netdevice.h                     | 2 ++
->  include/uapi/linux/netdevice.h                | 4 ++++
->  net/core/dev.c                                | 7 +++++++
->  net/core/net-sysfs.c                          | 2 ++
->  net/core/rtnetlink.c                          | 2 ++
->  net/mac80211/cfg.c                            | 2 +-
->  net/mac80211/ieee80211_i.h                    | 1 +
->  net/mac80211/iface.c                          | 2 ++
->  net/mac80211/main.c                           | 2 +-
->  13 files changed, 30 insertions(+), 5 deletions(-)
->
-> --
-> 1.9.0
->
