@@ -1,87 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:42983 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbaCRN7G (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48158 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076AbaCZLNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:06 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so5498841eek.9
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:04 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 00/21] cfg80211/mac80211: multi-vif csa
-Date: Tue, 18 Mar 2014 14:53:03 +0100
-Message-Id: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145923_928583_9701DB2D)
+	Wed, 26 Mar 2014 07:13:17 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: split ce initialization and allocation
+References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+	<1395745943-29492-3-git-send-email-michal.kazior@tieto.com>
+	<87ppl9z54w.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnMZ+B0nC_MdYqKk6z1wH-bK47vE+Uknqnv+FpJRKaRjA@mail.gmail.com>
+Date: Wed, 26 Mar 2014 13:13:05 +0200
+In-Reply-To: <CA+BoTQnMZ+B0nC_MdYqKk6z1wH-bK47vE+Uknqnv+FpJRKaRjA@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 26 Mar 2014 11:05:23 +0100")
+Message-ID: <87d2h9yzzy.fsf@kamboji.qca.qualcomm.com> (sfid-20140326_121322_541429_88DC5373)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I'm aware this is rather huge. I'm hoping I can
-get some early feedback before all other patches
-I'm depending on are finally merged into
-mac80211-next.
+> On 26 March 2014 10:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/ce.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/ce.h
+>>> @@ -104,7 +104,8 @@ struct ath10k_ce_ring {
+>>>       void *shadow_base_unaligned;
+>>>       struct ce_desc *shadow_base;
+>>>
+>>> -     void **per_transfer_context;
+>>> +     /* keep last */
+>>> +     void *per_transfer_context[0];
+>>>  };
+>>
+>> If possible, I would prefer to have changes like this in a separate
+>> patch as it makes easier to review. Or at least mention the change in
+>> the commit log.
+>
+> The patch already alters the allocation code so I thought I'd squash
+> this here. You want me to just update the commit log or split it up?
 
-Considering current dependency hell of all related
-the patchsets I'm duplicating some of my patches
-I've posted on the mailing list here. Hopefully
-this is sane enough for reviewing purposes.
+In this case updating the commit log is fine.
 
-The patchset alone is based on:
- * mac80211-next/master
- * VLAN chanctx copy refactor
- * Luca's intf combination patches
- * Luca's chanctx reservation patches
+>>> @@ -2018,9 +2029,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+>>>       ath10k_pci_free_early_irq(ar);
+>>>       ath10k_pci_kill_tasklet(ar);
+>>>       ath10k_pci_deinit_irq(ar);
+>>> +     ath10k_pci_ce_deinit(ar);
+>>>       ath10k_pci_warm_reset(ar);
+>>>
+>>> -     ath10k_pci_ce_deinit(ar);
+>>>       if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+>>>               ath10k_do_pci_sleep(ar);
+>>>  }
+>>
+>> Why this?
+>
+> ath10k_pci_ce_deinit() zeroes copy engine registers now so I thought
+> it's nice to have this done before reset.
+>
+> Before ath10k_pci_ce_deinit() freed memory so it was required to reset
+> the device beforehand. Otherwise you risked device accessing memory
+> that wasn't mapped nor allocated by the driver anymore.
 
-I've skipped the 'cfg80211_stop_iface()' since it
-depends on a patch from Johannes that hasn't been
-merged yet either.
-
-As some probably suspect I've tested this mostly
-with ath10k and iwl/mvm. I've been able to
-successfully switch multi-BSS AP and perform
-AP-follows-STA.
-
-There's a WARN_ON related to chanctx recalc, but
-being aware Zhao has some patches around recalc
-stuff I decided to ignore it for now.
-
-
-Michal Kazior (21):
-  mac80211: add support for radar detection for reservations
-  cfg80211: allow drivers to iterate over matching combinations
-  mac80211: add max channel calculation utility function
-  mac80211: prevent chanctx overcommit
-  mac80211: track assigned vifs in chanctx
-  mac80211: track reserved vifs in chanctx
-  mac80211: improve find_chanctx() for reservations
-  mac80211: improve chanctx reservation lookup
-  mac80211: split ieee80211_new_chanctx()
-  mac80211: split ieee80211_free_chanctx()
-  mac80211: fix racy usage of chanctx->refcount
-  mac80211: compute chanctx refcount on-the-fly
-  mac80211: implement multi-vif in-place reservations
-  mac80211: fix CSA tx queue locking
-  mac80211: split CSA finalize function
-  mac80211: make check_combinations() aware of chanctx reservation
-  mac80211: use chanctx reservation for AP CSA
-  mac80211: use chanctx reservation for STA CSA
-  mac80211: ignore cqm during csa
-  mac80211: remove old unused channel switching code
-  cfg80211: remove channel_switch combination check
-
- include/net/cfg80211.h     |  27 ++
- include/net/mac80211.h     |  11 +-
- net/mac80211/cfg.c         | 212 +++++++++++----
- net/mac80211/chan.c        | 663 +++++++++++++++++++++++++++++++--------------
- net/mac80211/ieee80211_i.h |  25 +-
- net/mac80211/iface.c       |   9 +
- net/mac80211/mlme.c        | 117 +++++---
- net/mac80211/util.c        |  80 +++++-
- net/wireless/nl80211.c     |  11 -
- net/wireless/util.c        |  44 ++-
- 10 files changed, 867 insertions(+), 332 deletions(-)
+But can you split this change into it's own patch, please? Just in case
+if there are regressions, it's easier to find the culprit.
 
 -- 
-1.8.5.3
-
+Kalle Valo
