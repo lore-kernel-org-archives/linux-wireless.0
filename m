@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:61760 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbaCWTYl (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:8707 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751423AbaCZCBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Mar 2014 15:24:41 -0400
-From: Monam Agarwal <monamagarwal123@gmail.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net/wireless: Use RCU_INIT_POINTER(x, NULL) in reg.c
-Date: Mon, 24 Mar 2014 00:53:40 +0530
-Message-Id: <1395602620-15480-1-git-send-email-monamagarwal123@gmail.com> (sfid-20140323_202532_141051_000B9CE8)
+	Tue, 25 Mar 2014 22:01:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/3] mwifiex: corner case NULL pointer dereference fix
+Date: Tue, 25 Mar 2014 19:01:18 -0700
+Message-ID: <1395799280-29221-1-git-send-email-bzhao@marvell.com> (sfid-20140326_030159_948161_328E22D8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+When next scan command is delayed due to Tx traffic and
+meanwhile synchronous command is received followed by a signal,
+we cance all pending commands. NULL pointer dereference is seen
+in this case while queueing next command in scan delay timer.
+This patch adds a check to fix this issue.
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/wireless/reg.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 90b82e0..4dc08cc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2594,7 +2594,7 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- 		reg_num_devs_support_basehint--;
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 7b4502f..77db088 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -38,7 +38,8 @@ static void scan_delay_timer_fn(unsigned long data)
+ 	if (adapter->surprise_removed)
+ 		return;
  
- 	rcu_free_regdom(get_wiphy_regdom(wiphy));
--	rcu_assign_pointer(wiphy->regd, NULL);
-+	RCU_INIT_POINTER(wiphy->regd, NULL);
- 
- 	if (lr)
- 		request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
+-	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT) {
++	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT ||
++	    !adapter->scan_processing) {
+ 		/*
+ 		 * Abort scan operation by cancelling all pending scan
+ 		 * commands
 -- 
-1.7.9.5
+1.8.2.3
 
