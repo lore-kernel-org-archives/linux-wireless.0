@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:34554 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbaCFKVK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56479 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755681AbaC0SaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 05:21:10 -0500
-Received: by mail-we0-f169.google.com with SMTP id w62so2836943wes.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 02:21:09 -0800 (PST)
-Date: Thu, 6 Mar 2014 11:21:02 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>
-Subject: Re: [PATCH 08/36] iwlwifi: mvm: Change power management dependency
- on multi MAC
-Message-ID: <20140306102102.GA15185@magnum.frso.rivierawaves.com> (sfid-20140306_112155_646989_FED58848)
-References: <52B0B72A.5070704@gmail.com>
- <1387313079-28123-8-git-send-email-egrumbach@gmail.com>
- <20140113111357.GA4611@magnum.frso.rivierawaves.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D3C4A5@HASMSX103.ger.corp.intel.com>
- <20140113124049.GA5796@magnum.frso.rivierawaves.com>
- <52D83C56.5010706@gmail.com>
- <20140116214357.GA10376@gobelin>
- <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
+	Thu, 27 Mar 2014 14:30:14 -0400
+Date: Thu, 27 Mar 2014 14:18:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-03-24
+Message-ID: <20140327181849.GG31168@tuxdriver.com> (sfid-20140327_193020_615594_70D62D2A)
+References: <20140324173332.GA2214@joana>
+ <20140326183411.GB1741@joana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CANUX_P25Oi=_5RBHKyuWQEZe6DXVyMOFS2xfGfa45HyyJSz=ug@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140326183411.GB1741@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 02:01:43PM +0200, Emmanuel Grumbach wrote:
-> Monitor mode should work with latest wireless-testing now.
+On Wed, Mar 26, 2014 at 03:34:11PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> 2014-03-24 Gustavo Padovan <gustavo@padovan.org>:
+> 
+> > Hi John,
+> > 
+> > Here follow another set of patches to 3.15. This is mostly a bug fix pull
+> > request with the exception of one commit from Marcel which adds tracking to
+> > the current configured LE scan type parameter.
+> 
+> There is one more fix that we want to include in this pull request. Here
+> follows a new pull request, please pull, Thanks. 
+> 
+> 	Gustavo
+> 
+> --
+> The following changes since commit 40b552aa5a0bfa785bc7ddb5c2d7965b1e0bb08d:
+> 
+>   Bluetooth: Enforce strict Secure Connections Only mode security (2014-03-19 23:30:32 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to e8b1ab9e6d30394e0df3e4f60bf56c4dc9bf0863:
+> 
+>   Bluetooth: Fix returning peer address in pending connect state (2014-03-26 09:31:33 -0700)
 
-Hi,
+Pulling now...
 
-Thanks for the update, indeed monitor is in better shape, however I am
-still seeing some issues.
-E.g. short-guard or > 20MHz bw frames are not visible when not
-aggregated, I still see "Microcode SW error detected." but in a
-different scenario (monitoring with main managed iface down, then upping
-the main managed iface up), it also seems that we filter out many frames
-when the main managed iface is up and/or? associated.
-Also, I started working on AMSDUs this week and yesterday my laptop
-crashed immediately when monitoring. This morning I see that this
-happens when my aggregates start getting above the ~4k limit and
-modprobing with amsdu_size_8K=1 seems to 'fix' the issue, I guess some
-places need some oflows checks.
-All this with wireless-next@704445d9 (i.e. circa the time I got your
-email) and fw 22.15.8.0.
-
-
- 
-Karl
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
