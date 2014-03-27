@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:50947 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaCVJCS (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:49271 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754869AbaC0SQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2014 05:02:18 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hm4so1139638wib.8
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:17 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/10] staging: vt6656: rxtx.c: s_vFillTxKey Replace dwRevIVCounter
-Date: Sat, 22 Mar 2014 09:01:23 +0000
-Message-Id: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100222_909237_0CBBF86F)
+	Thu, 27 Mar 2014 14:16:05 -0400
+Message-ID: <53346ABB.1060907@broadcom.com> (sfid-20140327_191611_501871_64332057)
+Date: Thu, 27 Mar 2014 19:15:23 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH] mac80211: add vif to flush call
+References: <1395912629-1458-1-git-send-email-egrumbach@gmail.com>
+In-Reply-To: <1395912629-1458-1-git-send-email-egrumbach@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix base type to __le32 and remove camel case.
+On 03/27/14 10:30, Emmanuel Grumbach wrote:
+> From: Emmanuel Grumbach<emmanuel.grumbach@intel.com>
+>
+> This will allow the low level driver to make decision based
+> on the vif such as queues etc...
+> Since the vif might be NULL, we can't add it to the tracing
+> functions.
 
-Camel case change
-dwRevIVCounter -> rev_iv_counter
+Although this argument sound fair my rule about interfaces is that a 
+change should be needed, ie. a low-level driver that needs the info, 
+instead of hypothetical use. You have one up your sleeve ? ;-)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 3840323..9f80a7a 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -184,28 +184,28 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 	u32 *pdwIV = (u32 *)pbyIVHead;
- 	u32 *pdwExtIV = (u32 *)((u8 *)pbyIVHead + 4);
- 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyHdrBuf;
--	u32 dwRevIVCounter;
-+	__le32 rev_iv_counter;
- 
- 	/* Fill TXKEY */
- 	if (pTransmitKey == NULL)
- 		return;
- 
--	dwRevIVCounter = cpu_to_le32(pDevice->dwIVCounter);
-+	rev_iv_counter = cpu_to_le32(pDevice->dwIVCounter);
- 	*pdwIV = pDevice->dwIVCounter;
- 	pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
- 
- 	switch (pTransmitKey->byCipherSuite) {
- 	case KEY_CTL_WEP:
- 		if (pTransmitKey->uKeyLength == WLAN_WEP232_KEYLEN) {
--			memcpy(pDevice->abyPRNG, (u8 *)&dwRevIVCounter, 3);
-+			memcpy(pDevice->abyPRNG, (u8 *)&rev_iv_counter, 3);
- 			memcpy(pDevice->abyPRNG + 3, pTransmitKey->abyKey,
- 						pTransmitKey->uKeyLength);
- 		} else {
--			memcpy(pbyBuf, (u8 *)&dwRevIVCounter, 3);
-+			memcpy(pbyBuf, (u8 *)&rev_iv_counter, 3);
- 			memcpy(pbyBuf + 3, pTransmitKey->abyKey,
- 						pTransmitKey->uKeyLength);
- 			if (pTransmitKey->uKeyLength == WLAN_WEP40_KEYLEN) {
--				memcpy(pbyBuf+8, (u8 *)&dwRevIVCounter, 3);
-+				memcpy(pbyBuf+8, (u8 *)&rev_iv_counter, 3);
- 			memcpy(pbyBuf+11, pTransmitKey->abyKey,
- 						pTransmitKey->uKeyLength);
- 			}
--- 
-1.9.0
-
+> Signed-off-by: Emmanuel Grumbach<emmanuel.grumbach@intel.com>
+> ---
+>   drivers/net/wireless/ath/ar5523/ar5523.c              | 3 ++-
+>   drivers/net/wireless/ath/ath10k/mac.c                 | 3 ++-
+>   drivers/net/wireless/ath/ath9k/main.c                 | 3 ++-
+>   drivers/net/wireless/ath/carl9170/main.c              | 4 +++-
+>   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 3 ++-
+>   drivers/net/wireless/cw1200/sta.c                     | 3 ++-
+>   drivers/net/wireless/cw1200/sta.h                     | 3 ++-
+>   drivers/net/wireless/iwlegacy/common.c                | 3 ++-
+>   drivers/net/wireless/iwlegacy/common.h                | 3 ++-
+>   drivers/net/wireless/iwlwifi/dvm/mac80211.c           | 3 ++-
+>   drivers/net/wireless/mac80211_hwsim.c                 | 4 +++-
+>   drivers/net/wireless/p54/main.c                       | 3 ++-
+>   drivers/net/wireless/rt2x00/rt2x00.h                  | 3 ++-
+>   drivers/net/wireless/rt2x00/rt2x00mac.c               | 3 ++-
+>   drivers/net/wireless/rtlwifi/core.c                   | 3 ++-
+>   drivers/net/wireless/ti/wlcore/main.c                 | 3 ++-
+>   include/net/mac80211.h                                | 4 +++-
+>   net/mac80211/driver-ops.h                             | 8 +++++++-
+>   net/mac80211/util.c                                   | 2 +-
+>   19 files changed, 45 insertions(+), 19 deletions(-)
