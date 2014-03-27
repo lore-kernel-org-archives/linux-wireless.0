@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:64843 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755645AbaCZT6Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 15:58:16 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e53so2074465eek.2
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2014 12:58:15 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: andrea.merello@gmail.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, bernhard@schiffner-limbach.de,
-	dan.carpenter@oracle.com
-Subject: [PATCH 04/20] rtl8180: add basic rate configuration support for rtl8187se
-Date: Wed, 26 Mar 2014 20:59:25 +0100
-Message-Id: <1395863965-4487-1-git-send-email-andrea.merello@gmail.com> (sfid-20140326_205827_731092_A8374158)
+Received: from ee.oulu.fi ([130.231.61.23]:47097 "EHLO ee.oulu.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756786AbaC0NjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2014 09:39:03 -0400
+Received: from [130.231.161.26] (wlan-161-26.oulu.fi [130.231.161.26])
+	(authenticated bits=0)
+	by ee.oulu.fi (8.14.4/8.14.4) with ESMTP id s2RDBGch025079
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 15:11:16 +0200
+Message-ID: <53342374.7010602@ee.oulu.fi> (sfid-20140327_143908_623885_3E8F95C2)
+Date: Thu, 27 Mar 2014 15:11:16 +0200
+From: =?ISO-8859-1?Q?Pekka_Pietik=E4inen?= <pp@ee.oulu.fi>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [linux-firmware] Bump carl9170 1.9.6 -> 1.9.9?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Basic rate configuration is a bit different for rtl8187se.
-Adding this also fixes the gcc warning introduced in last patch
-about unhandled case in switch.
+linux-firmware seems to ship an oldish carl9170-1.fw, which seems to
+work ok except for spewing a lot of
 
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
----
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+"[1889329.659407] ieee80211 phy0: invalid plcp cck rate (0)." messages.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 767e104..6b237ed 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -412,7 +412,6 @@ static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
- 		reg &= ~3;
- 		reg |= max;
- 		rtl818x_iowrite16(priv, &priv->map->BRSR, reg);
--
- 		break;
- 
- 	case RTL818X_CHIP_FAMILY_RTL8185:
-@@ -420,6 +419,11 @@ static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
- 		rtl818x_iowrite16(priv, &priv->map->BRSR, rates_mask);
- 		rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (max << 4) | min);
- 		break;
-+
-+	case RTL818X_CHIP_FAMILY_RTL8187SE:
-+		/* in 8187se this is a BITMAP */
-+		rtl818x_iowrite16(priv, &priv->map->BRSR_8187SE, rates_mask);
-+		break;
- 	}
- }
- 
--- 
-1.8.3.2
+Grabbing 1.9.9 seems to make them go away and the driver works just as
+well :-)
+
+Any chance of someone bumping the version so the newer firmware gets
+shipped by distros?
+
 
