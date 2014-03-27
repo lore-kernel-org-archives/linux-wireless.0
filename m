@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:37265 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752510AbaCLJnF (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:39191 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457AbaC0QBR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 05:43:05 -0400
-Received: by mail-qc0-f174.google.com with SMTP id x13so10620235qcv.5
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2014 02:43:04 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Helmut Schaa <helmut.schaa@googlemail.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] ath9k: Fix sequence number assignment for non-data frames
-Date: Wed, 12 Mar 2014 10:37:55 +0100
-Message-Id: <1394617075-24664-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20140312_104330_692744_990F5A54)
+	Thu, 27 Mar 2014 12:01:17 -0400
+Date: Thu, 27 Mar 2014 19:01:05 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Fariya Fatima <fariyaf@gmail.com>, kbuild@01.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [kbuild-all] [wireless-next:master 316/316]
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c:296 rsi_init_dbgfs() error:
+ potential null dereference 'dev_dbgfs'. (kzalloc returns null)
+Message-ID: <20140327160105.GU7045@mwanda> (sfid-20140327_170129_627214_73FAEA59)
+References: <53275729.QHDAYltTUiN7HGNZ%fengguang.wu@intel.com>
+ <20140327154507.GA27177@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140327154507.GA27177@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit 558ff225de80ac95b132d3a115ddadcd64498b4f (ath9k: fix
-ps-poll responses under a-mpdu sessions) non-data frames would have
-gotten a sequence number from a TIDs sequence counter instead of
-using the global sequence counter.
+On Thu, Mar 27, 2014 at 06:45:07PM +0300, Dan Carpenter wrote:
+> > drivers/net/wireless/rsi/rsi_91x_usb.c:289 rsi_usb_write_register_multiple() warn: '__min2' 4096 can't fit into 255 'transfer'
 
-This can lead to instable connections.
+The code for this one is:
 
-To fix this only select the correct TID if we are processing a
-data frame. Furthermore, prevent non-data frames to get a sequence
-number from a TID sequence counter by adding a check to
-ath_tx_setup_buffer.
+	transfer = min_t(int, count, 4096);
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+It's complaining because "tranfers" is u8, but the cast to int always
+makes me worry negative values.  In this case, count is not user
+controlled so it's safe.  But that's a common security problem you
+should be aware of.  It's better to cast it to an unsigned value.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index fafacfe..69d04d5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2064,7 +2064,7 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 
- 	ATH_TXBUF_RESET(bf);
- 
--	if (tid) {
-+	if (tid && ieee80211_is_data_present(hdr->frame_control)) {
- 		fragno = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG;
- 		seqno = tid->seq_next;
- 		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
-@@ -2187,7 +2187,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		txq->stopped = true;
- 	}
- 
--	if (txctl->an)
-+	if (txctl->an && ieee80211_is_data_present(hdr->frame_control))
- 		tid = ath_get_skb_tid(sc, txctl->an, skb);
- 
- 	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
--- 
-1.8.1.4
+regards,
+dan carpenter
 
