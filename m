@@ -1,89 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coelho.fi ([88.198.205.34]:60394 "EHLO dedo"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751986AbaCKNJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Mar 2014 09:09:15 -0400
-Message-ID: <1394543344.19973.8.camel@dubbel> (sfid-20140311_140921_879005_DF01930C)
-From: Luca Coelho <luca@coelho.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michal Kazior <michal.kazior@tieto.com>, sw@simonwunderlich.de,
-	andrei.otcheretianski@intel.com
-Date: Tue, 11 Mar 2014 15:09:04 +0200
-In-Reply-To: <CAB3XZEdhLOOT+6CYcqCMRBDBE66-EuXXkMiSLZmvedo+iZEZaA@mail.gmail.com>
-References: <1394487103-13027-1-git-send-email-luciano.coelho@intel.com>
-	 <1394487103-13027-2-git-send-email-luciano.coelho@intel.com>
-	 <CAB3XZEdhLOOT+6CYcqCMRBDBE66-EuXXkMiSLZmvedo+iZEZaA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v9 1/5] cfg80211: refactor cfg80211_can_use_iftype_chan()
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:40193 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754922AbaC0Spv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Mar 2014 14:45:51 -0400
+Message-ID: <533471DC.3090107@lwfinger.net> (sfid-20140327_194604_290336_7B1320BF)
+Date: Thu, 27 Mar 2014 13:45:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Adam Lee <adam.lee@canonical.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	stable@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH v2] rtlwifi: add MSI interrupts support
+References: <1395660884-15042-1-git-send-email-adam.lee@canonical.com> <1395715732-9545-1-git-send-email-adam.lee@canonical.com> <20140327181513.GF31168@tuxdriver.com>
+In-Reply-To: <20140327181513.GF31168@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-03-11 at 12:40 +0200, Eliad Peller wrote:
-> On Mon, Mar 10, 2014 at 11:31 PM, Luciano Coelho
-> <luciano.coelho@intel.com> wrote:
-> > Separate the code that counts the interface types and channels from
-> > the code that check the interface combinations.  The new function that
-> > checks for combinations is exported so it can be called by the
-> > drivers.
-> >
-> > This is done in preparation for moving the interface combinations
-> > checks out of cfg80211.
-> >
-> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> > ---
-> [...]
-> 
-> > +int cfg80211_check_combinations(struct wiphy *wiphy,
-> > +                               const int num_different_channels,
-> > +                               const u8 radar_detect,
-> > +                               const int iftype_num[NUM_NL80211_IFTYPES])
-> > +{
-> > +       int i, j, iftype;
-> > +       int num_interfaces = 0;
-> > +       u32 used_iftypes = 0;
-> > +
-> > +       for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-> > +               num_interfaces += iftype_num[iftype];
-> > +               if (iftype_num[iftype] > 0)
-> > +                       used_iftypes |= BIT(iftype);
-> > +       }
-> > +
-> [...]
-> 
-> > +
-> > +               for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-> > +                       if (wiphy->software_iftypes & BIT(iftype))
-> > +                               continue;
-> > +                       for (j = 0; j < c->n_limits; j++) {
-> > +                               all_iftypes |= limits[j].types;
-> > +                               if (!(limits[j].types & BIT(iftype)))
-> > +                                       continue;
-> > +                               if (limits[j].max < iftype_num[iftype])
-> > +                                       goto cont;
-> > +                               limits[j].max -= iftype_num[iftype];
-> > +                       }
-> > +               }
-> > +
-> > +               if (radar_detect && !(c->radar_detect_widths & radar_detect))
-> > +                       goto cont;
-> > +
-> > +               /* Finally check that all iftypes that we're currently
-> > +                * using are actually part of this combination. If they
-> > +                * aren't then we can't use this combination and have
-> > +                * to continue to the next.
-> > +                */
-> > +               if ((all_iftypes & used_iftypes) != used_iftypes)
-> > +                       goto cont;
-> > +
-> if software_iftypes will be passed to this function, this check will
-> fail (as they exist only in used_iftypes).
+On 03/27/2014 01:15 PM, John W. Linville wrote:
+> I'm confused -- is "rtlwifi: rtl8188ee: enable MSI interrupts support"
+> still wanted/needed?
 
-Good point, I guess I should skip SW interface types in the iterator
-where I mark the user interfaces above...
+I think so, but Adam needs to resubmit both patches in a V3.
 
---
-Luca.
+Larry
+
 
