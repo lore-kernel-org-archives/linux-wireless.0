@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755761AbaCETul (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:61766 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755473AbaC0Suf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 14:50:41 -0500
-Message-ID: <1394049034.6583.0.camel@jlt4.sipsolutions.net> (sfid-20140305_205203_402310_84ACE376)
-Subject: Re: WEP is not working on libertas drivers.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Enric Balletbo Serra <eballetbo@gmail.com>, david.abd@gmail.com,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Date: Wed, 05 Mar 2014 20:50:34 +0100
-In-Reply-To: <1394048380.2278.9.camel@dcbw.local> (sfid-20140305_203822_760823_413635B2)
-References: <CAFqH_52V8JPROp_cmJHsVEu4s+s20vbkWgL2xykDoJAAScWmVw@mail.gmail.com>
-	 <1394048380.2278.9.camel@dcbw.local> (sfid-20140305_203822_760823_413635B2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Mar 2014 14:50:35 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so3203419eek.21
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 11:50:34 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] iwlwifi: mvm: implement mac80211's flush callback
+Date: Thu, 27 Mar 2014 20:50:33 +0200
+Message-Id: <1395946233-8672-1-git-send-email-egrumbach@gmail.com> (sfid-20140327_195039_641885_3DF572A1)
+In-Reply-To: <53346ABB.1060907@broadcom.com>
+References: <53346ABB.1060907@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-03-05 at 13:39 -0600, Dan Williams wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> which pretty much means it isn't there.  If you wanted to fix this, what
-> you'd do is you'd look at priv->wdev->connect_keys, and if that was !
-> NULL, you'd run through each of the 6 keys and if at least one key was
-> valid, you'd then set the PRIVACY bit in the beacon.  Then later after
-> the join was successful, the kernel already calls the functions for
-> uploading the keys to the driver
-> (net/wireless/util.c::cfg80211_upload_connect_keys()).
+This allows mac80211 to flush the Tx queues before it sends
+critical management frames.
 
-Small correction - you want to look at cfg80211_ibss_params->privacy,
-not the connect_keys.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 3ce7203..c08e02a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2463,6 +2463,34 @@ out_unlock:
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
++static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif, u32 queues, bool drop)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_mvm_vif *mvmvif;
++	struct iwl_mvm_sta *mvmsta;
++
++	if (!vif || vif->type != NL80211_IFTYPE_STATION)
++		return;
++
++	mutex_lock(&mvm->mutex);
++	mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	mvmsta = iwl_mvm_sta_from_staid_protected(mvm, mvmvif->ap_sta_id);
++
++	if (WARN_ON_ONCE(!mvmsta))
++		goto done;
++
++	if (drop) {
++		if (iwl_mvm_flush_tx_path(mvm, mvmsta->tfd_queue_msk, true))
++			IWL_ERR(mvm, "flush request fail\n");
++	} else {
++		iwl_trans_wait_tx_queue_empty(mvm->trans,
++					      mvmsta->tfd_queue_msk);
++	}
++done:
++	mutex_unlock(&mvm->mutex);
++}
++
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -2486,6 +2514,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.sta_rc_update = iwl_mvm_sta_rc_update,
+ 	.conf_tx = iwl_mvm_mac_conf_tx,
+ 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
++	.flush = iwl_mvm_mac_flush,
+ 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
+ 	.sched_scan_stop = iwl_mvm_mac_sched_scan_stop,
+ 	.set_key = iwl_mvm_mac_set_key,
+-- 
+1.8.3.2
 
