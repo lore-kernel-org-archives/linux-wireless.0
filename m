@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933380AbaCSOFR (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:49020 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050AbaC1MRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 10:05:17 -0400
-Message-ID: <1395237914.4142.13.camel@jlt4.sipsolutions.net> (sfid-20140319_150523_078342_27AD4DAB)
-Subject: Re: [PATCH 3/3] mac80211: compute chanctx refcount dynamically
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 19 Mar 2014 15:05:14 +0100
-In-Reply-To: <CA+BoTQnnWfNxeo6rtATU8qgj=dk9Kkx36GVewDr7p8OVFfcxNA@mail.gmail.com> (sfid-20140311_143307_127674_73F11729)
-References: <1394191196-6425-1-git-send-email-michal.kazior@tieto.com>
-	 <1394191196-6425-3-git-send-email-michal.kazior@tieto.com>
-	 <CA+BoTQkke050EMs0Nnz3O3XM6U2uRRVrxffVdwKJrWua+iapFw@mail.gmail.com>
-	 <1394543770.30155.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQnnWfNxeo6rtATU8qgj=dk9Kkx36GVewDr7p8OVFfcxNA@mail.gmail.com>
-	 (sfid-20140311_143307_127674_73F11729)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 28 Mar 2014 08:17:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: update wal_dbg_tx_stats structure with missing parameter
+References: <1395648122-2125-1-git-send-email-yeohchunyeow@gmail.com>
+Date: Fri, 28 Mar 2014 14:17:14 +0200
+In-Reply-To: <1395648122-2125-1-git-send-email-yeohchunyeow@gmail.com>
+	(Chun-Yeow Yeoh's message of "Mon, 24 Mar 2014 16:02:02 +0800")
+Message-ID: <87ha6iwm9h.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_131723_390735_161B0E59)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-03-11 at 14:33 +0100, Michal Kazior wrote:
+Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
 
-> >> I'm planning on adding `struct list_head` to sdata and chanctx to be
-> >> able to iterate over assigned (and reserved, in the future) chanctx.
-> >> What do you think? Do you have other ideas?
-> >
-> > I guess that seems reasonable - not sure why you'd want the reserved
-> > one? Some of the maintenance there might be tricky?
-> 
-> For multi-vif we need to be able to track list of interfaces that have
-> a reservation. This is needed for example for chandef calculation
-> (e.g. to see if you can start a new vif on given chanctx that is part
-> of a reservation already, etc).
-> 
-> It's also necessary so you can synchronize CSA across interfaces with
-> the chanctx reservation that happen "in place" when you're out of
-> max_num_different_channels. In that case you must unassign all
-> interfaces, free chanctx, create new chanctx, and then assign the
-> reservation interfaces.
-> 
-> Actually I think there's also one thing that might benefit from
-> chanctx-vif list tracking: ieee80211_recalc_chanctx_chantype(). It
-> seems to complain with WARN_ON splat when I reload driver when more
-> than 1 vif is running because it doesn't find a non-NULL `compat`
-> chandef (rightfully so as local->interfaces is empty at that point due
-> to ieee80211_remove_interfaces).
+> This patch is introduced by Bartosz Markowski but never upstream.
+> By using this patch, 636 firmware is able to print out the peer
+> stats correctly and have caused no regression to the latest AP
+> firmware as well.
+>
+> The original patch from Bartosz Markowski can be found at:
+> http://lists.infradead.org/pipermail/ath10k/2013-September/000318.html
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Ok, makes sense. I guess I don't see any easier solution either.
+I'm going to apply the original patch instead and I'll drop this.
 
-johannes
-
+-- 
+Kalle Valo
