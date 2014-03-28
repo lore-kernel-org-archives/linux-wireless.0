@@ -1,106 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61594 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbaB1X7u (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:48862 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258AbaC1NW3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Feb 2014 18:59:50 -0500
-Received: by mail-wg0-f44.google.com with SMTP id a1so1118988wgh.15
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2014 15:59:49 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/9] staging: vt6656: Clean up RXvFreeRCB.
-Date: Fri, 28 Feb 2014 23:58:32 +0000
-Message-Id: <1393631919-16182-2-git-send-email-tvboxspy@gmail.com> (sfid-20140301_010000_044523_0E241C2C)
-In-Reply-To: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
-References: <1393631919-16182-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 28 Mar 2014 09:22:29 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x13so3655557wgg.9
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 06:22:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1396012272.4175.27.camel@jlt4.sipsolutions.net>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	<1395409651-26120-13-git-send-email-michal.kazior@tieto.com>
+	<1396012272.4175.27.camel@jlt4.sipsolutions.net>
+Date: Fri, 28 Mar 2014 14:22:28 +0100
+Message-ID: <CA+BoTQ=i+XdwCcixiWTT9zchyLeXq2-rr5XbvWAVs1kXx=VjUQ@mail.gmail.com> (sfid-20140328_142232_904628_0C605DEC)
+Subject: Re: [PATCH v2 12/13] mac80211: compute chanctx refcount on-the-fly
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up white space, comments and camel case.
+On 28 March 2014 14:11, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+>> It doesn't make much sense to store refcount in
+>> the chanctx structure. One still needs to hold
+>> chanctx_mtx to get the value safely. Besides,
+>> refcount isn't on performance critical paths.
+>>
+>> This will make implementing chanctx reservation
+>> refcounting a little easier.
+>
+> Why bother with patch 11 then?
 
-Camel case changes
-pRCB -> rcb
-bReAllocSkb -> re_alloc_skb
-pDevice -> priv
+I try to do one-thing-at-a-time. 11 is a fix, 12 is an enhancement. I
+can squash it if you want?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/dpc.c | 53 ++++++++++++++++++++++----------------------
- 1 file changed, 27 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 6894490..18ad3e6 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -1323,39 +1323,40 @@ void RXvWorkItem(struct work_struct *work)
- 	spin_unlock_irq(&priv->lock);
- }
- 
--void RXvFreeRCB(struct vnt_rcb *pRCB, int bReAllocSkb)
-+void RXvFreeRCB(struct vnt_rcb *rcb, int re_alloc_skb)
- {
--	struct vnt_private *pDevice = pRCB->pDevice;
-+	struct vnt_private *priv = rcb->pDevice;
- 
--    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->RXvFreeRCB\n");
-+	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"---->RXvFreeRCB\n");
- 
--	if (bReAllocSkb == false) {
--		kfree_skb(pRCB->skb);
--		bReAllocSkb = true;
-+	if (re_alloc_skb == false) {
-+		kfree_skb(rcb->skb);
-+		re_alloc_skb = true;
- 	}
- 
--    if (bReAllocSkb == true) {
--        pRCB->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
--        // todo error handling
--        if (pRCB->skb == NULL) {
--            DBG_PRT(MSG_LEVEL_ERR,KERN_ERR" Failed to re-alloc rx skb\n");
--        }else {
--            pRCB->skb->dev = pDevice->dev;
--        }
--    }
--    //
--    // Insert the RCB back in the Recv free list
--    //
--    EnqueueRCB(pDevice->FirstRecvFreeList, pDevice->LastRecvFreeList, pRCB);
--    pDevice->NumRecvFreeList++;
-+	if (re_alloc_skb == true) {
-+		rcb->skb = dev_alloc_skb((int)priv->rx_buf_sz);
-+		/* TODO error handling */
-+		if (rcb->skb == NULL) {
-+			DBG_PRT(MSG_LEVEL_ERR, KERN_ERR
-+				" Failed to re-alloc rx skb\n");
-+		} else {
-+			rcb->skb->dev = priv->dev;
-+		}
-+	}
- 
--    if ((pDevice->Flags & fMP_POST_READS) && MP_IS_READY(pDevice) &&
--        (pDevice->bIsRxWorkItemQueued == false) ) {
-+	/* Insert the RCB back in the Recv free list */
-+	EnqueueRCB(priv->FirstRecvFreeList, priv->LastRecvFreeList, rcb);
-+	priv->NumRecvFreeList++;
- 
--        pDevice->bIsRxWorkItemQueued = true;
--	schedule_work(&pDevice->read_work_item);
--    }
--    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----RXFreeRCB %d %d\n",pDevice->NumRecvFreeList, pDevice->NumRecvMngList);
-+	if ((priv->Flags & fMP_POST_READS) && MP_IS_READY(priv) &&
-+			(priv->bIsRxWorkItemQueued == false)) {
-+		priv->bIsRxWorkItemQueued = true;
-+		schedule_work(&priv->read_work_item);
-+	}
-+
-+	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----RXFreeRCB %d %d\n",
-+			priv->NumRecvFreeList, priv->NumRecvMngList);
- }
- 
- void RXvMngWorkItem(struct work_struct *work)
--- 
-1.9.0
-
+Micha³
