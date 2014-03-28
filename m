@@ -1,74 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:61877 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756501AbaCSIys convert rfc822-to-8bit (ORCPT
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:32992 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbaC1WkS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:54:48 -0400
-Received: by mail-ob0-f177.google.com with SMTP id wo20so7538885obc.8
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:54:48 -0700 (PDT)
+	Fri, 28 Mar 2014 18:40:18 -0400
+Received: by mail-yk0-f174.google.com with SMTP id 20so4271375yks.19
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 15:40:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEckstWFB-2CmWg7JeoyT0bTUgSh5bXqZxADUHiurZgnhw@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-4-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
-	<CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com>
-	<CAB3XZEckstWFB-2CmWg7JeoyT0bTUgSh5bXqZxADUHiurZgnhw@mail.gmail.com>
-Date: Wed, 19 Mar 2014 09:54:47 +0100
-Message-ID: <CA+BoTQnNXb=sm=k=fFmYd=e1pOVTRX3MhwMgmhUeWD=2Nuy_8A@mail.gmail.com> (sfid-20140319_095455_559813_B3480B7D)
-Subject: Re: [RFC 03/21] mac80211: add max channel calculation utility function
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20140328.172107.16072208664321602.davem@davemloft.net>
+References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+ <20140328.145410.1817326821928803131.davem@davemloft.net> <CAG-2HqVJPrTWXtuvDkU6MvfNj0MXfNuBMmdoKWtSd5kToZ3mMQ@mail.gmail.com>
+ <20140328.172107.16072208664321602.davem@davemloft.net>
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 28 Mar 2014 23:39:57 +0100
+Message-ID: <CAG-2HqVQ-MAZgsZAkykvVtbtYgDA3bfJA5rEqpdX5vBqPTjLJg@mail.gmail.com> (sfid-20140328_234126_428889_494D4A30)
+Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
+To: David Miller <davem@davemloft.net>
+Cc: David Herrmann <dh.herrmann@gmail.com>,
+	netdev <netdev@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 March 2014 09:43, Eliad Peller <eliad@wizery.com> wrote:
-> On Wed, Mar 19, 2014 at 10:32 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 18 March 2014 17:17, Eliad Peller <eliad@wizery.com> wrote:
->>> hi,
+On Fri, Mar 28, 2014 at 10:21 PM, David Miller <davem@davemloft.net> wrote:
+> From: Tom Gundersen <teg@jklm.no>
+> Date: Fri, 28 Mar 2014 21:51:53 +0100
+>
+>> On Fri, Mar 28, 2014 at 7:54 PM, David Miller <davem@davemloft.net> wrote:
+>>> From: David Herrmann <dh.herrmann@gmail.com>
+>>> Date: Wed, 26 Mar 2014 14:05:13 +0100
 >>>
->>> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>>> The utility function has no uses yet. It is aimed
->>>> at future chanctx reservation management and
->>>> channel switching.
->>>>
->>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>>> ---
->>> [...]
+>>>> The main use-case is to allow udev to skip applying reliable ifnames to virtual
+>>>> devices. For instance, if wifi-P2P devices are created, wpas already provides a
+>>>> suitable naming-policy and udev shouldn't touch these devices. Same is true for
+>>>> other virtual devices.
 >>>
->>>> +int ieee80211_max_num_channels(struct ieee80211_local *local)
->>>> +{
->>>> +       struct ieee80211_sub_if_data *sdata;
->>>> +       int num[NUM_NL80211_IFTYPES] = {};
->>>> +       struct ieee80211_chanctx *ctx;
->>>> +       int num_different_channels = 0;
->>>> +       u8 radar_detect = 0;
->>>> +       u32 max_num_different_channels = 1;
->>>> +       int err;
->>>> +
->>>> +       lockdep_assert_held(&local->chanctx_mtx);
->>>> +
->>>> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
->>>> +               num_different_channels++;
->>>> +
->>> this doesn't seem correct - i think we can have multiple channel
->>> contexts with the same channel (e.g. due to exclusive mode)?
+>>> This makes no sense at all.
+>>>
+>>> If udev should avoid applying names to wifi-P2P devices, that policy can
+>>> be instituted completely inside of udev.  There is no need whatsoever
+>>> for kernel support.
+>>>
+>>> udev can look at the device type, and policies can be defined that key
+>>> off of that device type, entirely in userspace.
 >>
->> Hmm, does it even make sense to consider chanctx mode here?
+>> Doing this in userspace sounds really wrong and fragile.
 >>
-> i don't think you should consider the chancx mode, but keep track of
-> the used channels.
-> if you have 2 different channel contexts with the same channel (e.g.
-> due to exclusive mode), you have to make sure you don't count the same
-> channel twice. you shouldn't care about the actual reason for it.
+>> In the case of wifi-P2P we could make it work, but for every type of
+>> device that is added to the kernel which is named from userspace, we
+>> would have to play catch-up in udev (and even after we do, new kernels
+>> on old userspace will never work in the expected way).
+>
+> Chronically we are finding hackish ways for seperate components in
+> userspace to coordinate their actions.
+>
+> You're right, doing this for every device type for every single attribute
+> that might better.... sucks.
+>
+> What's really needed is generic ways for seperate userspace components
+> to coordinate with eachother on issues like this.
 
-I disagree. There's a reason why we have exclusive chanctx mode.
+You mean coordinate with each other in userspace? If so, I still don't
+see how this can ever be anything else than fragile. It will depend on
+each userspace component actually opting in to whatever scheme we
+devise, and does so correctly.
 
-If you insist on counting compatible chandefs you can lead to
-overcommit if your exclusive chanctx bound interface decides to switch
-to another channel.
+The kernel is the only one who can know where the names came from in a
+reliable way (no matter how crappy the userspace component who
+originally created or renamed the devices is).
 
+In udev we can ensure that what we do ourselves is sane, and we are
+happy to trust that what the kernel does is sane (and that the info it
+exposes to us is correct). However, we cannot really rely on each of
+the myriad of different components who may in various ways
+create/rename netdevs will manage to correctly hook into some
+synchronisation mechanism.
 
-Michał
+Given that the kernel already has all the necessary info, and that the
+patch to expose it is so trivial, and that it is absolutely not clear
+at all that this can even be done in userspace (let alone being done
+in a sane way), I still struggle to see the reason for rejecting the
+patch...
+
+Or am I missing some obvious way we can solve this in userspace?
+
+Cheers,
+
+Tom
