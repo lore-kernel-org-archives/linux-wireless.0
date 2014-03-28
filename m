@@ -1,114 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:61081 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755090AbaCDWy3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48907 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbaC1NCA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Mar 2014 17:54:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 5/9] rtlwifi: rtl8192se: Fix too long disable of IRQs
-Date: Tue,  4 Mar 2014 16:53:51 -0600
-Message-Id: <1393973635-24799-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140304_235443_641804_9DEC51A1)
-In-Reply-To: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1393973635-24799-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 28 Mar 2014 09:02:00 -0400
+Message-ID: <1396011717.4175.20.camel@jlt4.sipsolutions.net> (sfid-20140328_140205_609318_9618C76E)
+Subject: Re: [PATCH v2 3/7] mac80211: use chanctx reservation for AP CSA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Mar 2014 14:01:57 +0100
+In-Reply-To: <1395409941-26303-4-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145812_036753_6C8DF103)
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409941-26303-4-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140321_145812_036753_6C8DF103)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit f78bccd79ba3cd9d9664981b501d57bdb81ab8a4 entitled "rtlwifi:
-rtl8192ce: Fix too long disable of IRQs", Olivier Langlois
-<olivier@trillion01.com> fixed a problem caused by an extra long disabling
-of interrupts. This patch makes the same fix for rtl8192se.
+On Fri, 2014-03-21 at 14:52 +0100, Michal Kazior wrote:
+> Channel switch finalization is now 2-step. First
+> step is when driver calls csa_finish(), the other
+> is when reservation is actually finalized (which
+> be defered for in-place reservation).
+> 
+> This implies driver must not call csa_finish()
+> more than once for each channel_switch request.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/mac80211/cfg.c  | 62 ++++++++++++++++++++++++++++++++++++-----------------
+>  net/mac80211/chan.c | 11 +++++++++-
+>  2 files changed, 52 insertions(+), 21 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 0c68269..ba544d3 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -3096,17 +3096,25 @@ static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+>  
+>  	sdata_assert_lock(sdata);
+>  	lockdep_assert_held(&local->mtx);
+> +	lockdep_assert_held(&local->mtx);
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 27 +++++++++++++++++++++------
- 1 file changed, 21 insertions(+), 6 deletions(-)
+duplicate
+ 
+> -	sdata->radar_required = sdata->csa_radar_required;
+> -	err = ieee80211_vif_change_channel(sdata, &changed);
+> -	if (WARN_ON(err < 0))
+> -		return err;
+> +	/* using reservation isn't immediate as it may be deferred until later
+> +	 * with multi-vif. once reservation is complete it will re-schedule the
+> +	 * work with no reserved_chanctx so verify chandef to check if it
+> +	 * completed successfully */
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-index 7c4b39c..3015af1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -955,7 +955,7 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	u8 tmp_byte = 0;
--
-+	unsigned long flags;
- 	bool rtstatus = true;
- 	u8 tmp_u1b;
- 	int err = false;
-@@ -967,6 +967,16 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 	rtlpci->being_init_adapter = true;
- 
-+	/* As this function can take a very long time (up to 350 ms)
-+	 * and can be called with irqs disabled, reenable the irqs
-+	 * to let the other devices continue being serviced.
-+	 *
-+	 * It is safe doing so since our own interrupts will only be enabled
-+	 * in a subsequent step.
-+	 */
-+	local_save_flags(flags);
-+	local_irq_enable();
-+
- 	rtlpriv->intf_ops->disable_aspm(hw);
- 
- 	/* 1. MAC Initialize */
-@@ -984,7 +994,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
- 			 "Failed to download FW. Init HW without FW now... "
- 			 "Please copy FW into /lib/firmware/rtlwifi\n");
--		return 1;
-+		err = 1;
-+		goto exit;
- 	}
- 
- 	/* After FW download, we have to reset MAC register */
-@@ -997,7 +1008,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 	/* 3. Initialize MAC/PHY Config by MACPHY_reg.txt */
- 	if (!rtl92s_phy_mac_config(hw)) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "MAC Config failed\n");
--		return rtstatus;
-+		err = rtstatus;
-+		goto exit;
- 	}
- 
- 	/* because last function modify RCR, so we update
-@@ -1016,7 +1028,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 	/* 4. Initialize BB After MAC Config PHY_reg.txt, AGC_Tab.txt */
- 	if (!rtl92s_phy_bb_config(hw)) {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "BB Config failed\n");
--		return rtstatus;
-+		err = rtstatus;
-+		goto exit;
- 	}
- 
- 	/* 5. Initiailze RF RAIO_A.txt RF RAIO_B.txt */
-@@ -1033,7 +1046,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 	if (!rtl92s_phy_rf_config(hw)) {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "RF Config failed\n");
--		return rtstatus;
-+		err = rtstatus;
-+		goto exit;
- 	}
- 
- 	/* After read predefined TXT, we must set BB/MAC/RF
-@@ -1122,8 +1136,9 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 	rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_ON);
- 	rtl92s_dm_init(hw);
-+exit:
-+	local_irq_restore(flags);
- 	rtlpci->being_init_adapter = false;
--
- 	return err;
- }
- 
--- 
-1.8.4.5
+style issue here also
+
+
+> -	if (num_chanctx > 1)
+> -		return -EBUSY;
+> +	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
+> +					    chanctx->mode,
+> +					    params->radar_required);
+> +	if (err) {
+> +		mutex_unlock(&local->chanctx_mtx);
+> +		return err;
+> +	}
+>  
+> -	/* don't allow another channel switch if one is already active. */
+> -	if (sdata->vif.csa_active)
+> -		return -EBUSY;
+> +	/* if reservation is invalid then this will fail */
+> +	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
+> +	if (err) {
+> +		ieee80211_vif_unreserve_chanctx(sdata);
+> +		mutex_unlock(&local->chanctx_mtx);
+> +		return err;
+> +	}
+>  
+>  	err = ieee80211_set_csa_beacon(sdata, params, &changed);
+> -	if (err)
+> +	if (err) {
+> +		ieee80211_vif_unreserve_chanctx(sdata);
+> +		mutex_unlock(&local->chanctx_mtx);
+>  		return err;
+> +	}
+
+All those error cases could be converted to 'goto' instead of
+duplicating the unlock/unreserve.
+
+johannes
 
