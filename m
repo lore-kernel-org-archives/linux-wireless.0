@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7761 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754425AbaCCLjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 06:39:39 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Stable <stable@vger.kernel.org>,
-	Eliad Peller <eliadx.peller@intel.com>
-Subject: [PATCH] mac80211: consider virtual mon when calculating min_def
-Date: Mon,  3 Mar 2014 13:37:14 +0200
-Message-Id: <1393846634-21264-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140303_124152_467955_33842E2E)
+Received: from s3.sipsolutions.net ([144.76.43.152]:48014 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbaC1I3D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 04:29:03 -0400
+Message-ID: <1395995337.4175.0.camel@jlt4.sipsolutions.net> (sfid-20140328_092908_138760_AA86EFC5)
+Subject: Re: [PATCH] mac80211: add vif to flush call
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Fri, 28 Mar 2014 09:28:57 +0100
+In-Reply-To: <1395912629-1458-1-git-send-email-egrumbach@gmail.com> (sfid-20140327_103039_397719_35FA165E)
+References: <1395912629-1458-1-git-send-email-egrumbach@gmail.com>
+	 (sfid-20140327_103039_397719_35FA165E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Thu, 2014-03-27 at 11:30 +0200, Emmanuel Grumbach wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> This will allow the low level driver to make decision based
+> on the vif such as queues etc...
+> Since the vif might be NULL, we can't add it to the tracing
+> functions.
 
-When calculating the current max bw required for
-a channel context, we didn't consider the virtual
-monitor interface, resulting in its channel context
-being narrower than configured.
+Applied.
 
-Fixes: 21f659bf1f93 ("mac80211: add min required channel definition field")
-Cc: Stable <stable@vger.kernel.org>  [3.12+]
-Reported-by: Ido Yariv <idox.yariv@intel.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
----
- net/mac80211/chan.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 42c6592..bd1fd8e 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -100,6 +100,12 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
- 		}
- 		max_bw = max(max_bw, width);
- 	}
-+
-+	/* use the configured bandwidth in case of monitor interface */
-+	sdata = rcu_dereference(local->monitor_sdata);
-+	if (sdata && rcu_access_pointer(sdata->vif.chanctx_conf) == conf)
-+		max_bw = max(max_bw, conf->def.width);
-+
- 	rcu_read_unlock();
- 
- 	return max_bw;
--- 
-1.8.3.2
+johannes
 
