@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51300 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:48114 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881AbaCCNTN (ORCPT
+	with ESMTP id S1750793AbaC1Iu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 08:19:13 -0500
+	Fri, 28 Mar 2014 04:50:28 -0400
+Message-ID: <1395996624.4175.8.camel@jlt4.sipsolutions.net> (sfid-20140328_095127_693674_666514CA)
+Subject: Re: [PATCH 0/5] cfg80211: Add channel attributes to be used with
+ 5/10MHz channels
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.14] cfg80211: remove racy beacon_interval assignment
-Date: Mon,  3 Mar 2014 14:19:08 +0100
-Message-Id: <1393852748-31855-1-git-send-email-johannes@sipsolutions.net> (sfid-20140303_141916_513023_57616596)
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Fri, 28 Mar 2014 09:50:24 +0100
+In-Reply-To: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140311_140522_704622_0C67DCB5)
+References: <1394543114-6700-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140311_140522_704622_0C67DCB5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2014-03-11 at 14:05 +0100, Rostislav Lisovy wrote:
+> The IEEE 802.11p amendment specifies usage of 5 and 10 MHz wide
+> channels in 5.9GHz band for vehicular environment. This patch-set adds
+> new channel attributes holding the information about the prohibited
+> bandwidths. This is meant to be used mainly with channels in 5.9GHz
+> band in future implementation of 802.11p.
 
-In case of AP mode, the beacon interval is already reset to
-zero inside cfg80211_stop_ap(), and in the other modes it
-isn't relevant. Remove the assignment to remove a potential
-race since the assignment isn't properly locked.
+This looks fine, but you need to rebase. Also, maybe squash patches 1/2
+or something, the patches are pretty oddly split up IMHO, with nl80211.h
+updates in one patch and the nl80211.c in the other, for example.
 
-Reported-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 2 --
- 1 file changed, 2 deletions(-)
+It'd also be good to have some text in the empty commit logs of patches
+3 and 5.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 010892b81a06..a3bf18d11609 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -788,8 +788,6 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
- 	default:
- 		break;
- 	}
--
--	wdev->beacon_interval = 0;
- }
- 
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
--- 
-1.8.5.3
+johannes
 
