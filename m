@@ -1,35 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61413 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755507AbaCRPGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 11:06:35 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v10 0/4] mac802111: channel context reservation
-Date: Tue, 18 Mar 2014 17:03:02 +0200
-Message-Id: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160638_288822_5C81F28F)
+Received: from mail.candelatech.com ([208.74.158.172]:57192 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249AbaC1OSl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 10:18:41 -0400
+Message-ID: <533584BF.70604@candelatech.com> (sfid-20140328_151844_777684_0EF64730)
+Date: Fri, 28 Mar 2014 07:18:39 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: sedat.dilek@gmail.com
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Setting txpower fails?
+References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
+In-Reply-To: <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One more small fix to a WARN_ON detected by Michal.  One change in
-patch 3/4 (which also goes into 4/4).
+On 03/28/2014 12:27 AM, Sedat Dilek wrote:
+> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
+>> Any idea why this isn't working?
+>>
+>> Kernel is 3.9.11+, driver is ath9k.
+>>
+>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>            Encryption key:off
+>>            Power Management:off
+>>
+>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
+>> [root@ct523-9292 lanforge]# echo $?
+>> 0
+>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>            Encryption key:off
+>>            Power Management:off
+>>
+>> [root@ct523-9292 lanforge]#
+>>
+>
+> Which version of wireless-tools?
+> Why don't you use modern iw?
 
---
-Luca.
+Do you know the right incantation for 'iw'?  From it's help, it seems
+this should work, but it throws an error.  I haven't dug into the
+code to figure out why...
 
-Luciano Coelho (4):
-  mac80211: split ieee80211_vif_change_channel in two
-  mac80211: refactor ieee80211_assign/unassign_vif_chanctx into one
-  mac80211: implement chanctx reservation
-  mac80211: allow reservation of a running chanctx
+[root@ct523-9292 lanforge]# iw dev wlan0 set txpower 10
+Invalid parameter: 10
 
- include/net/mac80211.h     |   7 +
- net/mac80211/chan.c        | 367 +++++++++++++++++++++++++++++++++------------
- net/mac80211/ieee80211_i.h |  13 ++
- 3 files changed, 294 insertions(+), 93 deletions(-)
+[root@ct523-9292 lanforge]# iwconfig --version
+iwconfig  Wireless-Tools version 29
+           Compatible with Wireless Extension v11 to v22.
+
+Kernel    Currently compiled with Wireless Extension v22.
+
+sta211    Recommend Wireless Extension v21 or later,
+           Currently compiled with Wireless Extension v22.
+...
+
+
+Thanks,
+Ben
+
+>
+> - Sedat -
+>
+
 
 -- 
-1.9.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
