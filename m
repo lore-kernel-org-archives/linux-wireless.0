@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44848 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbaCNSpJ (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:63864 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757511AbaC1Dgh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 14:45:09 -0400
-Date: Fri, 14 Mar 2014 14:33:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2014-03-11
-Message-ID: <20140314183339.GC20339@tuxdriver.com> (sfid-20140314_194513_996439_871352A3)
-References: <531EF845.2050609@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <531EF845.2050609@gmail.com>
+	Thu, 27 Mar 2014 23:36:37 -0400
+Received: by mail-pa0-f48.google.com with SMTP id hz1so4390897pad.7
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 20:36:37 -0700 (PDT)
+From: Adam Lee <adam.lee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 2/2] rtlwifi: rtl8188ee: enable MSI interrupts mode
+Date: Fri, 28 Mar 2014 11:36:19 +0800
+Message-Id: <1395977779-16093-2-git-send-email-adam.lee@canonical.com> (sfid-20140328_043646_886977_17DA47C9)
+In-Reply-To: <1395977779-16093-1-git-send-email-adam.lee@canonical.com>
+References: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
+ <1395977779-16093-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 01:49:25PM +0200, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> One more bugfix - this bug has been there forever, so it might not be all that much important. Your call.
-> 
-> We were sending a host command while the mutex wasn't held. This led to hard-to-catch races.
-> 
-> Please pull - thanks.
-> 
-> 
-> The following changes since commit acfcd9ed588465e48efe5ceb67177096d51c95a9:
-> 
->   iwlwifi: fix and add 7265 series HW IDs (2014-03-04 19:30:06 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to 82e5a649453a3cf23516277abb84273768a1592b:
-> 
->   iwlwifi: dvm: take mutex when sending SYNC BT config command (2014-03-11 13:15:16 +0200)
+Some HP notebooks using this rtl8188ee hardware module can't get
+AP scan results with pin-based interrupts mode, enabling MSI interrupts
+mode could fix it.
 
-Pulling now (for -next)...
+As RealTek's testing results, RTL8188EE works well with both MSI mode
+and pin-based mode fallback.
 
+Signed-off-by: Adam Lee <adam.lee@canonical.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+index 347af1e..1b4101b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+@@ -93,6 +93,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	u8 tid;
+ 
+ 	rtl8188ee_bt_reg_init(hw);
++	rtlpci->msi_support = true;
+ 
+ 	rtlpriv->dm.dm_initialgain_enable = 1;
+ 	rtlpriv->dm.dm_flag = 0;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
