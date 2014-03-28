@@ -1,61 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:47598 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953AbaCJKuY (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:55142 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbaC1HkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Mar 2014 06:50:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com>
-References: <CANqatMD5-vD0m+YAsMqYRPNRKQrKSWthv=Gx+sRRO_Ouw7usZQ@mail.gmail.com>
-	<CANUX_P15ryyg3RGqm5pW0oZKTptKHspW=4S76BpMg2GT0nGbUQ@mail.gmail.com>
-	<CANqatMAgkVqQY3wX_MEj8vjZ2qeOuLFmef8ABtkKmv6j8hO7Dw@mail.gmail.com>
-	<CANUX_P2+jN0Wa+G6ZjXGkbsxFgeTCb4AY9vJeJ4qp7y2nh3U7Q@mail.gmail.com>
-	<CANqatMCGoS6M+ss4ezeAQi7PY7LPV6hfHC+CWtHM652rv5cmkg@mail.gmail.com>
-Date: Mon, 10 Mar 2014 12:50:22 +0200
-Message-ID: <CANUX_P2qUr7m2-K-i0FmXaimkgcs5bR8g9d+XZcBitNqR-PXUw@mail.gmail.com> (sfid-20140310_115028_723681_2EE634E1)
-Subject: Re: wifi driver or USB might leads suspend/resume failure on thinkpad
- X1 carbon
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Shuduo Sang <sangshuduo@gmail.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tedd <tedd.an@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 28 Mar 2014 03:40:23 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so3741251eek.32
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 00:40:22 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/3] ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()
+Date: Fri, 28 Mar 2014 08:34:23 +0100
+Message-Id: <1395992065-10086-2-git-send-email-michal.kazior@tieto.com> (sfid-20140328_084028_199898_0A606EE7)
+In-Reply-To: <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
+References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+ <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>> Hi,
->>>>
->>>> On Mon, Mar 10, 2014 at 7:05 AM, Shuduo Sang <sangshuduo@gmail.com> wrote:
->>>>> Hi,
->>>>>
->>>>> Sorry for cross posting. I'm suffering an issue my Thinkpad X1 Carbon
->>>>> can't resume after suspend recently. I tried many ways including
->>>>> latest vanilla kernel, latest stable 3.13 and 3.11 kernel but it still
->>>>> happens. I found it will not happen when I turn off WIFI device or USB
->>>>> 3.0 in BIOS. So I suspect something need fix in either wifi driver or
->>>>> USB side. Since Windows 7 works good so I suppose no hardware issue.
->>>>> Anyone has some ideas to fix it or debug it?
->>>>>
->>>>> Thanks,
->>>>> Shuduo
->>>>>
->>>>
->>>> If you disable WiFi only (without touching USB 3.0 in BIOS), it works?
->>>> How do you disable WiFi? Rfkill or removing iwlwifi?
->>>>
->>>
->>> I have disabled WIFI device in BIOS, then its suspend/resume works.
->>>
->>
->> Do you have any logs to share?
->> I supposed you tested 3.13.6 right?
->
-> Attach dmesg output. If any other log you need, I can capture too.
-> Actually I tried 3.14-rc6, 3.13.6 and 3.11.10.
+This allows to use GFP_KERNEL allocation. This
+should decrease chance of allocation failure, e.g.
+during firmware recovery.
 
-This looks healthy.
+Reported-By: Avery Pennarun <apenwarr@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  | 53 +++++++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/pci.c | 22 ++++++++-------
+ 2 files changed, 37 insertions(+), 38 deletions(-)
 
-    Suspending console(s) (use no_console_suspend to debug)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index a79499c..653a240 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -843,7 +843,6 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 				   struct ath10k_ce_pipe *ce_state,
+ 				   const struct ce_attr *attr)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ath10k_ce_ring *src_ring;
+ 	unsigned int nentries = attr->src_nentries;
+ 	unsigned int ce_nbytes;
+@@ -885,10 +884,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 	 * coherent DMA are unsupported
+ 	 */
+ 	src_ring->base_addr_owner_space_unaligned =
+-		pci_alloc_consistent(ar_pci->pdev,
+-				     (nentries * sizeof(struct ce_desc) +
+-				      CE_DESC_RING_ALIGN),
+-				     &base_addr);
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
+ 	if (!src_ring->base_addr_owner_space_unaligned) {
+ 		kfree(ce_state->src_ring);
+ 		ce_state->src_ring = NULL;
+@@ -912,11 +911,11 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 		kmalloc((nentries * sizeof(struct ce_desc) +
+ 			 CE_DESC_RING_ALIGN), GFP_KERNEL);
+ 	if (!src_ring->shadow_base_unaligned) {
+-		pci_free_consistent(ar_pci->pdev,
+-				    (nentries * sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    src_ring->base_addr_owner_space,
+-				    src_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (nentries * sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  src_ring->base_addr_owner_space,
++				  src_ring->base_addr_ce_space);
+ 		kfree(ce_state->src_ring);
+ 		ce_state->src_ring = NULL;
+ 		return -ENOMEM;
+@@ -946,7 +945,6 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 				    struct ath10k_ce_pipe *ce_state,
+ 				    const struct ce_attr *attr)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ath10k_ce_ring *dest_ring;
+ 	unsigned int nentries = attr->dest_nentries;
+ 	unsigned int ce_nbytes;
+@@ -986,10 +984,10 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 	 * coherent DMA are unsupported
+ 	 */
+ 	dest_ring->base_addr_owner_space_unaligned =
+-		pci_alloc_consistent(ar_pci->pdev,
+-				     (nentries * sizeof(struct ce_desc) +
+-				      CE_DESC_RING_ALIGN),
+-				     &base_addr);
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
+ 	if (!dest_ring->base_addr_owner_space_unaligned) {
+ 		kfree(ce_state->dest_ring);
+ 		ce_state->dest_ring = NULL;
+@@ -1112,26 +1110,25 @@ out:
+ void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
+ 	if (ce_state->src_ring) {
+ 		kfree(ce_state->src_ring->shadow_base_unaligned);
+-		pci_free_consistent(ar_pci->pdev,
+-				    (ce_state->src_ring->nentries *
+-				     sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    ce_state->src_ring->base_addr_owner_space,
+-				    ce_state->src_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (ce_state->src_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->src_ring->base_addr_owner_space,
++				  ce_state->src_ring->base_addr_ce_space);
+ 		kfree(ce_state->src_ring);
+ 	}
+ 
+ 	if (ce_state->dest_ring) {
+-		pci_free_consistent(ar_pci->pdev,
+-				    (ce_state->dest_ring->nentries *
+-				     sizeof(struct ce_desc) +
+-				     CE_DESC_RING_ALIGN),
+-				    ce_state->dest_ring->base_addr_owner_space,
+-				    ce_state->dest_ring->base_addr_ce_space);
++		dma_free_coherent(ar->dev,
++				  (ce_state->dest_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->dest_ring->base_addr_owner_space,
++				  ce_state->dest_ring->base_addr_ce_space);
+ 		kfree(ce_state->dest_ring);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 9d242d8..f167ceb 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -346,9 +346,10 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 	 *   2) Buffer in DMA-able space
+ 	 */
+ 	orig_nbytes = nbytes;
+-	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
+-							 orig_nbytes,
+-							 &ce_data_base);
++	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
++						       orig_nbytes,
++						       &ce_data_base,
++						       GFP_ATOMIC);
+ 
+ 	if (!data_buf) {
+ 		ret = -ENOMEM;
+@@ -446,8 +447,8 @@ done:
+ 			   __func__, address);
+ 
+ 	if (data_buf)
+-		pci_free_consistent(ar_pci->pdev, orig_nbytes,
+-				    data_buf, ce_data_base);
++		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
++				  ce_data_base);
+ 
+ 	return ret;
+ }
+@@ -490,9 +491,10 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 	 *   2) Buffer in DMA-able space
+ 	 */
+ 	orig_nbytes = nbytes;
+-	data_buf = (unsigned char *)pci_alloc_consistent(ar_pci->pdev,
+-							 orig_nbytes,
+-							 &ce_data_base);
++	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
++						       orig_nbytes,
++						       &ce_data_base,
++						       GFP_ATOMIC);
+ 	if (!data_buf) {
+ 		ret = -ENOMEM;
+ 		goto done;
+@@ -588,8 +590,8 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 
+ done:
+ 	if (data_buf) {
+-		pci_free_consistent(ar_pci->pdev, orig_nbytes, data_buf,
+-				    ce_data_base);
++		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
++				  ce_data_base);
+ 	}
+ 
+ 	if (ret != 0)
+-- 
+1.8.5.3
 
-can you use no_console_suspend?
