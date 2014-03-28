@@ -1,138 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:43888 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758505AbaCSIti (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:42838 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249AbaC1NVc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 04:49:38 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e53so6308474eek.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 01:49:37 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC v2 5/8] ath10k: setup rx channel per ppdu
-Date: Wed, 19 Mar 2014 09:49:00 +0100
-Message-Id: <1395218943-31704-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140319_094947_701667_B0F9747D)
-In-Reply-To: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395218943-31704-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 28 Mar 2014 09:21:32 -0400
+Received: by mail-wg0-f48.google.com with SMTP id l18so3604429wgh.7
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 06:21:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1396011945.4175.23.camel@jlt4.sipsolutions.net>
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	<1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	<1395409651-26120-2-git-send-email-michal.kazior@tieto.com>
+	<1396011945.4175.23.camel@jlt4.sipsolutions.net>
+Date: Fri, 28 Mar 2014 14:21:30 +0100
+Message-ID: <CA+BoTQnpijm3JxXNaCzSf3bDx6OiPDAhseTj7=0Urv4jWav=Wg@mail.gmail.com> (sfid-20140328_142136_134049_F240BC6C)
+Subject: Re: [PATCH v2 01/13] cfg80211: allow drivers to iterate over matching combinations
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup band and frequency in ieee80211_rx_status
-only once - for ppdu.
+On 28 March 2014 14:05, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+>
+>> +int cfg80211_iter_combinations(struct wiphy *wiphy,
+>> +                            const int num_different_channels,
+>> +                            const u8 radar_detect,
+>> +                            const int iftype_num[NUM_NL80211_IFTYPES],
+>> +                            void (*iter)(const struct ieee80211_iface_combination *c,
+>> +                                         void *data),
+>> +                            void *data);
+>
+> Maybe *iter should have a non-void return value and allow aborting the
+> loop somehow?
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |   51 +++++++++++++++++++-----------
- 1 file changed, 33 insertions(+), 18 deletions(-)
+I don't see much of use for that. You can still use *data for that.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 415ef1c..4797b59 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -749,10 +749,29 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar, struct htt_rx_info *info,
- 	}
- }
- 
-+static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
-+				    struct ieee80211_rx_status *status)
-+{
-+	struct ieee80211_channel *ch;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ch = ar->scan_channel;
-+	if (!ch)
-+		ch = ar->rx_channel;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (!ch)
-+		return false;
-+
-+	status->band = ch->band;
-+	status->freq = ch->center_freq;
-+
-+	return true;
-+}
-+
- static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- {
- 	struct ieee80211_rx_status *status;
--	struct ieee80211_channel *ch;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)info->skb->data;
- 
- 	status = IEEE80211_SKB_RXCB(info->skb);
-@@ -775,21 +794,7 @@ static void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
- 	if (info->amsdu_more)
- 		status->flag |= RX_FLAG_AMSDU_MORE;
- 
--	spin_lock_bh(&ar->data_lock);
--	ch = ar->scan_channel;
--	if (!ch)
--		ch = ar->rx_channel;
--	spin_unlock_bh(&ar->data_lock);
--
--	if (!ch) {
--		ath10k_warn("no channel configured; ignoring frame!\n");
--		dev_kfree_skb_any(info->skb);
--		return;
--	}
--
--	ath10k_htt_rx_h_rates(ar, info, ch->band, status);
--	status->band = ch->band;
--	status->freq = ch->center_freq;
-+	ath10k_htt_rx_h_rates(ar, info, status->band, status);
- 
- 	if (info->rate.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
- 		/* TSF available only in 32-bit */
-@@ -1135,7 +1140,8 @@ static int ath10k_unchain_msdu(struct sk_buff *msdu_head)
- 
- static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 					struct sk_buff *head,
--					struct htt_rx_info *info)
-+					struct htt_rx_info *info,
-+					bool channel_set)
- {
- 	enum htt_rx_mpdu_status status = info->status;
- 
-@@ -1156,6 +1162,11 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 		return false;
- 	}
- 
-+	if (!channel_set) {
-+		ath10k_warn("no channel configured; ignoring frame!\n");
-+		return false;
-+	}
-+
- 	/* Skip mgmt frames while we handle this in WMI */
- 	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
- 	    ath10k_htt_rx_is_mgmt(head)) {
-@@ -1191,6 +1202,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	int num_mpdu_ranges;
- 	int fw_desc_len;
- 	u8 *fw_desc;
-+	bool channel_set;
- 	int i, j;
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
-@@ -1208,6 +1220,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	info.rx_status.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
- 	info.rx_status.signal += rx->ppdu.combined_rssi;
- 
-+	channel_set = ath10k_htt_rx_h_channel(htt->ar, &info.rx_status);
-+
- 	info.rate.info0 = rx->ppdu.info0;
- 	info.rate.info1 = __le32_to_cpu(rx->ppdu.info1);
- 	info.rate.info2 = __le32_to_cpu(rx->ppdu.info2);
-@@ -1234,7 +1248,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 							 &msdu_tail);
- 
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
--							 &info)) {
-+							 &info,
-+							 channel_set)) {
- 				ath10k_htt_rx_free_msdu_chain(msdu_head);
- 				continue;
- 			}
--- 
-1.7.9.5
 
+>> +static void
+>> +cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
+>> +                       void *data)
+>> +{
+>> +     int *num = data;
+>> +     (*num)++;
+>> +}
+>> +
+>> +int cfg80211_check_combinations(struct wiphy *wiphy,
+>> +                             const int num_different_channels,
+>> +                             const u8 radar_detect,
+>> +                             const int iftype_num[NUM_NL80211_IFTYPES])
+>> +{
+>> +     int err, num = 0;
+>> +
+>> +     err = cfg80211_iter_combinations(wiphy, num_different_channels,
+>> +                                      radar_detect, iftype_num,
+>> +                                      cfg80211_iter_sum_ifcombs, &num);
+>> +     if (err)
+>> +             return err;
+>> +     if (num == 0)
+>> +             return -EBUSY;
+>> +
+>> +     return 0;
+>>  }
+>
+> This also seems a bit pointless - why not just have an int instead of
+> num and set it to -EBUSY outside, and to 0 inside, and then just return
+> it? You don't need the number of available combinations.
+
+Hmm.. Well, that works too I guess.
+
+
+Michał
