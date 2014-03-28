@@ -1,43 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55036 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754588AbaCCQXR (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:60526 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757056AbaC1Dgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 11:23:17 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [net-next v4 1/3] if_ether.h: add IEEE 802.21 Ethertype
-Date: Mon,  3 Mar 2014 17:23:10 +0100
-Message-Id: <1393863792-18172-2-git-send-email-sw@simonwunderlich.de> (sfid-20140303_172343_236672_EF27DDED)
-In-Reply-To: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
-References: <1393863792-18172-1-git-send-email-sw@simonwunderlich.de>
+	Thu, 27 Mar 2014 23:36:31 -0400
+Received: by mail-pa0-f47.google.com with SMTP id lj1so4388363pab.34
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2014 20:36:31 -0700 (PDT)
+From: Adam Lee <adam.lee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 1/2] rtlwifi: add MSI interrupts mode support
+Date: Fri, 28 Mar 2014 11:36:18 +0800
+Message-Id: <1395977779-16093-1-git-send-email-adam.lee@canonical.com> (sfid-20140328_043650_953350_AA2B68F0)
+In-Reply-To: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
+References: <1395715732-9545-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the Ethertype for IEEE Std 802.21 - Media Independent Handover
-Protocol. This Ethertype is used for network control messages.
+Add MSI interrupts mode support, enable it when submodules' msi_support
+flag is true, also could fallback to pin-based interrupts mode if MSI
+interrupts mode fails.
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+RealTek's policy(on modules which work well with MSI interrupts mode) is:
+
+> If the platform supports both MSI and pin-based, use MSI.
+> If the platform supports MSI only, use MSI.
+> If the platform supports pin-based only, use pin-based.
+
+Also as RealTek's testing results, RTL8188EE and RTL8723BE work well
+with both MSI mode and pin-based mode fallback.
+
+Signed-off-by: Adam Lee <adam.lee@canonical.com>
 ---
- include/uapi/linux/if_ether.h |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/rtlwifi/pci.c | 65 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 63 insertions(+), 2 deletions(-)
 
-diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
-index ba8b15f..750ba67 100644
---- a/include/uapi/linux/if_ether.h
-+++ b/include/uapi/linux/if_ether.h
-@@ -89,6 +89,7 @@
- #define ETH_P_FCOE	0x8906		/* Fibre Channel over Ethernet  */
- #define ETH_P_TDLS	0x890D          /* TDLS */
- #define ETH_P_FIP	0x8914		/* FCoE Initialization Protocol */
-+#define ETH_P_80221	0x8917		/* IEEE 802.21 Media Independent Handover Protocol */
- #define ETH_P_QINQ1	0x9100		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
- #define ETH_P_QINQ2	0x9200		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
- #define ETH_P_QINQ3	0x9300		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 7d71170..dae5525 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1853,6 +1853,65 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+ 	return true;
+ }
+ 
++static int rtl_pci_intr_mode_msi(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	ret = pci_enable_msi(rtlpci->pdev);
++	if (ret < 0)
++		return ret;
++
++	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
++			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	if (ret < 0) {
++		pci_disable_msi(rtlpci->pdev);
++		return ret;
++	}
++
++	rtlpci->using_msi = true;
++
++	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
++		 "MSI Interrupt Mode!\n");
++	return 0;
++}
++
++static int rtl_pci_intr_mode_legacy(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	ret = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
++			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	if (ret < 0)
++		return ret;
++
++	rtlpci->using_msi = false;
++	RT_TRACE(rtlpriv, COMP_INIT|COMP_INTR, DBG_DMESG,
++		 "Pin-based Interrupt Mode!\n");
++	return 0;
++}
++
++static int rtl_pci_intr_mode_decide(struct ieee80211_hw *hw)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
++	int ret;
++
++	if (rtlpci->msi_support) {
++		ret = rtl_pci_intr_mode_msi(hw);
++		if (ret < 0)
++			ret = rtl_pci_intr_mode_legacy(hw);
++	} else {
++		ret = rtl_pci_intr_mode_legacy(hw);
++	}
++	return ret;
++}
++
+ int rtl_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id)
+ {
+@@ -1995,8 +2054,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	rtlpci = rtl_pcidev(pcipriv);
+-	err = request_irq(rtlpci->pdev->irq, &_rtl_pci_interrupt,
+-			  IRQF_SHARED, KBUILD_MODNAME, hw);
++	err = rtl_pci_intr_mode_decide(hw);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			 "%s: failed to register IRQ handler\n",
+@@ -2064,6 +2122,9 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+ 		rtlpci->irq_alloc = 0;
+ 	}
+ 
++	if (rtlpci->using_msi)
++		pci_disable_msi(rtlpci->pdev);
++
+ 	list_del(&rtlpriv->list);
+ 	if (rtlpriv->io.pci_mem_start != 0) {
+ 		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
 -- 
-1.7.10.4
+1.9.1
 
