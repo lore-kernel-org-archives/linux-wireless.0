@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34395 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbaCXGBG (ORCPT
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:41564 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbaC1QHZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 02:01:06 -0400
-Received: by mail-pa0-f47.google.com with SMTP id lj1so4968575pab.34
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Mar 2014 23:01:06 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	stable@kernel.org, "John W. Linville" <linville@tuxdriver.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: [PATCH] rtlwifi: rtl8188ee: enable MSI interrupts support
-Date: Mon, 24 Mar 2014 14:00:41 +0800
-Message-Id: <1395640841-14477-1-git-send-email-adam.lee@canonical.com> (sfid-20140324_070117_047163_F2F90774)
+	Fri, 28 Mar 2014 12:07:25 -0400
+Received: by mail-ve0-f181.google.com with SMTP id oy12so5840759veb.26
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 09:07:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87siq2v1lm.fsf@kamboji.qca.qualcomm.com>
+References: <20140328132849.31620.78501.stgit@potku.adurom.net>
+	<CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
+	<87wqfev2ml.fsf@kamboji.qca.qualcomm.com>
+	<CAEFj985Xq-_QRmdOsFKEM0kA40TpgKL6t1DW8yXSPY6dn=R2LA@mail.gmail.com>
+	<87siq2v1lm.fsf@kamboji.qca.qualcomm.com>
+Date: Sat, 29 Mar 2014 00:07:24 +0800
+Message-ID: <CAEFj9848WTRBMNDGZAsN3DZa757bGMsO5dC0jTY+DCCJsYV_5Q@mail.gmail.com> (sfid-20140328_170732_764604_36064963)
+Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some HP notebooks using this rtl8188ee hardware module can't get
-AP scan results with pin-based interrupts, enabling MSI interrupts could
-fix it.
+So this patch is intended for firmware 999.999.0.716, right?
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c | 1 +
- 1 file changed, 1 insertion(+)
+Chun-Yeow
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-index 347af1e..1b4101b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-@@ -93,6 +93,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 	u8 tid;
- 
- 	rtl8188ee_bt_reg_init(hw);
-+	rtlpci->msi_support = true;
- 
- 	rtlpriv->dm.dm_initialgain_enable = 1;
- 	rtlpriv->dm.dm_flag = 0;
--- 
-1.9.1
-
+On Fri, Mar 28, 2014 at 10:28 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+>
+>> On Fri, Mar 28, 2014 at 10:06 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>>
+>>>> On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>>>> From: Bartosz Markowski <bartosz.markowski@tieto.com>
+>>>>>
+>>>>> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
+>>>>> can return per-VDEV statistics. Using debugfs we can fetch this info now.
+>>>>>
+>>>>> This is a backward compatible change. In case of older FW the VDEV
+>>>>> statistics are simply not returned.
+>>>>>
+>>>>> kvalo: remove struct wmi_peer_stats_common cast from
+>>>>> ath10k_debug_read_target_stats()
+>>>>
+>>>> I just glanced over the patch and I don't think this is correct.
+>>>>
+>>>> Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
+>>>
+>>> Ok, I need to take a closer look at this. If someone else wants to look
+>>> at this instead, feel free to do that :)
+>>>
+>> I up two AP interfaces in same physical but not able to see two
+>> different vdev in get stats.
+>
+> That's because the firmware image have doesn't have the feature bit set.
+>
+> --
+> Kalle Valo
