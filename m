@@ -1,77 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:55797 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbaCGEW1 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39938 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbaC1PZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 23:22:27 -0500
-Message-ID: <5319497F.9080003@wwwdotorg.org> (sfid-20140307_052250_486806_5C9A12B3)
-Date: Thu, 06 Mar 2014 21:22:23 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Fri, 28 Mar 2014 11:25:44 -0400
+Message-ID: <53359475.60904@candelatech.com> (sfid-20140328_162554_300021_0BC9F850)
+Date: Fri, 28 Mar 2014 08:25:41 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Chen-Yu Tsai <wens@csie.org>,
-	Linus Walleij <linus.walleij@linaro.org>
-CC: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: Re: [PATCHv2 3/5] net: rfkill: gpio: remove gpio names
-References: <1393330950-7283-1-git-send-email-heikki.krogerus@linux.intel.com> <1393330950-7283-4-git-send-email-heikki.krogerus@linux.intel.com> <530D218E.9010007@wwwdotorg.org> <CACRpkdZF4-rWs1WkOp3t0x77fgSCE71E=wdrxiDuGZ8eBu_p_Q@mail.gmail.com> <53168976.7000008@wwwdotorg.org> <CACRpkdYfQoDmPX0He4J2Sn2wgQn2hHoHyPqnStLRVqrvi=M+-w@mail.gmail.com> <53169304.9080002@wwwdotorg.org> <CACRpkdaYuZ5bXo7djOv04oyHPAFbO=pKfR7L7UBY+kZqZUHfmQ@mail.gmail.com> <CAGb2v65UQZoDJhjpX+kfa6HppXdhrCHG=A5m_WaQ_DimW-Lsbg@mail.gmail.com>
-In-Reply-To: <CAGb2v65UQZoDJhjpX+kfa6HppXdhrCHG=A5m_WaQ_DimW-Lsbg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bruno Antunes <baantunes@gmail.com>
+CC: linux-wireless@vger.kernel.org, sedat.dilek@gmail.com
+Subject: Re: Setting txpower fails?
+References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com> <533584BF.70604@candelatech.com> <4CC49FDB-1767-4A3F-9C1D-8F8DCF612233@gmail.com> <53358920.6030304@candelatech.com> <8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com> <53358EFB.1030308@candelatech.com> <E322ACF2-B0A6-45D9-93C8-85F68176DCB2@gmail.com>
+In-Reply-To: <E322ACF2-B0A6-45D9-93C8-85F68176DCB2@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2014 08:43 PM, Chen-Yu Tsai wrote:
-> On Fri, Mar 7, 2014 at 11:41 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
->> On Wed, Mar 5, 2014 at 10:59 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->>> On 03/04/2014 07:37 PM, Linus Walleij wrote:
->>>> On Wed, Mar 5, 2014 at 10:18 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->>>>> On 03/04/2014 06:43 PM, Linus Walleij wrote:
->>>>
->>>>>> If I understand the situation correctly it's like ACPI does not have named
->>>>>> GPIOs so keeping specifying this in DT GPIO bindings is counter-productive
->>>>>> to the work of abstracting the access to GPIO handlers so that drivers
->>>>>> need not know whether ACPI or DT is used for describing the hardware.
->>>>>
->>>>> For devices that already have both ACPI and DT bindings, we can't
->>>>> pretend they can be the same; they are already potentially different. We
->>>>> simply need to parse DT and ACPI differently, since that's the sway
->>>>> their bindings are defined.
->>>>>
->>>>> For any devices that don't have both ACPI and DT bindings, I agree we
->>>>> should certainly strive to make any new bindings aligned so we don't
->>>>> have to deal with this for them.
->>>>>
->>>>> However, we can't change the past.
->>>>
->>>> Yeah, right, so for this very driver there are no bindings defined (yet)
->>>> and the only device tree I can find referencing it is the Tegra20-paz00
->>>> and it just use gpios = <>;
->>>>
->>>> So in this case I think this patch is the right way forward, but I admit
->>>> I'm really uncertain in the general case.
+On 03/28/2014 08:15 AM, Bruno Antunes wrote:
+>
+> On 28 Mar, 2014, at 15:02 , Ben Greear <greearb@candelatech.com> wrote:
+>
+>> On 03/28/2014 07:49 AM, Bruno Antunes wrote:
 >>>
->>> If there are no bindings defined at all yet, then we can define both DT
->>> and ACPI bindings to use name-based GPIOs. Index-based lookups aren't a
->>> good way forward.
+>>> On 28 Mar, 2014, at 14:37 , Ben Greear <greearb@candelatech.com> wrote:
+>>>
+>>>> On 03/28/2014 07:29 AM, Bruno Antunes wrote:
+>>>>> Hi Ben,
+>>>>> I think you are missing some parameters
+>>>>>
+>>>>> On 28 Mar, 2014, at 14:18 , Ben Greear <greearb@candelatech.com> wrote:
+>>>>>
+>>>>>> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
+>>>>>>> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
+>>>>>>>> Any idea why this isn't working?
+>>>>>>>>
+>>>>>>>> Kernel is 3.9.11+, driver is ath9k.
+>>>>>>>>
+>>>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>>>>>>>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>>>>>>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>>>>>>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>>>>>>>            Encryption key:off
+>>>>>>>>            Power Management:off
+>>>>>>>>
+>>>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
+>>>>>
+>>>>> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+>>>>>
+>>>>>   It should be something like:
+>>>>>
+>>>>> iw dev wlan0 set txpower fixed 1000
+>>>>
+>>>> Ok, that doesn't give an error, but 'iwconfig' still shows 16 dBm,
+>>>> and I don't see any way to get 'iw' to print out the power itself?
+>>>>
+>>>> So, not sure if it is really working or not.
+>>> It works , at least on iw 3.10.
+>>>
+>>> If you have debug enabled you can see the value changing.
 >>
->> After Mark clarifying that ACPI is going to have named GPIOs I'm
->> totally aligned on this, so OK!
-> 
-> Glad to hear this, but is it possible to get rid of the index in current
-> drivers? Or change the behavior to name-based OR index-based lookups.
-> This might break any DTs that have multiple GPIOs defined under one
-> property though.
+>> Just for posterity's sake, it seems you should really be looking
+>> at user_power_level:
+>>
+>> [root@ct523-9292 lanforge]# iw dev wlan0 set txpower fixed 1000
+>> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/txpower
+>> 0
+>> [root@ct523-9292 lanforge]#
+>>
+>> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/user_power_level
+>> 10
+>>
+> Not on all systems...
 
-For any bindings that are already defined to use index-based lookups, I
-think we have to continue using them, for backwards-compatibility with
-old DTs (and I assume old ACPI databases need the same thing).
+I suspect the difference is that my wlan0 is not actually connected,
+and it will probably show correct 'txpower' when it is connected.
+
+Thanks,
+Ben
+
+>
+> root@RSPro2:/etc/config#  iw dev adhoc0 set txpower fixed 700
+> root@RSPro2:/etc/config# cat /sys/kernel/debug/ieee80211/phy0/netdev\:adhoc0/txpower
+> 7
+> root@RSPro2:/etc/config# cat /sys/kernel/debug/ieee80211/phy0/netdev\:adhoc0/user_power_level
+> 7
+>
+> Bruno
+>
+>> Thanks,
+>> Ben
+>>
+>>>
+>>> On a openwrt system
+>>>
+>>> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 900
+>>> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
+>>> 9
+>>> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 1500
+>>> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
+>>> 15
+>>>
+>>> And the received power changes on the station confirming that is making effect.
+>>>
+>>> Bruno
+>>>
+>>>>
+>>>> Thanks,
+>>>> Ben
+>>>>
+>>>>
+>>>> --
+>>>> Ben Greear <greearb@candelatech.com>
+>>>> Candela Technologies Inc  http://www.candelatech.com
+>>>>
+>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
