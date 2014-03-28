@@ -1,99 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:55187 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757811AbaCRT0H (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6545 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751744AbaC1EFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 15:26:07 -0400
-Received: by mail-wg0-f49.google.com with SMTP id a1so6236517wgh.8
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 12:26:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/14] staging: vt6656: rxtx: Replace wRTSDuration* variables
-Date: Tue, 18 Mar 2014 19:24:56 +0000
-Message-Id: <1395170708-2990-2-git-send-email-tvboxspy@gmail.com> (sfid-20140318_202611_814742_D117941A)
-In-Reply-To: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
-References: <1395170708-2990-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 28 Mar 2014 00:05:44 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix spinlock bad magic bug
+Date: Thu, 27 Mar 2014 21:05:26 -0700
+Message-ID: <1395979526-2181-1-git-send-email-bzhao@marvell.com> (sfid-20140328_050548_194905_B17177F6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix base type to __le16 and remove camel case.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Camel case changes
-wRTSDuration* -> rts_duration*
+[ 6630.450908] BUG: spinlock bad magic on CPU#1,
+               ksdioirqd/mmc1/355
+[ 6630.450914] Unable to handle kernel NULL pointer dereference
+               at virtual address 0000004f
+[ 6630.450919] pgd = ecbd8000
+[ 6630.450926] [0000004f] *pgd=00000000
+[ 6630.450936]  lock: 0xeea4ab08, .magic: 00000000,
+               .owner: <none>/-1, .owner_cpu: 0
+[ 6630.450939] Backtrace:
+[ 6630.450956] [<c010d354>] (unwind_backtrace+0x0/0x118) from
+               [<c060c238>] (dump_stack+0x28/0x30)
+[ 6630.450960] Internal error: Oops: 5 [#1] SMP ARM
+[ 6630.450964] Modules linked in: uvcvideo videobuf2_vmalloc
+[ 6630.450980] [<c060c238>] (dump_stack+0x28/0x30) from
+               [<c0315ab4>] (spin_dump+0x80/0x94)
+[ 6630.450988] [<c0315ab4>] (spin_dump+0x80/0x94) from
+               [<c0315af4>] (spin_bug+0x2c/0x30)
+[ 6630.450996] [<c0315af4>] (spin_bug+0x2c/0x30) from
+               [<c0315b80>] (do_raw_spin_lock+0x28/0x15c)
+[ 6630.451004] [<c0315b80>] (do_raw_spin_lock+0x28/0x15c) from
+               [<c0610c24>] (_raw_spin_lock_irqsave+0x20/0x28)
+[ 6630.451016] [<c0610c24>] (_raw_spin_lock_irqsave+0x20/0x28)
+               from [<bf07a7f4>] (mwifiex_exec_next_cmd
+                                  +0x6c/0x45c [mwifiex])
+[ 6630.451030] [<bf07a7f4>] (mwifiex_exec_next_cmd+0x6c/0x45c
+               [mwifiex]) from [<bf07834c>]
+               (mwifiex_main_process+0x2c8/0x464 [mwifiex])
+[ 6630.451047] [<bf07834c>] (mwifiex_main_process+0x2c8/0x464
+               [mwifiex]) from [<bf0a093c>]
+               (mwifiex_sdio_interrupt+0xc8/0x1cc [mwifiex_sdio]
+[ 6630.451064] [<bf0a093c>] (mwifiex_sdio_interrupt+0xc8/0x1cc
+               [mwifiex_sdio]) from [<c04bbde0>]
+               (sdio_irq_thread+0x178/0x31c)
+[ 6630.451079] [<c04bbde0>] (sdio_irq_thread+0x178/0x31c) from
+               [<c0145514>] (kthread+0xc8/0xd8)
+[ 6630.451095] [<c0145514>] (kthread+0xc8/0xd8) from
+               [<c0106118>] (ret_from_fork+0x14/0x20)
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This bug has introduced/exposed due to recent patch in which we
+cancel pending commands before suspend (using hs_enabling flag).
+The NULL pointer is dereferenced when both
+mwifiex_cancel_all_pending_cmd() and mwifiex_exec_next_cmd()
+try to access cmd pending queue simultaneously.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/vt6656/rxtx.c | 12 ++++++------
- drivers/staging/vt6656/rxtx.h | 12 ++++++------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 5507db8..1a29251 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -613,13 +613,13 @@ static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 		pkt_type, current_rate, need_ack, fb_option);
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index a23791d..1062c91 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -981,11 +981,10 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 	struct mwifiex_private *priv;
+ 	int i;
  
++	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+ 	/* Cancel current cmd */
+ 	if ((adapter->curr_cmd) && (adapter->curr_cmd->wait_q_enabled)) {
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd->wait_q_enabled = false;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->cmd_wait_q.status = -1;
+ 		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+ 	}
+@@ -1005,6 +1004,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
++	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
  
--	buf->wRTSDuration_ba_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F0,
-+	buf->rts_duration_ba_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack, fb_option);
--	buf->wRTSDuration_aa_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
-+	buf->rts_duration_aa_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack, fb_option);
--	buf->wRTSDuration_ba_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F1,
-+	buf->rts_duration_ba_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_BA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack, fb_option);
--	buf->wRTSDuration_aa_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
-+	buf->rts_duration_aa_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack, fb_option);
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration_aa);
-@@ -660,10 +660,10 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 	buf->duration = s_uGetRTSCTSDuration(priv, RTSDUR_AA, frame_len,
- 		pkt_type, current_rate, need_ack, fb_option);
- 
--	buf->wRTSDuration_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
-+	buf->rts_duration_f0 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F0,
- 		frame_len, pkt_type, priv->tx_rate_fb0, need_ack, fb_option);
- 
--	buf->wRTSDuration_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
-+	buf->rts_duration_f1 = s_uGetRTSCTSDuration(priv, RTSDUR_AA_F1,
- 		frame_len, pkt_type, priv->tx_rate_fb1, need_ack, fb_option);
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->duration);
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index d677d07..bb2d0ce 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -127,10 +127,10 @@ struct vnt_rts_g_fb {
- 	__le16 duration_aa;
- 	__le16 duration_bb;
- 	u16 wReserved;
--	u16 wRTSDuration_ba_f0;
--	u16 wRTSDuration_aa_f0;
--	u16 wRTSDuration_ba_f1;
--	u16 wRTSDuration_aa_f1;
-+	__le16 rts_duration_ba_f0;
-+	__le16 rts_duration_aa_f0;
-+	__le16 rts_duration_ba_f1;
-+	__le16 rts_duration_aa_f1;
- 	struct ieee80211_rts data;
- 	struct vnt_tx_datahead_g_fb data_head;
- } __packed;
-@@ -147,8 +147,8 @@ struct vnt_rts_a_fb {
- 	struct vnt_phy_field a;
- 	__le16 duration;
- 	u16 wReserved;
--	u16 wRTSDuration_f0;
--	u16 wRTSDuration_f1;
-+	__le16 rts_duration_f0;
-+	__le16 rts_duration_f1;
- 	struct ieee80211_rts data;
- 	struct vnt_tx_datahead_a_fb data_head;
- } __packed;
+ 	/* Cancel all pending scan command */
+ 	spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
 -- 
-1.9.0
+1.8.2.3
 
