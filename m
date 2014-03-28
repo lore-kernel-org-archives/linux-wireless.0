@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:42261 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758599AbaCSKSL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37067 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbaC1NPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Mar 2014 06:18:11 -0400
-Received: by mail-ie0-f180.google.com with SMTP id as1so8588136iec.39
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Mar 2014 03:18:10 -0700 (PDT)
+	Fri, 28 Mar 2014 09:15:17 -0400
+Date: Fri, 28 Mar 2014 09:07:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Fariya Fatima <fariyaf@gmail.com>, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] rsi: rsi_91x: misleading debug printk
+Message-ID: <20140328130748.GJ31168@tuxdriver.com> (sfid-20140328_141524_556634_32AD6B8B)
+References: <20140328082733.GK25192@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQnNXb=sm=k=fFmYd=e1pOVTRX3MhwMgmhUeWD=2Nuy_8A@mail.gmail.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-	<1395150804-24090-4-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcRwJ0H_rRSq0kaw8mWLJh2i2msZUmBRBFXZonZSua4kQ@mail.gmail.com>
-	<CA+BoTQmNJoMa8p-DnjH9h-NdkTm=6DK2pztCFYGACe8BB5aJ=Q@mail.gmail.com>
-	<CAB3XZEckstWFB-2CmWg7JeoyT0bTUgSh5bXqZxADUHiurZgnhw@mail.gmail.com>
-	<CA+BoTQnNXb=sm=k=fFmYd=e1pOVTRX3MhwMgmhUeWD=2Nuy_8A@mail.gmail.com>
-Date: Wed, 19 Mar 2014 12:18:09 +0200
-Message-ID: <CAB3XZEe2ie8eHGrKLBkn6juQ5wGGfdOMirSj5vCEBAixZHHvuw@mail.gmail.com> (sfid-20140319_111815_007841_C50E75C7)
-Subject: Re: [RFC 03/21] mac80211: add max channel calculation utility function
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140328082733.GK25192@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 10:54 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 19 March 2014 09:43, Eliad Peller <eliad@wizery.com> wrote:
->> On Wed, Mar 19, 2014 at 10:32 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> On 18 March 2014 17:17, Eliad Peller <eliad@wizery.com> wrote:
->>>> hi,
->>>>
->>>> On Tue, Mar 18, 2014 at 3:53 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>>>> The utility function has no uses yet. It is aimed
->>>>> at future chanctx reservation management and
->>>>> channel switching.
->>>>>
->>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>>>> ---
->>>> [...]
->>>>
->>>>> +int ieee80211_max_num_channels(struct ieee80211_local *local)
->>>>> +{
->>>>> +       struct ieee80211_sub_if_data *sdata;
->>>>> +       int num[NUM_NL80211_IFTYPES] = {};
->>>>> +       struct ieee80211_chanctx *ctx;
->>>>> +       int num_different_channels = 0;
->>>>> +       u8 radar_detect = 0;
->>>>> +       u32 max_num_different_channels = 1;
->>>>> +       int err;
->>>>> +
->>>>> +       lockdep_assert_held(&local->chanctx_mtx);
->>>>> +
->>>>> +       list_for_each_entry(ctx, &local->chanctx_list, list) {
->>>>> +               num_different_channels++;
->>>>> +
->>>> this doesn't seem correct - i think we can have multiple channel
->>>> contexts with the same channel (e.g. due to exclusive mode)?
->>>
->>> Hmm, does it even make sense to consider chanctx mode here?
->>>
->> i don't think you should consider the chancx mode, but keep track of
->> the used channels.
->> if you have 2 different channel contexts with the same channel (e.g.
->> due to exclusive mode), you have to make sure you don't count the same
->> channel twice. you shouldn't care about the actual reason for it.
->
-> I disagree. There's a reason why we have exclusive chanctx mode.
->
-> If you insist on counting compatible chandefs you can lead to
-> overcommit if your exclusive chanctx bound interface decides to switch
-> to another channel.
->
-ok. fair point. i guess you're right.
+;-)
 
-Eliad.
+goto fail;
+goto fail;
+
+Thanks, Dan!
+
+On Fri, Mar 28, 2014 at 11:27:33AM +0300, Dan Carpenter wrote:
+> There is a missing set of curly braces here so the debug output says
+> "Probe confirm received" unintentionally.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> index ef37d4b..2361a68 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+> @@ -1292,10 +1292,11 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
+>  			return -EINVAL;
+>  		}
+>  	} else if (msg_type == TX_STATUS_IND) {
+> -		if (msg[15] == PROBEREQ_CONFIRM)
+> +		if (msg[15] == PROBEREQ_CONFIRM) {
+>  			common->mgmt_q_block = false;
+>  			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
+>  				__func__);
+> +		}
+>  	} else {
+>  		return rsi_mgmt_pkt_to_core(common, msg, msg_len, msg_type);
+>  	}
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
