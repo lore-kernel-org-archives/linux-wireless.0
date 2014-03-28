@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0188.hostedemail.com ([216.40.44.188]:58299 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755569AbaCLRXX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5731 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbaC1OGr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Mar 2014 13:23:23 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH net-next 9/9] ath9k: Convert uses of __constant_<foo> to <foo>
-Date: Wed, 12 Mar 2014 10:22:38 -0700
-Message-Id: <b44fc68ea21f435c665dee1b2d1d89d6e53bd703.1394644825.git.joe@perches.com> (sfid-20140312_182414_362537_A08DD8A0)
-In-Reply-To: <cover.1394644825.git.joe@perches.com>
-References: <cover.1394644825.git.joe@perches.com>
+	Fri, 28 Mar 2014 10:06:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
+References: <20140328132849.31620.78501.stgit@potku.adurom.net>
+	<CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
+Date: Fri, 28 Mar 2014 16:06:42 +0200
+In-Reply-To: <CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 28 Mar 2014 14:53:40 +0100")
+Message-ID: <87wqfev2ml.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_150651_098124_B70C72E5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The use of __constant_<foo> has been unnecessary for quite awhile now.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Make these uses consistent with the rest of the kernel.
+> On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> From: Bartosz Markowski <bartosz.markowski@tieto.com>
+>>
+>> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
+>> can return per-VDEV statistics. Using debugfs we can fetch this info now.
+>>
+>> This is a backward compatible change. In case of older FW the VDEV
+>> statistics are simply not returned.
+>>
+>> kvalo: remove struct wmi_peer_stats_common cast from
+>> ath10k_debug_read_target_stats()
+>
+> I just glanced over the patch and I don't think this is correct.
+>
+> Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Ok, I need to take a closer look at this. If someone else wants to look
+at this instead, feel free to do that :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index b8daff7..d7625ec 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -23,8 +23,8 @@
- #define COMP_HDR_LEN 4
- #define COMP_CKSUM_LEN 2
- 
--#define LE16(x) __constant_cpu_to_le16(x)
--#define LE32(x) __constant_cpu_to_le32(x)
-+#define LE16(x) cpu_to_le16(x)
-+#define LE32(x) cpu_to_le32(x)
- 
- /* Local defines to distinguish between extension and control CTL's */
- #define EXT_ADDITIVE (0x8000)
 -- 
-1.8.1.2.459.gbcd45b4.dirty
-
+Kalle Valo
