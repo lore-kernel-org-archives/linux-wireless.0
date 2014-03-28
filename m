@@ -1,115 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61413 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755665AbaCRPGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 11:06:35 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v10 1/4] mac80211: split ieee80211_vif_change_channel in two
-Date: Tue, 18 Mar 2014 17:03:03 +0200
-Message-Id: <1395154986-13810-2-git-send-email-luciano.coelho@intel.com> (sfid-20140318_160643_462938_30A8A180)
-In-Reply-To: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
-References: <1395154986-13810-1-git-send-email-luciano.coelho@intel.com>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:39271 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbaC1HcR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 03:32:17 -0400
+Subject: [PATCH v2 0/8] ath10k: small cleanups to pci.c
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Mar 2014 09:32:14 +0200
+Message-ID: <20140328073040.30438.17966.stgit@potku.adurom.net> (sfid-20140328_083221_210237_086365DF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_vif_change_channel() locks chanctx_mtx.  When implementing
-channel reservation for CS, we will need to call the function to
-change channel when the lock is already held, so split the part that
-requires the lock out and leave the locking in the original function.
+While looking at the cold reset problem I did some cleanup
+to pci.c.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+v2: In patch 1 fix how to check FW_IND_INITIALIZED and also check for 0xffffffff.
+
 ---
- net/mac80211/chan.c | 58 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index fdbb932..ef77703 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -547,39 +547,20 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
--int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
--				 u32 *changed)
-+static int __ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx,
-+					  u32 *changed)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *conf;
--	struct ieee80211_chanctx *ctx;
- 	const struct cfg80211_chan_def *chandef = &sdata->csa_chandef;
--	int ret;
- 	u32 chanctx_changed = 0;
- 
--	lockdep_assert_held(&local->mtx);
--
--	/* should never be called if not performing a channel switch. */
--	if (WARN_ON(!sdata->vif.csa_active))
--		return -EINVAL;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 				     IEEE80211_CHAN_DISABLED))
- 		return -EINVAL;
- 
--	mutex_lock(&local->chanctx_mtx);
--	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--					 lockdep_is_held(&local->chanctx_mtx));
--	if (!conf) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	ctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (ctx->refcount != 1) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (ctx->refcount != 1)
-+		return -EINVAL;
- 
- 	if (sdata->vif.bss_conf.chandef.width != chandef->width) {
- 		chanctx_changed = IEEE80211_CHANCTX_CHANGE_WIDTH;
-@@ -597,7 +578,34 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_radar_chanctx(local, ctx);
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
- 
--	ret = 0;
-+	return 0;
-+}
-+
-+int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
-+				 u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	/* should never be called if not performing a channel switch. */
-+	if (WARN_ON(!sdata->vif.csa_active))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ret = __ieee80211_vif_change_channel(sdata, ctx, changed);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
--- 
-1.9.0
+Kalle Valo (8):
+      ath10k: cleanup ath10k_pci_wait_for_target_init()
+      ath10k: add module parameter to disable cold reset
+      ath10k: fix name of target_ps module parameter
+      ath10k: advertise only firmware API 2 files
+      ath10k: delete ar_pci->fw_indicator_address
+      ath10k: improve pci debug messages
+      ath10k: add module parameter values to the pci info print
+      ath10k: print chip id during boot
+
+
+ drivers/net/wireless/ath/ath10k/core.c |    9 +-
+ drivers/net/wireless/ath/ath10k/hw.h   |    1 
+ drivers/net/wireless/ath/ath10k/pci.c  |  131 ++++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/pci.h  |    3 -
+ 4 files changed, 98 insertions(+), 46 deletions(-)
 
