@@ -1,81 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:43267 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbaCIVnY (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43568 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbaC1PCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 17:43:24 -0400
-Received: by mail-qc0-f173.google.com with SMTP id r5so6938446qcx.32
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Mar 2014 14:43:23 -0700 (PDT)
-Message-ID: <531CE079.9050304@gmail.com> (sfid-20140309_224327_203115_30694526)
-Date: Sun, 09 Mar 2014 14:43:21 -0700
-From: Bryan Batten <bryanbatten@gmail.com>
-Reply-To: BryanBatten@gmail.com
+	Fri, 28 Mar 2014 11:02:22 -0400
+Message-ID: <53358EFB.1030308@candelatech.com> (sfid-20140328_160225_397882_6CC810B0)
+Date: Fri, 28 Mar 2014 08:02:19 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC} mac80211: optimize rate control initialization
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Bruno Antunes <baantunes@gmail.com>
+CC: linux-wireless@vger.kernel.org, sedat.dilek@gmail.com
+Subject: Re: Setting txpower fails?
+References: <5334F8E7.1070803@candelatech.com> <CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com> <533584BF.70604@candelatech.com> <4CC49FDB-1767-4A3F-9C1D-8F8DCF612233@gmail.com> <53358920.6030304@candelatech.com> <8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com>
+In-Reply-To: <8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This proposed patch changes the rate control initialization sources to 
-reduce the number of files to be modified when a new rate control 
-scheme is added to the kernel. Reducing the scope of needed source 
-changes should enhance the Linux kernel as a vehicle for expanding 
-802.11 rate control capabilities by making the addition of new schemes 
-easier.
+On 03/28/2014 07:49 AM, Bruno Antunes wrote:
+>
+> On 28 Mar, 2014, at 14:37 , Ben Greear <greearb@candelatech.com> wrote:
+>
+>> On 03/28/2014 07:29 AM, Bruno Antunes wrote:
+>>> Hi Ben,
+>>> I think you are missing some parameters
+>>>
+>>> On 28 Mar, 2014, at 14:18 , Ben Greear <greearb@candelatech.com> wrote:
+>>>
+>>>> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
+>>>>> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com> wrote:
+>>>>>> Any idea why this isn't working?
+>>>>>>
+>>>>>> Kernel is 3.9.11+, driver is ath9k.
+>>>>>>
+>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>>>>>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>>>>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>>>>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>>>>>            Encryption key:off
+>>>>>>            Power Management:off
+>>>>>>
+>>>>>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
+>>>
+>>> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
+>>>
+>>>   It should be something like:
+>>>
+>>> iw dev wlan0 set txpower fixed 1000
+>>
+>> Ok, that doesn't give an error, but 'iwconfig' still shows 16 dBm,
+>> and I don't see any way to get 'iw' to print out the power itself?
+>>
+>> So, not sure if it is really working or not.
+> It works , at least on iw 3.10.
+>
+> If you have debug enabled you can see the value changing.
 
-Affected files are net/mac80211/rate.h and net/mac80211/main.c.
+Just for posterity's sake, it seems you should really be looking
+at user_power_level:
 
-Adding an additional rate control scheme currently requires not only 
-adding the new rate control source code to the kernel, but also 
-modifying net/mac80211/rate.h to define initialization and exit 
-functions for the new scheme, and net/mac80211/main.c to add additional 
-initialization and exit calls to the added functions. This patch 
-removes the need to modify main.c when new rate control schemes are 
-added. It makes a one time modification to main.c and changes rate.h so 
-that any future rate control schemes added to mac80211 only require 
-changes to rate.h, leaving the source for main.c unchanged.
+[root@ct523-9292 lanforge]# iw dev wlan0 set txpower fixed 1000
+[root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/txpower
+0
+[root@ct523-9292 lanforge]#
 
-The basic idea is to push the all the calls to specific rate control 
-initialization and exit functions down into rate.h, using generic rate 
-control initialization and exit functions defined there, then replace 
-the explicit calls in main.c with references to the generic functions. 
-The patch has two parts.
-
-First, net/mac80211/rate.h currently conditionally expands calls to 
-rc80211_pid_{init|exit} and rc80211_minstrel_{init|exit} based on the 
-setting for CONFIG_MAC80211_RC_PID and CONFIG_MAC80211_RC_MINSTREL. The 
-patch would add two wrapper functions:
-
-static inline int mac80211_rc_init() to call all the initializers, and
-static inline void mac80211_rc_exit() to call all the exit functions.
-
-These symbols to not appear to be currently defined as of 3.12.11.
-
-Second, in net/mac80211/main.c, ieee80211_init() and ieee80211_exit() 
-currently call rc80211_pid_{init|exit} and rc80211_minstrel_{init|exit} 
-individually, relying on the conditional definitions in rate.h to 
-appropriately expand the calls. The patch replaces the initialization 
-calls in ieee80211_init() with:
-
-ret=mac80211_rc_init();
-
-and the exit calls in ieee80211_exit() with:
-
-mac80211_rc_exit();
-
-If this proposal is deemed to be a worthwhile effort, let me know the 
-appropriate version of the kernel to target, and I'll code (compile in 
-target kernel without error or warning messages using gcc 4.7.2) and 
-test (modified kernel does not crash) a formal patch and submit it to 
-wherever you deem appropriate.
-
-Additional comments and suggestions will be appreciated.
+[root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/user_power_level
+10
 
 Thanks,
+Ben
+
+>
+> On a openwrt system
+>
+> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 900
+> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
+> 9
+> root@RSPro2:/lib/wifi#  iw dev adhoc0 set txpower fixed 1500
+> root@RSPro2:/lib/wifi# cat /sys/kernel/debug/ieee80211/phy0/netdev:adhoc0/txpower
+> 15
+>
+> And the received power changes on the station confirming that is making effect.
+>
+> Bruno
+>
+>>
+>> Thanks,
+>> Ben
+>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+
+
 -- 
-Bryan
--
-Large corporations are not notably capitalistic.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
