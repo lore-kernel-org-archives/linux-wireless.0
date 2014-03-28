@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:24035 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443AbaC3Ufj (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:61485 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819AbaC1RK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Mar 2014 16:35:39 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [RFCv2 3/6] mac80211: export expected throughput in set_sta_info()
-Date: Sun, 30 Mar 2014 22:35:01 +0200
-Message-Id: <1396211704-4677-4-git-send-email-antonio@meshcoding.com> (sfid-20140330_223551_235962_30913EAA)
-In-Reply-To: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
-References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
+	Fri, 28 Mar 2014 13:10:57 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so4314565eek.11
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 10:10:56 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: fengguang.wu@intel.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, andrea.merello@gmail.com
+Subject: [PATCH 1/2] rtl8187: fix compile warning
+Date: Fri, 28 Mar 2014 18:12:08 +0100
+Message-Id: <1396026728-5569-1-git-send-email-andrea.merello@gmail.com> (sfid-20140328_181101_603139_FEC35C19)
+In-Reply-To: <5334b1ac.IdF9Kz2kTwX26Omj%fengguang.wu@intel.com>
+References: <5334b1ac.IdF9Kz2kTwX26Omj%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+ANAPARAM3 register, defined in the rtl818x common register
+struct, is accessed as 16bit by rtl8187se and as 8bit by rtl8187b.
+Since I have no documentation about this, I can only stick to
+the reference code and to what is known to work.
 
-If the RC algorithm implements the get_expected_throughput()
-API fill the related member in the station_info object when
-dumping a station.
+This issue has been addressed by a patch from Larry Finger
+that introduces an "union", in the register struct.
+In my last patch-set I applied it on the register struct, but
+I forget to update rtl8187 driver too.
+This patch does it.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Suggested-by: Larry Finger <Larry.Finger@lwfinger.net> [ Original patch ]
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
 ---
- net/mac80211/cfg.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/rtl818x/rtl8187/dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index aa39381..0e80e2c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -472,9 +472,13 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
-+	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
- 	struct timespec uptime;
- 	u64 packets = 0;
- 	int i, ac;
-+	u32 thr;
- 
- 	sinfo->generation = sdata->local->sta_generation;
- 
-@@ -587,6 +591,19 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
-+
-+	if (ref->ops->get_expected_throughput) {
-+		band = ieee80211_get_sdata_band(sta->sdata);
-+		sband = sta->local->hw.wiphy->bands[band];
-+
-+		thr = ref->ops->get_expected_throughput(ref->priv,
-+							sta->rate_ctrl_priv,
-+							sband);
-+		if (thr != 0) {
-+			sinfo->filled |= STATION_INFO_EXPECTED_THROUGHPUT;
-+			sinfo->expected_throughput = thr;
-+		}
-+	}
- }
- 
- static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+index c981bcf..2c79bcc 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -592,7 +592,7 @@ static void rtl8187_set_anaparam(struct rtl8187_priv *priv, bool rfon)
+ 	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, anaparam);
+ 	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, anaparam2);
+ 	if (priv->is_rtl8187b)
+-		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, anaparam3);
++		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3A, anaparam3);
+ 	reg &= ~RTL818X_CONFIG3_ANAPARAM_WRITE;
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
 -- 
 1.8.3.2
 
