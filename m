@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:47686 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760946AbaCUNxq (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56815 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbaC1HdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 09:53:46 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e53so1823869eek.16
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 06:53:45 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 10/13] mac80211: split ieee80211_free_chanctx()
-Date: Fri, 21 Mar 2014 14:47:28 +0100
-Message-Id: <1395409651-26120-11-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145427_625488_E4C25A81)
-In-Reply-To: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
- <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 28 Mar 2014 03:33:00 -0400
+Subject: [PATCH v2 7/8] ath10k: add module parameter values to the pci info
+ print
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Mar 2014 09:32:58 +0200
+Message-ID: <20140328073258.30438.10368.stgit@potku.adurom.net> (sfid-20140328_083304_408168_FB07F8DA)
+In-Reply-To: <20140328073040.30438.17966.stgit@potku.adurom.net>
+References: <20140328073040.30438.17966.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a little too much. Split it up so
-the code can be easily reused in the future.
+Hopefully this makes it easier to debug problems in the future.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/chan.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 561d7c1..74459a7 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -425,14 +425,11 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	return ctx;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index a4e2da3251dc..dd34ac9a682f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1955,7 +1955,9 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+ 		irq_mode = "legacy";
  
--static void ieee80211_free_chanctx(struct ieee80211_local *local,
--				   struct ieee80211_chanctx *ctx)
-+static void ieee80211_del_chanctx(struct ieee80211_local *local,
-+				  struct ieee80211_chanctx *ctx)
- {
--	bool check_single_channel = false;
- 	lockdep_assert_held(&local->chanctx_mtx);
+ 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
+-		ath10k_info("pci irq %s\n", irq_mode);
++		ath10k_info("pci irq %s irq_mode %d reset_mode %d\n",
++			    irq_mode, ath10k_pci_irq_mode,
++			    ath10k_pci_reset_mode);
  
--	WARN_ON_ONCE(ctx->refcount != 0);
--
- 	if (!local->use_chanctx) {
- 		struct cfg80211_chan_def *chandef = &local->_oper_chandef;
- 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-@@ -442,8 +439,9 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		/* NOTE: Disabling radar is only valid here for
- 		 * single channel context. To be sure, check it ...
- 		 */
--		if (local->hw.conf.radar_enabled)
--			check_single_channel = true;
-+		WARN_ON(local->hw.conf.radar_enabled &&
-+			!list_empty(&local->chanctx_list));
-+
- 		local->hw.conf.radar_enabled = false;
+ 	return 0;
  
- 		ieee80211_hw_config(local, 0);
-@@ -451,13 +449,19 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		drv_remove_chanctx(local, ctx);
- 	}
- 
--	list_del_rcu(&ctx->list);
--	kfree_rcu(ctx, rcu_head);
-+	ieee80211_recalc_idle(local);
-+}
- 
--	/* throw a warning if this wasn't the only channel context. */
--	WARN_ON(check_single_channel && !list_empty(&local->chanctx_list));
-+static void ieee80211_free_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	lockdep_assert_held(&local->chanctx_mtx);
- 
--	ieee80211_recalc_idle(local);
-+	WARN_ON_ONCE(ctx->refcount != 0);
-+
-+	list_del_rcu(&ctx->list);
-+	ieee80211_del_chanctx(local, ctx);
-+	kfree_rcu(ctx, rcu_head);
- }
- 
- static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
--- 
-1.8.5.3
 
