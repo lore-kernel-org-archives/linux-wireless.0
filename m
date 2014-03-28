@@ -1,107 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:46975 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbaCXOCW convert rfc822-to-8bit (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56753 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964AbaC1HcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 10:02:22 -0400
-Received: by mail-oa0-f52.google.com with SMTP id l6so5859073oag.11
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 07:02:21 -0700 (PDT)
+	Fri, 28 Mar 2014 03:32:24 -0400
+Subject: [PATCH v2 1/8] ath10k: cleanup ath10k_pci_wait_for_target_init()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Mar 2014 09:32:21 +0200
+Message-ID: <20140328073221.30438.67531.stgit@potku.adurom.net> (sfid-20140328_083226_572695_2898E860)
+In-Reply-To: <20140328073040.30438.17966.stgit@potku.adurom.net>
+References: <20140328073040.30438.17966.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1395669396.4515.62.camel@dubbel>
-References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
-	<1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	<1395408675-26013-4-git-send-email-michal.kazior@tieto.com>
-	<1395669396.4515.62.camel@dubbel>
-Date: Mon, 24 Mar 2014 15:02:21 +0100
-Message-ID: <CA+BoTQ=G=fXBiQ7cGi2KT2B3RP9_9_AW-mL0-ucUYCK0OYUOHQ@mail.gmail.com> (sfid-20140324_150234_129636_0E81E8B4)
-Subject: Re: [PATCH v2 3/4] cfg80211: export interface stopping function
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 March 2014 14:56, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2014-03-21 at 14:31 +0100, Michal Kazior wrote:
->> This exports a new cfg80211_stop_iface() function.
->>
->> This is intended for driver internal interface
->> combination management and channel switching.
->>
->> Due to locking issues (it re-enters driver) the
->> call is asynchronous and uses cfg80211 event
->> list/worker.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->
-> Looks good to me, with a couple of nitpicks.
->
-> [...]
->> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->> index 2f28ac4..7f0cbfb 100644
->> --- a/include/net/cfg80211.h
->> +++ b/include/net/cfg80211.h
->> @@ -4705,6 +4705,21 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
->>                               const u8 radar_detect,
->>                               const int iftype_num[NUM_NL80211_IFTYPES]);
->>
->> +/*
->> + * cfg80211_stop_iface - stop given interface
->> + *
->> + * @wiphy: the wiphy
->> + * @wdev: wireless device
->> + *
->> + * Stop interface as if AP was stopped, IBSS/mesh left, STA disconnected.
->
-> This is not very clear.  Maybe you should say that this allows the
-> driver to _trigger_ an interface to be stopped, so that it's clear that
-> all the stopping flow will take place.
+ath10k_pci_wait_for_target_init() did really follow the style used elsewhere in
+ath10k. Use ath10k_pci_read/write() wrappers, simplify the while loop and
+improve warning messages.
 
-Yeah, it's async so "trigger" makes more sense.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   40 ++++++++++++++++++++++-----------
+ 1 file changed, 27 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 9d242d801d9d..43d63677b133 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -48,6 +48,9 @@ MODULE_PARM_DESC(ath10k_target_ps, "Enable ath10k Target (SoC) PS option");
+ module_param_named(irq_mode, ath10k_pci_irq_mode, uint, 0644);
+ MODULE_PARM_DESC(irq_mode, "0: auto, 1: legacy, 2: msi (default: 0)");
+ 
++/* how long wait to wait for target to initialise, in ms */
++#define ATH10K_PCI_TARGET_WAIT 3000
++
+ #define QCA988X_2_0_DEVICE_ID	(0x003c)
+ 
+ static DEFINE_PCI_DEVICE_TABLE(ath10k_pci_id_table) = {
+@@ -2385,30 +2388,41 @@ static int ath10k_pci_deinit_irq(struct ath10k *ar)
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	int wait_limit = 300; /* 3 sec */
++	unsigned long timeout;
+ 	int ret;
++	u32 val;
+ 
+ 	ret = ath10k_pci_wake(ar);
+ 	if (ret) {
+-		ath10k_err("failed to wake up target: %d\n", ret);
++		ath10k_err("failed to wake up target for init: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	while (wait_limit-- &&
+-	       !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
+-		 FW_IND_INITIALIZED)) {
++	timeout = jiffies + msecs_to_jiffies(ATH10K_PCI_TARGET_WAIT);
++
++	do {
++		val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
++
++		/* target should never return this */
++		if (val == 0xffffffff)
++			continue;
++
++		if (val & FW_IND_INITIALIZED)
++			break;
++
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			iowrite32(PCIE_INTR_FIRMWARE_MASK |
+-				  PCIE_INTR_CE_MASK_ALL,
+-				  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+-						 PCIE_INTR_ENABLE_ADDRESS));
++			ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
++					       PCIE_INTR_FIRMWARE_MASK |
++					       PCIE_INTR_CE_MASK_ALL);
++
+ 		mdelay(10);
+-	}
++	} while (time_before(jiffies, timeout));
+ 
+-	if (wait_limit < 0) {
+-		ath10k_err("target stalled\n");
+-		ret = -EIO;
++	if (val == 0xffffffff || !(val & FW_IND_INITIALIZED)) {
++		ath10k_err("failed to receive initialized event from target: %08x\n",
++			   val);
++		ret = -ETIMEDOUT;
+ 		goto out;
+ 	}
+ 
 
->> + *
->> + * This is intended for channel switching and internal driver interface
->> + * combination management.
->
-> Not sure you need to say when this is needed.  The driver could call it
-> for any internal reason.
-
-I'll remove this sentence then unless someone has an objection? :-)
-
-
-> [...]
->> @@ -789,6 +788,37 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
->>       wdev->beacon_interval = 0;
->>  }
->>
->> +void cfg80211_leave(struct cfg80211_registered_device *rdev,
->> +                 struct wireless_dev *wdev)
->> +{
->> +     ASSERT_RTNL();
->> +
->> +     wdev_lock(wdev);
->> +     __cfg80211_leave(rdev, wdev);
->> +     wdev_unlock(wdev);
->> +}
->> +
->> +void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
->> +{
->> +     struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
->> +     struct cfg80211_event *ev;
->> +     unsigned long flags;
->> +
->> +     trace_cfg80211_stop_iface(wiphy, wdev);
->> +
->> +     ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
->
-> Is there any reason why you don't pass the GFP type to this function, as
-> in all other functions that allow the driver to queue events?
-
-Not really. I'll add the argument.
-
-
-Michał
