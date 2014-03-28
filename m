@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:50432 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbaCZNFs (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:48935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbaC1NLQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Mar 2014 09:05:48 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v5 4/4] brcmfmac: set NET_NAME_USER for P2P ifs
-Date: Wed, 26 Mar 2014 14:05:17 +0100
-Message-Id: <1395839117-20090-5-git-send-email-dh.herrmann@gmail.com> (sfid-20140326_140716_610672_C030E538)
-In-Reply-To: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
-References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+	Fri, 28 Mar 2014 09:11:16 -0400
+Message-ID: <1396012272.4175.27.camel@jlt4.sipsolutions.net> (sfid-20140328_141120_033765_2579CE98)
+Subject: Re: [PATCH v2 12/13] mac80211: compute chanctx refcount on-the-fly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Mar 2014 14:11:12 +0100
+In-Reply-To: <1395409651-26120-13-git-send-email-michal.kazior@tieto.com> (sfid-20140321_145348_783692_069A202E)
+References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1395409651-26120-13-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140321_145348_783692_069A202E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Netdevs created via nl80211 (currently only P2P ifs) have names provided
-by user-space. Therefore, set the naming-policy to NET_NAME_USER so it is
-correctly shown in sysfs.
+On Fri, 2014-03-21 at 14:47 +0100, Michal Kazior wrote:
+> It doesn't make much sense to store refcount in
+> the chanctx structure. One still needs to hold
+> chanctx_mtx to get the value safely. Besides,
+> refcount isn't on performance critical paths.
+> 
+> This will make implementing chanctx reservation
+> refcounting a little easier.
 
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
- 1 file changed, 1 insertion(+)
+Why bother with patch 11 then?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index f3445ac..f721ed6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2308,6 +2308,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- 		goto fail;
- 	}
- 
-+	ifp->ndev->name_assign_type = NET_NAME_USER;
- 	strncpy(ifp->ndev->name, name, sizeof(ifp->ndev->name) - 1);
- 	err = brcmf_net_attach(ifp, true);
- 	if (err) {
--- 
-1.9.1
+johannes
 
