@@ -1,29 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13904 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751900AbaCaLYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:24:47 -0400
-Message-ID: <53394F5A.5000306@redhat.com> (sfid-20140331_132511_869686_585E46C0)
-Date: Mon, 31 Mar 2014 13:19:54 +0200
-From: Denys Vlasenko <dvlasenk@redhat.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27295 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbaC1PAh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 11:00:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add extra pdev stats on 10.1 firmware
+References: <1395744573-13691-1-git-send-email-yeohchunyeow@gmail.com>
+Date: Fri, 28 Mar 2014 17:00:32 +0200
+In-Reply-To: <1395744573-13691-1-git-send-email-yeohchunyeow@gmail.com>
+	(Chun-Yeow Yeoh's message of "Tue, 25 Mar 2014 18:49:33 +0800")
+Message-ID: <877g7ev04v.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_160041_043082_A8330983)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save
- 440 bytes
-References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com> <53391B89.7010304@broadcom.com> <53394F23.6080805@redhat.com>
-In-Reply-To: <53394F23.6080805@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2014 01:18 PM, Denys Vlasenko wrote:
-> The script removes "static" keyword, recompiles the .c file,
-> compares the sizes, and if code size went down,
-> creates a patch
+Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
 
-Erm... I meant, "removes 'inline' keyword".
-"static", or course, is not removed.
+> As pointed out by Michal Kazior, add extra pdev stats
+> for 10.1 firmware.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+
+Thanks, applied.
+
+-- 
+Kalle Valo
