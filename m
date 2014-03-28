@@ -1,94 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65201 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbaCNTCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Mar 2014 15:02:51 -0400
-Message-ID: <1394823891.5829.14.camel@dcbw.local> (sfid-20140314_200255_009146_624F8CCC)
-Subject: Re: [PATCH v4 00/11] rsi: Adding RS9113 wireless driver.
-From: Dan Williams <dcbw@redhat.com>
-To: fariyaf@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 14 Mar 2014 14:04:51 -0500
-In-Reply-To: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
-References: <1394465199-10042-1-git-send-email-fariyaf@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:59670 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbaC1HkZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 03:40:25 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d17so3703758eek.15
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 00:40:24 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/3] ath10k: deinit copy engine before resetting
+Date: Fri, 28 Mar 2014 08:34:25 +0100
+Message-Id: <1395992065-10086-4-git-send-email-michal.kazior@tieto.com> (sfid-20140328_084032_070667_29D3ACEF)
+In-Reply-To: <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
+References: <1395745943-29492-1-git-send-email-michal.kazior@tieto.com>
+ <1395992065-10086-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-10 at 20:56 +0530, fariyaf@gmail.com wrote:
-> From: Fariya Fatima <fariyaf@gmail.com>
-> 
-> This series of patches adds Redpine Signals wireless driver.
+Since copy engine allocation has been revised the
+ath10k_pci_ce_deinit() now simply zeroes copy
+engine registers. It's probably a good idea to do
+that before reseting for a more graceful device
+reset.
 
-Looking much better, good work.
+Before ath10k_pci_ce_deinit() freed copy engine
+ringbuffer memory so it was required to call it
+after resetting. Otherwise it was possible for
+device to access unmapped/freed copy engine
+ringbuffer memory.
 
-One last comment; there are a couple functions (rsi_device_init,
-rsi_host_intf_write_pkt) that are defined multiple times, once in the
-USB code and once in the SDIO code.  These need to be renamed, otherwise
-you will not be able to load the USB and the SDIO modules at the same
-time.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * added as a result of splitting another patch
 
-I would suggest making all the functions in rsi_usb.h start with
-"rsi_usb" if they don't already, and have functions in rsi_sdio.h start
-with "rsi_sdio" if they don't already.
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Dan
-
-> Fariya Fatima (11):
->   Adding RS9113 driver header files
->   Adding remaining header files
->   Adding core and main files.
->   Writing packets to device and debugfs.
->   MAC80211 callbacks to driver.
->   MAC80211 callbacks and management functions internal to device.
->   Management functions internal to the device.
->   USB functionality
->   SDIO functionality.
->   Remaining SDIO functionality.
->   Makefile and Kconfig
-> 
->  drivers/net/wireless/Kconfig                |    1 +
->  drivers/net/wireless/Makefile               |    1 +
->  drivers/net/wireless/rsi/Kconfig            |   30 +
->  drivers/net/wireless/rsi/Makefile           |   12 +
->  drivers/net/wireless/rsi/rsi_91x_core.c     |  342 +++++++
->  drivers/net/wireless/rsi/rsi_91x_debugfs.c  |  339 +++++++
->  drivers/net/wireless/rsi/rsi_91x_mac80211.c | 1008 +++++++++++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_main.c     |  270 ++++++
->  drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 1302 +++++++++++++++++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_pkt.c      |  195 ++++
->  drivers/net/wireless/rsi/rsi_91x_sdio.c     |  845 +++++++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  566 ++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_usb.c      |  572 ++++++++++++
->  drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  177 ++++
->  drivers/net/wireless/rsi/rsi_boot_params.h  |  126 +++
->  drivers/net/wireless/rsi/rsi_common.h       |   87 ++
->  drivers/net/wireless/rsi/rsi_debugfs.h      |   48 +
->  drivers/net/wireless/rsi/rsi_main.h         |  232 +++++
->  drivers/net/wireless/rsi/rsi_mgmt.h         |  285 ++++++
->  drivers/net/wireless/rsi/rsi_sdio.h         |  129 +++
->  drivers/net/wireless/rsi/rsi_usb.h          |   70 ++
->  21 files changed, 6637 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/net/wireless/rsi/Kconfig
->  create mode 100644 drivers/net/wireless/rsi/Makefile
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_core.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_debugfs.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_mac80211.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_main.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_mgmt.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_sdio.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_91x_usb_ops.c
->  create mode 100644 drivers/net/wireless/rsi/rsi_boot_params.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_common.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_debugfs.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_main.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_mgmt.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_sdio.h
->  create mode 100644 drivers/net/wireless/rsi/rsi_usb.h
-> 
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 10bf612..52c8c0d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2000,9 +2000,9 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 	ath10k_pci_free_early_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+ 	ath10k_pci_deinit_irq(ar);
++	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_warm_reset(ar);
+ 
+-	ath10k_pci_ce_deinit(ar);
+ 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_sleep(ar);
+ }
+-- 
+1.8.5.3
 
