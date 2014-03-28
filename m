@@ -1,84 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:42206 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753288AbaCXOzv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 10:55:51 -0400
-Message-ID: <1395672943.4515.66.camel@dubbel> (sfid-20140324_155554_316450_6ED8E07D)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Mon, 24 Mar 2014 16:55:43 +0200
-In-Reply-To: <1395408675-26013-5-git-send-email-michal.kazior@tieto.com>
-References: <1394029623-21894-1-git-send-email-michal.kazior@tieto.com>
-	 <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	 <1395408675-26013-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:40849 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbaC1VCZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Mar 2014 17:02:25 -0400
+Date: Fri, 28 Mar 2014 17:02:22 -0400 (EDT)
+Message-Id: <20140328.170222.346040641241669437.davem@davemloft.net> (sfid-20140328_220253_618247_9CA37FB6)
+To: dh.herrmann@gmail.com
+Cc: netdev@vger.kernel.org, teg@jklm.no, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CANq1E4TxaNnZoqfw5DiifAhk28hVq5HJJMd07ZDFAjdc68nKKg@mail.gmail.com>
+References: <1395839117-20090-1-git-send-email-dh.herrmann@gmail.com>
+	<20140328.145410.1817326821928803131.davem@davemloft.net>
+	<CANq1E4TxaNnZoqfw5DiifAhk28hVq5HJJMd07ZDFAjdc68nKKg@mail.gmail.com>
 Mime-Version: 1.0
-Subject: Re: [PATCH v2 4/4] mac80211: disconnect iface if CSA unexpectedly
- fails
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-21 at 14:31 +0100, Michal Kazior wrote:
-> It doesn't make much sense to leave a cripled
-> interface running.
-> 
-> As a side effect this will unblock tx queues with
-> CSA reason immediately after failure instead of
-> until after userspace requests interface to stop.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  net/mac80211/cfg.c | 17 +++++++++++++----
->  1 file changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 65768ef..64e152d 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -3088,7 +3088,7 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
->  	return 0;
->  }
->  
-> -static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-> +static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->  {
->  	struct ieee80211_local *local = sdata->local;
->  	u32 changed = 0;
-> @@ -3100,7 +3100,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
->  	sdata->radar_required = sdata->csa_radar_required;
->  	err = ieee80211_vif_change_channel(sdata, &changed);
->  	if (WARN_ON(err < 0))
-> -		return;
-> +		return err;
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 28 Mar 2014 20:34:47 +0100
 
-Now you propagate the error up, do we still need the WARN_ON here?
+> However, as mentioned in the discussions on v1, there're more
+> use-cases than that. Imagine a 3rd party initrd renames a
+> network-device early, if udev runs in the main system, we would rename
+> the device again. If we could detect the rename via NET_NAME_RENAMED,
+> we wouldn't break such setups. The only reason to rename devices in
+> udev is to get reliable names. If someone else already renamed a
+> device, we always expect them to provide better names than we do, so
+> udev should only touch devices that have kernel-enumerated names.
+> Of course, this can be fixed by requiring all the initrd developers to
+> somehow tag devices as already renamed. But this would replicate
+> information that the kernel already has.
 
-[...]
-> @@ -3123,6 +3125,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
->  		container_of(work, struct ieee80211_sub_if_data,
->  			     csa_finalize_work);
->  	struct ieee80211_local *local = sdata->local;
-> +	int err;
->  
->  	sdata_lock(sdata);
->  	mutex_lock(&local->mtx);
-> @@ -3134,7 +3137,13 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
->  	if (!ieee80211_sdata_running(sdata))
->  		goto unlock;
->  
-> -	ieee80211_csa_finalize(sdata);
-> +	err = ieee80211_csa_finalize(sdata);
-> +	if (err) {
-> +		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
-> +		cfg80211_stop_iface(local->hw.wiphy, &sdata->wdev);
-> +		goto unlock;
-> +	}
-> +
+You want to use the kernel to facilitate communication between two
+userland components.
 
-This is neat. :) Maybe it's possible to do the same thing in mlme.c and
-get rid of the connection_drop_work?
+Imagine if we had to do that for everything.
 
---
-Luca.
-
+Really, it's not a good reason, sorry.
