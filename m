@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:46809 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680AbaCRN7V (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:33306 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbaC1I2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:21 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so5417747eek.34
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 11/21] mac80211: fix racy usage of chanctx->refcount
-Date: Tue, 18 Mar 2014 14:53:14 +0100
-Message-Id: <1395150804-24090-12-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145938_007831_D3FBBA3D)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 28 Mar 2014 04:28:23 -0400
+Date: Fri, 28 Mar 2014 11:28:11 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: fariyaf@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: rsi: Add RS9113 wireless driver
+Message-ID: <20140328082811.GL25192@mwanda> (sfid-20140328_092829_821291_8D328B07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel context refcount is protected by
-chanctx_mtx. Accessing the value without holding
-the mutex is racy. RCU section didn't guarantee
-anything here.
+Hello Fariya Fatima,
 
-Theoretically ieee80211_channel_switch() could
-fail to see refcount change and read "1" instead
-of, e.g. "2". This means mac80211 could accept CSA
-even though it shouldn't have.
+The patch dad0d04fa7ba: "rsi: Add RS9113 wireless driver" from Mar
+16, 2014, leads to the following static checker warning:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+	drivers/net/wireless/rsi/rsi_91x_core.c:121 rsi_core_determine_hal_queue()
+	error: buffer overflow 'common->tx_qinfo' 4 <= 4
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 137d379..61b62f4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3225,7 +3225,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
- 	int err, num_chanctx, changed = 0;
- 
-@@ -3241,23 +3241,24 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 				       &sdata->vif.bss_conf.chandef))
- 		return -EINVAL;
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!chanctx_conf) {
--		rcu_read_unlock();
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		mutex_unlock(&local->chanctx_mtx);
- 		return -EBUSY;
- 	}
- 
- 	/* don't handle for multi-VIF cases */
--	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
-+	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
- 	if (chanctx->refcount > 1) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->chanctx_mtx);
- 		return -EBUSY;
- 	}
- 	num_chanctx = 0;
- 	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
- 		num_chanctx++;
--	rcu_read_unlock();
-+	mutex_unlock(&local->chanctx_mtx);
- 
- 	if (num_chanctx > 1)
- 		return -EBUSY;
--- 
-1.8.5.3
+This is probably a false positive.
 
+drivers/net/wireless/rsi/rsi_91x_core.c
+   104  get_queue_num:
+   105          q_num = 0;
+                ^^^^^^^^^
+Unneeded assignment.
+
+   106          recontend_queue = false;
+   107  
+   108          q_num = rsi_determine_min_weight_queue(common);
+                ^^^^^
+q_num = 0-4.
+
+   109          q_len = skb_queue_len(&common->tx_queue[ii]);
+   110          ii = q_num;
+   111  
+   112          /* Selecting the queue with least back off */
+   113          for (; ii < NUM_EDCA_QUEUES; ii++) {
+   114                  if (((common->tx_qinfo[ii].pkt_contended) &&
+   115                       (common->tx_qinfo[ii].weight < min)) && q_len) {
+   116                          min = common->tx_qinfo[ii].weight;
+   117                          q_num = ii;
+   118                  }
+   119          }
+   120  
+   121          common->tx_qinfo[q_num].pkt_contended = 0;
+                                 ^^^^^
+4 is too high.
+
+   122          /* Adjust the back off values for all queues again */
+   123          recontend_queue = rsi_recalculate_weights(common);
+
+regards,
+dan carpenter
