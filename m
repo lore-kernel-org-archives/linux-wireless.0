@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:65516 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754186AbaCRN7H (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:43097 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbaC1OYe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:07 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so5365796eek.20
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:06 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 01/21] mac80211: add support for radar detection for reservations
-Date: Tue, 18 Mar 2014 14:53:04 +0100
-Message-Id: <1395150804-24090-2-git-send-email-michal.kazior@tieto.com> (sfid-20140318_145926_405091_0F943B19)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 28 Mar 2014 10:24:34 -0400
+Received: by mail-vc0-f177.google.com with SMTP id if17so5850361vcb.36
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:24:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87wqfev2ml.fsf@kamboji.qca.qualcomm.com>
+References: <20140328132849.31620.78501.stgit@potku.adurom.net>
+	<CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com>
+	<87wqfev2ml.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 28 Mar 2014 22:24:33 +0800
+Message-ID: <CAEFj985Xq-_QRmdOsFKEM0kA40TpgKL6t1DW8yXSPY6dn=R2LA@mail.gmail.com> (sfid-20140328_152437_028513_529CA392)
+Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initial chanctx reservation code wasn't aware of
-radar detection requirements. This is necessary
-for chanctx reservations to be used for channel
-switching in the future.
+On Fri, Mar 28, 2014 at 10:06 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> From: Bartosz Markowski <bartosz.markowski@tieto.com>
+>>>
+>>> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
+>>> can return per-VDEV statistics. Using debugfs we can fetch this info now.
+>>>
+>>> This is a backward compatible change. In case of older FW the VDEV
+>>> statistics are simply not returned.
+>>>
+>>> kvalo: remove struct wmi_peer_stats_common cast from
+>>> ath10k_debug_read_target_stats()
+>>
+>> I just glanced over the patch and I don't think this is correct.
+>>
+>> Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
+>
+> Ok, I need to take a closer look at this. If someone else wants to look
+> at this instead, feel free to do that :)
+>
+I up two AP interfaces in same physical but not able to see two
+different vdev in get stats.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c        | 5 ++++-
- net/mac80211/ieee80211_i.h | 4 +++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 74b0df6..a3704d4 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -723,7 +723,8 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
- 
- int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 				  const struct cfg80211_chan_def *chandef,
--				  enum ieee80211_chanctx_mode mode)
-+				  enum ieee80211_chanctx_mode mode,
-+				  bool radar_required)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *conf;
-@@ -764,6 +765,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 	new_ctx->refcount++;
- 	sdata->reserved_chanctx = new_ctx;
- 	sdata->reserved_chandef = *chandef;
-+	sdata->reserved_radar_required = radar_required;
- out:
- 	mutex_unlock(&local->chanctx_mtx);
- 	return ret;
-@@ -808,6 +810,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 	/* unref our reservation */
- 	ctx->refcount--;
- 	sdata->reserved_chanctx = NULL;
-+	sdata->radar_required = sdata->reserved_radar_required;
- 
- 	if (old_ctx == ctx) {
- 		/* This is our own context, just change it */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a32d62d..15556fe 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -759,6 +759,7 @@ struct ieee80211_sub_if_data {
- 	/* context reservation -- protected with chanctx_mtx */
- 	struct ieee80211_chanctx *reserved_chanctx;
- 	struct cfg80211_chan_def reserved_chandef;
-+	bool reserved_radar_required;
- 
- 	/* used to reconfigure hardware SM PS */
- 	struct work_struct recalc_smps;
-@@ -1776,7 +1777,8 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- int __must_check
- ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 			      const struct cfg80211_chan_def *chandef,
--			      enum ieee80211_chanctx_mode mode);
-+			      enum ieee80211_chanctx_mode mode,
-+			      bool radar_required);
- int __must_check
- ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 				   u32 *changed);
--- 
-1.8.5.3
-
+----
+Chun-Yeow
