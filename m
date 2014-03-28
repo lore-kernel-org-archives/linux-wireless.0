@@ -1,42 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54834 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbaC1O7S (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:48380 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbaC1OjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:59:18 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: Re: [PATCH v2] ath10k:  add the Rx rate in FW stats
-References: <1395441560-6028-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 28 Mar 2014 16:59:10 +0200
-In-Reply-To: <1395441560-6028-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Fri, 21 Mar 2014 15:39:20
-	-0700")
-Message-ID: <87bnwqv075.fsf@kamboji.qca.qualcomm.com> (sfid-20140328_155921_838470_EC289BAC)
+	Fri, 28 Mar 2014 10:39:11 -0400
+Received: by mail-wi0-f182.google.com with SMTP id d1so832300wiv.3
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:39:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <533584BF.70604@candelatech.com>
+References: <5334F8E7.1070803@candelatech.com>
+	<CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
+	<533584BF.70604@candelatech.com>
+Date: Fri, 28 Mar 2014 15:39:09 +0100
+Message-ID: <CA+icZUUBH5zp4nVnP-B_tGUskn=Fsvcr5Ebo-QR7Joh8dYgmvQ@mail.gmail.com> (sfid-20140328_153915_770540_852E9B25)
+Subject: Re: Setting txpower fails?
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+On Fri, Mar 28, 2014 at 3:18 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 03/28/2014 12:27 AM, Sedat Dilek wrote:
+>>
+>> On Fri, Mar 28, 2014 at 5:21 AM, Ben Greear <greearb@candelatech.com>
+>> wrote:
+>>>
+>>> Any idea why this isn't working?
+>>>
+>>> Kernel is 3.9.11+, driver is ath9k.
+>>>
+>>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>>            Encryption key:off
+>>>            Power Management:off
+>>>
+>>> [root@ct523-9292 lanforge]# iwconfig wlan0 txpower 10
+>>> [root@ct523-9292 lanforge]# echo $?
+>>> 0
+>>> [root@ct523-9292 lanforge]# iwconfig wlan0
+>>> wlan0     IEEE 802.11abgn  ESSID:off/any
+>>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>>>            Retry short limit:7   RTS thr:off   Fragment thr:off
+>>>            Encryption key:off
+>>>            Power Management:off
+>>>
+>>> [root@ct523-9292 lanforge]#
+>>>
+>>
+>> Which version of wireless-tools?
+>> Why don't you use modern iw?
+>
+>
+> Do you know the right incantation for 'iw'?  From it's help, it seems
+> this should work, but it throws an error.  I haven't dug into the
+> code to figure out why...
+>
+> [root@ct523-9292 lanforge]# iw dev wlan0 set txpower 10
+> Invalid parameter: 10
+>
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> FW stats does provide the Rx rate information. Add this.
-> Tested with firmware 10x firmware.
->
-> Increase buffer size so more peers can be shown.
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->
-> v2:  Re-work Chun-Yeow's patch to hopefully be backwards compat
->      with pre 10.x firmware.  I tested on modified 10x firmware.
+I have found [1] in the wiki.
+For more details and a quick answer try to ask on IRC?
 
-Thanks, applied.
+- Sedat -
 
--- 
-Kalle Valo
+[1] http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
+
+> [root@ct523-9292 lanforge]# iwconfig --version
+> iwconfig  Wireless-Tools version 29
+>           Compatible with Wireless Extension v11 to v22.
+>
+> Kernel    Currently compiled with Wireless Extension v22.
+>
+> sta211    Recommend Wireless Extension v21 or later,
+>           Currently compiled with Wireless Extension v22.
+> ...
+>
+>
+> Thanks,
+> Ben
+>
+>>
+>> - Sedat -
+>>
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
