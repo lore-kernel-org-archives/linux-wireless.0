@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:43159 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaCVJCX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Mar 2014 05:02:23 -0400
-Received: by mail-we0-f178.google.com with SMTP id u56so2168144wes.37
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Mar 2014 02:02:21 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/10] staging: vt6656: rxtx s_vFillTxKey Fix pdwIV base type
-Date: Sat, 22 Mar 2014 09:01:24 +0000
-Message-Id: <1395478892-3419-2-git-send-email-tvboxspy@gmail.com> (sfid-20140322_100227_221737_8EFBF5AA)
-In-Reply-To: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
-References: <1395478892-3419-1-git-send-email-tvboxspy@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:37431 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751113AbaC2FrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2014 01:47:03 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Bruno Antunes <baantunes@gmail.com>,
+	linux-wireless@vger.kernel.org, sedat.dilek@gmail.com
+Subject: Re: Setting txpower fails?
+References: <5334F8E7.1070803@candelatech.com>
+	<CA+icZUVe7Mwf2P=Jk3rHvqZEDf3otOP7DwM=y7_LVHd4t_koQA@mail.gmail.com>
+	<533584BF.70604@candelatech.com>
+	<4CC49FDB-1767-4A3F-9C1D-8F8DCF612233@gmail.com>
+	<53358920.6030304@candelatech.com>
+	<8BD1BFE8-263F-4EDC-8044-30F4FBC44041@gmail.com>
+	<53358EFB.1030308@candelatech.com>
+	<E322ACF2-B0A6-45D9-93C8-85F68176DCB2@gmail.com>
+	<53359475.60904@candelatech.com>
+Date: Sat, 29 Mar 2014 07:02:45 +0200
+In-Reply-To: <53359475.60904@candelatech.com> (Ben Greear's message of "Fri,
+	28 Mar 2014 08:25:41 -0700")
+Message-ID: <87mwg9k362.fsf@purkki.adurom.net> (sfid-20140329_064738_587023_DCDCE520)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use base type __le32 and endian correct changed values.
+Ben Greear <greearb@candelatech.com> writes:
 
-Correct endian conversions to cpu_to_le32.
+>>> [root@ct523-9292 lanforge]# iw dev wlan0 set txpower fixed 1000
+>>> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/txpower
+>>> 0
+>>> [root@ct523-9292 lanforge]#
+>>>
+>>> [root@ct523-9292 lanforge]# cat /debug/ieee80211/wiphy0/netdev\:wlan0/user_power_level
+>>> 10
+>>>
+>> Not on all systems...
+>
+> I suspect the difference is that my wlan0 is not actually connected,
+> and it will probably show correct 'txpower' when it is connected.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+I also recall openwrt having some custom tx power patches. They might
+make a difference as well.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 9f80a7a..f2f96ee 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -181,7 +181,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 	struct vnt_mic_hdr *mic_hdr)
- {
- 	u8 *pbyBuf = (u8 *)&fifo_head->adwTxKey[0];
--	u32 *pdwIV = (u32 *)pbyIVHead;
-+	__le32 *pdwIV = (__le32 *)pbyIVHead;
- 	u32 *pdwExtIV = (u32 *)((u8 *)pbyIVHead + 4);
- 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyHdrBuf;
- 	__le32 rev_iv_counter;
-@@ -191,7 +191,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 		return;
- 
- 	rev_iv_counter = cpu_to_le32(pDevice->dwIVCounter);
--	*pdwIV = pDevice->dwIVCounter;
-+	*pdwIV = cpu_to_le32(pDevice->dwIVCounter);
- 	pDevice->byKeyIndex = pTransmitKey->dwKeyIndex & 0xf;
- 
- 	switch (pTransmitKey->byCipherSuite) {
-@@ -213,9 +213,8 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 			memcpy(pDevice->abyPRNG, pbyBuf, 16);
- 		}
- 		/* Append IV after Mac Header */
--		*pdwIV &= WEP_IV_MASK;
--		*pdwIV |= (u32)pDevice->byKeyIndex << 30;
--		*pdwIV = cpu_to_le32(*pdwIV);
-+		*pdwIV &= cpu_to_le32(WEP_IV_MASK);
-+		*pdwIV |= cpu_to_le32((u32)pDevice->byKeyIndex << 30);
- 
- 		pDevice->dwIVCounter++;
- 		if (pDevice->dwIVCounter > WEP_IV_MASK)
-@@ -256,7 +255,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
- 		*(pbyIVHead+3) = (u8)(((pDevice->byKeyIndex << 6) &
- 							0xc0) | 0x20);
- 
--		*pdwIV |= cpu_to_le16((u16)(pTransmitKey->wTSC15_0));
-+		*pdwIV |= cpu_to_le32((u32)(pTransmitKey->wTSC15_0));
- 
- 		/* Append IV&ExtIV after Mac Header */
- 		*pdwExtIV = cpu_to_le32(pTransmitKey->dwTSC47_16);
 -- 
-1.9.0
-
+Kalle Valo
