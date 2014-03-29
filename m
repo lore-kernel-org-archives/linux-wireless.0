@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:41888 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbaCYIL6 convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:58514 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898AbaC2TtL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 04:11:58 -0400
-Received: by mail-ob0-f170.google.com with SMTP id uz6so123478obc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:11:58 -0700 (PDT)
+	Sat, 29 Mar 2014 15:49:11 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so4502333wgh.34
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2014 12:49:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Tue, 25 Mar 2014 09:11:57 +0100
-Message-ID: <CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com> (sfid-20140325_091205_344910_BAD3B4FE)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20140329.153737.671362434625537776.davem@davemloft.net>
+References: <CAG-2HqVQ-MAZgsZAkykvVtbtYgDA3bfJA5rEqpdX5vBqPTjLJg@mail.gmail.com>
+ <20140328.214254.1620280677250220442.davem@davemloft.net> <CAG-2HqWQsLPaaHxMFn5Bha0BGKSAVZV9n87KTCsbQ1ewktzZvA@mail.gmail.com>
+ <20140329.153737.671362434625537776.davem@davemloft.net>
+From: Kay Sievers <kay@vrfy.org>
+Date: Sat, 29 Mar 2014 20:48:47 +0100
+Message-ID: <CAPXgP11ce5zXePU=idVqXRREpXpNTa4HBcvyq_hh1pdiVJme8Q@mail.gmail.com> (sfid-20140329_205001_163167_1361040C)
+Subject: Re: [PATCH v5 0/4] Provide netdev naming-policy via sysfs
+To: David Miller <davem@davemloft.net>
+Cc: Tom Gundersen <teg@jklm.no>,
+	David Herrmann <dh.herrmann@gmail.com>, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2014 08:55, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> This patch is intended to fix the problem if we use the
-> firmware 999.999.0.636 to get peer stats when the number
-> of peer is more than 3. The WMI_UPDATE_STATS_EVENTID may
-> trigger more than 1 time if the number of peers is more
-> than 3. So this patch allows us to do the checking on this
-> and make sure that we print the peer stats correctly.
+On Sat, Mar 29, 2014 at 8:37 PM, David Miller <davem@davemloft.net> wrote:
+> From: Tom Gundersen <teg@jklm.no>
+> Date: Sat, 29 Mar 2014 10:46:02 +0100
 >
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/debug.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>> The issue I see with that is that there are several ways to generate
+>> predictable names, and the user may want to chose between them, so
+>> this is arguably policy that should not be in the kernel. If you don't
+>> think that's a problem, I'd be happy to submit a patch to move all
+>> this logic from udev to the kernel, just let me know how you see it.
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> index 7be284c..4a4072e 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -245,10 +245,17 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
->         if (num_peer_stats) {
->                 struct wmi_peer_stats_10x *peer_stats;
->                 struct ath10k_peer_stat *s;
-> +               int j = 0;
-> +
-> +               if (!test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features) &&
-> +                   !num_pdev_stats) {
-> +                       j = 3;
-> +                       num_peer_stats += 3;
-> +               }
+> Unfortunately, we have already allowed this kind of thing for setting
+> MAC addresses so I guess I'll have to allow your changes to be applied.
 >
->                 stats->peers = num_peer_stats;
->
-> -               for (i = 0; i < num_peer_stats; i++) {
-> +               for (i = j; i < num_peer_stats; i++) {
->                         peer_stats = (struct wmi_peer_stats_10x *)tmp;
->                         s = &stats->peer_stat[i];
+> But before I ask you to resubmit, do you have full buy-in from the
+> udev folks for this facility?
 
-I suppose there's a limit how much peer entries firmware is able to
-pack up into a single event. The second event you handle here is still
-going to have some sort of a limit and you'll end up dropping results
-again. The same probably goes with vdev stats (which aren't handled
-yet, but hey).
+Absolutely, it is very useful to have.
 
-I think a better approach would be to make read_target_stats *append*
-data to the stats structure and make ath10k wait for more possible
-events instead of being satisfied with just one.
+Today, there is no way for userland to distinguish explicitly
+requested and predictable names provided by tools, from unpredictable
+names composed by the kernel itself by adding an unpredictable
+enumeration number.
 
-The way you do it now seems like you end up with the extra results
-being shown upon *next* stat request-response.. i.e. you see old
-results.
+It allows us the work around the common problems in general purpose
+Linux, where we have no strong dependencies, not necessarily central
+management, and loose coupling between components.
 
+This information will allow us to apply best-effort or common sense to
+the default udev device name policies, like:
+  - leave the name alone if someone has asked explicitly for that name
+  - leave the name alone if someone else has already renamed it after
+its first creation
 
-Michał
+So, having that information in /sys would be very welcome from udev's
+point of view.
+
+Thanks,
+Kay
