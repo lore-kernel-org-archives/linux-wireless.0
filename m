@@ -1,129 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52232 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbaCAUR2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:17:28 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 14/23] ath9k_htc: use ath9k_cmn_beacon_config_sta
-Date: Sat,  1 Mar 2014 21:15:57 +0100
-Message-Id: <1393704966-13985-15-git-send-email-linux@rempel-privat.de> (sfid-20140301_214709_913250_61C15715)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-yk0-f172.google.com ([209.85.160.172]:52783 "EHLO
+	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064AbaC2Sn7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Mar 2014 14:43:59 -0400
+Received: by mail-yk0-f172.google.com with SMTP id 200so4857064ykr.31
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2014 11:43:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5336D767.7050304@meshcoding.com>
+References: <773DB8A82AB6A046AE0195C68612A31901734186@sbs2003.acksys.local>
+ <773DB8A82AB6A046AE0195C68612A31901734187@sbs2003.acksys.local>
+ <20140328132204.GB18560@localhost> <5336D767.7050304@meshcoding.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Sat, 29 Mar 2014 22:43:38 +0400
+Message-ID: <CAHNKnsSWBLhjsbByPz4hG5M2YY7AtG6qtEaXDnQF2W+ts1Qr2g@mail.gmail.com> (sfid-20140329_194415_227536_BE2152D4)
+Subject: Re: TR: [RFC] 802.11s bitrate correction in airtime metric calculation
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	open80211s <devel@lists.open80211s.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 84 +------------------------
- 1 file changed, 2 insertions(+), 82 deletions(-)
+2014-03-29 18:23 GMT+04:00 Antonio Quartulli <antonio@meshcoding.com>:
+> Hello,
+>
+> On 28/03/14 14:22, Bob Copeland wrote:
+>> On Fri, Mar 28, 2014 at 11:15:06AM +0100, Cedric VONCKEN wrote:
+>>> Hi all,
+>>>
+>>> I am currently using 802.11s for a project using openWrt mesh portals.
+>>> All mesh points use 802.11a (non HT) and minstrel. Airtime metric uses a
+>>> "rate"
+>>> which is ultimately computed using sta->last_tx_rate from minstrel.
+>>>
+>>> This last_tx_rate is also updated by minstrel attempts at lower and
+>>> higher speeds. Even if these occasional attempts are outnumbered by
+>>> frames at max_tp_rate[0], they cause unexpected airtime metric
+>>> variations resulting in unneeded mesh path changes.
+>>> My idea is to use max_tp_rate[0] (from minstrel) instead. This rate is
+>>> not subject to minstrel attempts and directly reflects the speed used
+>>> for the vast majority of the frames.
+>>
+>> Interesting -- I tried this exact thing once before, but got mixed results
+>> in my testing.
+>>
+>> Can you share your testing strategy?
+>>
+>> It's true that last_tx_rate is sub-optimal here, but I feel like using
+>> max_tp_rate directly is a layering violation.  Many rate controllers
+>> won't have that concept, and some rate controllers will exist entirely
+>> in firmware.  So I think perhaps fixing the concept of "last_tx_rate" or
+>> adding a new "best_tx_rate" field that excludes probes and such might be
+>> the way forward, rather than calling into the rate controllers.
+>>
+>
+> Some time ago I raised a similar problem when trying to extract a
+> reasonable value from the RC algorithm to be used in a new metric for
+> batman-adv.
+>
+> I wanted something that could represent the "available bandwidth", so
+> the first idea was to use "max_tp_rate" and its probability of success.
+> Unfortunately these two values are meaningful if we are using minstrel,
+> but mostly meaningless for other RC algorithms, therefore nobody (in
+> particular Johannes) liked the idea of "exporting" the two separately.
+>
+> Then we realised that a sort of "estimated throughput/bandwidth" is
+> something that any RC algorithm can somewhat provide and that can
+> therefore be exported by a generic RC API[1].
+>
+> The "expected throughput" should be computed by minstrel as the product
+> of the max_tp_rate and its probability of success.
+>
+> I talked a bit about this with Bob on IRC and it seems that this could
+> be a viable approach for 11s as well (even if it requires a
+> rearrangement of the way ALM is computed).
+>
+Seems that this could be useful even for end user if we export these
+data via NL80211, since last_tx_rate is quite meaningless when using
+minstrel rate control.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 9ff9e6e..fc16c10 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -62,97 +62,17 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 	}
- }
- 
--
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 					struct ath_beacon_config *bss_conf)
- {
--	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_beacon_state bs;
- 	enum ath9k_int imask = 0;
--	int dtimperiod, dtimcount;
--	int bmiss_timeout;
--	u32 nexttbtt = 0, intval, tsftu;
- 	__be32 htc_imask = 0;
--	u64 tsf;
--	int num_beacons, offset, dtim_dec_count;
- 	int ret __attribute__ ((unused));
- 	u8 cmd_rsp;
- 
--	memset(&bs, 0, sizeof(bs));
--
--	intval = bss_conf->beacon_interval;
--	bmiss_timeout = (ATH_DEFAULT_BMISS_LIMIT * bss_conf->beacon_interval);
--
--	/*
--	 * Setup dtim parameters according to
--	 * last beacon we received (which may be none).
--	 */
--	dtimperiod = bss_conf->dtim_period;
--	if (dtimperiod <= 0)		/* NB: 0 if not known */
--		dtimperiod = 1;
--	dtimcount = 1;
--	if (dtimcount >= dtimperiod)	/* NB: sanity check */
--		dtimcount = 0;
--
--	/*
--	 * Pull nexttbtt forward to reflect the current
--	 * TSF and calculate dtim state for the result.
--	 */
--	tsf = ath9k_hw_gettsf64(priv->ah);
--	tsftu = TSF_TO_TU(tsf>>32, tsf) + FUDGE;
--
--	num_beacons = tsftu / intval + 1;
--	offset = tsftu % intval;
--	nexttbtt = tsftu - offset;
--	if (offset)
--		nexttbtt += intval;
--
--	/* DTIM Beacon every dtimperiod Beacon */
--	dtim_dec_count = num_beacons % dtimperiod;
--	dtimcount -= dtim_dec_count;
--	if (dtimcount < 0)
--		dtimcount += dtimperiod;
--
--	bs.bs_intval = TU_TO_USEC(intval);
--	bs.bs_nexttbtt = TU_TO_USEC(nexttbtt);
--	bs.bs_dtimperiod = dtimperiod * bs.bs_intval;
--	bs.bs_nextdtim = bs.bs_nexttbtt + dtimcount * bs.bs_intval;
--
--	/*
--	 * Calculate the number of consecutive beacons to miss* before taking
--	 * a BMISS interrupt. The configuration is specified in TU so we only
--	 * need calculate based	on the beacon interval.  Note that we clamp the
--	 * result to at most 15 beacons.
--	 */
--	bs.bs_bmissthreshold = DIV_ROUND_UP(bmiss_timeout, intval);
--	if (bs.bs_bmissthreshold > 15)
--		bs.bs_bmissthreshold = 15;
--	else if (bs.bs_bmissthreshold <= 0)
--		bs.bs_bmissthreshold = 1;
--
--	/*
--	 * Calculate sleep duration. The configuration is given in ms.
--	 * We ensure a multiple of the beacon period is used. Also, if the sleep
--	 * duration is greater than the DTIM period then it makes senses
--	 * to make it a multiple of that.
--	 *
--	 * XXX fixed at 100ms
--	 */
--
--	bs.bs_sleepduration = TU_TO_USEC(roundup(IEEE80211_MS_TO_TU(100),
--						 intval));
--	if (bs.bs_sleepduration > bs.bs_dtimperiod)
--		bs.bs_sleepduration = bs.bs_dtimperiod;
--
--	/* TSF out of range threshold fixed at 1 second */
--	bs.bs_tsfoor_threshold = ATH9K_TSFOOR_THRESHOLD;
--
--	ath_dbg(common, CONFIG, "intval: %u tsf: %llu tsftu: %u\n",
--		intval, tsf, tsftu);
--	ath_dbg(common, CONFIG, "bmiss: %u sleep: %u\n",
--		bs.bs_bmissthreshold, bs.bs_sleepduration);
--
--	/* Set the computed STA beacon timers */
-+	if (ath9k_cmn_beacon_config_sta(priv->ah, bss_conf, &bs) == -EPERM)
-+		return;
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_set_sta_beacon_timers(priv->ah, &bs);
 -- 
-1.9.0
-
+BR,
+Sergey
