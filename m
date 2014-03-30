@@ -1,73 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:55544 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512AbaCUQmy (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:43934 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbaC3Ufj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Mar 2014 12:42:54 -0400
-Received: by mail-vc0-f170.google.com with SMTP id hu19so2922341vcb.29
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Mar 2014 09:42:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87eh1va5um.fsf@kamboji.qca.qualcomm.com>
-References: <1395360324-20433-1-git-send-email-greearb@candelatech.com>
-	<CA+BoTQn1B6g19Ks41kzcoVyhYbHAcJGTNAyucmPMupbRAy1SNg@mail.gmail.com>
-	<CAEFj98541uEFjHxjzUeim4nrjELToYrnbJTGuR5WgzwRvF9gkw@mail.gmail.com>
-	<532C62DE.6060309@candelatech.com>
-	<87eh1va5um.fsf@kamboji.qca.qualcomm.com>
-Date: Sat, 22 Mar 2014 00:42:54 +0800
-Message-ID: <CAEFj985WKAOp9vewgZW8LYB9KdUxh2GJG5uhAjRdCSiAd-y1sQ@mail.gmail.com> (sfid-20140321_174258_322733_1202B235)
-Subject: Re: [PATCH] ath10k: Fix getting stats from firmware.
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 30 Mar 2014 16:35:39 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [RFCv2 1/6] cfg80211: export expected throughput through get_station()
+Date: Sun, 30 Mar 2014 22:34:59 +0200
+Message-Id: <1396211704-4677-2-git-send-email-antonio@meshcoding.com> (sfid-20140330_223552_003623_B91E41E0)
+In-Reply-To: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
+References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Ben
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-I did a quick check again on STA mode. With or without your patch, the
-printed peer stats are both identical but both wrong. See below:
+Users may need information about the expected throughput
+towards a given peer computed by the RC algorithm.
+Export such value through the get_station() API.
 
-             ath10k PEER stats
-             =================
+This information is useful to the batman-adv module which
+will use it for its new metric computation.
 
-              Peer MAC address 00:00:00:00:00:00
-                     Peer RSSI 256
-                  Peer TX rate 0
-
-              Peer MAC address 00:00:00:00:04:f0
-                     Peer RSSI 17317
-                  Peer TX rate 73
-
-So I think that your patch makes no difference but do indeed providing
-"correct" peer stats on latest AP firmware.
-
-After applying the "ath10k: add the Rx rate in FW stats", I am able to
-get the Tx and Rx Rate for all connected STAs to my AP.
-
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
-Chun-Yeow
+ include/net/cfg80211.h | 63 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 35 insertions(+), 28 deletions(-)
 
-On Sat, Mar 22, 2014 at 12:12 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 03/20/2014 11:41 PM, Yeoh Chun-Yeow wrote:
->>>>
->>>> Did you test 636 as well? 636 doesn't seem to support more than just `stats_id`.
->>>>
->>> Nope. Tested with 636 not working.
->>
->> Does the existing code work with 636?  If so, we can add two different cmd
->> structs and use the smaller one with 636, and the one I modified with
->> 10.x firmware?
->
-> For this issue that would be the best approach. See Marek P's patch
-> "ath10k: update regulatory domain settings for 10.x firmware" (not yet
-> applied, still in ath-next-test branch) as an example how this can be
-> done.
->
-> --
-> Kalle Valo
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fb8afce..4c8ebe9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -862,36 +862,38 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+  * @STATION_INFO_NONPEER_PM: @nonpeer_pm filled
+  * @STATION_INFO_CHAIN_SIGNAL: @chain_signal filled
+  * @STATION_INFO_CHAIN_SIGNAL_AVG: @chain_signal_avg filled
++ * @STATION_INFO_EXPECTED_THROUGHPUT: @expected_throughput filled
+  */
+ enum station_info_flags {
+-	STATION_INFO_INACTIVE_TIME	= 1<<0,
+-	STATION_INFO_RX_BYTES		= 1<<1,
+-	STATION_INFO_TX_BYTES		= 1<<2,
+-	STATION_INFO_LLID		= 1<<3,
+-	STATION_INFO_PLID		= 1<<4,
+-	STATION_INFO_PLINK_STATE	= 1<<5,
+-	STATION_INFO_SIGNAL		= 1<<6,
+-	STATION_INFO_TX_BITRATE		= 1<<7,
+-	STATION_INFO_RX_PACKETS		= 1<<8,
+-	STATION_INFO_TX_PACKETS		= 1<<9,
+-	STATION_INFO_TX_RETRIES		= 1<<10,
+-	STATION_INFO_TX_FAILED		= 1<<11,
+-	STATION_INFO_RX_DROP_MISC	= 1<<12,
+-	STATION_INFO_SIGNAL_AVG		= 1<<13,
+-	STATION_INFO_RX_BITRATE		= 1<<14,
+-	STATION_INFO_BSS_PARAM          = 1<<15,
+-	STATION_INFO_CONNECTED_TIME	= 1<<16,
+-	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
+-	STATION_INFO_STA_FLAGS		= 1<<18,
+-	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19,
+-	STATION_INFO_T_OFFSET		= 1<<20,
+-	STATION_INFO_LOCAL_PM		= 1<<21,
+-	STATION_INFO_PEER_PM		= 1<<22,
+-	STATION_INFO_NONPEER_PM		= 1<<23,
+-	STATION_INFO_RX_BYTES64		= 1<<24,
+-	STATION_INFO_TX_BYTES64		= 1<<25,
+-	STATION_INFO_CHAIN_SIGNAL	= 1<<26,
+-	STATION_INFO_CHAIN_SIGNAL_AVG	= 1<<27,
++	STATION_INFO_INACTIVE_TIME		= 1<<0,
++	STATION_INFO_RX_BYTES			= 1<<1,
++	STATION_INFO_TX_BYTES			= 1<<2,
++	STATION_INFO_LLID			= 1<<3,
++	STATION_INFO_PLID			= 1<<4,
++	STATION_INFO_PLINK_STATE		= 1<<5,
++	STATION_INFO_SIGNAL			= 1<<6,
++	STATION_INFO_TX_BITRATE			= 1<<7,
++	STATION_INFO_RX_PACKETS			= 1<<8,
++	STATION_INFO_TX_PACKETS			= 1<<9,
++	STATION_INFO_TX_RETRIES			= 1<<10,
++	STATION_INFO_TX_FAILED			= 1<<11,
++	STATION_INFO_RX_DROP_MISC		= 1<<12,
++	STATION_INFO_SIGNAL_AVG			= 1<<13,
++	STATION_INFO_RX_BITRATE			= 1<<14,
++	STATION_INFO_BSS_PARAM			= 1<<15,
++	STATION_INFO_CONNECTED_TIME		= 1<<16,
++	STATION_INFO_ASSOC_REQ_IES		= 1<<17,
++	STATION_INFO_STA_FLAGS			= 1<<18,
++	STATION_INFO_BEACON_LOSS_COUNT		= 1<<19,
++	STATION_INFO_T_OFFSET			= 1<<20,
++	STATION_INFO_LOCAL_PM			= 1<<21,
++	STATION_INFO_PEER_PM			= 1<<22,
++	STATION_INFO_NONPEER_PM			= 1<<23,
++	STATION_INFO_RX_BYTES64			= 1<<24,
++	STATION_INFO_TX_BYTES64			= 1<<25,
++	STATION_INFO_CHAIN_SIGNAL		= 1<<26,
++	STATION_INFO_CHAIN_SIGNAL_AVG		= 1<<27,
++	STATION_INFO_EXPECTED_THROUGHPUT	= 1<<28,
+ };
+ 
+ /**
+@@ -1013,6 +1015,9 @@ struct sta_bss_parameters {
+  * @local_pm: local mesh STA power save mode
+  * @peer_pm: peer mesh STA power save mode
+  * @nonpeer_pm: non-peer mesh STA power save mode
++ * @expected_throughput: expected throughput as reported by the RC algorithm
++ *  about the bitrate having the maximum throughput. This field can be filled
++ *  only by drivers using Minstrel
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -1051,6 +1056,8 @@ struct station_info {
+ 	enum nl80211_mesh_power_mode peer_pm;
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
+ 
++	u32 expected_throughput;
++
+ 	/*
+ 	 * Note: Add a new enum station_info_flags value for each new field and
+ 	 * use it to check which fields are initialized.
+-- 
+1.8.3.2
+
