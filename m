@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:39049 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbaCIUHJ (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:18868 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752408AbaC3Ufj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 16:07:09 -0400
-From: Emil Goode <emilgoode@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Emil Goode <emilgoode@gmail.com>
-Subject: [PATCH 2/2] brcmsmac: update comment to reflect the code
-Date: Sun,  9 Mar 2014 21:06:52 +0100
-Message-Id: <1394395612-3510-2-git-send-email-emilgoode@gmail.com> (sfid-20140309_210840_612064_790CA1E0)
-In-Reply-To: <1394395612-3510-1-git-send-email-emilgoode@gmail.com>
-References: <1394395612-3510-1-git-send-email-emilgoode@gmail.com>
+	Sun, 30 Mar 2014 16:35:39 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org,
+	Antonio Quartulli <antonio@meshcoding.com>
+Subject: [RFCv2 0/6] Export the expected throughput
+Date: Sun, 30 Mar 2014 22:34:58 +0200
+Message-Id: <1396211704-4677-1-git-send-email-antonio@meshcoding.com> (sfid-20140330_223544_136497_62488751)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcms_attach function is defined as static but the comment is
-saying that it should not be static or gcc will issue a warning.
-I believe we can remove the comment as I don't se a problem with
-this function being defined as static.
+The "Expected throughput" towards a generic wireless peer is
+a value that can be used by other kernel components to
+achieve different goals.
+In particular we have 802.11s and batman-adv which will
+iuse this estimation to compute their throughput based
+metric. Therefore with this patchset I wanted to export
+this result and make it available for future use.
 
-Signed-off-by: Emil Goode <emilgoode@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    6 ------
- 1 file changed, 6 deletions(-)
+Changes included in this patchset:
+- add the new get_expected_throughput() RC API
+- export the result of such API via cfg80211::get_station()
+- implement the get_expected_throughput() RC API for minstrel(_ht)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 93598cd..8c5fa4e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1092,12 +1092,6 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
-  * Attach to the WL device identified by vendor and device parameters.
-  * regs is a host accessible memory address pointing to WL device registers.
-  *
-- * brcms_attach is not defined as static because in the case where no bus
-- * is defined, wl_attach will never be called, and thus, gcc will issue
-- * a warning that this function is defined but not used if we declare
-- * it as static.
-- *
-- *
-  * is called in brcms_bcma_probe() context, therefore no locking required.
-  */
- static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+
+For what concerns Minstrel_HT I decided to directly re-use the
+throughput value computed by the algorithm itself with
+minstrel_ht_calc_tp() for max_tp_rate.
+
+For the legacy Minstrel instead I computed the expected
+throughput as the product of the max_tp bitrate multplied
+by its probability of success.
+
+
+I am not entirely sure about passing sband as third parameter
+to get_expected_throughput()..maybe somebody can suggest a
+better solution.
+
+
+
+Cheers,
+
+
+Antonio Quartulli (6):
+  cfg80211: export expected throughput through get_station()
+  mac80211: add new RC API to retrieve expected throughput
+  mac80211: export expected throughput in set_sta_info()
+  mac80211: minstrel - implement get_expected_throughput() API
+  mac80211: minstrel_ht - implement get_expected_throughput() API
+  cfg80211: implement cfg80211_get_station cfg80211 API
+
+ include/net/cfg80211.h             | 74 +++++++++++++++++++++++---------------
+ include/net/mac80211.h             |  3 ++
+ net/mac80211/cfg.c                 | 17 +++++++++
+ net/mac80211/rc80211_minstrel.c    | 15 ++++++++
+ net/mac80211/rc80211_minstrel_ht.c | 19 ++++++++++
+ net/wireless/util.c                | 18 ++++++++++
+ 6 files changed, 118 insertions(+), 28 deletions(-)
+
 -- 
-1.7.10.4
+1.8.3.2
 
