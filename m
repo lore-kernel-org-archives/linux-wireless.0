@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:43373 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888AbaCIG5j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 01:57:39 -0500
-Subject: [PATCH 5/6] ath6kl: remove a warning on a macro
-To: ath6kl@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 09 Mar 2014 08:57:35 +0200
-Message-ID: <20140309065735.10793.45835.stgit@x230> (sfid-20140309_075742_280751_49EC04BA)
-In-Reply-To: <20140309065606.10793.67068.stgit@x230>
-References: <20140309065606.10793.67068.stgit@x230>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:43638 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043AbaC3MYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Mar 2014 08:24:23 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Daniel Sim <simd@student.ethz.ch>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: " ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: tx_retries and tx_failures on iwlwifi
+Date: Sun, 30 Mar 2014 12:24:17 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DBE160@HASMSX103.ger.corp.intel.com> (sfid-20140330_142454_180195_46E57C48)
+References: <fe413605-8f49-491e-87f2-7bfd1c90ef66@CAS20.d.ethz.ch>
+In-Reply-To: <fe413605-8f49-491e-87f2-7bfd1c90ef66@CAS20.d.ethz.ch>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes checkpatch warning:
-
-WARNING: Single statement macros should not use a do {} while (0) loop
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 55c4064..10a89cf 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -798,12 +798,10 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
- 		return -ENOMEM;
- 
- #define EPSTAT(name)							\
--	do {								\
--		len = print_endpoint_stat(target, buf, buf_len, len,	\
--					  offsetof(struct htc_endpoint_stats, \
--						   name),		\
--					  #name);			\
--	} while (0)
-+	(len = print_endpoint_stat(target, buf, buf_len, len,		\
-+				   offsetof(struct htc_endpoint_stats,	\
-+					    name),			\
-+				   #name))
- 
- 	EPSTAT(cred_low_indicate);
- 	EPSTAT(tx_issued);
-
+SGksDQoNCj4gDQo+IEhpIEVtbWFudWVsLA0KPiANCj4gPg0KPiA+IFRoZSBkZWZhdWx0IG51bWJl
+ciBvZiByZXRyaWVzIGlzIDE2LiBUaGUgcmVhc29uIHlvdSBoYXZlIG9kZCBudW1iZXJzDQo+ID4g
+aXMgYmVjYXVzZSB3ZSBkb24ndCByZXBvcnQgdGhpcyBwcm9wZXJseS4gVGhlIGJpZyBwcm9ibGVt
+IGlzIGFib3V0DQo+ID4gQU1QRFUgbWFpbmx5IC0gdGhlIGZyYW1lcyBhcmUgcGlja2VkIHVwIGJ5
+IHRoZSBIVyBhbmQgcmV0cmFuc21pc3Npb25zDQo+ID4gYXJlIGhhbmRsZWQgYnkgdGhlIEZXIC8g
+SFcuIFdoaWxlIHdlIGtub3cgaG93IG1hbnkgcGFja2V0cyBmYWlsZWQgdnMuDQo+ID4gaG93IG1h
+bnkgd2VyZSBzZW50IChmb3IgcmF0ZSBjb250cm9sIHB1cnBvc2VzKSwgd2UgY2FuJ3Qga25vdyBl
+eGFjdGx5DQo+ID4gd2hhdCBmcmFtZSB3ZSByZXRyYW5zbWl0dGVkIGFuZCBob3cgbWFueSB0aW1l
+cyAod2VsbC4uLiB3ZSBjYW4gLSBidXQNCj4gPiBpdCBpcyBub3QgdHJpdmlhbCkuIFNpbmNlIHRo
+ZSB0aGUgb25seSB3YXkgdG8gdGVsbCBtYWM4MDIxMSAvIGNmZzgwMjExDQo+ID4gLyBpdyBpcyBw
+ZXItcGFja2V0IChpbiBpZWVlODAyMTFfdHhfc3RhdHVzIGluIGVhY2ggVHggc3RhdHVzIGZvciBl
+YWNoDQo+ID4gcGFja2V0KSwgdGhlIGluZm9ybWF0aW9uIHRoZXJlIGlzIG5vdCBhY2N1cmF0ZS4N
+Cj4gPg0KPiA+IEkgd2FudCB0byBob3BlIHRoYXQgaWYgeW91IGRpc2FibGVkIEFNUERVIChUeCkg
+eW91J2xsIGdldCBtb3JlDQo+ID4gYWNjdXJhdGUgcmVzdWx0cyAtIEkgaGF2ZW4ndCB0ZXN0ZWQg
+bXlzZWxmIHRob3VnaC4NCj4gDQo+IERvZXMgdGhpcyBtZWFuIHRoYXQgaWYgQU1QRFUgaXMgZGlz
+YWJsZWQsIHRoZSByZXRyYW5zbWlzc2lvbnMgd2lsbCBiZSBlaXRoZXINCj4gaGFuZGxlZCBpbiBz
+b2Z0d2FyZSwgb3IgdGhlIGhhcmR3YXJlIHdpbGwgcmVwb3J0IHJldHJhbnNtaXNzaW9ucyBtb3Jl
+DQo+IGFjY3VyYXRlbHk/DQoNClllYWggLSBzb21ldGhpbmcgbGlrZSB0aGF0LiBCdXQgYWdhaW4s
+IEkgZG9uJ3QgcmVhbGx5IHRoaW5rIHRoYXQgdGhlc2UgbnVtYmVycyBhcmUgcmVhbGx5IHRydXN0
+d29ydGh5LiBNaWdodCBiZSB3b3J0aCBjaGVja2luZy4NCg0KPiANCj4gSG93IHNob3VsZCBJIGRp
+c2FibGUgQU1QRFU/DQoNCk1vZHVsZSBwYXJhbWV0ZXI6IDExbl9kaXNhYmxlPTENCk9yIHRha2Ug
+My4xNC1yYzggLyAzLjEzLjcgLSBpdCBpcyBkaXNhYmxlZCBieSBkZWZhdWx0IGluIHRoZXNlIGtl
+cm5lbHMuDQoNCj4gDQo+IERhbmllbA0K
