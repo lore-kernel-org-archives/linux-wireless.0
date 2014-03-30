@@ -1,88 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:46040 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754645AbaCRN7T (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:2068 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751353AbaC3HtX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:19 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so4722382eek.40
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:18 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 10/21] mac80211: split ieee80211_free_chanctx()
-Date: Tue, 18 Mar 2014 14:53:13 +0100
-Message-Id: <1395150804-24090-11-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150214_916948_F78AF67F)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 30 Mar 2014 03:49:23 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Monam Agarwal <monamagarwal123@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"eliad@wizery.com" <eliad@wizery.com>,
+	"Lifshitz, Eytan" <eytan.lifshitz@intel.com>,
+	"eyal@wizery.com" <eyal@wizery.com>,
+	"Stepanov, Max" <Max.Stepanov@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] drivers/net/wireless: Use RCU_INIT_POINTER(x, NULL) in
+ iwlwifi/mvm/sta.c
+Date: Sun, 30 Mar 2014 07:49:17 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DBDB42@HASMSX103.ger.corp.intel.com> (sfid-20140330_095025_592675_D2180CA3)
+References: <1395599756-7861-1-git-send-email-monamagarwal123@gmail.com>
+In-Reply-To: <1395599756-7861-1-git-send-email-monamagarwal123@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a little too much. Split it up so
-the code can be easily reused in the future.
+> 
+> This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x,
+> NULL)
+> 
+> The rcu_assign_pointer() ensures that the initialization of a structure
+> is carried out before storing a pointer to that structure.
+> And in the case of the NULL pointer, there is no structure to initialize.
+> So, rcu_assign_pointer(p, NULL) can be safely converted to
+> RCU_INIT_POINTER(p, NULL)
+> 
+> Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
+> ---
+>  drivers/net/wireless/iwlwifi/mvm/sta.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 1982e33..623df6f 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -433,14 +433,11 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	return ctx;
- }
- 
--static void ieee80211_free_chanctx(struct ieee80211_local *local,
--				   struct ieee80211_chanctx *ctx)
-+static void ieee80211_del_chanctx(struct ieee80211_local *local,
-+				  struct ieee80211_chanctx *ctx)
- {
--	bool check_single_channel = false;
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
--	WARN_ON_ONCE(ctx->refcount != 0);
--
- 	if (!local->use_chanctx) {
- 		struct cfg80211_chan_def *chandef = &local->_oper_chandef;
- 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-@@ -450,8 +447,9 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		/* NOTE: Disabling radar is only valid here for
- 		 * single channel context. To be sure, check it ...
- 		 */
--		if (local->hw.conf.radar_enabled)
--			check_single_channel = true;
-+		WARN_ON(local->hw.conf.radar_enabled &&
-+			!list_empty(&local->chanctx_list));
-+
- 		local->hw.conf.radar_enabled = false;
- 
- 		ieee80211_hw_config(local, 0);
-@@ -459,13 +457,19 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		drv_remove_chanctx(local, ctx);
- 	}
- 
--	list_del_rcu(&ctx->list);
--	kfree_rcu(ctx, rcu_head);
-+	ieee80211_recalc_idle(local);
-+}
- 
--	/* throw a warning if this wasn't the only channel context. */
--	WARN_ON(check_single_channel && !list_empty(&local->chanctx_list));
-+static void ieee80211_free_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	lockdep_assert_held(&local->chanctx_mtx);
- 
--	ieee80211_recalc_idle(local);
-+	WARN_ON_ONCE(ctx->refcount != 0);
-+
-+	list_del_rcu(&ctx->list);
-+	ieee80211_del_chanctx(local, ctx);
-+	kfree_rcu(ctx, rcu_head);
- }
- 
- static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
--- 
-1.8.5.3
+Applied - with small change in commit log.
+Thank you for your contribution.
 
