@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f178.google.com ([209.85.128.178]:51317 "EHLO
-	mail-ve0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779AbaCYIde (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:51122 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092AbaC3Vbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Mar 2014 04:33:34 -0400
-Received: by mail-ve0-f178.google.com with SMTP id jw12so146346veb.9
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Mar 2014 01:33:34 -0700 (PDT)
+	Sun, 30 Mar 2014 17:31:35 -0400
+Message-ID: <53388D35.8080902@lwfinger.net> (sfid-20140330_233319_982024_36E8C56C)
+Date: Sun, 30 Mar 2014 16:31:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-References: <1395734146-10907-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQmVw1fiDU_Pu_fowRfFdme-AZ1-qLmxhCHuxFPSK831rw@mail.gmail.com>
-Date: Tue, 25 Mar 2014 16:33:34 +0800
-Message-ID: <CAEFj9867Z+x3orcwUpwjwQB-9c5r4FfAuZBHYDGZ1hNe=6Z1pA@mail.gmail.com> (sfid-20140325_093348_015992_5A3B6CC7)
-Subject: Re: [PATCH] ath10k: fix printing of peer stats in non-AP firmware
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_probe()
+References: <1396038375-18122-1-git-send-email-khoroshilov@ispras.ru>
+In-Reply-To: <1396038375-18122-1-git-send-email-khoroshilov@ispras.ru>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Michal
-
-> I suppose there's a limit how much peer entries firmware is able to
-> pack up into a single event. The second event you handle here is still
-> going to have some sort of a limit and you'll end up dropping results
-> again. The same probably goes with vdev stats (which aren't handled
-> yet, but hey).
-
-vdev stats is not supported by firmware 999.999.0.636, am I right?
-BTW, I also saw that the same happen to latest AP firmware whenever
-the peer stats is more than 1. But since the first peer stats is self
-stats, so it is ok to overwrite it.
-
-> I think a better approach would be to make read_target_stats *append*
-> data to the stats structure and make ath10k wait for more possible
-> events instead of being satisfied with just one.
+On 03/28/2014 03:26 PM, Alexey Khoroshilov wrote:
+> If allocation of io_dmabuf fails, rtl8187_probe() calls usb_put_dev(udev)
+> while usb_get_dev(udev) is not called yet. As a result refcnt is decremented
+> incorrectly and usb_dev can be used after memory deallocation.
 >
-> The way you do it now seems like you end up with the extra results
-> being shown upon *next* stat request-response.. i.e. you see old
-> results.
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> ---
 
-Will take a look on this.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-----
-Chun-Yeow
+Thanks,
+
+Larry
+
+>   drivers/net/wireless/rtl818x/rtl8187/dev.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> index fd78df813a85..d7f540a9dc9b 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> @@ -1636,10 +1636,10 @@ static int rtl8187_probe(struct usb_interface *intf,
+>
+>    err_free_dmabuf:
+>   	kfree(priv->io_dmabuf);
+> - err_free_dev:
+> -	ieee80211_free_hw(dev);
+>   	usb_set_intfdata(intf, NULL);
+>   	usb_put_dev(udev);
+> + err_free_dev:
+> +	ieee80211_free_hw(dev);
+>   	return err;
+>   }
+>
+>
+
