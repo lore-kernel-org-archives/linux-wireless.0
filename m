@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64955 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103AbaCHL5m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Mar 2014 06:57:42 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Steffen Trumtrar <s.trumtrar@pengutronix.de>
-CC: Hui Liu <Hui.Liu@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<ath6kl@lists.infradead.org>
-Subject: Re: [PATCH] ath6kl: sdio: fix system panic when doing wifi stress test
-References: <1384221185-8645-1-git-send-email-r64343@freescale.com>
-	<87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
-	<AD13664F485EE54694E29A7F9D5BE1AFC0AD96@039-SN2MPN1-022.039d.mgd.msft.net>
-	<20140307093813.GA28728@pengutronix.de>
-Date: Sat, 8 Mar 2014 13:57:36 +0200
-In-Reply-To: <20140307093813.GA28728@pengutronix.de> (Steffen Trumtrar's
-	message of "Fri, 7 Mar 2014 10:38:13 +0100")
-Message-ID: <87a9d0oqbz.fsf@kamboji.qca.qualcomm.com> (sfid-20140308_125805_852351_73356A74)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:4225 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752663AbaC3Vbo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Mar 2014 17:31:44 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: [PATCH 2/4] brcm80211: deinline dma64_dd_upd, save 157 bytes
+Date: Sun, 30 Mar 2014 23:31:17 +0200
+Message-Id: <1396215079-7541-2-git-send-email-dvlasenk@redhat.com> (sfid-20140330_233248_005825_D0A1845F)
+In-Reply-To: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
+References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Steffen,
+Automated script discovered that without forced inlining,
+gcc-4.7 generates smaller code for this function.
 
-Steffen Trumtrar <s.trumtrar@pengutronix.de> writes:
+There is no need to declare static functions inline anyway:
+nowadays gcc detects single-callsite static functions
+which benefit from inlining.
 
->> > Does the patch below help? It would also fix the corruption with
->> > scat_q_depth. Please note that I have only compile tested it. And I might
->> > have also missed something important, so please review it carefully.
->> 
->> Yes, Firstly, I have looked at the asm code and the compiler(gcc 4.8.1) works correctly after applying
->> the following patch. Secondly, I have tested the patch with compiler(gcc 4.8.1) on the real HW, and it
->> works fine too. Without the patch, the kernel crash will happen 100%.
->> 
->> Thus, for the patch:
->> 
->> Acked-by: Jason Liu <r64343@freescale.com>
->> Tested-by: Jason Liu <r64343@freescale.com>
+In this case, function is large and has two callsites.
 
-[...]
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> What happend with this? If I look in mainline, I don't find it. At
-> least the reording of the struct fields looks as if one definitely
-> wants to have that.
-
-It seems that I forgot to submit this properly, sorry about that. I did
-it now:
-
-http://lists.infradead.org/pipermail/ath6kl/2014-March/000000.html
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 4fb9635..5acf73e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -711,7 +711,7 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 	return NULL;
+ }
+ 
+-static inline void
++static void
+ dma64_dd_upd(struct dma_info *di, struct dma64desc *ddring,
+ 	     dma_addr_t pa, uint outidx, u32 *flags, u32 bufcount)
+ {
 -- 
-Kalle Valo
+1.8.1.4
+
