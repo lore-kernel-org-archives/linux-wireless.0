@@ -1,99 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:47975 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbaCCH7A (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:17402 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbaC3Ufj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Mar 2014 02:59:00 -0500
-Received: by mail-ob0-f177.google.com with SMTP id wo20so4052247obc.8
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Mar 2014 23:59:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
-References: <CAKH5=LtkNnX9g9U5Fv8EH9uDj2=KC6gieRT-Td8NNbFhkv_hvg@mail.gmail.com>
-Date: Mon, 3 Mar 2014 15:59:00 +0800
-Message-ID: <CAKH5=LuaHTG40hMy3f-A9UcmCxkRxnfBvoYBzRbL5zfBAKmRJw@mail.gmail.com> (sfid-20140303_085904_997279_8D0C4247)
-Subject: Re: insmod: cannot insert `wl_high.ko': Success (17): Success ??
-From: Naughtboy <skylvlinux@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 30 Mar 2014 16:35:39 -0400
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [RFCv2 4/6] mac80211: minstrel - implement get_expected_throughput() API
+Date: Sun, 30 Mar 2014 22:35:02 +0200
+Message-Id: <1396211704-4677-5-git-send-email-antonio@meshcoding.com> (sfid-20140330_223554_509991_81EFDCAD)
+In-Reply-To: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
+References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-yes  today i kwon it the reason  by accident
+From: Antonio Quartulli <antonio@open-mesh.com>
 
-# insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
-insmod: cannot insert `wl_high.ko': Success (17): Success
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+---
+ net/mac80211/rc80211_minstrel.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 26fd94f..9434435d 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -657,6 +657,20 @@ minstrel_free(void *priv)
+ 	kfree(priv);
+ }
+ 
++static u32
++minstrel_get_expected_throughput(void *priv, void *priv_sta,
++				 struct ieee80211_supported_band *sband)
++{
++	struct minstrel_sta_info *mi = priv_sta;
++	int idx = mi->max_tp_rate[0];
++	u32 bitrate, ret;
++
++	bitrate = sband->bitrates[mi->r[idx].rix].bitrate;
++	ret = bitrate * MINSTREL_TRUNC(mi->r[idx].probability * 1000) / 1000;
++
++	return ret;
++}
++
+ const struct rate_control_ops mac80211_minstrel = {
+ 	.name = "minstrel",
+ 	.tx_status = minstrel_tx_status,
+@@ -670,6 +684,7 @@ const struct rate_control_ops mac80211_minstrel = {
+ 	.add_sta_debugfs = minstrel_add_sta_debugfs,
+ 	.remove_sta_debugfs = minstrel_remove_sta_debugfs,
+ #endif
++	.get_expected_throughput = minstrel_get_expected_throughput,
+ };
+ 
+ int __init
+-- 
+1.8.3.2
 
-some reason caused by  wl.ko  (which  has arealdy insmod in the kernel )
-so  after  i just  rmmod wl.ko  ,insomd wl_high.ko it just ok !!!!
-so  i  change the bcm43236 code  to generate the diffrent moduels name
-  ,just slove it , thank you  erenoyone  !!
-
-
-# insmod bcm_usbshim.ko
-# insmod wl_high.ko
-bcm_rpc_up: waiting to be connected
-bcm_rpc_buf_recv_mgn_high: Reason: 0 Dongle Version: 0x571623e
-bcm_rpc_buf_recv_mgn_high: Connected!
-eth5: Broadcom BCMa8e4 802.11 Wireless Controller 5.113.98.62
-usbcore: registered new interface driver dbus_usbdev
-
-# lsmod
-Module                  Size  Used by
-wl_high 1350048 0 - Live 0xc045c000 (P)
-bcm_usbshim 2048 1 wl_high, Live 0xc0070000
-wl 1807408 0 - Live 0xc02a1000 (P)
-pktflow 41056 0 - Live 0xc0064000 (PF)
-
-
-
-
-
-
---Naughtboy
-
-
-
-2014-02-20 19:19 GMT+08:00 Naughtboy <skylvlinux@gmail.com>:
-> i try tralsplant 43236  --5.8G usb dongle drivers into linux-2.6.21.5
-> ,but here is some erros .....
->
-> filename:       wl_high.ko
-> license:        Proprietary
-> alias:          usb:v0A5Cp0BDCd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0471p20E7d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v04DAp23F2d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v043Ep3001d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v1EDAp0BDCd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v050DpD321d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v050Dp615Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0846p9011d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD17d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD16d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD13d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5CpBD12d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0A5Cp0000d*dc*dsc*dp*ic*isc*ip*
-> depends:        bcm_usbshim
-> vermagic:       2.6.21.5 mod_unload MIPS32_R2 32BIT
-> parm:           oneonly:int
-> parm:           piomode:int
-> parm:           instance_base:int
-> parm:           nompc:int
-> parm:           name:string
-> parm:           nvram_path:string
->
-> # insmod bcm_usbshim.ko    ----ok
-> but  insmod wl_high.ko occur error  .....    as the follow ..
->
-> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
-> insmod: cannot insert `wl_high.ko': Success (17): Success
-> # insmod wl_high.ko nvram_path=../nvram/fake43236usb_p420.nvm
-> insmod: cannot insert `wl_high.ko': Success (17): Success
->
->
->
->
-> any bigman  can do me a gudiance
->
-> thank you
-> --Naughtboy
