@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:32860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580AbaCEPBA (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42310 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693AbaCaG2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 10:01:00 -0500
-Message-ID: <1394031651.5275.38.camel@jlt4.sipsolutions.net> (sfid-20140305_160108_744043_5CA7F458)
-Subject: Re: [PATCH 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
- again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: linville@tuxdriver.com, projekt-wlan@fem.tu-ilmenau.de,
-	linux-wireless@vger.kernel.org
-Date: Wed, 05 Mar 2014 16:00:51 +0100
-In-Reply-To: <f54e8751cdc525ebc4d0d8abbbc96550@fami-braun.de> (sfid-20140305_144700_435568_A1DD1A4E)
-References: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
-	 <f54e8751cdc525ebc4d0d8abbbc96550@fami-braun.de>
-	 (sfid-20140305_144700_435568_A1DD1A4E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 31 Mar 2014 02:28:15 -0400
+Message-ID: <53390AE4.4030705@candelatech.com> (sfid-20140331_082828_142851_5D73CD1E)
+Date: Sun, 30 Mar 2014 23:27:48 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Here are some ath10k performance graphs.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-03-05 at 14:40 +0100, michael-dev wrote:
-> commit de74a1d9032f4d37ea453ad2a647e1aff4cd2591
->    "mac80211: fix WPA with VLAN on AP side with ps-sta"
-> fixed an issue.
-> commit "7cbf9d017dbb5e3276de7d527925d42d4c11e732"
->    "mac80211: fix oops on mesh PS broadcast forwarding"
-> essentially reverted it, because vif.type cannot be AP_VLAN
-> due to the check to vif.type in ieee80211_get_buffered_bc before.
-> 
-> As the 7cbf9 commit intended to fix the MESH case, fix it
-> by checking for IFTYPE_AP instead of IFTYPE_AP_VLAN.
+I finally have a firmware stable enough to do some throughput
+tests (only locked station machine up once doing these!).
 
-This looks fine, but
- * please add a Cc stable and Fixes line
-(https://lwn.net/Articles/571980/)
- * is severely whitespace damaged, so I can't apply it
- * is against a backport which has vastly different line numbers, so I'm
-not sure
-   it'd apply if it wasn't broken
+I find the download test interesting where the rx link rate goes very low
+after 12 or so stations.
 
-johannes
+tx link rate is not reported properly yet by ath10k, so ignore that.
+
+http://www.candelatech.com/examples/cap-ath10k-tcp-download-open/
+http://www.candelatech.com/examples/cap-ath10k-tcp-download-wpa2/
+http://www.candelatech.com/examples/cap-ath10k-tcp-upload-open/
+http://www.candelatech.com/examples/cap-ath10k-tcp-upload-wpa2/
+
+Some notes are near the top of each report, and in general:
+
+The station machine is sending to/from wired Eth1 to/from the
+stations, ie it is both sides of the network.
+The AP is configured as router.  Both systems are running
+our customized 10.1.467-ct firmware, and near the latest ath10k kernel.  Station
+machine is Fedora 17, AP is Fedora 19.  Both are 64-bit, CPU is a mobile core-i7,
+8GB RAM, SSD hard drives (not that it should matter).
+
+Due to the vagaries of ath10k hardware and our firmware, we get hardware acceleration when
+sending encrypted packets, but we have to decrypt received packets on the CPU.
+
+I am not sure why open TCP throughput is so bad compared to upload.
+I'll run some UDP tests when I get a chance.
+
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
