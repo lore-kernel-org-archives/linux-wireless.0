@@ -1,45 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:56214 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752502AbaCEKyZ (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:44757 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbaCaLnN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Mar 2014 05:54:25 -0500
-Date: Wed, 5 Mar 2014 12:54:22 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] mac80211: ignore probe response from adjacent
- channels
-Message-ID: <20140305105422.GB32093@w1.fi> (sfid-20140305_115428_276311_7830713F)
-References: <1393944614-4465-1-git-send-email-emmanuel.grumbach@intel.com>
- <1393944614-4465-2-git-send-email-emmanuel.grumbach@intel.com>
- <20140305090854.GA3544@w1.fi>
- <0BA3FCBA62E2DC44AF3030971E174FB303D7871D@HASMSX103.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D7871D@HASMSX103.ger.corp.intel.com>
+	Mon, 31 Mar 2014 07:43:13 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so5666727wgh.11
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:12 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 04/13] mac80211: add support for radar detection for reservations
+Date: Mon, 31 Mar 2014 12:39:22 +0200
+Message-Id: <1396262371-6466-5-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134318_874621_C3307B5D)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+ <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 09:20:07AM +0000, Grumbach, Emmanuel wrote:
-> > So I guess you want me to revert the code we currently have in
-> > ieee80211_rx_mgmt_beacon ;) Don't know really... If you are associated to
-> > an AP and hear its beacons / probe responses on another channel you really
-> > have a big problem in your radio?
-> 
-> FWIW: this logic is there since:
-> 
-> commit d91f36db51661018f6d54ff5966e283bcec4c545
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Thu Apr 16 13:17:26 2009 +0200
-> 
->     mac80211: implement beacon filtering in software
+Initial chanctx reservation code wasn't aware of
+radar detection requirements. This is necessary
+for chanctx reservations to be used for channel
+switching in the future.
 
-The frequency related areas in this commit are in a location that has a
-clear comment about it being for the current BSS. Your patch did not
-look like it would be for that case. If it is, the commit log should
-really say that clearly.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c        | 5 ++++-
+ net/mac80211/ieee80211_i.h | 4 +++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 90cac10..cc85ad8 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -743,7 +743,8 @@ int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
+ 
+ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 				  const struct cfg80211_chan_def *chandef,
+-				  enum ieee80211_chanctx_mode mode)
++				  enum ieee80211_chanctx_mode mode,
++				  bool radar_required)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *conf;
+@@ -787,6 +788,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	new_ctx->refcount++;
+ 	sdata->reserved_chanctx = new_ctx;
+ 	sdata->reserved_chandef = *chandef;
++	sdata->reserved_radar_required = radar_required;
+ out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	return ret;
+@@ -831,6 +833,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 	/* unref our reservation */
+ 	ctx->refcount--;
+ 	sdata->reserved_chanctx = NULL;
++	sdata->radar_required = sdata->reserved_radar_required;
+ 
+ 	if (old_ctx == ctx) {
+ 		/* This is our own context, just change it */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 41d9e49..a96e375 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -760,6 +760,7 @@ struct ieee80211_sub_if_data {
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+ 	struct cfg80211_chan_def reserved_chandef;
++	bool reserved_radar_required;
+ 
+ 	/* used to reconfigure hardware SM PS */
+ 	struct work_struct recalc_smps;
+@@ -1785,7 +1786,8 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ int __must_check
+ ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 			      const struct cfg80211_chan_def *chandef,
+-			      enum ieee80211_chanctx_mode mode);
++			      enum ieee80211_chanctx_mode mode,
++			      bool radar_required);
+ int __must_check
+ ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
+ 				   u32 *changed);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.8.5.3
+
