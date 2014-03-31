@@ -1,40 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:46678 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbaC1Nxl convert rfc822-to-8bit (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:9204 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbaCaItm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 09:53:41 -0400
-Received: by mail-we0-f176.google.com with SMTP id x48so2624692wes.21
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 06:53:40 -0700 (PDT)
+	Mon, 31 Mar 2014 04:49:42 -0400
+Message-ID: <53392C0D.2010404@meshcoding.com> (sfid-20140331_104949_125462_B57263BC)
+Date: Mon, 31 Mar 2014 10:49:17 +0200
+From: Antonio Quartulli <antonio@meshcoding.com>
+Reply-To: The list for a Better Approach To Mobile Ad-hoc
+	   Networking <b.a.t.m.a.n@lists.open-mesh.org>
 MIME-Version: 1.0
-In-Reply-To: <20140328132849.31620.78501.stgit@potku.adurom.net>
-References: <20140328132849.31620.78501.stgit@potku.adurom.net>
-Date: Fri, 28 Mar 2014 14:53:40 +0100
-Message-ID: <CA+BoTQmqf8kryKEeD00P6o+N7C+980pEqHnT9qe4H4cjZ+eb=w@mail.gmail.com> (sfid-20140328_145347_623285_FA29805B)
-Subject: Re: [PATCH v5] ath10k: implement per-VDEV FW statistics
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: devel@lists.open80211s.org, Felix Fietkau <nbd@openwrt.org>,
+	b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>,
+	Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [B.A.T.M.A.N.] [RFCv2 4/6] mac80211: minstrel - implement get_expected_throughput()
+ API
+References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com> <1396211704-4677-5-git-send-email-antonio@meshcoding.com>
+In-Reply-To: <1396211704-4677-5-git-send-email-antonio@meshcoding.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 March 2014 14:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Bartosz Markowski <bartosz.markowski@tieto.com>
->
-> The WMI_REQUEST_PEER_STAT command with latest (999.999.0.716) FW
-> can return per-VDEV statistics. Using debugfs we can fetch this info now.
->
-> This is a backward compatible change. In case of older FW the VDEV
-> statistics are simply not returned.
->
-> kvalo: remove struct wmi_peer_stats_common cast from
-> ath10k_debug_read_target_stats()
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I just glanced over the patch and I don't think this is correct.
+On 30/03/14 22:35, Antonio Quartulli wrote:
+> +static u32
+> +minstrel_get_expected_throughput(void *priv, void *priv_sta,
+> +				 struct ieee80211_supported_band *sband)
+> +{
+> +	struct minstrel_sta_info *mi =3D priv_sta;
+> +	int idx =3D mi->max_tp_rate[0];
+> +	u32 bitrate, ret;
+> +
+> +	bitrate =3D sband->bitrates[mi->r[idx].rix].bitrate;
+> +	ret =3D bitrate * MINSTREL_TRUNC(mi->r[idx].probability * 1000) / 100=
+0;
 
-Firmware 10.1.467 has peer_rx_rate but doesn't seem to have vdev stats.
+Thanks to the point raised by Andrew Lunn I just realised that this
+value is expressed in Mbps/10 and so should be converted to Mbps/100
+before being returned (assuming we agree on using this unit).
+
+Cheers,
+
+--=20
+Antonio Quartulli
 
 
-Michał
+--28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIbBAEBCAAGBQJTOSwSAAoJEEKTMo6mOh1V8asP+J2bLE68i+RxFlJrzYzEllWq
+bwB+MppRkMI++NicUZ0yefjcfwrakxLKBqA9DFz/kYPGmuVplJELwJKrIW2CRdHz
+XuxkGRF0os53xeCkY+XiVXjLQbNHhx3bZmrtIaUhW09JGCLNiXVtGzgdwSIfn/i0
+3EVd1mn5qwGnvZD+WmxssbJktxXCj19JLVnYHSo7qRHa602iiPgpBDZQxKU7ss1a
+sb0Vx9ax7KBNDkRIkj+oINxHpT2B0mS+cuqsd5qo2YYFhkJAxW73MQNFIl4jEokS
+MUT6LM+x7tl507vFPmWCikBdixuZKlb2n2yRUHVpomRYUKCzXqM7MmX2LpKtrEu4
+kjfXNuIiFZkaJRAYcJr5FwzVW/SPmrauuQitME9kC2AQD3x0z993JOOiMmBloGK+
+w4Wul/0viRmrj1syqNKtG75lv1qOJaclUc94m8jEUASJgGOzYt8bffCG1HmRcwBF
+MwcNsONueDD+qgM6/sEmbOfWcYefJYcEdtKKf2x56RcMIOXqFl1be2eutnUkJ7OG
+2zkAbobRiBXQJ1bAdyJDdmuNV91DQYUBAkfB6xnMRwj3T8NfutigRiM0GN/7GdQm
+RXD1ihK58snPByb/1FoA7Ex7V9vJXtJc7WNnUpTFpxa6ZuelyAC0cBrl8k+A/adE
+KqVgmrzYzlcfCHcKQm0=
+=3Kbq
+-----END PGP SIGNATURE-----
+
+--28ul0wgrLWBgNg5k75THTKHIUVvHuv4GQ--
