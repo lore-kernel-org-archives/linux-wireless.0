@@ -1,69 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:40794 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109AbaCXUZN (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:45432 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753011AbaCaLnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Mar 2014 16:25:13 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so4940823eek.27
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2014 13:25:12 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 2/2] ath10k: fix rssi and rate reporting
-Date: Mon, 24 Mar 2014 21:24:58 +0100
-Message-Id: <1395692698-4745-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140324_212521_424705_8B8F9E2E)
-In-Reply-To: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1395692698-4745-1-git-send-email-janusz.dziedzic@tieto.com>
+	Mon, 31 Mar 2014 07:43:20 -0400
+Received: by mail-wi0-f179.google.com with SMTP id z2so1365294wiv.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:19 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 07/13] mac80211: improve find_chanctx() for reservations
+Date: Mon, 31 Mar 2014 12:39:25 +0200
+Message-Id: <1396262371-6466-8-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134326_606990_9DA32193)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+ <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RSSI and RATES fields are valid only when START_VALID
-bit is set. So, in current implementation we have to
-remember/caclulate them when START_VALID and report the same
-when only END_VALID is set.
-Currently during heavy traffic we could have:
-- 10 packets with START_VALID - correct RSSI and RATES
-- 10 packets with END_VALID
-- 10 packets with START_VALID - correct RSSI and RATES
-- 10 packets with END_VALID
-...
-Next using monitor interface we will see:
-- 10 packets with correct rssi/rates
-- 10 packets with rssi=-95/rate=6Mbps
+This allows new vifs to be assigned to a chanctx
+as long as chanctx's reservation chandefs (if any)
+and chanctx's current chandef (implied by assigned
+vifs at the time, if any) and the new vif chandef
+are all compatible.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+This implies it is impossible to assign a new vif
+to an in-place reservation chanctx.
+
+This gives no advantages for single-channel
+hardware. It makes sense for multi-channel
+hardware only.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+v2:
+ * remove redundant calls to _chandef() [Eliad]
+ * dont use rcu_access_pointer() [Eliad]
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index be25e16..f7ecc10 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1154,8 +1154,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+v3:
+ * fix commit message so it makes more sense [Johannes]
+
+ net/mac80211/chan.c | 56 +++++++++++++++++++++++++++--------------------------
+ 1 file changed, 29 insertions(+), 27 deletions(-)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index ad29e6e..e14d756 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -28,6 +28,29 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
+ 	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
+ }
  
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
--	memset(rx_status, 0, sizeof(*rx_status));
--
- 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
- 	fw_desc = (u8 *)&rx->fw_desc;
- 
-@@ -1164,8 +1162,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
- 	/* Fill this once, while this is per-ppdu */
--	rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR;
--	rx_status->signal += rx->ppdu.combined_rssi;
-+	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
-+		memset(rx_status, 0, sizeof(*rx_status));
-+		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
-+				     rx->ppdu.combined_rssi;
++static const struct cfg80211_chan_def *
++ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
++				   struct ieee80211_chanctx *ctx,
++				   const struct cfg80211_chan_def *compat)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(sdata, &ctx->reserved_vifs,
++			    reserved_chanctx_list) {
++		if (!compat)
++			compat = &sdata->reserved_chandef;
++
++		compat = cfg80211_chandef_compatible(&sdata->reserved_chandef,
++						     compat);
++		if (!compat)
++			break;
 +	}
++
++	return compat;
++}
++
+ static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
+ {
+ 	switch (sta->bandwidth) {
+@@ -181,27 +204,6 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 	}
+ }
  
- 	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
- 		/* TSF available only in 32-bit */
+-static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
+-					  struct ieee80211_chanctx *ctx)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-	bool ret = false;
+-
+-	lockdep_assert_held(&local->chanctx_mtx);
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-		if (sdata->reserved_chanctx == ctx) {
+-			ret = true;
+-			break;
+-		}
+-	}
+-
+-	rcu_read_unlock();
+-	return ret;
+-}
+-
+ static struct ieee80211_chanctx *
+ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		       const struct cfg80211_chan_def *chandef,
+@@ -217,18 +219,18 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		const struct cfg80211_chan_def *compat;
+ 
+-		/* We don't support chanctx reservation for multiple
+-		 * vifs yet, so don't allow reserved chanctxs to be
+-		 * reused.
+-		 */
+-		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
+-		    ieee80211_chanctx_is_reserved(local, ctx))
++		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+ 			continue;
+ 
+ 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
+ 		if (!compat)
+ 			continue;
+ 
++		compat = ieee80211_chanctx_reserved_chandef(local, ctx,
++							    compat);
++		if (!compat)
++			continue;
++
+ 		ieee80211_change_chanctx(local, ctx, compat);
+ 
+ 		return ctx;
 -- 
-1.7.9.5
+1.8.5.3
 
