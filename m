@@ -1,123 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:57849 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756252AbaCROqd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37448 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966AbaCaTpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:33 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so4832430eek.12
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:32 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/35] iwlwifi: mvm: configure protocol offloading on D0i3
-Date: Tue, 18 Mar 2014 16:45:30 +0200
-Message-Id: <1395153939-23897-26-git-send-email-egrumbach@gmail.com> (sfid-20140318_154658_926655_510692CF)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Mon, 31 Mar 2014 15:45:17 -0400
+Date: Mon, 31 Mar 2014 15:31:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-next 2014-03-31
+Message-ID: <20140331193118.GE17412@tuxdriver.com> (sfid-20140331_214523_436929_6103A0C0)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
 
-Enable protocol offloading (arp and NS) on D0i3.
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The offloading allows the fw answer NS and arp requests
-without waking up the host.
+Dave,
 
-Since protocol offloading is saved between D0i3
-entries, we have to explicitly disable it in
-case we don't want it.
+Please accept this one last round of general wireless updates for
+the 3.15 merge window!
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+For the Bluetooth bits, Gustavo says:
+
+"Here follow another set of patches to 3.15. This is mostly a bug fix
+pull request with the exception of one commit from Marcel which adds
+tracking to the current configured LE scan type parameter."
+
+Beyond that, notable bits include some final refactoring of rtl8180
+and the addition of the rtl8187se driver, fixes for a number of
+problems identified by Dan Carpenter and his static analysis tools,
+and a handful of other bits here and there.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/iwlwifi/mvm/d3.c         |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h        |  5 ++++-
- drivers/net/wireless/iwlwifi/mvm/offloading.c | 13 +++++++------
- drivers/net/wireless/iwlwifi/mvm/ops.c        |  1 +
- 4 files changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 02fb950..e56f5a0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1031,7 +1031,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out;
- 
--	ret = iwl_mvm_send_proto_offload(mvm, vif);
-+	ret = iwl_mvm_send_proto_offload(mvm, vif, false, CMD_SYNC);
- 	if (ret)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index d4f3c95..46fe817 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -906,7 +906,10 @@ iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- #endif
- void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
- 				struct iwl_wowlan_config_cmd_v2 *cmd);
--int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
-+			       struct ieee80211_vif *vif,
-+			       bool disable_offloading,
-+			       u32 cmd_flags);
- 
- /* D0i3 */
- void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/offloading.c b/drivers/net/wireless/iwlwifi/mvm/offloading.c
-index 9ec5a59..9bfb95e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/offloading.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/offloading.c
-@@ -81,7 +81,10 @@ void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
- 	}
- }
- 
--int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
-+			       struct ieee80211_vif *vif,
-+			       bool disable_offloading,
-+			       u32 cmd_flags)
- {
- 	union {
- 		struct iwl_proto_offload_cmd_v1 v1;
-@@ -91,7 +94,7 @@ int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	} cmd = {};
- 	struct iwl_host_cmd hcmd = {
- 		.id = PROT_OFFLOAD_CONFIG_CMD,
--		.flags = CMD_SYNC,
-+		.flags = cmd_flags,
- 		.data[0] = &cmd,
- 		.dataflags[0] = IWL_HCMD_DFL_DUP,
- 	};
-@@ -204,10 +207,8 @@ int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		memcpy(common->arp_mac_addr, vif->addr, ETH_ALEN);
- 	}
- 
--	if (!enabled)
--		return 0;
--
--	common->enabled = cpu_to_le32(enabled);
-+	if (!disable_offloading)
-+		common->enabled = cpu_to_le32(enabled);
- 
- 	hcmd.len[0] = size;
- 	return iwl_mvm_send_cmd(mvm, &hcmd);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index a3e21f1..10846b6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -905,6 +905,7 @@ static void iwl_mvm_enter_d0i3_iterator(void *_data, u8 *mac,
- 		data->disable_offloading = true;
- 
- 	iwl_mvm_update_d0i3_power_mode(mvm, vif, true, flags);
-+	iwl_mvm_send_proto_offload(mvm, vif, data->disable_offloading, flags);
- 
- 	/*
- 	 * on init/association, mvm already configures POWER_TABLE_CMD
--- 
-1.8.3.2
+The following changes since commit 9109e17f7c3ace48629397b44db5ce06bf168644:
 
+  Merge branch 'filter-next' (2014-03-31 00:45:49 -0400)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
+for-davem
+
+for you to fetch changes up to 96da266e77637ae892b196f377908c51fa9f2d1a:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless-next into for-davem (2014-03-31 15:22:17 -0400)
+
+----------------------------------------------------------------
+
+Adam Lee (2):
+      rtlwifi: add MSI interrupts mode support
+      rtlwifi: rtl8188ee: enable MSI interrupts mode
+
+Alexey Khoroshilov (1):
+      rtl8187: fix use after free on failure path in rtl8187_probe()
+
+Amitkumar Karwar (8):
+      Bluetooth: btmrvl: don't consume all vendor specific events
+      mwifiex: corner case NULL pointer dereference fix
+      mwifiex: correction in sleep confirm command sequence number
+      mwifiex: cancel pending commands during host sleep
+      mwifiex: scan command preparation failure handling
+      mwifiex: cancel pending commands for signal
+      mwifiex: use timeout variant for wait_event_interruptible
+      mwifiex: fix spinlock bad magic bug
+
+Andrea Merello (24):
+      rtl8180: fix DMA register are written two times
+      rtl8180: rationalize TX queues
+      rtl818x: add registers for rtl8187se
+      rtl8180: add rtl8187se chip type
+      rtl8180: add rtl8187se fields to TX descriptor
+      rtl8180: add basic rate configuration support for rtl8187se
+      rtl8180: support for rtl8187se RX descriptors
+      rtl8180: add ISR for rtl8187se
+      rtl8180: introduce functions to enable/disable ints and add support f=
+or rtl8187se
+      rtl8180: don't write MAR registers for rtl8187se
+      rtl8180: add TX queue mapping and support for rtl8187se
+      rtl8180: config carbus register for rtl8187se
+      rtl8180: add rtl8187se params to eeprom reading
+      rtl8180: introduce functions for setting ANAPARAM 2 and 3 params
+      rtl8180: add RF code for rtl8225 zebra v4
+      rtl8180: add rtl8187se HW initialization
+      rtl8180: add ERP configuration for rtl8187se
+      rtl8180: make sure RTL818X_MSR_ENEDCA is set for rtl8187se
+      rtl8180: add WMM parameters configuration for rtl8187se
+      rtl8180: detect rtl8187se card
+      rtl8180: enable rtl8187se support
+      rtl818x: Update Kconfig for rtl8187se
+      rtl8187: fix compile warning
+      rtl8180: don't use weird trick to access "far" registers
+
+Dan Carpenter (1):
+      rsi: rsi_91x: misleading debug printk
+
+Daniel Kim (1):
+      brcmfmac: use mfp if required from user-space
+
+Joe Perches (4):
+      rtlwifi: Remove addressof casts to same type
+      carl9170: Remove casts of pointer to same type
+      mwifiex: Remove casts of pointer to same type
+      rtlwifi: Remove casts of pointer to same type
+
+Johan Hedberg (11):
+      Bluetooth: Fix passkey endianess in user_confirm and notify_passkey
+      Bluetooth: Fix address value for early disconnection events
+      Bluetooth: Fix potential NULL pointer dereference in SMP
+      Bluetooth: Add missing cmd_status handler for LE_Start_Encryption
+      Bluetooth: Fix SMP confirmation callback handling
+      Bluetooth: Add SMP flag to track which side is the initiator
+      Bluetooth: Don't try to confirm locally initiated SMP pairing
+      Bluetooth: Remove LTK re-encryption procedure
+      Bluetooth: Fix potential NULL pointer dereference in smp_conn_security
+      Bluetooth: Remove unnecessary assignment in SMP
+      Bluetooth: Fix returning peer address in pending connect state
+
+John W. Linville (2):
+      Merge branch 'for-upstream' of git://git.kernel.org/.../bluetooth/blu=
+etooth-next
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
+ext into for-davem
+
+Marcel Holtmann (1):
+      Bluetooth: Track current configured LE scan type parameter
+
+Rafa=C5=82 Mi=C5=82ecki (1):
+      bcma: gpio: register 32 GPIOs on BCM5357
+
+Thomas Gleixner (1):
+      Bluetooth: bluecard: Use del_timer_sync() in teardown path
+
+ drivers/bcma/driver_gpio.c                         |   9 +-
+ drivers/bluetooth/bluecard_cs.c                    |   2 +-
+ drivers/bluetooth/btmrvl_main.c                    |  11 +-
+ drivers/net/wireless/ath/carl9170/rx.c             |   2 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  15 +-
+ .../net/wireless/brcm80211/include/brcmu_wifi.h    |   3 +
+ drivers/net/wireless/mwifiex/cmdevt.c              |  11 +-
+ drivers/net/wireless/mwifiex/main.c                |   3 +-
+ drivers/net/wireless/mwifiex/main.h                |   1 +
+ drivers/net/wireless/mwifiex/pcie.c                |   7 +-
+ drivers/net/wireless/mwifiex/scan.c                |  19 +-
+ drivers/net/wireless/mwifiex/sdio.c                |   2 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |   9 +-
+ drivers/net/wireless/mwifiex/tdls.c                |   6 +-
+ drivers/net/wireless/mwifiex/usb.c                 |   1 +
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c            |   3 +-
+ drivers/net/wireless/rtl818x/Kconfig               |   4 +-
+ drivers/net/wireless/rtl818x/rtl8180/Makefile      |   2 +-
+ drivers/net/wireless/rtl818x/rtl8180/dev.c         | 691 +++++++++++++++++=
++---
+ drivers/net/wireless/rtl818x/rtl8180/rtl8180.h     |  64 +-
+ drivers/net/wireless/rtl818x/rtl8180/rtl8225.c     |   1 +
+ drivers/net/wireless/rtl818x/rtl8180/rtl8225se.c   | 475 ++++++++++++++
+ drivers/net/wireless/rtl818x/rtl8180/rtl8225se.h   |  61 ++
+ drivers/net/wireless/rtl818x/rtl8187/dev.c         |   6 +-
+ drivers/net/wireless/rtl818x/rtl818x.h             | 258 ++++++--
+ drivers/net/wireless/rtlwifi/core.c                |   2 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |  69 +-
+ drivers/net/wireless/rtlwifi/ps.c                  |  19 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |   5 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |   4 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |  66 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |   1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |   4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  14 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  14 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |   5 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |  67 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |   4 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c        |   2 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c        |  64 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c       |   4 +-
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    |   4 +-
+ include/net/bluetooth/hci_core.h                   |   3 +-
+ net/bluetooth/hci_event.c                          |  63 +-
+ net/bluetooth/l2cap_sock.c                         |   3 +-
+ net/bluetooth/mgmt.c                               |  20 +-
+ net/bluetooth/rfcomm/sock.c                        |   3 +-
+ net/bluetooth/smp.c                                |  87 ++-
+ net/bluetooth/smp.h                                |   7 +-
+ 49 files changed, 1805 insertions(+), 395 deletions(-)
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8180/rtl8225se.c
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8180/rtl8225se.h
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJTOcKGAAoJEJctW/TcYTgGuiAP/0SZyKts4sc5BqIgXFLb7FtC
+3meIeghoB/5QJM4fGXtTyL/0wXCH2lVi7Ajmb9AhdPjx3VwWg4kew0J9qr6psMow
+DPuwwbpCWU1kdJJvFyiSlFJhuBnlpBP1N+TngEi5iDDmNdst7w5QSBrBIT3yTNk3
+wcvoMsE7xpOERQPw8qwRPj8vxyhORKuRakObJXZ/0vwyGsgTAHU8fb4FoSU04jLj
+wFKp+zPvjpJZCldX4io4OJSTgBHQLH5esxCRGW7rErpUwIww0AEskRs+Tnn7tbqV
+/bmbUEKDt5ErpJPPySDP69RBffb+XPX43NFxsi6j1h6QpPqGLiIruA2hu3luHAN0
+GDX76zPc81Hl/mYmYjCSZbCpH/QJcUhtA+8+7j6gIe0TT0xjRrMgBVbreYSrQ0dd
+nwaKnLqyzZpHV8KRX1kHI7I54TtX3Z4zUw31MtNikGfWUrQstc6LYCdUL+gGZK+D
+TYE8KZRrZ5kjGpVX5CIJLt/wx0+MGPLNhEW/ZKycQ84vIIA0WoW1AwI/5aNYyEbt
+G2ANihgLXGptLf6TKGlkyDOROAu42P/YIp/G2bCkAyl54rK49RwyEazMvwkCGU00
+VuCWj3yIQoamd9s32k8AvtyOW5ZAEnBEnRxrnW2obIqTuMATUw9iBHiqzGu3s0R6
+QhU/9Tv9BuBsnm3epdeo
+=Qt2G
+-----END PGP SIGNATURE-----
+
+--XsQoSWH+UP9D9v3l--
