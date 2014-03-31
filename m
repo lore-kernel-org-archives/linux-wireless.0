@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56221 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaCOEjc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:40178 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbaCaLtN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Mar 2014 00:39:32 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so3439992pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2014 21:39:31 -0700 (PDT)
-From: "Zhao\, Gang" <gamerh2o@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wlan-ng: fixup staging driver for removal of ieee80211_dsss_chan_to_freq
-References: <1394730975-20389-1-git-send-email-linville@tuxdriver.com>
-Date: Sat, 15 Mar 2014 12:39:14 +0800
-In-Reply-To: <1394730975-20389-1-git-send-email-linville@tuxdriver.com> (John
-	W. Linville's message of "Thu, 13 Mar 2014 13:16:15 -0400")
-Message-ID: <87wqfw6pot.fsf@will.lan> (sfid-20140315_053935_642446_D507480C)
+	Mon, 31 Mar 2014 07:49:13 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so5671782wgh.15
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:49:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1396266320.6794.6.camel@dubbel>
+References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	<1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	<1396259841-6359-5-git-send-email-michal.kazior@tieto.com>
+	<1396266320.6794.6.camel@dubbel>
+Date: Mon, 31 Mar 2014 13:49:11 +0200
+Message-ID: <CA+BoTQnOh8nRot1=vTkQ0bW2rkxxiDDF4PJm4q9ryY5FvO3Hiw@mail.gmail.com> (sfid-20140331_134916_799877_9B35CF1B)
+Subject: Re: [PATCH v3 4/4] mac80211: disconnect iface if CSA unexpectedly fails
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-03-14 at 01:16:15 +0800, John W. Linville wrote:
-> Commit 3ebe8e257307a87c33460aa7d2b75dadd374ed9c ("ieee80211: remove
-> function ieee80211_{dsss_chan_to_freq, freq_to_dsss_chan}") removed
-> ieee80211_dsss_chan_to_freq, but it neglected to account for this
-> staging driver...
-
-Hi, John.
-
-I have submited a similar patch to staging/staging-next tree, and it was
-applied in that tree on Feb 18, the commit is 4e5e9d7c66f04 on that
-tree. But my patch add a variable to deal with 80 characters
-problem. I'm not sure if your patch is applied to wireless-next, then
-there could be a conflict in future time.
-
-I separated the wireless tree patches and staging tree patch to
-different maintainers when doing that change. If I knew the staging driver
-change can happen on wireless tree, I should have combined them in one place.
-
+On 31 March 2014 13:45, Luca Coelho <luca@coelho.fi> wrote:
+> On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
+>> It doesn't make much sense to leave a cripled
+>> interface running.
+>>
+>> As a side effect this will unblock tx queues with
+>> CSA reason immediately after failure instead of
+>> until after userspace requests interface to stop.
+>>
+>> This also gives userspace an opportunity to
+>> indirectly see CSA failure.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
 >
-> Cc: Zhao, Gang <gamerh2o@gmail.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/staging/wlan-ng/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> [...]
 >
-> diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
-> index a7d24c95191d..7dd2b95416e8 100644
-> --- a/drivers/staging/wlan-ng/cfg80211.c
-> +++ b/drivers/staging/wlan-ng/cfg80211.c
-> @@ -416,7 +416,7 @@ static int prism2_scan(struct wiphy *wiphy,
->  		memcpy(&ie_buf[2], &(msg2.ssid.data.data), msg2.ssid.data.len);
->  		bss = cfg80211_inform_bss(wiphy,
->  			ieee80211_get_channel(wiphy,
-> -			      ieee80211_dsss_chan_to_freq(msg2.dschannel.data)),
-> +			      ieee80211_channel_to_frequency(msg2.dschannel.data, IEEE80211_BAND_2GHZ)),
->  			(const u8 *) &(msg2.bssid.data.data),
->  			msg2.timestamp.data, msg2.capinfo.data,
->  			msg2.beaconperiod.data,
+>> @@ -3100,7 +3100,7 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+>>       sdata->radar_required = sdata->csa_radar_required;
+>>       err = ieee80211_vif_change_channel(sdata, &changed);
+>>       if (WARN_ON(err < 0))
+>> -             return;
+>> +             return err;
+>
+> Didn't we agree to remove the WARN_ON() from here?
+
+I forgot, sorry. Now I definitely need to respin, again :)
+
+
+Michał
