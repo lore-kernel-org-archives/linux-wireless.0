@@ -1,252 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27293 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbaCIOku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 10:40:50 -0400
-From: Luciano Coelho <luciano.coelho@intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36404 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980AbaCaLn3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2014 07:43:29 -0400
+Received: by mail-we0-f174.google.com with SMTP id t60so4689184wes.33
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com,
-	sw@simonwunderlich.de, andrei.otcheretianski@intel.com
-Subject: [PATCH v6 2/3] mac80211: implement chanctx reservation
-Date: Sun,  9 Mar 2014 16:40:38 +0200
-Message-Id: <1394376039-9644-3-git-send-email-luciano.coelho@intel.com> (sfid-20140309_154053_330922_7D8888C6)
-In-Reply-To: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
-References: <1394376039-9644-1-git-send-email-luciano.coelho@intel.com>
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 11/13] mac80211: fix racy usage of chanctx->refcount
+Date: Mon, 31 Mar 2014 12:39:29 +0200
+Message-Id: <1396262371-6466-12-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134339_938432_8507CA86)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+ <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to support channel switch with multiple vifs and multiple
-contexts, we implement a concept of channel context reservation.  This
-allows us to reserve a channel context to be used later.
+Channel context refcount is protected by
+chanctx_mtx. Accessing the value without holding
+the mutex is racy. RCU section didn't guarantee
+anything here.
 
-The reservation functionality is not tied directly to channel switch
-and may be used in other situations (eg. reserving a channel context
-during IBSS join).
+Theoretically ieee80211_channel_switch() could
+fail to see refcount change and read "1" instead
+of, e.g. "2". This means mac80211 could accept CSA
+even though it shouldn't have.
 
-We first check if an existing compatible context exists and if it
-does, we reserve it.  If there is no compatible context we create a
-new one and reserve it.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-In RFC v2:
+v2:
+ * use rcu_dereference_protected() [Eliad/Johannes]
 
-   * reformulated the patch to make channel reservation generic and
-     not only for channel switch, as we may find other uses for it in
-     the future;
-   * added ieee80211_vif_unreserve_chanctx();
-   * removed reservation of the current chanctx from this patch;
-   * added a stop_queue_reason for chanctx reservation;
-   * added a few TODOs according to Michal's comments to be handled in
-     future patch series;
-   * set sdata->csa_chandef to the received chandef in all cases (it
-     was only happening in the alone-in-the-vif case;
+ net/mac80211/cfg.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-In v3:
-
-   * removed stray empty line;
-   * reworded the commit message;
-   * added reserved_chandef;
-   * added comment about reserved_chanctx and reserved_chandef protection;
-   * wake the queues if ieee80211_assign_vif_chanctx() fails;
-
-In v4:
-
-   * add chanctx mode parameter to ieee80211_vif_reserve_chanctx();
-   * compare the vif's previous BSS width with the reserved new width
-     instead of comparing it to the chanctx's combined width;
-
-In v5:
-
-   * removed a comment that was being removed, mistakenly, on the next
-     patch;
----
- net/mac80211/chan.c        | 125 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  14 +++++
- 2 files changed, 139 insertions(+)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a27c6ec..2acf973 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -419,6 +419,9 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 
- 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
-+	if (sdata->reserved_chanctx)
-+		ieee80211_vif_unreserve_chanctx(sdata);
-+
- 	ieee80211_unassign_vif_chanctx(sdata, ctx);
- 	if (ctx->refcount == 0)
- 		ieee80211_free_chanctx(local, ctx);
-@@ -611,6 +614,128 @@ int ieee80211_vif_change_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
-+{
-+	lockdep_assert_held(&sdata->local->chanctx_mtx);
-+
-+	if (WARN_ON(!sdata->reserved_chanctx))
-+		return -EINVAL;
-+
-+	if (--sdata->reserved_chanctx->refcount == 0)
-+		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
-+
-+	sdata->reserved_chanctx = NULL;
-+
-+	return 0;
-+}
-+
-+int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-+				  const struct cfg80211_chan_def *chandef,
-+				  enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 821143c..caa351b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3282,7 +3282,7 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
 +	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *new_ctx, *curr_ctx;
-+	int ret = 0;
-+
+ 	struct ieee80211_chanctx *chanctx;
+ 	int err, num_chanctx, changed = 0;
+ 
+@@ -3299,23 +3299,24 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				       &sdata->vif.bss_conf.chandef))
+ 		return -EINVAL;
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
 +	mutex_lock(&local->chanctx_mtx);
-+
 +	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
 +					 lockdep_is_held(&local->chanctx_mtx));
 +	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	curr_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	/* try to find another context with the chandef we want */
-+	new_ctx = ieee80211_find_chanctx(local, chandef, mode);
-+	if (!new_ctx) {
-+		/* create a new context */
-+		new_ctx = ieee80211_new_chanctx(local, chandef, mode);
-+		if (IS_ERR(new_ctx)) {
-+			ret = PTR_ERR(new_ctx);
-+			goto out;
-+		}
-+	}
-+
-+	sdata->reserved_chanctx = new_ctx;
-+	new_ctx->refcount++;
-+	sdata->reserved_chandef = *chandef;
-+out:
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
+ 	}
+ 
+ 	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
++	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->chanctx_mtx);
+ 		return -EBUSY;
+ 	}
+ 	num_chanctx = 0;
+ 	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
+ 		num_chanctx++;
+-	rcu_read_unlock();
 +	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
-+int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
-+				       u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx *ctx;
-+	struct ieee80211_chanctx *old_ctx;
-+	struct ieee80211_chanctx_conf *conf;
-+	int ret, local_changed = *changed;
-+
-+	/* TODO: need to recheck if the chandef is usable etc.? */
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	mutex_lock(&local->chanctx_mtx);
-+
-+	ctx = sdata->reserved_chanctx;
-+	if (WARN_ON(!ctx)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	old_ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	ieee80211_stop_queues_by_reason(&local->hw,
-+					IEEE80211_MAX_QUEUE_MAP,
-+					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
-+
-+	ieee80211_unassign_vif_chanctx(sdata, old_ctx);
-+	if (old_ctx->refcount == 0)
-+		ieee80211_free_chanctx(local, old_ctx);
-+
-+	if (sdata->vif.bss_conf.chandef.width != sdata->reserved_chandef.width)
-+		local_changed |= BSS_CHANGED_BANDWIDTH;
-+
-+	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
-+
-+	/* unref our reservation before assigning */
-+	ctx->refcount--;
-+	sdata->reserved_chanctx = NULL;
-+	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-+	if (ret) {
-+		/* if assign fails refcount stays the same */
-+		if (ctx->refcount == 0)
-+			ieee80211_free_chanctx(local, ctx);
-+		goto out_wake;
-+	}
-+
-+	*changed = local_changed;
-+
-+	ieee80211_recalc_chanctx_chantype(local, ctx);
-+	ieee80211_recalc_smps_chanctx(local, ctx);
-+	ieee80211_recalc_radar_chanctx(local, ctx);
-+out_wake:
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_MAX_QUEUE_MAP,
-+					IEEE80211_QUEUE_STOP_REASON_CHANCTX);
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
- int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 				   const struct cfg80211_chan_def *chandef,
- 				   u32 *changed)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8603dfb..ae8acc2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -756,6 +756,10 @@ struct ieee80211_sub_if_data {
- 	bool csa_radar_required;
- 	struct cfg80211_chan_def csa_chandef;
  
-+	/* context reservation -- protected with chanctx_mtx */
-+	struct ieee80211_chanctx *reserved_chanctx;
-+	struct cfg80211_chan_def reserved_chandef;
-+
- 	/* used to reconfigure hardware SM PS */
- 	struct work_struct recalc_smps;
- 
-@@ -899,6 +903,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
- 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
- 	IEEE80211_QUEUE_STOP_REASON_FLUSH,
-+	IEEE80211_QUEUE_STOP_REASON_CHANCTX,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
-@@ -1776,6 +1781,15 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 			  const struct cfg80211_chan_def *chandef,
- 			  enum ieee80211_chanctx_mode mode);
- int __must_check
-+ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
-+			      const struct cfg80211_chan_def *chandef,
-+			      enum ieee80211_chanctx_mode mode);
-+int __must_check
-+ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
-+				   u32 *changed);
-+int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata);
-+
-+int __must_check
- ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u32 *changed);
+ 	if (num_chanctx > 1)
+ 		return -EBUSY;
 -- 
-1.9.0
+1.8.5.3
 
