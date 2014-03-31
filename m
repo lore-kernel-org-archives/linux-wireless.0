@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:39388 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbaC1HdF (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:30439 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754272AbaCaNnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 03:33:05 -0400
-Subject: [PATCH v2 8/8] ath10k: print chip id during boot
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 28 Mar 2014 09:33:04 +0200
-Message-ID: <20140328073304.30438.94161.stgit@potku.adurom.net> (sfid-20140328_083309_195391_0EBE615D)
-In-Reply-To: <20140328073040.30438.17966.stgit@potku.adurom.net>
-References: <20140328073040.30438.17966.stgit@potku.adurom.net>
+	Mon, 31 Mar 2014 09:43:04 -0400
+Message-ID: <533970DF.70303@broadcom.com> (sfid-20140331_154337_292937_4B2FC099)
+Date: Mon, 31 Mar 2014 15:42:55 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Denys Vlasenko <dvlasenk@redhat.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] brcm80211: deinline brcmf_chip_cr4_enterdl, save
+ 440 bytes
+References: <1396215079-7541-1-git-send-email-dvlasenk@redhat.com> <53391B89.7010304@broadcom.com> <53394F23.6080805@redhat.com>
+In-Reply-To: <53394F23.6080805@redhat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it easier to debug what kind of board is used.
+On 31/03/14 13:18, Denys Vlasenko wrote:
+> On 03/31/2014 09:38 AM, Arend van Spriel wrote:
+>> On 30/03/14 23:31, Denys Vlasenko wrote:
+>>> Automated script discovered that without forced inlining,
+>>> gcc-4.7 generates smaller code for this function.
+>>>
+>>> There is no need to declare static functions inline anyway:
+>>> nowadays gcc detects single-callsite static functions
+>>> which benefit from inlining.
+>>
+>> These patches look awfully familiar. I tend to object, but I don't know the details of this automated script.
+>
+> The script removes "static" keyword, recompiles the .c file,
+> compares the sizes, and if code size went down,
+> creates a patch
+>
+>> How about execution time or is this only compile tested?
+>
+> The change adds one pair of call/return instructions -
+> probably around 5-10 CPU cycles.
+>
+> The function in question is a part of firmware download logic,
+> which is nowhere near being hot path/.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+True. My remarks are on all four patches and I just replied to the first 
+patch. The other patches are in interrupt handling code, ie. interrupt 
+or bottom-halve context.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 471c219e5137..0077ba17e5c0 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -844,9 +844,12 @@ int ath10k_core_start(struct ath10k *ar)
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
- 	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
--		ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
--			    ar->hw_params.name, ar->target_version,
--			    ar->hw->wiphy->fw_version, ar->fw_api,
-+		ath10k_info("%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
-+			    ar->hw_params.name,
-+			    ar->target_version,
-+			    ar->chip_id,
-+			    ar->hw->wiphy->fw_version,
-+			    ar->fw_api,
- 			    ar->htt.target_version_major,
- 			    ar->htt.target_version_minor);
- 
+>> The other thing is that you seem to rely on a specific gcc version.
+>> What about pre-4.7? How about different architectures.
+>> Was this determined on x86, arm, sparc, mips.
+>> All these questions make me say 'nay'.
+>
+> Not making functions inline unless there is a good reason
+> is a general good coding practice. It is not a compiler-
+> or architecture-specific optimization.
+
+Agree, but you seem to assume that in this case there is no good reason.
+
+Regards,
+Arend
+
 
