@@ -1,29 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f182.google.com ([209.85.128.182]:64074 "EHLO
-	mail-ve0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249AbaC1ORw (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36346 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbaCaLnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Mar 2014 10:17:52 -0400
-Received: by mail-ve0-f182.google.com with SMTP id jw12so5723224veb.41
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Mar 2014 07:17:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ha6iwm9h.fsf@kamboji.qca.qualcomm.com>
-References: <1395648122-2125-1-git-send-email-yeohchunyeow@gmail.com>
-	<87ha6iwm9h.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Mar 2014 22:17:51 +0800
-Message-ID: <CAEFj987qGWyBzS1a=joRaP7mSjcSUvd_5K05xhn-F4HBYWbD2A@mail.gmail.com> (sfid-20140328_151756_233780_22DC75A1)
-Subject: Re: [PATCH] ath10k: update wal_dbg_tx_stats structure with missing parameter
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 31 Mar 2014 07:43:05 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hm4so3127877wib.8
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:03 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 01/13] cfg80211: allow drivers to iterate over matching combinations
+Date: Mon, 31 Mar 2014 12:39:19 +0200
+Message-Id: <1396262371-6466-2-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134311_623572_B60AA53C)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+ <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm going to apply the original patch instead and I'll drop this.
->
-Sure.
+The patch splits cfg80211_check_combinations()
+into an iterator function and a simple iteration
+user.
 
-----
-Chun-Yeow
+This makes it possible for drivers to asses how
+many channels can use given iftype setup. This in
+turn can be used for future
+multi-interface/multi-channel channel switching.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
+ net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 64 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b4ea653..af26751 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4730,6 +4730,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			 gfp_t gfp);
+ 
++/**
++ * cfg80211_iter_combinations - iterate over matching combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ * @iter: function to call for each matching combination
++ * @data: pointer to pass to iter function
++ *
++ * This function can be called by the driver to check what possible
++ * combinations it fits in at a given moment, e.g. for channel switching
++ * purposes.
++ */
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 31b93b9..f9928f2 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1250,10 +1250,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
+-int cfg80211_check_combinations(struct wiphy *wiphy,
+-				const int num_different_channels,
+-				const u8 radar_detect,
+-				const int iftype_num[NUM_NL80211_IFTYPES])
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data)
+ {
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+@@ -1310,13 +1313,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 		/* This combination covered all interface types and
+ 		 * supported the requested numbers, so we're good.
+ 		 */
+-		kfree(limits);
+-		return 0;
++
++		(*iter)(c, data);
+  cont:
+ 		kfree(limits);
+ 	}
+ 
+-	return -EBUSY;
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_iter_combinations);
++
++static void
++cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
++			  void *data)
++{
++	int *num = data;
++	(*num)++;
++}
++
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int err, num = 0;
++
++	err = cfg80211_iter_combinations(wiphy, num_different_channels,
++					 radar_detect, iftype_num,
++					 cfg80211_iter_sum_ifcombs, &num);
++	if (err)
++		return err;
++	if (num == 0)
++		return -EBUSY;
++
++	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_check_combinations);
+ 
+-- 
+1.8.5.3
+
