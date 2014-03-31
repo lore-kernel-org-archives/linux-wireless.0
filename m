@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:43917 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbaCFWpz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46870 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068AbaCaQ5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Mar 2014 17:45:55 -0500
-Received: by mail-we0-f175.google.com with SMTP id q58so3957216wes.6
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Mar 2014 14:45:54 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/5] staging: vt6655: 64 bit Correct alignment of tx/rx structures.
-Date: Thu,  6 Mar 2014 22:44:21 +0000
-Message-Id: <1394145865-3748-1-git-send-email-tvboxspy@gmail.com> (sfid-20140306_234559_805157_4F88BD62)
+	Mon, 31 Mar 2014 12:57:00 -0400
+Message-ID: <53399E42.2090504@candelatech.com> (sfid-20140331_185706_754814_C073AFD1)
+Date: Mon, 31 Mar 2014 09:56:34 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath10k:  ieee80211_restart_work called with hardware scan in progress
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aligment of pointers on 64 bit is incorrect.
+This came from a customer (demo) system.  Firmware is 10.1.389 based, modified
+by us.  It has lots of known issues, but I haven't seen the warning
+below before, and not sure it is specifically a bug with ath10k or not.
 
-Align to 64 bit using aligned 8 bytes and remove structure packing.
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+Mar 31 13:49:54 ct521-5332 kernel: ieee80211_restart_work called with hardware scan in progress
+Mar 31 13:49:54 ct521-5332 kernel: Modules linked in: nf_nat_ipv4 nf_nat fuse 8021q mrp garp stp llc macvlan pktgen coretemp hwmon sunrpc ipv6 uinput
+snd_hda_codec_realtek snd_hda_codec_generic ath10k_pci ath10k_core snd_hda_intel mac80211 snd_hda_codec snd_hwdep snd_seq snd_seq_device iTCO_wdt e1000e
+microcode ath gpio_ich snd_pcm iTCO_vendor_support ppdev ptp snd_timer parport_pc snd cfg80211 parport serio_raw pps_core soundcore pcspkr i2c_i801 lpc_ich i915
+drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iptable_nat]
+Mar 31 13:49:54 ct521-5332 kernel: CPU: 0 PID: 11818 Comm: kworker/0:0 Tainted: G        WC   3.14.0-rc7-wl-ath+ #4
+Mar 31 13:49:54 ct521-5332 kernel: Hardware name: To be filled by O.E.M. To be filled by O.E.M./To be filled by O.E.M., BIOS 4.6.3 09/05/2011
+Mar 31 13:49:54 ct521-5332 kernel: Workqueue: events ieee80211_restart_work [mac80211]
+Mar 31 13:49:54 ct521-5332 kernel: 0000000000000009 ffff8800bd865d68 ffffffff815ab0a5 ffff88022bc0ec38
+Mar 31 13:49:54 ct521-5332 kernel: ffff8800bd865db8 ffff8800bd865da8 ffffffff810c1aa8 ffff8800bd865d88
+Mar 31 13:49:54 ct521-5332 kernel: ffffffffa03858ce ffff8802214d5650 ffff8802214d45e0 ffff8802214d5650
+Mar 31 13:49:54 ct521-5332 kernel: Call Trace:
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff815ab0a5>] dump_stack+0x4e/0x71
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810c1aa8>] warn_slowpath_common+0x77/0x91
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffffa03858ce>] ? ieee80211_restart_work+0x49/0x68 [mac80211]
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810c1b56>] warn_slowpath_fmt+0x41/0x43
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffffa03858ce>] ieee80211_restart_work+0x49/0x68 [mac80211]
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d52af>] process_one_work+0x162/0x216
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d5724>] worker_thread+0x12f/0x1fd
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d55f5>] ? rescuer_thread+0x268/0x268
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d55f5>] ? rescuer_thread+0x268/0x268
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da37f>] kthread+0xa0/0xa8
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da2df>] ? __kthread_parkme+0x5c/0x5c
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff815b5b4c>] ret_from_fork+0x7c/0xb0
+Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da2df>] ? __kthread_parkme+0x5c/0x5c
+Mar 31 13:49:54 ct521-5332 kernel: ---[ end trace fd8ccdaa79168e68 ]---
 
-This allows the device to run on both 32 and 64 bit
+Thanks,
+Ben
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/desc.h | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 32d808e..f8e4148 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -276,9 +276,8 @@ typedef struct tagSRxDesc {
- 	volatile SRDES1 m_rd1RD1;
- 	volatile u32    buff_addr;
- 	volatile u32    next_desc;
--	struct tagSRxDesc   *next;//4 bytes
--	volatile PDEVICE_RD_INFO    pRDInfo;//4 bytes
--	volatile u32    Reserved[2];//8 bytes
-+	struct tagSRxDesc *next __aligned(8);
-+	volatile PDEVICE_RD_INFO pRDInfo __aligned(8);
- } __attribute__ ((__packed__))
- SRxDesc, *PSRxDesc;
- typedef const SRxDesc *PCSRxDesc;
-@@ -361,9 +360,8 @@ typedef struct tagSTxDesc {
- 	volatile    STDES1  m_td1TD1;
- 	volatile    u32    buff_addr;
- 	volatile    u32    next_desc;
--	struct tagSTxDesc *next; //4 bytes
--	volatile    PDEVICE_TD_INFO pTDInfo;//4 bytes
--	volatile    u32    Reserved[2];//8 bytes
-+	struct tagSTxDesc *next __aligned(8);
-+	volatile    PDEVICE_TD_INFO pTDInfo __aligned(8);
- } __attribute__ ((__packed__))
- STxDesc, *PSTxDesc;
- typedef const STxDesc *PCSTxDesc;
-@@ -375,9 +373,8 @@ typedef struct tagSTxSyncDesc {
- 	volatile    u32 next_desc; // pointer to next logical descriptor
- 	volatile    unsigned short m_wFIFOCtl;
- 	volatile    unsigned short m_wTimeStamp;
--	struct tagSTxSyncDesc *next; //4 bytes
--	volatile    PDEVICE_TD_INFO pTDInfo;//4 bytes
--	volatile    u32 m_dwReserved2;
-+	struct tagSTxSyncDesc *next __aligned(8);
-+	volatile    PDEVICE_TD_INFO pTDInfo __aligned(8);
- } __attribute__ ((__packed__))
- STxSyncDesc, *PSTxSyncDesc;
- typedef const STxSyncDesc *PCSTxSyncDesc;
 -- 
-1.9.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
