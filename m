@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29864 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbaCGIRo (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:33400 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbaCaMKe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Mar 2014 03:17:44 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Marek Puzyniak <marek.puzyniak@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: do not overwrite max_antenna_gain
-References: <1394021433-19376-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Fri, 7 Mar 2014 10:17:39 +0200
-In-Reply-To: <1394021433-19376-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 5 Mar 2014 13:10:33 +0100")
-Message-ID: <878usmpgm4.fsf@kamboji.qca.qualcomm.com> (sfid-20140307_091748_476873_824BE484)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 31 Mar 2014 08:10:34 -0400
+Received: by mail-we0-f179.google.com with SMTP id x48so4591941wes.38
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 05:10:33 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 4/5] mac80211: ignore cqm during csa
+Date: Mon, 31 Mar 2014 14:04:18 +0200
+Message-Id: <1396267459-9976-5-git-send-email-michal.kazior@tieto.com> (sfid-20140331_141055_545272_DF4E190C)
+In-Reply-To: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+ <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+It is not guaranteed that multi-vif channel
+switching is tightly synchronized. It makes sense
+to ignore cqm (missing beacons, et al) while csa
+is progressing and re-check it after it completes.
 
-> From: Marek Puzyniak <marek.puzyniak@tieto.com>
->
-> Seems like we have an old bug, where we incidently overwrites
-> the max_antenna_gain we pass to firmware, with zero value.
->
-> End of all we are artifically reducing the output power.
->
-> This patch removes the excessive assignment on max_antenna_gain,
-> which is being provided by regulatory domain, and consequently
-> improves the tx power.
->
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/mlme.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Thanks, applied.
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 07a4324..ecf9681 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -983,6 +983,9 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
+ 
++	ieee80211_sta_reset_beacon_monitor(sdata);
++	ieee80211_sta_reset_conn_monitor(sdata);
++
+ out:
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+@@ -3570,6 +3573,9 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
++	if (sdata->vif.csa_active)
++		return;
++
+ 	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->u.mgd.beacon_connection_loss_work);
+@@ -3585,6 +3591,9 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
++	if (sdata->vif.csa_active)
++		return;
++
+ 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
+ }
+ 
 -- 
-Kalle Valo
+1.8.5.3
+
