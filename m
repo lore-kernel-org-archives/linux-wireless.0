@@ -1,37 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:45538 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752504AbaCaLGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Mar 2014 07:06:32 -0400
-Message-ID: <1396263984.4478.13.camel@dubbel> (sfid-20140331_130639_627721_ACF57392)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Mon, 31 Mar 2014 14:06:24 +0300
-In-Reply-To: <1396259841-6359-2-git-send-email-michal.kazior@tieto.com>
-References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
-	 <1396259841-6359-2-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v3 1/4] mac80211: fix CSA tx queue locking
+Received: from nm27-vm2.bullet.mail.sg3.yahoo.com ([106.10.151.129]:25888 "EHLO
+	nm27-vm2.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753424AbaCaOmZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2014 10:42:25 -0400
+Message-ID: <1396276552.27791.YahooMailBasic@web193503.mail.sg3.yahoo.com> (sfid-20140331_164230_929160_88619BBD)
+Date: Mon, 31 Mar 2014 22:35:52 +0800 (SGT)
+From: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Subject: Impact of migration from compat wireless to backports
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
-> It was possible for tx queues to be stuck locked
-
-I would still prefer to use "stopped" instead of locked here (and in the
-subject).  But that's just me...
-
-
-> if AP CSA finalization failed. In that case
-> stop_ap nor do_stop woke the queues up.
-
-Maybe "In that case *neither* stop_ap nor do_stop"...?
-
-Otherwise looks good to me.
-
---
-Luca.
-
+Hello Mr.Adrian, Mr.Sujith & others,
+       We have been asked to migrate from Compat wireless 3.1.1 to backports. When i took the differences with the latest version (3.13.2 backports) and  compat wireless 3.1.1, there were huge differences in files. From AR9287 BT Wifi 2/3 wire coexistence are there any differences in migrating to backports as I might need to restart from scratch all the efforts?
+Please share if any of you had any issues.
+Thanks & regards
+Sandeep.
