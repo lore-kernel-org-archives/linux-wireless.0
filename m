@@ -1,227 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:55943 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbaCAUQl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Mar 2014 15:16:41 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org,
-	linville@tuxdriver.com
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 02/23] ath9k_htc: use common ath_beacon_config
-Date: Sat,  1 Mar 2014 21:15:45 +0100
-Message-Id: <1393704966-13985-3-git-send-email-linux@rempel-privat.de> (sfid-20140301_211645_423807_6FB476FA)
-In-Reply-To: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
-References: <1393704966-13985-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:33835 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753865AbaCaKDa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Mar 2014 06:03:30 -0400
+Received: by mail-wg0-f48.google.com with SMTP id l18so5532921wgh.31
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 03:03:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 1/4] mac80211: fix CSA tx queue locking
+Date: Mon, 31 Mar 2014 11:57:18 +0200
+Message-Id: <1396259841-6359-2-git-send-email-michal.kazior@tieto.com> (sfid-20140331_120335_802130_128E85BE)
+In-Reply-To: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+ <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc.h            | 10 +++----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 40 ++++++++++++-------------
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  2 +-
- 3 files changed, 25 insertions(+), 27 deletions(-)
+It was possible for tx queues to be stuck locked
+if AP CSA finalization failed. In that case
+stop_ap nor do_stop woke the queues up. This means
+it was impossible to perform tx at all until
+driver was reloaded or a successful CSA was
+performed later.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 3baf9ce..ed41db5 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -406,12 +406,9 @@ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
- #define DEFAULT_SWBA_RESPONSE 40 /* in TUs */
- #define MIN_SWBA_RESPONSE     10 /* in TUs */
- 
--struct htc_beacon_config {
-+struct htc_beacon {
- 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
--	u16 beacon_interval;
--	u16 dtim_period;
--	u16 bmiss_timeout;
--	u32 bmiss_cnt;
-+	u32 bmisscnt;
- };
- 
- struct ath_btcoex {
-@@ -489,7 +486,8 @@ struct ath9k_htc_priv {
- 	struct ath9k_hw_cal_data caldata;
- 
- 	spinlock_t beacon_lock;
--	struct htc_beacon_config cur_beacon_conf;
-+	struct ath_beacon_config cur_beacon_conf;
-+	struct htc_beacon beacon;
- 
- 	struct ath9k_htc_rx rx;
- 	struct ath9k_htc_tx tx;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index a00ddb9..8929050 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -64,7 +64,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 
- 
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
--					struct htc_beacon_config *bss_conf)
-+					struct ath_beacon_config *bss_conf)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_beacon_state bs;
-@@ -162,7 +162,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+It was possible to solve this in a simpler manner
+however this is more robust and future proof
+(having multi-vif CSA in mind).
+
+New sdata->csa_block_tx is introduced to keep
+track of which interfaces requested tx to be
+blocked for CSA. This is required because mac80211
+locks all tx queues for that purpose. This means
+queues must be unlocked only when last tx-blocking
+CSA interface is finished.
+
+It is still possible to have tx queues stopped
+after CSA failure but as soon as offending
+interfaces are stopped from userspace (stop_ap or
+ifdown) tx queues are woken up properly.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * get rid of idempotency [Johannes]
+
+v3:
+ * fix wake/stop typo [Luca]
+ * move queue waking to csa_finalize() [Luca]
+ * tune how queues are woken for STA CSA [Luca]
+
+ include/net/mac80211.h     |  4 ++-
+ net/mac80211/cfg.c         | 77 ++++++++++++++++++++++++++++++++++++++--------
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       |  7 +++++
+ net/mac80211/mlme.c        | 37 ++++++++++++++++------
+ 5 files changed, 104 insertions(+), 23 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 604e279..ea69961 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1113,7 +1113,9 @@ enum ieee80211_vif_flags {
+  * @addr: address of this interface
+  * @p2p: indicates whether this AP or STA interface is a p2p
+  *	interface, i.e. a GO or p2p-sta respectively
+- * @csa_active: marks whether a channel switch is going on
++ * @csa_active: marks whether a channel switch is going on. Internally it is
++ *	write-protected by sdata_lock and local->mtx so holding either is fine
++ *	for read access.
+  * @driver_flags: flags/capabilities the driver has for this interface,
+  *	these need to be set (or cleared) when the interface is added
+  *	or, if supported by the driver, the interface type is changed
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index aa39381..b7cf8e4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1084,6 +1084,31 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
- static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
--				       struct htc_beacon_config *bss_conf)
-+				       struct ath_beacon_config *bss_conf)
++bool ieee80211_csa_needs_block_tx(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	lockdep_assert_held(&local->mtx);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++
++		if (!sdata->vif.csa_active)
++			continue;
++
++		if (!sdata->csa_block_tx)
++			continue;
++
++		rcu_read_unlock();
++		return true;
++	}
++	rcu_read_unlock();
++
++	return false;
++}
++
+ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
  {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
-@@ -211,13 +211,13 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1101,7 +1126,14 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
  
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
--	priv->cur_beacon_conf.bmiss_cnt = 0;
-+	priv->beacon.bmisscnt = 0;
- 	htc_imask = cpu_to_be32(imask);
- 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
- }
+ 	/* abort any running channel switch */
++	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
++	mutex_unlock(&local->mtx);
++
+ 	kfree(sdata->u.ap.next_beacon);
+ 	sdata->u.ap.next_beacon = NULL;
  
- static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
--					  struct htc_beacon_config *bss_conf)
-+					  struct ath_beacon_config *bss_conf)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
-@@ -257,7 +257,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+@@ -3025,11 +3057,10 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	int err, changed = 0;
  
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
--	priv->cur_beacon_conf.bmiss_cnt = 0;
-+	priv->beacon.bmisscnt = 0;
- 	htc_imask = cpu_to_be32(imask);
- 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
- }
-@@ -279,7 +279,7 @@ static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
+ 	sdata_assert_lock(sdata);
++	lockdep_assert_held(&local->mtx);
  
- 	spin_lock_bh(&priv->beacon_lock);
- 
--	vif = priv->cur_beacon_conf.bslot[slot];
-+	vif = priv->beacon.bslot[slot];
- 
- 	skb = ieee80211_get_buffered_bc(priv->hw, vif);
- 
-@@ -340,7 +340,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 
- 	spin_lock_bh(&priv->beacon_lock);
- 
--	vif = priv->cur_beacon_conf.bslot[slot];
-+	vif = priv->beacon.bslot[slot];
- 	avp = (struct ath9k_htc_vif *)vif->drv_priv;
- 
- 	if (unlikely(test_bit(OP_SCANNING, &priv->op_flags))) {
-@@ -423,8 +423,8 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv,
- 	int slot;
- 
- 	if (swba->beacon_pending != 0) {
--		priv->cur_beacon_conf.bmiss_cnt++;
--		if (priv->cur_beacon_conf.bmiss_cnt > BSTUCK_THRESHOLD) {
-+		priv->beacon.bmisscnt++;
-+		if (priv->beacon.bmisscnt > BSTUCK_THRESHOLD) {
- 			ath_dbg(common, BSTUCK, "Beacon stuck, HW reset\n");
- 			ieee80211_queue_work(priv->hw,
- 					     &priv->fatal_work);
-@@ -432,16 +432,16 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv,
+-	mutex_lock(&local->mtx);
+ 	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+-	mutex_unlock(&local->mtx);
+ 	if (WARN_ON(err < 0))
  		return;
- 	}
  
--	if (priv->cur_beacon_conf.bmiss_cnt) {
-+	if (priv->beacon.bmisscnt) {
- 		ath_dbg(common, BSTUCK,
- 			"Resuming beacon xmit after %u misses\n",
--			priv->cur_beacon_conf.bmiss_cnt);
--		priv->cur_beacon_conf.bmiss_cnt = 0;
-+			priv->beacon.bmisscnt);
-+		priv->beacon.bmisscnt = 0;
- 	}
+@@ -3070,11 +3101,12 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
  
- 	slot = ath9k_htc_choose_bslot(priv, swba);
- 	spin_lock_bh(&priv->beacon_lock);
--	if (priv->cur_beacon_conf.bslot[slot] == NULL) {
-+	if (priv->beacon.bslot[slot] == NULL) {
- 		spin_unlock_bh(&priv->beacon_lock);
- 		return;
- 	}
-@@ -460,13 +460,13 @@ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 	ieee80211_bss_info_change_notify(sdata, changed);
  
- 	spin_lock_bh(&priv->beacon_lock);
- 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++) {
--		if (priv->cur_beacon_conf.bslot[i] == NULL) {
-+		if (priv->beacon.bslot[i] == NULL) {
- 			avp->bslot = i;
- 			break;
- 		}
- 	}
+-	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
++
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+ }
  
--	priv->cur_beacon_conf.bslot[avp->bslot] = vif;
-+	priv->beacon.bslot[avp->bslot] = vif;
- 	spin_unlock_bh(&priv->beacon_lock);
+ void ieee80211_csa_finalize_work(struct work_struct *work)
+@@ -3082,8 +3114,11 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     csa_finalize_work);
++	struct ieee80211_local *local = sdata->local;
  
- 	ath_dbg(common, CONFIG, "Added interface at beacon slot: %d\n",
-@@ -480,7 +480,7 @@ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
- 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
+ 	sdata_lock(sdata);
++	mutex_lock(&local->mtx);
++
+ 	/* AP might have been stopped while waiting for the lock. */
+ 	if (!sdata->vif.csa_active)
+ 		goto unlock;
+@@ -3094,6 +3129,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	ieee80211_csa_finalize(sdata);
  
- 	spin_lock_bh(&priv->beacon_lock);
--	priv->cur_beacon_conf.bslot[avp->bslot] = NULL;
-+	priv->beacon.bslot[avp->bslot] = NULL;
- 	spin_unlock_bh(&priv->beacon_lock);
+ unlock:
++	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ }
  
- 	ath_dbg(common, CONFIG, "Removed interface at beacon slot: %d\n",
-@@ -496,7 +496,7 @@ void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
+@@ -3220,8 +3256,8 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-			     struct cfg80211_csa_settings *params)
++int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			       struct cfg80211_csa_settings *params)
  {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
--	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
-+	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
- 	u64 tsfadjust;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+@@ -3230,6 +3266,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	int err, num_chanctx, changed = 0;
  
- 	if (avp->bslot == 0)
-@@ -528,7 +528,7 @@ static bool ath9k_htc_check_beacon_config(struct ath9k_htc_priv *priv,
- 					  struct ieee80211_vif *vif)
+ 	sdata_assert_lock(sdata);
++	lockdep_assert_held(&local->mtx);
+ 
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+ 		return -EBUSY;
+@@ -3271,15 +3308,15 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		return err;
+ 
+ 	sdata->csa_radar_required = params->radar_required;
+-
+-	if (params->block_tx)
+-		ieee80211_stop_queues_by_reason(&local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+ 	sdata->csa_chandef = params->chandef;
++	sdata->csa_block_tx = params->block_tx;
+ 	sdata->vif.csa_active = true;
+ 
++	if (sdata->csa_block_tx)
++		ieee80211_stop_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
++
+ 	if (changed) {
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 		drv_channel_switch_beacon(sdata, &params->chandef);
+@@ -3291,6 +3328,20 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int err;
++
++	mutex_lock(&local->mtx);
++	err = __ieee80211_channel_switch(wiphy, dev, params);
++	mutex_unlock(&local->mtx);
++
++	return err;
++}
++
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     struct cfg80211_mgmt_tx_params *params,
+ 			     u64 *cookie)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3b73c3e..02fe9f4 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -754,6 +754,7 @@ struct ieee80211_sub_if_data {
+ 	int csa_counter_offset_beacon;
+ 	int csa_counter_offset_presp;
+ 	bool csa_radar_required;
++	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
+ 	struct cfg80211_chan_def csa_chandef;
+ 
+ 	/* context reservation -- protected with chanctx_mtx */
+@@ -1466,6 +1467,7 @@ void ieee80211_sw_roc_work(struct work_struct *work);
+ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
++bool ieee80211_csa_needs_block_tx(struct ieee80211_local *local);
+ void ieee80211_csa_finalize_work(struct work_struct *work);
+ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct cfg80211_csa_settings *params);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 359e14b..52dccd6 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -838,8 +838,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	cancel_work_sync(&sdata->recalc_smps);
+ 	sdata_lock(sdata);
++	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
++	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
++
+ 	cancel_work_sync(&sdata->csa_finalize_work);
+ 
+ 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index bbc2175..5a916bb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -952,16 +952,20 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 	/* XXX: shouldn't really modify cfg80211-owned data! */
+ 	ifmgd->associated->channel = sdata->csa_chandef.chan;
+ 
++	ieee80211_bss_info_change_notify(sdata, changed);
++
++	mutex_lock(&local->mtx);
++	sdata->vif.csa_active = false;
+ 	/* XXX: wait for a beacon first? */
+-	ieee80211_wake_queues_by_reason(&local->hw,
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
++	mutex_unlock(&local->mtx);
+ 
+-	ieee80211_bss_info_change_notify(sdata, changed);
+-
+- out:
+-	sdata->vif.csa_active = false;
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
++
++out:
+ 	sdata_unlock(sdata);
+ }
+ 
+@@ -1077,12 +1081,16 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	mutex_unlock(&local->chanctx_mtx);
+ 
+ 	sdata->csa_chandef = csa_ie.chandef;
++
++	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = true;
++	sdata->csa_block_tx = csa_ie.mode;
+ 
+-	if (csa_ie.mode)
++	if (sdata->csa_block_tx)
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
++	mutex_unlock(&local->mtx);
+ 
+ 	if (local->ops->channel_switch) {
+ 		/* use driver's channel switch callback */
+@@ -1794,6 +1802,12 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	ifmgd->flags = 0;
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_vif_release_channel(sdata);
++
++	sdata->vif.csa_active = false;
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
++					IEEE80211_MAX_QUEUE_MAP,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	mutex_unlock(&local->mtx);
+ 
+ 	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
+@@ -2022,6 +2036,7 @@ EXPORT_SYMBOL(ieee80211_ap_probereq_get);
+ 
+ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
  {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
-+	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	bool beacon_configured;
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
  
-@@ -583,7 +583,7 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
- 			     struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
-+	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *) vif->drv_priv;
+@@ -2035,10 +2050,14 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+ 			       true, frame_buf);
+ 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
++
++	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
+-	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++	if (!ieee80211_csa_needs_block_tx(local))
++		ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_CSA);
++	mutex_unlock(&local->mtx);
  
-@@ -619,7 +619,7 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
- void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
-+	struct ath_beacon_config *cur_conf = &priv->cur_beacon_conf;
- 
- 	switch (priv->ah->opmode) {
- 	case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index b22fb64..b8a0220 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -520,7 +520,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 		goto err_queues;
- 
- 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++)
--		priv->cur_beacon_conf.bslot[i] = NULL;
-+		priv->beacon.bslot[i] = NULL;
- 
- 	ath9k_cmn_init_channels_rates(common);
- 	ath9k_cmn_init_crypto(ah);
+ 	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+ 			      IEEE80211_DEAUTH_FRAME_LEN);
 -- 
-1.9.0
+1.8.5.3
 
