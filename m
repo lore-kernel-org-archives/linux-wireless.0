@@ -1,51 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:49407 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756126AbaCROqZ (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:41905 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbaCaTQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 10:46:25 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so4776914eek.35
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 07:46:24 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/35] iwlwifi: mvm: don't fail completely if led mode is not supported
-Date: Tue, 18 Mar 2014 16:45:26 +0200
-Message-Id: <1395153939-23897-22-git-send-email-egrumbach@gmail.com> (sfid-20140318_154819_008583_30D50A3A)
-In-Reply-To: <53285AF8.7050305@gmail.com>
-References: <53285AF8.7050305@gmail.com>
+	Mon, 31 Mar 2014 15:16:29 -0400
+Date: Mon, 31 Mar 2014 15:16:25 -0400 (EDT)
+Message-Id: <20140331.151625.1813309792083064637.davem@davemloft.net> (sfid-20140331_211640_584022_63383C0D)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: no new feature patches please
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Blink led mode is not supported by iwlmvm. This doesn't mean
-that we should prevent any operation if it is selected by
-the user.
-Instead of failing without any notice to the user, fallback
-to the default mode (RF mode) if the blink mode
-is selected and print an error to inform the user.
+We are enterring the merge window, please do not submit non-bugfix patches
+until the net-next tree opens back up.
 
-Reported-by: Steven Haigh <netwiz@crc.id.au>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/led.c | 2 ++
- 1 file changed, 2 insertions(+)
+I will be just silently marking as "deferred" any submission which
+violates this, because it is extremely time consuming responding to
+each and every posting which violates the submission rules.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/led.c b/drivers/net/wireless/iwlwifi/mvm/led.c
-index 6b4ea6b..e3b3cf4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/led.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/led.c
-@@ -94,6 +94,8 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
- 	int ret;
- 
- 	switch (mode) {
-+	case IWL_LED_BLINK:
-+		IWL_ERR(mvm, "Blink led mode not supported, used default\n");
- 	case IWL_LED_DEFAULT:
- 	case IWL_LED_RF_STATE:
- 		mode = IWL_LED_RF_STATE;
--- 
-1.8.3.2
-
+Thanks in advance for your understanding.
