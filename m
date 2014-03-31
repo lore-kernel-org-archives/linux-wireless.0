@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15771 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126AbaCIHK4 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:47142 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979AbaCaLnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Mar 2014 03:10:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH 5/6] ath6kl: remove a warning on a macro
-References: <20140309065606.10793.67068.stgit@x230>
-	<20140309065735.10793.45835.stgit@x230>
-Date: Sun, 9 Mar 2014 09:10:50 +0200
-In-Reply-To: <20140309065735.10793.45835.stgit@x230> (Kalle Valo's message of
-	"Sun, 09 Mar 2014 08:57:35 +0200")
-Message-ID: <87iornn8xx.fsf@kamboji.qca.qualcomm.com> (sfid-20140309_081100_577863_9B92EFEE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 31 Mar 2014 07:43:08 -0400
+Received: by mail-we0-f172.google.com with SMTP id t61so4697465wes.3
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:43:07 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 03/13] mac80211: prevent chanctx overcommit
+Date: Mon, 31 Mar 2014 12:39:21 +0200
+Message-Id: <1396262371-6466-4-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134321_924609_C63E3D90)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+ <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Do not allocate more channel contexts than a
+driver is capable for currently matching interface
+combination.
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+This allows the ieee80211_vif_reserve_chanctx() to
+act as a guard against breaking interface
+combinations.
 
-> Fixes checkpatch warning:
->
-> WARNING: Single statement macros should not use a do {} while (0) loop
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
-I would need help with this checkpatch warning:
-
-> --- a/drivers/net/wireless/ath/ath6kl/debug.c
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
-> @@ -798,12 +798,10 @@ static ssize_t ath6kl_endpoint_stats_read(struct file *file,
->  		return -ENOMEM;
->  
->  #define EPSTAT(name)							\
-> -	do {								\
-> -		len = print_endpoint_stat(target, buf, buf_len, len,	\
-> -					  offsetof(struct htc_endpoint_stats, \
-> -						   name),		\
-> -					  #name);			\
-> -	} while (0)
-> +	(len = print_endpoint_stat(target, buf, buf_len, len,		\
-> +				   offsetof(struct htc_endpoint_stats,	\
-> +					    name),			\
-> +				   #name))
-
-I wasn't quite able to figure out what is the preferred style here. I
-don't see how the () style is any better, but checkpatch didn't complain
-at least.
-
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 122033d..90cac10 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -9,6 +9,25 @@
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+ 
++static int ieee80211_num_chanctx(struct ieee80211_local *local)
++{
++	struct ieee80211_chanctx *ctx;
++	int num = 0;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(ctx, &local->chanctx_list, list)
++		num++;
++
++	return num;
++}
++
++static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
++{
++	lockdep_assert_held(&local->chanctx_mtx);
++	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
++}
++
+ static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
+ {
+ 	switch (sta->bandwidth) {
+@@ -752,13 +771,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 			 * context, reserve our current context
+ 			 */
+ 			new_ctx = curr_ctx;
+-		} else {
++		} else if (ieee80211_can_create_new_chanctx(local)) {
+ 			/* create a new context and reserve it */
+ 			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+ 			if (IS_ERR(new_ctx)) {
+ 				ret = PTR_ERR(new_ctx);
+ 				goto out;
+ 			}
++		} else {
++			ret = -EBUSY;
++			goto out;
+ 		}
+ 	}
+ 
 -- 
-Kalle Valo
+1.8.5.3
+
