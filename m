@@ -1,141 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:40770 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbaCRN7I (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:50016 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbaCaNMl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Mar 2014 09:59:08 -0400
-Received: by mail-ee0-f47.google.com with SMTP id b15so5365821eek.20
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Mar 2014 06:59:07 -0700 (PDT)
+	Mon, 31 Mar 2014 09:12:41 -0400
+Received: by mail-we0-f181.google.com with SMTP id q58so4670405wes.40
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 06:12:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1396267459-9976-3-git-send-email-michal.kazior@tieto.com>
+References: <1395409941-26303-1-git-send-email-michal.kazior@tieto.com>
+	<1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+	<1396267459-9976-3-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 31 Mar 2014 15:12:39 +0200
+Message-ID: <CA+BoTQmiF1=zVJW+2fGQhj3La32tODBqtKYaOxs_eVbm2x5pZw@mail.gmail.com> (sfid-20140331_151244_821748_9A6034F9)
+Subject: Re: [PATCH v3 2/5] mac80211: use chanctx reservation for AP CSA
 From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 02/21] cfg80211: allow drivers to iterate over matching combinations
-Date: Tue, 18 Mar 2014 14:53:05 +0100
-Message-Id: <1395150804-24090-3-git-send-email-michal.kazior@tieto.com> (sfid-20140318_150216_014592_0C62A73F)
-In-Reply-To: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
-References: <1395150804-24090-1-git-send-email-michal.kazior@tieto.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch splits cfg80211_check_combinations()
-into an iterator function and a simple iteration
-user.
+On 31 March 2014 14:04, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Channel switch finalization is now 2-step. First
+> step is when driver calls csa_finish(), the other
+> is when reservation is actually finalized (which
+> be defered for in-place reservation).
+>
+> Also remove the ieee80211_vif_change_channel()
+> which isn't used anymore.
+>
+> It is now safe to call ieee80211_csa_finish() more
+> then once.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> v3:
+>  * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
+>  * fix comment style [Johannes]
+>  * use goto for cleaner unlocking/returning [Johannes]
+>  * squash with ieee80211_vif_change_channel() removal patch [Johannes]
 
-This makes it possible for drivers to asses how
-many channels can use given iftype setup. This in
-turn can be used for future
-multi-interface/multi-channel channel switching.
+Eww, I hastily squashed it too early. It should have been squashed it
+onto the following STA CSA patch instead of this one. I'll wait a bit
+for more comments before I respin.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
- net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 64 insertions(+), 7 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 23a72e2..f3411c9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4705,6 +4705,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- 				const u8 radar_detect,
- 				const int iftype_num[NUM_NL80211_IFTYPES]);
- 
-+/**
-+ * cfg80211_iter_combinations - iterate over matching combinations
-+ *
-+ * @wiphy: the wiphy
-+ * @num_different_channels: the number of different channels we want
-+ *	to use for verification
-+ * @radar_detect: a bitmap where each bit corresponds to a channel
-+ *	width where radar detection is needed, as in the definition of
-+ *	&struct ieee80211_iface_combination.@radar_detect_widths
-+ * @iftype_num: array with the numbers of interfaces of each interface
-+ *	type.  The index is the interface type as specified in &enum
-+ *	nl80211_iftype.
-+ * @iter: function to call for each matching combination
-+ * @data: pointer to pass to iter function
-+ *
-+ * This function can be called by the driver to check what possible
-+ * combinations it fits in at a given moment, e.g. for channel switching
-+ * purposes.
-+ */
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b9deec2..804ba31 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1248,10 +1248,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
--int cfg80211_check_combinations(struct wiphy *wiphy,
--				const int num_different_channels,
--				const u8 radar_detect,
--				const int iftype_num[NUM_NL80211_IFTYPES])
-+int cfg80211_iter_combinations(struct wiphy *wiphy,
-+			       const int num_different_channels,
-+			       const u8 radar_detect,
-+			       const int iftype_num[NUM_NL80211_IFTYPES],
-+			       void (*iter)(const struct ieee80211_iface_combination *c,
-+					    void *data),
-+			       void *data)
- {
- 	int i, j, iftype;
- 	int num_interfaces = 0;
-@@ -1308,13 +1311,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
- 		/* This combination covered all interface types and
- 		 * supported the requested numbers, so we're good.
- 		 */
--		kfree(limits);
--		return 0;
-+
-+		(*iter)(c, data);
-  cont:
- 		kfree(limits);
- 	}
- 
--	return -EBUSY;
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_iter_combinations);
-+
-+static void
-+cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
-+			  void *data)
-+{
-+	int *num = data;
-+	(*num)++;
-+}
-+
-+int cfg80211_check_combinations(struct wiphy *wiphy,
-+				const int num_different_channels,
-+				const u8 radar_detect,
-+				const int iftype_num[NUM_NL80211_IFTYPES])
-+{
-+	int err, num = 0;
-+
-+	err = cfg80211_iter_combinations(wiphy, num_different_channels,
-+					 radar_detect, iftype_num,
-+					 cfg80211_iter_sum_ifcombs, &num);
-+	if (err)
-+		return err;
-+	if (num == 0)
-+		return -EBUSY;
-+
-+	return 0;
- }
- EXPORT_SYMBOL(cfg80211_check_combinations);
- 
--- 
-1.8.5.3
-
+Micha³
