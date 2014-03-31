@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44932 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756902AbaC0Oyq (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47267 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292AbaCaPsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Mar 2014 10:54:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix software remain-on-channel implementation
-Date: Thu, 27 Mar 2014 15:54:39 +0100
-Message-Id: <1395932079-31862-1-git-send-email-johannes@sipsolutions.net> (sfid-20140327_155500_810525_555006FB)
+	Mon, 31 Mar 2014 11:48:38 -0400
+Message-ID: <53398E03.1090903@candelatech.com> (sfid-20140331_174842_323921_AAAABFE8)
+Date: Mon, 31 Mar 2014 08:47:15 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Here are some ath10k performance graphs.
+References: <53390AE4.4030705@candelatech.com>
+In-Reply-To: <53390AE4.4030705@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/30/2014 11:27 PM, Ben Greear wrote:
+> I finally have a firmware stable enough to do some throughput
+> tests (only locked station machine up once doing these!).
+>
+> I find the download test interesting where the rx link rate goes very low
+> after 12 or so stations.
+>
+> tx link rate is not reported properly yet by ath10k, so ignore that.
+>
+> http://www.candelatech.com/examples/cap-ath10k-tcp-download-open/
+> http://www.candelatech.com/examples/cap-ath10k-tcp-download-wpa2/
+> http://www.candelatech.com/examples/cap-ath10k-tcp-upload-open/
+> http://www.candelatech.com/examples/cap-ath10k-tcp-upload-wpa2/
 
-Jouni reported that when doing off-channel transmissions mixed
-with on-channel transmissions, the on-channel ones ended up on
-the off-channel in some cases.
+Here are some UDP graphs, both with no encryption.  Upload is still
+significantly better than download, in this case, possibly because
+it is safe to send larger UDP PDUs (I used 9k) from stations.  Sending
+large MTUs too stations from wired ports causes too much loss because
+loss of a single sub-frame causes entire pkt to be dropped.  Previous
+detailed testing shows that is not the only problem, however.
 
-The reason for that is that during the refactoring of the off-
-channel code, I lost the part that stopped all activity and as
-a consequence the on-channel frames (including data frames)
-were no longer queued but would be transmitted on the temporary
-channel.
+http://www.candelatech.com/examples/cap-ath10k-udp-upload-open/
+http://www.candelatech.com/examples/cap-ath10k-udp-download-open/
 
-Fix this by simply restoring the lost activity stop call.
+All of these have a summary chart near the bottom that is generally
+more interesting than the individual pie charts, btw.
 
-Cc: stable@vger.kernel.org
-Fixes: 2eb278e083549 ("mac80211: unify SW/offload remain-on-channel")
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/offchannel.c | 1 +
- 1 file changed, 1 insertion(+)
+I can get more throughput with carefully tuned individual connections
+for single-station tests, will post some of those when I get time
+to do some detailed testing.
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 0c2a29484c07..6fb38558a5e6 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -355,6 +355,7 @@ void ieee80211_sw_roc_work(struct work_struct *work)
- 		struct ieee80211_roc_work *dep;
- 
- 		/* start this ROC */
-+		ieee80211_offchannel_stop_vifs(local);
- 
- 		/* switch channel etc */
- 		ieee80211_recalc_idle(local);
+Thanks,
+Ben
+
+>
+> Some notes are near the top of each report, and in general:
+>
+> The station machine is sending to/from wired Eth1 to/from the
+> stations, ie it is both sides of the network.
+> The AP is configured as router.  Both systems are running
+> our customized 10.1.467-ct firmware, and near the latest ath10k kernel.  Station
+> machine is Fedora 17, AP is Fedora 19.  Both are 64-bit, CPU is a mobile core-i7,
+> 8GB RAM, SSD hard drives (not that it should matter).
+>
+> Due to the vagaries of ath10k hardware and our firmware, we get hardware acceleration when
+> sending encrypted packets, but we have to decrypt received packets on the CPU.
+>
+> I am not sure why open TCP throughput is so bad compared to upload.
+> I'll run some UDP tests when I get a chance.
+>
+>
+> Thanks,
+> Ben
+>
+
+
 -- 
-1.9.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
