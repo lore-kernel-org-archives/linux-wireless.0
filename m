@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:64616 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbaCQVQH (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:61821 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbaCaLkU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Mar 2014 17:16:07 -0400
-Received: by mail-wi0-f179.google.com with SMTP id f8so2852365wiw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Mar 2014 14:16:04 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH] staging: vt6656: [BUG] set usb_fill_int_urb interval to 1
-Date: Mon, 17 Mar 2014 21:15:03 +0000
-Message-Id: <1395090903-2988-1-git-send-email-tvboxspy@gmail.com> (sfid-20140317_221611_549599_8F83B87D)
+	Mon, 31 Mar 2014 07:40:20 -0400
+Received: by mail-wi0-f175.google.com with SMTP id cc10so3115458wib.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 04:40:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1396263984.4478.13.camel@dubbel>
+References: <1395408675-26013-1-git-send-email-michal.kazior@tieto.com>
+	<1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	<1396259841-6359-2-git-send-email-michal.kazior@tieto.com>
+	<1396263984.4478.13.camel@dubbel>
+Date: Mon, 31 Mar 2014 13:40:17 +0200
+Message-ID: <CA+BoTQnN8qAmFLe9WgX_zjjy+QrphOhixPWX+CPWij4SJLK7vw@mail.gmail.com> (sfid-20140331_134029_983384_E5EFCC54)
+Subject: Re: [PATCH v3 1/4] mac80211: fix CSA tx queue locking
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result of patch
-staging: vt6656: [BUG] Fix Warning BOGUS urb xfer, pipe 3 != type 1
+On 31 March 2014 13:06, Luca Coelho <luca@coelho.fi> wrote:
+> On Mon, 2014-03-31 at 11:57 +0200, Michal Kazior wrote:
+>> It was possible for tx queues to be stuck locked
+>
+> I would still prefer to use "stopped" instead of locked here (and in the
+> subject).  But that's just me...
 
-has resulted in sluggish TX performance due to interupt inverval
-being too long.
+Ah, I totally missed this one.
 
-Set int_interval to 1 as set in bInterval of endpoint 1.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> if AP CSA finalization failed. In that case
+>> stop_ap nor do_stop woke the queues up.
+>
+> Maybe "In that case *neither* stop_ap nor do_stop"...?
 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 7dd885f..3c93230 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1007,7 +1007,7 @@ static int  device_open(struct net_device *dev)
- 
- 	schedule_delayed_work(&pDevice->second_callback_work, HZ);
- 
--	pDevice->int_interval = 100;  /* max 100 microframes */
-+	pDevice->int_interval = 1;  /* bInterval is set to 1 */
-     pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
- 
-     pDevice->bIsRxWorkItemQueued = true;
--- 
-1.9.0
+I'll respin later unless Johannes decides it's fine as it is.
 
+
+Michał
