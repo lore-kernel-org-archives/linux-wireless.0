@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:35993 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339AbaDBEFY (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:44913 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751238AbaDANuK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 00:05:24 -0400
-Received: by mail-pb0-f45.google.com with SMTP id uo5so10892802pbc.32
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:05:24 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: update last_tx_rate only for data frame
-Date: Wed,  2 Apr 2014 12:05:09 +0800
-Message-Id: <1396411509-4660-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140402_060528_176061_8B63D072)
+	Tue, 1 Apr 2014 09:50:10 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] ray_cs: replace del_timer by del_timer_sync
+Date: Tue,  1 Apr 2014 15:49:18 +0200
+Message-Id: <1396360159-16244-3-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140401_155214_572141_CB6097CF)
+In-Reply-To: <1396360159-16244-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1396360159-16244-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate controller in firmware may also return the Tx Rate
-used for management frame that is usually sent as lowest
-Tx Rate (1Mbps in 2.4GHz). So update the last_tx_rate only
-if it is data frame.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-This patch is tested with ath9k_htc.
+Use del_timer_sync to ensure that the timer is stopped on all CPUs before
+the driver exits.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+This change was suggested by Thomas Gleixner.
+
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r@
+identifier i,t,ex;
+@@
+struct t i = { .remove = ex, };
+
+@@
+identifier r.ex;
+@@
+ex(...) {
+  <...
+- del_timer
++ del_timer_sync
+    (...)
+  ...>
+}
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- net/mac80211/status.c |    1 +
- 1 file changed, 1 insertion(+)
+Not tested.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index e6e574a..00ba90b 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -618,6 +618,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 					sta, true, acked);
+ drivers/net/wireless/ray_cs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index cbf0a58..8330fa3 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -343,7 +343,7 @@ static void ray_detach(struct pcmcia_device *link)
+ 	ray_release(link);
  
- 		if ((local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
-+		    (ieee80211_is_data(hdr->frame_control)) &&
- 		    (rates_idx != -1))
- 			sta->last_tx_rate = info->status.rates[rates_idx];
+ 	local = netdev_priv(dev);
+-	del_timer(&local->timer);
++	del_timer_sync(&local->timer);
  
--- 
-1.7.9.5
+ 	if (link->priv) {
+ 		unregister_netdev(dev);
 
