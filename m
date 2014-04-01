@@ -1,45 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33448 "EHLO mx2.suse.de"
+Received: from mga02.intel.com ([134.134.136.20]:48336 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077AbaDSLDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2014 07:03:55 -0400
-Date: Sat, 19 Apr 2014 13:03:52 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-wireless@vger.kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH] NFC: The linux-nfc list is subscribers-only
-Message-ID: <20140419130352.2c305d9e@endymion.delvare> (sfid-20140419_130359_072719_E116FBBE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751663AbaDAOEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2014 10:04:22 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv3 2/5] net: rfkill: gpio: remove unused and obsolete platform parameters
+Date: Tue,  1 Apr 2014 17:02:53 +0300
+Message-Id: <1396360976-28657-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160717_575404_A97B5F7E)
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the automatic reply I received when trying to send a
-message to the linux-nfc list, it is not only moderated, it is
-actually subscribers-only.
+After upgrading to descriptor based gpios, the gpio numbers
+are not used anymore. The power_clk_name and the platform
+specific setup and close hooks are not used by anybody, and
+we should not encourage use of such things, so removing them.
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- MAINTAINERS |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/rfkill-gpio.h | 10 ----------
+ net/rfkill/rfkill-gpio.c    | 15 +--------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
---- linux-3.15-rc1.orig/MAINTAINERS	2014-04-18 16:47:16.044614592 +0200
-+++ linux-3.15-rc1/MAINTAINERS	2014-04-19 12:54:11.072671978 +0200
-@@ -6197,7 +6197,7 @@ M:	Lauro Ramos Venancio <lauro.venancio@
- M:	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
- M:	Samuel Ortiz <sameo@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--L:	linux-nfc@lists.01.org (moderated for non-subscribers)
-+L:	linux-nfc@lists.01.org (subscribers-only)
- S:	Supported
- F:	net/nfc/
- F:	include/net/nfc/
-
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index 4d09f6e..20bcb55 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -27,21 +27,11 @@
+  * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
+  * for unused gpio's, the expected value is -1.
+  * @name:		name for the gpio rf kill instance
+- * @reset_gpio:		GPIO which is used for reseting rfkill switch
+- * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
+- * @power_clk_name:	[optional] name of clk to turn off while blocked
+- * @gpio_runtime_close:	clean up platform specific gpio configuration
+- * @gpio_runtime_setup:	set up platform specific gpio configuration
+  */
+ 
+ struct rfkill_gpio_platform_data {
+ 	char			*name;
+-	int			reset_gpio;
+-	int			shutdown_gpio;
+-	const char		*power_clk_name;
+ 	enum rfkill_type	type;
+-	void	(*gpio_runtime_close)(struct platform_device *);
+-	int	(*gpio_runtime_setup)(struct platform_device *);
+ };
+ 
+ #endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index bd2a5b9..0adda44 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_gpio_data *rfkill;
+-	const char *clk_name = NULL;
+ 	struct gpio_desc *gpio;
+ 	int ret;
+ 	int len;
+@@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			return ret;
+ 	} else if (pdata) {
+-		clk_name = pdata->power_clk_name;
+ 		rfkill->name = pdata->name;
+ 		rfkill->type = pdata->type;
+ 	} else {
+@@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+ 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+ 
+-	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
++	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+ 
+ 	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
+ 	if (!IS_ERR(gpio)) {
+@@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (pdata && pdata->gpio_runtime_setup) {
+-		ret = pdata->gpio_runtime_setup(pdev);
+-		if (ret) {
+-			dev_err(&pdev->dev, "can't set up gpio\n");
+-			return ret;
+-		}
+-	}
+-
+ 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+ 					  rfkill->type, &rfkill_gpio_ops,
+ 					  rfkill);
+@@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ static int rfkill_gpio_remove(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+-	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 
+-	if (pdata && pdata->gpio_runtime_close)
+-		pdata->gpio_runtime_close(pdev);
+ 	rfkill_unregister(rfkill->rfkill_dev);
+ 	rfkill_destroy(rfkill->rfkill_dev);
+ 
 -- 
-Jean Delvare
-SUSE L3 Support
+1.9.1
+
