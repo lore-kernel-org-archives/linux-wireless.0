@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12451 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755687AbaDNWc7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 18:32:59 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/7] mwifiex: improve AMSDU packet aggregation for PCIe and SDIO
-Date: Mon, 14 Apr 2014 15:32:51 -0700
-Message-ID: <1397514775-4777-3-git-send-email-bzhao@marvell.com> (sfid-20140415_003304_186438_21014C98)
-In-Reply-To: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
-References: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:48374 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751842AbaDAOE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2014 10:04:27 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv3 4/5] net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
+Date: Tue,  1 Apr 2014 17:02:55 +0300
+Message-Id: <1396360976-28657-5-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160451_461241_82657A32)
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+This adds ACPI IDs for Broadcom bluetooth chip BCM43241 used
+on various Baytrail based boards such as Lenovo Miix 2 and
+Asus Transformer Book T100TA.
 
-For PCIe, aggregate more AMSDU packets till PCIe TXBD is full.
-
-For SDIO, aggregation was disabled for AMSDU packets because
-AMSDU aggregated packet size is already 4K or 8K, SDIO Multiport
-Aggregation feature didn't use to gain much previously.
-Now with increased multiport aggregation buffer, we can enable
-it for AMSDU packets.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ net/rfkill/rfkill-gpio.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index 63211707..b179652 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -236,18 +236,11 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_USB_EP_DATA,
- 						   skb_aggr, NULL);
- 	} else {
--		/*
--		 * Padding per MSDU will affect the length of next
--		 * packet and hence the exact length of next packet
--		 * is uncertain here.
--		 *
--		 * Also, aggregation of transmission buffer, while
--		 * downloading the data to the card, wont gain much
--		 * on the AMSDU packets as the AMSDU packets utilizes
--		 * the transmission buffer space to the maximum
--		 * (adapter->tx_buf_size).
--		 */
--		tx_param.next_pkt_len = 0;
-+		if (skb_src)
-+			tx_param.next_pkt_len =
-+					skb_src->len + sizeof(struct txpd);
-+		else
-+			tx_param.next_pkt_len = 0;
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index fec3dbf..436bffb 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -171,11 +171,16 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 	return 0;
+ }
  
- 		ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
- 						   skb_aggr, &tx_param);
++#ifdef CONFIG_ACPI
+ static const struct acpi_device_id rfkill_acpi_match[] = {
++	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
++	{ "BCM2E39", RFKILL_TYPE_BLUETOOTH },
++	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
+ 	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
++#endif
+ 
+ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
 -- 
-1.8.2.3
+1.9.1
 
