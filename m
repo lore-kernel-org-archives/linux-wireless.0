@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:40190 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbaDDLoL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 07:44:11 -0400
-Received: by mail-wg0-f42.google.com with SMTP id y10so3249544wgg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:10 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFT 0/4] ath10k: fix flushing and tx stalls
-Date: Fri,  4 Apr 2014 13:37:40 +0200
-Message-Id: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134418_904297_B212643F)
+Received: from mga02.intel.com ([134.134.136.20]:48360 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751693AbaDAOEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2014 10:04:23 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv3 3/5] net: rfkill: gpio: add ACPI ID for GPS module on Lenovo Miix2
+Date: Tue,  1 Apr 2014 17:02:54 +0300
+Message-Id: <1396360976-28657-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160637_036905_9DC7D28A)
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Lenovo Miix 2 8", BCM4752 is renamed LNV4752.
 
-After digging around I've found what seems to be
-the problem with WMI Tx credit starvation and
-inability to properly flush Tx in ath10k_flush().
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Long story short: if a client that was asleep (as
-per what firmware thinks) goes out of range (or
-just stops responding) then Tx rots in FW/HW
-queues for a few seconds before it's discarded.
-For WMI Tx credits this means management frames
-eat up Tx credits for a few seconds (causing other
-WMI commands to timeout and return -EAGAIN/-11).
-For HTT Tx this means NullFunc frames would get
-stuck for a few seconds before completion was
-received.
-
-@Ben: Can you check if this helps you? I tested
-this briefly and at least [1/4] seems fixes the
-WMI Tx starvation. I'm hoping patches 2-4 help
-with your ath10k_flush() failures which I haven't
-been successfull in reproducing (but have observed
-improvement with purging some frames out of FW/HW
-queues).
-
-
-Michal Kazior (4):
-  ath10k: fix wmi-htc tx credit starvation
-  ath10k: rework peer accounting
-  ath10k: wait for mgmt tx when flushing too
-  ath10k: improve tx flushing
-
- drivers/net/wireless/ath/ath10k/core.h |   7 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 254 +++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/txrx.c |  29 ++--
- drivers/net/wireless/ath/ath10k/wmi.c  |   5 -
- drivers/net/wireless/ath/ath10k/wmi.h  |   4 +
- 5 files changed, 253 insertions(+), 46 deletions(-)
-
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 0adda44..fec3dbf 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -173,6 +173,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
++	{ "LNV4752", RFKILL_TYPE_GPS },
+ 	{ },
+ };
+ 
 -- 
-1.8.5.3
+1.9.1
 
