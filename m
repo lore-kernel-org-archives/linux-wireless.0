@@ -1,193 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7538 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756207AbaDHIgt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 04:36:49 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 3/5] wil6210: sync with the latest FW API
-Date: Tue, 8 Apr 2014 11:36:17 +0300
-Message-ID: <1396946179-11677-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140408_103708_885232_1B318EEC)
-In-Reply-To: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:36395 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751472AbaDAOFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Apr 2014 10:05:08 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Subject: [PATCHv3 5/5] net: rfkill: gpio: hard-code the gpio names
+Date: Tue,  1 Apr 2014 17:02:56 +0300
+Message-Id: <1396360976-28657-6-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160545_656715_92B9CD02)
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- add pcp_max_assoc_sta to the struct wmi_pcp_start_cmd
-- enum for the scan ststus
+There is no need to dynamically generate the names. This
+will fix a static checker warning..
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
+    warn: variable dereferenced before check 'rfkill->name'
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c |  3 +-
- drivers/net/wireless/ath/wil6210/wmi.h | 50 +++++++++++++++++++++-------------
- 2 files changed, 33 insertions(+), 20 deletions(-)
+ net/rfkill/rfkill-gpio.c | 19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index b7764f3..e9a11cb 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -348,7 +348,7 @@ static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
- {
- 	if (wil->scan_request) {
- 		struct wmi_scan_complete_event *data = d;
--		bool aborted = (data->status != 0);
-+		bool aborted = (data->status != WMI_SCAN_SUCCESS);
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 436bffb..9c4a5eb 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -36,8 +36,6 @@ struct rfkill_gpio_data {
+ 	struct gpio_desc	*shutdown_gpio;
  
- 		wil_dbg_wmi(wil, "SCAN_COMPLETE(0x%08x)\n", data->status);
- 		cfg80211_scan_done(wil->scan_request, aborted);
-@@ -802,6 +802,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype, u8 chan)
- 		.network_type = wmi_nettype,
- 		.disable_sec_offload = 1,
- 		.channel = chan - 1,
-+		.pcp_max_assoc_sta = WIL6210_MAX_CID,
- 	};
- 	struct {
- 		struct wil6210_mbox_hdr_wmi wmi;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 50b8528..17334c8 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -28,7 +28,7 @@
- #define __WILOCITY_WMI_H__
+ 	struct rfkill		*rfkill_dev;
+-	char			*reset_name;
+-	char			*shutdown_name;
+ 	struct clk		*clk;
  
- /* General */
+ 	bool			clk_enabled;
+@@ -89,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	struct rfkill_gpio_data *rfkill;
+ 	struct gpio_desc *gpio;
+ 	int ret;
+-	int len;
+ 
+ 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
+ 	if (!rfkill)
+@@ -106,21 +103,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
+-	len = strlen(rfkill->name);
+-	rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
+-	if (!rfkill->reset_name)
+-		return -ENOMEM;
 -
-+#define WILOCITY_MAX_ASSOC_STA (8)
- #define WMI_MAC_LEN		(6)
- #define WMI_PROX_RANGE_NUM	(3)
- 
-@@ -219,15 +219,6 @@ struct wmi_disconnect_sta_cmd {
- 	__le16 disconnect_reason;
- } __packed;
- 
--/*
-- * WMI_RECONNECT_CMDID
-- */
--struct wmi_reconnect_cmd {
--	u8 channel;			/* hint */
--	u8 reserved;
--	u8 bssid[WMI_MAC_LEN];		/* mandatory if set */
--} __packed;
+-	rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
+-	if (!rfkill->shutdown_name)
+-		return -ENOMEM;
 -
- 
- /*
-  * WMI_SET_PMK_CMDID
-@@ -296,11 +287,13 @@ enum wmi_scan_type {
- 	WMI_LONG_SCAN		= 0,
- 	WMI_SHORT_SCAN		= 1,
- 	WMI_PBC_SCAN		= 2,
-+	WMI_ACTIVE_SCAN		= 3,
-+	WMI_DIRECT_SCAN		= 4,
- };
- 
- struct wmi_start_scan_cmd {
--	u8 reserved[8];
+-	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
+-	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
 -
-+	u8 direct_scan_mac_addr[6];
-+	u8 reserved[2];
- 	__le32 home_dwell_time;	/* Max duration in the home channel(ms) */
- 	__le32 force_scan_interval;	/* Time interval between scans (ms)*/
- 	u8 scan_type;		/* wmi_scan_type */
-@@ -332,6 +325,7 @@ struct wmi_probed_ssid_cmd {
- 	u8 ssid[WMI_MAX_SSID_LEN];
- } __packed;
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
  
-+
- /*
-  * WMI_SET_APPIE_CMDID
-  * Add Application specified IE to a management frame
-@@ -427,7 +421,7 @@ struct wmi_bcon_ctrl_cmd {
- 	__le16 frag_num;
- 	__le64 ss_mask;
- 	u8 network_type;
--	u8 reserved;
-+	u8 pcp_max_assoc_sta;
- 	u8 disable_sec_offload;
- 	u8 disable_sec;
- } __packed;
-@@ -450,7 +444,7 @@ enum wmi_port_role {
- struct wmi_port_allocate_cmd {
- 	u8 mac[WMI_MAC_LEN];
- 	u8 port_role;
--	u8 midid;
-+	u8 mid;
- } __packed;
+-	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
++	gpio = devm_gpiod_get_index(&pdev->dev, "reset", 0);
+ 	if (!IS_ERR(gpio)) {
+ 		ret = gpiod_direction_output(gpio, 0);
+ 		if (ret)
+@@ -128,7 +113,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		rfkill->reset_gpio = gpio;
+ 	}
  
- /*
-@@ -467,6 +461,7 @@ struct wmi_delete_port_cmd {
- enum wmi_discovery_mode {
- 	WMI_DISCOVERY_MODE_NON_OFFLOAD	= 0,
- 	WMI_DISCOVERY_MODE_OFFLOAD	= 1,
-+	WMI_DISCOVERY_MODE_PEER2PEER	= 2,
- };
- 
- struct wmi_p2p_cfg_cmd {
-@@ -493,7 +488,8 @@ struct wmi_power_mgmt_cfg_cmd {
-  */
- struct wmi_pcp_start_cmd {
- 	__le16 bcon_interval;
--	u8 reserved0[10];
-+	u8 pcp_max_assoc_sta;
-+	u8 reserved0[9];
- 	u8 network_type;
- 	u8 channel;
- 	u8 disable_sec_offload;
-@@ -857,6 +853,7 @@ enum wmi_event_id {
- 	WMI_RF_MGMT_STATUS_EVENTID		= 0x1853,
- 	WMI_BF_SM_MGMT_DONE_EVENTID		= 0x1838,
- 	WMI_RX_MGMT_PACKET_EVENTID		= 0x1840,
-+	WMI_TX_MGMT_PACKET_EVENTID		= 0x1841,
- 
- 	/* Performance monitoring events */
- 	WMI_DATA_PORT_OPEN_EVENTID		= 0x1860,
-@@ -1040,16 +1037,23 @@ enum wmi_disconnect_reason {
- struct wmi_disconnect_event {
- 	__le16 protocol_reason_status;	/* reason code, see 802.11 spec. */
- 	u8 bssid[WMI_MAC_LEN];		/* set if known */
--	u8 disconnect_reason;		/* see wmi_disconnect_reason_e */
--	u8 assoc_resp_len;
--	u8 assoc_info[0];
-+	u8 disconnect_reason;		/* see wmi_disconnect_reason */
-+	u8 assoc_resp_len;		/* not in use */
-+	u8 assoc_info[0];		/* not in use */
- } __packed;
- 
- /*
-  * WMI_SCAN_COMPLETE_EVENTID
-  */
-+enum scan_status {
-+	WMI_SCAN_SUCCESS	= 0,
-+	WMI_SCAN_FAILED		= 1,
-+	WMI_SCAN_ABORTED	= 2,
-+	WMI_SCAN_REJECTED	= 3,
-+};
-+
- struct wmi_scan_complete_event {
--	__le32 status;
-+	__le32 status;	/* scan_status */
- } __packed;
- 
- /*
-@@ -1256,6 +1260,14 @@ struct wmi_rx_mgmt_info {
- 	u8 channel;	/* From Radio MNGR */
- } __packed;
- 
-+
-+/*
-+ * WMI_TX_MGMT_PACKET_EVENTID
-+ */
-+struct wmi_tx_mgmt_packet_event {
-+	u8 payload[0];
-+} __packed;
-+
- struct wmi_rx_mgmt_packet_event {
- 	struct wmi_rx_mgmt_info info;
- 	u8 payload[0];
+-	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->shutdown_name, 1);
++	gpio = devm_gpiod_get_index(&pdev->dev, "shutdown", 1);
+ 	if (!IS_ERR(gpio)) {
+ 		ret = gpiod_direction_output(gpio, 0);
+ 		if (ret)
 -- 
-1.8.3.2
+1.9.1
 
