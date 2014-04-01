@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:40843 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753357AbaDBHzf (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43408 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbaDAR4h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 03:55:35 -0400
-From: Daeseok Youn <daeseok.youn@gmail.com>
-To: davem@davemloft.net, lauro.venancio@openbossa.org
-Cc: aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] nfc: fix NULL pointer dereference
-Date: Wed, 02 Apr 2014 16:55:30 +0900
-Message-ID: <20540404.Au0OUqzobS@daeseok-laptop.cloud.net> (sfid-20140402_095617_905631_80FEE61B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 1 Apr 2014 13:56:37 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
+Date: Tue,  1 Apr 2014 10:55:40 -0700
+Message-Id: <1396374940-21453-1-git-send-email-greearb@candelatech.com> (sfid-20140401_195644_857582_E33E0750)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
-dev is NULL when nfc_get_device() is failed but
-dev is used for handling error.
+It can be nice to update the firmware's stats while
+debugging other bits of the driver, so add helper method
+to do this.
 
-coccicheck says:
- net/nfc/netlink.c:1092:21-24: ERROR:
-dev is NULL but dereferenced.
-
-Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/nfc/netlink.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c | 26 +++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/debug.h |  2 ++
+ 2 files changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 43cb1c1..b2ad570 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -1026,10 +1026,8 @@ static int nfc_genl_llc_sdreq(struct sk_buff *skb, struct genl_info *info)
- 	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f562ac5..5813286 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -283,6 +283,21 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 	complete(&ar->debug.event_stats_compl);
+ }
  
- 	dev = nfc_get_device(idx);
--	if (!dev) {
--		rc = -ENODEV;
++int ath10k_refresh_peer_stats(struct ath10k *ar)
++{
++	int ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
++	if (ret) {
++		ath10k_warn("could not request stats (%d)\n", ret);
++		return ret;
++	}
++
++	ret = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
++	if (ret <= 0)
++		return ret;
++
++	return 0;
++}
++
+ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+ {
+@@ -291,7 +306,6 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	char *buf = NULL;
+ 	unsigned int len = 0, buf_len = 8000;
+ 	ssize_t ret_cnt = 0;
+-	long left;
+ 	int i;
+ 	int ret;
+ 
+@@ -306,14 +320,8 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		goto exit;
+ 
+-	ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
+-	if (ret) {
+-		ath10k_warn("could not request stats (%d)\n", ret);
 -		goto exit;
 -	}
-+	if (!dev)
-+		return -ENODEV;
+-
+-	left = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
+-	if (left <= 0)
++	ret = ath10k_refresh_peer_stats(ar);
++	if (ret)
+ 		goto exit;
  
- 	device_lock(&dev->dev);
+ 	spin_lock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 12573fa..e5d1391 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -135,4 +135,6 @@ struct dbglog_hdr_s {
  
+ void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
+ 
++int ath10k_refresh_peer_stats(struct ath10k *ar);
++
+ #endif /* _DEBUG_H_ */
 -- 
-1.7.4.4
-
+1.7.11.7
 
