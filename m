@@ -1,56 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:59988 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbaDBEAX (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:52972 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbaDAHqh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 00:00:23 -0400
-Received: by mail-pd0-f175.google.com with SMTP id x10so10422072pdj.6
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:22 -0700 (PDT)
-From: Fariya Fatima <fariyaf@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH 5/6] rsi: Fixed issue relating to index of q_num.
-Date: Wed,  2 Apr 2014 09:29:54 +0530
-Message-Id: <1396411195-5051-6-git-send-email-fariyaf@gmail.com> (sfid-20140402_060033_752397_01D1DA78)
-In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
-References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+	Tue, 1 Apr 2014 03:46:37 -0400
+Received: by mail-ig0-f173.google.com with SMTP id hl10so927730igb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 00:46:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQkXWscUL-XLL1sBNb=eXahafoCUazsNKVFU08X9bPdBPQ@mail.gmail.com>
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	<1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	<1396262371-6466-14-git-send-email-michal.kazior@tieto.com>
+	<CAB3XZEcYPPruXSxndMcbaek0ozLZV9GGpqKOAO0WPC6CcT-j7Q@mail.gmail.com>
+	<CA+BoTQkXWscUL-XLL1sBNb=eXahafoCUazsNKVFU08X9bPdBPQ@mail.gmail.com>
+Date: Tue, 1 Apr 2014 10:46:36 +0300
+Message-ID: <CAB3XZEew5X5Ux9Wpi0g0xqiMk2ULxoeEQvb8SkXBkpmQDjMCxQ@mail.gmail.com> (sfid-20140401_094641_103191_C518D7EA)
+Subject: Re: [PATCH v3 13/13] mac80211: implement multi-vif in-place reservations
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+On Tue, Apr 1, 2014 at 8:10 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 31 March 2014 18:15, Eliad Peller <eliad@wizery.com> wrote:
+>> hi Michal,
+>>
+>> On Mon, Mar 31, 2014 at 1:39 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> Multi-vif in-place reservations happen when
+>>> it's impossible to allocate more chanctx as per
+>>> driver combinations.
+>>>
+>>> Such reservations aren't finalized until last
+>>> reservation interface calls in to use the
+>>> reservation.
+>>>
+>>> This introduces a special hook
+>>> ieee80211_vif_chanctx_reservation_complete(). This
+>>> is currently an empty stub and will be filled in
+>>> by AP/STA CSA code. This is required to implement
+>>> 2-step CSA finalization.
+>>>
+>>> This also gets rid of driver requirement to be
+>>> able to re-program channel of a chanctx.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>> ---
+>>>
+>> [...]
+>>
+>>> -       /* TODO: need to recheck if the chandef is usable etc.? */
+>>> +static int
+>>> +ieee80211_vif_use_reserved_incompat(struct ieee80211_local *local,
+>>> +                                   struct ieee80211_chanctx *ctx,
+>>> +                                   const struct cfg80211_chan_def *chandef)
+>>> +{
+>> [...]
+>>
+>>> +       new_ctx = ieee80211_alloc_chanctx(local, chandef, ctx->mode);
+>>> +       if (!new_ctx) {
+>>> +               err = -ENOMEM;
+>>> +               goto err;
+>>> +       }
+>>> +
+>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
+>>> +               drv_unassign_vif_chanctx(local, sdata, ctx);
+>>> +               rcu_assign_pointer(sdata->vif.chanctx_conf, &new_ctx->conf);
+>>> +       }
+>>> +
+>>> +       list_del_rcu(&ctx->list);
+>>> +       ieee80211_del_chanctx(local, ctx);
+>>> +
+>>> +       err = ieee80211_add_chanctx(local, new_ctx);
+>>> +       if (err)
+>>> +               goto err_revert;
+>>> +
+>>> +       /* don't simply overwrite radar_required in case of failure */
+>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
+>>> +               bool tmp = sdata->radar_required;
+>>> +               sdata->radar_required = sdata->reserved_radar_required;
+>>> +               sdata->reserved_radar_required = tmp;
+>>> +       }
+>>> +
+>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
+>>> +               err = drv_assign_vif_chanctx(local, sdata, new_ctx);
+>>> +               if (err)
+>>> +                       goto err_unassign;
+>>> +       }
+>>> +
+>> better recalc radar before assigning the chanctx. otherwise, you end
+>> up with radar_enabled configuration for non-radar channels -
+>> ieee80211_alloc_chanctx sets radar_enabled if any
+>> sdata->radar_required is true (which is true before the channel
+>> switch).
+>
+> Good point, thanks!
+>
+>
+>>
+>> [...]
+>>
+>>> +
+>>> +err_unassign:
+>>> +       list_for_each_entry_continue_reverse(sdata, &ctx->reserved_vifs,
+>>> +                                            reserved_chanctx_list)
+>>> +               drv_unassign_vif_chanctx(local, sdata, ctx);
+>>> +       ieee80211_del_chanctx(local, new_ctx);
+>>> +err_revert:
+>>> +       kfree_rcu(new_ctx, rcu_head);
+>>> +       WARN_ON(ieee80211_add_chanctx(local, ctx));
+>>> +       list_add_rcu(&ctx->list, &local->chanctx_list);
+>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
+>>> +               sdata->radar_required = sdata->reserved_radar_required;
+>>> +               rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
+>>> +               WARN_ON(drv_assign_vif_chanctx(local, sdata, ctx));
+>>> +       }
+>> seems like the list_for_each_entry should actually be under err_unassign?
+>
+> No. This is correct. The err_unassign is used to bail out if any
+> drv_assign_vif_chanctx fails mid-way. We want to unassign only those
+> vif-chanctx we only managed to assign.
+>
+sure. i failed to explain - i'm referring only to the radar_required
+swapping - it seems to happen only later.
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index e89535e..1a8d321 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -102,10 +102,10 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
- 	}
- 
- get_queue_num:
--	q_num = 0;
- 	recontend_queue = false;
- 
- 	q_num = rsi_determine_min_weight_queue(common);
-+
- 	q_len = skb_queue_len(&common->tx_queue[ii]);
- 	ii = q_num;
- 
-@@ -118,7 +118,9 @@ get_queue_num:
- 		}
- 	}
- 
--	common->tx_qinfo[q_num].pkt_contended = 0;
-+	if (q_num < NUM_EDCA_QUEUES)
-+		common->tx_qinfo[q_num].pkt_contended = 0;
-+
- 	/* Adjust the back off values for all queues again */
- 	recontend_queue = rsi_recalculate_weights(common);
- 
--- 
-1.7.5.4
-
+Eliad.
