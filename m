@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:57856 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1162618AbaDCI2I (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42766 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756574AbaDBHdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2014 04:28:08 -0400
-Message-ID: <1396512771.31985.5.camel@x220> (sfid-20140403_102819_174086_A466ED17)
-Subject: [PATCH] rtlwifi: btcoexist: remove undefined Kconfig macros
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 03 Apr 2014 10:12:51 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Apr 2014 03:33:00 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
+References: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
+Date: Wed, 2 Apr 2014 10:32:55 +0300
+In-Reply-To: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Tue, 1 Apr 2014 10:55:40
+	-0700")
+Message-ID: <8738hwrxso.fsf@kamboji.qca.qualcomm.com> (sfid-20140402_093305_154384_34CFC69E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are references to four undefined Kconfig macros in the code.
-Commit 8542373dccd2 ("Staging: rtl8812ae: remove undefined Kconfig
-macros") removed identical references from that staging driver, but
-they resurfaced in rtlwifi. Remove these again as the checks for them
-still will always evaluate to false.
+greearb@candelatech.com writes:
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Tested by grepping the tree only.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> It can be nice to update the firmware's stats while
+> debugging other bits of the driver, so add helper method
+> to do this.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-A follow up could now remove both "enum btc_chip_interface" and
-"chip_interface", couldn't it?
+[...]
 
- drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c | 10 ----------
- 1 file changed, 10 deletions(-)
+> --- a/drivers/net/wireless/ath/ath10k/debug.h
+> +++ b/drivers/net/wireless/ath/ath10k/debug.h
+> @@ -135,4 +135,6 @@ struct dbglog_hdr_s {
+>  
+>  void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
+>  
+> +int ath10k_refresh_peer_stats(struct ath10k *ar);
 
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-index b6722de6..33da3df 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -625,17 +625,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
- 	else
- 		btcoexist->binded = true;
- 
--#if (defined(CONFIG_PCI_HCI))
--	btcoexist->chip_interface = BTC_INTF_PCI;
--#elif (defined(CONFIG_USB_HCI))
--	btcoexist->chip_interface = BTC_INTF_USB;
--#elif (defined(CONFIG_SDIO_HCI))
--	btcoexist->chip_interface = BTC_INTF_SDIO;
--#elif (defined(CONFIG_GSPI_HCI))
--	btcoexist->chip_interface = BTC_INTF_GSPI;
--#else
- 	btcoexist->chip_interface = BTC_INTF_UNKNOWN;
--#endif
- 
- 	if (NULL == btcoexist->adapter)
- 		btcoexist->adapter = adapter;
+I don't see anyone calling this. How are you planning to use it?
+
 -- 
-1.9.0
-
+Kalle Valo
