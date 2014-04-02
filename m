@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932589AbaDIMrt (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:35993 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339AbaDBEFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 08:47:49 -0400
-Message-ID: <1397047651.4964.15.camel@jlt4.sipsolutions.net> (sfid-20140409_144753_647092_05CBDAF8)
-Subject: Re: [PATCH 3/8] mac80211: fix possible compile warning in michael.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 09 Apr 2014 14:47:31 +0200
-In-Reply-To: <0c2fa5b7a8724d0ee405afd05f393af95e65116c.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032855_945110_A8572F5D)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 <0c2fa5b7a8724d0ee405afd05f393af95e65116c.1397006688.git.gamerh2o@gmail.com>
-	 (sfid-20140409_032855_945110_A8572F5D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Apr 2014 00:05:24 -0400
+Received: by mail-pb0-f45.google.com with SMTP id uo5so10892802pbc.32
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:05:24 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: update last_tx_rate only for data frame
+Date: Wed,  2 Apr 2014 12:05:09 +0800
+Message-Id: <1396411509-4660-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140402_060528_176061_8B63D072)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 09:28 +0800, Zhao, Gang wrote:
-> The warning doesn't show up due to duplicate including, but it's worth
-> fixing it.
-> 
-> net/mac80211//michael.h:22:4: warning: ‘struct ieee80211_hdr’ declared inside parameter list [enabled by default]
->     const u8 *data, size_t data_len, u8 *mic);
->     ^
-> net/mac80211//michael.h:22:4: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
-> 
-> Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
-> ---
->  net/mac80211/michael.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
-> index 3b848da..b259547 100644
-> --- a/net/mac80211/michael.h
-> +++ b/net/mac80211/michael.h
-> @@ -10,7 +10,7 @@
->  #ifndef MICHAEL_H
->  #define MICHAEL_H
->  
-> -#include <linux/types.h>
-> +#include <linux/ieee80211.h>
+Rate controller in firmware may also return the Tx Rate
+used for management frame that is usually sent as lowest
+Tx Rate (1Mbps in 2.4GHz). So update the last_tx_rate only
+if it is data frame.
 
-This should probably include both now though.
+This patch is tested with ath9k_htc.
 
-johannes
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/status.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e6e574a..00ba90b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -618,6 +618,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 					sta, true, acked);
+ 
+ 		if ((local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
++		    (ieee80211_is_data(hdr->frame_control)) &&
+ 		    (rates_idx != -1))
+ 			sta->last_tx_rate = info->status.rates[rates_idx];
+ 
+-- 
+1.7.9.5
 
