@@ -1,91 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f180.google.com ([209.85.160.180]:62683 "EHLO
-	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbaDYMqI (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:34638 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978AbaDBJg1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 08:46:08 -0400
-Date: Fri, 25 Apr 2014 09:46:02 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2014-04-25
-Message-ID: <20140425124602.GF7832@joana> (sfid-20140425_144618_931436_9D10E274)
+	Wed, 2 Apr 2014 05:36:27 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Md/poaVZ8hnGTzuv"
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Wed, 2 Apr 2014 18:36:06 +0900
+Message-ID: <CAAVeFuLXQ99gMW6Kmr4fj2FhccsKUEajBWLn8v33LB_LbGjgqw@mail.gmail.com> (sfid-20140402_113651_271420_7AA92F66)
+Subject: Re: [PATCHv3 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Negative number of added lines, temporary string buffers removal, and
+use of the gpiod interface: lots of stuff to like here!
 
---Md/poaVZ8hnGTzuv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Alexandre Courbot <acourbot@nvidia.com>
 
-Hi John,
-
-Some fixes for 3.15. There is a revert for the intel driver, a new device i=
-d,
-and two important SSP fixes from Johan. This one is rebased on wireless/mas=
-ter.
-
-Please pull or let me know of any concerns you have. Thanks!
-=09
-	Gustavo
-
----
-The following changes since commit ffa216bb5eecfce0f01b0b2a95d5c320dde90005:
-
-  brcmfmac: Fix brcmf_chip_ai_coredisable not applying reset bits to BCMA_I=
-OCTL (2014-04-24 21:46:22 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for=
--upstream
-
-for you to fetch changes up to 1fb4e09a7e780b915dbd172592ae7e2a4c071065:
-
-  Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-25 09:47:16 +0300)
-
-----------------------------------------------------------------
-Johan Hedberg (2):
-      Bluetooth: Fix triggering BR/EDR L2CAP Connect too early
-      Bluetooth: Fix redundant encryption request for reauthentication
-
-Marcel Holtmann (1):
-      Revert "Bluetooth: Enable autosuspend for Intel Bluetooth device"
-
-Mohammed Habibulla (1):
-      Bluetooth: Add support for Lite-on [04ca:3007]
-
- drivers/bluetooth/ath3k.c | 2 ++
- drivers/bluetooth/btusb.c | 5 ++---
- net/bluetooth/hci_conn.c  | 9 ++++++---
- net/bluetooth/hci_event.c | 6 ++++++
- 4 files changed, 16 insertions(+), 6 deletions(-)
-
-
---Md/poaVZ8hnGTzuv
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTWlkKAAoJEPs3PUX4s20oaP8P/0L4mTwU2Ek/GSV3MGv+sZx+
-8jeW319sWQYW9jo1CqNOqbgvuSecgnaptHInuz5AlHnjHycRlB4o3vRWgeqHhbRf
-1v/zB5iyXjinvd7r32d5GdDem7OUs46LWhAo4Qv65RW6XaoRR8iE/DbL2uHXF7gk
-fmknTntK8QHKjVwZmpbo14FnahCDLvxff0fMM7gkuEZntYFmj8LbEoNjZMU8bwgD
-86AWhCIfijzKUhkXNYaiVLPd9xzk8rApH8ziJaYfocGuO9o4/yexLr2Gqi5e7XyI
-u6gqYXBg8y6LeA3MlF7O5Vb1w5f4zmzfnz6c3js+qRq1nKrSteKYzINwKXE52zVd
-EbmqnOxbUThCG0Z2N/aIp7kBprit3IoW2OlT6lOI6CdgmQAUsOjGd21SjNHIPvTq
-ZjcdhsDdekrM7KrGq5q94WdmnfidFTa6j7ZwqRkUsR8bAY6do5uYlY+DSBrkJrTH
-VmNnGm72zXnlYdmWFBP1NEvQYx/+EEuoEfJnmRu+jG/0v3WReLhHBq1/TqPGDCdq
-YxDzgK+rjyEBeVOB2h9BUpJYwp+++1BLfG2X6gj6SFlsab8PC+YS6HD+JD7AgXHH
-yJXbx/lZeClHeby6UtOcg8Zt2fFvxWoywijkiozDTWLe3v3NRngMaDy+ufeHVfNh
-4Ms5NZ5mL4320Gand74C
-=PzFE
------END PGP SIGNATURE-----
-
---Md/poaVZ8hnGTzuv--
+On Tue, Apr 1, 2014 at 11:02 PM, Heikki Krogerus
+<heikki.krogerus@linux.intel.com> wrote:
+> Hi,
+>
+> I hope this one is OK with everyone.
+>
+> Changes since v2:
+> - Instead of changing the driver to use only indexed gpios, just
+>   hard-coding the names.
+>
+> Changes since v1:
+> - Removed the gpio entries from arch/arm/mach-tegra/board-paz00.c
+>
+>
+> Heikki Krogerus (5):
+>   ARM: tegra: remove obsolete gpio entries
+>   net: rfkill: gpio: remove unused and obsolete platform parameters
+>   net: rfkill: gpio: add ACPI ID for GPS module on Lenovo Miix2
+>   net: rfkill: gpio: add ACPI IDs for a Broadcom bluetooth chip
+>   net: rfkill: gpio: hard-code the gpio names
+>
+>  arch/arm/mach-tegra/board-paz00.c |  4 +---
+>  include/linux/rfkill-gpio.h       | 10 ----------
+>  net/rfkill/rfkill-gpio.c          | 40 +++++++++------------------------------
+>  3 files changed, 10 insertions(+), 44 deletions(-)
+>
+> --
+> 1.9.1
+>
