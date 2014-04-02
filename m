@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33968 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776AbaDYBpR (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:59706 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbaDBEAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 21:45:17 -0400
-Date: Thu, 24 Apr 2014 21:37:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-Message-ID: <20140425013756.GA3410@tuxdriver.com> (sfid-20140425_034614_624982_767B7962)
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
- <1397760423-11455-2-git-send-email-bzhao@marvell.com>
- <87a9bb5c2c.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87a9bb5c2c.fsf@purkki.adurom.net>
+	Wed, 2 Apr 2014 00:00:15 -0400
+Received: by mail-pa0-f43.google.com with SMTP id bj1so10854730pad.16
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:15 -0700 (PDT)
+From: Fariya Fatima <fariyaf@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH 2/6] rsi: Fixed signedness bug reported by static code analyzer.
+Date: Wed,  2 Apr 2014 09:29:51 +0530
+Message-Id: <1396411195-5051-3-git-send-email-fariyaf@gmail.com> (sfid-20140402_060022_181822_EA016B14)
+In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 12:08:59PM +0300, Kalle Valo wrote:
-> Bing Zhao <bzhao@marvell.com> writes:
-> 
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >
-> > Firmware dump feature is added for PCIe based chipsets.
-> > Separate file will be created at /var/log/fw_dump_*
-> > for each memory segment.
-> >
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> 
-> Sorry for commenting so late, I was on holidays and then got lagged
-> behind with email.
-> 
-> > +			memset(filename, 0, sizeof(filename));
-> > +			memcpy(filename, name_prefix, strlen(name_prefix));
-> > +			strcat(filename, entry->mem_name);
-> > +			do_gettimeofday(&t);
-> > +			entry->file_mem = filp_open(filename, O_CREAT | O_RDWR,
-> > +						    0644);
-> > +			if (IS_ERR(entry->file_mem)) {
-> > +				dev_info(adapter->dev,
-> > +					 "Create %s file failed at %s, opening another dir /tmp\n",
-> > +					 entry->mem_name, filename);
-> > +				memset(filename, 0, sizeof(filename));
-> > +				sprintf(filename, "%s%s", "/tmp/fw_dump_",
-> > +					entry->mem_name);
-> > +				entry->file_mem =
-> > +					filp_open(filename,
-> > +						  O_CREAT | O_RDWR, 0644);
-> > +			}
-> > +			if (!IS_ERR(entry->file_mem)) {
-> > +				dev_info(adapter->dev,
-> > +					 "Start to save the output : %u.%06u, please wait...\n",
-> > +					 (u32)t.tv_sec, (u32)t.tv_usec);
-> 
-> Like I said in my previous email, IMHO a wireless driver should not save
-> any files to the filesystem. For example, I don't see any other uses of
-> filp_open() in drivers/net. Ugly hacks like this belong to staging
-> drivers, not to proper upstream drivers.
+From: Fariya Fatima <fariyaf@gmail.com>
 
-I'm sorry for letting this slip through.  I must have had too much rum or something...
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-I'm reverting this patch in wireless-next -- drivers should not be
-making filesystem calls like that.  Even if you can argue for doing
-so somehow, where the file would go would be a policy decision that
-should not be encoded in the driver.
-
-John
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 2361a68..7369429 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -738,7 +738,7 @@ int rsi_hal_load_key(struct rsi_common *common,
+  *
+  * Return: 0 on success, corresponding error code on failure.
+  */
+-static u8 rsi_load_bootup_params(struct rsi_common *common)
++static int rsi_load_bootup_params(struct rsi_common *common)
+ {
+ 	struct sk_buff *skb;
+ 	struct rsi_boot_params *boot_params;
+@@ -1272,6 +1272,7 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
+ {
+ 	s32 msg_len = (le16_to_cpu(*(__le16 *)&msg[0]) & 0x0fff);
+ 	u16 msg_type = (msg[2]);
++	int ret;
+ 
+ 	rsi_dbg(FSM_ZONE, "%s: Msg Len: %d, Msg Type: %4x\n",
+ 		__func__, msg_len, msg_type);
+@@ -1284,8 +1285,9 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
+ 		if (common->fsm_state == FSM_CARD_NOT_READY) {
+ 			rsi_set_default_parameters(common);
+ 
+-			if (rsi_load_bootup_params(common))
+-				return -ENOMEM;
++			ret = rsi_load_bootup_params(common);
++			if (ret)
++				return ret;
+ 			else
+ 				common->fsm_state = FSM_BOOT_PARAMS_SENT;
+ 		} else {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.5.4
+
