@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:44419 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932866AbaDIOSf (ORCPT
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:45453 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758186AbaDBJ6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 10:18:35 -0400
-Received: by mail-pd0-f172.google.com with SMTP id p10so2508062pdj.17
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 07:18:35 -0700 (PDT)
-From: "Zhao\, Gang" <gamerh2o@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/8] cfg80211: fix possible compile warning in wext-compat.h
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	<1397047610.4964.14.camel@jlt4.sipsolutions.net>
-Date: Wed, 09 Apr 2014 22:18:27 +0800
-In-Reply-To: <1397047610.4964.14.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Wed, 09 Apr 2014 14:46:50 +0200")
-Message-ID: <8738hmfux8.fsf@gmail.com> (sfid-20140409_161840_202441_5ADD3542)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 2 Apr 2014 05:58:47 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v6 0/4] Provide netdev naming-policy via sysfs
+Date: Wed,  2 Apr 2014 11:58:22 +0200
+Message-Id: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com> (sfid-20140402_120135_126057_861552B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 14:46:50 +0200, Johannes Berg wrote:
-> On Wed, 2014-04-09 at 09:28 +0800, Zhao, Gang wrote:
->> Function cfg80211_wext_freq() is declared in wext-compat.h, but its
->> parameter struct wiphy's declaration is not included there. Actually
->> the parameter is not used in this function, so change it to normal
->> net_device.
->> 
->> The compile warning doesn't show up due to duplicate including, but
->> it's worth fixing it.
->
-> Why not just include the right file here?
+Hi
 
-As I said in commit log, that parameter is not used in that function,
-and all the other functions in wext-compat.h use net_device as their
-parameters, I don't see any reason why this function should be specific.
+This is v6 of the name_assign_type attribute for netdevs. Changes since v5 [1]:
+ - Acked-by: Kay Sievers
+ - rebased on net-next of today
 
-Although changing the parameter type seems complicated the problem, I
-think it's the more reasonable way.
+Aimed for 3.15, but feel free to delay for 3.16 if you want it in -next for some
+more time.
 
->
-> johannes
+Thanks
+David
+
+[1] http://thread.gmane.org/gmane.linux.kernel/1673169
+
+David Herrmann (4):
+  net: add name_assign_type netdev attribute
+  mac80211: set NET_NAME_USER for user-space created ifs
+  ath6kl: set NET_NAME_USER for P2P ifs
+  brcmfmac: set NET_NAME_USER for P2P ifs
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c    | 5 ++++-
+ drivers/net/wireless/ath/ath6kl/cfg80211.h    | 1 +
+ drivers/net/wireless/ath/ath6kl/core.c        | 4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+ include/linux/netdevice.h                     | 2 ++
+ include/uapi/linux/netdevice.h                | 4 ++++
+ net/core/dev.c                                | 7 +++++++
+ net/core/net-sysfs.c                          | 2 ++
+ net/core/rtnetlink.c                          | 2 ++
+ net/mac80211/cfg.c                            | 2 +-
+ net/mac80211/ieee80211_i.h                    | 1 +
+ net/mac80211/iface.c                          | 2 ++
+ net/mac80211/main.c                           | 2 +-
+ 13 files changed, 30 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
+
