@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755946AbaDVOrn (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:44128 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216AbaDBNcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 10:47:43 -0400
-Message-ID: <1398178044.4211.9.camel@jlt4.sipsolutions.net> (sfid-20140422_164755_954152_E70578E5)
-Subject: Re: [PATCH 03/12] mac80211: minor changes of ieee80211_reconfig()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 22 Apr 2014 16:47:24 +0200
-In-Reply-To: <d8410804796e01fe8b4c62aeaca97b791154f585.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065501_034767_D908E586)
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-	 <d8410804796e01fe8b4c62aeaca97b791154f585.1398055854.git.gamerh2o@gmail.com>
-	 (sfid-20140421_065501_034767_D908E586)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Apr 2014 09:32:07 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 2/4] cfg80211: Take the BW restrictions into account when checking the channel
+Date: Wed,  2 Apr 2014 15:31:53 +0200
+Message-Id: <1396445515-5808-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140402_153357_508238_3904D5C1)
+In-Reply-To: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-21 at 12:52 +0800, Zhao, Gang wrote:
-> Try to update chanctx only if local->use_chanctx is true.
+Since there are frequency bands restricting maximum channel
+bandwidth to 5MHz or 10MHz, check the particular bandwidth
+flags in cfg80211_chandef_usable() to comply with the restrictions.
 
-I'm not convinced this part is correct, since the internal channel
-context handling also has an effect when the driver doesn't use it.
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ net/wireless/chan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Have you really thought this through?
-
-johannes
-
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 78559b5..87e1576 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -531,12 +531,14 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 		width = 5;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_10:
++		prohibited_flags |= IEEE80211_CHAN_NO_10MHZ;
+ 		width = 10;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
+ 		if (!ht_cap->ht_supported)
+ 			return false;
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
++		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 		width = 20;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_40:
+-- 
+1.9.1
 
