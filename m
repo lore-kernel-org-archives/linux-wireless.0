@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:47980 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381AbaDUEyy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12565 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756574AbaDBHbh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 00:54:54 -0400
-Received: by mail-pa0-f49.google.com with SMTP id lj1so3333948pab.36
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:54:53 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 02/12] mac80211: remove config option check
-Date: Mon, 21 Apr 2014 12:52:57 +0800
-Message-Id: <3ed41ac7f29b74d7cfc81c42715cf2dc1706066c.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065458_432824_49A38723)
-In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
-References: <cover.1398055853.git.gamerh2o@gmail.com>
+	Wed, 2 Apr 2014 03:31:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: remove not needed warning when peer unmap
+References: <1396340628-4570-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Wed, 2 Apr 2014 10:31:31 +0300
+In-Reply-To: <1396340628-4570-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Tue, 1 Apr 2014 10:23:48 +0200")
+Message-ID: <877g78rxv0.fsf@kamboji.qca.qualcomm.com> (sfid-20140402_093140_892208_E63988C8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sanity check and error handling code shouldn't be put into
-CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
-used to control whether to print debug messages.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/tx.c | 2 --
- 1 file changed, 2 deletions(-)
+> Remove not needed warning when get peer unmap
+> event from the firmware. This is not critical
+> message. Instead print this as a debug message.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 48650da..59715da 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1205,13 +1205,11 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		int q = info->hw_queue;
- 
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		if (WARN_ON_ONCE(q >= local->hw.queues)) {
- 			__skb_unlink(skb, skbs);
- 			ieee80211_free_txskb(&local->hw, skb);
- 			continue;
- 		}
--#endif
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		if (local->queue_stop_reasons[q] ||
+I don't agree with that statement. If that would be true, we could
+remove a lot of warnings from ath10k. We have these warnings to catch
+problems early, which again improves the quality of the driver.
+
+Your commit log was again missing the "why?" part. I assume the reason
+for this patch is the problem of seeing the warning "unknown peer id 2"
+when putting the interface is down, which again is a spurious event from
+the firmware? You should document that in the commit log as well as add
+a short comment to the code explaining why we only print a debug message
+when that happens.
+
+Other idea I had would be to keep the warning message but add a new test
+to detect this problematic case, but I guess for that we would need to
+add a new state "stopping" to catch that? For example, something like
+this:
+
+if state == stopping and event->id == 2
+        dbg("foo")
+else
+        warn("bar")
+
 -- 
-1.9.0
-
+Kalle Valo
