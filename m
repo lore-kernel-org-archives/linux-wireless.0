@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:61678 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493AbaDXIuQ (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:65050 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbaDBEDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 04:50:16 -0400
-Received: by mail-vc0-f180.google.com with SMTP id hq16so85727vcb.11
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 01:50:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQkBCGyKYDaOMgdCi4Yw+SXeuRS+t0rGE8o=8+x2q5N74w@mail.gmail.com>
-References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQkBCGyKYDaOMgdCi4Yw+SXeuRS+t0rGE8o=8+x2q5N74w@mail.gmail.com>
-Date: Thu, 24 Apr 2014 16:50:15 +0800
-Message-ID: <CAEFj986fsmUD2kvEN=vjHK32cunyFO+8bH-y7ZoWZAMkcunJ2w@mail.gmail.com> (sfid-20140424_105022_647673_4648B190)
-Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 2 Apr 2014 00:03:46 -0400
+Received: by mail-pd0-f169.google.com with SMTP id fp1so10574096pdb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:03:45 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath9k_htc: set IEEE80211_TX_STAT_AMPDU for acked aggregated frames
+Date: Wed,  2 Apr 2014 12:03:18 +0800
+Message-Id: <1396411398-4525-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140402_060350_342472_74F54609)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think Monitor operation should be performed on a best effort basis.
-> This means monitor_start/stop should be attempted once number of
-> non-monitor vdevs changes.
+Frame aggregation requires the IEEE80211_TX_STAT_AMPDU to
+be set so that mac80211 can report the last_tx_rate correctly.
 
-I am too clear about this. Do you mean that actually we can have
-monitor mode on non-monitor vdevs in firmware 636?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-----
-Chun-Yeow
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index e8149e3..289f3d8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -471,8 +471,11 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+ 	if (!txok || !vif || !txs)
+ 		goto send_mac80211;
+ 
+-	if (txs->ts_flags & ATH9K_HTC_TXSTAT_ACK)
++	if (txs->ts_flags & ATH9K_HTC_TXSTAT_ACK) {
+ 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
++		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
++			tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
++	}
+ 
+ 	if (txs->ts_flags & ATH9K_HTC_TXSTAT_FILT)
+ 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+-- 
+1.7.9.5
+
