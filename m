@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46256 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965254AbaDJH74 (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:60207 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750704AbaDBEAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 03:59:56 -0400
-Message-ID: <1397116783.4757.4.camel@jlt4.sipsolutions.net> (sfid-20140410_100007_697411_435A9509)
-Subject: Re: [PATCH 2/2] cfg80211: ignore invalid BSSIDs when looking for
- BSSes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: linux-wireless@vger.kernel.org, stefan.pietsch@lsexperts.de
-Date: Thu, 10 Apr 2014 09:59:43 +0200
-In-Reply-To: <53464190.1030202@meshcoding.com>
-References: <1397075965-2684-1-git-send-email-johannes@sipsolutions.net>
-	 <1397075965-2684-2-git-send-email-johannes@sipsolutions.net>
-	 <53464190.1030202@meshcoding.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Apr 2014 00:00:13 -0400
+Received: by mail-pa0-f52.google.com with SMTP id rd3so10866173pab.39
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:13 -0700 (PDT)
+From: Fariya Fatima <fariyaf@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH 1/6] rsi: Potential null pointer derefernce issue fixed.
+Date: Wed,  2 Apr 2014 09:29:50 +0530
+Message-Id: <1396411195-5051-2-git-send-email-fariyaf@gmail.com> (sfid-20140402_060019_581243_EDAF004D)
+In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-04-10 at 09:00 +0200, Antonio Quartulli wrote:
-> On 09/04/14 22:39, Johannes Berg wrote:
-> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> > index 7d09a712cb1f..746c56ebd66c 100644
-> > --- a/net/wireless/scan.c
-> > +++ b/net/wireless/scan.c
-> > @@ -540,6 +540,8 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
-> >  			continue;
-> >  		if (channel && bss->pub.channel != channel)
-> >  			continue;
-> > +		if (!is_valid_ether_addr(bss->pub.bssid))
-> > +			continue;
-> 
-> Wouldn't it be better to prevent such entry to end up in the bss list at
-> all? (i.e. filtering during the scan?)
+From: Fariya Fatima <fariyaf@gmail.com>
 
-I thought about that, but I'm not so sure.
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c |   35 ++++++++++++---------------
+ 1 files changed, 16 insertions(+), 19 deletions(-)
 
-On the one hand, that would make sense since it's unusable, on the other
-hand it could cause confusion if you don't see some other network that
-you expect to show up ...
-
-And then again, if you can click the network in the UI and then it won't
-connect to it, that also causes confusion. I'm not sure what the best
-way is ...
-
-johannes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+index 7e4ef45..c466246 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
++++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+@@ -289,32 +289,29 @@ int rsi_init_dbgfs(struct rsi_hw *adapter)
+ 	const struct rsi_dbg_files *files;
+ 
+ 	dev_dbgfs = kzalloc(sizeof(*dev_dbgfs), GFP_KERNEL);
++	if (!dev_dbgfs)
++		return -ENOMEM;
++
+ 	adapter->dfsentry = dev_dbgfs;
+ 
+ 	snprintf(devdir, sizeof(devdir), "%s",
+ 		 wiphy_name(adapter->hw->wiphy));
+-	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
+ 
+-	if (IS_ERR(dev_dbgfs->subdir)) {
+-		if (dev_dbgfs->subdir == ERR_PTR(-ENODEV))
+-			rsi_dbg(ERR_ZONE,
+-				"%s:Debugfs has not been mounted\n", __func__);
+-		else
+-			rsi_dbg(ERR_ZONE, "debugfs:%s not created\n", devdir);
++	dev_dbgfs->subdir = debugfs_create_dir(devdir, NULL);
+ 
+-		adapter->dfsentry = NULL;
++	if (!dev_dbgfs->subdir) {
+ 		kfree(dev_dbgfs);
+-		return (int)PTR_ERR(dev_dbgfs->subdir);
+-	} else {
+-		for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
+-			files = &dev_debugfs_files[ii];
+-			dev_dbgfs->rsi_files[ii] =
+-			debugfs_create_file(files->name,
+-					    files->perms,
+-					    dev_dbgfs->subdir,
+-					    common,
+-					    &files->fops);
+-		}
++		return -ENOMEM;
++	}
++
++	for (ii = 0; ii < adapter->num_debugfs_entries; ii++) {
++		files = &dev_debugfs_files[ii];
++		dev_dbgfs->rsi_files[ii] =
++		debugfs_create_file(files->name,
++				    files->perms,
++				    dev_dbgfs->subdir,
++				    common,
++				    &files->fops);
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.5.4
 
