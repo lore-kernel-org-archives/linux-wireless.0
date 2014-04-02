@@ -1,62 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:59706 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbaDBEAP (ORCPT
+Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:59123 "EHLO
+	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758036AbaDBIxu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 00:00:15 -0400
-Received: by mail-pa0-f43.google.com with SMTP id bj1so10854730pad.16
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:15 -0700 (PDT)
-From: Fariya Fatima <fariyaf@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Fariya Fatima <fariyaf@gmail.com>
-Subject: [PATCH 2/6] rsi: Fixed signedness bug reported by static code analyzer.
-Date: Wed,  2 Apr 2014 09:29:51 +0530
-Message-Id: <1396411195-5051-3-git-send-email-fariyaf@gmail.com> (sfid-20140402_060022_181822_EA016B14)
-In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
-References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+	Wed, 2 Apr 2014 04:53:50 -0400
+Received: from smtp26.msg.oleane.net (smtp26.mail.priv [172.17.20.148])
+	by smtp-out03.msg.oleane.net with ESMTP id s328XbYs012114
+	for <linux-wireless@vger.kernel.org>; Wed, 2 Apr 2014 10:33:37 +0200
+Subject: Re: TR: [RFC] 802.11s bitrate correction in airtime metric calculation
+Date: Wed, 2 Apr 2014 10:13:03 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A3190173423A@sbs2003.acksys.local> (sfid-20140402_105356_058723_78FCA226)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+From: "Cedric Debarge" <cedric.debarge@acksys.fr>
+To: <devel@lists.open80211s.org>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fariya Fatima <fariyaf@gmail.com>
+Hi Bob and Dennis,
 
-Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+Thanks for your answer.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 2361a68..7369429 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -738,7 +738,7 @@ int rsi_hal_load_key(struct rsi_common *common,
-  *
-  * Return: 0 on success, corresponding error code on failure.
-  */
--static u8 rsi_load_bootup_params(struct rsi_common *common)
-+static int rsi_load_bootup_params(struct rsi_common *common)
- {
- 	struct sk_buff *skb;
- 	struct rsi_boot_params *boot_params;
-@@ -1272,6 +1272,7 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
- {
- 	s32 msg_len = (le16_to_cpu(*(__le16 *)&msg[0]) & 0x0fff);
- 	u16 msg_type = (msg[2]);
-+	int ret;
- 
- 	rsi_dbg(FSM_ZONE, "%s: Msg Len: %d, Msg Type: %4x\n",
- 		__func__, msg_len, msg_type);
-@@ -1284,8 +1285,9 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
- 		if (common->fsm_state == FSM_CARD_NOT_READY) {
- 			rsi_set_default_parameters(common);
- 
--			if (rsi_load_bootup_params(common))
--				return -ENOMEM;
-+			ret = rsi_load_bootup_params(common);
-+			if (ret)
-+				return ret;
- 			else
- 				common->fsm_state = FSM_BOOT_PARAMS_SENT;
- 		} else {
--- 
-1.7.5.4
+>On 3/28/2014 8:22 AM, Bob Copeland wrote:
+>> Interesting -- I tried this exact thing once before, but got mixed
+>> results in my testing.
+>>
+>> Can you share your testing strategy?
 
+Here is my testing summary :
+
+     __  _      |_|_|                           |_|_|      __  _
+    [__]|=|--->[____°]                         [____°]<---[__]|=|
+    /::/|_|                                               /::/|_|
+                       .------------------.
+   Mesh portal B       | Office building  |   Mesh portal A
+   Fixed location      |    15m x 40m     |   Fixed location
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       |                  |
+                       '------------------'
+      __  _     |_|_|
+     [__]|=|-->[____°]
+     /::/|_|
+
+    Mesh portal C
+    Fixed location
+
+All points are mesh portals. Signal levels are :
+	- around -60dBm between A and B --> metric = 152
+	- around -60dBm between B and C --> metric = 152
+	- around -80dBm between A and C --> metric >> 2*152
+
+All point are using openwrt with compat-wireless v2013-04-16.
+
+A runs an iperf server and C an iperf client (see iperf parameters below)
+iperf -c mesh_point_A_ip -b10M -i10 -t9999
+
+During the test I monitored both mpath and minstrel stats on mesh portal C:
+	- mpath (iw wlan0 mpath dump)
+	- minstrel stats (rc_stats files for stations B and A)
+
+Without my patch, I get 10 or more mpath changes per minute. When I apply it,
+the number of changes drops to 1 or 2 per minute. In this particular case, it
+seems to be an improvement but I haven't tested this patch in another scenario.
+In order to get a fully stable link, I have to set a rssi threshold in order to
+prevent C to establish any plink with A (and do the same on point A).
+
+Cédric DEBARGE
+ACKSYS R&D dpt.
