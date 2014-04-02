@@ -1,72 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:45337 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbaDAIKs (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:36114 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758342AbaDBJ6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 04:10:48 -0400
-Received: by mail-ig0-f182.google.com with SMTP id uy17so4523743igb.15
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 01:10:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=DXmWuYtX8XmHuD1Lia=h8pFhJ1wXOSBv+bURzrFREmQ@mail.gmail.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	<1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-	<1396262371-6466-14-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcYPPruXSxndMcbaek0ozLZV9GGpqKOAO0WPC6CcT-j7Q@mail.gmail.com>
-	<CA+BoTQkXWscUL-XLL1sBNb=eXahafoCUazsNKVFU08X9bPdBPQ@mail.gmail.com>
-	<CAB3XZEew5X5Ux9Wpi0g0xqiMk2ULxoeEQvb8SkXBkpmQDjMCxQ@mail.gmail.com>
-	<CA+BoTQ=DXmWuYtX8XmHuD1Lia=h8pFhJ1wXOSBv+bURzrFREmQ@mail.gmail.com>
-Date: Tue, 1 Apr 2014 11:10:48 +0300
-Message-ID: <CAB3XZEegvNWUccoU5PGm6v-OrvwpbbaaB1_Qxv=KR1Maag3XMQ@mail.gmail.com> (sfid-20140401_101055_345911_5894EC50)
-Subject: Re: [PATCH v3 13/13] mac80211: implement multi-vif in-place reservations
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Apr 2014 05:58:52 -0400
+From: David Herrmann <dh.herrmann@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Tom Gundersen <teg@jklm.no>,
+	Johannes berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	David Herrmann <dh.herrmann@gmail.com>
+Subject: [PATCH v6 3/4] ath6kl: set NET_NAME_USER for P2P ifs
+Date: Wed,  2 Apr 2014 11:58:25 +0200
+Message-Id: <1396432706-14470-4-git-send-email-dh.herrmann@gmail.com> (sfid-20140402_120000_008683_8EE57FF5)
+In-Reply-To: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+References: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 1, 2014 at 10:54 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 1 April 2014 09:46, Eliad Peller <eliad@wizery.com> wrote:
->> On Tue, Apr 1, 2014 at 8:10 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> On 31 March 2014 18:15, Eliad Peller <eliad@wizery.com> wrote:
->>>> On Mon, Mar 31, 2014 at 1:39 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->
-> [...]
->
->>>>> +err_unassign:
->>>>> +       list_for_each_entry_continue_reverse(sdata, &ctx->reserved_vifs,
->>>>> +                                            reserved_chanctx_list)
->>>>> +               drv_unassign_vif_chanctx(local, sdata, ctx);
->>>>> +       ieee80211_del_chanctx(local, new_ctx);
->>>>> +err_revert:
->>>>> +       kfree_rcu(new_ctx, rcu_head);
->>>>> +       WARN_ON(ieee80211_add_chanctx(local, ctx));
->>>>> +       list_add_rcu(&ctx->list, &local->chanctx_list);
->>>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
->>>>> +               sdata->radar_required = sdata->reserved_radar_required;
->>>>> +               rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
->>>>> +               WARN_ON(drv_assign_vif_chanctx(local, sdata, ctx));
->>>>> +       }
->>>> seems like the list_for_each_entry should actually be under err_unassign?
->>>
->>> No. This is correct. The err_unassign is used to bail out if any
->>> drv_assign_vif_chanctx fails mid-way. We want to unassign only those
->>> vif-chanctx we only managed to assign.
->>>
->> sure. i failed to explain - i'm referring only to the radar_required
->> swapping - it seems to happen only later.
->
-> You mean to split the list_for_each_entry from err_revert into 2
-> parts: one that reverts the radar_required swapping and the other one
-> re-assigning vif-chanctx? I'm not really sure if that's necessary? The
-> `ctx` (old chanctx) should still be configured as it was wrt radar
-> detection. Or is there something that I'm missing?
->
-ctx is correct, but sdata->radar_required doesn't seem to derive its
-value from it.
-i mean that you should either split the list_for_each_entry as you
-suggested, or move the radar_enabled swapping loop before the
-ieee80211_add_chanctx() call.
+P2P netdevs and other devices that are created via nl80211 from user-space
+have a name provided by user-space. Therefore, set NET_NAME_USER so this
+is correctly shown in sysfs.
 
-Eliad.
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Acked-by: Tom Gundersen <teg@jklm.no>
+Acked-by: Kay Sievers <kay.sievers@vrfy.org>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 5 ++++-
+ drivers/net/wireless/ath/ath6kl/cfg80211.h | 1 +
+ drivers/net/wireless/ath/ath6kl/core.c     | 4 ++--
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index c2c6f46..131d8ab 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1512,7 +1512,8 @@ static struct wireless_dev *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	wdev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
++	wdev = ath6kl_interface_add(ar, name, NET_NAME_USER, type,
++				    if_idx, nw_type);
+ 	if (!wdev)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -3630,6 +3631,7 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
+ }
+ 
+ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
++					  unsigned char name_assign_type,
+ 					  enum nl80211_iftype type,
+ 					  u8 fw_vif_idx, u8 nw_type)
+ {
+@@ -3666,6 +3668,7 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
+ 			ndev->dev_addr[4] ^= 0x80;
+ 	}
+ 
++	ndev->name_assign_type = name_assign_type;
+ 	init_netdev(ndev);
+ 
+ 	ath6kl_init_control_info(vif);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index b59becd..5aa57a7 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -25,6 +25,7 @@ enum ath6kl_cfg_suspend_mode {
+ };
+ 
+ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
++					  unsigned char name_assign_type,
+ 					  enum nl80211_iftype type,
+ 					  u8 fw_vif_idx, u8 nw_type);
+ void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 4b46adb..3cc8145 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -195,8 +195,8 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
+ 	rtnl_lock();
+ 
+ 	/* Add an initial station interface */
+-	wdev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
+-				    INFRA_NETWORK);
++	wdev = ath6kl_interface_add(ar, "wlan%d", NET_NAME_ENUM,
++				    NL80211_IFTYPE_STATION, 0, INFRA_NETWORK);
+ 
+ 	rtnl_unlock();
+ 
+-- 
+1.9.1
+
