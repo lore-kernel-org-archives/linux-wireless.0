@@ -1,80 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:39097 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbaDEOfj (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:63534 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbaDBEAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2014 10:35:39 -0400
-Received: by mail-we0-f176.google.com with SMTP id x48so4566598wes.7
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Apr 2014 07:35:38 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][FIX 3.15] b43: N-PHY: access B43_MMIO_PSM_PHY_HDR using 16b ops
-Date: Sat,  5 Apr 2014 16:35:24 +0200
-Message-Id: <1396708524-12199-1-git-send-email-zajec5@gmail.com> (sfid-20140405_163559_966834_E71BAD8D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 2 Apr 2014 00:00:25 -0400
+Received: by mail-pb0-f45.google.com with SMTP id uo5so10845128pbc.18
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:00:25 -0700 (PDT)
+From: Fariya Fatima <fariyaf@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH 6/6] rsi: Fixed issue relating to doing dma on stack error.
+Date: Wed,  2 Apr 2014 09:29:55 +0530
+Message-Id: <1396411195-5051-7-git-send-email-fariyaf@gmail.com> (sfid-20140402_060036_123558_E0890D6A)
+In-Reply-To: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
+References: <1396411195-5051-1-git-send-email-fariyaf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register B43_MMIO_PSM_PHY_HDR is 16 bit one, so accessing it with 32b
-functions isn't safe. On my machine it causes delayed (!) CPU exception:
+From: Fariya Fatima <fariyaf@gmail.com>
 
-Disabling lock debugging due to kernel taint
-mce: [Hardware Error]: CPU 0: Machine Check Exception: 4 Bank 4: b200000000070f0f
-mce: [Hardware Error]: TSC 164083803dc
-mce: [Hardware Error]: PROCESSOR 2:20fc2 TIME 1396650505 SOCKET 0 APIC 0 microcode 0
-mce: [Hardware Error]: Run the above through 'mcelog --ascii'
-mce: [Hardware Error]: Machine check: Processor context corrupt
-Kernel panic - not syncing: Fatal machine check on current CPU
-Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Fariya Fatima <fariyaf@gmail.com>
 ---
-John: I think this patch it worth picking for 3.15 release. This bug
-causes instability and can be triggered depending on the default state
-of B43_NPHY_BANDCTL register.
-It doesn't cause exception immediately, so I spent few hours tracing it.
----
- drivers/net/wireless/b43/phy_n.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c |   26 +++++++++++++++++++-------
+ 1 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 05ee7f1..24ccbe9 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -5176,22 +5176,22 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 	int ch = new_channel->hw_value;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index bb1bf96..4c46e56 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -154,24 +154,30 @@ static int rsi_usb_reg_read(struct usb_device *usbdev,
+ 			    u16 *value,
+ 			    u16 len)
+ {
+-	u8 temp_buf[4];
+-	int status = 0;
++	u8 *buf;
++	int status = -ENOMEM;
++
++	buf  = kmalloc(0x04, GFP_KERNEL);
++	if (!buf)
++		return status;
  
- 	u16 old_band_5ghz;
--	u32 tmp32;
-+	u16 tmp16;
+ 	status = usb_control_msg(usbdev,
+ 				 usb_rcvctrlpipe(usbdev, 0),
+ 				 USB_VENDOR_REGISTER_READ,
+ 				 USB_TYPE_VENDOR,
+ 				 ((reg & 0xffff0000) >> 16), (reg & 0xffff),
+-				 (void *)temp_buf,
++				 (void *)buf,
+ 				 len,
+ 				 HZ * 5);
  
- 	old_band_5ghz =
- 		b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
- 	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
--		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
- 		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
- 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
- 	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
- 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
--		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
- 		b43_phy_mask(dev, B43_PHY_B_BBCFG, 0x3FFF);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
+-	*value = (temp_buf[0] | (temp_buf[1] << 8));
++	*value = (buf[0] | (buf[1] << 8));
+ 	if (status < 0) {
+ 		rsi_dbg(ERR_ZONE,
+ 			"%s: Reg read failed with error code :%d\n",
+ 			__func__, status);
  	}
++	kfree(buf);
++
+ 	return status;
+ }
  
- 	b43_chantab_phy_upload(dev, e);
+@@ -190,8 +196,12 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			     u16 value,
+ 			     u16 len)
+ {
+-	u8 usb_reg_buf[4];
+-	int status = 0;
++	u8 *usb_reg_buf;
++	int status = -ENOMEM;
++
++	usb_reg_buf  = kmalloc(0x04, GFP_KERNEL);
++	if (!usb_reg_buf)
++		return status;
+ 
+ 	usb_reg_buf[0] = (value & 0x00ff);
+ 	usb_reg_buf[1] = (value & 0xff00) >> 8;
+@@ -212,6 +222,8 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+ 			"%s: Reg write failed with error code :%d\n",
+ 			__func__, status);
+ 	}
++	kfree(usb_reg_buf);
++
+ 	return status;
+ }
+ 
+@@ -286,7 +298,7 @@ int rsi_usb_write_register_multiple(struct rsi_hw *adapter,
+ 		return -ENOMEM;
+ 
+ 	while (count) {
+-		transfer = min_t(int, count, 4096);
++		transfer = (u8)(min_t(u32, count, 4096));
+ 		memcpy(buf, data, transfer);
+ 		status = usb_control_msg(dev->usbdev,
+ 					 usb_sndctrlpipe(dev->usbdev, 0),
 -- 
-1.8.4.5
+1.7.5.4
 
