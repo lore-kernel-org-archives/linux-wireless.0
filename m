@@ -1,215 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:39038 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932569AbaDIKzc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:45937 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932124AbaDBNcF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:32 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so1689978eek.25
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:30 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 2/5] ath10k: fix wmi-htc tx credit starvation
-Date: Wed,  9 Apr 2014 12:48:48 +0200
-Message-Id: <1397040531-6224-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125544_509292_6B038462)
-In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
- <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 2 Apr 2014 09:32:05 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 1/4] cfg80211: Add attributes describing prohibited channel bandwidth
+Date: Wed,  2 Apr 2014 15:31:52 +0200
+Message-Id: <1396445515-5808-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140402_153336_143242_A0CA1D18)
+In-Reply-To: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1396445515-5808-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each WMI management Tx consumes 1 HTC Tx credit
-and doesn't replenish it until the frame is
-actually transmitted out of firmware's Tx queues.
+Since there are frequency bands (e.g. 5.9GHz) allowing channels
+with only 10 or 5 MHz bandwidth, this patch adds attributes that
+allow keeping track about this information.
 
-If associated client was asleep and has gone out
-of range then unicast frames won't be released for
-FW/HW queues for a while (10 seconds per
-observation). This means that if more management
-frames are queued then HTC Tx credits are drained
-to 0 and no other commands can be submitted
-including beacons and peer removal.
+When channel attributes are reported to user-space, make sure to
+not break old tools, i.e. if the 'split wiphy dump' is enabled,
+report the extra attributes (if present) describing the bandwidth
+restrictions.  If the 'split wiphy dump' is not enabled,
+completely omit those channels that have flags set to either
+IEEE80211_CHAN_NO_10MHZ or IEEE80211_CHAN_NO_20MHZ.
 
-This could in turn result in clients disconnecting
-due to their beacon loss and may trigger spurious
-sta kickouts because wmi peer removal command may
-never reach firmware during disassociation.
-
-This could happen, e.g. when disconnecting
-client (hostapd inactivity) that has gone away
-while asleep when acting as AP.
-
-As a workaround flush frames that can potentialy
-get stuck in FW Tx queues.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 96 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  5 --
- drivers/net/wireless/ath/ath10k/wmi.h |  3 ++
- 3 files changed, 99 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h       |  6 ++++++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       | 13 +++++++++++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58ec5a7..5cfbf88 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2076,9 +2076,67 @@ void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar)
- 	}
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b1f84b0..f5ecd6c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -109,6 +109,10 @@ enum ieee80211_band {
+  *	channel as the control or any of the secondary channels.
+  *	This may be due to the driver or due to regulatory bandwidth
+  *	restrictions.
++ * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
++ *     on this channel.
++ * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
++ *     on this channel.
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+@@ -120,6 +124,8 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_NO_OFDM		= 1<<6,
+ 	IEEE80211_CHAN_NO_80MHZ		= 1<<7,
+ 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
++	IEEE80211_CHAN_NO_20MHZ		= 1<<9,
++	IEEE80211_CHAN_NO_10MHZ		= 1<<10,
+ };
  
-+static void ath10k_mgmt_tx_flush(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_sta *sta;
-+	struct ath10k_vif *arvif;
-+	u8 *da = ieee80211_get_DA(hdr);
-+	u8 vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
-+	u32 bcn_intval = 0;
-+	unsigned int msecs;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (!is_unicast_ether_addr(da))
-+		return;
-+
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta_by_ifaddr(ar->hw, da, NULL);
-+	rcu_read_unlock();
-+
-+	/*
-+	 * FW Tx queues can be paused only for associated peers. Since this is
-+	 * a workaround just assume worst case if station simply entry exists.
-+	 */
-+	if (!sta)
-+		return;
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (arvif->vdev_id == vdev_id) {
-+			bcn_intval = arvif->beacon_interval;
-+			break;
-+		}
-+	}
-+
-+	if (!bcn_intval)
-+		return;
-+
-+	/*
-+	 * Wait 2 beacon intervals before flushing so stations that are
-+	 * asleep but are actually still in range have a chance to see
-+	 * updated PVB, wake up and fetch the frame. There's no other way of
-+	 * synchronizing other than sleeping because there's no tx completion
-+	 * indication event for WMI management tx.
-+	 */
-+	msecs = 2 * arvif->beacon_interval * 1024 / 1000;
-+	ath10k_dbg(ATH10K_DBG_MAC,
-+		   "mac flushing peer %pM on vdev %i mgmt tid for unicast mgmt (%d msecs)\n",
-+		   da, vdev_id, msecs);
-+	msleep(msecs);
-+
-+	ret = ath10k_wmi_peer_flush(ar, vdev_id, da,
-+				    WMI_PEER_TID_MGMT_MASK);
-+	if (ret)
-+		ath10k_warn("failed to flush peer %pM mgmt tid: %d\n",
-+			    da, ret);
-+}
-+
- void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ #define IEEE80211_CHAN_NO_HT40 \
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 91054fd..0748026 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2304,6 +2304,10 @@ enum nl80211_band_attr {
+  * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
+  *	using this channel as the primary or any of the secondary channels
+  *	isn't possible
++ * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
++ *     on this channel in current regulatory domain.
++ * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
++ *     on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+@@ -2322,6 +2326,8 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
+ 	NL80211_FREQUENCY_ATTR_NO_80MHZ,
+ 	NL80211_FREQUENCY_ATTR_NO_160MHZ,
++	NL80211_FREQUENCY_ATTR_NO_20MHZ,
++	NL80211_FREQUENCY_ATTR_NO_10MHZ,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4fe2e6e..c62c572 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -563,6 +563,13 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 				   struct ieee80211_channel *chan,
+ 				   bool large)
  {
- 	struct ath10k *ar = container_of(work, struct ath10k, wmi_mgmt_tx_work);
-+	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	int ret;
- 
-@@ -2087,12 +2145,50 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- 		if (!skb)
- 			break;
- 
-+		mutex_lock(&ar->conf_mutex);
++	/* Some channels must be completely excluded from the
++	 * list to protect old user-space tools from breaking
++	 */
++	if (!large && chan->flags &
++	    (IEEE80211_CHAN_NO_10MHZ | IEEE80211_CHAN_NO_20MHZ))
++		return 0;
 +
- 		ret = ath10k_wmi_mgmt_tx(ar, skb);
- 		if (ret) {
- 			ath10k_warn("failed to transmit management frame via WMI: %d\n",
- 				    ret);
-+			mutex_unlock(&ar->conf_mutex);
- 			ieee80211_free_txskb(ar->hw, skb);
-+			continue;
- 		}
-+
-+		/*
-+		 * Each WMI management Tx consumes 1 HTC Tx credit and doesn't
-+		 * replenish it until the frame is actually transmitted out of
-+		 * firmware's Tx queues.
-+		 *
-+		 * If associated client was asleep and has gone out of range
-+		 * then unicast frames won't be released for FW/HW queues for a
-+		 * while (10 seconds per observation). This means that if more
-+		 * management frames are queued then HTC Tx credits are drained
-+		 * to 0 and no other commands can be submitted including
-+		 * beacons and peer removal.
-+		 *
-+		 * This could in turn result in clients disconnecting due to
-+		 * their beacon loss and may trigger spurious sta kickouts
-+		 * because wmi peer removal command may never reach firmware
-+		 * during disassociation.
-+		 *
-+		 * This could happen, e.g. when disconnecting client that has
-+		 * gone away while asleep.
-+		 *
-+		 * As a workaround flush unicast management frames that can
-+		 * possibly be buffered.
-+		 *
-+		 * Note: This is a deficiency in design of WMI_MGMT_TX command.
-+		 */
-+		ath10k_mgmt_tx_flush(ar, skb);
-+
-+		mutex_unlock(&ar->conf_mutex);
-+
-+		/* there's no way to get ACK so just assume it's acked */
-+		info = IEEE80211_SKB_CB(skb);
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+		ieee80211_tx_status(ar->hw, skb);
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
+ 			chan->center_freq))
+ 		goto nla_put_failure;
+@@ -606,6 +613,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 		if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
++			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
++			goto nla_put_failure;
  	}
- }
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d4b48ef..3b270a4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -637,7 +637,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_mgmt_tx_cmd *cmd;
- 	struct ieee80211_hdr *hdr;
- 	struct sk_buff *wmi_skb;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int len;
- 	u16 fc;
- 
-@@ -673,10 +672,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	if (ret)
- 		return ret;
- 
--	/* TODO: report tx status to mac80211 - temporary just ACK */
--	info->flags |= IEEE80211_TX_STAT_ACK;
--	ieee80211_tx_status_irqsafe(ar->hw, skb);
--
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index ae83822..90fe2e9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3844,6 +3844,9 @@ struct wmi_peer_delete_cmd {
- 	struct wmi_mac_addr peer_macaddr;
- } __packed;
- 
-+#define WMI_PEER_TID_MGMT 17
-+#define WMI_PEER_TID_MGMT_MASK BIT(WMI_PEER_TID_MGMT)
-+
- struct wmi_peer_flush_tids_cmd {
- 	__le32 vdev_id;
- 	struct wmi_mac_addr peer_macaddr;
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
 -- 
-1.8.5.3
+1.9.1
 
