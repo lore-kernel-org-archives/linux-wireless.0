@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:61782 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285AbaDVC6y (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45887 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752973AbaDCSBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 22:58:54 -0400
-Received: by mail-la0-f48.google.com with SMTP id gf5so3752448lab.21
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 19:58:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1397646587-11078-1-git-send-email-arik@wizery.com>
-References: <1397646587-11078-1-git-send-email-arik@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Apr 2014 19:58:32 -0700
-Message-ID: <CAB=NE6UMho_LOMu1oQEjm5QFKU7T-bQdQCEMAtZ3_vJoQMEcpg@mail.gmail.com> (sfid-20140422_045904_184677_D803E92A)
-Subject: Re: [PATCH] cfg80211: avoid freeing last_request while in flight
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Colleen T <colleen@cozybit.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 3 Apr 2014 14:01:54 -0400
+Date: Thu, 03 Apr 2014 14:03:24 -0400 (EDT)
+Message-Id: <20140403.140324.1744832114380351572.davem@davemloft.net> (sfid-20140403_200205_318121_FA060C70)
+To: dh.herrmann@gmail.com
+Cc: netdev@vger.kernel.org, teg@jklm.no, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kay.sievers@vrfy.org
+Subject: Re: [PATCH v6 0/4] Provide netdev naming-policy via sysfs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+References: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 4:09 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> Avoid freeing the last request while it is being processed. This can
-> happen in some cases if reg_work is kicked for some reason while the
-> currently pending request is in flight.
->
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> This is to be applied on top of
-> "cfg80211: fix processing world regdomain when non modular"
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed,  2 Apr 2014 11:58:22 +0200
 
-Thanks for help on this Arik, in this case we actually want to apply
-this *before* the other regdomain patch, as such I'll address that and
-resend your patch before mine, it requires just a minor change.
+> This is v6 of the name_assign_type attribute for netdevs. Changes since v5 [1]:
+>  - Acked-by: Kay Sievers
+>  - rebased on net-next of today
+> 
+> Aimed for 3.15, but feel free to delay for 3.16 if you want it in -next for some
+> more time.
 
-  Luis
+I'm fine with the basic idea, but the implementation needs work and
+this will be deferred to 3.16 in any event.
+
+We really need to specify the name allocation type at alloc_netdev()
+time, I know that's more work but that's the only way you can be sure
+you caught all such cases.
+
+I know you missed the ISDN layer, where the name can come from the
+user via an ioctl().  I'm sure there were several more.
+
+You can even do something like make alloc_netdev_enumerated()
+be a shorthand for alloc_netdev(size, name, NET_NAME_ENUM, ...)
+
+Thanks.
