@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:58614 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbaD1HKy convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:45879 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbaDCPqx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 03:10:54 -0400
-Received: by mail-oa0-f53.google.com with SMTP id j17so6903063oag.12
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2014 00:10:53 -0700 (PDT)
+	Thu, 3 Apr 2014 11:46:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <535A13FA.4070405@gmail.com>
-References: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
- <535A13FA.4070405@gmail.com>
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Mon, 28 Apr 2014 09:10:33 +0200
-Message-ID: <CA+V6dmjNF2cgQHx=bZBDUrBUocYVzqQEmB5d13UhU-C9tTAydw@mail.gmail.com> (sfid-20140428_091123_047273_D7392690)
-Subject: Re: Odd network behaviors with an Intel Wireless 7260
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ryan Houdek <sonicadvance1@gmail.com>
+In-Reply-To: <20140403173701.75c1f497@north>
+References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com> <20140403173701.75c1f497@north>
+From: Richard Genoud <richard.genoud@gmail.com>
+Date: Thu, 3 Apr 2014 17:46:30 +0200
+Message-ID: <CACQ1gAg8N+Y1=dvkZcA_KyLudfSB_ueL1+LS4F=2F2TE_JwtGA@mail.gmail.com> (sfid-20140403_174722_770645_BF5506E4)
+Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
+To: =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 25, 2014 at 9:51 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Thank you very much for this very detailed report.
-> 1) can you try with power save disabled?
->    sudo iw wlan0 set power_save off
-> 2) if 1) helps, can you try https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=a82dda6cd492b8c88952be6f6527f3656f7ac585.
+2014-04-03 17:37 GMT+02:00 Jakub Kiciński <moorray3@wp.pl>:
+> On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
+>> rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
+>> that calls rt2x00usb_vendor_request() which is already looping up to
+>> REGISTER_BUSY_COUNT times.
+>>
+>> So this loop is not needed.
+>
+> Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
+> to succeed, rt2x00usb_register_read_lock() busy-waits for the register
+> field itself to become 0.
+>
+> Also, how would this be a BUG?
 
-Unfortunately I have to report that this does not solve the issue. I
-was able to reproduce the random non-local drops several times with
-power saving disabled on the interface.
+Ok, you're right.
+Just forget about this patch...
 
--- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
+Richard
