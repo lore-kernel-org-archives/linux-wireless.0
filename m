@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:60700 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612AbaDVDjx (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:47419 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162380AbaDCHDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 23:39:53 -0400
-Received: by mail-pd0-f176.google.com with SMTP id r10so4368660pdi.35
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 20:39:53 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, lkml20140418@newton.leun.net,
-	arik@wizery.com, linux@eikelenboom.it,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH 2/2] cfg80211: fix processing world regdomain when non modular
-Date: Mon, 21 Apr 2014 20:39:35 -0700
-Message-Id: <1398137975-14275-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20140422_054000_236315_8D306BAF)
-In-Reply-To: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 3 Apr 2014 03:03:54 -0400
+Received: from potku.adurom.net (a91-155-131-35.elisa-laajakaista.fi [91.155.131.35])
+	by emh01.mail.saunalahti.fi (Postfix) with ESMTP id AAD6490266
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Apr 2014 10:03:46 +0300 (EEST)
+Subject: [PATCH] cfg80211: update comment about WIPHY_FLAG_CUSTOM_REGULATORY
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Thu, 03 Apr 2014 10:03:45 +0300
+Message-ID: <20140403070345.28730.75836.stgit@potku.adurom.net> (sfid-20140403_090457_092805_E553137B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Commit a2f73b6c5db3c ("cfg80211: move regulatory flags to their own variable")
+renamed WIPHY_FLAG_CUSTOM_REGULATORY to REGULATORY_CUSTOM_REG, but missed to
+update one comment.
 
-This allows processing of the last regulatory request when
-we determine its still pending. Without this if a regulatory
-request failed to get processed by userspace we wouldn't
-be able to re-process it later. An example situation that can
-lead to an unprocessed last_request is enabling cfg80211 to
-be built-in to the kernel, not enabling CFG80211_INTERNAL_REGDB
-and the CRDA binary not being available at the time the udev
-rule that kicks of CRDA triggers.
-
-In such a situation we want to let some cfg80211 triggers
-eventually kick CRDA for us again. Without this if the first
-cycle attempt to kick off CRDA failed we'd be stuck without
-the ability to change process any further regulatory domains.
-
-cfg80211 will trigger re-processing of the regulatory queue
-whenever schedule_work(&reg_work) is called, currently this
-happens when:
-
-  * suspend / resume
-  * disconnect
-  * a beacon hint gets triggered (non DFS 5 GHz AP found)
-  * a regulatory request gets added to the queue
-
-We don't have any specific opportunistic late boot triggers
-to address a late mount of where CRDA resides though, adding
-that should be done separately through another patch.
-Without an opportunistic fix then this fix relies at least
-one of the triggeres above to happen.
-
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/wireless/reg.c | 2 +-
+ include/net/cfg80211.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 081c571..625c41e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1912,7 +1912,7 @@ static void reg_process_pending_hints(void)
- 
- 	/* When last_request->processed becomes true this will be rescheduled */
- 	if (lr && !lr->processed) {
--		REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
-+		reg_process_hint(lr);
- 		return;
- 	}
- 
--- 
-1.9.0
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f3539a15c411..0442504b9164 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3600,7 +3600,7 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+  * default channel settings will be disregarded. If no rule is found for a
+  * channel on the regulatory domain the channel will be disabled.
+  * Drivers using this for a wiphy should also set the wiphy flag
+- * WIPHY_FLAG_CUSTOM_REGULATORY or cfg80211 will set it for the wiphy
++ * REGULATORY_CUSTOM_REG or cfg80211 will set it for the wiphy
+  * that called this helper.
+  */
+ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
 
