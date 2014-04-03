@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42644 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933039AbaDVPHO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 11:07:14 -0400
-Message-ID: <1398179202.4211.15.camel@jlt4.sipsolutions.net> (sfid-20140422_170751_516656_47BC2019)
-Subject: Re: [PATCH 0/7] net: rfkill: gpio: Add device tree support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
+Received: from mx4.wp.pl ([212.77.101.12]:46904 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681AbaDCPnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2014 11:43:42 -0400
+Date: Thu, 3 Apr 2014 17:37:01 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Date: Tue, 22 Apr 2014 17:06:42 +0200
-In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
+Message-ID: <20140403173701.75c1f497@north> (sfid-20140403_174451_382688_93F9B295)
+In-Reply-To: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com>
+References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-04-15 at 14:41 +0800, Chen-Yu Tsai wrote:
+On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
+> rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
+> that calls rt2x00usb_vendor_request() which is already looping up to
+> REGISTER_BUSY_COUNT times.
+> 
+> So this loop is not needed.
 
-> The first 2 patches should go through the gpio tree. The 4 rfkill-gpio
-> patches should go through the same tree that Heikki's patches are
-> in. Maxime, can you take the last one?
+Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
+to succeed, rt2x00usb_register_read_lock() busy-waits for the register
+field itself to become 0.
 
-Are there no dependencies? Maybe it'd be easier if you sent it as
-separate patch series then?
+Also, how would this be a BUG? 
 
-I can take those four patches into my topic branch on top of Heikki's
-patches, but in any case, there seem to be a bunch of
-comments/discussions so for now I'm not going to do anything with them.
-
-johannes
-
+	-- kuba
