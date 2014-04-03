@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46271 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965184AbaDJICm (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:47910 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350AbaDCOtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 04:02:42 -0400
-Message-ID: <1397116944.4757.7.camel@jlt4.sipsolutions.net> (sfid-20140410_100256_873609_4B7F9E76)
-Subject: Re: [PATCH 1/8] cfg80211: fix possible compile warning in
- wext-compat.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 10 Apr 2014 10:02:24 +0200
-In-Reply-To: <8738hmfux8.fsf@gmail.com> (sfid-20140409_161838_074038_B9FB9FD2)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 <1397047610.4964.14.camel@jlt4.sipsolutions.net> <8738hmfux8.fsf@gmail.com>
-	 (sfid-20140409_161838_074038_B9FB9FD2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 Apr 2014 10:49:10 -0400
+From: Richard Genoud <richard.genoud@gmail.com>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Richard Genoud <richard.genoud@gmail.com>
+Subject: [PATCH] rt2x00: Endless loop on hub port power down
+Date: Thu,  3 Apr 2014 16:48:56 +0200
+Message-Id: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com> (sfid-20140403_164940_309852_9EE62BB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 22:18 +0800, Zhao, Gang wrote:
+I've met an endless (or at least very long) loop if I power down the usb
+port on witch a usb wifi key is plugged.
+(Ok, it's not very smart to power down a usb port when a usb key is in
+used... but still, I think that should not lead to an endless loop).
 
-> As I said in commit log, that parameter is not used in that function,
-> and all the other functions in wext-compat.h use net_device as their
-> parameters, I don't see any reason why this function should be specific.
-> 
-> Although changing the parameter type seems complicated the problem, I
-> think it's the more reasonable way.
+I have a lot of:
+ieee80211 phy1: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71
 
-Fair enough. I'll take that patch.
+(-71==-EPROTO)
 
-johannes
+How to reproduce:
+- plug an usb wifi key
+- ip link set wlan0 up
+- hub-ctrl -b usb_bus -d usb_device -P usb_port -p 0
+
+hub-ctrl source: https://github.com/codazoda/hub-ctrl.c/blob/master/hub-ctrl.c
+
+The following patch prevents the endless loop, but I'm really not sure
+that The Right Way To Do It (R)
+
+Signed-off-by: Richard Genoud <richard.genoud@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 14142b099019..6bf4067ebf63 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -68,6 +68,12 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 		}
+ 	}
+ 
++	/* If the port is powered down, we get a -EPROTO error, and this
++	 * leads to a endless loop. So just say that the device is gone.
++	 */
++	if (status == -EPROTO)
++		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
++
+ 	rt2x00_err(rt2x00dev,
+ 		   "Vendor Request 0x%02x failed for offset 0x%04x with error %d\n",
+ 		   request, offset, status);
+-- 
+1.8.5.5
 
