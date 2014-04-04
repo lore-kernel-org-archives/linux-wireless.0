@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:54399 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756239AbaDHLYu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54313 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbaDDOuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 07:24:50 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so557367eei.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 04:24:49 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: improve htc tx credit debugging prints
-Date: Tue,  8 Apr 2014 13:18:40 +0200
-Message-Id: <1396955920-25863-1-git-send-email-michal.kazior@tieto.com> (sfid-20140408_132454_805935_674E9B8C)
+	Fri, 4 Apr 2014 10:50:25 -0400
+Message-ID: <533EC686.40505@candelatech.com> (sfid-20140404_165033_438740_B4F4EDB4)
+Date: Fri, 04 Apr 2014 07:49:42 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This way it's easier to track and debug htc tx
-credit issues.
+On 04/04/2014 04:37 AM, Michal Kazior wrote:
+> Hi,
+>
+> After digging around I've found what seems to be
+> the problem with WMI Tx credit starvation and
+> inability to properly flush Tx in ath10k_flush().
+>
+> Long story short: if a client that was asleep (as
+> per what firmware thinks) goes out of range (or
+> just stops responding) then Tx rots in FW/HW
+> queues for a few seconds before it's discarded.
+> For WMI Tx credits this means management frames
+> eat up Tx credits for a few seconds (causing other
+> WMI commands to timeout and return -EAGAIN/-11).
+> For HTT Tx this means NullFunc frames would get
+> stuck for a few seconds before completion was
+> received.
+>
+> @Ben: Can you check if this helps you? I tested
+> this briefly and at least [1/4] seems fixes the
+> WMI Tx starvation. I'm hoping patches 2-4 help
+> with your ath10k_flush() failures which I haven't
+> been successfull in reproducing (but have observed
+> improvement with purging some frames out of FW/HW
+> queues).
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+I'm out of office for a bit, but will test this as
+soon as I'm back.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7f1bccd..d083198 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -157,7 +157,11 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 			goto err_pull;
- 		}
- 		ep->tx_credits -= credits;
-+		ath10k_dbg(ATH10K_DBG_HTC,
-+			   "htc ep %d consumed %d credits (total %d)\n",
-+			   eid, credits, ep->tx_credits);
- 		spin_unlock_bh(&htc->tx_lock);
-+
- 	}
- 
- 	ath10k_htc_prepare_tx_skb(ep, skb);
-@@ -185,6 +189,9 @@ err_credits:
- 	if (ep->tx_credit_flow_enabled) {
- 		spin_lock_bh(&htc->tx_lock);
- 		ep->tx_credits += credits;
-+		ath10k_dbg(ATH10K_DBG_HTC,
-+			   "htc ep %d reverted %d credits back (total %d)\n",
-+			   eid, credits, ep->tx_credits);
- 		spin_unlock_bh(&htc->tx_lock);
- 
- 		if (ep->ep_ops.ep_tx_credits)
-@@ -234,12 +241,12 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
- 		if (report->eid >= ATH10K_HTC_EP_COUNT)
- 			break;
- 
--		ath10k_dbg(ATH10K_DBG_HTC, "ep %d got %d credits\n",
--			   report->eid, report->credits);
--
- 		ep = &htc->endpoint[report->eid];
- 		ep->tx_credits += report->credits;
- 
-+		ath10k_dbg(ATH10K_DBG_HTC, "htc ep %d got %d credits (total %d)\n",
-+			   report->eid, report->credits, ep->tx_credits);
-+
- 		if (ep->ep_ops.ep_tx_credits) {
- 			spin_unlock_bh(&htc->tx_lock);
- 			ep->ep_ops.ep_tx_credits(htc->ar);
+Thanks for looking into this!
+
+In general, would it make more sense to have a few more tx credits
+available to mitigate the slow-to-be-processed buffers?
+
+Thanks,
+Ben
+
+
 -- 
-1.8.5.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
