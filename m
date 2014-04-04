@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29427 "EHLO mx1.redhat.com"
+Received: from mx4.wp.pl ([212.77.101.12]:30269 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750781AbaDDIGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 04:06:11 -0400
-Date: Fri, 4 Apr 2014 10:04:53 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	id S1752026AbaDDJBL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Apr 2014 05:01:11 -0400
+Date: Fri, 4 Apr 2014 11:01:06 +0200
+From: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Richard Genoud <richard.genoud@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
 	Gertjan van Wingerde <gwingerde@gmail.com>,
 	Helmut Schaa <helmut.schaa@googlemail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: Endless loop on hub port power down
-Message-ID: <20140404080453.GA1448@redhat.com> (sfid-20140404_100655_618050_C5CB3440)
-References: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com>
+Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
+Message-ID: <20140404110106.6d249615@north> (sfid-20140404_110137_617193_62EE9A74)
+In-Reply-To: <20140404081908.GB1448@redhat.com>
+References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com>
+	<20140403173701.75c1f497@north>
+	<20140404081908.GB1448@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 03, 2014 at 04:48:56PM +0200, Richard Genoud wrote:
-> I've met an endless (or at least very long) loop if I power down the usb
-> port on witch a usb wifi key is plugged.
-> (Ok, it's not very smart to power down a usb port when a usb key is in
-> used... but still, I think that should not lead to an endless loop).
->
-> I have a lot of:
-> ieee80211 phy1: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71
+On Fri, 4 Apr 2014 10:19:09 +0200, Stanislaw Gruszka wrote:
+> On Thu, Apr 03, 2014 at 05:37:01PM +0200, Jakub Kiciński wrote:
+> > On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
+> > > rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
+> > > that calls rt2x00usb_vendor_request() which is already looping up to
+> > > REGISTER_BUSY_COUNT times.
+> > > 
+> > > So this loop is not needed.
+> > 
+> > Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
+> > to succeed, rt2x00usb_register_read_lock() busy-waits for the register
+> > field itself to become 0.
 > 
-> (-71==-EPROTO)
-> 
-> How to reproduce:
-> - plug an usb wifi key
-> - ip link set wlan0 up
-> - hub-ctrl -b usb_bus -d usb_device -P usb_port -p 0
-> 
-> hub-ctrl source: https://github.com/codazoda/hub-ctrl.c/blob/master/hub-ctrl.c
-> 
-> The following patch prevents the endless loop, but I'm really not sure
-> that The Right Way To Do It (R)
+> Yeah, but still we are looping REGISTER_BUSY_COUNT*REGISTER_BUSY_COUNT
+> what seems to be far too long.
 
-If device disappear, we should get -ENODEV status, why we get -EPROTO ?
+Yes, the busy waiting itself takes roughly 1s (100*100*100us) and then
+there are transfer times, so it might be too long indeed.  Vendor driver
+waits only 10 * 5ms in RTUSB_VendorRequest() so
+rt2x00usb_vendor_request() seems like a better place to cut down the
+number of loops.
 
-Stanislaw
+Alternatively we could make rt2x00usb_regbusy_read() check the retval
+from rt2x00usb_vendor_request() and exit early?
+
+	-- kuba
+
