@@ -1,62 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932560AbaDIMne (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:44579 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562AbaDDLfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 08:43:34 -0400
-Message-ID: <1397047400.4964.13.camel@jlt4.sipsolutions.net> (sfid-20140409_144338_752488_A05DFDB9)
-Subject: Re: [PATCH 8/8] cfg80211: remove unnecessary include clauses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 09 Apr 2014 14:43:20 +0200
-In-Reply-To: <1397047019.4964.8.camel@jlt4.sipsolutions.net> (sfid-20140409_143809_742831_27C557D7)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 <c02aba28b27fe39da9730cd965e322054815713f.1397006688.git.gamerh2o@gmail.com>
-	 <1397029770.4964.2.camel@jlt4.sipsolutions.net> <87d2gqg05o.fsf@gmail.com>
-	 (sfid-20140409_142534_582747_BF7AE6C3) <1397047019.4964.8.camel@jlt4.sipsolutions.net>
-	 (sfid-20140409_143809_742831_27C557D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 4 Apr 2014 07:35:01 -0400
+Received: by mail-we0-f176.google.com with SMTP id x48so3180398wes.7
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:34:59 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/2] ath10k: refactor radar detection code
+Date: Fri,  4 Apr 2014 13:28:46 +0200
+Message-Id: <1396610926-5787-3-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134046_234067_2B5C8256)
+In-Reply-To: <1396610926-5787-1-git-send-email-michal.kazior@tieto.com>
+References: <1396337123-12622-1-git-send-email-michal.kazior@tieto.com>
+ <1396610926-5787-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 14:36 +0200, Johannes Berg wrote:
+If 20MHz CAC completed successfully then
+subsequent CAC with wider bandwidth (40Mhz, 80Mhz)
+with identical control frequency did not start
+monitor vdev making it impossible to detect any
+radar pulses during intended CAC.
 
-> At the current point in time. If some of the headers that you rely on
-> including something no longer does in the future because it no longer
-> needs that, then you just broke everything.
+It also was incorrect to assume ath10k_config() will
+be called after CAC is finished. Theoretically for
+non-HT channels nothing changes between CAC and
+start_ap() (albeit in practice this can be
+different). The incorrect assumption led to CAC
+not being stopped on non-HT chandefs leading to
+all Rx being drooped making it impossible for
+clients to associate.
 
-Take the first of those patches for example. You say
+While at it clean up the code a bit.
 
-<linux/bug.h> and <linux/net.h> is included by <linux/skbuff.h>.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * change locking comment style [Kalle]
+ * get rid of forward declaration [Kalle]
+ * fix vdev_stop / WARN_ON (missing !) [Kalle]
+ * change commit message
+   (the original issue found was CAC not being
+    stopped for non-HT channels but this was a
+    side-effect of a mac80211 bug, although the
+    use of hw->conf.radar_enabled in ath10k was
+    also incorrect either way)
 
-However, this is a side effect of some implementation detail in
-skbuff.h. If, in the future, some function in skbuff.h is no longer
-inlined, then skbuff.h will no longer have to include bug.h and can
-remove it. That change would break the build due to your patches.
+ drivers/net/wireless/ath/ath10k/core.h |  4 +++
+ drivers/net/wireless/ath/ath10k/mac.c  | 54 +++++++++++-----------------------
+ 2 files changed, 21 insertions(+), 37 deletions(-)
 
-The way you should think about this isn't the mechanic include chain,
-it's the API that each file defines. skbuff.h includes bug.h due to an
-implementation detail, but it doesn't intentionally re-export all the
-bug.h API, that's not the purpose of skbuff.h. The purpose of skbuff.h
-is to capture the SKB related APIs and structures, so that's the only
-thing you should rely on getting from it.
-
-Similarly, you should include bug.h if you need the APIs from that,
-rather than relying on it being included more or less accidentally
-through something else.
-
-Obviously, the lack of namespaces etc. in the compiler makes it
-impossible to actually enforce this, and as a result we often *miss*
-includes that should be there, which sometimes gets found later when
-things change or on different platforms if the recursive include was
-platform specific, but we shouldn't exacerbate this problem by actively
-removing correct includes.
-
-Now, of course, if you find includes that aren't actually *needed* (e.g.
-bug.h in a file that doesn't use BUG() or WARN() variants) then those
-should be removed.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8edd6da..5cb9903 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -435,6 +435,10 @@ struct ath10k {
+ 	unsigned long dev_flags;
+ 	u32 dfs_block_radar_events;
+ 
++	/* protected by conf_mutex */
++	bool radar_enabled;
++	int num_started_vdevs;
++
+ 	struct wmi_pdev_set_wmm_params_arg wmm_params;
+ 	struct completion install_key_done;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e1f4227..3333b1f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -719,49 +719,18 @@ static int ath10k_stop_cac(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static const char *ath10k_dfs_state(enum nl80211_dfs_state dfs_state)
++static void ath10k_recalc_radar_detection(struct ath10k *ar)
+ {
+-	switch (dfs_state) {
+-	case NL80211_DFS_USABLE:
+-		return "USABLE";
+-	case NL80211_DFS_UNAVAILABLE:
+-		return "UNAVAILABLE";
+-	case NL80211_DFS_AVAILABLE:
+-		return "AVAILABLE";
+-	default:
+-		WARN_ON(1);
+-		return "bug";
+-	}
+-}
+-
+-static void ath10k_config_radar_detection(struct ath10k *ar)
+-{
+-	struct ieee80211_channel *chan = ar->hw->conf.chandef.chan;
+-	bool radar = ar->hw->conf.radar_enabled;
+-	bool chan_radar = !!(chan->flags & IEEE80211_CHAN_RADAR);
+-	enum nl80211_dfs_state dfs_state = chan->dfs_state;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	ath10k_dbg(ATH10K_DBG_MAC,
+-		   "mac radar config update: chan %dMHz radar %d chan radar %d chan state %s\n",
+-		   chan->center_freq, radar, chan_radar,
+-		   ath10k_dfs_state(dfs_state));
+-
+-	/*
+-	 * It's safe to call it even if CAC is not started.
+-	 * This call here guarantees changing channel, etc. will stop CAC.
+-	 */
+ 	ath10k_stop_cac(ar);
+ 
+-	if (!radar)
+-		return;
+-
+-	if (!chan_radar)
++	if (!ar->radar_enabled)
+ 		return;
+ 
+-	if (dfs_state != NL80211_DFS_USABLE)
++	if (ar->num_started_vdevs > 0)
+ 		return;
+ 
+ 	ret = ath10k_start_cac(ar);
+@@ -832,6 +801,9 @@ static int ath10k_vdev_start(struct ath10k_vif *arvif)
+ 		return ret;
+ 	}
+ 
++	ar->num_started_vdevs++;
++	ath10k_recalc_radar_detection(ar);
++
+ 	return ret;
+ }
+ 
+@@ -858,6 +830,11 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+ 		return ret;
+ 	}
+ 
++	if (!WARN_ON(ar->num_started_vdevs == 0)) {
++		ar->num_started_vdevs--;
++		ath10k_recalc_radar_detection(ar);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -2341,6 +2318,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		goto exit;
+ 	}
+ 
++	ar->num_started_vdevs = 0;
+ 	ath10k_regd_update(ar);
+ 	ret = 0;
+ 
+@@ -2490,15 +2468,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+ 		ath10k_dbg(ATH10K_DBG_MAC,
+-			   "mac config channel %d mhz flags 0x%x\n",
++			   "mac config channel %dMHz flags 0x%x radar %d\n",
+ 			   conf->chandef.chan->center_freq,
+-			   conf->chandef.chan->flags);
++			   conf->chandef.chan->flags,
++			   conf->radar_enabled);
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		ar->rx_channel = conf->chandef.chan;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+-		ath10k_config_radar_detection(ar);
++		ar->radar_enabled = conf->radar_enabled;
++		ath10k_recalc_radar_detection(ar);
+ 
+ 		if (!cfg80211_chandef_identical(&ar->chandef, &conf->chandef)) {
+ 			ar->chandef = conf->chandef;
+-- 
+1.8.5.3
 
