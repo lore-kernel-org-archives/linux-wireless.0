@@ -1,164 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:53769 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbaDSAnB (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:59141 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbaDDOR0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 20:43:01 -0400
-Received: by mail-la0-f52.google.com with SMTP id ec20so1737484lab.25
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 17:42:57 -0700 (PDT)
+	Fri, 4 Apr 2014 10:17:26 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140419003410.GB14606@us.netrek.org>
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
-	<1397710914-10061-2-git-send-email-bzhao@marvell.com>
-	<CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
-	<20140418044619.GF24166@us.netrek.org>
-	<477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com>
-	<20140419003410.GB14606@us.netrek.org>
-Date: Fri, 18 Apr 2014 17:42:57 -0700
-Message-ID: <CACUGKYOPSnxWohpXL_FTs2Gyf9VKdLChkdqYx2hmApR+cTVcMw@mail.gmail.com> (sfid-20140419_024342_589237_F0EB7BE4)
-Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
-From: John Tobias <john.tobias.ph@gmail.com>
-To: James Cameron <quozl@laptop.org>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+In-Reply-To: <20140404140614.GA2147@redhat.com>
+References: <1396534327-12971-1-git-send-email-richard.genoud@gmail.com>
+ <20140403173701.75c1f497@north> <20140404081908.GB1448@redhat.com>
+ <20140404110106.6d249615@north> <20140404140614.GA2147@redhat.com>
+From: Richard Genoud <richard.genoud@gmail.com>
+Date: Fri, 4 Apr 2014 16:17:04 +0200
+Message-ID: <CACQ1gAimN_Y8cfaZNFx0Cj1yCoLMdauc4T0vp3Pxaqh5TeXqDg@mail.gmail.com> (sfid-20140404_161749_437703_567F4FEF)
+Subject: Re: [PATCH] rt2x00: BUG: remove double loop on REGISTER_BUSY_COUNT
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Chris Ball <cjb@laptop.org>
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
-
-May I know what processor are you using?.
-
-Thanks,
-
-john
-
-On Fri, Apr 18, 2014 at 5:34 PM, James Cameron <quozl@laptop.org> wrote:
-> On Fri, Apr 18, 2014 at 12:16:07PM -0700, Bing Zhao wrote:
->> Hi James,
->>
->> > > That "adapter->cmd_sent = false" was hoping the firmware is
->> > > still alive and can respond to a new command. The reality is
->> > > that the timeout usually indicates the firmware has already
->> > > hung. Sending another command won't recover it in this case.
->> >
->> > I'm dealing with a firmware hang when more than 13 nodes are in an
->> > ad-hoc IBSS, and I've just found out isn't entirely a firmware
->> > hang; in that we can see beacons and probe responses from the
->> > card, using tcpdump and monitor mode.
->> >
->> > I'm interested to know if the "firmware hangs" that you experiment
->> > with prevent autonomous RF TX, or if RF TX typically proceeds.
->>
->> It depends. Even if firmware hangs the hardware is still alive.
->> So you could see beacons and probe responses from the card if
->> hardware has been programmed before firmware hangs.
->
-> Thanks.  I neglected to mention the time period; beacons and probe
-> responses are seen for many minutes after the timeout report by the
-> driver, and I have not yet tested for how long this lasts.  The probe
-> responses are in reply to new probe requests.  It makes me think the
-> card is working fine, apart from not communicating with the host.
->
-> HOST_INSTATUS_REG, RD_BITMAP_{U,L} are all zero when read at the
-> timeout.
->
-> I am reliably reproducing this particular problem.
->
->> > > I guess you are using SDIO chip. If your host controller
->> > > supports MMC_POWER_OFF/UP, you can reset the chip with this
->> > > approach:
+2014-04-04 16:06 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Fri, Apr 04, 2014 at 11:01:06AM +0200, Jakub Kiciński wrote:
+>> On Fri, 4 Apr 2014 10:19:09 +0200, Stanislaw Gruszka wrote:
+>> > On Thu, Apr 03, 2014 at 05:37:01PM +0200, Jakub Kiciński wrote:
+>> > > On Thu,  3 Apr 2014 16:12:07 +0200, Richard Genoud wrote:
+>> > > > rt2x00usb_register_read_lock() calls rt2x00usb_vendor_req_buff_lock()
+>> > > > that calls rt2x00usb_vendor_request() which is already looping up to
+>> > > > REGISTER_BUSY_COUNT times.
+>> > > >
+>> > > > So this loop is not needed.
 >> > >
->> > >         mmc_remove_host(host);
->> > >         /* some delay */
->> > >         mmc_add_host(host);
+>> > > Not true.  rt2x00usb_vendor_request() busy-waits for usb_control_msg()
+>> > > to succeed, rt2x00usb_register_read_lock() busy-waits for the register
+>> > > field itself to become 0.
 >> >
->> > Thanks, adding that to my list of things to try, as I am using
->> > SDIO too.
+>> > Yeah, but still we are looping REGISTER_BUSY_COUNT*REGISTER_BUSY_COUNT
+>> > what seems to be far too long.
 >>
->> This code (with 20ms delay) is already in latest driver. Your
->> platform and controller may require a longer delay.
+>> Yes, the busy waiting itself takes roughly 1s (100*100*100us) and then
+>> there are transfer times, so it might be too long indeed.  Vendor driver
+>> waits only 10 * 5ms in RTUSB_VendorRequest() so
 >
-> Thanks.  This is the patch I found:
+> We use "timeout" argument which is set to 500ms , so perhaps that
+> could be the reason why Richard sees "infinite" loop i.e.
+> 100*100*(500ms + 100us)
+That's what I thougth at the begining, so I applied this patch, but it
+was still looping on errors -EPROTO.
+
+>> rt2x00usb_vendor_request() seems like a better place to cut down the
+>> number of loops.
+>>
+>> Alternatively we could make rt2x00usb_regbusy_read() check the retval
+>> from rt2x00usb_vendor_request() and exit early?
 >
->         mwifiex: add support for SDIO card reset
+> Make sense, but I think we should review the area and make some more
+> changes to fine tune the timeout of USB reg reading functions.
 >
-> and it isn't in our tree yet.
->
-> Yes, we may need to test the delay required.  We have a host GPIO
-> that drives power to the card.  We have discharge clamps on that path
-> as well.  mmc_* is configured through device-tree to use the GPIO,
-> which we use for suspend and resume.  We have power-delay-ms
-> properties but they aren't used.
->
-> I've been testing the patch with 3000ms delay, and additional output:
->
->         pr_err("Resetting card (3000ms) ...\n");
->         mmc_remove_host(reset_host);
->         pr_err("removed host\n");
->         mdelay(3000);
->         pr_err("delayed\n");
->         mmc_add_host(reset_host);
->         pr_err("added host\n");
->
-> If the host joins an IBSS with 10 peers, and three more peers added,
-> the wireless LED stays on, and:
->
-> [  105.023274] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id (1397865681.433582) = 0xa4, act = 0x0
-> [  105.033735] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-> [  105.039533] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-> [  105.045235] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-> [  105.045245] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-> [  105.055866] mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-> [  105.061148] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 2
-> [  105.066868] mwifiex_sdio mmc0:0001:1: last_event_index = 3
-> [  105.072320] mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
-> [  105.077944] mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
-> [  105.083408] mwifiex_sdio: Resetting card (3000ms) ...
-> [  105.083408] mwifiex_sdio mmc0:0001:1: curr_cmd is still in processing
-> [  105.098195] mwifiex_sdio mmc0:0001:1: cmd timeout
->
-> This is mmc_remove_host not returning.  I've no idea why yet.  +CC cjb.
->
-> If the host joins an IBSS with with 13 peers, the wireless LED goes
-> off, and:
->
-> [   83.603038] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id (1397865805.48239) = 0x10, act = 0x1
-> [   83.613425] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-> [   83.613425] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-> [   83.624911] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-> [   83.624918] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-> [   83.635542] mwifiex_sdio mmc0:0001:1: last_cmd_index = 2
-> [   83.640833] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 1
-> [   83.646542] mwifiex_sdio mmc0:0001:1: last_event_index = 2
-> [   83.652002] mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
-> [   83.657612] mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
-> [   83.663071] mwifiex_sdio: Resetting card (3000ms) ...
-> [   83.668157] mwifiex_sdio mmc0:0001:1: curr_cmd is still in processing
-> [   83.677902] mwifiex_sdio mmc0:0001:1: failed to get signal information
-> [   83.684925] mwifiex_sdio mmc0:0001:1: PREP_CMD: card is removed
-> [   83.713537] mmc0: card 0001 removed
-> [   83.713537] mwifiex_sdio: removed host
-> [   87.660599] mwifiex_sdio: delayed
-> [   87.703045] mwifiex_sdio: added host
-> [   87.740247] mmc0: new high speed SDIO card at address 0001
-> [   97.911584] mwifiex_sdio mmc0:0001:1: FW failed to be active in time
->
-> But bringing the card back to life has failed.  It seems to depend on
-> what command was outstanding; get RSSI vs MAC multicast address.
->
-> Is there another patch needed?  I looked through all the patches but
-> none seemed to relate to this.
->
-> What about forcing a reset instead of using power?  We have a host
-> GPIO tied to the reset input on the card.
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
+> Stanislaw
