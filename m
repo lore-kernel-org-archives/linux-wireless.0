@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:55234 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753687AbaDQU4N (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:51749 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbaDDQYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 16:56:13 -0400
-Received: by mail-ie0-f179.google.com with SMTP id lx4so906331iec.38
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 13:56:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
-References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>
-	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>
-	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
-Date: Fri, 18 Apr 2014 00:56:12 +0400
-Message-ID: <CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com> (sfid-20140417_225628_818535_1707FA92)
-Subject: Re: iwlwifi null pointer dereference
-From: Alexander Monakov <amonakov@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 4 Apr 2014 12:24:53 -0400
+Received: by mail-wi0-f175.google.com with SMTP id cc10so1625385wib.14
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 09:24:52 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com, kilroyd@googlemail.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	andrea.merello@gmail.com
+Subject: [PATCH 3/4] rtl8180: add parentheses to REG_ADDR macros
+Date: Fri,  4 Apr 2014 18:24:36 +0200
+Message-Id: <1396628676-14512-1-git-send-email-andrea.merello@gmail.com> (sfid-20140404_182456_637116_7DA9E5A5)
+In-Reply-To: <533C63D6.5000109@gmail.com>
+References: <533C63D6.5000109@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel,
+Parentheses are missing around the macro argument, causing the
+macro possibly not to work passing certain expressions as
+arguments.
 
-I'm curious about the plans w.r.t this fix; is it going to
-iwlwifi-next.git?  Thanks again.
+This should not cause any issues with current code, however it's
+worth to add them, as a good practice, and to eventually avoid
+future bugs.
 
-On Sun, Apr 13, 2014 at 12:49 PM, Alexander Monakov <amonakov@gmail.com> wrote:
-> On Sun, Apr 13, 2014 at 11:23 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Sat, Apr 12, 2014 at 6:11 PM, Alexander Monakov <amonakov@gmail.com> wrote:
->>> Hello,
->>>
->>> On a laptop with Wireless-N 135 card and 3.14.0 kernel I'm getting a
->>> kernel oops on cold boot ans wireless seems unusable, but suprisingly
->>> everything works fine after a reboot:
->>
->> Wow - interesting - you are getting an interrupt before we even enable them.
->>
->> Does this help you?
->
-> Yes, it did help. Thanks.
->
-> (regarding interrupts, after installing an mSATA SSD that goes into
-> the mini-PCIe slot next to the wireless card, I've noticed that
-> "events" (mostly interrupts I guess) shown by PowerTop for the
-> wireless card and the SATA controller seem correlated, even though the
-> disk should be idle; I wonder what that means)
->
-> Alexander
+Suggested-by: Dave Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl818x.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
+index 45ea4e1..7abef95 100644
+--- a/drivers/net/wireless/rtl818x/rtl818x.h
++++ b/drivers/net/wireless/rtl818x/rtl818x.h
+@@ -334,9 +334,9 @@ struct rtl818x_csr {
+  * I don't like to introduce a ton of "reserved"..
+  * They are for RTL8187SE
+  */
+-#define REG_ADDR1(addr)	((u8 __iomem *)priv->map + addr)
+-#define REG_ADDR2(addr)	((__le16 __iomem *)priv->map + (addr >> 1))
+-#define REG_ADDR4(addr)	((__le32 __iomem *)priv->map + (addr >> 2))
++#define REG_ADDR1(addr)	((u8 __iomem *)priv->map + (addr))
++#define REG_ADDR2(addr)	((__le16 __iomem *)priv->map + ((addr) >> 1))
++#define REG_ADDR4(addr)	((__le32 __iomem *)priv->map + ((addr) >> 2))
+ 
+ #define FEMR_SE		REG_ADDR2(0x1D4)
+ #define ARFR		REG_ADDR2(0x1E0)
+-- 
+1.8.3.2
+
