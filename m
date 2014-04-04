@@ -1,58 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:37517 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaDAFNg (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:47068 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735AbaDDLoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 01:13:36 -0400
-Received: by mail-wi0-f179.google.com with SMTP id z2so2644416wiv.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 22:13:35 -0700 (PDT)
-From: Pawel Kulakowski <pawel.kulakowski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Pawel Kulakowski <pawel.kulakowski@tieto.com>
-Subject: [PATCH] mac80211: Allow disabling LDPC
-Date: Tue,  1 Apr 2014 07:13:21 +0200
-Message-Id: <1396329202-2549-1-git-send-email-pawel.kulakowski@tieto.com> (sfid-20140401_071339_294088_A274E3C8)
+	Fri, 4 Apr 2014 07:44:16 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so3291273wgh.15
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:15 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFT 4/4] ath10k: improve tx flushing
+Date: Fri,  4 Apr 2014 13:37:44 +0200
+Message-Id: <1396611464-5940-5-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134426_178792_83897B4F)
+In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows user-space (wpa_supplicant) to disable LDPC coding.
+Flushing was prone to timeouts when powersaving
+clients were involved that went missing while
+asleep. The common culprit was NullFunc frame
+being stuck in FW/HW queues.
 
-Signed-off-by: Pawel Kulakowski <pawel.kulakowski@tieto.com>
+Introduce a two-pass flushing with WMI flush
+commands interleaved to force frame drops if
+necessary. This allows for a decreased flush
+timeout time and should get rid of some warnings.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/ht.c   |    4 ++++
- net/mac80211/main.c |    3 ++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.h |  2 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 92 +++++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi.h  |  1 +
+ 3 files changed, 76 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c150b68..1495b9e 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -86,6 +86,10 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_htcap_disable(ht_capa, ht_capa_mask, ht_cap,
- 			      IEEE80211_HT_CAP_MAX_AMSDU);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 61e325a..0d60e70 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -38,7 +38,7 @@
  
-+	/* Allow user to disable LDPC */
-+	__check_htcap_disable(ht_capa, ht_capa_mask, ht_cap,
-+			      IEEE80211_HT_CAP_LDPC_CODING);
+ #define ATH10K_SCAN_ID 0
+ #define WMI_READY_TIMEOUT (5 * HZ)
+-#define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
++#define ATH10K_FLUSH_TIMEOUT_HZ (1*HZ)
+ #define ATH10K_NUM_CHANS 38
+ 
+ /* Antenna noise floor */
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 47b3574..77e1370 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3753,25 +3753,30 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return ret;
+ }
+ 
+-static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
++static int ath10k_flush_all_peer_tids(struct ath10k *ar)
+ {
+-	struct ath10k *ar = hw->priv;
+-	bool skip;
++	struct ath10k_peer *peer;
+ 	int ret;
+ 
+-	/* mac80211 doesn't care if we really xmit queued frames or not
+-	 * we'll collect those frames either way if we stop/delete vdevs */
+-	if (drop)
+-		return;
+-
+-	mutex_lock(&ar->conf_mutex);
++	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	if (ar->state == ATH10K_STATE_WEDGED) {
+-		ret = -EBUSY;
+-		goto skip;
++	list_for_each_entry(peer, &ar->peers, list) {
++		ret = ath10k_wmi_peer_flush(ar, peer->vdev_id, peer->addr,
++					    WMI_PEER_TID_ALL_MASK);
++		if (ret) {
++			ath10k_warn("failed to request peer %pM on vdev %i to flush %08x: %d\n",
++				    peer->addr, peer->vdev_id, WMI_PEER_TID_ALL_MASK, ret);
++			return ret;
++		}
+ 	}
+ 
+-	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
++	return 0;
++}
 +
- 	/* Allow user to decrease AMPDU factor */
- 	if (ht_capa_mask->ampdu_params_info &
- 	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b055f6a5..cfc24e9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -444,7 +444,8 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- 	.cap_info = cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 				IEEE80211_HT_CAP_MAX_AMSDU |
- 				IEEE80211_HT_CAP_SGI_20 |
--				IEEE80211_HT_CAP_SGI_40),
-+				IEEE80211_HT_CAP_SGI_40 |
-+				IEEE80211_HT_CAP_LDPC_CODING),
- 	.mcs = {
- 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
- 			     0xff, 0xff, 0xff, 0xff, 0xff, },
++static int ath10k_flush_wait(struct ath10k *ar)
++{
++	bool skip;
++	int ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+ 			bool htt_empty, wmi_empty;
+ 			unsigned long flags;
+ 
+@@ -3789,16 +3794,67 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 			((htt_empty && wmi_empty) || skip);
+ 		}), ATH10K_FLUSH_TIMEOUT_HZ);
+ 
+-	if (ret <= 0 || skip)
+-		ath10k_warn("failed to flush transmit queue (skip %i ar-state %i): %i\n",
+-			    skip, ar->state, ret);
++	if (ret == 0)
++		ret = -ETIMEDOUT;
++	else if (ret > 0)
++		ret = 0;
++
++	if (skip) {
++		ath10k_warn("ignoring flushing result because hardware is wedged\n");
++		ret = -EBUSY;
++	}
++
++	return ret;
++}
++
++static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
++{
++	struct ath10k *ar = hw->priv;
++	int ret;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (drop) {
++		ret = ath10k_flush_all_peer_tids(ar);
++		if (ret) {
++			ath10k_warn("failed to flush all peer tids: %d\n", ret);
++			goto out;
++		}
++
++		goto out;
++	}
++
++	if (ar->state == ATH10K_STATE_WEDGED) {
++		ath10k_warn("skipping flushing because hardware is wedged\n");
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ret = ath10k_flush_wait(ar);
++	if (ret) {
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "failed to wait for tx to flush: %d, forcing\n",
++			   ret);
++
++		ret = ath10k_flush_all_peer_tids(ar);
++		if (ret) {
++			ath10k_warn("failed to flush all peer tids: %d\n", ret);
++			goto out;
++		}
++
++		ret = ath10k_flush_wait(ar);
++		if (ret) {
++			ath10k_warn("failed to flush tx: %d\n", ret);
++			goto out;
++		}
++	}
+ 
+-skip:
++out:
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	/* empty mgmt tx queue doesn't mean mgmt tx is flushed because the last
+ 	 * frame still may be processed by a worker */
+-	if (ret > 0)
++	if (ret == 0)
+ 		cancel_work_sync(&ar->wmi_mgmt_tx_work);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 90fe2e9..2b37c4a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3846,6 +3846,7 @@ struct wmi_peer_delete_cmd {
+ 
+ #define WMI_PEER_TID_MGMT 17
+ #define WMI_PEER_TID_MGMT_MASK BIT(WMI_PEER_TID_MGMT)
++#define WMI_PEER_TID_ALL_MASK 0xFFFFFFFF
+ 
+ struct wmi_peer_flush_tids_cmd {
+ 	__le32 vdev_id;
 -- 
-1.7.9.5
+1.8.5.3
 
