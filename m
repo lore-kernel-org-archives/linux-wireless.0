@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54899 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758976AbaD3PME (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 11:12:04 -0400
-From: Ashish Patro <patro@cs.wisc.edu>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux@rempel-privat.de,
-	Ashish Patro <patro@cs.wisc.edu>
-Subject: [PATCH 0/3] Refactoring spectral scan code and adding spectral scan support for ath9k_htc
-Date: Wed, 30 Apr 2014 10:11:20 -0500
-Message-Id: <1398870683-15701-1-git-send-email-patro@cs.wisc.edu> (sfid-20140430_171208_811299_60686D49)
+Received: from mail-we0-f171.google.com ([74.125.82.171]:57804 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562AbaDDLe6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Apr 2014 07:34:58 -0400
+Received: by mail-we0-f171.google.com with SMTP id t61so3239280wes.2
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:34:57 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/2] ath10k: fix radar/cac
+Date: Fri,  4 Apr 2014 13:28:44 +0200
+Message-Id: <1396610926-5787-1-git-send-email-michal.kazior@tieto.com> (sfid-20140404_133547_247120_731F1A30)
+In-Reply-To: <1396337123-12622-1-git-send-email-michal.kazior@tieto.com>
+References: <1396337123-12622-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches move the common components of spectral scan funcationality to common-spectral.c.
+Hi,
 
-Also added spectral scan support to ath9k_htc using the same mechanism to collect spectral scan data as used by ath9k driver.
+This loosely depends on `ath10k: refactor monitor
+code`. Without it patch this patchset introduces
+some (harmless) runtime warnings.
 
-This work was done at the Wisconsin Wireless and NetworkinG Systems (WiNGS) Lab at the University of Wisconsin Madison.
+This v2 introduces a non-functional patch to avoid
+forward declaration. The [1/2] has a little
+conflict with `ath10k: refactor monitor code`
+which renames ath10k_monitor_stop() to
+ath10k_monitor_vdev_stop().
 
-I've also worked with Oleksij Rempel (linux@rempel-privat.de) to get these patches tested and verified with a AR9271 chipset device.
+Part of the original CAC problem is also addressed
+in `mac80211: fix radar_enabled propagation`.
 
-Ashish Patro (3):
-  Moving the ath9k specific spectral functions to ath9k.h from
-    spectral.h. Renamed spectral.h to common-spectral.h
-  Refactoring the ath9k driver to move common spectral functions to
-    common-spectral.c
-  Update spectral scan calls to support both ath9k and ath9k_htc.
-    Adding spectral scan functionality to ath9k_htc driver. Tested
-    using a AR9271 WiFi card.
 
- drivers/net/wireless/ath/ath9k/Makefile           |    3 +-
- drivers/net/wireless/ath/ath9k/ar9002_phy.c       |   11 +-
- drivers/net/wireless/ath/ath9k/ath9k.h            |    9 +-
- drivers/net/wireless/ath/ath9k/common-spectral.c  |  213 +++++++++++++
- drivers/net/wireless/ath/ath9k/common-spectral.h  |  199 ++++++++++++
- drivers/net/wireless/ath/ath9k/htc.h              |   13 +
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c    |    3 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c     |    8 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c     |   75 +++++
- drivers/net/wireless/ath/ath9k/htc_drv_spectral.c |  353 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c     |   17 +
- drivers/net/wireless/ath/ath9k/recv.c             |    7 +-
- drivers/net/wireless/ath/ath9k/spectral.c         |  187 -----------
- drivers/net/wireless/ath/ath9k/spectral.h         |  212 ------------
- 14 files changed, 905 insertions(+), 405 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.c
- create mode 100644 drivers/net/wireless/ath/ath9k/common-spectral.h
- create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_spectral.c
- delete mode 100644 drivers/net/wireless/ath/ath9k/spectral.h
+Michal Kazior (2):
+  ath10k: reorder functions
+  ath10k: refactor radar detection code
+
+ drivers/net/wireless/ath/ath10k/core.h |   4 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 224 +++++++++++++++------------------
+ 2 files changed, 106 insertions(+), 122 deletions(-)
 
 -- 
-1.7.5.4
+1.8.5.3
 
