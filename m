@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f179.google.com ([209.85.128.179]:47534 "EHLO
-	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277AbaD1QTz (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:41407 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459AbaDDQ0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 12:19:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
- <1397544101-18135-2-git-send-email-wens@csie.org> <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
- <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Tue, 29 Apr 2014 00:19:34 +0800
-Message-ID: <CAGb2v64rs4UYMbQ--i=pcuuORVneozDpucCeHQKE4Qn7+qSCdA@mail.gmail.com> (sfid-20140428_182051_070752_56BC2FFF)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement
- device tree gpio-names based lookup
-To: linux-sunxi <linux-sunxi@googlegroups.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 4 Apr 2014 12:26:22 -0400
+Received: by mail-we0-f179.google.com with SMTP id x48so3666905wes.38
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 09:26:21 -0700 (PDT)
+From: Andrea Merello <andrea.merello@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
+	andrea.merello@gmail.com
+Subject: [PATCH 4/4] rtl8180: be paranoid in stopping unused queues.
+Date: Fri,  4 Apr 2014 18:25:51 +0200
+Message-Id: <1396628751-14564-1-git-send-email-andrea.merello@gmail.com> (sfid-20140404_182628_736113_421DFCB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2014 at 9:49 AM, Alexandre Courbot <gnurou@gmail.com> wrote:
-> On Wed, Apr 23, 2014 at 12:02 AM, Linus Walleij
-> <linus.walleij@linaro.org> wrote:
->> On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
->>
->>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
->>> phandles by name only, through gpios/gpio-names, and not by index.
->>>
->>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
->>
->> Like Alexandre I have no strong opinion on this alternative scheme.
->
-> Yeah this new lookup scheme probably does no harm, but I think it
-> should be a little bit more motivated as it is, after all, introducing
-> more potential confusion for DT users.
->
-> It does not look like this new lookup scheme is necessary to Chen-Yu's
-> patchset and that he could as well have used the current one. Right
-> now there is only one way to define GPIOs - if we introduce a second
-> one, then which one should new DT users choose? Which one looks
-> better? I can already endless fights taking place over this.
+HW should never attempt to perform DMA for unused queues.
+For rtl8187se this is ensured by setting a dedicated register at
+init time, before enabling TX.
 
-I will pull out the two patches.
+In rtl8180/5 the register is only written at the first TX (because
+in rtl8180/5 it serves also to kick DMA for used queues).
+This should be enough, but it's worth to add a register write at
+init time, before enabling TX.
 
-> Does this new lookup help with some of the existing problems we have
-> like ACPI/DT lookup compatibility?
+Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180/dev.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-I hope they will be compatible with ACPI named gpios, whenever support
-for ACPI named properties extension lands. But that really depends on
-the ACPI implementation. For now I think it's best that I just hold on
-to these. We can revisit the discussion later if needed.
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index cb8275f..50d69b1 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -910,7 +910,10 @@ static int rtl8180_init_hw(struct ieee80211_hw *dev)
+ 		reg32 &= 0x00ffff00;
+ 		reg32 |= 0xb8000054;
+ 		rtl818x_iowrite32(priv, &priv->map->RF_PARA, reg32);
+-	}
++	} else
++		/* stop unused queus (no dma alloc) */
++		rtl818x_iowrite8(priv, &priv->map->TX_DMA_POLLING,
++			    (1<<1) | (1<<2));
+ 
+ 	priv->rf->init(dev);
+ 
+-- 
+1.8.3.2
 
-> I just need to be given one practical reason to give my ack.
-
-
-Thanks
-ChenYu
