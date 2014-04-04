@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0216.hostedemail.com ([216.40.44.216]:42915 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750820AbaDYBvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 21:51:10 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	alsa-devel@alsa-project.org
-Subject: [PATCH 0/5] treewide: Convert logging message misuses of /n to \n
-Date: Thu, 24 Apr 2014 18:50:58 -0700
-Message-Id: <cover.1398390579.git.joe@perches.com> (sfid-20140425_035423_148944_C1AC1816)
+Received: from nm28-vm6.bullet.mail.sg3.yahoo.com ([106.10.151.149]:33827 "EHLO
+	nm28-vm6.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751175AbaDDBzm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Apr 2014 21:55:42 -0400
+Message-ID: <1396576540.65047.YahooMailBasic@web193505.mail.sg3.yahoo.com> (sfid-20140404_035612_924490_58E9FE24)
+Date: Fri, 4 Apr 2014 09:55:40 +0800 (SGT)
+From: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Subject: Wifi client Bluetooth coexistence; non smooth video streams
+To: Adrian Chadd <adrian@freebsd.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1396276552.27791.YahooMailBasic@web193503.mail.sg3.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (5):
-  qlge: Convert /n to \n
-  iwlegacy: Convert /n to \n
-  staging: rtl<foo>: Convert /n to \n
-  appledisplay: Convert /n to \n
-  sound: tlv320aic31xx: Convert /n to \n
+Dear all,
+   Please help if any one have encountered simillar problems or other guidance on this, Please.
 
- drivers/net/ethernet/qlogic/qlge/qlge_main.c  | 2 +-
- drivers/net/wireless/iwlegacy/3945.c          | 2 +-
- drivers/net/wireless/iwlegacy/4965-mac.c      | 2 +-
- drivers/staging/rtl8188eu/hal/usb_ops_linux.c | 2 +-
- drivers/staging/rtl8188eu/os_dep/usb_intf.c   | 2 +-
- drivers/staging/rtl8723au/hal/usb_ops_linux.c | 4 ++--
- drivers/staging/rtl8723au/os_dep/usb_intf.c   | 2 +-
- drivers/usb/misc/appledisplay.c               | 2 +-
- sound/soc/codecs/tlv320aic31xx.c              | 2 +-
- 9 files changed, 10 insertions(+), 10 deletions(-)
+The following is my set-up:
+Linksys Access point. Cisco 802.11g camera connected as a wifi client to Linksys. I have a development board in which i have AR9287 as the Wifi chipset associated as wifi client to linksys. The development board has Bluetooth dongle for streaming audio etc. The development board has a LCD display and I stream the video stream from camera at 640 x 480 resolution, MPEG-4, 10fps (also tried with 15, 30 fps).
 
--- 
-1.8.1.2.459.gbcd45b4.dirty
+Software: For the Wifi client on the development board, I am using the ath9k driver with btcoex_enable=1.
+2-wire coexistence. I am allowing 40% of the time for Bluetooth an 60% of the time for WiFi. The period is around 200ms.
 
+Observations: 
+1. The video streams are not smooth. There will be a small pause of a second or two between frames and hence we do not see smooth transitions.
+2. Sometimes it looks like, the streams are bufferred and played back at a rapid pace. So, one can see like a fast forward play of video streams on the board.
+3. Disabling coexistence does not have these observations.
+Please help.
+Regards
+Sandeep.
