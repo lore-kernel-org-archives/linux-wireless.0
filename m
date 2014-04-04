@@ -1,91 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36234 "EHLO
-	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaDOHWO (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:51087 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753722AbaDDPjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 03:22:14 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Fri, 4 Apr 2014 11:39:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140404141319.GB2147@redhat.com>
+References: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com>
+ <20140404080453.GA1448@redhat.com> <533E8242.8080203@gmail.com> <20140404141319.GB2147@redhat.com>
+From: Richard Genoud <richard.genoud@gmail.com>
+Date: Fri, 4 Apr 2014 17:38:58 +0200
+Message-ID: <CACQ1gAgMNM89mM_m_=G85-DAD1xSoo0j6E8vWTZ2cYhg48zNsA@mail.gmail.com> (sfid-20140404_173942_894262_006FC176)
+Subject: Re: [PATCH] rt2x00: Endless loop on hub port power down
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 0/7] net: rfkill: gpio: Add device tree support
-Date: Tue, 15 Apr 2014 14:41:34 +0800
-Message-Id: <1397544101-18135-1-git-send-email-wens@csie.org> (sfid-20140415_092543_288318_0B63E38F)
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+2014-04-04 16:13 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Fri, Apr 04, 2014 at 11:58:26AM +0200, Richard Genoud wrote:
+>> On 04/04/2014 10:04, Stanislaw Gruszka wrote:
+>> > On Thu, Apr 03, 2014 at 04:48:56PM +0200, Richard Genoud wrote:
+>> >> I've met an endless (or at least very long) loop if I power down the usb
+>> >> port on witch a usb wifi key is plugged.
+>> >> (Ok, it's not very smart to power down a usb port when a usb key is in
+>> >> used... but still, I think that should not lead to an endless loop).
+>> >>
+>> >> I have a lot of:
+>> >> ieee80211 phy1: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71
+>> >>
+>> >> (-71==-EPROTO)
+>> >>
+>> >> How to reproduce:
+>> >> - plug an usb wifi key
+>> >> - ip link set wlan0 up
+>> >> - hub-ctrl -b usb_bus -d usb_device -P usb_port -p 0
+>> >>
+>> >> hub-ctrl source: https://github.com/codazoda/hub-ctrl.c/blob/master/hub-ctrl.c
+>> >>
+>> >> The following patch prevents the endless loop, but I'm really not sure
+>> >> that The Right Way To Do It (R)
+>> >
+>> > If device disappear, we should get -ENODEV status, why we get -EPROTO ?
+>>
+>> I trace it down, and the EPROTO status comes from ctx.status (returned from usb_start_wait_urb() in drivers/usb/core/message.c)
+>> And, in my case, the ctx.status is set to EPROTO in qtd_copy_status() ( drivers/usb/host/ehci-q.c )
+>> in the code:
+>> } else if (token & QTD_STS_XACT) {
+>>       /* timeout, bad CRC, wrong PID, etc */
+>>       ehci_dbg(ehci, "devpath %s ep%d%s 3strikes\n",
+>>               urb->dev->devpath,
+>>               usb_pipeendpoint(urb->pipe),
+>>               usb_pipein(urb->pipe) ? "in" : "out");
+>>       status = -EPROTO;
+>>
+>> enabling this log, I get:
+>> atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
+>> atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
+>> atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
+>> atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
+>> ieee80211 phy0: rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed -71
+>
+> Thanks, ehci driver behaviour seems to be fine. Could you check if updating
+> rt2800 firmware (I assume you have some RT2800 usb dongle) change the situation,
+> i.e. we stop getting -EPROTO errors. To install new firmware, you can download
+> rt2870.bin blob from:
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-January/005610.html
+> and need to replace /lib/firmware/rt2870.bin file.
+>
+> Stanislaw
+It's the same behaviour:
 
-This patch series adds device tree support to rfkill-gpio, and
-fixes some issues I ran into. This is so we can define and control
-RF devices through the device tree, such as the Broadcom BCM20710
-UART-based Bluetooth device found on the CubieTruck.
-
-The series is based on Heikki's rfkill-gpio cleanup patches [1],
-applied on 3.15-rc1. Kudos to Heikki for paving the way.
-
- [1] https://lkml.org/lkml/2014/4/1/451
-
-The device tree bindings are much better than was defined in the
-RFC series I sent a few months earlier [2], due to cleanups by
-Heikki, and named gpios (via gpio-names) implemented in the first
-two patches. Hopefully this will satisfy everyone.
-
- [2] https://lkml.org/lkml/2014/1/17/31
-
-The CubieTruck uses a non-default clock rate oscillator for the
-BCM20710 device. As the datasheet states, a precise 32.768 KHz
-low power clock must be provided at power on for the device to
-detect the correct clock rate of the main oscillator. Hence the
-need for the "clock-frequency" property.
-
-The first 2 patches should go through the gpio tree. The 4 rfkill-gpio
-patches should go through the same tree that Heikki's patches are
-in. Maxime, can you take the last one?
-
-A big thanks to everyone who gave reviews and suggestions.
-
-
-Changes since RFC:
-
-  - Dropped gpio name buffer fix patch (not needed after cleanup patches)
-  - New gpios/gpio-names support for device trees
-  - Simplify device tree bindings due to name cleanup and gpio-names
-    support
-
-
-Cheers
-
-ChenYu
-
-Chen-Yu Tsai (7):
-  gpiolib: gpiolib-of: Implement device tree gpio-names based lookup
-  gpiolib: Support purely name based gpiod lookup in device trees
-  net: rfkill: gpio: use clk_prepare_enable/clk_disable_unprepare
-  net: rfkill: gpio: fix reversed clock enable state
-  net: rfkill: gpio: add device tree support
-  net: rfkill: gpio: add clock-frequency device tree property
-  ARM: sun7i: cubietruck: enable bluetooth module
-
- .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 26 ++++++++++++
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts         | 25 +++++++++++
- drivers/gpio/gpiolib-of.c                          | 48 ++++++++++++++++++++++
- drivers/gpio/gpiolib.c                             |  9 +++-
- include/linux/of_gpio.h                            |  3 ++
- net/rfkill/rfkill-gpio.c                           | 34 +++++++++++++--
- 6 files changed, 140 insertions(+), 5 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
-
--- 
-1.9.1
-
+dmesg | grep firm
+[   13.648437] ieee80211 phy0: rt2x00lib_request_firmware: Info -
+Loading firmware file 'rt2870.bin'
+[   13.656250] ieee80211 phy0: rt2x00lib_request_firmware: Info -
+Firmware detected - version: 0.33
+# disable_usb_port 1
+# [   31.398437] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x07 failed for offset 0x1700 with error -71
+[   31.804687] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x07 failed for offset 0x0438 with error -71
+[   32.226562] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x07 failed for offset 0x0438 with error -71
+[   32.640625] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x06 failed for offset 0x0408 with error -71
+[   33.062500] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x06 failed for offset 0x0408 with error -71
+[   33.617187] ieee80211 phy0: rt2x00usb_vendor_request: Error -
+Vendor Request 0x07 failed for offset 0x1700 with error -71
