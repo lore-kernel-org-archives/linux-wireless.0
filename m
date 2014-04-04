@@ -1,90 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegasos-out.vodafone.de ([80.84.1.38]:50191 "EHLO
-	pegasos-out.vodafone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933057AbaDJOmh convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:42717 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbaDDLoN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 10:42:37 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by pegasos-out.vodafone.de (Rohrpostix2  Daemon) with ESMTP id 8D5CE6400C7
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 16:42:35 +0200 (CEST)
-Received: from pegasos-out.vodafone.de ([127.0.0.1])
-	by localhost (rohrpostix2.prod.vfnet.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Nonl0v9bYf6d for <linux-wireless@vger.kernel.org>;
-	Thu, 10 Apr 2014 16:42:30 +0200 (CEST)
-Date: Thu, 10 Apr 2014 16:42:29 +0200 (CEST)
-From: Stefan =?utf-8?Q?Kr=C3=BCger?= <01727988324@vodafone.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Abdulla Alwabel <abdulla.wabel@gmail.com>
-Message-ID: <1629266394.17443508.1397140949916.JavaMail.root@vodafone.de> (sfid-20140410_164242_022701_5B35002B)
-In-Reply-To: <5346099B.7090309@lwfinger.net>
-Subject: Re: RTL8192ee Driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 4 Apr 2014 07:44:13 -0400
+Received: by mail-we0-f171.google.com with SMTP id t61so3328110wes.30
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:12 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFT 1/4] ath10k: fix wmi-htc tx credit starvation
+Date: Fri,  4 Apr 2014 13:37:41 +0200
+Message-Id: <1396611464-5940-2-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134420_422838_9B5D3488)
+In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Larry, 
+Each WMI management Tx consumes 1 HTC Tx credit
+and doesn't replenish it until the frame is
+actually transmitted out of firmware's Tx queues.
 
+If associated client was asleep and has gone out
+of range then unicast frames won't be released for
+FW/HW queues for a while (10 seconds per
+observation). This means that if more management
+frames are queued then HTC Tx credits are drained
+to 0 and no other commands can be submitted
+including beacons and peer removal.
 
-thanks for you response! 
-Yesterday i tried this driver https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1239578/+attachment/4057550/+files/rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1016v2.2013.tar.gz 
-and install it on my debian-system with Kernel 3.13.. 
-after a reboot i see the wlan0 
+This could in turn result in clients disconnecting
+due to their beacon loss and may trigger spurious
+sta kickouts because wmi peer removal command may
+never reach firmware during disassociation.
 
+This could happen, e.g. when disconnecting client
+that has gone away while asleep.
 
-but if i connect to my router the authentication failed, and after a few minutes the driver goes crazy, and fill up my logs (>300MB in a few seconds) with the following messages 
+As a workaround flush unicast management frames
+that can possibly be buffered.
 
-syslog; kern.log: 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626630] rtlwifi-0:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable! 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626634] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626651] rtlwifi-0:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable! 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626656] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626672] rtlwifi-0:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable! 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626677] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626694] rtlwifi-0:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable! 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626700] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626717] rtlwifi-0:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable! 
-Apr 9 16:51:25 wheezy kernel: [ 2545.626722] skb->end - skb->tail = 16000, len is 16301 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 80 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c |  5 ---
+ drivers/net/wireless/ath/ath10k/wmi.h |  3 ++
+ 3 files changed, 83 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 58ec5a7..25362ef 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2076,9 +2076,56 @@ void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar)
+ 	}
+ }
+ 
++static void ath10k_mgmt_tx_flush(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ath10k_vif *arvif = NULL, *arvif_iter;
++	u8 *da = ieee80211_get_DA(hdr);
++	u8 vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
++	int ret;
++
++	if (!is_unicast_ether_addr(da))
++		return;
++
++	if (!ieee80211_is_disassoc(hdr->frame_control) &&
++	    !ieee80211_is_deauth(hdr->frame_control) &&
++	    !ieee80211_is_action(hdr->frame_control))
++		return;
++
++	mutex_lock(&ar->conf_mutex);
++	list_for_each_entry(arvif_iter, &ar->arvifs, list) {
++		if (arvif_iter->vdev_id == vdev_id) {
++			arvif = arvif_iter;
++			break;
++		}
++	}
++	mutex_unlock(&ar->conf_mutex);
++
++	if (!arvif)
++		return;
++
++	ath10k_dbg(ATH10K_DBG_MAC,
++		   "mac flushing peer %pM on vdev %i mgmt tid for unicast mgmt\n",
++		   da, vdev_id);
++
++	/*
++	 * Wait 2 beacon intervals before flushing so stations that are
++	 * asleep but are actually still in range have a chance to see
++	 * updated PVB, wake up and fetch the frame.
++	 */
++	msleep(2 * arvif->beacon_interval * 1024 / 1000);
++
++	ret = ath10k_wmi_peer_flush(ar, vdev_id, da,
++				    WMI_PEER_TID_MGMT_MASK);
++	if (ret)
++		ath10k_warn("failed to flush peer %pM mgmt tid: %d\n",
++			    da, ret);
++}
++
+ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, wmi_mgmt_tx_work);
++	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb;
+ 	int ret;
+ 
+@@ -2092,7 +2139,40 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ 			ath10k_warn("failed to transmit management frame via WMI: %d\n",
+ 				    ret);
+ 			ieee80211_free_txskb(ar->hw, skb);
++			continue;
+ 		}
++
++		/*
++		 * Each WMI management Tx consumes 1 HTC Tx credit and doesn't
++		 * replenish it until the frame is actually transmitted out of
++		 * firmware's Tx queues.
++		 *
++		 * If associated client was asleep and has gone out of range
++		 * then unicast frames won't be released for FW/HW queues for a
++		 * while (10 seconds per observation). This means that if more
++		 * management frames are queued then HTC Tx credits are drained
++		 * to 0 and no other commands can be submitted including
++		 * beacons and peer removal.
++		 *
++		 * This could in turn result in clients disconnecting due to
++		 * their beacon loss and may trigger spurious sta kickouts
++		 * because wmi peer removal command may never reach firmware
++		 * during disassociation.
++		 *
++		 * This could happen, e.g. when disconnecting client that has
++		 * gone away while asleep.
++		 *
++		 * As a workaround flush unicast management frames that can
++		 * possibly be buffered.
++		 *
++		 * Note: This is a deficiency in design of WMI_MGMT_TX command.
++		 */
++		ath10k_mgmt_tx_flush(ar, skb);
++
++		/* there's no way to get ACK so just assume it's acked */
++		info = IEEE80211_SKB_CB(skb);
++		info->flags |= IEEE80211_TX_STAT_ACK;
++		ieee80211_tx_status(ar->hw, skb);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d4b48ef..3b270a4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -637,7 +637,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 	struct wmi_mgmt_tx_cmd *cmd;
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *wmi_skb;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int len;
+ 	u16 fc;
+ 
+@@ -673,10 +672,6 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (ret)
+ 		return ret;
+ 
+-	/* TODO: report tx status to mac80211 - temporary just ACK */
+-	info->flags |= IEEE80211_TX_STAT_ACK;
+-	ieee80211_tx_status_irqsafe(ar->hw, skb);
+-
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ae83822..90fe2e9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3844,6 +3844,9 @@ struct wmi_peer_delete_cmd {
+ 	struct wmi_mac_addr peer_macaddr;
+ } __packed;
+ 
++#define WMI_PEER_TID_MGMT 17
++#define WMI_PEER_TID_MGMT_MASK BIT(WMI_PEER_TID_MGMT)
++
+ struct wmi_peer_flush_tids_cmd {
+ 	__le32 vdev_id;
+ 	struct wmi_mac_addr peer_macaddr;
+-- 
+1.8.5.3
 
-and 
-
-messages: 
-Apr 9 16:51:24 wheezy kernel: [ 2543.779541] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:24 wheezy kernel: [ 2543.779564] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:24 wheezy kernel: [ 2543.779586] skb->end - skb->tail = 16000, len is 16301 
-Apr 9 16:51:24 wheezy kernel: [ 2543.779608] skb->end - skb->tail = 16000, len is 16301 
-
-
-that is just a information for you ;) maybe it will help you to get this driver working. 
-
-
-best regards 
-Stefan 
-
-
------ Ursprüngliche Mail ----- 
-
-Von: "Larry Finger" <Larry.Finger@lwfinger.net> 
-An: "Abdulla Alwabel" <abdulla.wabel@gmail.com>, "stefan krueger" <stefan.krueger@vodafone.de> 
-CC: "linux-wireless" <linux-wireless@vger.kernel.org> 
-Gesendet: Donnerstag, 10. April 2014 05:01:47 
-Betreff: Re: RTL8192ee Driver 
-
-On 04/09/2014 09:41 PM, Abdulla Alwabel wrote: 
-> Hi Larry, 
-> I found a message from you in a mailing list saying you received code for driver 
-> rtl8192ee. I've a lenovo laptop that has this chip and I couldn't find a stable 
-> driver. Would you please help me by telling where can I find the code ? 
-
-Abdulla and Stefan, 
-
-My announcement was a bit premature. I am currently merging that driver with the 
-rest of the rtlwifi family. I hope to have it working by next week. I will send 
-kernel patches to everyone that has requested a copy. 
-
-When those are ready, they will be patches that apply to the latest kernel 
-(3.14). I hope that will not be a problem for either of you. 
-
-Larry
