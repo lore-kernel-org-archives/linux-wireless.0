@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f54.google.com ([209.85.213.54]:43922 "EHLO
-	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755134AbaDPJUb (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:40190 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbaDDLoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 05:20:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <1397581703.8212.5.camel@x220>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
- <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
- <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
- <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
- <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Wed, 16 Apr 2014 13:20:10 +0400
-Message-ID: <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com> (sfid-20140416_112122_608952_3ACF13DB)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	Florian Fainelli <florian@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 4 Apr 2014 07:44:11 -0400
+Received: by mail-wg0-f42.google.com with SMTP id y10so3249544wgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 04:44:10 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFT 0/4] ath10k: fix flushing and tx stalls
+Date: Fri,  4 Apr 2014 13:37:40 +0200
+Message-Id: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com> (sfid-20140404_134418_904297_B212643F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
->> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
->> > John, can you delay the merging of this patch for a few months, I will
->> > try to prepare the necessary patches to add AR231x architecture to the
->> > kernel and send them to linux-mips.
->>
->> OK -- looking forward to your patches.
->
-> So am I. Is there any news on this front?
->
+Hi,
 
-Work still in progress :(
+After digging around I've found what seems to be
+the problem with WMI Tx credit starvation and
+inability to properly flush Tx in ath10k_flush().
+
+Long story short: if a client that was asleep (as
+per what firmware thinks) goes out of range (or
+just stops responding) then Tx rots in FW/HW
+queues for a few seconds before it's discarded.
+For WMI Tx credits this means management frames
+eat up Tx credits for a few seconds (causing other
+WMI commands to timeout and return -EAGAIN/-11).
+For HTT Tx this means NullFunc frames would get
+stuck for a few seconds before completion was
+received.
+
+@Ben: Can you check if this helps you? I tested
+this briefly and at least [1/4] seems fixes the
+WMI Tx starvation. I'm hoping patches 2-4 help
+with your ath10k_flush() failures which I haven't
+been successfull in reproducing (but have observed
+improvement with purging some frames out of FW/HW
+queues).
+
+
+Michal Kazior (4):
+  ath10k: fix wmi-htc tx credit starvation
+  ath10k: rework peer accounting
+  ath10k: wait for mgmt tx when flushing too
+  ath10k: improve tx flushing
+
+ drivers/net/wireless/ath/ath10k/core.h |   7 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 254 +++++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/txrx.c |  29 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c  |   5 -
+ drivers/net/wireless/ath/ath10k/wmi.h  |   4 +
+ 5 files changed, 253 insertions(+), 46 deletions(-)
 
 -- 
-BR,
-Sergey
+1.8.5.3
+
