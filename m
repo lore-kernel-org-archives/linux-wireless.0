@@ -1,27 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41992 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757481AbaDIHtt (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52079 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307AbaDEGRp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 03:49:49 -0400
-Message-ID: <1397029770.4964.2.camel@jlt4.sipsolutions.net> (sfid-20140409_094953_110924_E61EA865)
-Subject: Re: [PATCH 8/8] cfg80211: remove unnecessary include clauses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 09 Apr 2014 09:49:30 +0200
-In-Reply-To: <c02aba28b27fe39da9730cd965e322054815713f.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032913_086421_21E1A53B)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 <c02aba28b27fe39da9730cd965e322054815713f.1397006688.git.gamerh2o@gmail.com>
-	 (sfid-20140409_032913_086421_21E1A53B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 5 Apr 2014 02:17:45 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
+References: <1396374940-21453-1-git-send-email-greearb@candelatech.com>
+	<8738hwrxso.fsf@kamboji.qca.qualcomm.com>
+	<533C256B.9090209@candelatech.com>
+Date: Sat, 5 Apr 2014 09:17:39 +0300
+In-Reply-To: <533C256B.9090209@candelatech.com> (Ben Greear's message of "Wed,
+	02 Apr 2014 07:57:47 -0700")
+Message-ID: <87bnwgpaf0.fsf@kamboji.qca.qualcomm.com> (sfid-20140405_081819_302669_42C137E9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't like those last four patches, I'd rather have more includes than
-rely on other headers including headers that we need - that could change
-after all.
+Ben Greear <greearb@candelatech.com> writes:
 
-johannes
+> On 04/02/2014 12:32 AM, Kalle Valo wrote:
+>> greearb@candelatech.com writes:
+>>
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> It can be nice to update the firmware's stats while
+>>> debugging other bits of the driver, so add helper method
+>>> to do this.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/debug.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/debug.h
+>>> @@ -135,4 +135,6 @@ struct dbglog_hdr_s {
+>>>
+>>>   void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
+>>>
+>>> +int ath10k_refresh_peer_stats(struct ath10k *ar);
+>>
+>> I don't see anyone calling this. How are you planning to use it?
+>
+> The RFC patch that debugs tx-hang calls it..nice to see he firmware's
+> buffer reap stats and such before/after trying to flush the buffers.
+>
+> I figure it will be useful for other such uses as well, now that stats
+> actually work.
 
+Ok, I'll drop this patch for now. You can resend when we have callers
+for this.
+
+-- 
+Kalle Valo
