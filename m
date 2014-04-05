@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.pawisda.de ([213.157.4.156]:38909 "EHLO mail.pawisda.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933800AbaDIVM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 17:12:26 -0400
-Message-ID: <5345B7B8.1010903@sp.consulting.lsexperts.de> (sfid-20140409_231234_684234_C913E811)
-Date: Wed, 09 Apr 2014 23:12:24 +0200
-From: Stefan Pietsch <stefan.pietsch@lsexperts.de>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:49133 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318AbaDEGXY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2014 02:23:24 -0400
+Received: by mail-ob0-f169.google.com with SMTP id va2so4509244obc.14
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 23:23:23 -0700 (PDT)
+Message-ID: <533FA159.4030300@lwfinger.net> (sfid-20140405_082353_872633_69DA45AC)
+Date: Sat, 05 Apr 2014 01:23:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, chaitanya.mgit@gmail.com
-Subject: Re: iwlwifi: Invalid RXON when trying to join IBSS network
-References: <534464F9.1080805@sp.consulting.lsexperts.de>		 (sfid-20140408_233636_176148_44D5A66B) <1397029645.4964.1.camel@jlt4.sipsolutions.net>	 <5345A814.8090301@sp.consulting.lsexperts.de> <1397075249.4964.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1397075249.4964.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@adurom.com>,
+	Andrea Merello <andrea.merello@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com
+Subject: Re: [PATCH 1/4] rtl8180: change module name in rtl818Xpci
+References: <1396628142-14351-1-git-send-email-andrea.merello@gmail.com> <87bnwgif9n.fsf@purkki.adurom.net>
+In-Reply-To: <87bnwgif9n.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09.04.2014 22:27, Johannes Berg wrote:
-> On Wed, 2014-04-09 at 22:05 +0200, Stefan Pietsch wrote:
-> 
->> [  489.184233] wlan0: Trigger new scan to find an IBSS to join
->> [  489.320584] wlan0: Selected IBSS BSSID 55:44:33:22:11:00 based on
->> configured SSID
-> 
-> Well, 55:... still has the multicast bit set.
-> 
-> Clearly this is a bug and we should just refuse this in mac80211, but by
-> setting the BSSID by hand to an invalid value you're really just
-> shooting yourself in the foot. :)
-> 
-> johannes
+On 04/04/2014 11:14 PM, Kalle Valo wrote:
+> Andrea Merello <andrea.merello@gmail.com> writes:
+>
+>> From: Larry Finger <Larry.Finger@lwfinger.net>
+>>
+>> rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
+>> however in userspace tools (network manager) it still appares
+>> as "rtl8180".
+>> This might lead the user to think the wrong driver is in use.
+>>
+>> This patch changes module name to "rtl818Xpci" that should be
+>> more explanatory.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+>
+> [...]
+>
+>> -obj-$(CONFIG_RTL8180)	+= rtl8180.o
+>> +obj-$(CONFIG_RTL8180)	+= rtl818Xpci.o
+>
+> Aren't module names usually all lower case?
+
+I do not feel strongly about this, but when I viewed the driver name in the KDE 
+applet for NetworkManager, the lower-case x sort of got lost, whereas the 
+upper-case one stood out. That was the reason for the way I wrote the patch the 
+way I did. In a terminal, the lc value looks OK. Perhaps I should have made it 
+rtl818x_pci.
+
+Larry
 
 
-My bad. I was not aware of that.
-
-I set the first byte to 00 and it worked.
-
-Thanks!
