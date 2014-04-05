@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:36713 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758323AbaDIKz3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:29 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so1747037eek.10
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:27 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 0/5] ath10k: ath10k: fix flushing and tx stalls
-Date: Wed,  9 Apr 2014 12:48:46 +0200
-Message-Id: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125533_279023_BAC89E56)
-In-Reply-To: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+Received: from purkki.adurom.net ([80.68.90.206]:52042 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752345AbaDEGjv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Apr 2014 02:39:51 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andrea Merello <andrea.merello@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bernhard@schiffner-limbach.de,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH 1/4] rtl8180: change module name in rtl818Xpci
+References: <1396628142-14351-1-git-send-email-andrea.merello@gmail.com>
+	<87bnwgif9n.fsf@purkki.adurom.net> <533FA159.4030300@lwfinger.net>
+Date: Sat, 05 Apr 2014 09:39:48 +0300
+In-Reply-To: <533FA159.4030300@lwfinger.net> (Larry Finger's message of "Sat,
+	05 Apr 2014 01:23:21 -0500")
+Message-ID: <877g74i8jv.fsf@purkki.adurom.net> (sfid-20140405_084032_018270_065FCE47)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-After digging around I've found what seems to be
-the problem with WMI Tx credit starvation and
-inability to properly flush Tx in ath10k_flush().
+> On 04/04/2014 11:14 PM, Kalle Valo wrote:
+>> Andrea Merello <andrea.merello@gmail.com> writes:
+>>
+>>> From: Larry Finger <Larry.Finger@lwfinger.net>
+>>>
+>>> rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
+>>> however in userspace tools (network manager) it still appares
+>>> as "rtl8180".
+>>> This might lead the user to think the wrong driver is in use.
+>>>
+>>> This patch changes module name to "rtl818Xpci" that should be
+>>> more explanatory.
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+>>
+>> [...]
+>>
+>>> -obj-$(CONFIG_RTL8180)	+= rtl8180.o
+>>> +obj-$(CONFIG_RTL8180)	+= rtl818Xpci.o
+>>
+>> Aren't module names usually all lower case?
+>
+> I do not feel strongly about this, but when I viewed the driver name
+> in the KDE applet for NetworkManager, the lower-case x sort of got
+> lost, whereas the upper-case one stood out. That was the reason for
+> the way I wrote the patch the way I did. In a terminal, the lc value
+> looks OK. 
 
-Long story short: if a client that was asleep (as
-per what firmware thinks) goes out of range (or
-just stops responding) then Tx rots in FW/HW
-queues for a few seconds before it's discarded.
-For WMI Tx credits this means management frames
-eat up Tx credits for a few seconds (causing other
-WMI commands to timeout and return -EAGAIN/-11).
-For HTT Tx this means NullFunc frames would get
-stuck for a few seconds before completion was
-received.
+I think it's confusing to use upper case letter in middle of a module
+name. There's no way to remember that when you are typing it :)
 
-v2:
- * added tx replenishment patch
- * added conf_mutex locking
- * change condition for flushing mgmt tx
+I checked the ubuntu kernel 3.2.0-60-generic I had installed in this
+machine. Out of 3311 kernel modules only 50 had upper case letters and
+none of them were in drivers/net.
 
+> Perhaps I should have made it rtl818x_pci.
 
-Michal Kazior (5):
-  ath10k: always request htc tx replenishment
-  ath10k: fix wmi-htc tx credit starvation
-  ath10k: rework peer accounting
-  ath10k: wait for mgmt tx when flushing too
-  ath10k: improve tx flushing
-
- drivers/net/wireless/ath/ath10k/core.h |   7 +-
- drivers/net/wireless/ath/ath10k/htc.c  |  15 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 275 ++++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/txrx.c |  29 ++--
- drivers/net/wireless/ath/ath10k/wmi.c  |   5 -
- drivers/net/wireless/ath/ath10k/wmi.h  |   4 +
- 6 files changed, 275 insertions(+), 60 deletions(-)
+That would be much more user friendly and also consistent with other
+wireless drivers.
 
 -- 
-1.8.5.3
-
+Kalle Valo
