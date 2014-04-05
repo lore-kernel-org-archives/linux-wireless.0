@@ -1,94 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16916 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753841AbaDMLHS convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:39097 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730AbaDEOfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 07:07:18 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Jonathan McDowell <noodles@earth.li>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Re: Intel 7260 not working in 802.11n mode
-Date: Sun, 13 Apr 2014 11:07:10 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com> (sfid-20140413_130724_665794_B2CE7819)
-References: <20140407003648.GA19740@earth.li>
- <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
- <20140407064556.GN24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
- <20140407152312.GO24850@earth.li>
-In-Reply-To: <20140407152312.GO24850@earth.li>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 5 Apr 2014 10:35:39 -0400
+Received: by mail-we0-f176.google.com with SMTP id x48so4566598wes.7
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Apr 2014 07:35:38 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH][FIX 3.15] b43: N-PHY: access B43_MMIO_PSM_PHY_HDR using 16b ops
+Date: Sat,  5 Apr 2014 16:35:24 +0200
+Message-Id: <1396708524-12199-1-git-send-email-zajec5@gmail.com> (sfid-20140405_163559_966834_E71BAD8D)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Mon, Apr 07, 2014 at 07:00:49AM +0000, Grumbach, Emmanuel wrote:
-> > > On Mon, Apr 07, 2014 at 08:00:19AM +0300, Emmanuel Grumbach wrote:
-> > > > On Mon, Apr 7, 2014 at 3:36 AM, Jonathan McDowell
-> > > > <noodles@earth.li>
-> > > wrote:
-> > > > >
-> > > > > I have an Intel 7260 that fails to associate correctly in 802.11n mode.
-> > > > > Unfortunately I don't have any access to the AP in question, but
-> > > > > I believe it is an ASUS based device. This is on the 5GHz band;
-> > > > > there is some odd configuration with the router that results in
-> > > > > the driver refusing to associate on the 2.4GHz setup with the
-> following error:
-> > > > >
-> > > > > [  507.495986] iwlwifi 0000:02:00.0: AP 30:00:da:b1:da:d0 beacon
-> > > > > interval is
-> > > 7, refusing due to firmware bug!
-> > > >
-> > > > Ok - this is an interesting settings.
-> > > > I'll check with our firmware team what can be done here, but
-> > > > beacon
-> > > > interval=7 is really insane. I can't find what the spec defines as
-> > > > legal values right now.
-> > >
-> > > I wouldn't rule out the person who configured the AP having made a
-> > > mistake; the MAC address is a custom one so they may have tweaked
-> > > other settings too. However my phone (running Android) can connect
-> > > to the 2.4GHz AP just fine and I think the other users of the AP are
-> > > running Macs without problems.
-> > >
-> > > > > On the 5GHz band the driver attempts to associate, but never
-> > > > > seems to actually fully associate to the point of getting an IP.
-> > > > > If I pass the
-> > > > > 11n_disable=1 parameter to the driver then things work fine.
-> > > > >
-> > > > This is surprising - can you share your logs?
-> > >
-> > > The log below is without the 11n_disable flag set - if it helps I
-> > > can provide the log of when it works too.
-> > >
-> > > > > I've put a debug log of the failure to associate (kernel 3.14
-> > > > > but this has happened with all the version I've tried) up at:
-> > > > >
-> > > > > http://the.earth.li/~noodles/iwlwifi-fail.log
-> > > > >
-> > > >
-> > > > I can't access: Access forbidden.
-> > > >
-> > > Sorry, fixed.
-> > >
-> > Your log seems healthy - you associate at Apr  6 17:17:20 and
-> > disassociate at Apr  6 17:18:05 - was that intentional?
-> 
-> All I did was load the module with the debug parameter set, let Network
-> Manager do its thing and wait for the connection to fail, then unload the
-> module. NM is reporting that the DHCP times out - log at:
-> 
-> http://the.earth.li/~noodles/iwlfail-nm.log
-> 
-> I'd be blaming Network Manager or some other piece of configuration if it
-> wasn't for the fact that disabling 11n makes things work.
-> 
-I really can't see anything bad in this log.
-Can you run tracing?
+Register B43_MMIO_PSM_PHY_HDR is 16 bit one, so accessing it with 32b
+functions isn't safe. On my machine it causes delayed (!) CPU exception:
 
-sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e cfg80211
+Disabling lock debugging due to kernel taint
+mce: [Hardware Error]: CPU 0: Machine Check Exception: 4 Bank 4: b200000000070f0f
+mce: [Hardware Error]: TSC 164083803dc
+mce: [Hardware Error]: PROCESSOR 2:20fc2 TIME 1396650505 SOCKET 0 APIC 0 microcode 0
+mce: [Hardware Error]: Run the above through 'mcelog --ascii'
+mce: [Hardware Error]: Machine check: Processor context corrupt
+Kernel panic - not syncing: Fatal machine check on current CPU
+Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
 
-this will create a trace.dat file which I'd like to look at.
-Thanks.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+John: I think this patch it worth picking for 3.15 release. This bug
+causes instability and can be triggered depending on the default state
+of B43_NPHY_BANDCTL register.
+It doesn't cause exception immediately, so I spent few hours tracing it.
+---
+ drivers/net/wireless/b43/phy_n.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 05ee7f1..24ccbe9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -5176,22 +5176,22 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 	int ch = new_channel->hw_value;
+ 
+ 	u16 old_band_5ghz;
+-	u32 tmp32;
++	u16 tmp16;
+ 
+ 	old_band_5ghz =
+ 		b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
+ 	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
+-		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
+-		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
++		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
++		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
+ 		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
+-		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
++		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
+ 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
+ 	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
+ 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
+-		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
+-		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
++		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
++		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
+ 		b43_phy_mask(dev, B43_PHY_B_BBCFG, 0x3FFF);
+-		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
++		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
+ 	}
+ 
+ 	b43_chantab_phy_upload(dev, e);
+-- 
+1.8.4.5
+
