@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49715 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:24977 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932982AbaD2MZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2014 08:25:25 -0400
-Message-ID: <535F9A28.9070809@openwrt.org> (sfid-20140429_142529_002364_3A487C3C)
-Date: Tue, 29 Apr 2014 14:25:12 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1750922AbaDGHBX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Apr 2014 03:01:23 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jonathan McDowell <noodles@earth.li>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: Intel 7260 not working in 802.11n mode
+Date: Mon, 7 Apr 2014 07:00:49 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com> (sfid-20140407_090137_244063_081C0A0E)
+References: <20140407003648.GA19740@earth.li>
+	<CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
+ <20140407064556.GN24850@earth.li>
+In-Reply-To: <20140407064556.GN24850@earth.li>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Tim Harvey <tharvey@gateworks.com>, linux-wireless@vger.kernel.org
-CC: John Linville <linville@tuxdriver.com>,
-	ath9k-devel@lists.ath9k.org, Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH 2/2] ath9k: add a recv budget
-References: <1398122097-23544-1-git-send-email-tharvey@gateworks.com>	<1398122097-23544-2-git-send-email-tharvey@gateworks.com>	<535631B7.7050208@openwrt.org> <CAJ+vNU1mdgtZuT8NeQmZDJ25cufohqZyvcG4y2EM8tjpfntG7w@mail.gmail.com>
-In-Reply-To: <CAJ+vNU1mdgtZuT8NeQmZDJ25cufohqZyvcG4y2EM8tjpfntG7w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-04-29 14:04, Tim Harvey wrote:
-> On Tue, Apr 22, 2014 at 2:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2014-04-22 01:14, Tim Harvey wrote:
->>> Implement a recv budget so that in cases of high traffic we still allow other
->>> taskets to get processed.
->>>
->>> Without this, we can encounter a host of issues during high wireless traffic
->>> reception depending on system load including rcu stall's detected (ARM),
->>> soft lockups, failure to service critical tasks such as watchdog resets,
->>> and triggering of the tx stuck tasklet.
->>>
->>> The same thing was proposed previously by Ben:
->>>  http://www.spinics.net/lists/linux-wireless/msg112891.html
->>>
->>> The only difference here is that I make sure only processed packets are counted
->>> in the budget by checking at the end of the rx loop.
->>>
->>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
->> For both patches:
->> Acked-by: Felix Fietkau <nbd@openwrt.org>
->>
+> On Mon, Apr 07, 2014 at 08:00:19AM +0300, Emmanuel Grumbach wrote:
+> > On Mon, Apr 7, 2014 at 3:36 AM, Jonathan McDowell <noodles@earth.li>
+> wrote:
+> > >
+> > > I have an Intel 7260 that fails to associate correctly in 802.11n mode.
+> > > Unfortunately I don't have any access to the AP in question, but I
+> > > believe it is an ASUS based device. This is on the 5GHz band; there is
+> > > some odd configuration with the router that results in the driver
+> > > refusing to associate on the 2.4GHz setup with the following error:
+> > >
+> > > [  507.495986] iwlwifi 0000:02:00.0: AP 30:00:da:b1:da:d0 beacon interval is
+> 7, refusing due to firmware bug!
+> >
+> > Ok - this is an interesting settings.
+> > I'll check with our firmware team what can be done here, but beacon
+> > interval=7 is really insane. I can't find what the spec defines as
+> > legal values right now.
 > 
-> +cc ath9k-devel@lists.ath9k.org
-> +cc Ben Greear
+> I wouldn't rule out the person who configured the AP having made a
+> mistake; the MAC address is a custom one so they may have tweaked other
+> settings too. However my phone (running Android) can connect to the
+> 2.4GHz AP just fine and I think the other users of the AP are running
+> Macs without problems.
 > 
-> Any other ack's or comments on these? These address some fairly
-> long-standing bugs.
-No need for further ack's or comments, since the change has been picked
-up by John already.
+> > > On the 5GHz band the driver attempts to associate, but never seems to
+> > > actually fully associate to the point of getting an IP. If I pass the
+> > > 11n_disable=1 parameter to the driver then things work fine.
+> > >
+> > This is surprising - can you share your logs?
+> 
+> The log below is without the 11n_disable flag set - if it helps I can
+> provide the log of when it works too.
+> 
+> > > I've put a debug log of the failure to associate (kernel 3.14 but this
+> > > has happened with all the version I've tried) up at:
+> > >
+> > > http://the.earth.li/~noodles/iwlwifi-fail.log
+> > >
+> >
+> > I can't access: Access forbidden.
+> 
+> Sorry, fixed.
+> 
 
-- Felix
+Your log seems healthy - you associate at Apr  6 17:17:20 and disassociate at Apr  6 17:18:05 - was that intentional?
+
+Also - your AP seems to behave badly with uAPSD - can you try to set power_scheme=1 as a module parameter to iwlmvm module?
+
+
+
