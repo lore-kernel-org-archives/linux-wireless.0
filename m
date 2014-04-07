@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36244 "EHLO
-	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaDOHW2 (ORCPT
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:59967 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937AbaDGP2z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 03:22:28 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 4/7] net: rfkill: gpio: fix reversed clock enable state
-Date: Tue, 15 Apr 2014 14:41:38 +0800
-Message-Id: <1397544101-18135-5-git-send-email-wens@csie.org> (sfid-20140415_092323_089722_BA311325)
-In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	Mon, 7 Apr 2014 11:28:55 -0400
+Received: from smtp02.msg.oleane.net (smtp02.mail.priv [172.17.20.111])
+	by smtp-out05.msg.oleane.net with ESMTP id s37CPQQ2022207
+	for <linux-wireless@vger.kernel.org>; Mon, 7 Apr 2014 14:25:26 +0200
+From: "voncken" <cedric.voncke@acksys.fr>
+To: "'Janusz Dziedzic'" <janusz.dziedzic@gmail.com>,
+	"Cedric VONCKEN" <cedric.voncken@acksys.fr>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319017342EF@sbs2003.acksys.local> <CAFED-j=nyEnfg7n=OF0oA_Geh11DR_XYNPTLeb603jKNNUxv0g@mail.gmail.com>
+In-Reply-To: <CAFED-j=nyEnfg7n=OF0oA_Geh11DR_XYNPTLeb603jKNNUxv0g@mail.gmail.com>
+Subject: RE: [MAC80211] Radar detection management issue
+Date: Mon, 7 Apr 2014 14:04:51 +0200
+Message-ID: <00dc01cf5259$94fd02d0$bef70870$@acksys.fr> (sfid-20140407_172859_440388_D365D3DF)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill-gpio has clk_enabled = blocked, which is true when rfkill
-blocks the device. This results in calling clock enable/disable at
-the wrong time. Reversing the value fixes this.
+> >
+> >         I don't know how fix this issue. For the moment I disable the
+> > channel when the NL80211_RRF_DFS is set (in map_regdom_flags).
+> >
+> 
+> This seems like a bug in ath9k (init.c) driver, when register interface
+> combinations.
+> Seems RADAR combination should be registered only in case when
+> ATH9K_DFS_CERTIFIED is set.
+	
+	Thanks for the answer. 
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- net/rfkill/rfkill-gpio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	The ATH9K_HW_CAP_DFS is set in hw.c only  if the function
+ath9k_hw_dfs_tested return true.
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 29ff07c..f46ddf7 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -57,7 +57,7 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
- 		gpiod_set_value(rfkill->shutdown_gpio, 1);
- 	}
- 
--	rfkill->clk_enabled = blocked;
-+	rfkill->clk_enabled = !blocked;
- 
- 	return 0;
- }
--- 
-1.9.1
+	In the ath9k/init.c, the function ath9k_set_hw_capab do not set any
+flags in hw->flags relevant to DFS.
+
+	I'm looking for a similar line
+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_DFS)
+      	hw->flags |= IEEE80211_HW_xxxx;
+	
+	But I don't found. 
+
+	I'm looking in net/mac80211.h the IEEE80211 flag relevant to DFS (to
+add the test in ath9k init), but I don't found it.
+
+	It seem the mac80211 do not know the hardware capability to detect
+radar.
+
+	Cedric.
+> 
+> BR
+> Janusz
 
