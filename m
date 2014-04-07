@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:49462 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470AbaDSRsf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2014 13:48:35 -0400
-Received: by mail-ee0-f49.google.com with SMTP id c41so2513845eek.36
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 10:48:34 -0700 (PDT)
-Message-ID: <5352B6EF.1090208@gmail.com> (sfid-20140419_194912_590468_5E3FF382)
-Date: Sat, 19 Apr 2014 19:48:31 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: John W Linville <linville@tuxdriver.com>,
+Received: from the.earth.li ([46.43.34.31]:49660 "EHLO the.earth.li"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754695AbaDGPXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Apr 2014 11:23:37 -0400
+Date: Mon, 7 Apr 2014 16:23:12 +0100
+From: Jonathan McDowell <noodles@earth.li>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-CC: Ivo Van Doorn <ivdoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Remove myself as maintainer.
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [Ilw] Re: Intel 7260 not working in 802.11n mode
+Message-ID: <20140407152312.GO24850@earth.li> (sfid-20140407_172351_274199_E50C0587)
+References: <20140407003648.GA19740@earth.li>
+ <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
+ <20140407064556.GN24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let's formalize what must have been blatantly clear from my level
-of activity is the past year(s).
-I simply do not have time for this anymore.
+On Mon, Apr 07, 2014 at 07:00:49AM +0000, Grumbach, Emmanuel wrote:
+> > On Mon, Apr 07, 2014 at 08:00:19AM +0300, Emmanuel Grumbach wrote:
+> > > On Mon, Apr 7, 2014 at 3:36 AM, Jonathan McDowell <noodles@earth.li>
+> > wrote:
+> > > >
+> > > > I have an Intel 7260 that fails to associate correctly in 802.11n mode.
+> > > > Unfortunately I don't have any access to the AP in question, but I
+> > > > believe it is an ASUS based device. This is on the 5GHz band; there is
+> > > > some odd configuration with the router that results in the driver
+> > > > refusing to associate on the 2.4GHz setup with the following error:
+> > > >
+> > > > [  507.495986] iwlwifi 0000:02:00.0: AP 30:00:da:b1:da:d0 beacon interval is
+> > 7, refusing due to firmware bug!
+> > >
+> > > Ok - this is an interesting settings.
+> > > I'll check with our firmware team what can be done here, but beacon
+> > > interval=7 is really insane. I can't find what the spec defines as
+> > > legal values right now.
+> > 
+> > I wouldn't rule out the person who configured the AP having made a
+> > mistake; the MAC address is a custom one so they may have tweaked other
+> > settings too. However my phone (running Android) can connect to the
+> > 2.4GHz AP just fine and I think the other users of the AP are running
+> > Macs without problems.
+> > 
+> > > > On the 5GHz band the driver attempts to associate, but never seems to
+> > > > actually fully associate to the point of getting an IP. If I pass the
+> > > > 11n_disable=1 parameter to the driver then things work fine.
+> > > >
+> > > This is surprising - can you share your logs?
+> > 
+> > The log below is without the 11n_disable flag set - if it helps I can
+> > provide the log of when it works too.
+> > 
+> > > > I've put a debug log of the failure to associate (kernel 3.14 but this
+> > > > has happened with all the version I've tried) up at:
+> > > >
+> > > > http://the.earth.li/~noodles/iwlwifi-fail.log
+> > > >
+> > >
+> > > I can't access: Access forbidden.
+> > >
+> > Sorry, fixed.
+> > 
+> Your log seems healthy - you associate at Apr  6 17:17:20 and
+> disassociate at Apr  6 17:18:05 - was that intentional?
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- MAINTAINERS | 1 -
- 1 file changed, 1 deletion(-)
+All I did was load the module with the debug parameter set, let Network
+Manager do its thing and wait for the connection to fail, then unload
+the module. NM is reporting that the DHCP times out - log at:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6dc67b1..a80a586 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7277,7 +7277,6 @@ F:        drivers/video/aty/aty128fb.c
- RALINK RT2X00 WIRELESS LAN DRIVER
- P:     rt2x00 project
- M:     Ivo van Doorn <IvDoorn@gmail.com>
--M:     Gertjan van Wingerde <gwingerde@gmail.com>
- M:     Helmut Schaa <helmut.schaa@googlemail.com>
- L:     linux-wireless@vger.kernel.org
- L:     users@rt2x00.serialmonkey.com (moderated for non-subscribers)
+http://the.earth.li/~noodles/iwlfail-nm.log
+
+I'd be blaming Network Manager or some other piece of configuration if
+it wasn't for the fact that disabling 11n makes things work.
+
+> Also - your AP seems to behave badly with uAPSD - can you try to set
+> power_scheme=1 as a module parameter to iwlmvm module?
+
+Sure, I'll try that this evening.
+
+J.
+
 -- 
-1.8.4.3
+/-\                             |   "How the f**k did you work that
+|@/  Debian GNU/Linux Developer |         out?" -- Pythagoras
+\-                              |
