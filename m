@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:39256 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933449AbaDINvw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 09:51:52 -0400
-Received: by mail-ee0-f48.google.com with SMTP id b57so1906445eek.35
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:51:51 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 0/5] cfg80211/mac80211: implement multi-vif csa
-Date: Wed,  9 Apr 2014 15:45:32 +0200
-Message-Id: <1397051137-26201-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155201_222217_CADFAB22)
-In-Reply-To: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
-References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+Received: from nm35-vm9.bullet.mail.ir2.yahoo.com ([212.82.97.132]:40292 "EHLO
+	nm35-vm9.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755174AbaDHATN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Apr 2014 20:19:13 -0400
+Message-ID: <1396915964.55973.YahooMailBasic@web172301.mail.ir2.yahoo.com> (sfid-20140408_021916_808392_FF0EF97A)
+Date: Tue, 8 Apr 2014 01:12:44 +0100 (BST)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_probe()
+To: larry.finger@lwfinger.net, khoroshilov@ispras.ru,
+	herton@canonical.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+------------------------------
+On Sun, Mar 30, 2014 10:31 PM BST Larry Finger wrote:
 
-This is another part of my recent (originally)
-RFC. This is just the channel switching part.
+>On 03/28/2014 03:26 PM, Alexey Khoroshilov wrote:
+> If allocation of io_dmabuf fails, rtl8187_probe() calls usb_put_dev(udev)
+> while usb_get_dev(udev) is not called yet. As a result refcnt is decremented
+> incorrectly and usb_dev can be used after memory deallocation.
+>
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> ---
+>
+>Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+>Thanks,
+>
+>Larry
 
-This is based on my patchset implementing
-multi-vif chanctx reservations.
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-This effectively enables multi-vif CSA for
-STA/AP/IBSS/mesh (except the fact that channel
-switching itself is still hard-disabled in
-cfg80211 -- maybe it's about time to re-enable?).
+Hin-Tak
 
+>
+>   drivers/net/wireless/rtl818x/rtl8187/dev.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> index fd78df813a85..d7f540a9dc9b 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> @@ -1636,10 +1636,10 @@ static int rtl8187_probe(struct usb_interface *intf,
+>
+>    err_free_dmabuf:
+>       kfree(priv->io_dmabuf);
+> - err_free_dev:
+> -    ieee80211_free_hw(dev);
+>       usb_set_intfdata(intf, NULL);
+>       usb_put_dev(udev);
+> + err_free_dev:
+> +    ieee80211_free_hw(dev);
+>       return err;
+>   }
+>
+>
+>
 
-v2:
- * add radar_detect fix patch (wasn't present in
-   the big RFC)
-
-v3:
- * remove radar_detect fix patch (it was
-   cherry-picked)
- * squash removal of ieee80211_vif_change_channel() [Johannes]
- * cleanups [Johannes]
- * add resilience for calling ieee80211_csa_finish() and
-   ieee80211_chswitch_done() more than once (the
-   problem was originally discussed in `ath10k: dont call csa_finish
-   more than once`)
-
-v4:
- * fix compilation issue between 2/5 and 3/5
-   (I had squashed vif_change_channel removal too early)
-
-Michal Kazior (5):
-  mac80211: make check_combinations() aware of chanctx reservation
-  mac80211: use chanctx reservation for AP CSA
-  mac80211: use chanctx reservation for STA CSA
-  mac80211: ignore cqm during csa
-  cfg80211: remove channel_switch combination check
-
- net/mac80211/cfg.c         |  82 ++++++++++++++++++++++++------------
- net/mac80211/chan.c        |  79 ++++++----------------------------
- net/mac80211/ieee80211_i.h |   5 ---
- net/mac80211/mlme.c        | 103 ++++++++++++++++++++++++++++++---------------
- net/mac80211/util.c        |  39 ++++++++++++++++-
- net/wireless/nl80211.c     |  11 -----
- 6 files changed, 176 insertions(+), 143 deletions(-)
-
--- 
-1.8.5.3
 
