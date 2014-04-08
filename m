@@ -1,72 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:48579 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbaDXIkZ (ORCPT
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:51927 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbaDHI7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 04:40:25 -0400
-Received: by mail-ve0-f171.google.com with SMTP id jy13so2600892veb.30
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 01:40:24 -0700 (PDT)
+	Tue, 8 Apr 2014 04:59:53 -0400
+Received: by mail-vc0-f179.google.com with SMTP id ij19so512710vcb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 01:59:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
-References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
-	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 24 Apr 2014 16:40:24 +0800
-Message-ID: <CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com> (sfid-20140424_104032_337399_5EAD32FA)
-Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
+In-Reply-To: <1396947132.5936.5.camel@jlt4.sipsolutions.net>
+References: <1396411509-4660-1-git-send-email-yeohchunyeow@gmail.com>
+	<1396947132.5936.5.camel@jlt4.sipsolutions.net>
+Date: Tue, 8 Apr 2014 16:59:53 +0800
+Message-ID: <CAEFj986dM9S9=SYUL1CZz8cNNgbhScDn-_Rz_2-hgv_9+K0D4Q@mail.gmail.com> (sfid-20140408_105957_408581_DB73293C)
+Subject: Re: [PATCH] mac80211: update last_tx_rate only for data frame
 From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 4:22 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Chun-Yeow Yeoh <yeohchunyeow@gmail.com> writes:
+On Tue, Apr 8, 2014 at 4:52 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2014-04-02 at 12:05 +0800, Chun-Yeow Yeoh wrote:
+>> Rate controller in firmware may also return the Tx Rate
+>> used for management frame that is usually sent as lowest
+>> Tx Rate (1Mbps in 2.4GHz). So update the last_tx_rate only
+>> if it is data frame.
 >
->> Firmware 999.999.0.636 does not allow stand alone monitor
->> mode. This means that bridging the STA mode and put it into
->> promiscuous mode will also cause the firmware to crash. Avoid
->> this.
->>
->> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->
-> [...]
->
->> @@ -647,10 +647,15 @@ static int ath10k_monitor_vdev_delete(struct ath10k *ar)
->>
->>  static int ath10k_monitor_start(struct ath10k *ar)
->>  {
->> -     int ret;
->> +     int ret = -1;
->
-> I prefer to avoid initialising ret variables. And -1 is not a proper
-> error value.
->
-Ok.
+> I guess this makes some sense, although maybe the rate shouldn't be
+> reported then?
 
->>       lockdep_assert_held(&ar->conf_mutex);
->>
->> +     if (ar->fw_version_build == 636) {
->
-> Checking for firmware version in ath10k is a big no. For a functinality
-> change like this you should add a new feature flag to enum
-> ath10k_fw_features (and I need to then recreate the firmware image).
->
-Should we just use the ATH10K_FW_FEATURE_WMI_10X?
-
->> +             ath10k_warn("stand alone monitor mode is not supported\n");
->
-> I would prefer not to print a warning for a situation like this. Can't
-> we instead return an error value back to the caller?
->
-Yes.
-
->> +             return ret;
->
-> return -EOPNOTSUPP or similar is better approach than initialising ret
-> to -1.
-Sure.
+If you are referring to the last_tx_rate, we are using this to
+calculate the Airtime Link Metric in the mesh mode.
 
 ----
 Chun-Yeow
