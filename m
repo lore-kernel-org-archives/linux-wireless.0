@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:44299 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750820AbaDYBvR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37454 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbaDHIgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 21:51:17 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 2/5] iwlegacy: Convert /n to \n
-Date: Thu, 24 Apr 2014 18:51:00 -0700
-Message-Id: <80376e433ad62c5792b72ef5a338df1771bc9975.1398390579.git.joe@perches.com> (sfid-20140425_035318_272773_463DE366)
-In-Reply-To: <cover.1398390579.git.joe@perches.com>
-References: <cover.1398390579.git.joe@perches.com>
+	Tue, 8 Apr 2014 04:36:24 -0400
+Message-ID: <1396946168.5936.0.camel@jlt4.sipsolutions.net> (sfid-20140408_103629_220978_35F291B3)
+Subject: Re: [PATCH] mac80211: fix radar_enabled propagation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 Apr 2014 10:36:08 +0200
+In-Reply-To: <1396609363-24539-1-git-send-email-michal.kazior@tieto.com> (sfid-20140404_130852_698229_A2912E57)
+References: <1396609363-24539-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140404_130852_698229_A2912E57)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a newline character appropriately.
+On Fri, 2014-04-04 at 13:02 +0200, Michal Kazior wrote:
+> If chandef had non-HT width it was possible for
+> radar_enabled update to not be propagated properly
+> through drv_config(). This happened because
+> ieee80211_hw_conf_chan() would never see different
+> local->hw.conf.chandef and local->_oper_chandef.
+> 
+> This wasn't a problem with HT chandefs because
+> _oper_chandef width is reset to non-HT in
+> ieee80211_free_chanctx() making
+> ieee80211_hw_conf_chan() to kick in.
+> 
+> This problem led (at least) ath10k to not start
+> CAC if prior CAC was cancelled and both CACs were
+> requested for identical non-HT chandefs.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/mac80211/chan.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+> index 122033d..b472daa 100644
+> --- a/net/mac80211/chan.c
+> +++ b/net/mac80211/chan.c
+> @@ -269,7 +269,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+>  
+>  	if (!local->use_chanctx) {
+>  		local->_oper_chandef = *chandef;
+> -		ieee80211_hw_config(local, 0);
+> +		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/iwlegacy/3945.c     | 2 +-
- drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I'm not convinced that this is the right way to do this - couldn't
+ieee80211_hw_conf_chan() detect the radar detection requirement change?
 
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index d37a6fd..b598e28 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -573,7 +573,7 @@ il3945_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
- 		rx_status.flag |= RX_FLAG_SHORTPRE;
- 
- 	if ((unlikely(rx_stats->phy_count > 20))) {
--		D_DROP("dsp size out of range [0,20]: %d/n",
-+		D_DROP("dsp size out of range [0,20]: %d\n",
- 		       rx_stats->phy_count);
- 		return;
- 	}
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 888ad5c..c159c05 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -670,7 +670,7 @@ il4965_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
- 	}
- 
- 	if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
--		D_DROP("dsp size out of range [0,20]: %d/n",
-+		D_DROP("dsp size out of range [0,20]: %d\n",
- 		       phy_res->cfg_phy_cnt);
- 		return;
- 	}
--- 
-1.8.1.2.459.gbcd45b4.dirty
+johannes
 
