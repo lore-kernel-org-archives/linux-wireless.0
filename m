@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56476 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:38678 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664AbaDYPo3 (ORCPT
+	with ESMTP id S1756695AbaDHNa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 11:44:29 -0400
-Message-ID: <1398440079.4152.20.camel@jlt4.sipsolutions.net> (sfid-20140425_174613_233608_659C47B8)
-Subject: Re: [PATCH 10/12] mac80211: change return value of notifier function
+	Tue, 8 Apr 2014 09:30:26 -0400
+Message-ID: <1396963807.11971.2.camel@jlt4.sipsolutions.net> (sfid-20140408_153031_935772_E864561C)
+Subject: Re: [PATCH v3 00/13] cfg80211/mac80211: implement multi-vif chanctx
+ reservations
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 25 Apr 2014 17:34:39 +0200
-In-Reply-To: <7336424bc39404833509efc7fc9bf0ba0af450f1.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065524_383592_95172171)
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-	 <7336424bc39404833509efc7fc9bf0ba0af450f1.1398055854.git.gamerh2o@gmail.com>
-	 (sfid-20140421_065524_383592_95172171)
+Date: Tue, 08 Apr 2014 15:30:07 +0200
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134301_895786_6990540B)
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140331_134301_895786_6990540B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-21 at 12:53 +0800, Zhao, Gang wrote:
-> Return NOTIFY_DONE if we don't care this time's notification, return
-> NOTIFY_OK if we successfully handled this time's notification. That's
-> the formal way to do it.
+On Mon, 2014-03-31 at 12:39 +0200, Michal Kazior wrote:
+> Hi,
+> 
+> This is part of my multi-vif csa work. These
+> patches have been included in my recent big RFC.
+> I'm trying to split it up a bit.
+> 
+> The patchset incrementally improves chanctx
+> reservations in order to support multi-vif
+> reservations and in-place multi-vif reservations
+> (typically for single-channel hardware, but
+> multi-channel benefits from this too).
+> 
+> Some of the patches (the refcounting) were also
+> posted a while ago as a separate small RFC.
+> 
+> This is rebased on mac80211-next/master and my
+> CSA fixes/cleanups now.
 
-Same here.
+I guess this looks fine ... Is Luca planning to pick it up first?
 
 johannes
 
