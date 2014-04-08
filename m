@@ -1,155 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9143 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755761AbaDNWdD (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:33816 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126AbaDHL1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 18:33:03 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 6/7] mwifiex: use USB core's soft_unbind option
-Date: Mon, 14 Apr 2014 15:32:54 -0700
-Message-ID: <1397514775-4777-6-git-send-email-bzhao@marvell.com> (sfid-20140415_003309_466233_95553AAE)
-In-Reply-To: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
-References: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Apr 2014 07:27:54 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so564238eek.11
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 04:27:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2] ath10k: improve htc tx credit debugging prints
+Date: Tue,  8 Apr 2014 13:21:40 +0200
+Message-Id: <1396956100-26668-1-git-send-email-michal.kazior@tieto.com> (sfid-20140408_132758_102081_5BCBB9C2)
+In-Reply-To: <1396955920-25863-1-git-send-email-michal.kazior@tieto.com>
+References: <1396955920-25863-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+This way it's easier to track and debug htc tx
+credit issues.
 
-This option allows driver to finish pending operations in
-disconnect handler by not killing URBs after usb_deregister
-call.
-
-We will get rid of global pointer 'usb_card' by moving code
-from cleanup_module() to disconnect(). This will help to match
-with our handling for SDIO and PCIe interfaces.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/usb.c | 60 ++++++++++++++++++--------------------
- 1 file changed, 29 insertions(+), 31 deletions(-)
+v2:
+ * remove empty newline
 
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index edbe4af..db6377f 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -22,9 +22,9 @@
- 
- #define USB_VERSION	"1.0"
- 
-+static u8 user_rmmod;
- static struct mwifiex_if_ops usb_ops;
- static struct semaphore add_remove_card_sem;
--static struct usb_card_rec *usb_card;
- 
- static struct usb_device_id mwifiex_usb_table[] = {
- 	/* 8797 */
-@@ -532,28 +532,43 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- static void mwifiex_usb_disconnect(struct usb_interface *intf)
- {
- 	struct usb_card_rec *card = usb_get_intfdata(intf);
-+	struct mwifiex_adapter *adapter;
- 
--	if (!card) {
--		pr_err("%s: card is NULL\n", __func__);
-+	if (!card || !card->adapter) {
-+		pr_err("%s: card or card->adapter is NULL\n", __func__);
- 		return;
+(Sorry for the noise!)
+
+ drivers/net/wireless/ath/ath10k/htc.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7f1bccd..5b58dbb 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -157,6 +157,9 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 			goto err_pull;
+ 		}
+ 		ep->tx_credits -= credits;
++		ath10k_dbg(ATH10K_DBG_HTC,
++			   "htc ep %d consumed %d credits (total %d)\n",
++			   eid, credits, ep->tx_credits);
+ 		spin_unlock_bh(&htc->tx_lock);
  	}
  
--	mwifiex_usb_free(card);
-+	adapter = card->adapter;
-+	if (!adapter->priv_num)
-+		return;
+@@ -185,6 +188,9 @@ err_credits:
+ 	if (ep->tx_credit_flow_enabled) {
+ 		spin_lock_bh(&htc->tx_lock);
+ 		ep->tx_credits += credits;
++		ath10k_dbg(ATH10K_DBG_HTC,
++			   "htc ep %d reverted %d credits back (total %d)\n",
++			   eid, credits, ep->tx_credits);
+ 		spin_unlock_bh(&htc->tx_lock);
  
--	if (card->adapter) {
--		struct mwifiex_adapter *adapter = card->adapter;
-+	/* In case driver is removed when asynchronous FW downloading is
-+	 * in progress
-+	 */
-+	wait_for_completion(&adapter->fw_load);
+ 		if (ep->ep_ops.ep_tx_credits)
+@@ -234,12 +240,12 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 		if (report->eid >= ATH10K_HTC_EP_COUNT)
+ 			break;
  
--		if (!adapter->priv_num)
--			return;
-+	if (user_rmmod) {
-+#ifdef CONFIG_PM
-+		if (adapter->is_suspended)
-+			mwifiex_usb_resume(intf);
-+#endif
+-		ath10k_dbg(ATH10K_DBG_HTC, "ep %d got %d credits\n",
+-			   report->eid, report->credits);
+-
+ 		ep = &htc->endpoint[report->eid];
+ 		ep->tx_credits += report->credits;
+ 
++		ath10k_dbg(ATH10K_DBG_HTC, "htc ep %d got %d credits (total %d)\n",
++			   report->eid, report->credits, ep->tx_credits);
 +
-+		mwifiex_deauthenticate_all(adapter);
- 
--		dev_dbg(adapter->dev, "%s: removing card\n", __func__);
--		mwifiex_remove_card(adapter, &add_remove_card_sem);
-+		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
-+							  MWIFIEX_BSS_ROLE_ANY),
-+					 MWIFIEX_FUNC_SHUTDOWN);
- 	}
- 
-+	mwifiex_usb_free(card);
-+
-+	dev_dbg(adapter->dev, "%s: removing card\n", __func__);
-+	mwifiex_remove_card(adapter, &add_remove_card_sem);
-+
- 	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(interface_to_usbdev(intf));
- 	kfree(card);
--	usb_card = NULL;
- 
- 	return;
- }
-@@ -565,6 +580,7 @@ static struct usb_driver mwifiex_usb_driver = {
- 	.id_table = mwifiex_usb_table,
- 	.suspend = mwifiex_usb_suspend,
- 	.resume = mwifiex_usb_resume,
-+	.soft_unbind = 1,
- };
- 
- static int mwifiex_usb_tx_init(struct mwifiex_adapter *adapter)
-@@ -762,7 +778,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 
- 	card->adapter = adapter;
- 	adapter->dev = &card->udev->dev;
--	usb_card = card;
- 
- 	switch (le16_to_cpu(card->udev->descriptor.idProduct)) {
- 	case USB8897_PID_1:
-@@ -1025,25 +1040,8 @@ static void mwifiex_usb_cleanup_module(void)
- 	if (!down_interruptible(&add_remove_card_sem))
- 		up(&add_remove_card_sem);
- 
--	if (usb_card && usb_card->adapter) {
--		struct mwifiex_adapter *adapter = usb_card->adapter;
--
--		/* In case driver is removed when asynchronous FW downloading is
--		 * in progress
--		 */
--		wait_for_completion(&adapter->fw_load);
--
--#ifdef CONFIG_PM
--		if (adapter->is_suspended)
--			mwifiex_usb_resume(usb_card->intf);
--#endif
--
--		mwifiex_deauthenticate_all(adapter);
--
--		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
--							  MWIFIEX_BSS_ROLE_ANY),
--					 MWIFIEX_FUNC_SHUTDOWN);
--	}
-+	/* set the flag as user is removing this module */
-+	user_rmmod = 1;
- 
- 	usb_deregister(&mwifiex_usb_driver);
- }
+ 		if (ep->ep_ops.ep_tx_credits) {
+ 			spin_unlock_bh(&htc->tx_lock);
+ 			ep->ep_ops.ep_tx_credits(htc->ar);
 -- 
-1.8.2.3
+1.8.5.3
 
