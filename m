@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from the.earth.li ([46.43.34.31]:52084 "EHLO the.earth.li"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750971AbaDQRbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 13:31:22 -0400
-Date: Thu, 17 Apr 2014 18:31:18 +0100
-From: Jonathan McDowell <noodles@earth.li>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Ilw] Re: Intel 7260 not working in 802.11n mode
-Message-ID: <20140417173118.GC24850@earth.li> (sfid-20140417_193126_161297_250DD7A2)
-References: <20140407003648.GA19740@earth.li>
- <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
- <20140407064556.GN24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
- <20140407152312.GO24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
- <20140416061043.GZ24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:33372 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756040AbaDHJYS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Apr 2014 05:24:18 -0400
+Received: by mail-wg0-f43.google.com with SMTP id x13so648910wgg.14
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 02:24:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com>
+In-Reply-To: <1396946168.5936.0.camel@jlt4.sipsolutions.net>
+References: <1396609363-24539-1-git-send-email-michal.kazior@tieto.com>
+	<1396946168.5936.0.camel@jlt4.sipsolutions.net>
+Date: Tue, 8 Apr 2014 11:24:16 +0200
+Message-ID: <CA+BoTQ=H-zYoK5q4j8rKFU-XVXx=ydwjYiWh8ZoFGOCr9LyrVQ@mail.gmail.com> (sfid-20140408_112422_399693_44076B6E)
+Subject: Re: [PATCH] mac80211: fix radar_enabled propagation
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 07:58:01PM +0000, Grumbach, Emmanuel wrote:
-> > > I really can't see anything bad in this log.
-> > > Can you run tracing?
-> > >
-> > > sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e
-> > > cfg80211
-> > >
-> > > this will create a trace.dat file which I'd like to look at.
-> > 
-> > http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
-> > 
-> > and for completeness, with disable_11n=1:
-> > 
-> > http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
-> > 
-> > In both cases I started the trace, flipped the hardware wifi disable switch, let
-> > Network Manager do its thing.
-> > 
-> Thanks for this. I am on vacation right now and won't be able to look
-> at this straight away.
+On 8 April 2014 10:36, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2014-04-04 at 13:02 +0200, Michal Kazior wrote:
+>> If chandef had non-HT width it was possible for
+>> radar_enabled update to not be propagated properly
+>> through drv_config(). This happened because
+>> ieee80211_hw_conf_chan() would never see different
+>> local->hw.conf.chandef and local->_oper_chandef.
+>>
+>> This wasn't a problem with HT chandefs because
+>> _oper_chandef width is reset to non-HT in
+>> ieee80211_free_chanctx() making
+>> ieee80211_hw_conf_chan() to kick in.
+>>
+>> This problem led (at least) ath10k to not start
+>> CAC if prior CAC was cancelled and both CACs were
+>> requested for identical non-HT chandefs.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>>  net/mac80211/chan.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+>> index 122033d..b472daa 100644
+>> --- a/net/mac80211/chan.c
+>> +++ b/net/mac80211/chan.c
+>> @@ -269,7 +269,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+>>
+>>       if (!local->use_chanctx) {
+>>               local->_oper_chandef = *chandef;
+>> -             ieee80211_hw_config(local, 0);
+>> +             ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
 >
-> Please don't remove the files from your web server.  Also - if you can
-> open a bug on bugzilla.kernel.org - this would be best.  Cc
-> ilw@linux.intel.com to your bug. Thanks!
+> I'm not convinced that this is the right way to do this - couldn't
+> ieee80211_hw_conf_chan() detect the radar detection requirement change?
 
-No problem; bug 74311 raised. I'll leave the files around.
+I agree but on the other hand propagating local->mtx locking
+requirement for using local->radar_detect_enabled in
+ieee80211_hw_conf_chan() (and thus ieee80211_hw_config()) is probably
+going to be a cascade of pain.
 
-J.
 
--- 
-I wondered why I lost three stones last week.
+Michał
