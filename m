@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:52362 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbaDYW1o (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:64359 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbaDHHDQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 18:27:44 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so3169371eek.4
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 15:27:43 -0700 (PDT)
-Received: from [192.168.1.2] (46-126-92-137.dynamic.hispeed.ch. [46.126.92.137])
-        by mx.google.com with ESMTPSA id o7sm28203914eew.25.2014.04.25.15.27.41
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Fri, 25 Apr 2014 15:27:42 -0700 (PDT)
-Message-ID: <535AE15D.8010704@gmail.com> (sfid-20140426_002748_184952_051FDA8C)
-Date: Sat, 26 Apr 2014 00:27:41 +0200
-From: Julian Sikorski <belegdol@gmail.com>
+	Tue, 8 Apr 2014 03:03:16 -0400
+Received: by mail-wi0-f173.google.com with SMTP id z2so6433187wiv.12
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 00:03:15 -0700 (PDT)
 MIME-Version: 1.0
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Low 5 GHz performance of Intel Advanced-N 6230
-References: <5358AADD.3010702@gmail.com>	<ljbdr0$c27$1@ger.gmane.org>	<535A12F3.8020003@gmail.com> <CACna6rx+3CeucmhDDFwTii8A4KiEsTDQSeyTH6aLaYfs0YkaBg@mail.gmail.com> <535A3021.8070003@gmail.com>
-In-Reply-To: <535A3021.8070003@gmail.com>
+In-Reply-To: <87ob0cmhwp.fsf@kamboji.qca.qualcomm.com>
+References: <1396610305-5229-1-git-send-email-michal.kazior@tieto.com>
+	<87y4zgmifa.fsf@kamboji.qca.qualcomm.com>
+	<87ob0cmhwp.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 8 Apr 2014 09:03:15 +0200
+Message-ID: <CA+BoTQkWjr9pxTN0AgqDXLzXqTjJ1a=Zepss5UdDw7tpOQLOAw@mail.gmail.com> (sfid-20140408_090321_446004_B9151EA9)
+Subject: Re: [PATCH] ath10k: refactor monitor code
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 25.04.2014 11:51, Emmanuel Grumbach pisze:
-> 
-> 
-> On 04/25/2014 12:15 PM, Rafał Miłecki wrote:
->> 2014-04-25 9:46 GMT+02:00 Emmanuel Grumbach <egrumbach@gmail.com>:
->>> On 04/24/2014 07:24 PM, Julian Sikorski wrote:
->>>> Is such a major performance hit expected from this change? Here is the
->>>> commit in question:
->>>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?h=linux-3.13.y&id=45e5cb4f43d33e72ff5f98c80b081eb42e4e4182
->>>>
+On 8 April 2014 08:53, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> It was possible to create/delete/start/stop
+>>> monitor vdev from a few places that were not
+>>> exclusively protected against each other. This
+>>> resulted in monitor vdev being stopped/removed by
+>>> one call origin while another one was expecting it
+>>> to continue running.
 >>>
->>> Right - I disabled TX APMDU in this patch. This feature gives a big boost in TX performance, but lots of people experienced bugs that disappeared when this feature was disabled. This bug is in the firmware. Since the most common use case is to browse the internet which is more Rx than Tx, I decided to disabled this feature by default and allow people to enabled it using the module parameter.
+>>> For example if CAC was started and interface's
+>>> promiscuous mode was toggled monitor vdev was
+>>> removed from the driver meaning no radar would be
+>>> detected. In additional a warning would be printed
+>>> upon CAC completion complaining it tried to stop
+>>> non-running monitor vdev.
+>>>
+>>> The patch simplifies monitor code by removing
+>>> IEEE80211_HW_WANT_MONITOR_VIF (which wasn't really
+>>> ever needed) and improves state tracking. It also
+>>> unifies prints.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 >>
->> Any plans to update (fix) the firmware?
->>
-> 
-> I don't work on the firmware level, so I can't really say, but I doubt someone will have the cycles to fix the firmware for these devices. Newer devices (7260 and up) have this feature enabled.
-> 
-Can this feature be disabled on a per-device basis? It clearly works for
-6230 and is a huge performance hit when gone.
+>> Thanks, applied.
+>
+> Actually there were two checkpatch warnings which I had missed:
+>
+> drivers/net/wireless/ath/ath10k/mac.c:2587: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/mac.c:2852: WARNING: line over 80 characters
+>
+> I amended it like this:
+>
 
-Julian
+[...]
+
+Sorry for the trouble and thanks!
+
+
+Michał
