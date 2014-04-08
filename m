@@ -1,100 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37905 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689AbaDMNDF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65446 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126AbaDHIgx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 09:03:05 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/13] iwlwifi: mvm: rs: clear per rate stats when aggregation changes
-Date: Sun, 13 Apr 2014 16:02:02 +0300
-Message-Id: <1397394123-25102-12-git-send-email-egrumbach@gmail.com> (sfid-20140413_150350_561370_7196258A)
-In-Reply-To: <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
-References: <534A8A49.2030100@gmail.com>
- <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
+	Tue, 8 Apr 2014 04:36:53 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 5/5] wil6210: Use larger Tx rings
+Date: Tue, 8 Apr 2014 11:36:19 +0300
+Message-ID: <1396946179-11677-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140408_103705_041238_5D96EBB6)
+In-Reply-To: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+When using scatter-gather, more descriptor entries get used.
 
-The per rate stats should be cleared when aggregation state changes
-to avoid making rate scale decisions based on throughput figures which
-were collected prior to the aggregation state change and are now stale.
-While at it make sure any clearing of the per rate stats will get logged.
-
-Cc: <stable@vger.kernel.org> [3.14]
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 5cab26e..9f52c5b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -519,10 +519,12 @@ static void rs_rate_scale_clear_window(struct iwl_rate_scale_data *window)
- 	window->average_tpt = IWL_INVALID_VALUE;
- }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f881aee..d3b8659 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -35,7 +35,7 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ #define WIL6210_MEM_SIZE (2*1024*1024UL)
  
--static void rs_rate_scale_clear_tbl_windows(struct iwl_scale_tbl_info *tbl)
-+static void rs_rate_scale_clear_tbl_windows(struct iwl_mvm *mvm,
-+					    struct iwl_scale_tbl_info *tbl)
- {
- 	int i;
- 
-+	IWL_DEBUG_RATE(mvm, "Clearing up window stats\n");
- 	for (i = 0; i < IWL_RATE_COUNT; i++)
- 		rs_rate_scale_clear_window(&tbl->win[i]);
- }
-@@ -1490,7 +1492,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
- 
- 				IWL_DEBUG_RATE(mvm,
- 					       "LQ: stay in table clear win\n");
--				rs_rate_scale_clear_tbl_windows(tbl);
-+				rs_rate_scale_clear_tbl_windows(mvm, tbl);
- 			}
- 		}
- 
-@@ -1498,8 +1500,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
- 		 * bitmaps and stats in active table (this will become the new
- 		 * "search" table). */
- 		if (lq_sta->rs_state == RS_STATE_SEARCH_CYCLE_STARTED) {
--			IWL_DEBUG_RATE(mvm, "Clearing up window stats\n");
--			rs_rate_scale_clear_tbl_windows(tbl);
-+			rs_rate_scale_clear_tbl_windows(mvm, tbl);
- 		}
- 	}
- }
-@@ -1836,6 +1837,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 			       "Aggregation changed: prev %d current %d. Update expected TPT table\n",
- 			       prev_agg, lq_sta->is_agg);
- 		rs_set_expected_tpt_table(lq_sta, tbl);
-+		rs_rate_scale_clear_tbl_windows(mvm, tbl);
- 	}
- 
- 	/* current tx rate */
-@@ -2065,7 +2067,7 @@ lq_update:
- 		if (lq_sta->search_better_tbl) {
- 			/* Access the "search" table, clear its history. */
- 			tbl = &(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
--			rs_rate_scale_clear_tbl_windows(tbl);
-+			rs_rate_scale_clear_tbl_windows(mvm, tbl);
- 
- 			/* Use new "search" start rate */
- 			index = tbl->rate.index;
-@@ -2396,7 +2398,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	lq_sta->lq.sta_id = sta_priv->sta_id;
- 
- 	for (j = 0; j < LQ_SIZE; j++)
--		rs_rate_scale_clear_tbl_windows(&lq_sta->lq_info[j]);
-+		rs_rate_scale_clear_tbl_windows(mvm, &lq_sta->lq_info[j]);
- 
- 	lq_sta->flush_timer = 0;
- 	lq_sta->last_tx = jiffies;
+ #define WIL6210_RX_RING_SIZE	(128)
+-#define WIL6210_TX_RING_SIZE	(128)
++#define WIL6210_TX_RING_SIZE	(512)
+ #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
+ #define WIL6210_MAX_CID		(8) /* HW limit */
+ #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
 -- 
 1.8.3.2
 
