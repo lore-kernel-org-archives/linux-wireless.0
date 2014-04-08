@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40146 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004AbaDJPWF (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62987 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbaDHGjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 11:22:05 -0400
-Date: Thu, 10 Apr 2014 18:21:36 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Andrea Merello <andrea.merello@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	driverdev-devel@linuxdriverproject.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: staging/rtl8187se should be removed
-Message-ID: <20140410152136.GI26890@mwanda> (sfid-20140410_172212_266057_C8E322BB)
-References: <53450089.9050008@gmail.com>
- <20140409170815.GA17551@kroah.com>
- <CAN8YU5M3h_og084bcdgqOGLoQqtrcxbxpPpAR6DBmYGz6pBG-w@mail.gmail.com>
+	Tue, 8 Apr 2014 02:39:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: cleanup debug messages in ath10k_wmi_event_host_swba()
+References: <20140328093028.16927.81551.stgit@potku.adurom.net>
+Date: Tue, 8 Apr 2014 09:39:46 +0300
+In-Reply-To: <20140328093028.16927.81551.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Fri, 28 Mar 2014 11:30:28 +0200")
+Message-ID: <8738honx3h.fsf@kamboji.qca.qualcomm.com> (sfid-20140408_083955_079452_8F44C654)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAN8YU5M3h_og084bcdgqOGLoQqtrcxbxpPpAR6DBmYGz6pBG-w@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The thing about keeping e100 in parallel with the other driver is that
-some devices didn't work on the other driver and also it wasn't staging
-code.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-I don't have strong opinions either way, but if we decide to keep the
-old driver around for another kernel release "just in case" then we
-should make it print a warning on load or something to say that it's
-soon going to be removed.
+> They were just too superfluous and made it harder to read logs. Change them to
+> follow the normal style used in ath10k.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-regards,
-dan carpenter
+Applied.
 
+-- 
+Kalle Valo
