@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:51477 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbaD2GAG convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38662 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756586AbaDHNZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2014 02:00:06 -0400
-Received: by mail-we0-f175.google.com with SMTP id q58so7197132wes.20
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2014 23:00:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1398700073.4132.2.camel@jlt4.sipsolutions.net>
-References: <20140428082225.GA15459@jouni.qca.qualcomm.com>
-	<CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com>
-	<1398699982.4132.1.camel@jlt4.sipsolutions.net>
-	<1398700073.4132.2.camel@jlt4.sipsolutions.net>
-Date: Tue, 29 Apr 2014 08:00:04 +0200
-Message-ID: <CA+BoTQk6KGqnXGuDrVhKvPoxJCofwPw04Y-bLfU0Xnjfusgrqg@mail.gmail.com> (sfid-20140429_080434_863956_F82D135E)
-Subject: Re: [PATCH 2/3] mac80211: Support dynamic AP mode channel width changes
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 8 Apr 2014 09:25:25 -0400
+Message-ID: <1396963511.11971.1.camel@jlt4.sipsolutions.net> (sfid-20140408_152551_871628_0C394A54)
+Subject: Re: [PATCH v3 04/13] mac80211: add support for radar detection for
+ reservations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 Apr 2014 15:25:11 +0200
+In-Reply-To: <1396262371-6466-5-git-send-email-michal.kazior@tieto.com> (sfid-20140331_134312_842038_BDFF4F7F)
+References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
+	 <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+	 <1396262371-6466-5-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20140331_134312_842038_BDFF4F7F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 April 2014 17:47, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2014-04-28 at 17:46 +0200, Johannes Berg wrote:
->
->> > Shouldn't interface combinations be verified here? What if there was a
->> > bandwidth upgrade (after a downgrade) but in the meantime a vif with a
->> > to-be incompatible chandef was brought up?
->>
->> Yeah that seems like a potential issue.
->
-> Hm, wait, isn't this addressed by this code in
-> ieee80211_vif_change_bandwidth():
->
->         ctx = container_of(conf, struct ieee80211_chanctx, conf);
->         if (!cfg80211_chandef_compatible(&conf->def, chandef)) {
->                 ret = -EINVAL;
->                 goto out;
->         }
+On Mon, 2014-03-31 at 12:39 +0200, Michal Kazior wrote:
+> Initial chanctx reservation code wasn't aware of
+> radar detection requirements. This is necessary
+> for chanctx reservations to be used for channel
+> switching in the future.
 
-Yeah, you're right.
+>  int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+>  				  const struct cfg80211_chan_def *chandef,
+> -				  enum ieee80211_chanctx_mode mode)
+> +				  enum ieee80211_chanctx_mode mode,
+> +				  bool radar_required)
 
+Does this not have any callers?
 
-Michał
+johannes
+
