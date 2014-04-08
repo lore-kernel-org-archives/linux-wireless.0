@@ -1,38 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58118 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030816AbaDJNnJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756497AbaDHIjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 09:43:09 -0400
-Message-ID: <53469FD3.8040001@candelatech.com> (sfid-20140410_154314_290274_9EBA9132)
-Date: Thu, 10 Apr 2014 06:42:43 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: double check bmi xfer pointers
-References: <53461A8A.4030209@candelatech.com> <1397124355-6321-1-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1397124355-6321-1-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 8 Apr 2014 04:39:22 -0400
+Message-ID: <1396946348.5936.3.camel@jlt4.sipsolutions.net> (sfid-20140408_103927_754941_7C414991)
+Subject: Re: [PATCH] mac80211: Allow disabling LDPC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pawel Kulakowski <pawel.kulakowski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 Apr 2014 10:39:08 +0200
+In-Reply-To: <1396329202-2549-1-git-send-email-pawel.kulakowski@tieto.com> (sfid-20140401_071339_294088_A274E3C8)
+References: <1396329202-2549-1-git-send-email-pawel.kulakowski@tieto.com>
+	 (sfid-20140401_071339_294088_A274E3C8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/10/2014 03:05 AM, Michal Kazior wrote:
-> If for some reason copy engine ring buffer became
-> corrupt ath10k could crash the machine due to
-> invalid pointer dereference. It's very unlikely
-> but devices can never be fully trusted so verify
-> if the bmi xfer pointer read back from copy engine
-> matches the original pointer. The bug looked as
-> follows:
+On Tue, 2014-04-01 at 07:13 +0200, Pawel Kulakowski wrote:
+> This allows user-space (wpa_supplicant) to disable LDPC coding.
 
-Thanks for fixing this.  I'll add this patch to my
-tree and run more tests today.
+Applied.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
