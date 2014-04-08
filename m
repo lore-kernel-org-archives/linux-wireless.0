@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:42497 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754338AbaDMNQF (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:63591 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755407AbaDHFvq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 09:16:05 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x13so7058852wgg.26
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 06:16:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] regulatory: don't rule out some valid rules
-Date: Sun, 13 Apr 2014 16:15:58 +0300
-Message-Id: <1397394958-6827-1-git-send-email-eliad@wizery.com> (sfid-20140413_151611_012875_834BBCD3)
+	Tue, 8 Apr 2014 01:51:46 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so418910wes.4
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2014 22:51:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <53435F89.60500@candelatech.com>
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+	<5341F1A9.2030202@candelatech.com>
+	<CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com>
+	<53435F89.60500@candelatech.com>
+Date: Tue, 8 Apr 2014 07:51:45 +0200
+Message-ID: <CA+BoTQk6G4-h8HQENbK9snrXo6j6FW4D+07XKZMEEuvWiu03ww@mail.gmail.com> (sfid-20140408_075150_128406_719233BB)
+Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 6d87df6 ("regdb: allow 40 MHz on world roaming
-channels 12/13") in wireless-regdb did the following
-change:
+On 8 April 2014 04:31, Ben Greear <greearb@candelatech.com> wrote:
+> On 04/07/2014 02:11 AM, Michal Kazior wrote:
+>
+>> These logs are not enough. I'd love to see traces for this to see what
+>> frames are actually submitted and when tx credits are replenished.
+>>
+>> I also wonder if this can be somehow related to your FW changes to
+>> allow connecting multiple client virtual interfaces to a single AP?
+>
+>
+> I think it is unlikely due to my firmware changes...little of that touched
+> the handling of management frames.  It might very well be a basic problem in
+> either the firmware or driver when using multiple station VIFS.  I think
+> that
+> aside from my testing that code has not been used much.
+>
+> Note my followup email that problems started with patch 3/4...not sure you
+> saw that one or not.  I saw similar failure to associate & get DHCP (and
+> slow/hung user-space) without the kernel error logs.
 
--        # Channel 12 - 13. No HT40 channel fits here
--        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
-+        # Channel 12 - 13.
-+        (2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+I did get that mail. It's just that it makes little sense. Patch 3/4
+simply extends ath10k_flush() to wait for management frames. It
+shouldn't change behaviour of tx credit starvation which appears to be
+the case in the logs you provided.
 
-in order to allow HT40+ on lower channels (such as 9).
 
-However, the current regulatory rules verification forbids
-such rules, as 2482 - 2457 < 40.
-Remove this requirement from the rules verification function.
+> I've added the first two patches to my tree and will continue to run
+> with them since they do not appear to cause problems so far.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/wireless/reg.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Patch 2/4 is probably meaningless in itself. It is just a preparation for 4/4.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6c4b507..c8a5c34 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -610,8 +610,7 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- 
- 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
- 
--	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
--	    freq_range->max_bandwidth_khz > freq_diff)
-+	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
- 		return false;
- 
- 	return true;
--- 
-1.8.5.2.229.g4448466.dirty
+Anyway, thanks for testing!
 
+
+Michał
