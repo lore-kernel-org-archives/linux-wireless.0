@@ -1,70 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:49412 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758373AbaDIKza (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:48204 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235AbaDIB2s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:30 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so1733808eei.14
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:28 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 1/5] ath10k: always request htc tx replenishment
-Date: Wed,  9 Apr 2014 12:48:47 +0200
-Message-Id: <1397040531-6224-2-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125535_993916_5EE060EA)
-In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
- <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 8 Apr 2014 21:28:48 -0400
+Received: by mail-pa0-f51.google.com with SMTP id kq14so1810030pab.38
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:48 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/8] cfg80211: fix possible compile warning in wext-compat.h
+Date: Wed,  9 Apr 2014 09:28:06 +0800
+Message-Id: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032853_081054_476FA7D1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This simplifies tx credit management and tries to
-address a problem where driver runs out of credits
-and is unable to recover when firmware stalls.
+Function cfg80211_wext_freq() is declared in wext-compat.h, but its
+parameter struct wiphy's declaration is not included there. Actually
+the parameter is not used in this function, so change it to normal
+net_device.
 
-This also makes it a little more easy to track and
-debug htc tx credit flow since there should be no
-laziness involved.
+The compile warning doesn't show up due to duplicate including, but
+it's worth fixing it.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+net/wireless/wext-compat.h:53:52: warning: ‘struct wiphy’ declared inside parameter list [enabled by default]
+ int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq);
+                                                    ^
+net/wireless/wext-compat.h:53:52: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
+
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htc.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+ net/wireless/ibss.c        | 2 +-
+ net/wireless/scan.c        | 6 +++++-
+ net/wireless/wext-compat.c | 8 ++++----
+ net/wireless/wext-compat.h | 2 +-
+ net/wireless/wext-sme.c    | 2 +-
+ 5 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7f1bccd..c2a290a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -86,19 +86,6 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 071e99c..407f413 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -322,7 +322,7 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+ 	if (!rdev->ops->join_ibss)
+ 		return -EOPNOTSUPP;
  
--/* assumes tx_lock is held */
--static bool ath10k_htc_ep_need_credit_update(struct ath10k_htc_ep *ep)
--{
--	if (!ep->tx_credit_flow_enabled)
--		return false;
--	if (ep->tx_credits >= ep->tx_credits_per_max_message)
--		return false;
--
--	ath10k_dbg(ATH10K_DBG_HTC, "HTC: endpoint %d needs credit update\n",
--		   ep->eid);
--	return true;
--}
--
- static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 				      struct sk_buff *skb)
+-	freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
++	freq = cfg80211_wext_freq(dev, wextfreq);
+ 	if (freq < 0)
+ 		return freq;
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 7d09a71..d526d65 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1147,7 +1147,11 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 				int k;
+ 				int wiphy_freq = wiphy->bands[band]->channels[j].center_freq;
+ 				for (k = 0; k < wreq->num_channels; k++) {
+-					int wext_freq = cfg80211_wext_freq(wiphy, &wreq->channel_list[k]);
++					struct iw_freq *freq =
++						&wreq->channel_list[k];
++
++					int wext_freq =
++						cfg80211_wext_freq(dev, freq);
+ 					if (wext_freq == wiphy_freq)
+ 						goto wext_freq_found;
+ 				}
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 5661a54..9984d2f 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -253,12 +253,12 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_giwrange);
+ 
+ /**
+  * cfg80211_wext_freq - get wext frequency for non-"auto"
+- * @wiphy: the wiphy
++ * @dev: the net device
+  * @freq: the wext freq encoding
+  *
+  * Returns a frequency, or a negative error code, or 0 for auto.
+  */
+-int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq)
++int cfg80211_wext_freq(struct net_device *dev, struct iw_freq *freq)
  {
-@@ -113,7 +100,7 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 	spin_lock_bh(&ep->htc->tx_lock);
- 	hdr->seq_no = ep->seq_no++;
+ 	/*
+ 	 * Parse frequency - return 0 for auto and
+@@ -787,7 +787,7 @@ static int cfg80211_wext_siwfreq(struct net_device *dev,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_siwfreq(dev, info, wextfreq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-		freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
++		freq = cfg80211_wext_freq(dev, wextfreq);
+ 		if (freq < 0)
+ 			return freq;
+ 		if (freq == 0)
+@@ -798,7 +798,7 @@ static int cfg80211_wext_siwfreq(struct net_device *dev,
+ 			return -EINVAL;
+ 		return cfg80211_set_monitor_channel(rdev, &chandef);
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
++		freq = cfg80211_wext_freq(dev, wextfreq);
+ 		if (freq < 0)
+ 			return freq;
+ 		if (freq == 0)
+diff --git a/net/wireless/wext-compat.h b/net/wireless/wext-compat.h
+index 5d766b0..bd6aa81 100644
+--- a/net/wireless/wext-compat.h
++++ b/net/wireless/wext-compat.h
+@@ -50,7 +50,7 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 			   struct iw_point *data, char *extra);
  
--	if (ath10k_htc_ep_need_credit_update(ep))
-+	if (ep->tx_credit_flow_enabled)
- 		hdr->flags |= ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE;
  
- 	spin_unlock_bh(&ep->htc->tx_lock);
+-int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq);
++int cfg80211_wext_freq(struct net_device *dev, struct iw_freq *freq);
+ 
+ 
+ extern const struct iw_handler_def cfg80211_wext_handler;
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 86c331a..765e37b 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -75,7 +75,7 @@ int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
+ 		return -EINVAL;
+ 
+-	freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
++	freq = cfg80211_wext_freq(dev, wextfreq);
+ 	if (freq < 0)
+ 		return freq;
+ 
 -- 
-1.8.5.3
+1.9.0
 
