@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:40380 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755215AbaDMTUa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932674AbaDIMrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:30 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so7501769wgh.16
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:29 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/47] iwlwifi: move CPU1_CPU2_SEPARATOR_SECTION to iwl-fw.h
-Date: Sun, 13 Apr 2014 22:19:28 +0300
-Message-Id: <1397416802-32403-13-git-send-email-egrumbach@gmail.com> (sfid-20140413_212037_637887_5B0BC4F2)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+	Wed, 9 Apr 2014 08:47:08 -0400
+Message-ID: <1397047610.4964.14.camel@jlt4.sipsolutions.net> (sfid-20140409_144712_769442_FDF00559)
+Subject: Re: [PATCH 1/8] cfg80211: fix possible compile warning in
+ wext-compat.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 09 Apr 2014 14:46:50 +0200
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032851_199422_DE76A6CA)
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+	 (sfid-20140409_032851_199422_DE76A6CA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Wed, 2014-04-09 at 09:28 +0800, Zhao, Gang wrote:
+> Function cfg80211_wext_freq() is declared in wext-compat.h, but its
+> parameter struct wiphy's declaration is not included there. Actually
+> the parameter is not used in this function, so change it to normal
+> net_device.
+> 
+> The compile warning doesn't show up due to duplicate including, but
+> it's worth fixing it.
 
-This define is related to the firmware packaging and is
-needed by more than one transport.
+Why not just include the right file here?
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h     | 1 +
- drivers/net/wireless/iwlwifi/pcie/trans.c | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index de70919..f7ea9c0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -188,6 +188,7 @@ enum iwl_ucode_sec {
- #define IWL_UCODE_SECTION_MAX 12
- #define IWL_API_ARRAY_SIZE	1
- #define IWL_CAPABILITIES_ARRAY_SIZE	1
-+#define CPU1_CPU2_SEPARATOR_SECTION	0xFFFFCCCC
- 
- struct iwl_ucode_capabilities {
- 	u32 max_probe_length;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 97e6bd8..2548f49 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -103,7 +103,6 @@ static void iwl_pcie_set_pwr(struct iwl_trans *trans, bool vaux)
- 
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
--#define CPU1_CPU2_SEPARATOR_SECTION	0xFFFFCCCC
- 
- static void iwl_pcie_apm_config(struct iwl_trans *trans)
- {
--- 
-1.8.3.2
+johannes
 
