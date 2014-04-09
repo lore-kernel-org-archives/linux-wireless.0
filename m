@@ -1,192 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:56214 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932847AbaDIKzg (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:61545 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932685AbaDINZL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:36 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so1690083eek.25
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:35 -0700 (PDT)
+	Wed, 9 Apr 2014 09:25:11 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so2482385wgh.35
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:25:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1397049772.4418.71.camel@dubbel>
+References: <1396259841-6359-1-git-send-email-michal.kazior@tieto.com>
+	<1397049062-24177-1-git-send-email-michal.kazior@tieto.com>
+	<1397049062-24177-2-git-send-email-michal.kazior@tieto.com>
+	<1397049772.4418.71.camel@dubbel>
+Date: Wed, 9 Apr 2014 15:25:09 +0200
+Message-ID: <CA+BoTQmOGvjzcH5RDW=7MFqtw3xvX3aEpKmHQeGWc8bghEg9GQ@mail.gmail.com> (sfid-20140409_152528_502348_C84EFA47)
+Subject: Re: [PATCH v4 1/4] mac80211: fix CSA tx queue locking
 From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 5/5] ath10k: improve tx flushing
-Date: Wed,  9 Apr 2014 12:48:51 +0200
-Message-Id: <1397040531-6224-6-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125547_871739_EB267134)
-In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
- <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flushing was prone to timeouts when powersaving
-clients were involved that went missing while
-asleep. The common culprit was NullFunc frame
-being stuck in FW/HW queues.
+On 9 April 2014 15:22, Luca Coelho <luca@coelho.fi> wrote:
+> On Wed, 2014-04-09 at 15:10 +0200, Michal Kazior wrote:
+>> v4:
+>>  * improve commit message (locked vs stopped) [Luca]
+>
+> Maybe the subject should be changed too? But I think either Johannes or
+> I (whoever apply the series) can easily fix it up while applying...
 
-Introduce a two-pass flushing with WMI flush
-commands interleaved to force frame drops if
-necessary. This allows for a decreased flush
-timeout time and should get rid of some warnings.
+/me grabs my head
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h |  2 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 97 +++++++++++++++++++++++++++-------
- drivers/net/wireless/ath/ath10k/wmi.h  |  1 +
- 3 files changed, 81 insertions(+), 19 deletions(-)
+Please do. Thanks!
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 61e325a..0d60e70 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -38,7 +38,7 @@
- 
- #define ATH10K_SCAN_ID 0
- #define WMI_READY_TIMEOUT (5 * HZ)
--#define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
-+#define ATH10K_FLUSH_TIMEOUT_HZ (1*HZ)
- #define ATH10K_NUM_CHANS 38
- 
- /* Antenna noise floor */
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1d95500..dc176b5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3769,25 +3769,31 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 	return ret;
- }
- 
--static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
-+static int ath10k_flush_all_peer_tids(struct ath10k *ar)
- {
--	struct ath10k *ar = hw->priv;
--	bool skip;
-+	struct ath10k_peer *peer;
- 	int ret;
- 
--	/* mac80211 doesn't care if we really xmit queued frames or not
--	 * we'll collect those frames either way if we stop/delete vdevs */
--	if (drop)
--		return;
--
--	mutex_lock(&ar->conf_mutex);
-+	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (ar->state == ATH10K_STATE_WEDGED) {
--		ret = -EBUSY;
--		goto skip;
-+	list_for_each_entry(peer, &ar->peers, list) {
-+		ret = ath10k_wmi_peer_flush(ar, peer->vdev_id, peer->addr,
-+					    WMI_PEER_TID_ALL_MASK);
-+		if (ret) {
-+			ath10k_warn("failed to request peer %pM on vdev %i to flush %08x: %d\n",
-+				    peer->addr, peer->vdev_id,
-+				    WMI_PEER_TID_ALL_MASK, ret);
-+			return ret;
-+		}
- 	}
- 
--	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
-+	return 0;
-+}
-+
-+static int ath10k_flush_wait(struct ath10k *ar)
-+{
-+	bool skip;
-+	int ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
- 			bool htt_empty, wmi_empty;
- 			unsigned long flags;
- 
-@@ -3805,16 +3811,71 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 			((htt_empty && wmi_empty) || skip);
- 		}), ATH10K_FLUSH_TIMEOUT_HZ);
- 
--	if (ret <= 0 || skip)
--		ath10k_warn("failed to flush transmit queue (skip %i ar-state %i): %i\n",
--			    skip, ar->state, ret);
-+	if (ret == 0)
-+		ret = -ETIMEDOUT;
-+	else if (ret > 0)
-+		ret = 0;
-+
-+	if (skip) {
-+		ath10k_warn("ignoring flushing result because hardware is wedged\n");
-+		ret = -EBUSY;
-+	}
-+
-+	return ret;
-+}
-+
-+static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
-+{
-+	struct ath10k *ar = hw->priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (drop) {
-+		ath10k_mgmt_over_wmi_tx_purge(ar);
-+
-+		ret = ath10k_flush_all_peer_tids(ar);
-+		if (ret) {
-+			ath10k_warn("failed to flush all peer tids: %d\n", ret);
-+			goto out;
-+		}
- 
--skip:
-+		goto out;
-+	}
-+
-+	if (ar->state == ATH10K_STATE_WEDGED) {
-+		ath10k_warn("skipping flushing because hardware is wedged\n");
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ret = ath10k_flush_wait(ar);
-+	if (ret) {
-+		ath10k_dbg(ATH10K_DBG_MAC,
-+			   "failed to wait for tx to flush: %d, forcing\n",
-+			   ret);
-+
-+		ath10k_mgmt_over_wmi_tx_purge(ar);
-+
-+		ret = ath10k_flush_all_peer_tids(ar);
-+		if (ret) {
-+			ath10k_warn("failed to flush all peer tids: %d\n", ret);
-+			goto out;
-+		}
-+
-+		ret = ath10k_flush_wait(ar);
-+		if (ret) {
-+			ath10k_warn("failed to flush tx: %d\n", ret);
-+			goto out;
-+		}
-+	}
-+
-+out:
- 	mutex_unlock(&ar->conf_mutex);
- 
- 	/* empty mgmt tx queue doesn't mean mgmt tx is flushed because the last
- 	 * frame still may be processed by a worker */
--	if (ret > 0 && !skip)
-+	if (ret == 0)
- 		cancel_work_sync(&ar->wmi_mgmt_tx_work);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 90fe2e9..2b37c4a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3846,6 +3846,7 @@ struct wmi_peer_delete_cmd {
- 
- #define WMI_PEER_TID_MGMT 17
- #define WMI_PEER_TID_MGMT_MASK BIT(WMI_PEER_TID_MGMT)
-+#define WMI_PEER_TID_ALL_MASK 0xFFFFFFFF
- 
- struct wmi_peer_flush_tids_cmd {
- 	__le32 vdev_id;
--- 
-1.8.5.3
 
+Michał
