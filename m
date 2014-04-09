@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:38578 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808AbaDRUdO (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:65300 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758178AbaDIKNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 16:33:14 -0400
-Received: by mail-ie0-f175.google.com with SMTP id to1so1919684ieb.6
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 13:33:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <53513BC4.7020502@gmail.com>
-References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>
-	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>
-	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
-	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>
-	<5350B340.9020201@gmail.com>
-	<53512D04.5070808@gmail.com>
-	<CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>
-	<53513BC4.7020502@gmail.com>
-Date: Sat, 19 Apr 2014 00:33:13 +0400
-Message-ID: <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com> (sfid-20140418_223340_662750_77D47C4C)
-Subject: Re: iwlwifi null pointer dereference
-From: Alexander Monakov <amonakov@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Apr 2014 06:13:24 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so1690230eei.14
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:13:22 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: don't wait for device init if it crashed
+Date: Wed,  9 Apr 2014 12:07:07 +0200
+Message-Id: <1397038028-7665-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_121330_628052_4BAEC1EC)
+In-Reply-To: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 18, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
->>> So I definitely want to understand what is happening here before applying the fix.
->>
->> Sure, I can help with further investigation.  Would it help if I bisected?
->>
->
-> I can't decline such an offer:)
->
-> Note that the "bad" commit might be in pci too.
-> As a first try, I'd try 3.13.
-> I've made quite a few changes in the ISR for 3.14.
+When warm resetting it's possible for device to
+crash during initialization. Instead of waiting 3
+seconds just return failure as soon as
+FW_IND_EVENT_PENDING is set.
 
-It bisects to
+This speeds up device bootup and recovery in some
+cases.
 
-commit 2dbc368d7fded35ed221a3751405b15e06eb8925
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Mon Dec 9 11:09:47 2013 +0200
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-    iwlwifi: pcie: track interrupt mask in SW
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cd3b00c..8337608 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2452,6 +2452,9 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		if (val == 0xffffffff)
+ 			continue;
+ 
++		if (val & FW_IND_EVENT_PENDING)
++			break;
++
+ 		if (val & FW_IND_INITIALIZED)
+ 			break;
+ 
+@@ -2470,6 +2473,12 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		goto out;
+ 	}
+ 
++	if (val & FW_IND_EVENT_PENDING) {
++		ath10k_warn("device has crashed during init\n");
++		ret = -ECOMM;
++		goto out;
++	}
++
+ 	if (!(val & FW_IND_INITIALIZED)) {
+ 		ath10k_err("failed to receive initialized event from target: %08x\n",
+ 			   val);
+-- 
+1.8.5.3
+
