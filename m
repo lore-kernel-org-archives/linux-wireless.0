@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:45401 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752839AbaDIIOg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44329 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933354AbaDITaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 04:14:36 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so1552729eek.13
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 01:14:35 -0700 (PDT)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 1/2] mac80211: add option to generate CCMP IVs only for mgmt frames
-Date: Wed,  9 Apr 2014 10:14:02 +0200
-Message-Id: <1397031243-24388-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140409_101443_556497_E5236DFD)
+	Wed, 9 Apr 2014 15:30:08 -0400
+Message-ID: <53459FA0.9020700@candelatech.com> (sfid-20140409_213012_924309_6218CF6E)
+Date: Wed, 09 Apr 2014 12:29:36 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com> <5341F1A9.2030202@candelatech.com> <CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com> <53435F89.60500@candelatech.com> <CA+BoTQk6G4-h8HQENbK9snrXo6j6FW4D+07XKZMEEuvWiu03ww@mail.gmail.com> <53441D95.9000409@candelatech.com> <CA+BoTQkCDiUiV7dsg-myOZXQEB=B7JHH8NWm5BHsp1xExjLkSA@mail.gmail.com> <5345849A.5090603@candelatech.com>
+In-Reply-To: <5345849A.5090603@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some chips can encrypt managment frames in HW, but
-require generated IV in the frame. Add a key flag
-that allows us to achieve this.
+On 04/09/2014 10:34 AM, Ben Greear wrote:
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- include/net/mac80211.h |   16 ++++++++++------
- net/mac80211/tx.c      |    5 +++--
- net/mac80211/wpa.c     |    6 ++++--
- 3 files changed, 17 insertions(+), 10 deletions(-)
+> This is with your RFTv2 patches on top of some of my patches and
+> recent wl-ath tree.  This is using my modified firmware since this
+> test case cannot work at all on standard firmware.
+> 
+> Let me know if I can offer any additional logs or info.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2de7ff4..c81415f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1202,14 +1202,18 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
-  *	fall back to software crypto. Note that this flag deals only with
-  *	RX, if your crypto engine can't deal with TX you can also set the
-  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
-+ * @IEEE80211_KEY_FLAG_GENERATE_MGMT_IV: This flag should be set by the
-+ *	driver for a CCMP key to indicate that is requires IV generation
-+ *	only for managment frames (MFP).
-  */
- enum ieee80211_key_flags {
--	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
--	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
--	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
--	IEEE80211_KEY_FLAG_SW_MGMT_TX	= 1<<4,
--	IEEE80211_KEY_FLAG_PUT_IV_SPACE = 1<<5,
--	IEEE80211_KEY_FLAG_RX_MGMT	= 1<<6,
-+	IEEE80211_KEY_FLAG_GENERATE_IV		= 1<<1,
-+	IEEE80211_KEY_FLAG_GENERATE_MMIC	= 1<<2,
-+	IEEE80211_KEY_FLAG_PAIRWISE		= 1<<3,
-+	IEEE80211_KEY_FLAG_SW_MGMT_TX		= 1<<4,
-+	IEEE80211_KEY_FLAG_PUT_IV_SPACE		= 1<<5,
-+	IEEE80211_KEY_FLAG_RX_MGMT		= 1<<6,
-+	IEEE80211_KEY_FLAG_SW_MGMT_IV_TX	= 1<<7,
- };
- 
- /**
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 19d36d4..49b19ab 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -625,8 +625,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 				tx->key = NULL;
- 			else
- 				skip_hw = (tx->key->conf.flags &
--					   IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
--					ieee80211_is_mgmt(hdr->frame_control);
-+				      (IEEE80211_KEY_FLAG_SW_MGMT_TX |
-+				       IEEE80211_KEY_FLAG_GENERATE_MGMT_IV)) &&
-+				       ieee80211_is_mgmt(hdr->frame_control);
- 			break;
- 		case WLAN_CIPHER_SUITE_AES_CMAC:
- 			if (!ieee80211_is_mgmt(hdr->frame_control))
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index b8600e3..a5fe1d9 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -450,8 +450,10 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 
- 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
- 
--	/* hwaccel - with software CCMP header */
--	if (info->control.hw_key)
-+	/* hwaccel - with software CCMP header or the HW needs
-+	 * generated the IV */
-+	if (info->control.hw_key ||
-+	    (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MGMT_IV))
- 		return 0;
- 
- 	pos += IEEE80211_CCMP_HDR_LEN;
+By the way, I reproduced the general problem with only your first two
+patches (from previous RFT series) applied.  It is at least a bit
+harder to reproduce, but it can happen.
+
+Possibly the causes of the failure to flush are different in that
+case, so it may not really be quite the same issue.
+
+Thanks,
+Ben
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
