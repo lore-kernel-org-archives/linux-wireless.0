@@ -1,30 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:42188 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbaDRCKq (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:49412 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758373AbaDIKza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 22:10:46 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: backports@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-zigbee-devel@lists.sourceforge.net,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [ANNOUNCE] backports-3.15-rc1 is released
-Date: Thu, 17 Apr 2014 19:10:39 -0700
-Message-Id: <1397787039-17821-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20140418_041116_972640_631C3270)
+	Wed, 9 Apr 2014 06:55:30 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so1733808eei.14
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFTv2 1/5] ath10k: always request htc tx replenishment
+Date: Wed,  9 Apr 2014 12:48:47 +0200
+Message-Id: <1397040531-6224-2-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125535_993916_5EE060EA)
+In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+ <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux backports [0] backports-v3.15-rc1 is out [1]. Please
-go test and see if you can and break things or if see if
-we've broken anything so far before a final release in
-sync with Linus' releases. As usual development only happens
-on the master branch, we'll then carry fixes onto the stable
-branch. It just so happens that today's master branch is
-exactly as we have it on the linux-3.15.y branch.
+This simplifies tx credit management and tries to
+address a problem where driver runs out of credits
+and is unable to recover when firmware stalls.
 
-[0] https://backports.wiki.kernel.org/
-[1] https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.15-rc1/backports-3.15-rc1-1.tar.xz
+This also makes it a little more easy to track and
+debug htc tx credit flow since there should be no
+laziness involved.
 
-  Luis
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7f1bccd..c2a290a 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -86,19 +86,6 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
+ }
+ 
+-/* assumes tx_lock is held */
+-static bool ath10k_htc_ep_need_credit_update(struct ath10k_htc_ep *ep)
+-{
+-	if (!ep->tx_credit_flow_enabled)
+-		return false;
+-	if (ep->tx_credits >= ep->tx_credits_per_max_message)
+-		return false;
+-
+-	ath10k_dbg(ATH10K_DBG_HTC, "HTC: endpoint %d needs credit update\n",
+-		   ep->eid);
+-	return true;
+-}
+-
+ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 				      struct sk_buff *skb)
+ {
+@@ -113,7 +100,7 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 	spin_lock_bh(&ep->htc->tx_lock);
+ 	hdr->seq_no = ep->seq_no++;
+ 
+-	if (ath10k_htc_ep_need_credit_update(ep))
++	if (ep->tx_credit_flow_enabled)
+ 		hdr->flags |= ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE;
+ 
+ 	spin_unlock_bh(&ep->htc->tx_lock);
+-- 
+1.8.5.3
+
