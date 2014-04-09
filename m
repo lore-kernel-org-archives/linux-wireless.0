@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:50273 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030419AbaDJMWN convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42866 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933032AbaDIMhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 08:22:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
-References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
-	<CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
-Date: Thu, 10 Apr 2014 08:22:12 -0400
-Message-ID: <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com> (sfid-20140410_142304_667529_4B07CD9E)
-Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux v3.14-12042-g69cd9eba3886
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-gpio@vger.kernel.org,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Apr 2014 08:37:18 -0400
+Message-ID: <1397047019.4964.8.camel@jlt4.sipsolutions.net> (sfid-20140409_143809_742831_27C557D7)
+Subject: Re: [PATCH 8/8] cfg80211: remove unnecessary include clauses
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 09 Apr 2014 14:36:59 +0200
+In-Reply-To: <87d2gqg05o.fsf@gmail.com> (sfid-20140409_142534_582747_BF7AE6C3)
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+	 <c02aba28b27fe39da9730cd965e322054815713f.1397006688.git.gamerh2o@gmail.com>
+	 <1397029770.4964.2.camel@jlt4.sipsolutions.net> <87d2gqg05o.fsf@gmail.com>
+	 (sfid-20140409_142534_582747_BF7AE6C3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 2:50 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> 2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
->> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
->> module on the MacBookPro 10,2 I have here.  This works fine with Linux
->> v3.14-7333-g59ecc26004e7.  There have been no changes between those
->> two versions to bcma itself, but the GPIO merge did go in that window.
->>  I can attempt to do a bisect tomorrow, but looking over some of the
->> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
->> hoping someone here has an idea on what the issue might be and has
->> some possible things for me to test for fixes.
->
-> Bug report: https://lkml.org/lkml/2014/3/24/262
-> Patch: https://lkml.org/lkml/2014/3/24/293
-> Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
-> (all links are for the same thread).
->
-> Now you simply have to find above patch in some git tree :) Not sure
-> if it's already in Linus's one.
+On Wed, 2014-04-09 at 20:25 +0800, Zhao, Gang wrote:
+> On Wed, 2014-04-09 at 09:49:30 +0200, Johannes Berg wrote:
+> > I don't like those last four patches, I'd rather have more includes than
+> > rely on other headers including headers that we need - that could change
+> > after all.
+> 
+> As I said in commit log, duplicate including could hide some warnings.
 
-Ah, wonderful.  I now wish I would have found those in my searching
-before doing the bisect.  Oh well.  For what it's worth, my bisect
-landed on the same commit.
+Well, the commit logs for these patches didn't have any such
+information, but that's not really the point. Besides, what does "could
+hide some warnings" even mean? This isn't a meaningful thing, if you
+include the right headers then you should get what you need, and you
+should include the headers for what you need.
 
-The fix isn't in Linus' tree or linux-next.  I'm guessing Mika is
-either still on vacation, or hasn't sent out the formal fix yet.
+> In theory, the possibility of change is equal, either it's a directly
+> included header or a indirectly included header, and it's more likely to
+> change to include more, not less. So the change may not cause any
+> problem.
 
-josh
+At the current point in time. If some of the headers that you rely on
+including something no longer does in the future because it no longer
+needs that, then you just broke everything. That's the point you
+seemingly didn't consider, and I think it's much better to include what
+you need rather than rely on somebody else doing it for you. The latter
+can even be architecture-specific.
+
+> In other way, the local directory header files may change more
+> frequently than the header files in include/ directory. Whether it's a
+> total win to apply the last four patches may be a question, but it's
+> just amusing to see that lots of lines can be deleted. :-)
+
+# of lines isn't a relevant metric though. If you were removing includes
+that we didn't need that's certainly a useful thing, but removing
+includes because they're indirectly already included is IMHO practically
+always bad.
+
+johannes
+
