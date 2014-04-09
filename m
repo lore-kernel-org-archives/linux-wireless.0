@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:61585 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965159AbaDJSiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 14:38:15 -0400
-Date: Thu, 10 Apr 2014 20:37:53 +0200
-From: Christian Engelmayer <cengelma@gmx.at>
-To: linville@tuxdriver.com, fariyaf@gmail.com
-Cc: dan.carpenter@oracle.com, joe@perches.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH resend] rsi: Fix a potential memory leak in
- rsi_send_auto_rate_request()
-Message-ID: <20140410203753.4406f4f1@spike> (sfid-20140410_203846_642911_F28C6F66)
+Received: from dedo.coelho.fi ([88.198.205.34]:50970 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932560AbaDIMmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2014 08:42:06 -0400
+Message-ID: <1397047312.4418.68.camel@dubbel> (sfid-20140409_144220_519227_A8AE537B)
+From: Luca Coelho <luca@coelho.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Yegor Yefremov <yegorslists@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kaloz@openwrt.org
+Date: Wed, 09 Apr 2014 15:41:52 +0300
+In-Reply-To: <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com>
+References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
+	 <1396988949.4418.46.camel@dubbel>
+	 <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
+	 <1397035298.4418.60.camel@dubbel>
+	 <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
+	 <1397044175.4418.66.camel@dubbel>
+	 <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ws/ECg0KVk6C=61r5OaMN.1"; protocol="application/pgp-signature"
+Subject: Re: wl1271: tx stuck in firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/ws/ECg0KVk6C=61r5OaMN.1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2014-04-09 at 15:20 +0300, Arik Nemtsov wrote:
+> >>
+> >> # calibrator wlan0 plt power_mode on
+> >> [   93.107215] wlcore: power up
+> >> [   93.688714] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+> >> # [  139.232802] YY: wl1271_tx_allocate
+> >> [  144.241849] wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recovery
+> >
+> > Okay, you have a starting point. :)
+> >
+> > Now try to look from where this is being called and so on.  I don't
+> > think we should be calling wl1271_tx_allocate() in PLT mode either.  Try
+> > tracing back until you find where this is coming from.
+> 
+> Actually we've seen this bug before. At the time it was caused by FW
+> requests for dummy packets during PLT mode, which forced us to issue
+> Tx..
 
-Fix a potential memory leak in the error path of function
-rsi_send_auto_rate_request(). In case memory allocation for array
-'selected_rates' fails, the error path exits and leaves the previously
-allocated skb in place. Detected by Coverity: CID 1195575.
+Ah, interesting, I hadn't heard about it.  Would it send it even if the
+event was masked out? Masking it out (if it's not already) for PLT would
+probably be the right thing to do.
 
-Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
----
-Applies against git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.g=
-it
-Compile tested.
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless=
-/rsi/rsi_91x_mgmt.c
-index 2361a68..dd7946d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -966,6 +966,7 @@ static int rsi_send_auto_rate_request(struct rsi_common=
- *common)
- 	if (!selected_rates) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
- 			__func__);
-+		dev_kfree_skb(skb);
- 		return -ENOMEM;
- 	}
-=20
---=20
-1.8.3.2
+> It was fixed in the FW, but I'm not sure this was ever upstreamed
+> (customer specific fix, etc). Anyway it's pretty safe to disable the
+> Tx watchdog during PLT - try something like this:
+> 
+> void wl12xx_rearm_tx_watchdog_locked(struct wl1271 *wl)
+> {
+>      if (wl->plt)
+>          return;
 
---Sig_/ws/ECg0KVk6C=61r5OaMN.1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Maybe this could be blocked even earlier, like here:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 1f9a360..c44d3c0 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -158,6 +158,9 @@ EXPORT_SYMBOL_GPL(wlcore_event_channel_switch);
+ 
+ void wlcore_event_dummy_packet(struct wl1271 *wl)
+ {
++       if (wl->plt)
++               return;
++
+        wl1271_debug(DEBUG_EVENT, "DUMMY_PACKET_ID_EVENT_ID");
+        wl1271_tx_dummy_packet(wl);
+ }
 
-iQIcBAEBAgAGBQJTRuUBAAoJEKssnEpaPQKEKsMQALe4rVKfSsU9o6dra0tTPaxh
-MRofzv2deadUwPFN1zmI7xM6hWlYEvz1Dmp5RHuobrir+V1k+MfBer7UJRVObcVT
-Fj+h1+V6MamBtMQmwtg6pqG5CdWJDD4APl0k+woQyU9Luaqs4VfvV8axrwaZJ4Ls
-AXH2I9Mm4s8/RkvnBcgaEPBcl6imn1kNK8jLT9OGEcYtm4XYUbf8c2LxHJmiKfwu
-bG4biSUBzal5kJHpmyQL93kym0LpWANFMEHiEYz85erq2tM79qgiQ92J1B1WcGSG
-PNu8xWWnU3M7/UGeNzvHzQMdHf2flBn1311vkgIw8Dm3A+KrkVSLNnj2hy215hPI
-zodbg6MAAMMegVdDxQe5c9uczrDs525XmlvGaZvjxC60nibLvSZUMcGjfVrD8ffI
-Mt4Es/vQlo2W6j77+cD2TUZ2m1ACczKwkMDlLDeeoISmffpWfjEDDp0VBT6Pbu9I
-HfhmrXFRG082jO5sqYBaoUwUSIEdrFysfJjWaVfLOx9p1WVUx2RnvxsFUK9+cXZY
-duPEfC/sF4I/zu+JKpG+c022G4cXjrm252a2YKZiXXKQTrUMB2Kxb3mSvdXRtRe1
-gEuTSgCsmUZ/Qj3vNLim0twDsVwZmlPnv0pxl+qvXZpi5bIHX9UDZYtosLduXBT0
-Bg5sb+4mTcUjPDkMlHvA
-=TBc2
------END PGP SIGNATURE-----
+--
+Luca.
 
---Sig_/ws/ECg0KVk6C=61r5OaMN.1--
