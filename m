@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17234 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753581AbaDJUHy (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65191 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932883AbaDIKHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 16:07:54 -0400
-Date: Thu, 10 Apr 2014 23:07:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Andev <debiandev@gmail.com>
-Cc: Greg Kroah-Hartman <greg@kroah.com>,
-	Christian Engelmayer <cengelma@gmx.at>, linville@tuxdriver.com,
-	fariyaf@gmail.com, joe@perches.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH resend] rsi: Fix a potential memory leak in
- rsi_set_channel()
-Message-ID: <20140410200722.GN4963@mwanda> (sfid-20140410_220800_335969_D3D3B7F8)
-References: <20140410203146.767149e7@spike>
- <CAJUuVQ5KW3v0DgwotDMow=rBvxoZKfYYD2misXbsMD6c1UaShw@mail.gmail.com>
- <20140410195402.GA17308@kroah.com>
- <CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com>
+	Wed, 9 Apr 2014 06:07:43 -0400
+Received: by mail-ee0-f46.google.com with SMTP id t10so1669737eei.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:07:42 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/4] ath10k: prevent beacon memory leak
+Date: Wed,  9 Apr 2014 12:01:24 +0200
+Message-Id: <1397037685-7485-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_120752_980020_52538786)
+In-Reply-To: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 04:01:35PM -0400, Andev wrote:
-> On Thu, Apr 10, 2014 at 3:54 PM, Greg Kroah-Hartman <greg@kroah.com> wrote:
-> > On Thu, Apr 10, 2014 at 03:46:12PM -0400, Andev wrote:
-> >> Adding Greg KH,
-> >
-> > Why do I care about this?
-> >
-> 
-> I am not sure if this needs to be applied to stable too. Should I have
-> cc'ed stable@?
+If DMA mapping of next beacon failed ath10k leaked
+the beacon.
 
-Read Documentation/stable_kernel_rules.txt.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-But for netdev, then Dave M. maintains a queue of patches which go to
-stable.  So this would go through Dave's stable queue and he forwards
-them to Greg.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 35c7d52..ca51f17 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1450,6 +1450,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 					ATH10K_SKB_CB(bcn)->paddr);
+ 		if (ret) {
+ 			ath10k_warn("failed to map beacon: %d\n", ret);
++			dev_kfree_skb_any(bcn);
+ 			goto skip;
+ 		}
+ 
+-- 
+1.8.5.3
 
