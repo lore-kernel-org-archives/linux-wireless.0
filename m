@@ -1,102 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:50382 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758209AbaDIJOa (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:41283 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933344AbaDINf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 05:14:30 -0400
-Received: by mail-pd0-f170.google.com with SMTP id v10so2215963pde.29
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 02:14:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1396988949.4418.46.camel@dubbel>
-References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
- <1396988949.4418.46.camel@dubbel>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Wed, 9 Apr 2014 11:14:08 +0200
-Message-ID: <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com> (sfid-20140409_111434_552309_BBC2A838)
-Subject: Re: wl1271: tx stuck in firmware
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, kaloz@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Apr 2014 09:35:57 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so1921146eei.28
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:55 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 05/13] mac80211: track assigned vifs in chanctx
+Date: Wed,  9 Apr 2014 15:29:26 +0200
+Message-Id: <1397050174-26121-6-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153623_514134_B727FB85)
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+ <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 8, 2014 at 10:29 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Tue, 2014-04-08 at 17:28 +0200, Yegor Yefremov wrote:
->> I'm using kernel 3.14.0-rc4-12738-g674748b-dirty on a am335x-evmsk as
->> also on a custom board. I get following issue on both systems, when
->> working with various calibrator functions:
->
-> That's not a very nice kernel, right? How am I supposed to know what the
-> 12738 patches you have on top of 3.14.0-rc4 are? Even worse because your
-> tree is dirty. :(
->
->
->> # calibrator wlan0 plt power_mode on
->> [  252.935208] wlcore: power up
->> [  253.502531] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
->> # [  399.656192] wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recovery
->
-> This sounds really strange.  The TX watchdog should not be armed in PLT
-> mode.
->
->> or following error, when I start NetworkManager and wait for 5 minutes or so:
->>
->> [  717.608550] wlcore: Scan completed due to error.
->> [  717.613422] ------------[ cut here ]------------
->> [  717.618405] WARNING: CPU: 0 PID: 940 at
->> drivers/net/wireless/ti/wlcore/main.c:789
->> wl12xx_queue_recovery_work+0x60/0x6c()
->> [  717.629832] Modules linked in:
->> [  717.633055] CPU: 0 PID: 940 Comm: kworker/u2:2 Tainted: G        W
->>   3.14.0-rc4-12737-gefb78a0-dirty #214
->> [  717.643264] Workqueue: phy0 wl1271_scan_complete_work
->> [  717.648649] [<c00151e0>] (unwind_backtrace) from [<c0011e38>]
->> (show_stack+0x10/0x14)
->> [  717.656762] [<c0011e38>] (show_stack) from [<c05a1944>]
->> (dump_stack+0x7c/0x94)
->> [  717.664372] [<c05a1944>] (dump_stack) from [<c00402bc>]
->> (warn_slowpath_common+0x6c/0x90)
->> [  717.672876] [<c00402bc>] (warn_slowpath_common) from [<c004037c>]
->> (warn_slowpath_null+0x1c/0x24)
->> [  717.682110] [<c004037c>] (warn_slowpath_null) from [<c035be0c>]
->> (wl12xx_queue_recovery_work+0x60/0x6c)
->> [  717.691889] [<c035be0c>] (wl12xx_queue_recovery_work) from
->> [<c036d804>] (wl1271_scan_complete_work+0xf8/0x108)
->> [  717.702391] [<c036d804>] (wl1271_scan_complete_work) from
->> [<c0058ff4>] (process_one_work+0x1ac/0x4c4)
->> [  717.712110] [<c0058ff4>] (process_one_work) from [<c0059e88>]
->> (worker_thread+0x114/0x3b4)
->> [  717.720707] [<c0059e88>] (worker_thread) from [<c005fa44>]
->> (kthread+0xcc/0xe8)
->> [  717.728306] [<c005fa44>] (kthread) from [<c000e388>]
->> (ret_from_fork+0x14/0x2c)
->> [  717.735856] ---[ end trace f4d374bb2ca37664 ]---
->> [  717.743587] wlcore: Hardware recovery in progress. FW ver: Rev 6.3.10.0.133
->> [  717.752600] wlcore: pc: 0x0, hint_sts: 0x00000020 count: 6
->> [  717.759609] wlcore: down
->> [  717.764108] ieee80211 phy0: Hardware restart was requested
->> [  718.250930] wlcore: firmware booted (Rev 6.3.10.0.133)
->>
->> Any idea, what could be wrong?
->
-> First of all, try a clean kernel.
+This can be useful. Provides a more straghtforward
+way to iterate over interfaces bound to a given
+chanctx and allows tracking chanctx usage
+explicitly.
 
-It is not simple to get a clean kernel. "Official" support for
-am335x-evmsk WLAN was added first in the upcoming 3.15 kernel. I've
-tried the merge window version (3.14.0-12041-g75ff24f-dirty) and get
-following issue:
+The structure is protected by local->chanctx_mtx.
 
-# calibrator wlan0 plt power_mode on
-wlcore: power up
-wlcore: ERROR timeout waiting for the hardware to complete initialization
-wlcore: ERROR timeout waiting for the hardware to complete initialization
-wlcore: ERROR timeout waiting for the hardware to complete initialization
-wlcore: ERROR firmware boot in PLT mode failed despite 3 retries
-command failed: Input/output error (-5)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v3:
+ * update commit message [Johannes]
+ * add locking information [Johannes]
 
-If I use the "normal" firmware, i.e. ifconfig wlan0 up, it gets loaded
-and I can search for the stations. But PLT doesn't want to boot. Do
-you still have a board, where you could try the latest
-kernel/firmware?
+ net/mac80211/chan.c        | 4 ++++
+ net/mac80211/ieee80211_i.h | 4 ++++
+ net/mac80211/iface.c       | 1 +
+ 3 files changed, 9 insertions(+)
 
-Yegor
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 4ed229c..504526c 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -276,6 +276,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	INIT_LIST_HEAD(&ctx->assigned_vifs);
+ 	ctx->conf.def = *chandef;
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+@@ -420,6 +421,7 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 		curr_ctx->refcount--;
+ 		drv_unassign_vif_chanctx(local, sdata, curr_ctx);
+ 		conf = NULL;
++		list_del(&sdata->assigned_chanctx_list);
+ 	}
+ 
+ 	if (new_ctx) {
+@@ -429,6 +431,8 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 
+ 		new_ctx->refcount++;
+ 		conf = &new_ctx->conf;
++		list_add(&sdata->assigned_chanctx_list,
++			 &new_ctx->assigned_vifs);
+ 	}
+ 
+ out:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0e85cad..57fed5e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -691,6 +691,8 @@ struct ieee80211_chanctx {
+ 	struct list_head list;
+ 	struct rcu_head rcu_head;
+ 
++	struct list_head assigned_vifs;
++
+ 	enum ieee80211_chanctx_mode mode;
+ 	int refcount;
+ 	bool driver_present;
+@@ -757,6 +759,8 @@ struct ieee80211_sub_if_data {
+ 	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
+ 	struct cfg80211_chan_def csa_chandef;
+ 
++	struct list_head assigned_chanctx_list; /* protected by chanctx_mtx */
++
+ 	/* context reservation -- protected with chanctx_mtx */
+ 	struct ieee80211_chanctx *reserved_chanctx;
+ 	struct cfg80211_chan_def reserved_chandef;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d6230e2..1479e9f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1298,6 +1298,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+ 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
++	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
+-- 
+1.8.5.3
+
