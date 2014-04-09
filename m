@@ -1,53 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:33294 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932592AbaDIMUc (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:59146 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbaDIGZM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 08:20:32 -0400
-Received: by mail-pb0-f53.google.com with SMTP id rp16so2423186pbb.40
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 05:20:31 -0700 (PDT)
+	Wed, 9 Apr 2014 02:25:12 -0400
+Received: by mail-wi0-f171.google.com with SMTP id q5so8298207wiv.4
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 23:25:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1397044175.4418.66.camel@dubbel>
-References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
- <1396988949.4418.46.camel@dubbel> <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
- <1397035298.4418.60.camel@dubbel> <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
- <1397044175.4418.66.camel@dubbel>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 9 Apr 2014 15:20:16 +0300
-Message-ID: <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com> (sfid-20140409_142037_191056_95546CF1)
-Subject: Re: wl1271: tx stuck in firmware
-To: Luca Coelho <luca@coelho.fi>
-Cc: Yegor Yefremov <yegorslists@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	kaloz@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <53441D95.9000409@candelatech.com>
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+	<5341F1A9.2030202@candelatech.com>
+	<CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com>
+	<53435F89.60500@candelatech.com>
+	<CA+BoTQk6G4-h8HQENbK9snrXo6j6FW4D+07XKZMEEuvWiu03ww@mail.gmail.com>
+	<53441D95.9000409@candelatech.com>
+Date: Wed, 9 Apr 2014 08:25:11 +0200
+Message-ID: <CA+BoTQkCDiUiV7dsg-myOZXQEB=B7JHH8NWm5BHsp1xExjLkSA@mail.gmail.com> (sfid-20140409_082519_063039_4236BC06)
+Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8 April 2014 18:02, Ben Greear <greearb@candelatech.com> wrote:
+> On 04/07/2014 10:51 PM, Michal Kazior wrote:
+>> On 8 April 2014 04:31, Ben Greear <greearb@candelatech.com> wrote:
+>>> On 04/07/2014 02:11 AM, Michal Kazior wrote:
+>>>
+>>>> These logs are not enough. I'd love to see traces for this to see what
+>>>> frames are actually submitted and when tx credits are replenished.
+>>>>
+>>>> I also wonder if this can be somehow related to your FW changes to
+>>>> allow connecting multiple client virtual interfaces to a single AP?
+>>>
+>>>
+>>> I think it is unlikely due to my firmware changes...little of that touched
+>>> the handling of management frames.  It might very well be a basic problem in
+>>> either the firmware or driver when using multiple station VIFS.  I think
+>>> that
+>>> aside from my testing that code has not been used much.
+>>>
+>>> Note my followup email that problems started with patch 3/4...not sure you
+>>> saw that one or not.  I saw similar failure to associate & get DHCP (and
+>>> slow/hung user-space) without the kernel error logs.
 >>
->> # calibrator wlan0 plt power_mode on
->> [   93.107215] wlcore: power up
->> [   93.688714] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
->> # [  139.232802] YY: wl1271_tx_allocate
->> [  144.241849] wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recovery
+>> I did get that mail. It's just that it makes little sense. Patch 3/4
+>> simply extends ath10k_flush() to wait for management frames. It
+>> shouldn't change behaviour of tx credit starvation which appears to be
+>> the case in the logs you provided.
 >
-> Okay, you have a starting point. :)
->
-> Now try to look from where this is being called and so on.  I don't
-> think we should be calling wl1271_tx_allocate() in PLT mode either.  Try
-> tracing back until you find where this is coming from.
+> Maybe this causes unexpected waits (under lock) that in turn causes other
+> vifs trying to come up at the same time to time out?
 
-Actually we've seen this bug before. At the time it was caused by FW
-requests for dummy packets during PLT mode, which forced us to issue
-Tx..
+Hm... Most stuff is configured while holding conf_mutex and is
+completed while it is held. The exception are beacons and mgmt tx.
+Perhaps waiting for mgmt tx in ath10k_flush() doesn't interleave mgmt
+tx with other commands and ends up starving tx credit sooner.
 
-It was fixed in the FW, but I'm not sure this was ever upstreamed
-(customer specific fix, etc). Anyway it's pretty safe to disable the
-Tx watchdog during PLT - try something like this:
+I'm planning to submit RFTv2 later today with a few fixes.
 
-void wl12xx_rearm_tx_watchdog_locked(struct wl1271 *wl)
-{
-     if (wl->plt)
-         return;
 
-Arik
+> It seems easily reproducible, so let me know what sort of logging/tracing
+> you would like to see (and how to enable it if it is not trivial)
+> and I'll reproduce it and send you the logs.
+
+Additional kernel config:
+
+CONFIG_ATH10K_DEBUG=y
+CONFIG_ATH10K_DEBUGFS=y
+CONFIG_ATH10K_TRACING=y
+CONFIG_MAC80211_MESSAGE_TRACING=y
+
+This probably requires this to be set first:
+
+CONFIG_TRACING=y
+CONFIG_GENERIC_TRACER=y
+CONFIG_TRACING_SUPPORT=y
+
+(it's in Kernel Hacking)
+
+Once you have this you can use trace-cmd command to gathers logs:
+
+  trace-cmd record -e mac80211 -e cfg80211 -e ath10k
+
+And then perform whatever tortures on ath10k you wish.
+
+This creates trace.dat in your current directory. The file can get
+pretty heavy and it might not fit into an email so we might need to
+transfer it "out of band" somehow.
+
+If you use wpa_supplicant/hostapd you can pass -T argument to those to
+get all their messages into tracing as markers. This way you're able
+to get unified logs in one file with correct chronological order.
+
+
+Michał
