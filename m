@@ -1,93 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:40303 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754713AbaDOMiH (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:56903 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933343AbaDINf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 08:38:07 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 2/2] cfg80211: Use 5MHz bandwidth by default when checking usable channels
-Date: Tue, 15 Apr 2014 14:37:56 +0200
-Message-Id: <1397565476-4348-3-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140415_143914_084567_E73587F3)
-In-Reply-To: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Wed, 9 Apr 2014 09:35:59 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so1913295eek.12
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:58 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 07/13] mac80211: improve find_chanctx() for reservations
+Date: Wed,  9 Apr 2014 15:29:28 +0200
+Message-Id: <1397050174-26121-8-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153607_385940_200DCB79)
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+ <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current code checks if the 20MHz bandwidth is allowed for
-particular channel -- if it is not, the channel is disabled.
-Since we need to use 5/10 MHz channels, this code is modified in
-the way that the default bandwidth to check is 5MHz. If the
-maximum bandwidth allowed by the channel is smaller than 5MHz,
-the channel is disabled. Otherwise the channel is used and the
-flags are set according to the bandwidth allowed by the channel.
+This allows new vifs to be assigned to a chanctx
+as long as chanctx's reservation chandefs (if any)
+and chanctx's current chandef (implied by assigned
+vifs at the time, if any) and the new vif chandef
+are all compatible.
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+This implies it is impossible to assign a new vif
+to an in-place reservation chanctx.
+
+This gives no advantages for single-channel
+hardware. It makes sense for multi-channel
+hardware only.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/wireless/reg.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+v2:
+ * remove redundant calls to _chandef() [Eliad]
+ * dont use rcu_access_pointer() [Eliad]
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9d32633..3f3bc2e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -927,7 +927,7 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
- 		if (!band_rule_found)
- 			band_rule_found = freq_in_rule_band(fr, center_freq);
- 
--		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(20));
-+		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(5));
- 
- 		if (band_rule_found && bw_fits)
- 			return rr;
-@@ -1011,10 +1011,10 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
+v3:
+ * fix commit message so it makes more sense [Johannes]
+
+ net/mac80211/chan.c | 56 +++++++++++++++++++++++++++--------------------------
+ 1 file changed, 29 insertions(+), 27 deletions(-)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 79eac96..0dfb04a 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -28,6 +28,29 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
+ 	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
  }
- #endif
  
--/*
-- * Note that right now we assume the desired channel bandwidth
-- * is always 20 MHz for each individual channel (HT40 uses 20 MHz
-- * per channel, the primary and the extension channel).
-+/* Find an ieee80211_reg_rule such that a 5MHz channel with frequency
-+ * @chan->center_freq fits there.
-+ * If there is no such reg_rule, disable the channel, otherwise set the
-+ * flags corresponding to the bandwidths allowed in the particular reg_rule
-  */
- static void handle_channel(struct wiphy *wiphy,
- 			   enum nl80211_reg_initiator initiator,
-@@ -1075,8 +1075,12 @@ static void handle_channel(struct wiphy *wiphy,
- 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
- 		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
++static const struct cfg80211_chan_def *
++ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
++				   struct ieee80211_chanctx *ctx,
++				   const struct cfg80211_chan_def *compat)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(sdata, &ctx->reserved_vifs,
++			    reserved_chanctx_list) {
++		if (!compat)
++			compat = &sdata->reserved_chandef;
++
++		compat = cfg80211_chandef_compatible(&sdata->reserved_chandef,
++						     compat);
++		if (!compat)
++			break;
++	}
++
++	return compat;
++}
++
+ static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
+ {
+ 	switch (sta->bandwidth) {
+@@ -187,27 +210,6 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 	}
+ }
  
-+	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
-+		bw_flags = IEEE80211_CHAN_NO_10MHZ;
-+	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
-+		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
--		bw_flags = IEEE80211_CHAN_NO_HT40;
-+		bw_flags |= IEEE80211_CHAN_NO_HT40;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
- 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
-@@ -1510,8 +1514,12 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
- 		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
+-static bool ieee80211_chanctx_is_reserved(struct ieee80211_local *local,
+-					  struct ieee80211_chanctx *ctx)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-	bool ret = false;
+-
+-	lockdep_assert_held(&local->chanctx_mtx);
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-		if (sdata->reserved_chanctx == ctx) {
+-			ret = true;
+-			break;
+-		}
+-	}
+-
+-	rcu_read_unlock();
+-	return ret;
+-}
+-
+ static struct ieee80211_chanctx *
+ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		       const struct cfg80211_chan_def *chandef,
+@@ -223,18 +225,18 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		const struct cfg80211_chan_def *compat;
  
-+	if (max_bandwidth_khz < MHZ_TO_KHZ(10))
-+		bw_flags = IEEE80211_CHAN_NO_10MHZ;
-+	if (max_bandwidth_khz < MHZ_TO_KHZ(20))
-+		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
--		bw_flags = IEEE80211_CHAN_NO_HT40;
-+		bw_flags |= IEEE80211_CHAN_NO_HT40;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
- 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+-		/* We don't support chanctx reservation for multiple
+-		 * vifs yet, so don't allow reserved chanctxs to be
+-		 * reused.
+-		 */
+-		if ((ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) ||
+-		    ieee80211_chanctx_is_reserved(local, ctx))
++		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+ 			continue;
+ 
+ 		compat = cfg80211_chandef_compatible(&ctx->conf.def, chandef);
+ 		if (!compat)
+ 			continue;
+ 
++		compat = ieee80211_chanctx_reserved_chandef(local, ctx,
++							    compat);
++		if (!compat)
++			continue;
++
+ 		ieee80211_change_chanctx(local, ctx, compat);
+ 
+ 		return ctx;
 -- 
-1.9.2
+1.8.5.3
 
