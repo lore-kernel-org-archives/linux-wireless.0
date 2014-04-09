@@ -1,80 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:52403 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753141AbaDEQIc (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:62051 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932748AbaDINfv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Apr 2014 12:08:32 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH V2][FIX 3.15] b43: Fix machine check error due to improper access of B43_MMIO_PSM_PHY_HDR
-Date: Sat,  5 Apr 2014 18:08:25 +0200
-Message-Id: <1396714105-13093-1-git-send-email-zajec5@gmail.com> (sfid-20140405_180838_342348_991A4614)
-In-Reply-To: <1396708524-12199-1-git-send-email-zajec5@gmail.com>
-References: <1396708524-12199-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Apr 2014 09:35:51 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so1885791eek.23
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:50 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 00/13] cfg80211/mac80211: implement multi-vif chanctx reservations
+Date: Wed,  9 Apr 2014 15:29:21 +0200
+Message-Id: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153554_997332_F38AF357)
+In-Reply-To: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register B43_MMIO_PSM_PHY_HDR is 16 bit one, so accessing it with 32b
-functions isn't safe. On my machine it causes delayed (!) CPU exception:
+Hi,
 
-Disabling lock debugging due to kernel taint
-mce: [Hardware Error]: CPU 0: Machine Check Exception: 4 Bank 4: b200000000070f0f
-mce: [Hardware Error]: TSC 164083803dc
-mce: [Hardware Error]: PROCESSOR 2:20fc2 TIME 1396650505 SOCKET 0 APIC 0 microcode 0
-mce: [Hardware Error]: Run the above through 'mcelog --ascii'
-mce: [Hardware Error]: Machine check: Processor context corrupt
-Kernel panic - not syncing: Fatal machine check on current CPU
-Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
+This is part of my multi-vif csa work. These
+patches have been included in my recent big RFC.
+I'm trying to split it up a bit.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [2.6.35+]
----
-V2: Change commit message as Larry suggested, no code changes
----
- drivers/net/wireless/b43/phy_n.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+The patchset incrementally improves chanctx
+reservations in order to support multi-vif
+reservations and in-place multi-vif reservations
+(typically for single-channel hardware, but
+multi-channel benefits from this too).
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 05ee7f1..24ccbe9 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -5176,22 +5176,22 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 	int ch = new_channel->hw_value;
- 
- 	u16 old_band_5ghz;
--	u32 tmp32;
-+	u16 tmp16;
- 
- 	old_band_5ghz =
- 		b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
- 	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
--		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
- 		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
- 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
- 	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
- 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
--		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		tmp16 = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16 | 4);
- 		b43_phy_mask(dev, B43_PHY_B_BBCFG, 0x3FFF);
--		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+		b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp16);
- 	}
- 
- 	b43_chantab_phy_upload(dev, e);
+Some of the patches (the refcounting) were also
+posted a while ago as a separate small RFC.
+
+This is rebased on mac80211-next/master (the one
+rebased today) and my CSA fixes/cleanups now.
+
+v2:
+ * add changelog for refcounting patches
+ * fixes for issues pointed out by Eliad
+
+v3:
+ * fix commit messages
+
+v4:
+ * remove unnecessary braces
+ * fixes to the in-place reservation code ordering
+
+
+Michal Kazior (13):
+  cfg80211: allow drivers to iterate over matching combinations
+  mac80211: add max channel calculation utility function
+  mac80211: prevent chanctx overcommit
+  mac80211: add support for radar detection for reservations
+  mac80211: track assigned vifs in chanctx
+  mac80211: track reserved vifs in chanctx
+  mac80211: improve find_chanctx() for reservations
+  mac80211: improve chanctx reservation lookup
+  mac80211: split ieee80211_new_chanctx()
+  mac80211: split ieee80211_free_chanctx()
+  mac80211: fix racy usage of chanctx->refcount
+  mac80211: compute chanctx refcount on-the-fly
+  mac80211: implement multi-vif in-place reservations
+
+ include/net/cfg80211.h     |  27 ++
+ include/net/mac80211.h     |   7 -
+ net/mac80211/cfg.c         |  19 +-
+ net/mac80211/chan.c        | 598 ++++++++++++++++++++++++++++++++++-----------
+ net/mac80211/ieee80211_i.h |  18 +-
+ net/mac80211/iface.c       |   2 +
+ net/mac80211/mlme.c        |   2 +-
+ net/mac80211/util.c        |  42 ++++
+ net/wireless/util.c        |  44 +++-
+ 9 files changed, 592 insertions(+), 167 deletions(-)
+
 -- 
-1.8.4.5
+1.8.5.3
 
