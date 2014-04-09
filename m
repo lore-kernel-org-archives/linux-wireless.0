@@ -1,41 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:62255 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689AbaDMNCx (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:60459 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932748AbaDINfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 09:02:53 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 9 Apr 2014 09:35:54 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c13so1895993eek.38
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:52 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 06/13] iwlwifi: add MODULE_FIRMWARE for 7265
-Date: Sun, 13 Apr 2014 16:01:56 +0300
-Message-Id: <1397394123-25102-6-git-send-email-egrumbach@gmail.com> (sfid-20140413_150257_509209_F7C7CC8F)
-In-Reply-To: <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
-References: <534A8A49.2030100@gmail.com>
- <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 02/13] mac80211: add max channel calculation utility function
+Date: Wed,  9 Apr 2014 15:29:23 +0200
+Message-Id: <1397050174-26121-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153559_584555_9BF8DDB5)
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+ <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The utility function has no uses yet. It is aimed
+at future chanctx reservation management and
+channel switching.
 
-It was missing.
-
-Cc: stable@vger.kernel.org [3.13+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c | 1 +
- 1 file changed, 1 insertion(+)
+v4:
+ * remove unnecessary braces {} from list_for_each [Johannes]
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 8425130..4c2d4ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -244,3 +244,4 @@ const struct iwl_cfg iwl7265_n_cfg = {
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/util.c        | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6bfeb22..c59f983 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1824,6 +1824,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
++int ieee80211_max_num_channels(struct ieee80211_local *local);
  
- MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
- MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5a6cc33..7a376f8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2873,3 +2873,45 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 					   num_different_channels,
+ 					   radar_detect, num);
+ }
++
++static void
++ieee80211_iter_max_chans(const struct ieee80211_iface_combination *c,
++			 void *data)
++{
++	u32 *max_num_different_channels = data;
++
++	*max_num_different_channels = max(*max_num_different_channels,
++					  c->num_different_channels);
++}
++
++int ieee80211_max_num_channels(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	int num[NUM_NL80211_IFTYPES] = {};
++	struct ieee80211_chanctx *ctx;
++	int num_different_channels = 0;
++	u8 radar_detect = 0;
++	u32 max_num_different_channels = 1;
++	int err;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		num_different_channels++;
++
++		if (ctx->conf.radar_enabled)
++			radar_detect |= BIT(ctx->conf.def.width);
++	}
++
++	list_for_each_entry_rcu(sdata, &local->interfaces, list)
++		num[sdata->wdev.iftype]++;
++
++	err = cfg80211_iter_combinations(local->hw.wiphy,
++					 num_different_channels, radar_detect,
++					 num, ieee80211_iter_max_chans,
++					 &max_num_different_channels);
++	if (err < 0)
++		return err;
++
++	return max_num_different_channels;
++}
 -- 
-1.8.3.2
+1.8.5.3
 
