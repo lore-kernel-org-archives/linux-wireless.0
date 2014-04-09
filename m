@@ -1,62 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:45369 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381AbaD0VfS (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.130]:61155 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187AbaDIH6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2014 17:35:18 -0400
-Received: by mail-wi0-f180.google.com with SMTP id q5so4798605wiv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 14:35:16 -0700 (PDT)
-Message-ID: <535D7813.80100@gmail.com> (sfid-20140427_233555_716644_AD9AF7F3)
-Date: Sun, 27 Apr 2014 23:35:15 +0200
-From: poma <pomidorabelisima@gmail.com>
+	Wed, 9 Apr 2014 03:58:04 -0400
+Message-ID: <5344FD84.1050101@lri.fr> (sfid-20140409_095808_568432_15243F50)
+Date: Wed, 09 Apr 2014 09:57:56 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Stefan Pietsch <stefan.pietsch@lsexperts.de>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: Firmware(rtl8723befw.bin) for the Realtek 8723BE 802.11n PCI
- wireless(rtl8723be)
-References: <535D5712.6000106@gmail.com> <535D692C.7080905@lwfinger.net>
-In-Reply-To: <535D692C.7080905@lwfinger.net>
+Subject: Re: iwlwifi: Invalid RXON when trying to join IBSS network
+References: <534464F9.1080805@sp.consulting.lsexperts.de>	 (sfid-20140408_233636_176148_44D5A66B) <1397029645.4964.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1397029645.4964.1.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27.04.2014 22:31, Larry Finger wrote:
-> On 04/27/2014 02:14 PM, poma wrote:
+On 09/04/2014 09:47, Johannes Berg wrote:
+> On Tue, 2014-04-08 at 23:07 +0200, Stefan Pietsch wrote:
+>> Dear list,
 >>
->> Ahoy!
->>
->> Firmware(rtl8723befw.bin) for the Realtek 8723BE 802.11n PCI
->> wireless(rtl8723be)
->> missing in the "Repository of firmware blobs for use with the Linux kernel".
->> https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/rtlwifi
->> rtl8723befw.bin?
+>> trying to join an IBSS network gives me these kernel messages:
 >>
 >>
->> $ modinfo rtl8723be
->> filename:
->> /lib/modules/3.15.0-0.rc2.git3.1.fc21.x86_64/kernel/drivers/net/wireless/rtlwifi/rtl8723be/rtl8723be.ko
->> firmware:       rtlwifi/rtl8723befw.bin
->> description:    Realtek 8723BE 802.11n PCI wireless
->> license:        GPL
->> ...
 >>
->>
->> However attending in the "Code for new variety of the 8723 PCI cards -
->> temp until code added to kernel"
->> https://github.com/lwfinger/rtl8723be/tree/master/firmware/rtlwifi
->> rtl8723befw.bin
+>> [  383.857059] iwlwifi 0000:03:00.0: mac/bssid mcast!
 > 
-> Thanks for this note. I thought that I had sent the firmware to git repo at 
-> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git, but that 
-> was not correct until now. Within a few days, it should be in the repo. Until 
-> then, it can be gotten through the GitHub link posted above.
-> 
-> Larry
-> 
+> How did you manage to get a multicast address as the BSSID?
 
-OK, thanks.
-
-
-poma
-
-
+If I remember correctly, the WEXT API doesn't check this.
