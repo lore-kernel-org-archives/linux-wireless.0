@@ -1,134 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39018 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758884AbaD3PpQ (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:54741 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444AbaDIKRS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 11:45:16 -0400
-Date: Wed, 30 Apr 2014 11:42:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.15] ath9k: remove tid->paused flag
-Message-ID: <20140430154227.GE3635@tuxdriver.com> (sfid-20140430_174524_214815_B30CA3A8)
-References: <1398702732-77789-1-git-send-email-nbd@openwrt.org>
+	Wed, 9 Apr 2014 06:17:18 -0400
+Received: by mail-pb0-f44.google.com with SMTP id rp16so2327070pbb.17
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:17:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398702732-77789-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1397035298.4418.60.camel@dubbel>
+References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
+ <1396988949.4418.46.camel@dubbel> <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
+ <1397035298.4418.60.camel@dubbel>
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Wed, 9 Apr 2014 12:16:57 +0200
+Message-ID: <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com> (sfid-20140409_121721_982147_C8114450)
+Subject: Re: wl1271: tx stuck in firmware
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, kaloz@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You missed one in drivers/net/wireless/ath/ath9k/debug_sta.c, but I fixed it up...
+On Wed, Apr 9, 2014 at 11:21 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Wed, 2014-04-09 at 11:14 +0200, Yegor Yefremov wrote:
+>> On Tue, Apr 8, 2014 at 10:29 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Tue, 2014-04-08 at 17:28 +0200, Yegor Yefremov wrote:
+>> >> Any idea, what could be wrong?
+>> >
+>> > First of all, try a clean kernel.
+>>
+>> It is not simple to get a clean kernel. "Official" support for
+>> am335x-evmsk WLAN was added first in the upcoming 3.15 kernel. I've
+>> tried the merge window version (3.14.0-12041-g75ff24f-dirty) and get
+>> following issue:
+>>
+>> # calibrator wlan0 plt power_mode on
+>> wlcore: power up
+>> wlcore: ERROR timeout waiting for the hardware to complete initialization
+>> wlcore: ERROR timeout waiting for the hardware to complete initialization
+>> wlcore: ERROR timeout waiting for the hardware to complete initialization
+>> wlcore: ERROR firmware boot in PLT mode failed despite 3 retries
+>> command failed: Input/output error (-5)
+>
+> Okay, the main question here is, did you make any changes in the
+> wlcore/wl12xx code? As I said, the TX watchdog should *not* be
+> initialized in PLT mode.
 
-John
+I made not changes to any file in drivers/net/wireless/ti/
 
-On Mon, Apr 28, 2014 at 06:32:12PM +0200, Felix Fietkau wrote:
-> There are some corner cases where the driver could get stuck with a full
-> tid queue that is paused, leading to a software tx queue hang.
-> 
-> Since the tx queueing rework, pausing per-tid queues on aggregation
-> session setup is no longer necessary. The driver will assign sequence
-> numbers to buffered frames when a new session is established, in order
-> to get the correct starting sequence number.
-> 
-> mac80211 prevents new frames from entering the queue during setup.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
->  drivers/net/wireless/ath/ath9k/xmit.c  | 14 +-------------
->  2 files changed, 1 insertion(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 05935f6..33a2ae7 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -254,7 +254,6 @@ struct ath_atx_tid {
->  
->  	s8 bar_index;
->  	bool sched;
-> -	bool paused;
->  	bool active;
->  };
->  
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 87cbec4..66acb2c 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -107,9 +107,6 @@ static void ath_tx_queue_tid(struct ath_txq *txq, struct ath_atx_tid *tid)
->  {
->  	struct ath_atx_ac *ac = tid->ac;
->  
-> -	if (tid->paused)
-> -		return;
-> -
->  	if (tid->sched)
->  		return;
->  
-> @@ -1407,7 +1404,6 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
->  	ath_tx_tid_change_state(sc, txtid);
->  
->  	txtid->active = true;
-> -	txtid->paused = true;
->  	*ssn = txtid->seq_start = txtid->seq_next;
->  	txtid->bar_index = -1;
->  
-> @@ -1427,7 +1423,6 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
->  
->  	ath_txq_lock(sc, txq);
->  	txtid->active = false;
-> -	txtid->paused = false;
->  	ath_tx_flush_tid(sc, txtid);
->  	ath_tx_tid_change_state(sc, txtid);
->  	ath_txq_unlock_complete(sc, txq);
-> @@ -1487,7 +1482,7 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
->  		ath_txq_lock(sc, txq);
->  		ac->clear_ps_filter = true;
->  
-> -		if (!tid->paused && ath_tid_has_buffered(tid)) {
-> +		if (ath_tid_has_buffered(tid)) {
->  			ath_tx_queue_tid(txq, tid);
->  			ath_txq_schedule(sc, txq);
->  		}
-> @@ -1510,7 +1505,6 @@ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta,
->  	ath_txq_lock(sc, txq);
->  
->  	tid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
-> -	tid->paused = false;
->  
->  	if (ath_tid_has_buffered(tid)) {
->  		ath_tx_queue_tid(txq, tid);
-> @@ -1544,8 +1538,6 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
->  			continue;
->  
->  		tid = ATH_AN_2_TID(an, i);
-> -		if (tid->paused)
-> -			continue;
->  
->  		ath_txq_lock(sc, tid->ac->txq);
->  		while (nframes > 0) {
-> @@ -1844,9 +1836,6 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
->  			list_del(&tid->list);
->  			tid->sched = false;
->  
-> -			if (tid->paused)
-> -				continue;
-> -
->  			if (ath_tx_sched_aggr(sc, txq, tid, &stop))
->  				sent = true;
->  
-> @@ -2698,7 +2687,6 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
->  		tid->baw_size  = WME_MAX_BA;
->  		tid->baw_head  = tid->baw_tail = 0;
->  		tid->sched     = false;
-> -		tid->paused    = false;
->  		tid->active	   = false;
->  		__skb_queue_head_init(&tid->buf_q);
->  		__skb_queue_head_init(&tid->retry_q);
-> -- 
-> 1.8.5.2 (Apple Git-48)
-> 
-> 
+> Maybe you could add some prints in the driver to see when the watchdog
+> timer is set up? Try to add a printk in every place where
+> wl12xx_rearm_tx_watchdog_locked() is called to see where it is being
+> armed.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+drivers/net/wireless/ti/wlcore/tx.c in wl1271_tx_allocate()
+
+# calibrator wlan0 plt power_mode on
+[   93.107215] wlcore: power up
+[   93.688714] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+# [  139.232802] YY: wl1271_tx_allocate
+[  144.241849] wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recovery
+[  144.249064] ------------[ cut here ]------------
+[  144.254329] WARNING: CPU: 0 PID: 761 at
+drivers/net/wireless/ti/wlcore/main.c:800
+wl12xx_queue_recovery_work+0x60/0x68()
+[  144.265917] Modules linked in:
+[  144.269294] CPU: 0 PID: 761 Comm: kworker/u2:2 Not tainted
+3.14.0-rc4-12739-g17534e5-dirty #248
+[  144.278507] Workqueue: phy0 wl12xx_tx_watchdog_work
+[  144.283836] [<c00151e0>] (unwind_backtrace) from [<c0011e38>]
+(show_stack+0x10/0x14)
+[  144.292156] [<c0011e38>] (show_stack) from [<c05c5778>]
+(dump_stack+0x7c/0x94)
+[  144.299909] [<c05c5778>] (dump_stack) from [<c0040274>]
+(warn_slowpath_common+0x6c/0x90)
+[  144.308474] [<c0040274>] (warn_slowpath_common) from [<c0040334>]
+(warn_slowpath_null+0x1c/0x24)
+[  144.317869] [<c0040334>] (warn_slowpath_null) from [<c038de34>]
+(wl12xx_queue_recovery_work+0x60/0x68)
+[  144.327818] [<c038de34>] (wl12xx_queue_recovery_work) from
+[<c038df04>] (wl12xx_tx_watchdog_work+0xc8/0x1b8)
+[  144.338383] [<c038df04>] (wl12xx_tx_watchdog_work) from
+[<c0058fac>] (process_one_work+0x1ac/0x4c4)
+[  144.348059] [<c0058fac>] (process_one_work) from [<c0059e40>]
+(worker_thread+0x114/0x3b4)
+[  144.356820] [<c0059e40>] (worker_thread) from [<c005f9fc>]
+(kthread+0xcc/0xe8)
+[  144.364568] [<c005f9fc>] (kthread) from [<c000e388>]
+(ret_from_fork+0x14/0x2c)
+[  144.372292] ---[ end trace c815a12d05c76600 ]---
+
+Yegor
