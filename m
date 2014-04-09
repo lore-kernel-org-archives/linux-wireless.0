@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:12961 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbaDNOEH (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:44847 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758243AbaDIKNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 10:04:07 -0400
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 7/7] cfg80211: implement cfg80211_get_station cfg80211 API
-Date: Mon, 14 Apr 2014 16:03:25 +0200
-Message-Id: <1397484205-20905-7-git-send-email-antonio@meshcoding.com> (sfid-20140414_160415_033597_F6CBB7D2)
-In-Reply-To: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
+	Wed, 9 Apr 2014 06:13:24 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so1664999eek.35
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:13:23 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: skip suspending when recovering
+Date: Wed,  9 Apr 2014 12:07:08 +0200
+Message-Id: <1397038028-7665-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_121329_528982_D8C65A05)
+In-Reply-To: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Antonio Quartulli <antonio@open-mesh.com>
+It doesn't make much sense to even try suspending
+the device when recovering. Recovering means the
+device is unresponsive and waiting for suspend
+procedure means taking a 3 second timeout waiting
+for tx credits.
 
-Implement and export the new cfg80211_get_station() API.
-This utility can be used by other kernel modules to obtain
-detailed information about a given wireless station.
+This speeds up firmware recovery significantly.
 
-It will be in particular useful to batman-adv which will
-implement a wireless rate based metric.
-
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/cfg80211.h | 13 +++++++++++++
- net/wireless/util.c    | 18 ++++++++++++++++++
- 2 files changed, 31 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d4b85f7..c890244 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1065,6 +1065,19 @@ struct station_info {
- };
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 6abde37..75b3dfb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -680,8 +680,8 @@ static void ath10k_core_restart(struct work_struct *work)
  
- /**
-+ * cfg80211_get_station - retrieve information about a given station
-+ * @dev: the device where the station is supposed to be connected to
-+ * @mac_addr: the mac address of the station of interest
-+ * @sinfo: pointer to the structure to fill with the information
-+ *
-+ * Returns 0 on success and sinfo is filled with the available information
-+ * otherwise returns a negative error code and the content of sinfo has to be
-+ * considered undefined.
-+ */
-+int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
-+			 struct station_info *sinfo);
-+
-+/**
-  * enum monitor_flags - monitor flags
-  *
-  * Monitor interface configuration flags. Note that these must be the bits
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d032a31..d84d61a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1498,6 +1498,24 @@ unsigned int ieee80211_get_num_supported_channels(struct wiphy *wiphy)
- }
- EXPORT_SYMBOL(ieee80211_get_num_supported_channels);
+ 	switch (ar->state) {
+ 	case ATH10K_STATE_ON:
+-		ath10k_halt(ar);
+ 		ar->state = ATH10K_STATE_RESTARTING;
++		ath10k_halt(ar);
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
+@@ -908,7 +908,9 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	lockdep_assert_held(&ar->conf_mutex);
  
-+int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
-+			 struct station_info *sinfo)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
+ 	/* try to suspend target */
+-	ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
++	if (ar->state != ATH10K_STATE_RESTARTING)
++		ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
 +
-+	wdev = dev->ieee80211_ptr;
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+	if (!rdev->ops->get_station)
-+		return -EOPNOTSUPP;
-+
-+	return rdev_get_station(rdev, dev, mac_addr, sinfo);
-+}
-+EXPORT_SYMBOL(cfg80211_get_station);
-+
- /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
- /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
- const unsigned char rfc1042_header[] __aligned(2) =
+ 	ath10k_debug_stop(ar);
+ 	ath10k_htc_stop(&ar->htc);
+ 	ath10k_htt_detach(&ar->htt);
 -- 
-1.8.3.2
+1.8.5.3
 
