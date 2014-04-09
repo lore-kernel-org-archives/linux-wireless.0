@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:44913 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751238AbaDANuK (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:59596 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932785AbaDIKHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 09:50:10 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] ray_cs: replace del_timer by del_timer_sync
-Date: Tue,  1 Apr 2014 15:49:18 +0200
-Message-Id: <1396360159-16244-3-git-send-email-Julia.Lawall@lip6.fr> (sfid-20140401_155214_572141_CB6097CF)
-In-Reply-To: <1396360159-16244-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1396360159-16244-1-git-send-email-Julia.Lawall@lip6.fr>
+	Wed, 9 Apr 2014 06:07:44 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so1681906eek.32
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:07:43 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/4] ath10k: fix firmware recovery with ap interface
+Date: Wed,  9 Apr 2014 12:01:25 +0200
+Message-Id: <1397037685-7485-5-git-send-email-michal.kazior@tieto.com> (sfid-20140409_120752_325324_78C89E85)
+In-Reply-To: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Beacon data wasn't properly cleared during early
+phase of recovery. This in turn caused firmware to
+crash because the beacon data was submitted before
+vdevs were fully re-configured. Ultimately the
+device was considered wedged and nothing worked
+until driver was reloaded.
 
-Use del_timer_sync to ensure that the timer is stopped on all CPUs before
-the driver exits.
-
-This change was suggested by Thomas Gleixner.
-
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-identifier i,t,ex;
-@@
-struct t i = { .remove = ex, };
-
-@@
-identifier r.ex;
-@@
-ex(...) {
-  <...
-- del_timer
-+ del_timer_sync
-    (...)
-  ...>
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-Not tested.
+ drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
- drivers/net/wireless/ray_cs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index cbf0a58..8330fa3 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -343,7 +343,7 @@ static void ray_detach(struct pcmcia_device *link)
- 	ray_release(link);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5a9da3a..143ea1c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2264,6 +2264,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+  */
+ void ath10k_halt(struct ath10k *ar)
+ {
++	struct ath10k_vif *arvif;
++
+ 	lockdep_assert_held(&ar->conf_mutex);
  
- 	local = netdev_priv(dev);
--	del_timer(&local->timer);
-+	del_timer_sync(&local->timer);
+ 	ath10k_stop_cac(ar);
+@@ -2280,6 +2282,17 @@ void ath10k_halt(struct ath10k *ar)
+ 		ar->scan.in_progress = false;
+ 		ieee80211_scan_completed(ar->hw, true);
+ 	}
++
++	list_for_each_entry(arvif, &ar->arvifs, list) {
++		if (!arvif->beacon)
++			continue;
++
++		dma_unmap_single(arvif->ar->dev,
++				 ATH10K_SKB_CB(arvif->beacon)->paddr,
++				 arvif->beacon->len, DMA_TO_DEVICE);
++		dev_kfree_skb_any(arvif->beacon);
++		arvif->beacon = NULL;
++	}
+ 	spin_unlock_bh(&ar->data_lock);
+ }
  
- 	if (link->priv) {
- 		unregister_netdev(dev);
+-- 
+1.8.5.3
 
