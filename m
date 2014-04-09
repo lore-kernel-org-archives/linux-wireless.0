@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:63325 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751691AbaDRXvG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38087 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933342AbaDIOI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 19:51:06 -0400
-Received: by mail-la0-f42.google.com with SMTP id ec20so1792089lab.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 16:51:04 -0700 (PDT)
+	Wed, 9 Apr 2014 10:08:56 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
+Date: Wed, 9 Apr 2014 17:08:49 +0300
+Message-ID: <2146187.nt2BTDzSlP@lx-vladimir> (sfid-20140409_161021_674592_E5296C12)
+In-Reply-To: <1396973691.5212.3.camel@joe-AO722>
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1396946179-11677-2-git-send-email-qca_vkondrat@qca.qualcomm.com> <1396973691.5212.3.camel@joe-AO722>
 MIME-Version: 1.0
-Date: Fri, 18 Apr 2014 16:51:03 -0700
-Message-ID: <CACUGKYPP9s1cSJEpuBfQxT9=xLY57t0-kLZ8D=X2gaVcXbC2Nw@mail.gmail.com> (sfid-20140419_015126_591091_C1F387D1)
-Subject: Testing WMM
-From: John Tobias <john.tobias.ph@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Guys,
+On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
+> On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
+> > Convert Makefile -> Kbuild,
+> > to make off-kernel development easier and less intrusive.
+> 
+> No drivers/net directory uses Kbuild.
+> 
+> Why should this?
 
-I would like to test the following WMM features of the wifi driver.
+because it makes it easier to do off-kernel development, and then
+move things to the proper location within the kernel without
+conflicting changes in the Makefile.
+As I understand, Kbuild is better choice because it is really not
+standalone "Makefile", it is intended to be included by the real
+Makefile. Thus, distinct name is better.
+Are there any reasons why not using Kbuild? I did not found
+guidelines when use Kbuild and when not.
 
-wmm_ac_vo
-wmm_ac_vi
-wmm_ac_be
-wmm_ac_bk
+> 
+> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/wil6210/Kbuild   | 18 ++++++++++++++++++
+> >  drivers/net/wireless/ath/wil6210/Makefile | 18 ------------------
+> 
+> If you send renaming patches, please use
+> git format-patch -M
 
-What tools did you use to test it?.
+Sure I will. Thanks for mentioning this.
 
-Regards,
+Thanks, Vladimir
 
-john
+
