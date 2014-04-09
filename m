@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:18835 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755847AbaDNWdR (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:37978 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933136AbaDINZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 18:33:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 5/7] mwifiex: update timestamp information for aggregation packets
-Date: Mon, 14 Apr 2014 15:32:53 -0700
-Message-ID: <1397514775-4777-5-git-send-email-bzhao@marvell.com> (sfid-20140415_003330_390421_AE4C34BB)
-In-Reply-To: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
-References: <1397514775-4777-1-git-send-email-bzhao@marvell.com>
+	Wed, 9 Apr 2014 09:25:55 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so2443890pdj.36
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:25:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAGm1_kvwCoUT+EYTQy8bMda5fjnTz2seD25DP7Q1hfHyXtO5fw@mail.gmail.com>
+References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
+ <1396988949.4418.46.camel@dubbel> <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
+ <1397035298.4418.60.camel@dubbel> <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
+ <1397044175.4418.66.camel@dubbel> <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com>
+ <1397047312.4418.68.camel@dubbel> <CA+XVXfcB7Uu9F2OHffOUy8mfUofMc38LS0GnShx7t0NADNckpg@mail.gmail.com>
+ <CAGm1_kvwCoUT+EYTQy8bMda5fjnTz2seD25DP7Q1hfHyXtO5fw@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 9 Apr 2014 16:25:40 +0300
+Message-ID: <CA+XVXfcpRZjQ1DV3Bf7O73fhu0XHYPwPFgWG-F2+=Fs7en58iQ@mail.gmail.com> (sfid-20140409_152558_898589_6A29E1A5)
+Subject: Re: wl1271: tx stuck in firmware
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kaloz@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Wed, Apr 9, 2014 at 4:20 PM, Yegor Yefremov
+<yegorslists@googlemail.com> wrote:
+> On Wed, Apr 9, 2014 at 3:07 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> Both changes helped a lot. At least one can make a lot of tests
+> without a crash, though I had one
+>
+> # calibrator wlan0 plt tune_channel 0 1
+> # calibrator wlan0 plt tx_tone 1 9000
+> [  180.041505] wlcore: ERROR command complete timeout
 
-New skbs are allocated at the time of AMSDU aggregation. Setting
-up in timestamps for such skbs was missing which would result
-into wrong queue delays passed to FW. Fix this by setting
-timestamp of skbs created for AMSDU aggregation.
+It's a FW error.
+Not sure which change you tried, but if it was one of Luca's, I guess
+the FW doesn't like it when you ignore its requests for a dummy
+packet. Did you try my change with just disabling the re-arm?
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_aggr.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index b179652..860dfe7 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -160,6 +160,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 	int pad = 0, ret;
- 	struct mwifiex_tx_param tx_param;
- 	struct txpd *ptx_pd = NULL;
-+	struct timeval tv;
- 	int headroom = adapter->iface_type == MWIFIEX_USB ? 0 : INTF_HEADER_LEN;
- 
- 	skb_src = skb_peek(&pra_list->skb_head);
-@@ -184,6 +185,9 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 	tx_info_aggr->bss_num = tx_info_src->bss_num;
- 	skb_aggr->priority = skb_src->priority;
- 
-+	do_gettimeofday(&tv);
-+	skb_aggr->tstamp = timeval_to_ktime(tv);
-+
- 	do {
- 		/* Check if AMSDU can accommodate this MSDU */
- 		if (skb_tailroom(skb_aggr) < (skb_src->len + LLC_SNAP_LEN))
--- 
-1.8.2.3
-
+Arik
