@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:55462 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051AbaDROe5 (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:58327 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235AbaDIB24 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 10:34:57 -0400
-Received: by mail-ig0-f169.google.com with SMTP id h18so1026582igc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2014 07:34:57 -0700 (PDT)
+	Tue, 8 Apr 2014 21:28:56 -0400
+Received: by mail-pb0-f49.google.com with SMTP id jt11so1802509pbb.36
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:55 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 4/8] mac80211: fix possible compile warning in debugfs_netdev.h
+Date: Wed,  9 Apr 2014 09:28:09 +0800
+Message-Id: <9709360a8341770ec487d9033bfa17fdebbb4bf0.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032900_490103_D8892A6C)
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <53512D04.5070808@gmail.com>
-References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>
-	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>
-	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>
-	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>
-	<5350B340.9020201@gmail.com>
-	<53512D04.5070808@gmail.com>
-Date: Fri, 18 Apr 2014 18:34:57 +0400
-Message-ID: <CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com> (sfid-20140418_163502_024019_8C7E75B2)
-Subject: Re: iwlwifi null pointer dereference
-From: Alexander Monakov <amonakov@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 18, 2014 at 5:47 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->
->
-> On 04/18/2014 08:08 AM, Emmanuel Grumbach wrote:
->> Hi,
->>
->> On 04/17/2014 11:56 PM, Alexander Monakov wrote:
->>> Emmanuel,
->>>
->>> I'm curious about the plans w.r.t this fix; is it going to
->>> iwlwifi-next.git?  Thanks again.
->>>
->>
->> It will go to iwlwifi-fixes.
->>
->
-> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
-> So I definitely want to understand what is happening here before applying the fix.
+The warning doesn't show up due to duplicate including, but it's worth
+fixing it.
 
-Sure, I can help with further investigation.  Would it help if I bisected?
+net/mac80211//debugfs_netdev.h:7:42: warning: ‘struct ieee80211_sub_if_data’ declared inside parameter list [enabled by default]
+ void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
+                                          ^
+net/mac80211//debugfs_netdev.h:7:42: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
 
-Alexander
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/debugfs_netdev.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/debugfs_netdev.h b/net/mac80211/debugfs_netdev.h
+index 79025e7..9f5501a 100644
+--- a/net/mac80211/debugfs_netdev.h
++++ b/net/mac80211/debugfs_netdev.h
+@@ -3,6 +3,8 @@
+ #ifndef __IEEE80211_DEBUGFS_NETDEV_H
+ #define __IEEE80211_DEBUGFS_NETDEV_H
+ 
++#include "ieee80211_i.h"
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata);
+-- 
+1.9.0
+
