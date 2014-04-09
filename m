@@ -1,144 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:47413 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754712AbaDOMiF (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:43998 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235AbaDIB2x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 08:38:05 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 1/2] cfg80211: Add attributes describing prohibited channel bandwidth
-Date: Tue, 15 Apr 2014 14:37:55 +0200
-Message-Id: <1397565476-4348-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140415_143948_794270_86537A7C)
-In-Reply-To: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	Tue, 8 Apr 2014 21:28:53 -0400
+Received: by mail-pa0-f42.google.com with SMTP id fb1so1814895pad.29
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 18:28:53 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3/8] mac80211: fix possible compile warning in michael.h
+Date: Wed,  9 Apr 2014 09:28:08 +0800
+Message-Id: <0c2fa5b7a8724d0ee405afd05f393af95e65116c.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032857_074294_E7D7A9C5)
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since there are frequency bands (e.g. 5.9GHz) allowing channels
-with only 10 or 5 MHz bandwidth, this patch adds attributes that
-allow keeping track about this information.
+The warning doesn't show up due to duplicate including, but it's worth
+fixing it.
 
-When channel attributes are reported to user-space, make sure to
-not break old tools, i.e. if the 'split wiphy dump' is enabled,
-report the extra attributes (if present) describing the bandwidth
-restrictions.  If the 'split wiphy dump' is not enabled,
-completely omit those channels that have flags set to either
-IEEE80211_CHAN_NO_10MHZ or IEEE80211_CHAN_NO_20MHZ.
+net/mac80211//michael.h:22:4: warning: ‘struct ieee80211_hdr’ declared inside parameter list [enabled by default]
+    const u8 *data, size_t data_len, u8 *mic);
+    ^
+net/mac80211//michael.h:22:4: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
 
-Add the check for new bandwidth restriction flags in
-cfg80211_chandef_usable() to comply with the restrictions.
-
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
 ---
- include/net/cfg80211.h       |  6 ++++++
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/chan.c          |  2 ++
- net/wireless/nl80211.c       | 13 +++++++++++++
- 4 files changed, 27 insertions(+)
+ net/mac80211/michael.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9496fe5..4e9016d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -111,6 +111,10 @@ enum ieee80211_band {
-  *	restrictions.
-  * @IEEE80211_CHAN_INDOOR_ONLY: see %NL80211_FREQUENCY_ATTR_INDOOR_ONLY
-  * @IEEE80211_CHAN_GO_CONCURRENT: see %NL80211_FREQUENCY_ATTR_GO_CONCURRENT
-+ * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
-+ *	on this channel.
-+ * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-+ *	on this channel.
-  *
-  */
- enum ieee80211_channel_flags {
-@@ -125,6 +129,8 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
- 	IEEE80211_CHAN_INDOOR_ONLY	= 1<<9,
- 	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
-+	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
-+	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
- };
+diff --git a/net/mac80211/michael.h b/net/mac80211/michael.h
+index 3b848da..b259547 100644
+--- a/net/mac80211/michael.h
++++ b/net/mac80211/michael.h
+@@ -10,7 +10,7 @@
+ #ifndef MICHAEL_H
+ #define MICHAEL_H
  
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 513bfd7..0592032 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2358,6 +2358,10 @@ enum nl80211_band_attr {
-  *	connected to an AP with DFS and radar detection on the UNII band (it is
-  *	up to user-space, i.e., wpa_supplicant to perform the required
-  *	verifications)
-+ * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
-+ *	on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
-+ *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -2384,6 +2388,8 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_DFS_CAC_TIME,
- 	NL80211_FREQUENCY_ATTR_INDOOR_ONLY,
- 	NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
-+	NL80211_FREQUENCY_ATTR_NO_20MHZ,
-+	NL80211_FREQUENCY_ATTR_NO_10MHZ,
+-#include <linux/types.h>
++#include <linux/ieee80211.h>
  
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index c61bcdd..aee2dc2 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -616,12 +616,14 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		width = 5;
- 		break;
- 	case NL80211_CHAN_WIDTH_10:
-+		prohibited_flags |= IEEE80211_CHAN_NO_10MHZ;
- 		width = 10;
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
- 		if (!ht_cap->ht_supported)
- 			return false;
- 	case NL80211_CHAN_WIDTH_20_NOHT:
-+		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
- 		width = 20;
- 		break;
- 	case NL80211_CHAN_WIDTH_40:
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 232d15c..2f0a1b1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -567,6 +567,13 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 				   struct ieee80211_channel *chan,
- 				   bool large)
- {
-+	/* Some channels must be completely excluded from the
-+	 * list to protect old user-space tools from breaking
-+	 */
-+	if (!large && chan->flags &
-+	    (IEEE80211_CHAN_NO_10MHZ | IEEE80211_CHAN_NO_20MHZ))
-+		return 0;
-+
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
- 			chan->center_freq))
- 		goto nla_put_failure;
-@@ -620,6 +627,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		if ((chan->flags & IEEE80211_CHAN_GO_CONCURRENT) &&
- 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_GO_CONCURRENT))
- 			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
-+		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
-+			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
-+		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
-+			goto nla_put_failure;
- 	}
+ #define MICHAEL_MIC_LEN 8
  
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
 -- 
-1.9.2
+1.9.0
 
