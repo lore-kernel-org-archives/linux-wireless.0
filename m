@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:48621 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754264AbaDMNCR (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:61196 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933338AbaDINfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 09:02:17 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 9 Apr 2014 09:35:55 -0400
+Received: by mail-ee0-f45.google.com with SMTP id d17so1885015eek.18
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 05/13] iwlwifi: 7000: bump API to 9
-Date: Sun, 13 Apr 2014 16:01:55 +0300
-Message-Id: <1397394123-25102-5-git-send-email-egrumbach@gmail.com> (sfid-20140413_150226_314097_A61526A7)
-In-Reply-To: <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
-References: <534A8A49.2030100@gmail.com>
- <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 03/13] mac80211: prevent chanctx overcommit
+Date: Wed,  9 Apr 2014 15:29:24 +0200
+Message-Id: <1397050174-26121-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153654_433749_61CEB77C)
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+ <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Do not allocate more channel contexts than a
+driver is capable for currently matching interface
+combination.
 
-This will allow to load the new firmware.
+This allows the ieee80211_vif_reserve_chanctx() to
+act as a guard against breaking interface
+combinations.
 
-Cc: <stable@vger.kernel.org> [3.14]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/chan.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 003a546..8425130 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -67,8 +67,8 @@
- #include "iwl-agn-hw.h"
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 57b8ab1..fcb2cd8 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -9,6 +9,25 @@
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
  
- /* Highest firmware API version supported */
--#define IWL7260_UCODE_API_MAX	8
--#define IWL3160_UCODE_API_MAX	8
-+#define IWL7260_UCODE_API_MAX	9
-+#define IWL3160_UCODE_API_MAX	9
++static int ieee80211_num_chanctx(struct ieee80211_local *local)
++{
++	struct ieee80211_chanctx *ctx;
++	int num = 0;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	list_for_each_entry(ctx, &local->chanctx_list, list)
++		num++;
++
++	return num;
++}
++
++static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
++{
++	lockdep_assert_held(&local->chanctx_mtx);
++	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
++}
++
+ static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
+ {
+ 	switch (sta->bandwidth) {
+@@ -751,13 +770,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 			 * context, reserve our current context
+ 			 */
+ 			new_ctx = curr_ctx;
+-		} else {
++		} else if (ieee80211_can_create_new_chanctx(local)) {
+ 			/* create a new context and reserve it */
+ 			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
+ 			if (IS_ERR(new_ctx)) {
+ 				ret = PTR_ERR(new_ctx);
+ 				goto out;
+ 			}
++		} else {
++			ret = -EBUSY;
++			goto out;
+ 		}
+ 	}
  
- /* Oldest version we won't warn about */
- #define IWL7260_UCODE_API_OK	8
 -- 
-1.8.3.2
+1.8.5.3
 
