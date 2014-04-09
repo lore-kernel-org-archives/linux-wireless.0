@@ -1,151 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:47602 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbaDRA4V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 20:56:21 -0400
-Received: by mail-ve0-f174.google.com with SMTP id oz11so1659333veb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 17:56:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1397484205-20905-2-git-send-email-antonio@meshcoding.com>
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
-	<1397484205-20905-2-git-send-email-antonio@meshcoding.com>
-Date: Fri, 18 Apr 2014 08:56:20 +0800
-Message-ID: <CAEFj987Hr4iUuHX-_nJN5AcHBLnAeJhhMX9UbqkGffTT+UQFLQ@mail.gmail.com> (sfid-20140418_025646_205538_3050D7EF)
-Subject: Re: [B.A.T.M.A.N.] [PATCH 2/7] mac80211: add get_expected_throughput API
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: The list for a Better Approach To Mobile Ad-hoc
-	 Networking <b.a.t.m.a.n@lists.open-mesh.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:50941 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932482AbaDILtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Apr 2014 07:49:43 -0400
+Message-ID: <1397044175.4418.66.camel@dubbel> (sfid-20140409_134947_193505_BBAE686E)
+From: Luca Coelho <luca@coelho.fi>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, kaloz@openwrt.org
+Date: Wed, 09 Apr 2014 14:49:35 +0300
+In-Reply-To: <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
+References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
+	 <1396988949.4418.46.camel@dubbel>
+	 <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
+	 <1397035298.4418.60.camel@dubbel>
+	 <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: wl1271: tx stuck in firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Antonio
+On Wed, 2014-04-09 at 12:16 +0200, Yegor Yefremov wrote:
+> On Wed, Apr 9, 2014 at 11:21 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Wed, 2014-04-09 at 11:14 +0200, Yegor Yefremov wrote:
+> >> On Tue, Apr 8, 2014 at 10:29 PM, Luca Coelho <luca@coelho.fi> wrote:
+> >> > On Tue, 2014-04-08 at 17:28 +0200, Yegor Yefremov wrote:
+> >> >> Any idea, what could be wrong?
+> >> >
+> >> > First of all, try a clean kernel.
+> >>
+> >> It is not simple to get a clean kernel. "Official" support for
+> >> am335x-evmsk WLAN was added first in the upcoming 3.15 kernel. I've
+> >> tried the merge window version (3.14.0-12041-g75ff24f-dirty) and get
+> >> following issue:
+> >>
+> >> # calibrator wlan0 plt power_mode on
+> >> wlcore: power up
+> >> wlcore: ERROR timeout waiting for the hardware to complete initialization
+> >> wlcore: ERROR timeout waiting for the hardware to complete initialization
+> >> wlcore: ERROR timeout waiting for the hardware to complete initialization
+> >> wlcore: ERROR firmware boot in PLT mode failed despite 3 retries
+> >> command failed: Input/output error (-5)
+> >
+> > Okay, the main question here is, did you make any changes in the
+> > wlcore/wl12xx code? As I said, the TX watchdog should *not* be
+> > initialized in PLT mode.
+> 
+> I made not changes to any file in drivers/net/wireless/ti/
+> 
+> > Maybe you could add some prints in the driver to see when the watchdog
+> > timer is set up? Try to add a printk in every place where
+> > wl12xx_rearm_tx_watchdog_locked() is called to see where it is being
+> > armed.
+> 
+> drivers/net/wireless/ti/wlcore/tx.c in wl1271_tx_allocate()
+> 
+> # calibrator wlan0 plt power_mode on
+> [   93.107215] wlcore: power up
+> [   93.688714] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+> # [  139.232802] YY: wl1271_tx_allocate
+> [  144.241849] wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recovery
 
-Do you know whether the calculation of expected throughput in minstrel
-and minstrel_ht are both the same?
+Okay, you have a starting point. :)
 
-Any explanation on how the expected throughput is calculated?
+Now try to look from where this is being called and so on.  I don't
+think we should be calling wl1271_tx_allocate() in PLT mode either.  Try
+tracing back until you find where this is coming from.
 
----
-Chun-Yeow
+--
+Luca.
 
-On Mon, Apr 14, 2014 at 10:03 PM, Antonio Quartulli
-<antonio@meshcoding.com> wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
->
-> Add get_expected_throughput() API to mac80211 so that each
-> driver can implement its own version based on the RC
-> algorithm they are using (might be using an HW RC algo).
-> The API returns a value expressed in Mbps/100.
-> This unit has been chosen because it is the same of the
-> throughput returned by MinstrelHT.
->
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->  include/net/mac80211.h    |  4 ++++
->  net/mac80211/driver-ops.h | 13 +++++++++++++
->  net/mac80211/trace.h      | 32 ++++++++++++++++++++++++++++++++
->  3 files changed, 49 insertions(+)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index a3044e1..0efe37c 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -2761,6 +2761,9 @@ enum ieee80211_roc_type {
->   *     information in bss_conf is set up and the beacon can be retrieved. A
->   *     channel context is bound before this is called.
->   * @leave_ibss: Leave the IBSS again.
-> + *
-> + * @get_expected_throughput: extract the expected throughput towards the
-> + *     specified station. The returned value is expressed in Mbps/100.
->   */
->  struct ieee80211_ops {
->         void (*tx)(struct ieee80211_hw *hw,
-> @@ -2954,6 +2957,7 @@ struct ieee80211_ops {
->
->         int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->         void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-> +       u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
->  };
->
->  /**
-> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-> index 5331582..84ee6c2 100644
-> --- a/net/mac80211/driver-ops.h
-> +++ b/net/mac80211/driver-ops.h
-> @@ -1122,4 +1122,17 @@ static inline void drv_leave_ibss(struct ieee80211_local *local,
->         trace_drv_return_void(local);
->  }
->
-> +static inline u32 drv_get_expected_throughput(struct ieee80211_local *local,
-> +                                             struct ieee80211_sta *sta)
-> +{
-> +       u32 ret = 0;
-> +
-> +       trace_drv_get_expected_throughput(sta);
-> +       if (local->ops->get_expected_throughput)
-> +               ret = local->ops->get_expected_throughput(sta);
-> +       trace_drv_return_u32(local, ret);
-> +
-> +       return ret;
-> +}
-> +
->  #endif /* __MAC80211_DRIVER_OPS */
-> diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-> index a0b0aea..942f64b 100644
-> --- a/net/mac80211/trace.h
-> +++ b/net/mac80211/trace.h
-> @@ -184,6 +184,20 @@ TRACE_EVENT(drv_return_bool,
->                   "true" : "false")
->  );
->
-> +TRACE_EVENT(drv_return_u32,
-> +       TP_PROTO(struct ieee80211_local *local, u32 ret),
-> +       TP_ARGS(local, ret),
-> +       TP_STRUCT__entry(
-> +               LOCAL_ENTRY
-> +               __field(u32, ret)
-> +       ),
-> +       TP_fast_assign(
-> +               LOCAL_ASSIGN;
-> +               __entry->ret = ret;
-> +       ),
-> +       TP_printk(LOCAL_PR_FMT " - %u", LOCAL_PR_ARG, __entry->ret)
-> +);
-> +
->  TRACE_EVENT(drv_return_u64,
->         TP_PROTO(struct ieee80211_local *local, u64 ret),
->         TP_ARGS(local, ret),
-> @@ -1499,6 +1513,24 @@ DEFINE_EVENT(local_sdata_evt, drv_leave_ibss,
->         TP_ARGS(local, sdata)
->  );
->
-> +TRACE_EVENT(drv_get_expected_throughput,
-> +       TP_PROTO(struct ieee80211_sta *sta),
-> +
-> +       TP_ARGS(sta),
-> +
-> +       TP_STRUCT__entry(
-> +               STA_ENTRY
-> +       ),
-> +
-> +       TP_fast_assign(
-> +               STA_ASSIGN;
-> +       ),
-> +
-> +       TP_printk(
-> +               STA_PR_FMT, STA_PR_ARG
-> +       )
-> +);
-> +
->  /*
->   * Tracing for API calls that drivers call.
->   */
-> --
-> 1.8.3.2
->
