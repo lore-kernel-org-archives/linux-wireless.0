@@ -1,64 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33718 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964877AbaDJHnj (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:36824 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932847AbaDINfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 03:43:39 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kl14so3630085pab.4
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 00:43:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGm1_kttUTzc0aw54R=fFd5K1tvGiv_NmRTAVV-z+5gV0ojCCw@mail.gmail.com>
-References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
- <1396988949.4418.46.camel@dubbel> <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
- <1397035298.4418.60.camel@dubbel> <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
- <1397044175.4418.66.camel@dubbel> <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com>
- <1397047312.4418.68.camel@dubbel> <CA+XVXfcB7Uu9F2OHffOUy8mfUofMc38LS0GnShx7t0NADNckpg@mail.gmail.com>
- <CAGm1_kvwCoUT+EYTQy8bMda5fjnTz2seD25DP7Q1hfHyXtO5fw@mail.gmail.com>
- <CA+XVXfcpRZjQ1DV3Bf7O73fhu0XHYPwPFgWG-F2+=Fs7en58iQ@mail.gmail.com>
- <CAGm1_kuVg=Y1kHB=QMwv7gU42=zL=z3MPQ+Xck=zLV_NysVbXw@mail.gmail.com> <CAGm1_kttUTzc0aw54R=fFd5K1tvGiv_NmRTAVV-z+5gV0ojCCw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 10 Apr 2014 10:43:22 +0300
-Message-ID: <CA+XVXfdmV_eAhHDEO10zwfg25Ljw=waX-WHKG42o8uMSvNfSFA@mail.gmail.com> (sfid-20140410_094344_063671_01E4226C)
-Subject: Re: wl1271: tx stuck in firmware
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	kaloz@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 Apr 2014 09:35:52 -0400
+Received: by mail-ee0-f43.google.com with SMTP id e53so1889523eek.16
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:51 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 01/13] cfg80211: allow drivers to iterate over matching combinations
+Date: Wed,  9 Apr 2014 15:29:22 +0200
+Message-Id: <1397050174-26121-2-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153558_131162_F9F7FBD7)
+In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
+ <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 10:21 AM, Yegor Yefremov
-<yegorslists@googlemail.com> wrote:
-> On Wed, Apr 9, 2014 at 5:28 PM, Yegor Yefremov
-> <yegorslists@googlemail.com> wrote:
->> On Wed, Apr 9, 2014 at 3:25 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>> On Wed, Apr 9, 2014 at 4:20 PM, Yegor Yefremov
->>> <yegorslists@googlemail.com> wrote:
->>>> On Wed, Apr 9, 2014 at 3:07 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>>> Both changes helped a lot. At least one can make a lot of tests
->>>> without a crash, though I had one
->>>>
->>>> # calibrator wlan0 plt tune_channel 0 1
->>>> # calibrator wlan0 plt tx_tone 1 9000
->>>> [  180.041505] wlcore: ERROR command complete timeout
->>>
->>> It's a FW error.
->>> Not sure which change you tried, but if it was one of Luca's, I guess
->>> the FW doesn't like it when you ignore its requests for a dummy
->>> packet. Did you try my change with just disabling the re-arm?
->>
->> I have tried both changes. At first disabling the re-arm, it comes
->> with the same crash as when I implement both changes at once.
->
-> What to do with usual fw and scanning?
->
-> # [  165.608684] YY: wl1271_scan_complete_work
-> [  165.614218] wlcore: Scan completed due to error.
+The patch splits cfg80211_check_combinations()
+into an iterator function and a simple iteration
+user.
 
-Ah you didn't mention you also had problems with a regular FW. It's
-probably either an API sync issue between the FW and driver, or a
-platform integration issue where you're sometimes not getting
-interrupts.
+This makes it possible for drivers to asses how
+many channels can use given iftype setup. This in
+turn can be used for future
+multi-interface/multi-channel channel switching.
 
-Arik
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h | 27 +++++++++++++++++++++++++++
+ net/wireless/util.c    | 44 +++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 64 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6deebc8..0a44a14 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4730,6 +4730,33 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			 gfp_t gfp);
+ 
++/**
++ * cfg80211_iter_combinations - iterate over matching combinations
++ *
++ * @wiphy: the wiphy
++ * @num_different_channels: the number of different channels we want
++ *	to use for verification
++ * @radar_detect: a bitmap where each bit corresponds to a channel
++ *	width where radar detection is needed, as in the definition of
++ *	&struct ieee80211_iface_combination.@radar_detect_widths
++ * @iftype_num: array with the numbers of interfaces of each interface
++ *	type.  The index is the interface type as specified in &enum
++ *	nl80211_iftype.
++ * @iter: function to call for each matching combination
++ * @data: pointer to pass to iter function
++ *
++ * This function can be called by the driver to check what possible
++ * combinations it fits in at a given moment, e.g. for channel switching
++ * purposes.
++ */
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index ea4e28d..dbacb4a 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1266,10 +1266,13 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
+-int cfg80211_check_combinations(struct wiphy *wiphy,
+-				const int num_different_channels,
+-				const u8 radar_detect,
+-				const int iftype_num[NUM_NL80211_IFTYPES])
++int cfg80211_iter_combinations(struct wiphy *wiphy,
++			       const int num_different_channels,
++			       const u8 radar_detect,
++			       const int iftype_num[NUM_NL80211_IFTYPES],
++			       void (*iter)(const struct ieee80211_iface_combination *c,
++					    void *data),
++			       void *data)
+ {
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+@@ -1326,13 +1329,40 @@ int cfg80211_check_combinations(struct wiphy *wiphy,
+ 		/* This combination covered all interface types and
+ 		 * supported the requested numbers, so we're good.
+ 		 */
+-		kfree(limits);
+-		return 0;
++
++		(*iter)(c, data);
+  cont:
+ 		kfree(limits);
+ 	}
+ 
+-	return -EBUSY;
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_iter_combinations);
++
++static void
++cfg80211_iter_sum_ifcombs(const struct ieee80211_iface_combination *c,
++			  void *data)
++{
++	int *num = data;
++	(*num)++;
++}
++
++int cfg80211_check_combinations(struct wiphy *wiphy,
++				const int num_different_channels,
++				const u8 radar_detect,
++				const int iftype_num[NUM_NL80211_IFTYPES])
++{
++	int err, num = 0;
++
++	err = cfg80211_iter_combinations(wiphy, num_different_channels,
++					 radar_detect, iftype_num,
++					 cfg80211_iter_sum_ifcombs, &num);
++	if (err)
++		return err;
++	if (num == 0)
++		return -EBUSY;
++
++	return 0;
+ }
+ EXPORT_SYMBOL(cfg80211_check_combinations);
+ 
+-- 
+1.8.5.3
+
