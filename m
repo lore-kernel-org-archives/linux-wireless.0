@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:58072 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758197AbaDBJ6y (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36646 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933353AbaDIRFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 05:58:54 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v6 4/4] brcmfmac: set NET_NAME_USER for P2P ifs
-Date: Wed,  2 Apr 2014 11:58:26 +0200
-Message-Id: <1396432706-14470-5-git-send-email-dh.herrmann@gmail.com> (sfid-20140402_115929_187723_EFFD12A1)
-In-Reply-To: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
-References: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+	Wed, 9 Apr 2014 13:05:44 -0400
+Date: Wed, 9 Apr 2014 10:08:15 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: driverdev-devel@linuxdriverproject.org, andrea.merello@gmail.com,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: staging/rtl8187se should be removed
+Message-ID: <20140409170815.GA17551@kroah.com> (sfid-20140409_190554_585082_F44C2328)
+References: <53450089.9050008@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53450089.9050008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Netdevs created via nl80211 (currently only P2P ifs) have names provided
-by user-space. Therefore, set the naming-policy to NET_NAME_USER so it is
-correctly shown in sysfs.
+On Wed, Apr 09, 2014 at 10:10:49AM +0200, Xose Vazquez Perez wrote:
+> hi,
+> 
+> Support for RTL8187SE devices(0x8199) was added to
+> rtl8180 recently. See 1eba648f998ef9c31b8cf062754a4a7b4ab9001f
 
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
-Acked-by: Kay Sievers <kay.sievers@vrfy.org>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
- 1 file changed, 1 insertion(+)
+Very nice, so, any objection to me deleting the staging driver now?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index f3445ac..f721ed6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2308,6 +2308,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- 		goto fail;
- 	}
- 
-+	ifp->ndev->name_assign_type = NET_NAME_USER;
- 	strncpy(ifp->ndev->name, name, sizeof(ifp->ndev->name) - 1);
- 	err = brcmf_net_attach(ifp, true);
- 	if (err) {
--- 
-1.9.1
+thanks,
 
+greg k-h
