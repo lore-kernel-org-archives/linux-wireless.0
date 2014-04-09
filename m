@@ -1,89 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1048 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbaDOQOB (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:57851 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbaDII6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 12:14:01 -0400
-Date: Tue, 15 Apr 2014 19:13:56 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Allow HT capa override to add 40 MHz intolerant
-Message-ID: <20140415161356.GA14293@jouni.qca.qualcomm.com> (sfid-20140415_181408_065355_35CF34C8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 9 Apr 2014 04:58:14 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so1587472eek.23
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 01:58:13 -0700 (PDT)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH v2 1/2] mac80211: add option to generate CCMP IVs only for mgmt frames
+Date: Wed,  9 Apr 2014 10:57:36 +0200
+Message-Id: <1397033857-2523-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140409_105821_050813_E4AEA081)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful for testing purposes to confirm valid AP behavior on
-HT 20/40 co-existence functionality.
+Some chips can encrypt managment frames in HW, but
+require generated IV in the frame. Add a key flag
+that allows us to achieve this.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 ---
- net/mac80211/ht.c   |   18 +++++++++++++++++-
- net/mac80211/main.c |    3 ++-
- 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c150b68..7ddb260 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -31,6 +31,18 @@ static void __check_htcap_disable(struct ieee80211_ht_cap *ht_capa,
- 	}
- }
+v2: fix missed prefix
+
+ include/net/mac80211.h |   16 ++++++++++------
+ net/mac80211/tx.c      |    5 +++--
+ net/mac80211/wpa.c     |    7 +++++--
+ 3 files changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2de7ff4..77689ca 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1202,14 +1202,18 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  *	fall back to software crypto. Note that this flag deals only with
+  *	RX, if your crypto engine can't deal with TX you can also set the
+  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
++ * @IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX: This flag should be set by the
++ *	driver for a CCMP key to indicate that is requires IV generation
++ *	only for managment frames (MFP).
+  */
+ enum ieee80211_key_flags {
+-	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+-	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
+-	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
+-	IEEE80211_KEY_FLAG_SW_MGMT_TX	= 1<<4,
+-	IEEE80211_KEY_FLAG_PUT_IV_SPACE = 1<<5,
+-	IEEE80211_KEY_FLAG_RX_MGMT	= 1<<6,
++	IEEE80211_KEY_FLAG_GENERATE_IV		= 1<<1,
++	IEEE80211_KEY_FLAG_GENERATE_MMIC	= 1<<2,
++	IEEE80211_KEY_FLAG_PAIRWISE		= 1<<3,
++	IEEE80211_KEY_FLAG_SW_MGMT_TX		= 1<<4,
++	IEEE80211_KEY_FLAG_PUT_IV_SPACE		= 1<<5,
++	IEEE80211_KEY_FLAG_RX_MGMT		= 1<<6,
++	IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX	= 1<<7,
+ };
  
-+static void __check_htcap_enable(struct ieee80211_ht_cap *ht_capa,
-+				  struct ieee80211_ht_cap *ht_capa_mask,
-+				  struct ieee80211_sta_ht_cap *ht_cap,
-+				  u16 flag)
-+{
-+	__le16 le_flag = cpu_to_le16(flag);
-+
-+	if ((ht_capa_mask->cap_info & le_flag) &&
-+	    (ht_capa->cap_info & le_flag))
-+		ht_cap->cap |= flag;
-+}
-+
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_sta_ht_cap *ht_cap)
- {
-@@ -59,7 +71,7 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	smask = (u8 *)(&ht_capa_mask->mcs.rx_mask);
+ /**
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 19d36d4..8a49272 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -625,8 +625,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 				tx->key = NULL;
+ 			else
+ 				skip_hw = (tx->key->conf.flags &
+-					   IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
+-					ieee80211_is_mgmt(hdr->frame_control);
++				   (IEEE80211_KEY_FLAG_SW_MGMT_TX |
++				    IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX)) &&
++				    ieee80211_is_mgmt(hdr->frame_control);
+ 			break;
+ 		case WLAN_CIPHER_SUITE_AES_CMAC:
+ 			if (!ieee80211_is_mgmt(hdr->frame_control))
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b8600e3..2ef2e40 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -450,8 +450,11 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
  
- 	/* NOTE:  If you add more over-rides here, update register_hw
--	 * ht_capa_mod_msk logic in main.c as well.
-+	 * ht_capa_mod_mask logic in main.c as well.
- 	 * And, if this method can ever change ht_cap.ht_supported, fix
- 	 * the check in ieee80211_add_ht_ie.
- 	 */
-@@ -86,6 +98,10 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_htcap_disable(ht_capa, ht_capa_mask, ht_cap,
- 			      IEEE80211_HT_CAP_MAX_AMSDU);
+ 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
  
-+	/* Allow user to enable 40 MHz intolerant bit. */
-+	__check_htcap_enable(ht_capa, ht_capa_mask, ht_cap,
-+			     IEEE80211_HT_CAP_40MHZ_INTOLERANT);
-+
- 	/* Allow user to decrease AMPDU factor */
- 	if (ht_capa_mask->ampdu_params_info &
- 	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4c1bf61..d1d50f7 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -446,7 +446,8 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- 	.cap_info = cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 				IEEE80211_HT_CAP_MAX_AMSDU |
- 				IEEE80211_HT_CAP_SGI_20 |
--				IEEE80211_HT_CAP_SGI_40),
-+				IEEE80211_HT_CAP_SGI_40 |
-+				IEEE80211_HT_CAP_40MHZ_INTOLERANT),
- 	.mcs = {
- 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
- 			     0xff, 0xff, 0xff, 0xff, 0xff, },
+-	/* hwaccel - with software CCMP header */
+-	if (info->control.hw_key)
++	/* hwaccel - with software CCMP header or the HW needs
++	 * generated the IV
++	 */
++	if (info->control.hw_key ||
++	    (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MGMT_IV_TX))
+ 		return 0;
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
 -- 
 1.7.9.5
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
