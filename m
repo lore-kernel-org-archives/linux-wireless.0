@@ -1,54 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:42184 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbaDVAKa (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:56475 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964907AbaDIRvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 20:10:30 -0400
-Received: by mail-ee0-f50.google.com with SMTP id c13so3978902eek.37
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 17:10:29 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 4/4] wl1251: only call ieee80211_beacon_loss in managed mode
-Date: Tue, 22 Apr 2014 03:09:55 +0300
-Message-Id: <1398125395-5579-5-git-send-email-notasas@gmail.com> (sfid-20140422_021035_573397_4FC6006C)
-In-Reply-To: <1398125395-5579-1-git-send-email-notasas@gmail.com>
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
+	Wed, 9 Apr 2014 13:51:42 -0400
+Received: by mail-we0-f178.google.com with SMTP id u56so2778670wes.23
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 10:51:40 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <20140409170815.GA17551@kroah.com>
+References: <53450089.9050008@gmail.com> <20140409170815.GA17551@kroah.com>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Wed, 9 Apr 2014 19:51:20 +0200
+Message-ID: <CAN8YU5M3h_og084bcdgqOGLoQqtrcxbxpPpAR6DBmYGz6pBG-w@mail.gmail.com> (sfid-20140409_195146_479536_75735E9A)
+Subject: Re: staging/rtl8187se should be removed
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	driverdev-devel@linuxdriverproject.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_beacon_loss() is only to be called in managed mode,
-but the firmware may send the sync timeout event at any time,
-so do a check before calling.
+I honestly can't estimate how many rtl8187se users will be gained by
+this driver once it will appears in mainline (considering that most
+users will probably run kernels from distributions, that updates
+fairly slower than vanilla) and how much new use-cases this driver
+will suddenly encounter... Assuming they are not so few, If I had to
+decide, I would vote for keeping the staging driver in parallel to
+rtl8180 driver for a bit..
+In this way we keep a fallback alternative if someone faces any regression..
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- drivers/net/wireless/ti/wl1251/event.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Rtl8180 driver should be enough for most users (and I hope most of
+them will prefer it for a number of reasons, first of all the fact
+that the staging driver here sometimes oopsed), but it is still
+possible that someone will prefer to stick with staging for a while
+(in my plan I will try to do some other features improvement to
+rtl8180, and maybe rtl8187, drivers that indeed are present in staging
+code).
 
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index db01053..c986303 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -124,11 +124,12 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 			return ret;
- 	}
- 
--	if (wl->vif && vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
-+	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
- 
- 		/* indicate to the stack, that beacons have been lost */
--		ieee80211_beacon_loss(wl->vif);
-+		if (wl->vif && wl->vif->type == NL80211_IFTYPE_STATION)
-+			ieee80211_beacon_loss(wl->vif);
- 	}
- 
- 	if (vector & REGAINED_BSS_EVENT_ID) {
--- 
-1.7.9.5
+AFAIK Linux have kept some alternate ethernet driver (intel e100? am I
+right ?) and even two firewire stack for long time.. Maybe for staging
+stuff we can strongly shorten time, but without totally clamping to
+zero :)
 
+... But about this kind of kernel decisions, I guess other people here
+are by far more experienced than me.. This is just my personal humble
+opinion.. Probably I already wasted too much words with it :)
+
+BTW since the staging driver has been the only (AFAIK) source of
+information about rtl8187se HW publicly available, I would like to put
+a note in the rtl8180 driver main file, that indicates the latest
+linux version in which the staging code could be found, as reference
+for who may try to improve/debug rtl8180 driver -se support in future.
+Please notify me when the staging code will be killed, and I will post
+a patch for that comment note update.
+
+Andrea
+
+On Wed, Apr 9, 2014 at 7:08 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Wed, Apr 09, 2014 at 10:10:49AM +0200, Xose Vazquez Perez wrote:
+>> hi,
+>>
+>> Support for RTL8187SE devices(0x8199) was added to
+>> rtl8180 recently. See 1eba648f998ef9c31b8cf062754a4a7b4ab9001f
+>
+> Very nice, so, any objection to me deleting the staging driver now?
+>
+> thanks,
+>
+> greg k-h
