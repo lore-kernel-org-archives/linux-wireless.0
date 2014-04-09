@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegasos-out.vodafone.de ([80.84.1.38]:39515 "EHLO
-	pegasos-out.vodafone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaDFTx0 (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:39256 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933449AbaDINvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Apr 2014 15:53:26 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Driver for RTL8192EE
-From: stefan.krueger@vodafone.de
-Date: Sun, 06 Apr 2014 21:44:38 +0200
-To: larry.finger@lwfinger.net
-CC: linux-wireless@vger.kernel.org
-Message-ID: <89ba0a5d-affe-43ee-aada-f6ed5d8b7b7e@email.android.com> (sfid-20140406_215329_732417_25E76941)
+	Wed, 9 Apr 2014 09:51:52 -0400
+Received: by mail-ee0-f48.google.com with SMTP id b57so1906445eek.35
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:51:51 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 0/5] cfg80211/mac80211: implement multi-vif csa
+Date: Wed,  9 Apr 2014 15:45:32 +0200
+Message-Id: <1397051137-26201-1-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155201_222217_CADFAB22)
+In-Reply-To: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hi,
 
-Hello,
+This is another part of my recent (originally)
+RFC. This is just the channel switching part.
 
-I've seen that you have a driver for the RTL8192EE-chip. I have a Thinkpad L540.
-I use Debian wheezy with a back port kernel 3.13
+This is based on my patchset implementing
+multi-vif chanctx reservations.
 
-Can you please send me the driver for this and how I install it?!
+This effectively enables multi-vif CSA for
+STA/AP/IBSS/mesh (except the fact that channel
+switching itself is still hard-disabled in
+cfg80211 -- maybe it's about time to re-enable?).
 
-Thanks!
 
-Best regards
-Stefan Krüger
+v2:
+ * add radar_detect fix patch (wasn't present in
+   the big RFC)
 
-PS: sorry for my English, but I hope you understand me :)
+v3:
+ * remove radar_detect fix patch (it was
+   cherry-picked)
+ * squash removal of ieee80211_vif_change_channel() [Johannes]
+ * cleanups [Johannes]
+ * add resilience for calling ieee80211_csa_finish() and
+   ieee80211_chswitch_done() more than once (the
+   problem was originally discussed in `ath10k: dont call csa_finish
+   more than once`)
 
-- --
-Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
------BEGIN PGP SIGNATURE-----
-Version: APG v1.1.1
+v4:
+ * fix compilation issue between 2/5 and 3/5
+   (I had squashed vif_change_channel removal too early)
 
-iQJIBAEBCgAyBQJTQa6lKxxTdGVmYW4gS3L8Z2VyIDxzdGVmYW4ua3J1ZWdlckB2
-b2RhZm9uZS5kZT4ACgkQKfL7XZZDcf048hAAg1umeWqnqRsRG8aLvsOGEBmDhVhe
-fFIxkGd57Hvq6hWq3BhfyFAxjrLiFKo//OHRqVXeAPh0mRpSh25jR496lynNsNAG
-2c+fhZoz8qPegby0l31FW6r2ugNJK1zcCQBsDeNhM0bHUEERdqdnmZZsCc0gP/HA
-XFofoLVkUGujaFCyQTLjT72OVpUvcqTKfV+fzsz3l7Ehvr+5zP7Jpwcgpe7kWu7G
-aWRlRv1/4p+PXSZNGx1ZQaTveTqz0TDuQLfBMudQiJH4DgaEv2rYpFH62xqhnUVX
-tMuMjwnsdokAep2iZMzIhCA1WanxvlzP1DXO8McxzT26xSmxpiQvNNj6Yj3G69jd
-jkB3xkH3iOP/qntYWzavIL4AHu6On+iBvW9o8RidVzUVLv7v5wOKdvVY2/i+rseo
-C928JpKBV1u++r5C5VzZi+rzqLC4p8V5kVqHx1My7POxCcvUoT10XXbNO0KrX0+e
-nx8afAu/A7wecyZicZXqcEhH5KvWzdDdLCX8c93XRKvcNM03awHAWQuyxFsvPo4r
-+ZYsB6xGSJZ7ldqrIQe0aMF1F2HI7yfeVOdgUvASj39K5zsWuMYF7i7qIIxh1JHu
-hoq/KjbbvY6G3gJhmenmdPmZQ93Drn/Wl5zTDZD4rpI5doUSXaBylIZ1Dj62Exxx
-Ms89x4J98X+gdyI=
-=cT7c
------END PGP SIGNATURE-----
+Michal Kazior (5):
+  mac80211: make check_combinations() aware of chanctx reservation
+  mac80211: use chanctx reservation for AP CSA
+  mac80211: use chanctx reservation for STA CSA
+  mac80211: ignore cqm during csa
+  cfg80211: remove channel_switch combination check
+
+ net/mac80211/cfg.c         |  82 ++++++++++++++++++++++++------------
+ net/mac80211/chan.c        |  79 ++++++----------------------------
+ net/mac80211/ieee80211_i.h |   5 ---
+ net/mac80211/mlme.c        | 103 ++++++++++++++++++++++++++++++---------------
+ net/mac80211/util.c        |  39 ++++++++++++++++-
+ net/wireless/nl80211.c     |  11 -----
+ 6 files changed, 176 insertions(+), 143 deletions(-)
+
+-- 
+1.8.5.3
 
