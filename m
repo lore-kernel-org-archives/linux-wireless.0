@@ -1,129 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39829 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159AbaD3SXo (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:47021 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933531AbaDINvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 14:23:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  improve vdev map handling.
-Date: Wed, 30 Apr 2014 11:22:59 -0700
-Message-Id: <1398882179-17100-1-git-send-email-greearb@candelatech.com> (sfid-20140430_202348_066697_1E271DC7)
+	Wed, 9 Apr 2014 09:51:55 -0400
+Received: by mail-ee0-f53.google.com with SMTP id b57so1933517eek.12
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:51:54 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, luca@coelho.fi,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 2/5] mac80211: use chanctx reservation for AP CSA
+Date: Wed,  9 Apr 2014 15:45:34 +0200
+Message-Id: <1397051137-26201-3-git-send-email-michal.kazior@tieto.com> (sfid-20140409_155230_133497_2915504D)
+In-Reply-To: <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
+References: <1396267459-9976-1-git-send-email-michal.kazior@tieto.com>
+ <1397051137-26201-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Channel switch finalization is now 2-step. First
+step is when driver calls csa_finish(), the other
+is when reservation is actually finalized (which
+be defered for in-place reservation).
 
-Check vdev map has space before calling ffs,
-fix invalid cleanup in failure to create vdev
-case.
+It is now safe to call ieee80211_csa_finish() more
+then once.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+v3:
+ * fix lockdep typo s/mtx/chanctx_mtx/ [Johannes]
+ * fix comment style [Johannes]
+ * use goto for cleaner unlocking/returning [Johannes]
+ * squash with ieee80211_vif_change_channel() removal patch [Johannes]
+ * fix commit message [Johannes]
+ * add resilience for multiple ieee80211_csa_finish() calls
 
-This is compile-tested only.
+v4:
+ * split removal of ieee80211_vif_change_channel()
 
- drivers/net/wireless/ath/ath10k/mac.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ net/mac80211/cfg.c  | 82 +++++++++++++++++++++++++++++++++++------------------
+ net/mac80211/chan.c | 11 ++++++-
+ 2 files changed, 65 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e2c01dc..d461f05 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -594,14 +594,14 @@ static int ath10k_monitor_vdev_create(struct ath10k *ar)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e7dd809..be9e0c5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3096,17 +3096,35 @@ static int ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
  
- 	lockdep_assert_held(&ar->conf_mutex);
+ 	sdata_assert_lock(sdata);
+ 	lockdep_assert_held(&local->mtx);
++	lockdep_assert_held(&local->chanctx_mtx);
  
--	bit = ffs(ar->free_vdev_map);
--	if (bit == 0) {
-+	if (!ar->free_vdev_map) {
- 		ath10k_warn("failed to find free vdev id for monitor vdev\n");
- 		return -ENOMEM;
- 	}
+-	sdata->radar_required = sdata->csa_radar_required;
+-	err = ieee80211_vif_change_channel(sdata, &changed);
+-	if (err < 0)
+-		return err;
++	/*
++	 * using reservation isn't immediate as it may be deferred until later
++	 * with multi-vif. once reservation is complete it will re-schedule the
++	 * work with no reserved_chanctx so verify chandef to check if it
++	 * completed successfully
++	 */
  
-+	bit = ffs(ar->free_vdev_map);
+-	if (!local->use_chanctx) {
+-		local->_oper_chandef = sdata->csa_chandef;
+-		ieee80211_hw_config(local, 0);
++	if (sdata->reserved_chanctx) {
++		/*
++		 * with multi-vif csa driver may call ieee80211_csa_finish()
++		 * many times while waiting for other interfaces to use their
++		 * reservations
++		 */
++		if (sdata->reserved_ready)
++			return 0;
 +
- 	ar->monitor_vdev_id = bit - 1;
--	ar->free_vdev_map &= ~(1 << ar->monitor_vdev_id);
- 
- 	ret = ath10k_wmi_vdev_create(ar, ar->monitor_vdev_id,
- 				     WMI_VDEV_TYPE_MONITOR,
-@@ -609,20 +609,14 @@ static int ath10k_monitor_vdev_create(struct ath10k *ar)
- 	if (ret) {
- 		ath10k_warn("failed to request monitor vdev %i creation: %d\n",
- 			    ar->monitor_vdev_id, ret);
--		goto vdev_fail;
-+		return ret;
++		err = ieee80211_vif_use_reserved_context(sdata);
++		if (err)
++			return err;
++
++		return 0;
  	}
  
-+	ar->free_vdev_map &= ~(1 << ar->monitor_vdev_id);
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor vdev %d created\n",
- 		   ar->monitor_vdev_id);
++	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
++					&sdata->csa_chandef))
++		return -EINVAL;
++
+ 	sdata->vif.csa_active = false;
  
- 	return 0;
--
--vdev_fail:
--	/*
--	 * Restore the ID to the global map.
--	 */
--	ar->free_vdev_map |= 1 << (ar->monitor_vdev_id);
--	return ret;
+ 	err = ieee80211_set_after_csa_beacon(sdata, &changed);
+@@ -3134,6 +3152,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 
+ 	sdata_lock(sdata);
+ 	mutex_lock(&local->mtx);
++	mutex_lock(&local->chanctx_mtx);
+ 
+ 	/* AP might have been stopped while waiting for the lock. */
+ 	if (!sdata->vif.csa_active)
+@@ -3150,6 +3169,7 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	}
+ 
+ unlock:
++	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+ 	sdata_unlock(sdata);
+ }
+@@ -3284,7 +3304,7 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *conf;
+ 	struct ieee80211_chanctx *chanctx;
+-	int err, num_chanctx, changed = 0;
++	int err, changed = 0;
+ 
+ 	sdata_assert_lock(sdata);
+ 	lockdep_assert_held(&local->mtx);
+@@ -3299,37 +3319,43 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				       &sdata->vif.bss_conf.chandef))
+ 		return -EINVAL;
+ 
++	/* don't allow another channel switch if one is already active. */
++	if (sdata->vif.csa_active)
++		return -EBUSY;
++
+ 	mutex_lock(&local->chanctx_mtx);
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					 lockdep_is_held(&local->chanctx_mtx));
+ 	if (!conf) {
+-		mutex_unlock(&local->chanctx_mtx);
+-		return -EBUSY;
++		err = -EBUSY;
++		goto out;
+ 	}
+ 
+-	/* don't handle for multi-VIF cases */
+ 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
+-	if (ieee80211_chanctx_refcount(local, chanctx) > 1) {
+-		mutex_unlock(&local->chanctx_mtx);
+-		return -EBUSY;
++	if (!chanctx) {
++		err = -EBUSY;
++		goto out;
+ 	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &local->chanctx_list, list)
+-		num_chanctx++;
+-	mutex_unlock(&local->chanctx_mtx);
+ 
+-	if (num_chanctx > 1)
+-		return -EBUSY;
++	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
++					    chanctx->mode,
++					    params->radar_required);
++	if (err)
++		goto out;
+ 
+-	/* don't allow another channel switch if one is already active. */
+-	if (sdata->vif.csa_active)
+-		return -EBUSY;
++	/* if reservation is invalid then this will fail */
++	err = ieee80211_check_combinations(sdata, NULL, chanctx->mode, 0);
++	if (err) {
++		ieee80211_vif_unreserve_chanctx(sdata);
++		goto out;
++	}
+ 
+ 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
+-	if (err)
+-		return err;
++	if (err) {
++		ieee80211_vif_unreserve_chanctx(sdata);
++		goto out;
++	}
+ 
+-	sdata->csa_radar_required = params->radar_required;
+ 	sdata->csa_chandef = params->chandef;
+ 	sdata->csa_block_tx = params->block_tx;
+ 	sdata->vif.csa_active = true;
+@@ -3347,7 +3373,9 @@ int __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_csa_finalize(sdata);
+ 	}
+ 
+-	return 0;
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	return err;
  }
  
- static int ath10k_monitor_vdev_delete(struct ath10k *ar)
-@@ -638,7 +632,7 @@ static int ath10k_monitor_vdev_delete(struct ath10k *ar)
- 		return ret;
- 	}
+ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index cc9e817..48d3d15 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -963,7 +963,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ static void
+ ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
+ {
+-	/* stub */
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_MESH_POINT:
++		ieee80211_queue_work(&sdata->local->hw,
++				     &sdata->csa_finalize_work);
++		break;
++	default:
++		break;
++	}
+ }
  
--	ar->free_vdev_map |= 1 << (ar->monitor_vdev_id);
-+	ar->free_vdev_map |= (1 << ar->monitor_vdev_id);
- 
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac monitor vdev %d deleted\n",
- 		   ar->monitor_vdev_id);
-@@ -2622,11 +2616,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
- 	INIT_LIST_HEAD(&arvif->list);
- 
--	bit = ffs(ar->free_vdev_map);
--	if (bit == 0) {
-+	if (!ar->free_vdev_map) {
-+		ath10k_warn("Free vdev map is empty, no more interfaces allowed.\n");
- 		ret = -EBUSY;
- 		goto err;
- 	}
-+	bit = ffs(ar->free_vdev_map);
- 
- 	arvif->vdev_id = bit - 1;
- 	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
-@@ -2669,7 +2664,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err;
- 	}
- 
--	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
- 	list_add(&arvif->list, &ar->arvifs);
- 
- 	vdev_param = ar->wmi.vdev_param->def_keyid;
-@@ -2762,7 +2757,7 @@ err_peer_delete:
- 
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
--	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	ar->free_vdev_map |= (1 << arvif->vdev_id);
- 	list_del(&arvif->list);
- 
- err:
-@@ -2792,7 +2787,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	}
- 	spin_unlock_bh(&ar->data_lock);
- 
--	ar->free_vdev_map |= 1 << (arvif->vdev_id);
-+	ar->free_vdev_map |= (1 << arvif->vdev_id);
- 	list_del(&arvif->list);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ static int
 -- 
-1.7.11.7
+1.8.5.3
 
