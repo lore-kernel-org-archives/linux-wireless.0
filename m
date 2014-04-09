@@ -1,89 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34700 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbaDUEzJ (ORCPT
+Received: from smtprelay0081.hostedemail.com ([216.40.44.81]:39440 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932786AbaDIQGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 00:55:09 -0400
-Received: by mail-pa0-f48.google.com with SMTP id hz1so3337700pad.21
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 21:55:08 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 06/12] cfg80211: some workqueue improvements
-Date: Mon, 21 Apr 2014 12:53:01 +0800
-Message-Id: <84aff9f5916be0f5cfaa4f145670d0ee06fcf4bf.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065515_531740_7779E343)
-In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-In-Reply-To: <cover.1398055853.git.gamerh2o@gmail.com>
-References: <cover.1398055853.git.gamerh2o@gmail.com>
+	Wed, 9 Apr 2014 12:06:48 -0400
+Message-ID: <1397059601.14321.19.camel@joe-AO722> (sfid-20140409_180658_976557_07480B8D)
+Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Michal Marek <mmarek@suse.cz>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	netdev <netdev@vger.kernel.org>
+Date: Wed, 09 Apr 2014 09:06:41 -0700
+In-Reply-To: <2146187.nt2BTDzSlP@lx-vladimir>
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1396946179-11677-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1396973691.5212.3.camel@joe-AO722> <2146187.nt2BTDzSlP@lx-vladimir>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Works rdev->rfkill_sync and rdev->sched_scan_results_wk are safely
-stopped when unregistering wiphy.
+(adding Michal Marek)
 
-Work reg_regdb_work is safely stopped in regulatory_exit(), if related
-config option is enabled.
+On Wed, 2014-04-09 at 17:08 +0300, Vladimir Kondratiev wrote:
+> On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
+> > On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
+> > > Convert Makefile -> Kbuild,
+> > > to make off-kernel development easier and less intrusive.
+> > No drivers/net directory uses Kbuild.
+> > Why should this?
+> 
+> because it makes it easier to do off-kernel development, and then
+> move things to the proper location within the kernel without
+> conflicting changes in the Makefile.
+> As I understand, Kbuild is better choice because it is really not
+> standalone "Makefile", it is intended to be included by the real
+> Makefile. Thus, distinct name is better.
+> Are there any reasons why not using Kbuild? I did not found
+> guidelines when use Kbuild and when not.
 
-Queue work cfg80211_disconnect_work to workqueue cfg80211_wq, since
-it's a work owned by cfg80211, and so it can be safely stopped in
-destroy_workqueue(cfg80211_wq) in cfg80211_exit().
+Michal?  Any opinion?
 
-Change flush_work() to more robust cancel_work_sync().
-
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/wireless/core.c | 6 ++++--
- net/wireless/reg.c  | 4 ++++
- net/wireless/sme.c  | 2 +-
- 3 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 33d12e2..f7f71d9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -711,9 +711,11 @@ void wiphy_unregister(struct wiphy *wiphy)
- 
- 	rtnl_unlock();
- 
--	flush_work(&rdev->scan_done_wk);
-+	cancel_work_sync(&rdev->rfkill_sync);
-+	cancel_work_sync(&rdev->scan_done_wk);
-+	cancel_work_sync(&rdev->sched_scan_results_wk);
- 	cancel_work_sync(&rdev->conn_work);
--	flush_work(&rdev->event_work);
-+	cancel_work_sync(&rdev->event_work);
- 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
- 	flush_work(&rdev->destroy_work);
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9d32633..45b61f0 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2765,6 +2765,10 @@ void regulatory_exit(void)
- 	cancel_work_sync(&reg_work);
- 	cancel_delayed_work_sync(&reg_timeout);
- 
-+#ifdef CONFIG_CFG80211_INTERNAL_REGDB
-+	cancel_work_sync(&reg_regdb_work);
-+#endif
-+
- 	/* Lock to suppress warnings */
- 	rtnl_lock();
- 	reset_regdomains(true, NULL);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 998674f..0a96d67 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -872,7 +872,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 	wdev->wext.connect.ssid_len = 0;
- #endif
- 
--	schedule_work(&cfg80211_disconnect_work);
-+	queue_work(cfg80211_wq, &cfg80211_disconnect_work);
- }
- 
- void cfg80211_disconnected(struct net_device *dev, u16 reason,
--- 
-1.9.0
 
