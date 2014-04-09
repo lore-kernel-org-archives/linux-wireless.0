@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:38395 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932908AbaDIP3T (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47520 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898AbaDIQpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 11:29:19 -0400
-Received: by mail-pa0-f50.google.com with SMTP id kq14so2655523pab.37
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 08:29:19 -0700 (PDT)
+	Wed, 9 Apr 2014 12:45:20 -0400
+Date: Wed, 9 Apr 2014 12:42:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrea Merello <andrea.merello@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@adurom.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH v2 1/4] rtl8180: change module name in rtl818x_pci
+Message-ID: <20140409164236.GD29924@tuxdriver.com> (sfid-20140409_184526_194084_0F3B89F5)
+References: <877g74i8jv.fsf@purkki.adurom.net>
+ <1396981525-28078-1-git-send-email-andrea.merello@gmail.com>
+ <20140409161034.GC29924@tuxdriver.com>
+ <CAN8YU5N60UqgE3WEZ7BLQb2_BMd_H5CWkP8snNoQm5qxYRiFcQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfcpRZjQ1DV3Bf7O73fhu0XHYPwPFgWG-F2+=Fs7en58iQ@mail.gmail.com>
-References: <CAGm1_ktNAyqWhkTPycA-yKz9iXgqGvx3unjB7JHQpmiKFnFXuA@mail.gmail.com>
- <1396988949.4418.46.camel@dubbel> <CAGm1_ksFRCUNi1DPfmv=+8bBqiWxLSm6EeSYjhfVwR7oiAWBkw@mail.gmail.com>
- <1397035298.4418.60.camel@dubbel> <CAGm1_ktMWV0m1-gUTe8bQT1=f9HseBKCJn22bvPAgxynpeaQLg@mail.gmail.com>
- <1397044175.4418.66.camel@dubbel> <CA+XVXfcig5u1cQ8thxwO4B5_u=69x7FpdmORxMR4dFvpig_CZQ@mail.gmail.com>
- <1397047312.4418.68.camel@dubbel> <CA+XVXfcB7Uu9F2OHffOUy8mfUofMc38LS0GnShx7t0NADNckpg@mail.gmail.com>
- <CAGm1_kvwCoUT+EYTQy8bMda5fjnTz2seD25DP7Q1hfHyXtO5fw@mail.gmail.com> <CA+XVXfcpRZjQ1DV3Bf7O73fhu0XHYPwPFgWG-F2+=Fs7en58iQ@mail.gmail.com>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Wed, 9 Apr 2014 17:28:59 +0200
-Message-ID: <CAGm1_kuVg=Y1kHB=QMwv7gU42=zL=z3MPQ+Xck=zLV_NysVbXw@mail.gmail.com> (sfid-20140409_172923_226487_AC51F368)
-Subject: Re: wl1271: tx stuck in firmware
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	kaloz@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAN8YU5N60UqgE3WEZ7BLQb2_BMd_H5CWkP8snNoQm5qxYRiFcQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 9, 2014 at 3:25 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Wed, Apr 9, 2014 at 4:20 PM, Yegor Yefremov
-> <yegorslists@googlemail.com> wrote:
->> On Wed, Apr 9, 2014 at 3:07 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> Both changes helped a lot. At least one can make a lot of tests
->> without a crash, though I had one
->>
->> # calibrator wlan0 plt tune_channel 0 1
->> # calibrator wlan0 plt tx_tone 1 9000
->> [  180.041505] wlcore: ERROR command complete timeout
->
-> It's a FW error.
-> Not sure which change you tried, but if it was one of Luca's, I guess
-> the FW doesn't like it when you ignore its requests for a dummy
-> packet. Did you try my change with just disabling the re-arm?
+NM, I've got them -- they just got sorted strangely in my mailbox...
 
-I have tried both changes. At first disabling the re-arm, it comes
-with the same crash as when I implement both changes at once.
+On Wed, Apr 09, 2014 at 06:30:14PM +0200, Andrea Merello wrote:
+> Yes, it is.
+> It seems that at least the wireless ML received it.
+> http://marc.info/?l=linux-wireless&m=139662852419525&w=2
+> 
+> BTW I can resend if you need it.
+> 
+> On Wed, Apr 9, 2014 at 6:10 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> > I see parts 1, 3, and 4/4.  Is there a part 2/4 that I missed?
+> >
+> > On Tue, Apr 08, 2014 at 08:25:25PM +0200, Andrea Merello wrote:
+> >> From: Larry Finger <Larry.Finger@lwfinger.net> [ original patch ]
+> >>
+> >> rtl8180 driver can handle also rtl8185 and rtl8187SE cards,
+> >> however in userspace tools (network manager) it still appares
+> >> as "rtl8180".
+> >> This might lead the user to think the wrong driver is in use.
+> >>
+> >> This patch changes module name to "rtl818x_pci" that should be
+> >> more explanatory.
+> >>
+> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net> [ original patch ]
+> >> Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+> >> ---
+> >>  drivers/net/wireless/rtl818x/rtl8180/Makefile | 4 ++--
+> >>  1 file changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/rtl818x/rtl8180/Makefile b/drivers/net/wireless/rtl818x/rtl8180/Makefile
+> >> index 08b056d..21005bd 100644
+> >> --- a/drivers/net/wireless/rtl818x/rtl8180/Makefile
+> >> +++ b/drivers/net/wireless/rtl818x/rtl8180/Makefile
+> >> @@ -1,5 +1,5 @@
+> >> -rtl8180-objs         := dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
+> >> +rtl818x_pci-objs     := dev.o rtl8225.o sa2400.o max2820.o grf5101.o rtl8225se.o
+> >>
+> >> -obj-$(CONFIG_RTL8180)        += rtl8180.o
+> >> +obj-$(CONFIG_RTL8180)        += rtl818x_pci.o
+> >>
+> >>  ccflags-y += -Idrivers/net/wireless/rtl818x
+> >> --
+> >> 1.8.3.2
+> >>
+> >>
+> >
+> > --
+> > John W. Linville                Someday the world will need a hero, and you
+> > linville@tuxdriver.com                  might be all we have.  Be ready.
+> 
 
-Yegor
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
