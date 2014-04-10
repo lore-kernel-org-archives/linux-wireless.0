@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933776AbaDIUjf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42904 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030461AbaDJMht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 16:39:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: stefan.pietsch@lsexperts.de,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: reject invalid IBSS BSSIDs in wext compat code
-Date: Wed,  9 Apr 2014 22:39:24 +0200
-Message-Id: <1397075965-2684-1-git-send-email-johannes@sipsolutions.net> (sfid-20140409_223938_435361_2687194B)
+	Thu, 10 Apr 2014 08:37:49 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Michal Marek <mmarek@suse.cz>
+CC: Joe Perches <joe@perches.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
+Date: Thu, 10 Apr 2014 15:37:45 +0300
+Message-ID: <9443559.tzNazhYoXT@lx-vladimir> (sfid-20140410_143757_402489_9CF74FC8)
+In-Reply-To: <53467B23.6000407@suse.cz>
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1949326.Ead3K8R9Y2@lx-vladimir> <53467B23.6000407@suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thursday, April 10, 2014 01:06:11 PM Michal Marek wrote:
+> It's up to you, since it's your driver :).
 
-Don't allow using a multicast address as the BSSID, that
-isn't a valid configuration.
+Then, I like Kbuild + Makefile better. This makes it clear
+kbuild file is not 'real' top-level makefile.
+So, let's keep this patch as it is.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/ibss.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 071e99c75e82..a953a60b4f41 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -481,6 +481,9 @@ int cfg80211_ibss_wext_siwap(struct net_device *dev,
- 	if (is_zero_ether_addr(bssid) || is_broadcast_ether_addr(bssid))
- 		bssid = NULL;
- 
-+	if (bssid && !is_valid_ether_addr(bssid))
-+		return -EINVAL;
-+
- 	/* both automatic */
- 	if (!bssid && !wdev->wext.ibss.bssid)
- 		return 0;
--- 
-1.9.0
-
+Thanks, Vladimir
