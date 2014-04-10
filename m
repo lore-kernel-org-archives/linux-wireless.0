@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11858 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751457AbaDRTRd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 15:17:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: John Tobias <john.tobias.ph@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Fri, 18 Apr 2014 12:16:07 -0700
-Subject: RE: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout
- handler
-Message-ID: <477F20668A386D41ADCC57781B1F70430F706868D4@SC-VEXCH1.marvell.com> (sfid-20140418_211737_673746_7C307DCC)
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
- <1397710914-10061-2-git-send-email-bzhao@marvell.com>
- <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
- <20140418044619.GF24166@us.netrek.org>
-In-Reply-To: <20140418044619.GF24166@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30265 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934241AbaDJHSq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 03:18:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFTv2 3/5] ath10k: rework peer accounting
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+	<1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	<1397040531-6224-4-git-send-email-michal.kazior@tieto.com>
+	<87k3axhdqc.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=c+dTcK_diBKi6VJVgUkyBv21bDkRf+9GvGyhhqqMuNQ@mail.gmail.com>
+Date: Thu, 10 Apr 2014 10:18:40 +0300
+In-Reply-To: <CA+BoTQ=c+dTcK_diBKi6VJVgUkyBv21bDkRf+9GvGyhhqqMuNQ@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 10 Apr 2014 09:11:13 +0200")
+Message-ID: <87fvllhctr.fsf@kamboji.qca.qualcomm.com> (sfid-20140410_091850_989675_4AE0D9B1)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> > That "adapter->cmd_sent = false" was hoping the firmware is still
-> > alive and can respond to a new command. The reality is that the
-> > timeout usually indicates the firmware has already hung. Sending
-> > another command won't recover it in this case.
-> 
-> I'm dealing with a firmware hang when more than 13 nodes are in an ad-hoc
-> IBSS, and I've just found out isn't entirely a firmware hang; in that we can see
-> beacons and probe responses from the card, using tcpdump and monitor
-> mode.
-> 
-> I'm interested to know if the "firmware hangs" that you experiment with
-> prevent autonomous RF TX, or if RF TX typically proceeds.
+>>> +/* hold conf_mutex for simple iteration, or conf_mutex+data_lock for
+>>> + * modifications */
+>>>  struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+>>>                                    const u8 *addr)
+>>>  {
+>>>       struct ath10k_peer *peer;
+>>>
+>>> -     lockdep_assert_held(&ar->data_lock);
+>>> -
+>>>       list_for_each_entry(peer, &ar->peers, list) {
+>>>               if (peer->vdev_id != vdev_id)
+>>>                       continue;
+>>
+>> The comment here makes me suspicious. How can we safely iterate the list
+>> if we don't take data_lock? Doesn't it mean that the list can change
+>> while we have conf_mutex?
+>
+> The idea is you need BOTH locks to modify the list structure, but you
+> need only one of them to iterate over the list safely and
+> consistently. This means writer will not alter the list structure
+> until there are no readers.
 
-It depends. Even if firmware hangs the hardware is still alive.
-So you could see beacons and probe responses from the card if hardware has been programmed before firmware hangs.
+Still not understanding this. Why not then use conf_mutex always, why do
+we need data_lock at all?
 
-> > I guess you are using SDIO chip. If your host controller supports
-> > MMC_POWER_OFF/UP, you can reset the chip with this approach:
-> >
-> >         mmc_remove_host(host);
-> >         /* some delay */
-> >         mmc_add_host(host);
-> 
-> Thanks, adding that to my list of things to try, as I am using SDIO too.
+Or are you saying that one can iterate the list by either taking
+conf_mutex or by taking data_lock, depending on context?
 
-This code (with 20ms delay) is already in latest driver. Your platform and controller may require a longer delay.
-
-Regards,
-Bing
+-- 
+Kalle Valo
