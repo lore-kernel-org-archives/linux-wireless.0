@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932925AbaDVPRf (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:63779 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965088AbaDJQ1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 11:17:35 -0400
-Message-ID: <1398179846.4211.19.camel@jlt4.sipsolutions.net> (sfid-20140422_172308_770802_A4B0B363)
-Subject: Re: [PATCH] cfg80211: avoid freeing last_request while in flight
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, colleen@cozybit.com,
-	mcgrof@do-not-panic.com, linux@eikelenboom.it
-Date: Tue, 22 Apr 2014 17:17:26 +0200
-In-Reply-To: <1397646587-11078-1-git-send-email-arik@wizery.com> (sfid-20140416_130951_435209_F2416E3D)
-References: <1397646587-11078-1-git-send-email-arik@wizery.com>
-	 (sfid-20140416_130951_435209_F2416E3D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 10 Apr 2014 12:27:47 -0400
+Received: by mail-oa0-f43.google.com with SMTP id eb12so4769691oac.16
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 09:27:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1396360976-28657-6-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+	<1396360976-28657-6-git-send-email-heikki.krogerus@linux.intel.com>
+Date: Thu, 10 Apr 2014 18:27:47 +0200
+Message-ID: <CACRpkdbuvyEQVFv07Bq3dAeGEZr-MuJKJ5mYqdzicROJLwvHDw@mail.gmail.com> (sfid-20140410_182752_245859_1340BE34)
+Subject: Re: [PATCHv3 5/5] net: rfkill: gpio: hard-code the gpio names
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-16 at 14:09 +0300, Arik Nemtsov wrote:
-> Avoid freeing the last request while it is being processed. This can
-> happen in some cases if reg_work is kicked for some reason while the
-> currently pending request is in flight.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> This is to be applied on top of
-> "cfg80211: fix processing world regdomain when non modular"
+On Tue, Apr 1, 2014 at 4:02 PM, Heikki Krogerus
+<heikki.krogerus@linux.intel.com> wrote:
 
-I'll apply Luis's version of this, not sure what's up with the respin
-since he didn't give me a patch to apply to mac80211.git ...
+> There is no need to dynamically generate the names. This
+> will fix a static checker warning..
+>
+> net/rfkill/rfkill-gpio.c:144 rfkill_gpio_probe()
+>     warn: variable dereferenced before check 'rfkill->name'
+>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 
-johannes
+Excellent,
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
+Yours,
+Linus Walleij
