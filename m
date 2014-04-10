@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:62608 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883AbaDNJv5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 05:51:57 -0400
-Received: by mail-pd0-f178.google.com with SMTP id x10so7859656pdj.23
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:51:56 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/6] mac80211: remove config option check
-Date: Mon, 14 Apr 2014 17:51:31 +0800
-Message-Id: <ad0e43bccb39bdc9139601059ca014278ef0aba9.1397469036.git.gamerh2o@gmail.com> (sfid-20140414_115402_530518_B0AC68E8)
-In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
-References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+Received: from mout.gmx.net ([212.227.17.21]:61585 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965159AbaDJSiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 14:38:15 -0400
+Date: Thu, 10 Apr 2014 20:37:53 +0200
+From: Christian Engelmayer <cengelma@gmx.at>
+To: linville@tuxdriver.com, fariyaf@gmail.com
+Cc: dan.carpenter@oracle.com, joe@perches.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH resend] rsi: Fix a potential memory leak in
+ rsi_send_auto_rate_request()
+Message-ID: <20140410203753.4406f4f1@spike> (sfid-20140410_203846_642911_F28C6F66)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ws/ECg0KVk6C=61r5OaMN.1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sanity check and error handling code shouldn't be put into
-CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
-used to control whether to print debug messages.
+--Sig_/ws/ECg0KVk6C=61r5OaMN.1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+Fix a potential memory leak in the error path of function
+rsi_send_auto_rate_request(). In case memory allocation for array
+'selected_rates' fails, the error path exits and leaves the previously
+allocated skb in place. Detected by Coverity: CID 1195575.
+
+Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
 ---
- net/mac80211/tx.c | 2 --
- 1 file changed, 2 deletions(-)
+Applies against git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.g=
+it
+Compile tested.
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 48650da..59715da 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1205,13 +1205,11 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		int q = info->hw_queue;
- 
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		if (WARN_ON_ONCE(q >= local->hw.queues)) {
- 			__skb_unlink(skb, skbs);
- 			ieee80211_free_txskb(&local->hw, skb);
- 			continue;
- 		}
--#endif
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		if (local->queue_stop_reasons[q] ||
--- 
-1.9.0
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless=
+/rsi/rsi_91x_mgmt.c
+index 2361a68..dd7946d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -966,6 +966,7 @@ static int rsi_send_auto_rate_request(struct rsi_common=
+ *common)
+ 	if (!selected_rates) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
+ 			__func__);
++		dev_kfree_skb(skb);
+ 		return -ENOMEM;
+ 	}
+=20
+--=20
+1.8.3.2
 
+--Sig_/ws/ECg0KVk6C=61r5OaMN.1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTRuUBAAoJEKssnEpaPQKEKsMQALe4rVKfSsU9o6dra0tTPaxh
+MRofzv2deadUwPFN1zmI7xM6hWlYEvz1Dmp5RHuobrir+V1k+MfBer7UJRVObcVT
+Fj+h1+V6MamBtMQmwtg6pqG5CdWJDD4APl0k+woQyU9Luaqs4VfvV8axrwaZJ4Ls
+AXH2I9Mm4s8/RkvnBcgaEPBcl6imn1kNK8jLT9OGEcYtm4XYUbf8c2LxHJmiKfwu
+bG4biSUBzal5kJHpmyQL93kym0LpWANFMEHiEYz85erq2tM79qgiQ92J1B1WcGSG
+PNu8xWWnU3M7/UGeNzvHzQMdHf2flBn1311vkgIw8Dm3A+KrkVSLNnj2hy215hPI
+zodbg6MAAMMegVdDxQe5c9uczrDs525XmlvGaZvjxC60nibLvSZUMcGjfVrD8ffI
+Mt4Es/vQlo2W6j77+cD2TUZ2m1ACczKwkMDlLDeeoISmffpWfjEDDp0VBT6Pbu9I
+HfhmrXFRG082jO5sqYBaoUwUSIEdrFysfJjWaVfLOx9p1WVUx2RnvxsFUK9+cXZY
+duPEfC/sF4I/zu+JKpG+c022G4cXjrm252a2YKZiXXKQTrUMB2Kxb3mSvdXRtRe1
+gEuTSgCsmUZ/Qj3vNLim0twDsVwZmlPnv0pxl+qvXZpi5bIHX9UDZYtosLduXBT0
+Bg5sb+4mTcUjPDkMlHvA
+=TBc2
+-----END PGP SIGNATURE-----
+
+--Sig_/ws/ECg0KVk6C=61r5OaMN.1--
