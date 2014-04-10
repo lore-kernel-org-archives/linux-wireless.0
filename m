@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:65050 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbaDBEDq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 00:03:46 -0400
-Received: by mail-pd0-f169.google.com with SMTP id fp1so10574096pdb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 21:03:45 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath9k_htc: set IEEE80211_TX_STAT_AMPDU for acked aggregated frames
-Date: Wed,  2 Apr 2014 12:03:18 +0800
-Message-Id: <1396411398-4525-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140402_060350_342472_74F54609)
+Received: from mga03.intel.com ([143.182.124.21]:45770 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965656AbaDJJgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 05:36:41 -0400
+From: Frederic Danis <frederic.danis@linux.intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, pizza@shaftnet.org,
+	Frederic Danis <frederic.danis@linux.intel.com>
+Subject: [PATCH] cw1200: Fix cw1200_debug_link_id
+Date: Thu, 10 Apr 2014 11:36:38 +0200
+Message-Id: <1397122598-22547-1-git-send-email-frederic.danis@linux.intel.com> (sfid-20140410_113652_103081_C6576CC0)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Frame aggregation requires the IEEE80211_TX_STAT_AMPDU to
-be set so that mac80211 can report the last_tx_rate correctly.
+This array is used in debug string to display cw1200_link_status
+defined in drivers/net/wireless/cw1200/cw1200.h.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Add missing strings for CW1200_LINK_RESET and CW1200_LINK_RESET_REMAP.
+
+Signed-off-by: Frederic Danis <frederic.danis@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/cw1200/debug.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index e8149e3..289f3d8 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -471,8 +471,11 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
- 	if (!txok || !vif || !txs)
- 		goto send_mac80211;
+diff --git a/drivers/net/wireless/cw1200/debug.c b/drivers/net/wireless/cw1200/debug.c
+index e323b4d..34f97c3 100644
+--- a/drivers/net/wireless/cw1200/debug.c
++++ b/drivers/net/wireless/cw1200/debug.c
+@@ -41,6 +41,8 @@ static const char * const cw1200_debug_link_id[] = {
+ 	"REQ",
+ 	"SOFT",
+ 	"HARD",
++	"RESET",
++	"RESET_REMAP",
+ };
  
--	if (txs->ts_flags & ATH9K_HTC_TXSTAT_ACK)
-+	if (txs->ts_flags & ATH9K_HTC_TXSTAT_ACK) {
- 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
-+			tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
-+	}
- 
- 	if (txs->ts_flags & ATH9K_HTC_TXSTAT_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ static const char *cw1200_debug_mode(int mode)
 -- 
 1.7.9.5
 
