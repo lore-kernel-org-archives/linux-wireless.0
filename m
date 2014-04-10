@@ -1,119 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48336 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751663AbaDAOEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 10:04:22 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35849 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965070AbaDJIRk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 04:17:40 -0400
+Received: by mail-pa0-f51.google.com with SMTP id kq14so3662229pab.38
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 01:17:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1397116902.4757.6.camel@jlt4.sipsolutions.net>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+ <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
+ <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
+ <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
+ <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+ <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
+ <CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
+ <CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
+ <CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
+ <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
+ <1397071009.4964.18.camel@jlt4.sipsolutions.net> <CA+XVXfdekoT_jhVL_vpjJSPPD5hAjyprUB+g4kAN2Nssv=9-Ng@mail.gmail.com>
+ <1397116902.4757.6.camel@jlt4.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 10 Apr 2014 11:17:24 +0300
+Message-ID: <CA+XVXfdY65-7S-Hs1vAYSVx05wN98Q-5hmFTrhOduzKkVOdGCA@mail.gmail.com> (sfid-20140410_101746_559796_42FA4670)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
-	Marc Dietrich <marvin24@gmx.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCHv3 2/5] net: rfkill: gpio: remove unused and obsolete platform parameters
-Date: Tue,  1 Apr 2014 17:02:53 +0300
-Message-Id: <1396360976-28657-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20140401_160717_575404_A97B5F7E)
-In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+Cc: Colleen T <colleen@cozybit.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After upgrading to descriptor based gpios, the gpio numbers
-are not used anymore. The power_clk_name and the platform
-specific setup and close hooks are not used by anybody, and
-we should not encourage use of such things, so removing them.
+On Thu, Apr 10, 2014 at 11:01 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2014-04-10 at 09:13 +0300, Arik Nemtsov wrote:
+>> On Wed, Apr 9, 2014 at 10:16 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > +static void reg_free_last_request(struct regulatory_request *lr)
+>> >
+>> > Isn't it odd to pass the last request to a function called
+>> > reg_free_last_request()?
+>> >
+>>
+>> It makes sense to me. Non-last requests are freed using kfree. The
+>> last request needs RCU.
+>
+> Yeah but there can only be one "last request", so why pass it?
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- include/linux/rfkill-gpio.h | 10 ----------
- net/rfkill/rfkill-gpio.c    | 15 +--------------
- 2 files changed, 1 insertion(+), 24 deletions(-)
+oh. well that was weird before as well. :)
+let's wait to see if it solves the bug? I can respin it without the arg later.
 
-diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
-index 4d09f6e..20bcb55 100644
---- a/include/linux/rfkill-gpio.h
-+++ b/include/linux/rfkill-gpio.h
-@@ -27,21 +27,11 @@
-  * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
-  * for unused gpio's, the expected value is -1.
-  * @name:		name for the gpio rf kill instance
-- * @reset_gpio:		GPIO which is used for reseting rfkill switch
-- * @shutdown_gpio:	GPIO which is used for shutdown of rfkill switch
-- * @power_clk_name:	[optional] name of clk to turn off while blocked
-- * @gpio_runtime_close:	clean up platform specific gpio configuration
-- * @gpio_runtime_setup:	set up platform specific gpio configuration
-  */
- 
- struct rfkill_gpio_platform_data {
- 	char			*name;
--	int			reset_gpio;
--	int			shutdown_gpio;
--	const char		*power_clk_name;
- 	enum rfkill_type	type;
--	void	(*gpio_runtime_close)(struct platform_device *);
--	int	(*gpio_runtime_setup)(struct platform_device *);
- };
- 
- #endif /* __RFKILL_GPIO_H */
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index bd2a5b9..0adda44 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -87,7 +87,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- {
- 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
- 	struct rfkill_gpio_data *rfkill;
--	const char *clk_name = NULL;
- 	struct gpio_desc *gpio;
- 	int ret;
- 	int len;
-@@ -101,7 +100,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		if (ret)
- 			return ret;
- 	} else if (pdata) {
--		clk_name = pdata->power_clk_name;
- 		rfkill->name = pdata->name;
- 		rfkill->type = pdata->type;
- 	} else {
-@@ -120,7 +118,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
- 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
- 
--	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
-+	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
- 
- 	gpio = devm_gpiod_get_index(&pdev->dev, rfkill->reset_name, 0);
- 	if (!IS_ERR(gpio)) {
-@@ -146,14 +144,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	if (pdata && pdata->gpio_runtime_setup) {
--		ret = pdata->gpio_runtime_setup(pdev);
--		if (ret) {
--			dev_err(&pdev->dev, "can't set up gpio\n");
--			return ret;
--		}
--	}
--
- 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
- 					  rfkill->type, &rfkill_gpio_ops,
- 					  rfkill);
-@@ -174,10 +164,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- static int rfkill_gpio_remove(struct platform_device *pdev)
- {
- 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
--	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
- 
--	if (pdata && pdata->gpio_runtime_close)
--		pdata->gpio_runtime_close(pdev);
- 	rfkill_unregister(rfkill->rfkill_dev);
- 	rfkill_destroy(rfkill->rfkill_dev);
- 
--- 
-1.9.1
-
+Arik
