@@ -1,71 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2440 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965637AbaDJKXX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46282 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965238AbaDJIJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 06:23:23 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Michal Marek <mmarek@suse.cz>
-CC: Joe Perches <joe@perches.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
-Date: Thu, 10 Apr 2014 13:23:18 +0300
-Message-ID: <1949326.Ead3K8R9Y2@lx-vladimir> (sfid-20140410_122336_448287_D92FCC12)
-In-Reply-To: <534654D7.4080904@suse.cz>
-References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1397059601.14321.19.camel@joe-AO722> <534654D7.4080904@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 10 Apr 2014 04:09:50 -0400
+Message-ID: <1397117376.4757.8.camel@jlt4.sipsolutions.net> (sfid-20140410_101002_161191_C432D9CB)
+Subject: Re: [PATCH 1/8] cfg80211: fix possible compile warning in
+ wext-compat.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 10 Apr 2014 10:09:36 +0200
+In-Reply-To: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com> (sfid-20140409_032851_199422_DE76A6CA)
+References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
+	 (sfid-20140409_032851_199422_DE76A6CA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, April 10, 2014 10:22:47 AM Michal Marek wrote:
-> On 2014-04-09 18:06, Joe Perches wrote:
-> > (adding Michal Marek)
-> > 
-> > On Wed, 2014-04-09 at 17:08 +0300, Vladimir Kondratiev wrote:
-> >> On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
-> >>> On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
-> >>>> Convert Makefile -> Kbuild,
-> >>>> to make off-kernel development easier and less intrusive.
-> >>> No drivers/net directory uses Kbuild.
-> >>> Why should this?
-> >>
-> >> because it makes it easier to do off-kernel development, and then
-> >> move things to the proper location within the kernel without
-> >> conflicting changes in the Makefile.
-> 
-> You can create a GNUmakefile for this purpose, it takes precedence over
-> Makefile.
-> 
-> 
-> >> As I understand, Kbuild is better choice because it is really not
-> >> standalone "Makefile", it is intended to be included by the real
-> >> Makefile. Thus, distinct name is better.
-> >> Are there any reasons why not using Kbuild? I did not found
-> >> guidelines when use Kbuild and when not.
-> 
-> Kbuild is a slightly better choice because it better describes the
-> content, but I don't think its needed to rename existing Makefiles just
-> because of that. Kbuild is needed in the toplevel directory or in
-> arch/*/, where Makefile has a different special meaning. The out of tree
-> build use case can be solved by a GNUmakefile.
-> 
+On Wed, 2014-04-09 at 09:28 +0800, Zhao, Gang wrote:
+> Function cfg80211_wext_freq() is declared in wext-compat.h, but its
+> parameter struct wiphy's declaration is not included there. Actually
+> the parameter is not used in this function, so change it to normal
+> net_device.
 
-Originally, I followed the code found at
-drivers/scsi/osd/
-They have Kbuild for in-kernel use and Makefile for out-of-tree
+I applied this, but the netdev argument is also unused so I just removed
+it entirely.
 
-But now I found, Documentation/kbuild/makefiles.txt says:
----cut---
-The preferred name for the kbuild files are 'Makefile' but 'Kbuild' can
-be used and if both a 'Makefile' and a 'Kbuild' file exists, then the 'Kbuild'
-file will be used.
----cut---
+johannes
 
-Accordingly to this, would you say I should drop this patch and go with
-GNUmakefile + Makefile for internal development? I am pretty neutral with
-this, just need to know what is the proper way.
-
-Thanks, Vladimir 
