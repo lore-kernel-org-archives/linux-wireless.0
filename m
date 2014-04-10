@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:39115 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbaDUXPE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 19:15:04 -0400
-Received: by mail-pa0-f42.google.com with SMTP id fb1so4247368pad.15
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 16:15:04 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, nbd@openwrt.org
-Subject: [PATCH 1/2] ath9k: fix possible hang on flush
-Date: Mon, 21 Apr 2014 16:14:56 -0700
-Message-Id: <1398122097-23544-1-git-send-email-tharvey@gateworks.com> (sfid-20140422_011539_945924_2FDB891E)
+Received: from cantor2.suse.de ([195.135.220.15]:43646 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964832AbaDJIWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 04:22:50 -0400
+Message-ID: <534654D7.4080904@suse.cz> (sfid-20140410_102302_776335_018CE328)
+Date: Thu, 10 Apr 2014 10:22:47 +0200
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com>	 <1396946179-11677-2-git-send-email-qca_vkondrat@qca.qualcomm.com>	 <1396973691.5212.3.camel@joe-AO722> <2146187.nt2BTDzSlP@lx-vladimir> <1397059601.14321.19.camel@joe-AO722>
+In-Reply-To: <1397059601.14321.19.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a flush is requested, make sure to clear the descriptor once we've
-processed it.
+On 2014-04-09 18:06, Joe Perches wrote:
+> (adding Michal Marek)
+> 
+> On Wed, 2014-04-09 at 17:08 +0300, Vladimir Kondratiev wrote:
+>> On Tuesday, April 08, 2014 09:14:51 AM Joe Perches wrote:
+>>> On Tue, 2014-04-08 at 11:36 +0300, Vladimir Kondratiev wrote:
+>>>> Convert Makefile -> Kbuild,
+>>>> to make off-kernel development easier and less intrusive.
+>>> No drivers/net directory uses Kbuild.
+>>> Why should this?
+>>
+>> because it makes it easier to do off-kernel development, and then
+>> move things to the proper location within the kernel without
+>> conflicting changes in the Makefile.
 
-This resolves a hang that will occur if all RX descriptors are full when a
-flush is requested.
+You can create a GNUmakefile for this purpose, it takes precedence over
+Makefile.
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6c9accd..e77a253 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1113,14 +1113,13 @@ requeue_drop_frag:
- 		}
- requeue:
- 		list_add_tail(&bf->list, &sc->rx.rxbuf);
--		if (flush)
--			continue;
- 
- 		if (edma) {
- 			ath_rx_edma_buf_link(sc, qtype);
- 		} else {
- 			ath_rx_buf_relink(sc, bf);
--			ath9k_hw_rxena(ah);
-+			if (!flush)
-+				ath9k_hw_rxena(ah);
- 		}
- 	} while (1);
- 
--- 
-1.8.3.2
+>> As I understand, Kbuild is better choice because it is really not
+>> standalone "Makefile", it is intended to be included by the real
+>> Makefile. Thus, distinct name is better.
+>> Are there any reasons why not using Kbuild? I did not found
+>> guidelines when use Kbuild and when not.
 
+Kbuild is a slightly better choice because it better describes the
+content, but I don't think its needed to rename existing Makefiles just
+because of that. Kbuild is needed in the toplevel directory or in
+arch/*/, where Makefile has a different special meaning. The out of tree
+build use case can be solved by a GNUmakefile.
+
+Michal
