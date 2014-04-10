@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:59596 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932785AbaDIKHo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:07:44 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so1681906eek.32
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:07:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/4] ath10k: fix firmware recovery with ap interface
-Date: Wed,  9 Apr 2014 12:01:25 +0200
-Message-Id: <1397037685-7485-5-git-send-email-michal.kazior@tieto.com> (sfid-20140409_120752_325324_78C89E85)
-In-Reply-To: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
-References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+Received: from cantor2.suse.de ([195.135.220.15]:47235 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030249AbaDJLGN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 07:06:13 -0400
+Message-ID: <53467B23.6000407@suse.cz> (sfid-20140410_130624_670131_50903189)
+Date: Thu, 10 Apr 2014 13:06:11 +0200
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: Joe Perches <joe@perches.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/5] wil6210: Convert to Kbuild
+References: <1396946179-11677-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1397059601.14321.19.camel@joe-AO722> <534654D7.4080904@suse.cz> <1949326.Ead3K8R9Y2@lx-vladimir>
+In-Reply-To: <1949326.Ead3K8R9Y2@lx-vladimir>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacon data wasn't properly cleared during early
-phase of recovery. This in turn caused firmware to
-crash because the beacon data was submitted before
-vdevs were fully re-configured. Ultimately the
-device was considered wedged and nothing worked
-until driver was reloaded.
+On 2014-04-10 12:23, Vladimir Kondratiev wrote:
+> On Thursday, April 10, 2014 10:22:47 AM Michal Marek wrote:
+>> Kbuild is a slightly better choice because it better describes the
+>> content, but I don't think its needed to rename existing Makefiles just
+>> because of that. Kbuild is needed in the toplevel directory or in
+>> arch/*/, where Makefile has a different special meaning. The out of tree
+>> build use case can be solved by a GNUmakefile.
+>>
+> 
+> Originally, I followed the code found at
+> drivers/scsi/osd/
+> They have Kbuild for in-kernel use and Makefile for out-of-tree
+> 
+> But now I found, Documentation/kbuild/makefiles.txt says:
+> ---cut---
+> The preferred name for the kbuild files are 'Makefile' but 'Kbuild' can
+> be used and if both a 'Makefile' and a 'Kbuild' file exists, then the 'Kbuild'
+> file will be used.
+> ---cut---
+> 
+> Accordingly to this, would you say I should drop this patch and go with
+> GNUmakefile + Makefile for internal development? I am pretty neutral with
+> this, just need to know what is the proper way.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+It's up to you, since it's your driver :). But the trick with
+GNUmakefile works with the driver as-is as well as any other driver, so
+it might be easier just to use that.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5a9da3a..143ea1c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2264,6 +2264,8 @@ static void ath10k_tx(struct ieee80211_hw *hw,
-  */
- void ath10k_halt(struct ath10k *ar)
- {
-+	struct ath10k_vif *arvif;
-+
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	ath10k_stop_cac(ar);
-@@ -2280,6 +2282,17 @@ void ath10k_halt(struct ath10k *ar)
- 		ar->scan.in_progress = false;
- 		ieee80211_scan_completed(ar->hw, true);
- 	}
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (!arvif->beacon)
-+			continue;
-+
-+		dma_unmap_single(arvif->ar->dev,
-+				 ATH10K_SKB_CB(arvif->beacon)->paddr,
-+				 arvif->beacon->len, DMA_TO_DEVICE);
-+		dev_kfree_skb_any(arvif->beacon);
-+		arvif->beacon = NULL;
-+	}
- 	spin_unlock_bh(&ar->data_lock);
- }
- 
--- 
-1.8.5.3
-
+Michal
