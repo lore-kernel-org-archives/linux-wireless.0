@@ -1,58 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redpinesignals.com ([203.196.161.92]:54299 "EHLO
-	mail.redpinesignals.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbaDVGlQ (ORCPT
+Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:19302 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965147AbaDJSLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 02:41:16 -0400
-Message-ID: <53560E9A.6020105@redpinesignals.com> (sfid-20140422_084121_292965_6E54AEC6)
-Date: Tue, 22 Apr 2014 12:09:22 +0530
-From: Sowjanya <sowjanya.t@redpinesignals.com>
+	Thu, 10 Apr 2014 14:11:41 -0400
+Message-ID: <5346DED8.2030704@free.fr> (sfid-20140410_201146_496952_AF9DEEA6)
+Date: Thu, 10 Apr 2014 20:11:36 +0200
+From: WebAV <webav@free.fr>
 MIME-Version: 1.0
-To: John Tobias <john.tobias.ph@gmail.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Testing WMM
-References: <CACUGKYPP9s1cSJEpuBfQxT9=xLY57t0-kLZ8D=X2gaVcXbC2Nw@mail.gmail.com> <53553C69.8090307@candelatech.com>
-In-Reply-To: <53553C69.8090307@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Mwifiex driver on Globascal Mirabox
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hello John,
+     Hi,
 
-     You can use Ixia chariot to send traffic (RTP/UDP/TCP type) for 
-different access categories.
-Also you can use iperf to send traffic with different tos.
+Mwifiex driver doesn't work on Globalscale Mirabox (SD8787), when I do a 
+"iw mlan0 scan" command :
 
-Thanks
-Sowjanya.
+with a 3.12 kernel : mwifiex_cmd_timeout_func: Timeout cmd id () = 0x6, 
+act = 0x3
 
-On 04/21/2014 09:12 PM, Ben Greear wrote:
-> On 04/18/2014 04:51 PM, John Tobias wrote:
->> Hello Guys,
->>
->> I would like to test the following WMM features of the wifi driver.
->>
->> wmm_ac_vo
->> wmm_ac_vi
->> wmm_ac_be
->> wmm_ac_bk
->>
->> What tools did you use to test it?.
-> Use user-space app that can set IP ToS.  The OS/driver should put the
-> packets in the appropriate wmm queue.  Ensure that higher priority traffic
-> actually gets higher priority when over-driving each queue.
->
-> Thanks,
-> Ben
->
->> Regards,
->>
->> john
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+With a 3.14.0-next-20140409 :  mwifiex_cmd_timeout_func: Timeout cmd id 
+() = 0x107, act = 0x0
+
+dmesg :
+
+mwifiex_sdio mmc0:0001:1: cmd: QUEUE_CMD: cmd=0x107, cmd_pending=1
+mwifiex_sdio mmc0:0001:1: event: wakeup device...
+mwifiex_sdio mmc0:0001:1: int: sdio_ireg = 0x3
+mwifiex_sdio mmc0:0001:1: int: DNLD: wr_bitmap=0xffff
+mwifiex_sdio mmc0:0001:1: info: cmd_sent=0 data_sent=0
+mwifiex_sdio mmc0:0001:1: int: UPLD: rd_bitmap=0x1
+mwifiex_sdio mmc0:0001:1: data: mp_rd_bitmap=0x00000001
+mwifiex_sdio mmc0:0001:1: data: port=0 mp_rd_bitmap=0x00000000
+mwifiex_sdio mmc0:0001:1: info: RX: port=0 rx_len=10
+mwifiex_sdio mmc0:0001:1: info: rx_len = 256 skb->len = 256
+mwifiex_sdio mmc0:0001:1: info: mwifiex_sdio_card_to_host_mp_aggr: no 
+aggregation for cmd response
+mwifiex_sdio mmc0:0001:1: info: RX: port: 0, rx_len: 256
+mwifiex_sdio mmc0:0001:1: info: --- Rx: Event ---
+mwifiex_sdio mmc0:0001:1: data: mp_rd_bitmap=0x00000000
+mwifiex_sdio mmc0:0001:1: info: no more rd_port available
+mwifiex_sdio mmc0:0001:1: info: EVENT: AWAKE
+mwifiex_sdio mmc0:0001:1: cmd: DNLD_CMD: (1397151023.654452): 0x107, act 
+0x0, len 80, seqno 0x26
+mwifiex_sdio mmc0:0001:1: info: mwifiex_host_to_card_mp_aggr: tx 
+aggregation disabled
+mwifiex_sdio mmc0:0001:1: data: mwifiex_host_to_card_mp_aggr: send 
+current buffer 0
+mwifiex_sdio mmc0:0001:1: data: 3595 BSS(0-0): Data <= kernel
+mwifiex_sdio mmc0:0001:1: data: 3996 BSS(0-0): Data <= kernel
+mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id 
+(1397151033.670677) = 0x107, act = 0x0
+mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+mwifiex_sdio mmc0:0001:1: is_cmd_timedout = 1
+mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
+mwifiex_sdio mmc0:0001:1: last_cmd_id: 10 00 07 01 10 00 e4 00 10 00
+mwifiex_sdio mmc0:0001:1: last_cmd_act: 01 00 00 00 01 00 ff 00 01 00
+mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
+mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 10 80 10 80 10 80 e4 80 10 80
+mwifiex_sdio mmc0:0001:1: last_event_index = 4
+mwifiex_sdio mmc0:0001:1: last_event: 00 00 0b 00 0a 00 0b 00 0a 00
+mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
+mwifiex_sdio mmc0:0001:1: ps_mode=1 ps_state=0
+mwifiex_sdio mmc0:0001:1: cmd: FREE_CMD: cmd=0x107, cmd_pending=0
+mwifiex_sdio mmc0:0001:1: cmd timeout
+mwifiex_sdio mmc0:0001:1: info: aborting scan
+mwifiex_sdio: Resetting card...
+mwifiex_sdio: info: SDIO func num=1
+mwifiex_sdio mmc0:0001:1: cmd: calling mwifiex_shutdown_drv...
+mwifiex_sdio mmc0:0001:1: info: shutdown mwifiex...
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 0, head = ee1180d0
+mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb1c0, next = ee3fb380
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 1, head = ee1180dc
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 2, head = ee1180e8
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 0, head = ee1180d0
+mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb380, next = ee3fb300
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 1, head = ee1180dc
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 2, head = ee1180e8
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 0, head = ee1180d0
+mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb300, next = ee1180d0
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 1, head = ee1180dc
+mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0, 
+bss_num = 0, i = 2, head = ee1180e8
+mwifiex_sdio mmc0:0001:1: info: free cmd buffer
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 0
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 1
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 2
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 3
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 4
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 5
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 6
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 7
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 8
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 9
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 10
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 11
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 12
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 13
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 14
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 15
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 16
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 17
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 18
+mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 19
+mwifiex_sdio mmc0:0001:1: cmd: free cmd pool
+mwifiex_sdio mmc0:0001:1: info: free scan table
+mwifiex_sdio mmc0:0001:1: cmd: mwifiex_shutdown_drv done
+mwifiex_sdio mmc0:0001:1: info: unregister device
+mwifiex_sdio mmc0:0001:1: info: free adapter
+mwifiex: info: mwifiex_free_adapter: free adapter
+mmc0: card 0001 removed
+mmc0: new high speed SDIO card at address 0001
+mwifiex_sdio: info: vendor=0x02DF device=0x9119 class=0 function=1
+mwifiex_sdio: info: SDIO FUNC1 IO port: 0x10000
+mwifiex_sdio mmc0:0001:1: info: downloading FW image (447384 bytes)
+mwifiex_sdio mmc0:0001:1: poll card status failed, tries = 100
+mwifiex_sdio mmc0:0001:1: FW download with helper: poll status timeout @ 0
+mwifiex_sdio mmc0:0001:1: prog_fw failed ret=0xffffffff
+mwifiex: info: mwifiex_fw_dpc: unregister device
+mwifiex: info: mwifiex_free_adapter: free adapter
+
+Tell me if you need more information.
+
+
+
+
+
+
+
+
+
+
+
+
 
