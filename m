@@ -1,58 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from the.earth.li ([46.43.34.31]:59987 "EHLO the.earth.li"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752014AbaDPGKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 02:10:48 -0400
-Date: Wed, 16 Apr 2014 07:10:43 +0100
-From: Jonathan McDowell <noodles@earth.li>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Ilw] Re: Intel 7260 not working in 802.11n mode
-Message-ID: <20140416061043.GZ24850@earth.li> (sfid-20140416_081052_673178_425C49B8)
-References: <20140407003648.GA19740@earth.li>
- <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
- <20140407064556.GN24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
- <20140407152312.GO24850@earth.li>
- <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:64650 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935142AbaDJKRK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 06:17:10 -0400
+Received: by mail-ee0-f47.google.com with SMTP id b15so2845020eek.34
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Apr 2014 03:17:09 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: double check bmi xfer pointers
+Date: Thu, 10 Apr 2014 12:05:55 +0200
+Message-Id: <1397124355-6321-1-git-send-email-michal.kazior@tieto.com> (sfid-20140410_121720_354304_D9899788)
+In-Reply-To: <53461A8A.4030209@candelatech.com>
+References: <53461A8A.4030209@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 13, 2014 at 11:07:10AM +0000, Grumbach, Emmanuel wrote:
-> > > Your log seems healthy - you associate at Apr  6 17:17:20 and
-> > > disassociate at Apr  6 17:18:05 - was that intentional?
-> > 
-> > All I did was load the module with the debug parameter set, let Network
-> > Manager do its thing and wait for the connection to fail, then unload the
-> > module. NM is reporting that the DHCP times out - log at:
-> > 
-> > http://the.earth.li/~noodles/iwlfail-nm.log
-> > 
-> > I'd be blaming Network Manager or some other piece of configuration if it
-> > wasn't for the fact that disabling 11n makes things work.
-> > 
-> I really can't see anything bad in this log.
-> Can you run tracing?
-> 
-> sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e cfg80211
-> 
-> this will create a trace.dat file which I'd like to look at.
+If for some reason copy engine ring buffer became
+corrupt ath10k could crash the machine due to
+invalid pointer dereference. It's very unlikely
+but devices can never be fully trusted so verify
+if the bmi xfer pointer read back from copy engine
+matches the original pointer. The bug looked as
+follows:
 
-http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
+ BUG: unable to handle kernel paging request at ffffffff815d6133
+...
+ Call Trace:
+ [<ffffffff810fdaf4>] ? mark_held_locks+0x71/0x99
+ [<ffffffff810c6b6d>] ? __local_bh_enable_ip+0xaa/0xd9
+ [<ffffffff810fd7eb>] lock_acquire+0x82/0x9d
+ [<ffffffff810f5999>] ? complete+0x19/0x45
+ [<ffffffff810c6b72>] ? __local_bh_enable_ip+0xaf/0xd9
+ [<ffffffff815d5f9b>] _raw_spin_lock_irqsave+0x47/0x5a
+ [<ffffffff810f5999>] ? complete+0x19/0x45
+ [<ffffffff810f5999>] complete+0x19/0x45
+ [<ffffffffa056d977>] ath10k_pci_hif_exchange_bmi_msg+0x267/0x3f4 [ath10k_pci]
+ [<ffffffffa0471b42>] ath10k_hif_exchange_bmi_msg+0xe/0x10 [ath10k_core]
+ [<ffffffffa0471f01>] ath10k_bmi_write_memory+0xc4/0x12d [ath10k_core]
+ [<ffffffffa046877f>] ath10k_core_start+0x207/0x828 [ath10k_core]
+ [<ffffffffa0469723>] ath10k_core_register+0x5ca/0x77f [ath10k_core]
+...
 
-and for completeness, with disable_11n=1:
+Reported-By: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 30 ++++++++++++++++++++++--------
+ 1 file changed, 22 insertions(+), 8 deletions(-)
 
-http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
-
-In both cases I started the trace, flipped the hardware wifi disable
-switch, let Network Manager do its thing.
-
-J.
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index bf1083d..85e84c9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1390,35 +1390,49 @@ err_dma:
+ 	return ret;
+ }
+ 
+-static void ath10k_pci_bmi_send_done(struct ath10k_ce_pipe *ce_state)
++static void ath10k_pci_bmi_send_done(struct ath10k_ce_pipe *ce_state,
++				     struct bmi_xfer *xfer)
+ {
+-	struct bmi_xfer *xfer;
++	void *ptr;
+ 	u32 ce_data;
+ 	unsigned int nbytes;
+ 	unsigned int transfer_id;
+ 
+-	if (ath10k_ce_completed_send_next(ce_state, (void **)&xfer, &ce_data,
++	if (ath10k_ce_completed_send_next(ce_state, (void **)&ptr, &ce_data,
+ 					  &nbytes, &transfer_id))
+ 		return;
+ 
++	if (xfer != ptr) {
++		ath10k_warn("failed to verify bmi xfer tx pointer (got %p expected %p)\n",
++			    ptr, xfer);
++		return;
++	}
++
+ 	if (xfer->wait_for_resp)
+ 		return;
+ 
+ 	complete(&xfer->done);
+ }
+ 
+-static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
++static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state,
++				     struct bmi_xfer *xfer)
+ {
+-	struct bmi_xfer *xfer;
++	void *ptr;
+ 	u32 ce_data;
+ 	unsigned int nbytes;
+ 	unsigned int transfer_id;
+ 	unsigned int flags;
+ 
+-	if (ath10k_ce_completed_recv_next(ce_state, (void **)&xfer, &ce_data,
++	if (ath10k_ce_completed_recv_next(ce_state, (void **)&ptr, &ce_data,
+ 					  &nbytes, &transfer_id, &flags))
+ 		return;
+ 
++	if (xfer != ptr) {
++		ath10k_warn("failed to verify bmi xfer rx pointer (got %p expected %p)\n",
++			    ptr, xfer);
++		return;
++	}
++
+ 	if (!xfer->wait_for_resp) {
+ 		ath10k_warn("unexpected: BMI data received; ignoring\n");
+ 		return;
+@@ -1435,8 +1449,8 @@ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ 	unsigned long timeout = jiffies + BMI_COMMUNICATION_TIMEOUT_HZ;
+ 
+ 	while (time_before_eq(jiffies, timeout)) {
+-		ath10k_pci_bmi_send_done(tx_pipe);
+-		ath10k_pci_bmi_recv_data(rx_pipe);
++		ath10k_pci_bmi_send_done(tx_pipe, xfer);
++		ath10k_pci_bmi_recv_data(rx_pipe, xfer);
+ 
+ 		if (completion_done(&xfer->done))
+ 			return 0;
 -- 
-I just Fedexed my soul to hell. I'm *real* clever.
+1.8.5.3
+
