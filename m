@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:51711 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbaDDQOJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5425 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbaDJGLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 12:14:09 -0400
-Received: by mail-wg0-f51.google.com with SMTP id k14so3756073wgh.10
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Apr 2014 09:14:08 -0700 (PDT)
-Message-ID: <533EDA4E.9020308@gmail.com> (sfid-20140404_181415_231460_5210AF7F)
-Date: Fri, 04 Apr 2014 18:14:06 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Thu, 10 Apr 2014 02:11:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath10k: don't wait for device init if it crashed
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+	<1397038028-7665-3-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 10 Apr 2014 09:11:04 +0300
+In-Reply-To: <1397038028-7665-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 9 Apr 2014 12:07:07 +0200")
+Message-ID: <87siplhfyf.fsf@kamboji.qca.qualcomm.com> (sfid-20140410_081146_477265_509F95EF)
 MIME-Version: 1.0
-To: fariyaf@gmail.com, linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Submission of firmware for driver RSI
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fariya wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> I would like to submit the RSI firmware to the linux-firmware git. Can
-> anyone point me to the procedure for f/w submission? Can I submit the
-> f/w onto this mailing list?
+> When warm resetting it's possible for device to
+> crash during initialization. Instead of waiting 3
+> seconds just return failure as soon as
+> FW_IND_EVENT_PENDING is set.
+>
+> This speeds up device bootup and recovery in some
+> cases.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/plain/README
-is your friend:
+[...]
 
---cut--
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2452,6 +2452,9 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+>  		if (val == 0xffffffff)
+>  			continue;
+>  
+> +		if (val & FW_IND_EVENT_PENDING)
+> +			break;
 
-	Linux firmware
-	==============
+Can you add a small comment here explaining why we do this? "device has
+most probably crashed" or something like that.
 
-  <http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git>
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-
-This repository contains all these firmware images which have been
-extracted from older drivers, as well various new firmware images which
-we were never permitted to include in a GPL'd work, but which we _have_
-been permitted to redistribute under separate cover.
-
-To submit firmware to this repository, please send either a git binary
-diff or preferably a git pull request to:
-      David Woodhouse <dwmw2@infradead.org>
-      Ben Hutchings <ben@decadent.org.uk>
-and also cc: to related mailing lists.
-
-Your commit should include an update to the WHENCE file clearly
-identifying the licence under which the firmware is available, and
-that it is redistributable. If the licence is long and involved, it's
-permitted to include it in a separate file and refer to it from the
-WHENCE file.
-And if it were possible, a changelog of the firmware itself.
-
-Ideally, your commit should contain a Signed-Off-By: from someone
-authoritative on the licensing of the firmware in question (i.e. from
-within the company that owns the code).
-
-
-WARNING:
-=======
-
-Don't send any "CONFIDENTIALITY STATEMENT" in your e-mail, patch or
-request. Otherwise your firmware _will never be accepted_.
-
-Maintainers are really busy, so don't expect a prompt reply.
---theend--
+-- 
+Kalle Valo
