@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:44351 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbaDVAK2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 20:10:28 -0400
-Received: by mail-ee0-f49.google.com with SMTP id c41so3953541eek.22
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 17:10:27 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 3/4] wl1251: fix mixed up args for join
-Date: Tue, 22 Apr 2014 03:09:54 +0300
-Message-Id: <1398125395-5579-4-git-send-email-notasas@gmail.com> (sfid-20140422_021038_155370_54AADAB4)
-In-Reply-To: <1398125395-5579-1-git-send-email-notasas@gmail.com>
-References: <1398125395-5579-1-git-send-email-notasas@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:55483 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758633AbaDJUNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 16:13:35 -0400
+Date: Thu, 10 Apr 2014 22:13:22 +0200
+From: Christian Engelmayer <cengelma@gmx.at>
+To: Andev <debiandev@gmail.com>
+Cc: Greg Kroah-Hartman <greg@kroah.com>, linville@tuxdriver.com,
+	fariyaf@gmail.com, dan.carpenter@oracle.com, joe@perches.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH resend] rsi: Fix a potential memory leak in
+ rsi_set_channel()
+Message-ID: <20140410221322.547b9888@spike> (sfid-20140410_221421_912061_8C879FC0)
+In-Reply-To: <CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com>
+References: <20140410203146.767149e7@spike>
+	<CAJUuVQ5KW3v0DgwotDMow=rBvxoZKfYYD2misXbsMD6c1UaShw@mail.gmail.com>
+	<20140410195402.GA17308@kroah.com>
+	<CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/h+yLX4qGYraNGswgcq3+mcG"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The join arguments are mixed up, passing beacon_interval instead of
-channel and channel instead of beacon_interval. Fix them.
+--Sig_/h+yLX4qGYraNGswgcq3+mcG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Thu, 10 Apr 2014 16:01:35 -0400, Andev <debiandev@gmail.com> wrote:
+> On Thu, Apr 10, 2014 at 3:54 PM, Greg Kroah-Hartman <greg@kroah.com> wrot=
+e:
+> > On Thu, Apr 10, 2014 at 03:46:12PM -0400, Andev wrote:
+> >> Adding Greg KH,
+> >
+> > Why do I care about this?
+> >
+>=20
+> I am not sure if this needs to be applied to stable too. Should I have
+> cc'ed stable@?
+>=20
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index f557eb5..4e782f1 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1226,8 +1226,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 		if (ret < 0)
- 			goto out_sleep;
- 
--		ret = wl1251_join(wl, wl->bss_type, wl->beacon_int,
--				  wl->channel, wl->dtim_period);
-+		ret = wl1251_join(wl, wl->bss_type, wl->channel,
-+				  wl->beacon_int, wl->dtim_period);
- 
- 		if (ret < 0)
- 			goto out_sleep;
--- 
-1.7.9.5
+Besides what Dan pointed out, this driver has just been pulled recently and=
+ afaik
+is not included in v3.14. see http://www.spinics.net/lists/netdev/msg276519=
+.html
 
+Regards,
+Christian
+
+--Sig_/h+yLX4qGYraNGswgcq3+mcG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTRvtiAAoJEKssnEpaPQKEsxQQAIgoSlR290JYz5vhF4XbqdBP
+GG4cmE4ChZVoXjMtKOfUXUQhYHrk6JcieVsSFNEu96uZVORGVscO5b/v9h8ZnZFG
++NTp9AE1A56nc51VxL5mWMDuF8OVTrCOF567H6anKszg7EO6XcexeJ7eaA9qoGzM
+pBID2hBCpNmNFtqUI7H9XhlFnocWU/c0AhJM7NzIqzutEctMp3/WK608nDurRRaO
+7jpEVnBZX2PJIyIuMRv9fCLMbpX6zzY8TR3l3EosHfjmoZL9dDKAbIC1M2z/YALv
+hsQarepssoNCB9uSpNYRrZfm9pesUlZBiBSjTAPwZlbMPoJsNbCZpT/A6jmharLR
+fZkPrdMeRJrxUza/wEZAGpb9kbYZfsZrGOmVCSQZDoBWRYlW1HQS0xLXeyE6TzVX
+DXlbsNHY0E8EixH/NeLvrQ5tzv1EHW47A9AKIGZwTE5aJlqveA3FSuWkwr/X1NfL
+nZdpLR8XDf5HxQzQvFcmJbu7z7VdvCIz7meXdjrURfgNS1Go7DyGYsbqVtz+eCZi
+61ejs3eDdiwRqOoM19I4Qjfa8vSmKTlMa2PSe9YLNtzm7Ko9A64A5K0sLQPkilJO
+Ah4p67UZ4rY94aaKpeG3L4xB2iC9d1tCbSvQgMfm+BcH55ETaMI2KNcIjqr6pwmC
+E1ctxUETdgQgNpPa5JRK
+=++yE
+-----END PGP SIGNATURE-----
+
+--Sig_/h+yLX4qGYraNGswgcq3+mcG--
