@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.natecarlson.com ([74.117.236.15]:56510 "EHLO
-	plesk.technicality.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751676AbaD2OCA (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44212 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933287AbaDJGuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2014 10:02:00 -0400
-Received: from admin-chi.chi.technicality.org (unknown [IPv6:2607:ff50:1::1:3])
-	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by plesk.technicality.org (Postfix) with ESMTPSA id 445D11814531B
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Apr 2014 08:55:48 -0500 (CDT)
-Date: Tue, 29 Apr 2014 08:55:47 -0500 (CDT)
-From: Nate Carlson <linux-wireless@natecarlson.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANN] New firmware for Intel 7260 / 3160 - 22.212.9.0
-In-Reply-To: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1404290849580.28094@admin.chi.technicality.org> (sfid-20140429_160205_277916_6D1AEF96)
-References: <CANUX_P1GBeBdPkci6c9cDyz4C4uxA6ktaGvwgPQTDzEPsuEPgg@mail.gmail.com>
+	Thu, 10 Apr 2014 02:50:16 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFTv2 3/5] ath10k: rework peer accounting
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
+	<1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	<1397040531-6224-4-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 10 Apr 2014 09:50:02 +0300
+In-Reply-To: <1397040531-6224-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 9 Apr 2014 12:48:49 +0200")
+Message-ID: <87ob09he5h.fsf@kamboji.qca.qualcomm.com> (sfid-20140410_085031_829472_AE0F9C87)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 28 Apr 2014, Emmanuel Grumbach wrote:
-> we have released a new firmware for 7260, 3160 and 7265 Intel WiFi 
-> devices. This firmware is supported starting 3.14 kernel (when [2] will 
-> hit it). We have a here quite a few bug fixes with a few new features 
-> advertised by flags in the firmware file. The most visible bug fix is a 
-> ping loss issue we had with certain APs when using uAPSD.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Excellent! I've actually been watching almost-daily for a new firmware 
-version, hoping it'd help out some of the issues I've been having with a 
-7260 on a Cisco 802.11ac network. Primary issue is that my laptop would 
-suddenly pick an AP with a very weak signal, and my connection would end 
-up breaking to the point of being unusable until I reconnected (I think 
-this is actually wpa_supplicant's job, not the card/driver/firmware, but 
-since it worked fine on an old 6300 card on 802.11n I figure there has to 
-be something with this card causing issues.) With a combination modern 
-kernel (3.14.1+ or the 3.15 tree) and the previous firmware release, 
-things were better, but I'd still have to reconnect maybe once or twice a 
-day - and it never picked the 'best' AP (ie - my signal would always be 
-relatively weak, even though there is an AP about 30 feet away from my 
-desk). Installed this firmware with a build of 3.15, rebooted, and I've 
-got a nice strong signal right off the bat:
+> It was troublesome to iterate over peers and
+> perform sleepable calls. This will be necessary
+> for some upcomming changes to tx flushing.
+>
+> Make peer allocation and initial setup
+> protected by both ar->conf_mutex and
+> ar->data_lock. This way it's possible to iterate
+> over peers with conf_mutex and call sleepable
+> functions.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-signal:  	-55 [-55] dBm
-signal avg:	-54 [-54] dBm
-tx bitrate:	780.0 MBit/s VHT-MCS 8 80MHz short GI VHT-NSS 2
-rx bitrate:	702.0 MBit/s VHT-MCS 8 80MHz VHT-NSS 2
+Sorry, but I'm not really getting your idea here of using both
+conf_mutex and data_lock to protect ar->peers. Can you elaborate more,
+please? Why can't we just use conf_mutex then? What am I missing?
 
-It'll be interesting to see if it keeps on helping.  ;)
-
-Thanks!
-
--Nate
+-- 
+Kalle Valo
