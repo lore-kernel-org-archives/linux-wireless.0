@@ -1,29 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55535 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932128AbaDVLnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 07:43:14 -0400
-Date: Tue, 22 Apr 2014 13:46:33 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: Remove myself as maintainer.
-Message-ID: <20140422114633.GB6536@redhat.com> (sfid-20140422_134325_662240_EB6937C2)
-References: <5352B6EF.1090208@gmail.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:44703 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933287AbaDJGuG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 02:50:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5352B6EF.1090208@gmail.com>
+In-Reply-To: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
+References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
+Date: Thu, 10 Apr 2014 08:50:05 +0200
+Message-ID: <CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com> (sfid-20140410_085048_229959_3F022DDD)
+Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux v3.14-12042-g69cd9eba3886
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-gpio@vger.kernel.org,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 19, 2014 at 07:48:31PM +0200, Gertjan van Wingerde wrote:
-> Let's formalize what must have been blatantly clear from my level
-> of activity is the past year(s).
-> I simply do not have time for this anymore.
+2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
+> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
+> module on the MacBookPro 10,2 I have here.  This works fine with Linux
+> v3.14-7333-g59ecc26004e7.  There have been no changes between those
+> two versions to bcma itself, but the GPIO merge did go in that window.
+>  I can attempt to do a bisect tomorrow, but looking over some of the
+> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
+> hoping someone here has an idea on what the issue might be and has
+> some possible things for me to test for fixes.
 
-ACK :-(
+Bug report: https://lkml.org/lkml/2014/3/24/262
+Patch: https://lkml.org/lkml/2014/3/24/293
+Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
+(all links are for the same thread).
 
+Now you simply have to find above patch in some git tree :) Not sure
+if it's already in Linus's one.
