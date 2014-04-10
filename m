@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:57606 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbaDWBtd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 21:49:33 -0400
+Received: from mga09.intel.com ([134.134.136.24]:34938 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030371AbaDJMdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 08:33:18 -0400
+Date: Thu, 10 Apr 2014 15:40:45 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-gpio@vger.kernel.org,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux
+ v3.14-12042-g69cd9eba3886
+Message-ID: <20140410124045.GX19349@intel.com> (sfid-20140410_143322_969020_118CABB8)
+References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
+ <CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
+ <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
- <1397544101-18135-2-git-send-email-wens@csie.org> <CACRpkdZDjC1KxM2yJqsgpg2MxBamX1EObsuahB-2c+ShuBXm8A@mail.gmail.com>
-From: Alexandre Courbot <gnurou@gmail.com>
-Date: Wed, 23 Apr 2014 10:49:12 +0900
-Message-ID: <CAAVeFuL7B7kVw7ME=Vo_snhG27aBphKO8Uzvzen1gyD=R2ETNA@mail.gmail.com> (sfid-20140423_035041_047969_BB0D3B3B)
-Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
- based lookup
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Chen-Yu Tsai <wens@csie.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 23, 2014 at 12:02 AM, Linus Walleij
-<linus.walleij@linaro.org> wrote:
-> On Tue, Apr 15, 2014 at 8:41 AM, Chen-Yu Tsai <wens@csie.org> wrote:
->
->> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
->> phandles by name only, through gpios/gpio-names, and not by index.
->>
->> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
->
-> Like Alexandre I have no strong opinion on this alternative scheme.
+On Thu, Apr 10, 2014 at 08:22:12AM -0400, Josh Boyer wrote:
+> On Thu, Apr 10, 2014 at 2:50 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> > 2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
+> >> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
+> >> module on the MacBookPro 10,2 I have here.  This works fine with Linux
+> >> v3.14-7333-g59ecc26004e7.  There have been no changes between those
+> >> two versions to bcma itself, but the GPIO merge did go in that window.
+> >>  I can attempt to do a bisect tomorrow, but looking over some of the
+> >> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
+> >> hoping someone here has an idea on what the issue might be and has
+> >> some possible things for me to test for fixes.
+> >
+> > Bug report: https://lkml.org/lkml/2014/3/24/262
+> > Patch: https://lkml.org/lkml/2014/3/24/293
+> > Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
+> > (all links are for the same thread).
+> >
+> > Now you simply have to find above patch in some git tree :) Not sure
+> > if it's already in Linus's one.
+> 
+> Ah, wonderful.  I now wish I would have found those in my searching
+> before doing the bisect.  Oh well.  For what it's worth, my bisect
+> landed on the same commit.
+> 
+> The fix isn't in Linus' tree or linux-next.  I'm guessing Mika is
+> either still on vacation, or hasn't sent out the formal fix yet.
 
-Yeah this new lookup scheme probably does no harm, but I think it
-should be a little bit more motivated as it is, after all, introducing
-more potential confusion for DT users.
+No, not on vacation anymore (unfortunately). I did send the formal patch
+already:
 
-It does not look like this new lookup scheme is necessary to Chen-Yu's
-patchset and that he could as well have used the current one. Right
-now there is only one way to define GPIOs - if we introduce a second
-one, then which one should new DT users choose? Which one looks
-better? I can already endless fights taking place over this.
+https://lkml.org/lkml/2014/3/31/135
 
-Does this new lookup help with some of the existing problems we have
-like ACPI/DT lookup compatibility?
-
-I just need to be given one practical reason to give my ack.
-
-Alex.
+but it isn't merged to Linus' GPIO tree yet.
