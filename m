@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f43.google.com ([209.85.213.43]:38069 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235AbaDXOxe (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46512 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030265AbaDJP0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 10:53:34 -0400
-Date: Thu, 24 Apr 2014 11:53:29 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2014-04-24
-Message-ID: <20140424145329.GD7832@joana> (sfid-20140424_165355_316720_D0D77CC6)
+	Thu, 10 Apr 2014 11:26:53 -0400
+Date: Thu, 10 Apr 2014 08:29:36 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Andrea Merello <andrea.merello@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	driverdev-devel@linuxdriverproject.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: staging/rtl8187se should be removed
+Message-ID: <20140410152936.GA10663@kroah.com> (sfid-20140410_172658_414638_F59DE7BE)
+References: <53450089.9050008@gmail.com>
+ <20140409170815.GA17551@kroah.com>
+ <CAN8YU5M3h_og084bcdgqOGLoQqtrcxbxpPpAR6DBmYGz6pBG-w@mail.gmail.com>
+ <20140410152136.GI26890@mwanda>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140410152136.GI26890@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Apr 10, 2014 at 06:21:36PM +0300, Dan Carpenter wrote:
+> The thing about keeping e100 in parallel with the other driver is that
+> some devices didn't work on the other driver and also it wasn't staging
+> code.
+> 
+> I don't have strong opinions either way, but if we decide to keep the
+> old driver around for another kernel release "just in case" then we
+> should make it print a warning on load or something to say that it's
+> soon going to be removed.
 
---/9DWx/yDrRhgMJTb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+No, I'll just remove it entirely, no need for it to be around at all
+anymore.
 
-Hi John,
+thanks,
 
-Some fixes for 3.15. There is a revert for the intel driver, a new device id,
-and two important SSP fixes from Johan.
-Also we've noticed that your wireless.git tree is not up to date, so this pull
-was rebased on top of net.git. If you pull from this you'll will be pulling
-net/master from yesterday as well.
-
-Please pull or let me know of any concerns you have. Thanks!
-
-	Gustavo
-
----
-The following changes since commit 6a51b5e4d59e00051e65e836520912cd7c717be1:
-
-  hisax/icc: add missing semicolon after label (2014-04-22 21:22:47 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
-
-for you to fetch changes up to b66a81831359495b3768ace72452209cdf5d6614:
-
-  Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-24 12:43:33 +0300)
-
-----------------------------------------------------------------
-Johan Hedberg (2):
-      Bluetooth: Fix triggering BR/EDR L2CAP Connect too early
-      Bluetooth: Fix redundant encryption request for reauthentication
-
-Marcel Holtmann (1):
-      Revert "Bluetooth: Enable autosuspend for Intel Bluetooth device"
-
-Mohammed Habibulla (1):
-      Bluetooth: Add support for Lite-on [04ca:3007]
-
- drivers/bluetooth/ath3k.c | 2 ++
- drivers/bluetooth/btusb.c | 5 ++---
- net/bluetooth/hci_conn.c  | 9 ++++++---
- net/bluetooth/hci_event.c | 6 ++++++
- 4 files changed, 16 insertions(+), 6 deletions(-)
-
-
---/9DWx/yDrRhgMJTb
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJTWSVpAAoJEPs3PUX4s20oLWQP/1hhfe6EZ45Sec94NIsSYB5K
-EZYvvOX4sKj3VhTT/dzKIBZDp7aLHyBZGB4HRBezKe0KqiNFV3eVU9Um1BsWxCgH
-u5S/PgS1yj2BOSgCJAy2dZPYqQii8KEUugIocRMzqs6ZtolbnaucQexSy65af4hY
-MVyHPUCRgtYi9tMDu/JTyi3b+LDzYgztYG5mgLzuw3zz2SaGc9bLdJIQ4aPyaIge
-rwzoLxPJKxfF+7xIObhVccMK150AjwapsN9/oV+FGDmP83zxXxGoBOFGf8lorQbh
-2C4Ol0zqJj8pob3cQxExwZjmVX9LG0vm/wqeNW9E3wKfelhkwdf4cF25kvfvnPAl
-pjhhjp7ssbEBnPhxwKqJIEb6VuAaZPMYuV+62g9gcU3wq2LCSSRI1s31LgEiNBbh
-7HedJ12UD4Q6BqHzrSf4Mc3Bhli1jz1HL4wwZy2DxqhAu7mlRxHVjkg+iupeSp6l
-jJDjbWdzF3WH/E+lhJCI9mgGQb97X1ZwzCjLJxO2/QXDs2RlQU6+bSjbDbUDec9+
-0mrRNbfJgzdezuHBFWQEX0UkKG6E6mliXmJ+GH9OJDHA+VTIyMtm7vjowe68jMZW
-a1Iq52ijBMKlo1goMlkVR8K3KE0PpWNSSh0TdoYzrYWzBo8uM80uasyuNDvyhdqc
-Ab1PYbsWaogXz91HHxYG
-=TAG1
------END PGP SIGNATURE-----
-
---/9DWx/yDrRhgMJTb--
+greg k-h
