@@ -1,72 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:34964 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbaDYHv0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 03:51:26 -0400
-Received: by mail-wi0-f180.google.com with SMTP id q5so2247657wiv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Apr 2014 00:51:24 -0700 (PDT)
-Message-ID: <535A13FA.4070405@gmail.com> (sfid-20140425_095129_798461_02A236D4)
-Date: Fri, 25 Apr 2014 10:51:22 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Pierre Bourdon <delroth@gmail.com>, linux-wireless@vger.kernel.org
-CC: Ryan Houdek <sonicadvance1@gmail.com>
-Subject: Re: Odd network behaviors with an Intel Wireless 7260
-References: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
-In-Reply-To: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.18]:49939 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758897AbaDJScQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Apr 2014 14:32:16 -0400
+Date: Thu, 10 Apr 2014 20:31:46 +0200
+From: Christian Engelmayer <cengelma@gmx.at>
+To: linville@tuxdriver.com, fariyaf@gmail.com
+Cc: dan.carpenter@oracle.com, joe@perches.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH resend] rsi: Fix a potential memory leak in
+ rsi_set_channel()
+Message-ID: <20140410203146.767149e7@spike> (sfid-20140410_203252_991710_FEDDB4A4)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/iHoF=8G47JmKKQiDyzh/ZF7"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--Sig_/iHoF=8G47JmKKQiDyzh/ZF7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+Fix a potential memory leak in function rsi_set_channel() that is used to
+program channel changes. The channel check block for the frequency bands
+directly exits the function in case of an error, thus leaving an already
+allocated skb unreferenced. Move the checks above allocating the skb.
+Detected by Coverity: CID 1195576.
 
-On 04/25/2014 02:03 AM, Pierre Bourdon wrote:
-> Hi linux-wireless folks,
-> 
-> I have been getting some weird network behaviors with my Intel
-> Wireless 7260 adapter that I cannot explain by anything else than a
-> driver/firmware bug. I'm out of ideas on how to debug this issue.
-> 
-> My network configuration is fairly basic: IPv4 over 802.11n,
-> AP/default gateway is 192.168.0.1, my Intel 7260 STA is 192.168.0.2.
-> Several AP/gateway hardware and software have been tested and have
-> shown the same problem.
-> 
-> On 192.168.0.2 I am constantly running some ICMP pings to 192.168.0.1
-> and 8.8.8.8. Randomly, the pings from 192.168.0.2 to 8.8.8.8 start
-> failing (responses never received) while the pings to 192.168.0.1
-> continue to succeed without any trouble. When tcpdumping on the
-> gateway, I see the pings to 8.8.8.8 being successfully forwarded and
-> responses being sent back to the STA (so this is not a routing issue
-> on the gateway - and again, I've tested several combinations of hw/sw
-> on the gateway).
-> 
-> Another example: my TCP sessions on the Intel 7260 STA to the internet
-> will start randomly freezing, but my TCP sessions going through
-> tunnels on another LAN host (let's say, 192.168.0.3) to the internet
-> will work fine.
-> 
-> After 30s-1min30 the problem fixes itself and packets start being
-> received by the STA again.
-> 
-> I only see this from the Intel 7260 host and not from any other WLAN
-> device connected to the AP, which is another strong evidence that the
-> issue is on the STA side.
-> 
-> I've shared this with some other people using an Intel 7260 adapter on
-> Linux and found someone having a similar issue. I'm not sure how
-> widespread it is and could not find an existing bug report.
-> 
-> What are the next steps to get useful debugging information out of
-> this issue? I unfortunately do not have the required hardware to do
-> monitor-mode sniffing of what's happening at the L2 level.
-> 
+Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
+---
+Applies against git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.g=
+it
+Compile tested.
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Thank you very much for this very detailed report.
-1) can you try with power save disabled?
-   sudo iw wlan0 set power_save off
-2) if 1) helps, can you try https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=a82dda6cd492b8c88952be6f6527f3656f7ac585.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless=
+/rsi/rsi_91x_mgmt.c
+index 2361a68..be5b1fd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -841,16 +841,6 @@ int rsi_set_channel(struct rsi_common *common, u16 cha=
+nnel)
+ 	rsi_dbg(MGMT_TX_ZONE,
+ 		"%s: Sending scan req frame\n", __func__);
+=20
+-	skb =3D dev_alloc_skb(FRAME_DESC_SZ);
+-	if (!skb) {
+-		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
+-			__func__);
+-		return -ENOMEM;
+-	}
+-
+-	memset(skb->data, 0, FRAME_DESC_SZ);
+-	mgmt_frame =3D (struct rsi_mac_frame *)skb->data;
+-
+ 	if (common->band =3D=3D IEEE80211_BAND_5GHZ) {
+ 		if ((channel >=3D 36) && (channel <=3D 64))
+ 			channel =3D ((channel - 32) / 4);
+@@ -868,6 +858,16 @@ int rsi_set_channel(struct rsi_common *common, u16 cha=
+nnel)
+ 		}
+ 	}
+=20
++	skb =3D dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	mgmt_frame =3D (struct rsi_mac_frame *)skb->data;
++
+ 	mgmt_frame->desc_word[0] =3D cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
+ 	mgmt_frame->desc_word[1] =3D cpu_to_le16(SCAN_REQUEST);
+ 	mgmt_frame->desc_word[4] =3D cpu_to_le16(channel);
+--=20
+1.8.3.2
 
-Thanks
+--Sig_/iHoF=8G47JmKKQiDyzh/ZF7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTRuOSAAoJEKssnEpaPQKE8b8P/RQcnFMCHuu4EQsD7Uo9p36I
+xe4nYc6hImIpaQV1HsbBXA0Zvi7PjssSOOqobyVdyhsWrwxwiR9LvEH+n/+I+DIm
+qr8V09UnM7mcW6Qk7Kc5hojTZG0ggG+1G9WbDXNT9aJgskX2Q2ltPWdk1R6ShqJW
+L7QEY1+qX3LxVkUD60fPCa6xMt9UgRjEzB2MD57gOxDJYZ5rHXoVsOEvaeWcNQPe
+T7JOK2F+h/x7vhyRBOYkfWL7nM5JhOh3Sx7b3VE3nUkDy+QMu3cK5nq+d6YKFptK
+XLRqY3/hNmuaY8s6wVRlx7ES1q4flYQK2MLx0K+ElNzkkfOuYFnGPVBdyiLQGyKm
+DiUl7rOMsrLoqGB1MytZRPPZTQPqp8So9/HsKkOpfoslYichsbPvmKKMk92DQPw7
+SoOwPh7O7qgczgOGlHuZG3XHl2zA0jiZWR+EAWsX1ygJG2fsSuy0TxbT+e1b0aL3
+Fk2SbzqrNjY4UMx3bHN4H14wePhKbJuvjShVZfOcZm5rJCSrGbZQ10zoFgM3ya1l
+uqqhaYmeq9FLBOeoj9/H0GYaRt7/36lP59xXE8eLQB29TpHmSmzYmVRhbzdlHmFU
+NB3+tlv8GdoUP6PX+/m4CjbbyznrwfbWQ8RbAin08lHDv1n4SkA8EV/qhWZpB2wZ
+YqUhbqhuJ0XREhFNC/bQ
+=mh/v
+-----END PGP SIGNATURE-----
+
+--Sig_/iHoF=8G47JmKKQiDyzh/ZF7--
