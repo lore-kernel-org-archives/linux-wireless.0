@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46041 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932140AbaDBO6R (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:46335 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759070AbaDJUBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 10:58:17 -0400
-Message-ID: <533C256B.9090209@candelatech.com> (sfid-20140402_165820_717729_B61B0636)
-Date: Wed, 02 Apr 2014 07:57:47 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 10 Apr 2014 16:01:36 -0400
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath10k:  add helper method to grab debug stats.
-References: <1396374940-21453-1-git-send-email-greearb@candelatech.com> <8738hwrxso.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8738hwrxso.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20140410195402.GA17308@kroah.com>
+References: <20140410203146.767149e7@spike>
+	<CAJUuVQ5KW3v0DgwotDMow=rBvxoZKfYYD2misXbsMD6c1UaShw@mail.gmail.com>
+	<20140410195402.GA17308@kroah.com>
+Date: Thu, 10 Apr 2014 16:01:35 -0400
+Message-ID: <CAJUuVQ7xgRLDzwojDCdb3yhTm3HygypMLXyaRiErnVveNVz+sQ@mail.gmail.com> (sfid-20140410_220206_541908_6FCA22AE)
+Subject: Re: [PATCH resend] rsi: Fix a potential memory leak in rsi_set_channel()
+From: Andev <debiandev@gmail.com>
+To: Greg Kroah-Hartman <greg@kroah.com>
+Cc: Christian Engelmayer <cengelma@gmx.at>, linville@tuxdriver.com,
+	fariyaf@gmail.com, dan.carpenter@oracle.com, joe@perches.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/02/2014 12:32 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
+On Thu, Apr 10, 2014 at 3:54 PM, Greg Kroah-Hartman <greg@kroah.com> wrote:
+> On Thu, Apr 10, 2014 at 03:46:12PM -0400, Andev wrote:
+>> Adding Greg KH,
 >
->> From: Ben Greear <greearb@candelatech.com>
->>
->> It can be nice to update the firmware's stats while
->> debugging other bits of the driver, so add helper method
->> to do this.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Why do I care about this?
 >
-> [...]
->
->> --- a/drivers/net/wireless/ath/ath10k/debug.h
->> +++ b/drivers/net/wireless/ath/ath10k/debug.h
->> @@ -135,4 +135,6 @@ struct dbglog_hdr_s {
->>
->>   void ath10k_dbg_print_fw_dbg_buffer(u8 *buffer, int len, const char* lvl);
->>
->> +int ath10k_refresh_peer_stats(struct ath10k *ar);
->
-> I don't see anyone calling this. How are you planning to use it?
 
-
-The RFC patch that debugs tx-hang calls it..nice to see he firmware's
-buffer reap stats and such before/after trying to flush the buffers.
-
-I figure it will be useful for other such uses as well, now that stats
-actually work.
-
-Thanks,
-Ben
-
+I am not sure if this needs to be applied to stable too. Should I have
+cc'ed stable@?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Pratapa Rudra
