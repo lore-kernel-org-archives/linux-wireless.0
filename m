@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33966 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbaDYBpR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46269 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934654AbaDJIB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 21:45:17 -0400
-Date: Thu, 24 Apr 2014 21:44:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2014-04-24
-Message-ID: <20140425014446.GC3410@tuxdriver.com> (sfid-20140425_034615_303046_7BD23675)
-References: <20140424145329.GD7832@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140424145329.GD7832@joana>
+	Thu, 10 Apr 2014 04:01:57 -0400
+Message-ID: <1397116902.4757.6.camel@jlt4.sipsolutions.net> (sfid-20140410_100200_997740_CBE74951)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non
+ modular
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Colleen T <colleen@cozybit.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Date: Thu, 10 Apr 2014 10:01:42 +0200
+In-Reply-To: <CA+XVXfdekoT_jhVL_vpjJSPPD5hAjyprUB+g4kAN2Nssv=9-Ng@mail.gmail.com> (sfid-20140410_081344_153851_6493AFAD)
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
+	 <1393852248.10039.5.camel@jlt4.sipsolutions.net>
+	 <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
+	 <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
+	 <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+	 <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
+	 <CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
+	 <CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
+	 <CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
+	 <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
+	 <1397071009.4964.18.camel@jlt4.sipsolutions.net>
+	 <CA+XVXfdekoT_jhVL_vpjJSPPD5hAjyprUB+g4kAN2Nssv=9-Ng@mail.gmail.com>
+	 (sfid-20140410_081344_153851_6493AFAD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This tag has a lot of stuff in it not in the wireless tree.
-Please only send me pull requests that only include patches related
-to Bluetooth.
+On Thu, 2014-04-10 at 09:13 +0300, Arik Nemtsov wrote:
+> On Wed, Apr 9, 2014 at 10:16 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > +static void reg_free_last_request(struct regulatory_request *lr)
+> >
+> > Isn't it odd to pass the last request to a function called
+> > reg_free_last_request()?
+> >
+> 
+> It makes sense to me. Non-last requests are freed using kfree. The
+> last request needs RCU.
 
-John
+Yeah but there can only be one "last request", so why pass it?
 
-On Thu, Apr 24, 2014 at 11:53:29AM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> Some fixes for 3.15. There is a revert for the intel driver, a new device id,
-> and two important SSP fixes from Johan.
-> Also we've noticed that your wireless.git tree is not up to date, so this pull
-> was rebased on top of net.git. If you pull from this you'll will be pulling
-> net/master from yesterday as well.
-> 
-> Please pull or let me know of any concerns you have. Thanks!
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit 6a51b5e4d59e00051e65e836520912cd7c717be1:
-> 
->   hisax/icc: add missing semicolon after label (2014-04-22 21:22:47 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
-> 
-> for you to fetch changes up to b66a81831359495b3768ace72452209cdf5d6614:
-> 
->   Bluetooth: Add support for Lite-on [04ca:3007] (2014-04-24 12:43:33 +0300)
-> 
-> ----------------------------------------------------------------
-> Johan Hedberg (2):
->       Bluetooth: Fix triggering BR/EDR L2CAP Connect too early
->       Bluetooth: Fix redundant encryption request for reauthentication
-> 
-> Marcel Holtmann (1):
->       Revert "Bluetooth: Enable autosuspend for Intel Bluetooth device"
-> 
-> Mohammed Habibulla (1):
->       Bluetooth: Add support for Lite-on [04ca:3007]
-> 
->  drivers/bluetooth/ath3k.c | 2 ++
->  drivers/bluetooth/btusb.c | 5 ++---
->  net/bluetooth/hci_conn.c  | 9 ++++++---
->  net/bluetooth/hci_event.c | 6 ++++++
->  4 files changed, 16 insertions(+), 6 deletions(-)
-> 
+johannes
 
-
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
