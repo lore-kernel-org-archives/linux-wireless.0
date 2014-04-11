@@ -1,126 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:61272 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932748AbaDINf6 (ORCPT
+Received: from dev-nolb.cloudtrax.com ([54.203.245.161]:52959 "EHLO
+	dev-nolb.cloudtrax.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbaDKHFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 09:35:58 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so1885104eek.18
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:57 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 06/13] mac80211: track reserved vifs in chanctx
-Date: Wed,  9 Apr 2014 15:29:27 +0200
-Message-Id: <1397050174-26121-7-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153603_684615_59EB8616)
-In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
-References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
- <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 11 Apr 2014 03:05:14 -0400
+Message-ID: <53479407.7050005@open-mesh.com> (sfid-20140411_090520_117867_CAB2F5CB)
+Date: Fri, 11 Apr 2014 09:04:39 +0200
+From: Antonio Quartulli <antonio@open-mesh.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org
+Subject: Re: [RFCv2 6/6] cfg80211: implement cfg80211_get_station cfg80211
+ API
+References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>		 <1396211704-4677-7-git-send-email-antonio@meshcoding.com>	 <1396951582.5936.20.camel@jlt4.sipsolutions.net>	 <5346C0B3.4050704@open-mesh.com> <1397149960.4757.22.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1397149960.4757.22.camel@jlt4.sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="tvdTR3IE0ars1bBCSIH2PaRWocJRHa0p1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful. Provides a more straghtforward
-way to iterate over interfaces taking part in
-chanctx reservation and allows tracking chanctx
-usage explicitly.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--tvdTR3IE0ars1bBCSIH2PaRWocJRHa0p1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The structure is protected by local->chanctx_mtx.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v3:
- * update commit message [Johannes]
- * add locking information [Johannes]
 
- net/mac80211/chan.c        | 14 ++++++++++----
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       |  1 +
- 3 files changed, 13 insertions(+), 4 deletions(-)
+On 10/04/14 19:12, Johannes Berg wrote:
+> On Thu, 2014-04-10 at 18:02 +0200, Antonio Quartulli wrote:
+>=20
+>>> Any thoughts about clearing/filling/partially filling *sinfo when
+>>> returning an error?
+>>
+>> At the moment this function relies on what rdev_get_station() does and=
+ I
+>> always assumed that in case of error the content of *sinfo should be
+>> considered "undefined".
+>=20
+> That's fine, maybe add a line of documentation?
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 504526c..79eac96 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -277,6 +277,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 		return ERR_PTR(-ENOMEM);
- 
- 	INIT_LIST_HEAD(&ctx->assigned_vifs);
-+	INIT_LIST_HEAD(&ctx->reserved_vifs);
- 	ctx->conf.def = *chandef;
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
-@@ -731,16 +732,19 @@ void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_vif_unreserve_chanctx(struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_chanctx *ctx = sdata->reserved_chanctx;
-+
- 	lockdep_assert_held(&sdata->local->chanctx_mtx);
- 
--	if (WARN_ON(!sdata->reserved_chanctx))
-+	if (WARN_ON(!ctx))
- 		return -EINVAL;
- 
--	if (--sdata->reserved_chanctx->refcount == 0)
--		ieee80211_free_chanctx(sdata->local, sdata->reserved_chanctx);
--
-+	list_del(&sdata->reserved_chanctx_list);
- 	sdata->reserved_chanctx = NULL;
- 
-+	if (--ctx->refcount == 0)
-+		ieee80211_free_chanctx(sdata->local, ctx);
-+
- 	return 0;
- }
- 
-@@ -788,6 +792,7 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	list_add(&sdata->reserved_chanctx_list, &new_ctx->reserved_vifs);
- 	new_ctx->refcount++;
- 	sdata->reserved_chanctx = new_ctx;
- 	sdata->reserved_chandef = *chandef;
-@@ -837,6 +842,7 @@ int ieee80211_vif_use_reserved_context(struct ieee80211_sub_if_data *sdata,
- 	ctx->refcount--;
- 	sdata->reserved_chanctx = NULL;
- 	sdata->radar_required = sdata->reserved_radar_required;
-+	list_del(&sdata->reserved_chanctx_list);
- 
- 	if (old_ctx == ctx) {
- 		/* This is our own context, just change it */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 57fed5e..7a60142 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -692,6 +692,7 @@ struct ieee80211_chanctx {
- 	struct rcu_head rcu_head;
- 
- 	struct list_head assigned_vifs;
-+	struct list_head reserved_vifs;
- 
- 	enum ieee80211_chanctx_mode mode;
- 	int refcount;
-@@ -760,6 +761,7 @@ struct ieee80211_sub_if_data {
- 	struct cfg80211_chan_def csa_chandef;
- 
- 	struct list_head assigned_chanctx_list; /* protected by chanctx_mtx */
-+	struct list_head reserved_chanctx_list; /* protected by chanctx_mtx */
- 
- 	/* context reservation -- protected with chanctx_mtx */
- 	struct ieee80211_chanctx *reserved_chanctx;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 1479e9f..13ff2a9 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1299,6 +1299,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
- 	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
- 	INIT_LIST_HEAD(&sdata->assigned_chanctx_list);
-+	INIT_LIST_HEAD(&sdata->reserved_chanctx_list);
- 
- 	switch (type) {
- 	case NL80211_IFTYPE_P2P_GO:
--- 
-1.8.5.3
+Oky! will do.
 
+Cheers,
+
+--=20
+Antonio Quartulli
+
+
+--tvdTR3IE0ars1bBCSIH2PaRWocJRHa0p1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJTR5QLAAoJEEKTMo6mOh1Vd2cQAIY+P+77gDuJAvatIvE6hS/n
+pTM71eivxQnhBNZ6WNfYmBLcuB/eateCgJcdDRJEexwyrKvk7dayTqLpjwTCuijv
+jKspvOWW27kOxlN2LOMeg+qCd9Y4nhRIG0+F00wymdJwy6kE4Kos7yhCWbBF/6Rs
+IUjFOte1ZMQshEjfWtgRbEjn3zMDyIB/nJVudvRfWzJ8JsUrn0+OqqwyTvtVp06m
+BWoQiL5R1IgBgk7PB5BRwNlGYfgDqGgN/zz7Vhsltlt5tdG9778Q9UyGzJRmtl2y
+vI9+8NTtNm8VSkL3aNIwWJ0PueAmCRFemfPebNsQCUsyJBNmS6AYJj/EA5g46Frq
+yVFZenL4lfmz/XfVxQUMuSRE/D9MY+Gjt8H5aMFs/eGhlCbKbj5JkNQ1XD9Tsrdr
+YVSSNs10Xlz061mtmBsFE5y+6FLgRFyKZsnvTMZUlN+MDfGL2A2GAuTMGjxDYB07
+gCFo7tgFPvGKOypXchs+XJEUuDWS99tP+4jfJCOtFAaTMN/I9uucMausd0sG6SnC
+GEntuyCKgT71+ROgFHmcUc8uthY4uWH1UueIlEJ7PVG5AsE7YvQLGjhlExTOCHkT
+weMp2aSPorlkrLcNFGO152PUkJckTQzPA+/fxrPMX9WjK+VJT2ZV0yqdSY7raRvu
+TRHXRkj8V7EPSeKQ2Mm6
+=1U8I
+-----END PGP SIGNATURE-----
+
+--tvdTR3IE0ars1bBCSIH2PaRWocJRHa0p1--
