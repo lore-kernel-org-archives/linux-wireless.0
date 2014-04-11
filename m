@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:35920 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757331AbaDKOop (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:50704 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754264AbaDKH0m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2014 10:44:45 -0400
-Date: Fri, 11 Apr 2014 16:44:39 +0200
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <138773559.20140411164439@eikelenboom.it> (sfid-20140411_164454_147658_A86B82B9)
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	<mcgrof@do-not-panic.com>, <collen@cozybit.com>
-Subject: Re: [RFC/RFT] cfg80211: reg: track crda request
-In-Reply-To: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 11 Apr 2014 03:26:42 -0400
+Message-ID: <1397201173.4420.0.camel@jlt4.sipsolutions.net> (sfid-20140411_092711_859345_6DF3C919)
+Subject: Re: [PATCHv3 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Date: Fri, 11 Apr 2014 09:26:13 +0200
+In-Reply-To: <5345680F.3040903@wwwdotorg.org>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1396946275.5936.2.camel@jlt4.sipsolutions.net>
+	 <20140409100147.GB3083@xps8300> <5345680F.3040903@wwwdotorg.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2014-04-09 at 09:32 -0600, Stephen Warren wrote:
 
-Friday, April 11, 2014, 2:29:34 PM, you wrote:
+> > Stephen! Are you expecting any changes to board-paz00.c in this kernel
+> > cycle? If not, I think it would be easiest if Johannes, you take the
+> > whole set. What do you guys think?
+> 
+> I can't predict the future, but the chances are pretty slim - that file
+> is pretty tiny and doesn't have much churn.
+> 
+> The best approach is to put this series in its own topic branch. Then,
+> if any conflict does come up, I can simply merge the branch into the
+> Tegra treee and apply the conflicting patches on top.
 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
-> This is instead of:
-> cfg80211: fix processing world regdomain when non modular
+Ok, I'll do that. Shout now if you don't want these patches merged :)
 
-> @Sander @Colleen - could you chec this one?
-
-Is this just a replacement for the second patch of Luis his series, or
-a complete replacement for that series ?
-
---
-Sander
+johannes
 
