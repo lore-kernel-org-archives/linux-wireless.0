@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56502 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:50726 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752565AbaDYPpf (ORCPT
+	with ESMTP id S1754925AbaDKHdX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 11:45:35 -0400
-Message-ID: <1398440716.4152.27.camel@jlt4.sipsolutions.net> (sfid-20140425_174552_632433_143E7BE9)
-Subject: Re: [PATCH 3/7] mac80211: add new RC API to retrieve expected
- throughput
+	Fri, 11 Apr 2014 03:33:23 -0400
+Message-ID: <1397201577.4420.1.camel@jlt4.sipsolutions.net> (sfid-20140411_093327_772427_B4B62308)
+Subject: Re: [PATCHv3 0/5] net: rfkill: gpio: cleanup and a few new acpi ids
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Fri, 25 Apr 2014 17:45:16 +0200
-In-Reply-To: <1397484205-20905-3-git-send-email-antonio@meshcoding.com>
-References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
-	 <1397484205-20905-3-git-send-email-antonio@meshcoding.com>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Chen-Yu Tsai <wens@csie.org>, Rhyland Klein <rklein@nvidia.com>,
+	Marc Dietrich <marvin24@gmx.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org
+Date: Fri, 11 Apr 2014 09:32:57 +0200
+In-Reply-To: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1396360976-28657-1-git-send-email-heikki.krogerus@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-14 at 16:03 +0200, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
+On Tue, 2014-04-01 at 17:02 +0300, Heikki Krogerus wrote:
+> Hi,
 > 
-> In order to make mac80211 export the expected throughput,
-> a new API which extracts such information from any mac80211
-> SW RC algorithm is needed.
-> Therefore add the new get_expected_throughput() member
-> to the rate_control_ops structure.
-> 
-> The exported value is expressed in Mbps/100. Such unit has
-> been chosen because it is the highest precision that
-> MinstrelHT can return.
+> I hope this one is OK with everyone.
 
-Same as in patch 2 - and realistically 2/3/4 could just be squashed.
+Looks good to me, all applied.
+
+It's in jberg/mac80211-next.git rfkill-gpio-cleanups branch, in case
+anybody needs this separately. John isn't taking pull requests for -next
+until after -rc1, at which point I'll send it to him.
 
 johannes
 
