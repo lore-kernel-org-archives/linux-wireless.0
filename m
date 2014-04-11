@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:40493 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756067AbaD1PsH (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:38186 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486AbaDKUQO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 11:48:07 -0400
-Message-ID: <1398700073.4132.2.camel@jlt4.sipsolutions.net> (sfid-20140428_174814_416360_55194A76)
-Subject: Re: [PATCH 2/3] mac80211: Support dynamic AP mode channel width
- changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 28 Apr 2014 17:47:53 +0200
-In-Reply-To: <1398699982.4132.1.camel@jlt4.sipsolutions.net> (sfid-20140428_174647_065920_FAF317DA)
-References: <20140428082225.GA15459@jouni.qca.qualcomm.com>
-	 <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com>
-	 (sfid-20140428_105724_959492_6ACA3997) <1398699982.4132.1.camel@jlt4.sipsolutions.net>
-	 (sfid-20140428_174647_065920_FAF317DA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 11 Apr 2014 16:16:14 -0400
+Date: Fri, 11 Apr 2014 22:16:11 +0200
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <1423252643.20140411221611@eikelenboom.it> (sfid-20140411_221628_160050_DBC82323)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, <collen@cozybit.com>
+Subject: Re: [RFC/RFT] cfg80211: reg: track crda request
+In-Reply-To: <1397247226.4643.8.camel@jlt4.sipsolutions.net>
+References: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com> <2710039777.20140411192110@eikelenboom.it> <CAFED-jkPtXU8moGrb4XiriU-c7WokgSiXq6g0jCLOhk3dJnoLg@mail.gmail.com> <294574679.20140411220931@eikelenboom.it> <1397247226.4643.8.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-28 at 17:46 +0200, Johannes Berg wrote:
 
-> > Shouldn't interface combinations be verified here? What if there was a
-> > bandwidth upgrade (after a downgrade) but in the meantime a vif with a
-> > to-be incompatible chandef was brought up?
-> 
-> Yeah that seems like a potential issue.
+Friday, April 11, 2014, 10:13:46 PM, you wrote:
 
-Hm, wait, isn't this addressed by this code in
-ieee80211_vif_change_bandwidth():
+> On Fri, 2014-04-11 at 22:09 +0200, Sander Eikelenboom wrote:
 
-        ctx = container_of(conf, struct ieee80211_chanctx, conf);
-        if (!cfg80211_chandef_compatible(&conf->def, chandef)) { 
-                ret = -EINVAL;
-                goto out;
-        }
+>> I would first like to know if Johannes likes this solution or not.
 
-johannes
+> Heh, I guess that's only fair.
+
+>> With previous patches from Luis they were blocked after testing and debugging, so let him 
+>> first speak out if he likes the approach or not.
+
+> I think this looks fine. My main complaint with Luis's patches (besides
+> reportedly breaking some other use cases) was that he was piggy-backing
+> on some completely unrelated thing to try to recover something. Here we
+> have an explicit delayed work struct so that seems fine.
+
+> And I really like the part where Janusz moves the delayed_work setting
+> where it belongs - the CRDA call function :)
+
+Ok i will duplicate the testing tomorrow somewhat more careful and report back 
+tomorrow. 
+
+> johannes
+
+
 
