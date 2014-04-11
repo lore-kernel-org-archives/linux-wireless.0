@@ -1,51 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:53071 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbaDPLHg (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:56167 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754438AbaDKMaG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 07:07:36 -0400
-Received: by mail-pd0-f179.google.com with SMTP id w10so10662290pde.10
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 04:07:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFED-j=o7nLGu4w3BTpxqkBwN5wTgwz5K7DVPurdRomDOCRApA@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
- <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
- <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
- <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
- <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
- <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
- <CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
- <CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
- <CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
- <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
- <CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com>
- <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com>
- <CA+XVXfdxZqLVe3_wT3pY-rdY_7KXz_iXFd7Z8JCfXrDwpP8ciQ@mail.gmail.com> <CAFED-j=o7nLGu4w3BTpxqkBwN5wTgwz5K7DVPurdRomDOCRApA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 16 Apr 2014 14:07:21 +0300
-Message-ID: <CA+XVXfdVg_PO-TKKTeTN-XWSi5vgx+VwYAr08Gui582oroeKAQ@mail.gmail.com> (sfid-20140416_130739_966356_C118330E)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Colleen T <colleen@cozybit.com>, Eliad Peller <eliad@wizery.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Apr 2014 08:30:06 -0400
+Received: by mail-ee0-f54.google.com with SMTP id d49so4058915eek.41
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Apr 2014 05:30:02 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	linux@eikelenboom.it, collen@cozybit.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC/RFT] cfg80211: reg: track crda request
+Date: Fri, 11 Apr 2014 14:29:34 +0200
+Message-Id: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140411_143012_505755_969E6734)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 2:01 PM, Janusz Dziedzic
-<janusz.dziedzic@gmail.com> wrote:
-> 2014-04-16 12:38 GMT+02:00 Arik Nemtsov <arik@wizery.com>:
->> Thanks for testing Colleen!
->>
->> I'll respin the patch on top of wireless-testing.
->>
-> Please don't remove "Pending regulatory reques ... " dbg print. This
-> could be usefull for debuging.
+Track CRDA requests and handle timeout
+when no answer from CRDA.
+This could happen during startup when
+crda binary is not available.
 
-Well that's a comment for Luis I guess. Removing the print is not
-really part of my patch.
+Tested using:
+chmod 644 /sbin/crda
 
-Arik
+Tested scenarios:
+
+1)
+chmod 644 /sbin/crda
+modprobe cfg80211
+wait about 20 seconds
+chmod 755 /sbin/crda
+-> CORE request handled correctly after crda became
+   available, world regd
+
+2)
+chmod 644 /sbin/crda
+modprobe cfg80211
+wait about 10 seconds
+modprobe ath10k_pci (DRIVER hint with US)
+wait about 10 seconds
+chmod 755 /sbin/crda
+-> CORE request handled (world)
+-> next DRIVER request handled (US)
+
+3)
+chmod 644 /sbin/crda
+modprobe cfg80211
+wait about 10 seconds
+modprobe ath10k_pci (DRIVER hint with US)
+wait about 10 seconds
+iw reg set PL
+wait about 10 seconds
+chmod 755 /sbin/crda
+-> CORE request handled
+-> next DRIVER request handled (US)
+-> next USER request handled (PL)
+
+4)
+chmod 644 /sbin/crda
+modprobe cfg80211
+wait about 10 seconds
+iw reg set PL
+wait about 10 seconds
+modprobe ath10k_pci (DRIVER hint with US)
+wait about 10 seconds
+chmod 755 /sbin/crda
+-> CORE request handled
+-> next USER request handled (PL)
+-> next DRIVER request handled (intersected DRIVER and USER)
+Not sure this is as should be - intersection :)
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+This is instead of:
+cfg80211: fix processing world regdomain when non modular
+
+@Sander @Colleen - could you chec this one?
+
+ net/wireless/reg.c |   46 +++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 35 insertions(+), 11 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 220c4a2..17ec820 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -512,6 +512,10 @@ reg_call_crda(struct regulatory_request *request)
+ {
+ 	if (call_crda(request->alpha2))
+ 		return REG_REQ_IGNORE;
++
++	/* Setup timeout to check if CRDA is alive */
++	queue_delayed_work(system_power_efficient_wq,
++			   &reg_timeout, msecs_to_jiffies(3142));
+ 	return REG_REQ_OK;
+ }
+ 
+@@ -1542,8 +1546,7 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
+ 
+-	if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
+-		cancel_delayed_work(&reg_timeout);
++	cancel_delayed_work(&reg_timeout);
+ 
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+@@ -1810,6 +1813,9 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
+ 
++	REG_DBG_PRINT("Process regulatory hint called by %s\n",
++		      reg_initiator_name(reg_request->initiator));
++
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+ 
+@@ -1818,12 +1824,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		reg_process_hint_core(reg_request);
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_USER:
+-		treatment = reg_process_hint_user(reg_request);
+-		if (treatment == REG_REQ_IGNORE ||
+-		    treatment == REG_REQ_ALREADY_SET)
+-			return;
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, msecs_to_jiffies(3142));
++		reg_process_hint_user(reg_request);
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (!wiphy)
+@@ -1864,7 +1865,8 @@ static void reg_process_pending_hints(void)
+ 
+ 	/* When last_request->processed becomes true this will be rescheduled */
+ 	if (lr && !lr->processed) {
+-		REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
++		REG_DBG_PRINT("Pending %s regulatory request, waiting for it to be processed...\n",
++			      reg_initiator_name(lr->initiator));
+ 		return;
+ 	}
+ 
+@@ -2615,9 +2617,31 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
+ 
+ static void reg_timeout_work(struct work_struct *work)
+ {
+-	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
++	struct regulatory_request *lr;
++
+ 	rtnl_lock();
+-	restore_regulatory_settings(true);
++
++	lr = get_last_request();
++	REG_DBG_PRINT("Timeout while waiting for CRDA to reply %s request, restoring regulatory settings\n",
++		      reg_initiator_name(lr->initiator));
++
++	switch (lr->initiator) {
++	case NL80211_REGDOM_SET_BY_CORE:
++	case NL80211_REGDOM_SET_BY_DRIVER:
++		/* Call CRDA again for last request */
++		/* TODO add counter and back to default if required */
++		reg_process_hint(lr);
++		break;
++	case NL80211_REGDOM_SET_BY_USER:
++		restore_regulatory_settings(true);
++		break;
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		restore_regulatory_settings(false);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
+ 	rtnl_unlock();
+ }
+ 
+-- 
+1.7.9.5
+
