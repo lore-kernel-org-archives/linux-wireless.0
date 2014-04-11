@@ -1,150 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:34395 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755463AbaDTSbT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53062 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbaDKUOC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 14:31:19 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c13so3138429eek.38
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 11:31:18 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [wireless-next][PATCH 2/2] b43: remove leftover code for dual-core devices support
-Date: Sun, 20 Apr 2014 20:30:59 +0200
-Message-Id: <1398018659-17263-2-git-send-email-zajec5@gmail.com> (sfid-20140420_203125_042641_11E84CE6)
-In-Reply-To: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
-References: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Apr 2014 16:14:02 -0400
+Message-ID: <1397247226.4643.8.camel@jlt4.sipsolutions.net> (sfid-20140411_221408_485850_22F860D4)
+Subject: Re: [RFC/RFT] cfg80211: reg: track crda request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, collen@cozybit.com
+Date: Fri, 11 Apr 2014 22:13:46 +0200
+In-Reply-To: <294574679.20140411220931@eikelenboom.it>
+References: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <2710039777.20140411192110@eikelenboom.it>
+	 <CAFED-jkPtXU8moGrb4XiriU-c7WokgSiXq6g0jCLOhk3dJnoLg@mail.gmail.com>
+	 <294574679.20140411220931@eikelenboom.it>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h  |  4 ----
- drivers/net/wireless/b43/main.c | 52 +++++++++++++++--------------------------
- 2 files changed, 19 insertions(+), 37 deletions(-)
+On Fri, 2014-04-11 at 22:09 +0200, Sander Eikelenboom wrote:
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 54376fd..4113b69 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -915,10 +915,6 @@ struct b43_wl {
- 	char rng_name[30 + 1];
- #endif /* CONFIG_B43_HWRNG */
- 
--	/* List of all wireless devices on this chip */
--	struct list_head devlist;
--	u8 nr_devs;
--
- 	bool radiotap_enabled;
- 	bool radio_enabled;
- 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index cf84cf2..07024c6 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3735,40 +3735,35 @@ static int b43_switch_band(struct b43_wl *wl, struct ieee80211_channel *chan)
- {
- 	struct b43_wldev *up_dev = NULL;
- 	struct b43_wldev *down_dev;
--	struct b43_wldev *d;
- 	int err;
- 	bool uninitialized_var(gmode);
- 	int prev_status;
- 
- 	/* Find a device and PHY which supports the band. */
--	list_for_each_entry(d, &wl->devlist, list) {
--		switch (chan->band) {
--		case IEEE80211_BAND_5GHZ:
--			if (d->phy.supports_5ghz) {
--				up_dev = d;
--				gmode = false;
--			}
--			break;
--		case IEEE80211_BAND_2GHZ:
--			if (d->phy.supports_2ghz) {
--				up_dev = d;
--				gmode = true;
--			}
--			break;
--		default:
--			B43_WARN_ON(1);
--			return -EINVAL;
-+	switch (chan->band) {
-+	case IEEE80211_BAND_5GHZ:
-+		if (wl->current_dev->phy.supports_5ghz) {
-+			up_dev = wl->current_dev;
-+			gmode = false;
- 		}
--		if (up_dev)
--			break;
-+		break;
-+	case IEEE80211_BAND_2GHZ:
-+		if (wl->current_dev->phy.supports_2ghz) {
-+			up_dev = wl->current_dev;
-+			gmode = true;
-+		}
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+		return -EINVAL;
- 	}
-+
- 	if (!up_dev) {
- 		b43err(wl, "Could not find a device for %s-GHz band operation\n",
- 		       band_to_string(chan->band));
- 		return -ENODEV;
- 	}
--	if ((up_dev == wl->current_dev) &&
--	    (!!wl->current_dev->phy.gmode == !!gmode)) {
-+	if (!!wl->current_dev->phy.gmode == !!gmode) {
- 		/* This device is already running. */
- 		return 0;
- 	}
-@@ -5270,7 +5265,6 @@ static void b43_one_core_detach(struct b43_bus_dev *dev)
- 	b43_debugfs_remove_device(wldev);
- 	b43_wireless_core_detach(wldev);
- 	list_del(&wldev->list);
--	wl->nr_devs--;
- 	b43_bus_set_wldev(dev, NULL);
- 	kfree(wldev);
- }
-@@ -5295,8 +5289,6 @@ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl)
- 	if (err)
- 		goto err_kfree_wldev;
- 
--	list_add(&wldev->list, &wl->devlist);
--	wl->nr_devs++;
- 	b43_bus_set_wldev(dev, wldev);
- 	b43_debugfs_add_device(wldev);
- 
-@@ -5386,7 +5378,6 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- 	wl->hw = hw;
- 	mutex_init(&wl->mutex);
- 	spin_lock_init(&wl->hardirq_lock);
--	INIT_LIST_HEAD(&wl->devlist);
- 	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
- 	INIT_WORK(&wl->txpower_adjust_work, b43_phy_txpower_adjust_work);
- 	INIT_WORK(&wl->tx_work, b43_tx_work);
-@@ -5549,13 +5540,8 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	/* Unregister HW RNG driver */
- 	b43_rng_exit(wl);
- 
--	if (list_empty(&wl->devlist)) {
--		b43_leds_unregister(wl);
--		/* Last core on the chip unregistered.
--		 * We can destroy common struct b43_wl.
--		 */
--		b43_wireless_exit(dev, wl);
--	}
-+	b43_leds_unregister(wl);
-+	b43_wireless_exit(dev, wl);
- }
- 
- static struct ssb_driver b43_ssb_driver = {
--- 
-1.8.4.5
+> I would first like to know if Johannes likes this solution or not.
+
+Heh, I guess that's only fair.
+
+> With previous patches from Luis they were blocked after testing and debugging, so let him 
+> first speak out if he likes the approach or not.
+
+I think this looks fine. My main complaint with Luis's patches (besides
+reportedly breaking some other use cases) was that he was piggy-backing
+on some completely unrelated thing to try to recover something. Here we
+have an explicit delayed work struct so that seems fine.
+
+And I really like the part where Janusz moves the delayed_work setting
+where it belongs - the CRDA call function :)
+
+johannes
 
