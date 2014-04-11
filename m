@@ -1,130 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36240 "EHLO
-	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaDOHWX (ORCPT
+Received: from smtp03.smtpout.orange.fr ([80.12.242.125]:30612 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754253AbaDKOuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 03:22:23 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 5/7] net: rfkill: gpio: add device tree support
-Date: Tue, 15 Apr 2014 14:41:39 +0800
-Message-Id: <1397544101-18135-6-git-send-email-wens@csie.org> (sfid-20140415_092343_392712_A22B0119)
-In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	Fri, 11 Apr 2014 10:50:39 -0400
+Message-ID: <53480138.2080805@free.fr> (sfid-20140411_165106_268996_2B24CCA4)
+Date: Fri, 11 Apr 2014 16:50:32 +0200
+From: WebAV <webav@free.fr>
+MIME-Version: 1.0
+To: Avinash Patil <avinashapatil@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Mwifiex driver on Globalscale Mirabox
+References: <5346DED8.2030704@free.fr> <CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
+In-Reply-To: <CAJwzM1k=OOBa7C3u0+TzmRUBwMYfJSMgB+smbORfKmPE6KnF2g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- .../devicetree/bindings/rfkill/rfkill-gpio.txt     | 24 ++++++++++++++++++++++
- net/rfkill/rfkill-gpio.c                           | 23 +++++++++++++++++++++
- 2 files changed, 47 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+   Hi,
 
-diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
-new file mode 100644
-index 0000000..a23da65
---- /dev/null
-+++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
-@@ -0,0 +1,24 @@
-+GPIO controlled RFKILL devices
-+
-+Required properties:
-+- compatible	: Must be "rfkill-gpio".
-+- rfkill-name	: Name of RFKILL device
-+- rfkill-type	: Type of RFKILL device: 1 for WiFi, 2 for BlueTooth, etc.
-+		  See include/uapi/linux/rfkill.h for all valid values
-+- gpios		: At most two GPIO phandles
-+- gpio-names	: Shall be "reset" or "shutdown", matching gpios.
-+		  If both are provided, the "reset" GPIO is toggled first.
-+
-+Optional properties:
-+- clocks		: phandle to clock to enable/disable
-+
-+Example:
-+
-+	rfkill_bt {
-+		compatible = "rfkill-gpio";
-+		rfkill-name = "bluetooth";
-+		rfkill-type = <2>;
-+		gpios = <&pio 7 18 0>;
-+		gpio-names = "reset";
-+		clocks = <&clk_out_a>;
-+	};
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index f46ddf7..a174359 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -26,6 +26,7 @@
- #include <linux/slab.h>
- #include <linux/acpi.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/of_gpio.h>
- 
- #include <linux/rfkill-gpio.h>
- 
-@@ -81,6 +82,18 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
- 	return 0;
- }
- 
-+static int rfkill_gpio_dt_probe(struct device *dev,
-+				struct rfkill_gpio_data *rfkill)
-+{
-+	struct device_node * np = dev->of_node;
-+
-+	rfkill->name = np->name;
-+	of_property_read_string(np, "rfkill-name", &rfkill->name);
-+	of_property_read_u32(np, "rfkill-type", &rfkill->type);
-+
-+	return 0;
-+}
-+
- static int rfkill_gpio_probe(struct platform_device *pdev)
- {
- 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
-@@ -96,6 +109,10 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
- 		if (ret)
- 			return ret;
-+	} else if (&pdev->dev.of_node) {
-+		ret = rfkill_gpio_dt_probe(&pdev->dev, rfkill);
-+		if (ret)
-+			return ret;
- 	} else if (pdata) {
- 		rfkill->name = pdata->name;
- 		rfkill->type = pdata->type;
-@@ -167,6 +184,11 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
- };
- #endif
- 
-+static const struct of_device_id rfkill_of_match[] = {
-+	{ .compatible = "rfkill-gpio", },
-+	{},
-+};
-+
- static struct platform_driver rfkill_gpio_driver = {
- 	.probe = rfkill_gpio_probe,
- 	.remove = rfkill_gpio_remove,
-@@ -174,6 +196,7 @@ static struct platform_driver rfkill_gpio_driver = {
- 		.name = "rfkill_gpio",
- 		.owner = THIS_MODULE,
- 		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
-+		.of_match_table = of_match_ptr(rfkill_of_match),
- 	},
- };
- 
--- 
-1.9.1
+The FW is mwifiex 1.0 (14.66.9.p96) which I think is the last one.
+
+Thanks,
+
+Anthony
+
+Le 11/04/2014 08:54, Avinash Patil a écrit :
+> ---Resending as plain text----
+>
+> Hi,
+>
+> Thanks for your email & logs.
+>
+> What is FW version? You can see this in driver dmesg logs at load time.
+>
+> Thanks,
+> Avinash
+>
+> On Thu, Apr 10, 2014 at 11:41 PM, WebAV <webav@free.fr> wrote:
+>>      Hi,
+>>
+>> Mwifiex driver doesn't work on Globalscale Mirabox (SD8787), when I do a "iw
+>> mlan0 scan" command :
+>>
+>> with a 3.12 kernel : mwifiex_cmd_timeout_func: Timeout cmd id () = 0x6, act
+>> = 0x3
+>>
+>> With a 3.14.0-next-20140409 :  mwifiex_cmd_timeout_func: Timeout cmd id () =
+>> 0x107, act = 0x0
+>>
+>> dmesg :
+>>
+>> mwifiex_sdio mmc0:0001:1: cmd: QUEUE_CMD: cmd=0x107, cmd_pending=1
+>> mwifiex_sdio mmc0:0001:1: event: wakeup device...
+>> mwifiex_sdio mmc0:0001:1: int: sdio_ireg = 0x3
+>> mwifiex_sdio mmc0:0001:1: int: DNLD: wr_bitmap=0xffff
+>> mwifiex_sdio mmc0:0001:1: info: cmd_sent=0 data_sent=0
+>> mwifiex_sdio mmc0:0001:1: int: UPLD: rd_bitmap=0x1
+>> mwifiex_sdio mmc0:0001:1: data: mp_rd_bitmap=0x00000001
+>> mwifiex_sdio mmc0:0001:1: data: port=0 mp_rd_bitmap=0x00000000
+>> mwifiex_sdio mmc0:0001:1: info: RX: port=0 rx_len=10
+>> mwifiex_sdio mmc0:0001:1: info: rx_len = 256 skb->len = 256
+>> mwifiex_sdio mmc0:0001:1: info: mwifiex_sdio_card_to_host_mp_aggr: no
+>> aggregation for cmd response
+>> mwifiex_sdio mmc0:0001:1: info: RX: port: 0, rx_len: 256
+>> mwifiex_sdio mmc0:0001:1: info: --- Rx: Event ---
+>> mwifiex_sdio mmc0:0001:1: data: mp_rd_bitmap=0x00000000
+>> mwifiex_sdio mmc0:0001:1: info: no more rd_port available
+>> mwifiex_sdio mmc0:0001:1: info: EVENT: AWAKE
+>> mwifiex_sdio mmc0:0001:1: cmd: DNLD_CMD: (1397151023.654452): 0x107, act
+>> 0x0, len 80, seqno 0x26
+>> mwifiex_sdio mmc0:0001:1: info: mwifiex_host_to_card_mp_aggr: tx aggregation
+>> disabled
+>> mwifiex_sdio mmc0:0001:1: data: mwifiex_host_to_card_mp_aggr: send current
+>> buffer 0
+>> mwifiex_sdio mmc0:0001:1: data: 3595 BSS(0-0): Data <= kernel
+>> mwifiex_sdio mmc0:0001:1: data: 3996 BSS(0-0): Data <= kernel
+>> mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
+>> (1397151033.670677) = 0x107, act = 0x0
+>> mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+>> mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+>> mwifiex_sdio mmc0:0001:1: is_cmd_timedout = 1
+>> mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+>> mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
+>> mwifiex_sdio mmc0:0001:1: last_cmd_id: 10 00 07 01 10 00 e4 00 10 00
+>> mwifiex_sdio mmc0:0001:1: last_cmd_act: 01 00 00 00 01 00 ff 00 01 00
+>> mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
+>> mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 10 80 10 80 10 80 e4 80 10 80
+>> mwifiex_sdio mmc0:0001:1: last_event_index = 4
+>> mwifiex_sdio mmc0:0001:1: last_event: 00 00 0b 00 0a 00 0b 00 0a 00
+>> mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
+>> mwifiex_sdio mmc0:0001:1: ps_mode=1 ps_state=0
+>> mwifiex_sdio mmc0:0001:1: cmd: FREE_CMD: cmd=0x107, cmd_pending=0
+>> mwifiex_sdio mmc0:0001:1: cmd timeout
+>> mwifiex_sdio mmc0:0001:1: info: aborting scan
+>> mwifiex_sdio: Resetting card...
+>> mwifiex_sdio: info: SDIO func num=1
+>> mwifiex_sdio mmc0:0001:1: cmd: calling mwifiex_shutdown_drv...
+>> mwifiex_sdio mmc0:0001:1: info: shutdown mwifiex...
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 0, head = ee1180d0
+>> mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb1c0, next = ee3fb380
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 1, head = ee1180dc
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 2, head = ee1180e8
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 0, head = ee1180d0
+>> mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb380, next = ee3fb300
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 1, head = ee1180dc
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 2, head = ee1180e8
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 0, head = ee1180d0
+>> mwifiex_sdio mmc0:0001:1: info: Delete node ee3fb300, next = ee1180d0
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 1, head = ee1180dc
+>> mwifiex_sdio mmc0:0001:1: info: delete BSS priority table, bss_type = 0,
+>> bss_num = 0, i = 2, head = ee1180e8
+>> mwifiex_sdio mmc0:0001:1: info: free cmd buffer
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 0
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 1
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 2
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 3
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 4
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 5
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 6
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 7
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 8
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 9
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 10
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 11
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 12
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 13
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 14
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 15
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 16
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 17
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 18
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd buffer 19
+>> mwifiex_sdio mmc0:0001:1: cmd: free cmd pool
+>> mwifiex_sdio mmc0:0001:1: info: free scan table
+>> mwifiex_sdio mmc0:0001:1: cmd: mwifiex_shutdown_drv done
+>> mwifiex_sdio mmc0:0001:1: info: unregister device
+>> mwifiex_sdio mmc0:0001:1: info: free adapter
+>> mwifiex: info: mwifiex_free_adapter: free adapter
+>> mmc0: card 0001 removed
+>> mmc0: new high speed SDIO card at address 0001
+>> mwifiex_sdio: info: vendor=0x02DF device=0x9119 class=0 function=1
+>> mwifiex_sdio: info: SDIO FUNC1 IO port: 0x10000
+>> mwifiex_sdio mmc0:0001:1: info: downloading FW image (447384 bytes)
+>> mwifiex_sdio mmc0:0001:1: poll card status failed, tries = 100
+>> mwifiex_sdio mmc0:0001:1: FW download with helper: poll status timeout @ 0
+>> mwifiex_sdio mmc0:0001:1: prog_fw failed ret=0xffffffff
+>> mwifiex: info: mwifiex_fw_dpc: unregister device
+>> mwifiex: info: mwifiex_free_adapter: free adapter
+>>
+>> Tell me if you need more information.
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
