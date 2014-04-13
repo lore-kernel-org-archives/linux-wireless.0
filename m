@@ -1,136 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:53520 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605AbaDMTVK (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48475 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083AbaDMNA0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:21:10 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so7420218wgg.30
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:08 -0700 (PDT)
+	Sun, 13 Apr 2014 09:00:26 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so7186370wgh.27
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 06:00:25 -0700 (PDT)
+Message-ID: <534A8A49.2030100@gmail.com> (sfid-20140413_150031_318913_8DEB4EFE)
+Date: Sun, 13 Apr 2014 15:59:53 +0300
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 40/47] iwlwifi: mvm: BT Coex - minor API change
-Date: Sun, 13 Apr 2014 22:19:55 +0300
-Message-Id: <1397416802-32403-40-git-send-email-egrumbach@gmail.com> (sfid-20140413_213515_990347_E459892E)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2014-04-13
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="XoGP7sVKBib7unjthHfGioKlB6VvePwoI"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--XoGP7sVKBib7unjthHfGioKlB6VvePwoI
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-The BT Coex API underwent a minor backward compatible API
-change.
-We now need to set an invalid value in the override fields.
-While at it, add kerneldoc comments on the fields in the
-command.
+Hi John,
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c        |  2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h | 38 +++++++++++++++-----------
- 2 files changed, 24 insertions(+), 16 deletions(-)
+This is a first pull request of fixes for 3.15.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 3755ad4..a1403d4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -580,6 +580,8 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
- 	bt_cmd->bt4_antenna_isolation = iwlwifi_mod_params.ant_coupling;
- 	bt_cmd->bt4_tx_tx_delta_freq_thr = 15;
- 	bt_cmd->bt4_tx_rx_max_freq0 = 15;
-+	bt_cmd->override_primary_lut = BT_COEX_INVALID_LUT;
-+	bt_cmd->override_secondary_lut = BT_COEX_INVALID_LUT;
- 
- 	flags = iwlwifi_mod_params.bt_coex_active ?
- 			BT_COEX_NW : BT_COEX_DISABLE;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-index 21877e5..5fe82c29 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-@@ -141,7 +141,8 @@ enum iwl_bt_coex_lut_type {
- 	BT_COEX_TX_DIS_LUT,
- 
- 	BT_COEX_MAX_LUT,
--};
-+	BT_COEX_INVALID_LUT = 0xff,
-+}; /* BT_COEX_DECISION_LUT_INDEX_API_E_VER_1 */
- 
- #define BT_COEX_LUT_SIZE (12)
- #define BT_COEX_CORUN_LUT_SIZE (32)
-@@ -154,19 +155,23 @@ enum iwl_bt_coex_lut_type {
-  * @flags:&enum iwl_bt_coex_flags
-  * @max_kill:
-  * @bt_reduced_tx_power: enum %iwl_bt_reduced_tx_power
-- * @bt4_antenna_isolation:
-- * @bt4_antenna_isolation_thr:
-- * @bt4_tx_tx_delta_freq_thr:
-- * @bt4_tx_rx_max_freq0:
-- * @bt_prio_boost:
-+ * @override_primary_lut: enum %iwl_bt_coex_lut_type: BT_COEX_INVALID_LUT
-+ *	should be set by default
-+ * @override_secondary_lut: enum %iwl_bt_coex_lut_type: BT_COEX_INVALID_LUT
-+ *	should be set by default
-+ * @bt4_antenna_isolation: antenna isolation
-+ * @bt4_antenna_isolation_thr: antenna threshold value
-+ * @bt4_tx_tx_delta_freq_thr: TxTx delta frequency
-+ * @bt4_tx_rx_max_freq0: TxRx max frequency
-+ * @bt_prio_boost: BT priority boost registers
-  * @wifi_tx_prio_boost: SW boost of wifi tx priority
-  * @wifi_rx_prio_boost: SW boost of wifi rx priority
-- * @kill_ack_msk:
-- * @kill_cts_msk:
-- * @decision_lut:
-- * @bt4_multiprio_lut:
-- * @bt4_corun_lut20:
-- * @bt4_corun_lut40:
-+ * @kill_ack_msk: kill ACK mask. 1 - Tx ACK, 0 - kill Tx of ACK.
-+ * @kill_cts_msk: kill CTS mask. 1 - Tx CTS, 0 - kill Tx of CTS.
-+ * @decision_lut: PTA decision LUT, per Prio-Ch
-+ * @bt4_multiprio_lut: multi priority LUT configuration
-+ * @bt4_corun_lut20: co-running 20 MHz LUT configuration
-+ * @bt4_corun_lut40: co-running 40 MHz LUT configuration
-  * @valid_bit_msk: enum %iwl_bt_coex_valid_bit_msk
-  *
-  * The structure is used for the BT_COEX command.
-@@ -175,7 +180,8 @@ struct iwl_bt_coex_cmd {
- 	__le32 flags;
- 	u8 max_kill;
- 	u8 bt_reduced_tx_power;
--	u8 reserved[2];
-+	u8 override_primary_lut;
-+	u8 override_secondary_lut;
- 
- 	u8 bt4_antenna_isolation;
- 	u8 bt4_antenna_isolation_thr;
-@@ -194,7 +200,7 @@ struct iwl_bt_coex_cmd {
- 	__le32 bt4_corun_lut40[BT_COEX_CORUN_LUT_SIZE];
- 
- 	__le32 valid_bit_msk;
--} __packed; /* BT_COEX_CMD_API_S_VER_3 */
-+} __packed; /* BT_COEX_CMD_API_S_VER_5 */
- 
- /**
-  * struct iwl_bt_coex_ci_cmd - bt coex channel inhibition command
-@@ -282,7 +288,7 @@ enum iwl_bt_activity_grading {
- 	BT_ON_NO_CONNECTION	= 1,
- 	BT_LOW_TRAFFIC		= 2,
- 	BT_HIGH_TRAFFIC		= 3,
--};
-+}; /* BT_COEX_BT_ACTIVITY_GRADING_API_E_VER_1 */
- 
- /**
-  * struct iwl_bt_coex_profile_notif - notification about BT coex
-@@ -310,7 +316,7 @@ struct iwl_bt_coex_profile_notif {
- 	__le32 primary_ch_lut;
- 	__le32 secondary_ch_lut;
- 	__le32 bt_activity_grading;
--} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_2 */
-+} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_3 */
- 
- enum iwl_bt_coex_prio_table_event {
- 	BT_COEX_PRIO_TBL_EVT_INIT_CALIB1		= 0,
--- 
-1.8.3.2
+I have new device IDs and a new firmware API. These are the trivial ones.=
+ The less trivial ones are Johannes's fix that delays the enablement of a=
+n interrupt coalescing hardware until after association - this fixes a fe=
+w connection problems seen in the field. Eyal has a bunch of rate control=
+ fixes. I decided to add these for 3.15 because they fix some disconnecti=
+on and packet loss scenarios which were reported by the field. I also hav=
+e a fix for a memory leak that happens only with a very new NIC.
 
+I'll be with low connectivity for the coming week and a half, so I want h=
+ope you won't have any issues with this pull request. If you do have issu=
+es, please let me know, but I am not sure I'll be able to handle the prob=
+lems immediately.
+
+Thanks!
+
+The following changes since commit 67b3bd4e65f0854aca70e0134d59b1daede495=
+04:
+
+  brcmfmac: fallback to mimo_bw_cap for older firmwares (2014-03-20 11:55=
+:41 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to f59913dfbb8ce07d7fb527f67b26791aa849aa1c:
+
+  iwlwifi: mvm: BT Coex - fix Look Up Table (2014-04-13 15:57:36 +0300)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (4):
+      iwlwifi: mvm: BT Coex - send the new LUT upon antenna coupling chan=
+ge
+      iwlwifi: 7000: bump API to 9
+      iwlwifi: add MODULE_FIRMWARE for 7265
+      iwlwifi: mvm: BT Coex - fix Look Up Table
+
+Eyal Shapira (7):
+      iwlwifi: mvm: rs: fix mimo delimiter in LQ cmd
+      iwlwifi: mvm: rs: use correct max expected throughput figures
+      iwlwifi: mvm: rs: fix and cleanup rs_get_rate_action
+      iwlwifi: mvm: rs: reinit rs if no tx for a long time
+      iwlwifi: mvm: rs: fallback to legacy Tx columns
+      iwlwifi: mvm: avoid searching unnecessary columns
+      iwlwifi: mvm: rs: clear per rate stats when aggregation changes
+
+Johannes Berg (1):
+      iwlwifi: mvm: delay enabling smart FIFO until after beacon RX
+
+Oren Givon (1):
+      iwlwifi: add new 7265 HW IDs
+
+ drivers/net/wireless/iwlwifi/iwl-7000.c     |   5 +-
+ drivers/net/wireless/iwlwifi/mvm/coex.c     |  18 +++++---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   1 +
+ drivers/net/wireless/iwlwifi/mvm/rs.c       | 261 ++++++++++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++-----------------------------=
+----------
+ drivers/net/wireless/iwlwifi/mvm/rs.h       |  14 ++++--
+ drivers/net/wireless/iwlwifi/mvm/sf.c       |   3 +-
+ drivers/net/wireless/iwlwifi/pcie/drv.c     |   2 +
+ 7 files changed, 195 insertions(+), 109 deletions(-)
+
+
+--XoGP7sVKBib7unjthHfGioKlB6VvePwoI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTSopgAAoJEC0Llv5uNjIBEOUP/2K/T48HSBU3Nx+4pAx2Y5tc
+boFrq/s2xPD7raxAaDYob0RxhD9Y04MTMBQZDMTVi/JD98f/zDr6Mk9z3E/4RkLu
+BycXlWtlFBot2n7V4wdACKmZJEJUVkT8qmWllvc+KBO59BZJRxqQ6zneqC/Vnjhs
+N+kKfhzxG2JGNsGIzFueaX7LevqZBpUXyv9yc8oJCe71tuy0dr8IGHWdrteKc8G+
+e1jwMNizSYn65RepPcl5JA03jNpUIDMsE/nWqJiHEcMxlokxjvDR62oAMQ1AIUT+
+KXoxAVfd9ZrtmNMnpcaoyAWy0UKwbdaz41acYmnJyclmjI8pLXSoUFGLV4r+Srs+
+KHhFiZ5dLO00sGgPjbP/2B9wx3PT0AvTlsOeswbBTA55SRqXSnTgYUATYD1nvPLo
+MoMsSBHbIP5SCt9uVCNbemUBUC6rikkK0x4MHKrwLxljOM2UcKhBE3IuvkZ0JrDp
+4/tYv3tIiw5c/m1ruw0BsJMw95cg5x/YezU7qRzKzCEJzKNPBmmEf6zh9u+4M+DP
+ud3IxmW0JiveY5Vo9aiVjsRv+HYc1BLALnuIlK1orrdzK7rud9/ZdT4uH8O0AIa0
+GOAB2KdGQxw1ZIrOu2j8/6AaID4WUk7ucKI1oZhp2ABie25IGQpy1vL5L2pKB6Is
+LukJCk4hzR/seB/3J8b2
+=L71g
+-----END PGP SIGNATURE-----
+
+--XoGP7sVKBib7unjthHfGioKlB6VvePwoI--
