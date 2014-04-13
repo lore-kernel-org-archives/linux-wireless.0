@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:43211 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbaD0Ubm (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:38853 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755586AbaDMTVD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2014 16:31:42 -0400
-Received: by mail-ob0-f182.google.com with SMTP id uy5so6392488obc.41
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Apr 2014 13:31:41 -0700 (PDT)
-Message-ID: <535D692C.7080905@lwfinger.net> (sfid-20140427_223145_020521_FE5A7E25)
-Date: Sun, 27 Apr 2014 15:31:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: poma <pomidorabelisima@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Firmware(rtl8723befw.bin) for the Realtek 8723BE 802.11n PCI
- wireless(rtl8723be)
-References: <535D5712.6000106@gmail.com>
-In-Reply-To: <535D5712.6000106@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 13 Apr 2014 15:21:03 -0400
+Received: by mail-we0-f171.google.com with SMTP id t61so7345448wes.16
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:01 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 35/47] iwlwifi: remove IWL_UCODE_TLV_FLAGS_SCHED_SCAN flag
+Date: Sun, 13 Apr 2014 22:19:50 +0300
+Message-Id: <1397416802-32403-35-git-send-email-egrumbach@gmail.com> (sfid-20140413_213517_193190_3D1B0B7C)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/2014 02:14 PM, poma wrote:
->
-> Ahoy!
->
-> Firmware(rtl8723befw.bin) for the Realtek 8723BE 802.11n PCI
-> wireless(rtl8723be)
-> missing in the "Repository of firmware blobs for use with the Linux kernel".
-> https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/rtlwifi
-> rtl8723befw.bin?
->
->
-> $ modinfo rtl8723be
-> filename:
-> /lib/modules/3.15.0-0.rc2.git3.1.fc21.x86_64/kernel/drivers/net/wireless/rtlwifi/rtl8723be/rtl8723be.ko
-> firmware:       rtlwifi/rtl8723befw.bin
-> description:    Realtek 8723BE 802.11n PCI wireless
-> license:        GPL
-> ...
->
->
-> However attending in the "Code for new variety of the 8723 PCI cards -
-> temp until code added to kernel"
-> https://github.com/lwfinger/rtl8723be/tree/master/firmware/rtlwifi
-> rtl8723befw.bin
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Thanks for this note. I thought that I had sent the firmware to git repo at 
-git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git, but that 
-was not correct until now. Within a few days, it should be in the repo. Until 
-then, it can be gotten through the GitHub link posted above.
+All the supported firmwares have this flag set.
 
-Larry
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw.h       |  2 --
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 13 +++++--------
+ 2 files changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index fbfdba7..90d69a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -83,7 +83,6 @@
+  *	from the probe request template.
+  * @IWL_UCODE_TLV_FLAGS_NEW_NSOFFL_SMALL: new NS offload (small version)
+  * @IWL_UCODE_TLV_FLAGS_NEW_NSOFFL_LARGE: new NS offload (large version)
+- * @IWL_UCODE_TLV_FLAGS_SCHED_SCAN: this uCode image supports scheduled scan.
+  * @IWL_UCODE_TLV_FLAGS_STA_KEY_CMD: new ADD_STA and ADD_STA_KEY command API
+  * @IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD: support device wide power command
+  *	containing CAM (Continuous Active Mode) indication.
+@@ -107,7 +106,6 @@ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_NO_BASIC_SSID	= BIT(12),
+ 	IWL_UCODE_TLV_FLAGS_NEW_NSOFFL_SMALL	= BIT(15),
+ 	IWL_UCODE_TLV_FLAGS_NEW_NSOFFL_LARGE	= BIT(16),
+-	IWL_UCODE_TLV_FLAGS_SCHED_SCAN		= BIT(17),
+ 	IWL_UCODE_TLV_FLAGS_STA_KEY_CMD		= BIT(19),
+ 	IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD	= BIT(20),
+ 	IWL_UCODE_TLV_FLAGS_P2P_PM		= BIT(21),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index c455722..8312c03 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -362,14 +362,11 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	else
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+-	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_SCHED_SCAN) {
+-		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
+-		hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
+-		hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
+-		/* we create the 802.11 header and zero length SSID IE. */
+-		hw->wiphy->max_sched_scan_ie_len =
+-					SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
+-	}
++	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
++	hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
++	hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
++	/* we create the 802.11 header and zero length SSID IE. */
++	hw->wiphy->max_sched_scan_ie_len = SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
+ 
+ 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
+ 			       NL80211_FEATURE_P2P_GO_OPPPS;
+-- 
+1.8.3.2
 
