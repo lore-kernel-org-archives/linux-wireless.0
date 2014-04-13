@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41401 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbaDXJqp (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:43643 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754752AbaDMNDE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 05:46:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
-References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
-	<87d2g7m90w.fsf@kamboji.qca.qualcomm.com>
-	<CAEFj986h0FtMOpbTbYYQzLxZrEcL_og0+qpQkfj36xMWM9LG5g@mail.gmail.com>
-	<878uqvm7yz.fsf@kamboji.qca.qualcomm.com>
-	<CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com>
-Date: Thu, 24 Apr 2014 12:46:36 +0300
-In-Reply-To: <CAEFj986VVHkgSnv=xGo_WAYg+n4Sp0_qJGkpmzjNk9thoizZCA@mail.gmail.com>
-	(Yeoh Chun-Yeow's message of "Thu, 24 Apr 2014 17:19:10 +0800")
-Message-ID: <874n1jm54z.fsf@kamboji.qca.qualcomm.com> (sfid-20140424_114727_624293_B9215CFD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 13 Apr 2014 09:03:04 -0400
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/13] iwlwifi: mvm: avoid searching unnecessary columns
+Date: Sun, 13 Apr 2014 16:02:01 +0300
+Message-Id: <1397394123-25102-11-git-send-email-egrumbach@gmail.com> (sfid-20140413_150514_089263_80CE457D)
+In-Reply-To: <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
+References: <534A8A49.2030100@gmail.com>
+ <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+From: Eyal Shapira <eyal@wizery.com>
 
-> On Thu, Apr 24, 2014 at 4:45 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
->>
->>>>> +     if (ar->fw_version_build == 636) {
->>>>
->>>> Checking for firmware version in ath10k is a big no. For a functinality
->>>> change like this you should add a new feature flag to enum
->>>> ath10k_fw_features (and I need to then recreate the firmware image).
->>>>
->>> Should we just use the ATH10K_FW_FEATURE_WMI_10X?
->>
->> That's a bit dangerous if in the future there's a new firmware which
->> doesn't have ATH10K_FW_FEATURE_WMI_10X but still doesn't support stand
->> alone monitor mode.
->
-> Then, we may need to introduce the new feature flag.
+Don't search columns which are unlikely to succeed as previous
+columns searched with less aggressive modulation failed.
 
-And that will create other problems. It's better to bite the bullet now
-than trying to postpone it. Besides, adding the feature flag is trivial.
+Cc: <stable@vger.kernel.org> [3.14]
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-> But then I just wondering if the firmware 636 claimed to support STA
-> mode "well" but then not allowed to be bridged. This may cause
-> confusion to end user which is the best firmware for STA mode. FYI, AP
-> firmware has no such issue if using as STA mode and put into
-> promiscuous mode.
-
-Yeah, maybe should change the documentation to recommend using 10.1
-branch for AP, STA and monitor modes? And recommended main branch only
-for Ad-Hoc and P2P?
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index b007db9..5cab26e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -212,8 +212,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_LEGACY_ANT_B,
+ 			RS_COLUMN_SISO_ANT_A,
+ 			RS_COLUMN_SISO_ANT_B,
+-			RS_COLUMN_MIMO2,
+-			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_INVALID,
++			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 		},
+@@ -225,8 +225,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_LEGACY_ANT_A,
+ 			RS_COLUMN_SISO_ANT_A,
+ 			RS_COLUMN_SISO_ANT_B,
+-			RS_COLUMN_MIMO2,
+-			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_INVALID,
++			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 		},
+@@ -239,9 +239,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_MIMO2,
+ 			RS_COLUMN_SISO_ANT_A_SGI,
+ 			RS_COLUMN_SISO_ANT_B_SGI,
+-			RS_COLUMN_MIMO2_SGI,
+ 			RS_COLUMN_LEGACY_ANT_A,
+ 			RS_COLUMN_LEGACY_ANT_B,
++			RS_COLUMN_INVALID,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
+@@ -255,9 +255,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_MIMO2,
+ 			RS_COLUMN_SISO_ANT_B_SGI,
+ 			RS_COLUMN_SISO_ANT_A_SGI,
+-			RS_COLUMN_MIMO2_SGI,
+ 			RS_COLUMN_LEGACY_ANT_A,
+ 			RS_COLUMN_LEGACY_ANT_B,
++			RS_COLUMN_INVALID,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
 -- 
-Kalle Valo
+1.8.3.2
+
