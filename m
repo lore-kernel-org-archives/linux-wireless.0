@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933032AbaDIMhS (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:64448 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208AbaDMJbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 08:37:18 -0400
-Message-ID: <1397047019.4964.8.camel@jlt4.sipsolutions.net> (sfid-20140409_143809_742831_27C557D7)
-Subject: Re: [PATCH 8/8] cfg80211: remove unnecessary include clauses
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 09 Apr 2014 14:36:59 +0200
-In-Reply-To: <87d2gqg05o.fsf@gmail.com> (sfid-20140409_142534_582747_BF7AE6C3)
-References: <c0bf65125e2d1fce1a1757cd2d46ef47d4a145b9.1397006688.git.gamerh2o@gmail.com>
-	 <c02aba28b27fe39da9730cd965e322054815713f.1397006688.git.gamerh2o@gmail.com>
-	 <1397029770.4964.2.camel@jlt4.sipsolutions.net> <87d2gqg05o.fsf@gmail.com>
-	 (sfid-20140409_142534_582747_BF7AE6C3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 Apr 2014 05:31:07 -0400
+Received: by mail-pa0-f44.google.com with SMTP id bj1so7156314pad.3
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 02:31:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1397219374-3280-1-git-send-email-janusz.dziedzic@tieto.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 13 Apr 2014 12:30:50 +0300
+Message-ID: <CA+XVXfdepnQyTGQ5stYLjAngpvf_hxRfMUSbjufCDwoBKhTySA@mail.gmail.com> (sfid-20140413_113112_273806_886725E5)
+Subject: Re: [RFC/RFT] cfg80211: reg: track crda request
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	mcgrof@do-not-panic.com, linux@eikelenboom.it, collen@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 20:25 +0800, Zhao, Gang wrote:
-> On Wed, 2014-04-09 at 09:49:30 +0200, Johannes Berg wrote:
-> > I don't like those last four patches, I'd rather have more includes than
-> > rely on other headers including headers that we need - that could change
-> > after all.
-> 
-> As I said in commit log, duplicate including could hide some warnings.
+On Fri, Apr 11, 2014 at 3:29 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Track CRDA requests and handle timeout
+> when no answer from CRDA.
+> This could happen during startup when
+> crda binary is not available.
 
-Well, the commit logs for these patches didn't have any such
-information, but that's not really the point. Besides, what does "could
-hide some warnings" even mean? This isn't a meaningful thing, if you
-include the right headers then you should get what you need, and you
-should include the headers for what you need.
+[...]
+> @@ -1864,7 +1865,8 @@ static void reg_process_pending_hints(void)
+>
+>         /* When last_request->processed becomes true this will be rescheduled */
+>         if (lr && !lr->processed) {
+> -               REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
+> +               REG_DBG_PRINT("Pending %s regulatory request, waiting for it to be processed...\n",
+> +                             reg_initiator_name(lr->initiator));
+>                 return;
 
-> In theory, the possibility of change is equal, either it's a directly
-> included header or a indirectly included header, and it's more likely to
-> change to include more, not less. So the change may not cause any
-> problem.
 
-At the current point in time. If some of the headers that you rely on
-including something no longer does in the future because it no longer
-needs that, then you just broke everything. That's the point you
-seemingly didn't consider, and I think it's much better to include what
-you need rather than rely on somebody else doing it for you. The latter
-can even be architecture-specific.
+The patch is good, but what's why not also apply Luis' original
+("cfg80211: fix processing world regdomain when non modular") + my
+suggested fix for the issue there?
 
-> In other way, the local directory header files may change more
-> frequently than the header files in include/ directory. Whether it's a
-> total win to apply the last four patches may be a question, but it's
-> just amusing to see that lots of lines can be deleted. :-)
+The way I see it, the sooner we retry the better. Why should I see
+this print instead of trying to re-process the hint?
 
-# of lines isn't a relevant metric though. If you were removing includes
-that we didn't need that's certainly a useful thing, but removing
-includes because they're indirectly already included is IMHO practically
-always bad.
-
-johannes
-
+Arik
