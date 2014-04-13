@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12565 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756574AbaDBHbh (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:62051 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755621AbaDMTVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 03:31:37 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: remove not needed warning when peer unmap
-References: <1396340628-4570-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Wed, 2 Apr 2014 10:31:31 +0300
-In-Reply-To: <1396340628-4570-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Tue, 1 Apr 2014 10:23:48 +0200")
-Message-ID: <877g78rxv0.fsf@kamboji.qca.qualcomm.com> (sfid-20140402_093140_892208_E63988C8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 13 Apr 2014 15:21:08 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so3134622wib.5
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:07 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 39/47] iwlwifi: mvm: BT Coex - don't use comma operator
+Date: Sun, 13 Apr 2014 22:19:54 +0300
+Message-Id: <1397416802-32403-39-git-send-email-egrumbach@gmail.com> (sfid-20140413_213517_324682_29721EDB)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Remove not needed warning when get peer unmap
-> event from the firmware. This is not critical
-> message. Instead print this as a debug message.
+This is really not needed. This is a remainder from a C99
+initialiser.
 
-I don't agree with that statement. If that would be true, we could
-remove a lot of warnings from ath10k. We have these warnings to catch
-problems early, which again improves the quality of the driver.
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Your commit log was again missing the "why?" part. I assume the reason
-for this patch is the problem of seeing the warning "unknown peer id 2"
-when putting the interface is down, which again is a spurious event from
-the firmware? You should document that in the commit log as well as add
-a short comment to the code explaining why we only print a debug message
-when that happens.
-
-Other idea I had would be to keep the warning message but add a new test
-to detect this problematic case, but I guess for that we would need to
-add a new state "stopping" to catch that? For example, something like
-this:
-
-if state == stopping and event->id == 2
-        dbg("foo")
-else
-        warn("bar")
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index 92a005c..3755ad4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -576,10 +576,10 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 	cmd.data[0] = bt_cmd;
+ 
+ 	bt_cmd->max_kill = 5;
+-	bt_cmd->bt4_antenna_isolation_thr = BT_ANTENNA_COUPLING_THRESHOLD,
+-	bt_cmd->bt4_antenna_isolation = iwlwifi_mod_params.ant_coupling,
+-	bt_cmd->bt4_tx_tx_delta_freq_thr = 15,
+-	bt_cmd->bt4_tx_rx_max_freq0 = 15,
++	bt_cmd->bt4_antenna_isolation_thr = BT_ANTENNA_COUPLING_THRESHOLD;
++	bt_cmd->bt4_antenna_isolation = iwlwifi_mod_params.ant_coupling;
++	bt_cmd->bt4_tx_tx_delta_freq_thr = 15;
++	bt_cmd->bt4_tx_rx_max_freq0 = 15;
+ 
+ 	flags = iwlwifi_mod_params.bt_coex_active ?
+ 			BT_COEX_NW : BT_COEX_DISABLE;
 -- 
-Kalle Valo
+1.8.3.2
+
