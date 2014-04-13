@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37746 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755384AbaDHKDY (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:40380 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755215AbaDMTUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 06:03:24 -0400
-Message-ID: <1396951400.5936.15.camel@jlt4.sipsolutions.net> (sfid-20140408_120327_856727_52770814)
-Subject: Re: [RFCv2 1/6] cfg80211: export expected throughput through
- get_station()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: b.a.t.m.a.n@lists.open-mesh.org, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Date: Tue, 08 Apr 2014 12:03:20 +0200
-In-Reply-To: <1396211704-4677-2-git-send-email-antonio@meshcoding.com>
-References: <1396211704-4677-1-git-send-email-antonio@meshcoding.com>
-	 <1396211704-4677-2-git-send-email-antonio@meshcoding.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 Apr 2014 15:20:30 -0400
+Received: by mail-wg0-f45.google.com with SMTP id l18so7501769wgh.16
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:29 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/47] iwlwifi: move CPU1_CPU2_SEPARATOR_SECTION to iwl-fw.h
+Date: Sun, 13 Apr 2014 22:19:28 +0300
+Message-Id: <1397416802-32403-13-git-send-email-egrumbach@gmail.com> (sfid-20140413_212037_637887_5B0BC4F2)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-03-30 at 22:34 +0200, Antonio Quartulli wrote:
+From: Eran Harary <eran.harary@intel.com>
 
-> -	STATION_INFO_INACTIVE_TIME	= 1<<0,
+This define is related to the firmware packaging and is
+needed by more than one transport.
 
-Since you're touching these all anyway, maybe convert to use BIT().
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw.h     | 1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-
-> @@ -1013,6 +1015,9 @@ struct sta_bss_parameters {
->   * @local_pm: local mesh STA power save mode
->   * @peer_pm: peer mesh STA power save mode
->   * @nonpeer_pm: non-peer mesh STA power save mode
-> + * @expected_throughput: expected throughput as reported by the RC algorithm
-> + *  about the bitrate having the maximum throughput. This field can be filled
-> + *  only by drivers using Minstrel
-
-This value needs a documented unit ... :)
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index de70919..f7ea9c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -188,6 +188,7 @@ enum iwl_ucode_sec {
+ #define IWL_UCODE_SECTION_MAX 12
+ #define IWL_API_ARRAY_SIZE	1
+ #define IWL_CAPABILITIES_ARRAY_SIZE	1
++#define CPU1_CPU2_SEPARATOR_SECTION	0xFFFFCCCC
+ 
+ struct iwl_ucode_capabilities {
+ 	u32 max_probe_length;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 97e6bd8..2548f49 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -103,7 +103,6 @@ static void iwl_pcie_set_pwr(struct iwl_trans *trans, bool vaux)
+ 
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+-#define CPU1_CPU2_SEPARATOR_SECTION	0xFFFFCCCC
+ 
+ static void iwl_pcie_apm_config(struct iwl_trans *trans)
+ {
+-- 
+1.8.3.2
 
