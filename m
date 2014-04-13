@@ -1,164 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:54801 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758197AbaDBJ6t (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:35959 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755586AbaDMTVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 05:58:49 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	David Herrmann <dh.herrmann@gmail.com>
-Subject: [PATCH v6 1/4] net: add name_assign_type netdev attribute
-Date: Wed,  2 Apr 2014 11:58:23 +0200
-Message-Id: <1396432706-14470-2-git-send-email-dh.herrmann@gmail.com> (sfid-20140402_120018_914160_E6FB0E55)
-In-Reply-To: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
-References: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+	Sun, 13 Apr 2014 15:21:19 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so7390302wgh.35
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:18 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 47/47] iwlwifi: don't disable SCD chain extension on newer devices
+Date: Sun, 13 Apr 2014 22:20:02 +0300
+Message-Id: <1397416802-32403-47-git-send-email-egrumbach@gmail.com> (sfid-20140413_213516_215630_042C8B68)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The name_assign_type attribute gives hints where the interface name of a
-given net-device comes from. Three different values are currently defined:
-  NET_NAME_ENUM:
-    This is the default. The ifname is provided by the kernel with an
-    enumerated suffix. Names may be reused and unstable.
-  NET_NAME_USER:
-    The ifname was provided by user-space during net-device setup.
-  NET_NAME_RENAMED:
-    The net-device has been renamed via RTNL. Once this type is set, it
-    cannot change again.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This attribute comes in handy for reliable net-device names. If an ifname
-is provided by user-space, we can safely assume that the naming-policy
-avoids reuse and is stable. Only if it was set by the kernel, the
-interfaces might need to be renamed.
+7000 device series have a fix for this hardware feature.
+Stop disabling it, and get an improvement in Tx throughput.
+This feature allows the scheduler to fetch more frames on
+the fly while an A-MPDU is being built - which means that
+we can get larger A-MPDU. This, of course, give an
+improvement in the Tx throughput.
 
-The NET_NAME_RENAMED value allows us to detect whether some-one else
-already renamed the device, in which case we shouldn't touch it again. The
-NET_NAME_USER value allows us to detect whether some other naming policy
-created the device, in which case there's no need to rename it.
-
-The most significant use-case is to detect virtual wifi-P2P devices, which
-are named by wpa_supplicant et al. We shouldn't rename them as wpas
-already provides a proper naming-policy.
-
-Note that this patch only provides the core infrastructure. The different
-net-dev types need to be manually fixed to use NET_NAME_USER instead of
-the default (NET_NAME_ENUM). NET_NAME_ENUM is the least restrictive,
-though, so it seems safe to use it as fallback for non-converted net-dev
-types.
-
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
-Acked-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/linux/netdevice.h      | 2 ++
- include/uapi/linux/netdevice.h | 4 ++++
- net/core/dev.c                 | 7 +++++++
- net/core/net-sysfs.c           | 2 ++
- net/core/rtnetlink.c           | 2 ++
- 5 files changed, 17 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-1000.c   | 1 +
+ drivers/net/wireless/iwlwifi/iwl-2000.c   | 2 ++
+ drivers/net/wireless/iwlwifi/iwl-5000.c   | 1 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c   | 3 +++
+ drivers/net/wireless/iwlwifi/iwl-config.h | 2 ++
+ drivers/net/wireless/iwlwifi/pcie/tx.c    | 3 ++-
+ 6 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 775cc95..e016edd 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -1372,6 +1372,8 @@ struct net_device {
- 	struct kset		*queues_kset;
- #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 854ba84..c3817fa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -62,6 +62,7 @@ static const struct iwl_base_params iwl1000_base_params = {
+ 	.led_compensation = 51,
+ 	.wd_timeout = IWL_WATCHDOG_DISABLED,
+ 	.max_event_log_size = 128,
++	.scd_chain_ext_wa = true,
+ };
  
-+	unsigned char		name_assign_type; /* name assignment type */
-+
- 	bool			uc_promisc;
- 	unsigned int		promiscuity;
- 	unsigned int		allmulti;
-diff --git a/include/uapi/linux/netdevice.h b/include/uapi/linux/netdevice.h
-index fdfbd1c..af50a04 100644
---- a/include/uapi/linux/netdevice.h
-+++ b/include/uapi/linux/netdevice.h
-@@ -36,6 +36,10 @@
- /* Initial net device group. All devices belong to group 0 by default. */
- #define INIT_NETDEV_GROUP	0
- 
-+/* interface name assignment types (sysfs name_assign_type attribute) */
-+#define NET_NAME_ENUM		0	/* enumerated by kernel (default) */
-+#define NET_NAME_USER		1	/* provided by user-space */
-+#define NET_NAME_RENAMED	2	/* renamed by user-space */
+ static const struct iwl_ht_params iwl1000_ht_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 3e63323..21e5d08 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -75,6 +75,7 @@ static const struct iwl_base_params iwl2000_base_params = {
+ 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
+ 	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
++	.scd_chain_ext_wa = true,
+ };
  
  
- /* Media selection options. */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 48d81e4..b901aaa 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1083,6 +1083,7 @@ static int dev_get_valid_name(struct net *net,
- int dev_change_name(struct net_device *dev, const char *newname)
- {
- 	char oldname[IFNAMSIZ];
-+	unsigned char old_assign_type;
- 	int err = 0;
- 	int ret;
- 	struct net *net;
-@@ -1109,10 +1110,14 @@ int dev_change_name(struct net_device *dev, const char *newname)
- 		return err;
- 	}
+@@ -88,6 +89,7 @@ static const struct iwl_base_params iwl2030_base_params = {
+ 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
+ 	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
++	.scd_chain_ext_wa = true,
+ };
  
-+	old_assign_type = dev->name_assign_type;
-+	dev->name_assign_type = NET_NAME_RENAMED;
-+
- rollback:
- 	ret = device_rename(&dev->dev, dev->name);
- 	if (ret) {
- 		memcpy(dev->name, oldname, IFNAMSIZ);
-+		dev->name_assign_type = old_assign_type;
- 		write_seqcount_end(&devnet_rename_seq);
- 		return ret;
- 	}
-@@ -1141,6 +1146,8 @@ rollback:
- 			write_seqcount_begin(&devnet_rename_seq);
- 			memcpy(dev->name, oldname, IFNAMSIZ);
- 			memcpy(oldname, newname, IFNAMSIZ);
-+			dev->name_assign_type = old_assign_type;
-+			old_assign_type = NET_NAME_RENAMED;
- 			goto rollback;
- 		} else {
- 			pr_err("%s: name change rollback failed: %d\n",
-diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
-index 4623962..a39ae01 100644
---- a/net/core/net-sysfs.c
-+++ b/net/core/net-sysfs.c
-@@ -105,6 +105,7 @@ static ssize_t netdev_store(struct device *dev, struct device_attribute *attr,
+ static const struct iwl_ht_params iwl2000_ht_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 6674f2c..332bbede 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -61,6 +61,7 @@ static const struct iwl_base_params iwl5000_base_params = {
+ 	.led_compensation = 51,
+ 	.wd_timeout = IWL_WATCHDOG_DISABLED,
+ 	.max_event_log_size = 512,
++	.scd_chain_ext_wa = true,
+ };
  
- NETDEVICE_SHOW_RO(dev_id, fmt_hex);
- NETDEVICE_SHOW_RO(dev_port, fmt_dec);
-+NETDEVICE_SHOW_RO(name_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_assign_type, fmt_dec);
- NETDEVICE_SHOW_RO(addr_len, fmt_dec);
- NETDEVICE_SHOW_RO(iflink, fmt_dec);
-@@ -387,6 +388,7 @@ static struct attribute *net_class_attrs[] = {
- 	&dev_attr_dev_port.attr,
- 	&dev_attr_iflink.attr,
- 	&dev_attr_ifindex.attr,
-+	&dev_attr_name_assign_type.attr,
- 	&dev_attr_addr_assign_type.attr,
- 	&dev_attr_addr_len.attr,
- 	&dev_attr_link_mode.attr,
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index d4ff417..2e4be7f 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -1971,6 +1971,8 @@ replay:
- 		}
+ static const struct iwl_ht_params iwl5000_ht_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 8048de9..8f2c3c8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -85,6 +85,7 @@ static const struct iwl_base_params iwl6000_base_params = {
+ 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
+ 	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
++	.scd_chain_ext_wa = true,
+ };
  
- 		dev->ifindex = ifm->ifi_index;
-+		if (tb[IFLA_IFNAME])
-+			dev->name_assign_type = NET_NAME_USER;
+ static const struct iwl_base_params iwl6050_base_params = {
+@@ -97,6 +98,7 @@ static const struct iwl_base_params iwl6050_base_params = {
+ 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
+ 	.max_event_log_size = 1024,
+ 	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
++	.scd_chain_ext_wa = true,
+ };
  
- 		if (ops->newlink) {
- 			err = ops->newlink(net, dev, tb, data);
+ static const struct iwl_base_params iwl6000_g2_base_params = {
+@@ -109,6 +111,7 @@ static const struct iwl_base_params iwl6000_g2_base_params = {
+ 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
+ 	.shadow_reg_enable = false, /* TODO: fix bugs using this feature */
++	.scd_chain_ext_wa = true,
+ };
+ 
+ static const struct iwl_ht_params iwl6000_ht_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 8c16730..7ce82d9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -148,6 +148,7 @@ static inline u8 num_of_ant(u8 mask)
+  * @shadow_reg_enable: HW shadow register support
+  * @apmg_wake_up_wa: should the MAC access REQ be asserted when a command
+  *	is in flight. This is due to a HW bug in 7260, 3160 and 7265.
++ * @scd_chain_ext_wa: should the chain extension feature in SCD be disabled.
+  */
+ struct iwl_base_params {
+ 	int eeprom_size;
+@@ -163,6 +164,7 @@ struct iwl_base_params {
+ 	const bool shadow_reg_enable;
+ 	const bool pcie_l1_allowed;
+ 	const bool apmg_wake_up_wa;
++	const bool scd_chain_ext_wa;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 78a6ff2..dde6031 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -696,7 +696,8 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ 	/* The chain extension of the SCD doesn't work well. This feature is
+ 	 * enabled by default by the HW, so we need to disable it manually.
+ 	 */
+-	iwl_write_prph(trans, SCD_CHAINEXT_EN, 0);
++	if (trans->cfg->base_params->scd_chain_ext_wa)
++		iwl_write_prph(trans, SCD_CHAINEXT_EN, 0);
+ 
+ 	iwl_trans_ac_txq_enable(trans, trans_pcie->cmd_queue,
+ 				trans_pcie->cmd_fifo);
 -- 
-1.9.1
+1.8.3.2
 
