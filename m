@@ -1,111 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:35609 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbaDNJ2O (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:65144 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbaDMNDC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 05:28:14 -0400
-Received: by mail-ee0-f52.google.com with SMTP id e49so6320094eek.39
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:28:13 -0700 (PDT)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 2/2 V3] ath10k: Fix pmf for action frames
-Date: Mon, 14 Apr 2014 11:27:22 +0200
-Message-Id: <1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140414_112830_967994_A832EBBB)
-In-Reply-To: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
-References: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
+	Sun, 13 Apr 2014 09:03:02 -0400
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/13] iwlwifi: mvm: rs: fallback to legacy Tx columns
+Date: Sun, 13 Apr 2014 16:02:00 +0300
+Message-Id: <1397394123-25102-10-git-send-email-egrumbach@gmail.com> (sfid-20140413_150353_119432_B0F8E239)
+In-Reply-To: <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
+References: <534A8A49.2030100@gmail.com>
+ <1397394123-25102-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sending and receiveing protected managment frames.
-Lack of protected flag for received protected action frames
-causes report these frames as unprotected robust action frames.
-If the driver in AP mode sent frame with protected flag and
-CCMP header using IEEE80211_KEY_FLAG_SW_MGMT_TX flag,
-the FW encrypted frames once again. From user side all
-received SA Query Requests and Responses were skipped and
-all protected action frames were sent as malformed packets.
+From: Eyal Shapira <eyal@wizery.com>
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Allow switching back to legacy Tx columns so we'll stop doing
+HT/VHT in case we're far from the AP. Stop active aggregation when
+making a deciding to stay in a legacy column.
+Despite having low legacy rates in the LQ table lower entries
+it doesn't help much in case we're doing aggregations as the
+aggregation was being transmitted in the initial rate of the table.
+
+This should help traffic stalls when far from the AP.
+
+Cc: <stable@vger.kernel.org> [3.14]
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    5 ++++-
- drivers/net/wireless/ath/ath10k/wmi.c |   24 ++++++++++++++++++++----
- 2 files changed, 24 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58ec5a7..38035dc 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -54,7 +54,10 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		arg.key_cipher = WMI_CIPHER_AES_CCM;
--		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
-+		if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
-+		else
-+			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		arg.key_cipher = WMI_CIPHER_TKIP;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d4b48ef..6d8a097 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -639,6 +639,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	struct sk_buff *wmi_skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int len;
-+	u32 buf_len = skb->len;
- 	u16 fc;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 0d03dcd..b007db9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -142,7 +142,7 @@ enum rs_column_mode {
+ 	RS_MIMO2,
+ };
  
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -648,6 +649,15 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 		return -EINVAL;
+-#define MAX_NEXT_COLUMNS 5
++#define MAX_NEXT_COLUMNS 7
+ #define MAX_COLUMN_CHECKS 3
  
- 	len = sizeof(cmd->hdr) + skb->len;
+ typedef bool (*allow_column_func_t) (struct iwl_mvm *mvm,
+@@ -214,6 +214,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_B,
+ 			RS_COLUMN_MIMO2,
+ 			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_INVALID,
++			RS_COLUMN_INVALID,
+ 		},
+ 	},
+ 	[RS_COLUMN_LEGACY_ANT_B] = {
+@@ -225,6 +227,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_B,
+ 			RS_COLUMN_MIMO2,
+ 			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_INVALID,
++			RS_COLUMN_INVALID,
+ 		},
+ 	},
+ 	[RS_COLUMN_SISO_ANT_A] = {
+@@ -236,6 +240,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_A_SGI,
+ 			RS_COLUMN_SISO_ANT_B_SGI,
+ 			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
+@@ -250,6 +256,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_B_SGI,
+ 			RS_COLUMN_SISO_ANT_A_SGI,
+ 			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
+@@ -265,6 +273,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_A,
+ 			RS_COLUMN_SISO_ANT_B,
+ 			RS_COLUMN_MIMO2,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
+@@ -281,6 +291,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_B,
+ 			RS_COLUMN_SISO_ANT_A,
+ 			RS_COLUMN_MIMO2,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
+@@ -296,6 +308,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_A_SGI,
+ 			RS_COLUMN_SISO_ANT_B_SGI,
+ 			RS_COLUMN_MIMO2_SGI,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_mimo_allow,
+@@ -311,6 +325,8 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_SISO_ANT_A,
+ 			RS_COLUMN_SISO_ANT_B,
+ 			RS_COLUMN_MIMO2,
++			RS_COLUMN_LEGACY_ANT_A,
++			RS_COLUMN_LEGACY_ANT_B,
+ 		},
+ 		.checks = {
+ 			rs_mimo_allow,
+@@ -2070,8 +2086,18 @@ lq_update:
+ 		 * stay with best antenna legacy modulation for a while
+ 		 * before next round of mode comparisons. */
+ 		tbl1 = &(lq_sta->lq_info[lq_sta->active_tbl]);
+-		if (is_legacy(&tbl1->rate) && !sta->ht_cap.ht_supported) {
++		if (is_legacy(&tbl1->rate)) {
+ 			IWL_DEBUG_RATE(mvm, "LQ: STAY in legacy table\n");
 +
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		len += IEEE80211_CCMP_MIC_LEN;
-+		buf_len += IEEE80211_CCMP_MIC_LEN;
-+	}
-+
- 	len = round_up(len, 4);
- 
- 	wmi_skb = ath10k_wmi_alloc_skb(len);
-@@ -659,7 +669,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
- 	cmd->hdr.tx_rate = 0;
- 	cmd->hdr.tx_power = 0;
--	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
-+	cmd->hdr.buf_len = __cpu_to_le32(buf_len);
- 
- 	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
- 	memcpy(cmd->buf, skb->data, skb->len);
-@@ -957,10 +967,16 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	 * frames with Protected Bit set. */
- 	if (ieee80211_has_protected(hdr->frame_control) &&
- 	    !ieee80211_is_auth(hdr->frame_control)) {
--		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
--				RX_FLAG_MMIC_STRIPPED;
--		hdr->frame_control = __cpu_to_le16(fc &
-+		status->flag |= RX_FLAG_DECRYPTED;
-+
-+		if (!ieee80211_is_action(hdr->frame_control) &&
-+		    !ieee80211_is_deauth(hdr->frame_control) &&
-+		    !ieee80211_is_disassoc(hdr->frame_control)) {
-+			status->flag |= RX_FLAG_IV_STRIPPED |
-+					RX_FLAG_MMIC_STRIPPED;
-+			hdr->frame_control = __cpu_to_le16(fc &
- 					~IEEE80211_FCTL_PROTECTED);
-+		}
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_MGMT,
++			if (tid != IWL_MAX_TID_COUNT) {
++				tid_data = &sta_priv->tid_data[tid];
++				if (tid_data->state != IWL_AGG_OFF) {
++					IWL_DEBUG_RATE(mvm,
++						       "Stop aggregation on tid %d\n",
++						       tid);
++					ieee80211_stop_tx_ba_session(sta, tid);
++				}
++			}
+ 			rs_set_stay_in_table(mvm, 1, lq_sta);
+ 		} else {
+ 		/* If we're in an HT mode, and all 3 mode switch actions
 -- 
-1.7.9.5
+1.8.3.2
 
