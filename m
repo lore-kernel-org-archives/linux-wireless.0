@@ -1,156 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:38395 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbaDUIyn (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:34239 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754338AbaDMMum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Apr 2014 04:54:43 -0400
-Received: by mail-ee0-f41.google.com with SMTP id t10so3502175eei.14
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2014 01:54:42 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [wireless-next][PATCH V2 2/2] b43: remove list of IEEE 802.11 devices
-Date: Mon, 21 Apr 2014 10:54:29 +0200
-Message-Id: <1398070469-23307-1-git-send-email-zajec5@gmail.com> (sfid-20140421_105507_656747_6610748E)
-In-Reply-To: <1398018659-17263-2-git-send-email-zajec5@gmail.com>
-References: <1398018659-17263-2-git-send-email-zajec5@gmail.com>
+	Sun, 13 Apr 2014 08:50:42 -0400
+Received: by mail-ie0-f177.google.com with SMTP id rl12so7124938iec.22
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 05:50:42 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+	<1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
+	<1393852248.10039.5.camel@jlt4.sipsolutions.net>
+	<CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
+	<CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
+	<CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+	<CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
+	<CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
+	<CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
+	<CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
+	<CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
+Date: Sun, 13 Apr 2014 15:50:42 +0300
+Message-ID: <CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com> (sfid-20140413_145046_610235_4F3E9D8E)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
+From: Eliad Peller <eliad@wizery.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Colleen T <colleen@cozybit.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the first step to remove leftover code.
+On Wed, Apr 9, 2014 at 7:33 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>
+> Seems I might have found the culprit - reg_todo is called while the
+> request to CRDA is in flight and the patch in question causes the
+> already-in-process user-request to be handled again. Since it's the
+> same regdomain as the last request (it's the last request itself), we
+> get this:
+>
+> treatment = __reg_process_hint_user(user_request);
+> if (treatment == REG_REQ_IGNORE ||
+>    treatment == REG_REQ_ALREADY_SET) {
+> kfree(user_request); <------
+> return treatment;
+> }
+>
+> Can you try adding the attached patch? It just replaced relevant
+> kfree-s with a function that avoids freeing the last request.
+>
+i encountered a similar panic, and this patch seems to fix it.
+so you get my:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-As Michael noticed there is much more to remove (e.g. struct b43_wl).
-Change commit message to speciify what exactly we remove at this point.
-No code changes to V1
----
- drivers/net/wireless/b43/b43.h  |  4 ----
- drivers/net/wireless/b43/main.c | 52 +++++++++++++++--------------------------
- 2 files changed, 19 insertions(+), 37 deletions(-)
+Tested-by: Eliad Peller <eliad@wizery.com>
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 54376fd..4113b69 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -915,10 +915,6 @@ struct b43_wl {
- 	char rng_name[30 + 1];
- #endif /* CONFIG_B43_HWRNG */
- 
--	/* List of all wireless devices on this chip */
--	struct list_head devlist;
--	u8 nr_devs;
--
- 	bool radiotap_enabled;
- 	bool radio_enabled;
- 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index cf84cf2..07024c6 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3735,40 +3735,35 @@ static int b43_switch_band(struct b43_wl *wl, struct ieee80211_channel *chan)
- {
- 	struct b43_wldev *up_dev = NULL;
- 	struct b43_wldev *down_dev;
--	struct b43_wldev *d;
- 	int err;
- 	bool uninitialized_var(gmode);
- 	int prev_status;
- 
- 	/* Find a device and PHY which supports the band. */
--	list_for_each_entry(d, &wl->devlist, list) {
--		switch (chan->band) {
--		case IEEE80211_BAND_5GHZ:
--			if (d->phy.supports_5ghz) {
--				up_dev = d;
--				gmode = false;
--			}
--			break;
--		case IEEE80211_BAND_2GHZ:
--			if (d->phy.supports_2ghz) {
--				up_dev = d;
--				gmode = true;
--			}
--			break;
--		default:
--			B43_WARN_ON(1);
--			return -EINVAL;
-+	switch (chan->band) {
-+	case IEEE80211_BAND_5GHZ:
-+		if (wl->current_dev->phy.supports_5ghz) {
-+			up_dev = wl->current_dev;
-+			gmode = false;
- 		}
--		if (up_dev)
--			break;
-+		break;
-+	case IEEE80211_BAND_2GHZ:
-+		if (wl->current_dev->phy.supports_2ghz) {
-+			up_dev = wl->current_dev;
-+			gmode = true;
-+		}
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+		return -EINVAL;
- 	}
-+
- 	if (!up_dev) {
- 		b43err(wl, "Could not find a device for %s-GHz band operation\n",
- 		       band_to_string(chan->band));
- 		return -ENODEV;
- 	}
--	if ((up_dev == wl->current_dev) &&
--	    (!!wl->current_dev->phy.gmode == !!gmode)) {
-+	if (!!wl->current_dev->phy.gmode == !!gmode) {
- 		/* This device is already running. */
- 		return 0;
- 	}
-@@ -5270,7 +5265,6 @@ static void b43_one_core_detach(struct b43_bus_dev *dev)
- 	b43_debugfs_remove_device(wldev);
- 	b43_wireless_core_detach(wldev);
- 	list_del(&wldev->list);
--	wl->nr_devs--;
- 	b43_bus_set_wldev(dev, NULL);
- 	kfree(wldev);
- }
-@@ -5295,8 +5289,6 @@ static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl)
- 	if (err)
- 		goto err_kfree_wldev;
- 
--	list_add(&wldev->list, &wl->devlist);
--	wl->nr_devs++;
- 	b43_bus_set_wldev(dev, wldev);
- 	b43_debugfs_add_device(wldev);
- 
-@@ -5386,7 +5378,6 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- 	wl->hw = hw;
- 	mutex_init(&wl->mutex);
- 	spin_lock_init(&wl->hardirq_lock);
--	INIT_LIST_HEAD(&wl->devlist);
- 	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
- 	INIT_WORK(&wl->txpower_adjust_work, b43_phy_txpower_adjust_work);
- 	INIT_WORK(&wl->tx_work, b43_tx_work);
-@@ -5549,13 +5540,8 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	/* Unregister HW RNG driver */
- 	b43_rng_exit(wl);
- 
--	if (list_empty(&wl->devlist)) {
--		b43_leds_unregister(wl);
--		/* Last core on the chip unregistered.
--		 * We can destroy common struct b43_wl.
--		 */
--		b43_wireless_exit(dev, wl);
--	}
-+	b43_leds_unregister(wl);
-+	b43_wireless_exit(dev, wl);
- }
- 
- static struct ssb_driver b43_ssb_driver = {
--- 
-1.8.4.5
-
+Eliad.
