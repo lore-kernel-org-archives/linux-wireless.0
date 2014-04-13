@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24176 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756675AbaDWHUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2014 03:20:47 -0400
-From: Ilan Peer <ilan.peer@intel.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:65015 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755518AbaDMTVA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Apr 2014 15:21:00 -0400
+Received: by mail-wg0-f45.google.com with SMTP id l18so7502059wgh.16
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:59 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] cfg80211: Fix GO Concurrent relaxation on UNII-3
-Date: Wed, 23 Apr 2014 09:22:58 +0300
-Message-Id: <1398234178-24685-1-git-send-email-ilan.peer@intel.com> (sfid-20140423_092926_556077_B4B8B67A)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 33/47] iwlwifi: remove IWL_UCODE_TLV_FLAGS_BF_UPDATED flag
+Date: Sun, 13 Apr 2014 22:19:48 +0300
+Message-Id: <1397416802-32403-33-git-send-email-egrumbach@gmail.com> (sfid-20140413_213516_108656_2763F52A)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At some locations, channels 149-165 are considered a single
-bundle, while at some other locations, e.g., Indonesia, channels
-149-161 are considered a single bundle, while channel 165 belongs
-to a different bundle. This means that:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-1. A station interface connection to an AP on channel 165 allows
-   the instantiation of a P2P GO on channels 149-165.
-2. A station interface connection to an AP on channels 149-161
-   does NOT allow the instantiation of a P2P GO on channel 165.
+All the supported firmwares have this flag set.
 
-Fix this.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-fw.h       | 2 --
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
+ drivers/net/wireless/iwlwifi/mvm/power.c    | 3 +--
+ 3 files changed, 2 insertions(+), 6 deletions(-)
 
-Applied on top of mac80211-next/master.
-
- net/wireless/chan.c |   18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index c61bcdd..fb8f6a3 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -750,8 +750,24 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 		r1 = cfg80211_get_unii(chan->center_freq);
- 		r2 = cfg80211_get_unii(other_chan->center_freq);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 04eac6e..f87ab69 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -79,7 +79,6 @@
+  *	offload profile config command.
+  * @IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS: D3 image supports up to six
+  *	(rather than two) IPv6 addresses
+- * @IWL_UCODE_TLV_FLAGS_BF_UPDATED: new beacon filtering API
+  * @IWL_UCODE_TLV_FLAGS_NO_BASIC_SSID: not sending a probe with the SSID element
+  *	from the probe request template.
+  * @IWL_UCODE_TLV_FLAGS_D3_CONTINUITY_API: modified D3 API to allow keeping
+@@ -107,7 +106,6 @@ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
+ 	IWL_UCODE_TLV_FLAGS_SHORT_BL		= BIT(7),
+ 	IWL_UCODE_TLV_FLAGS_D3_6_IPV6_ADDRS	= BIT(10),
+-	IWL_UCODE_TLV_FLAGS_BF_UPDATED		= BIT(11),
+ 	IWL_UCODE_TLV_FLAGS_NO_BASIC_SSID	= BIT(12),
+ 	IWL_UCODE_TLV_FLAGS_D3_CONTINUITY_API	= BIT(14),
+ 	IWL_UCODE_TLV_FLAGS_NEW_NSOFFL_SMALL	= BIT(15),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 39e4ffe..c455722 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -824,8 +824,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 		goto out_remove_mac;
  
--		if (r1 != -EINVAL && r1 == r2)
-+		if (r1 != -EINVAL && r1 == r2) {
-+			/*
-+			 * At some locations channels 149-165 are considered a
-+			 * bundle, but at other locations, e.g., Indonesia,
-+			 * channels 149-161 are considered a bundle while
-+			 * channel 165 is left out and considered to be in a
-+			 * different bundle. Thus, in case that there is a
-+			 * station interface connected to an AP on channel 165,
-+			 * it is assumed that channels 149-161 are allowed for
-+			 * GO operations. However, having a station interface
-+			 * connected to an AP on channels 149-161, does not
-+			 * allow GO operation on channel 165.
-+			 */
-+			if (chan->center_freq == 5825 &&
-+			    other_chan->center_freq != 5825)
-+				continue;
- 			return true;
-+		}
- 	}
+ 	if (!mvm->bf_allowed_vif &&
+-	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
+-	    mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BF_UPDATED){
++	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p) {
+ 		mvm->bf_allowed_vif = mvmvif;
+ 		vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
+ 				     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index ab92a63..dba760f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -843,8 +843,7 @@ int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
  
- 	return false;
+-	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BF_UPDATED) ||
+-	    vif->type != NL80211_IFTYPE_STATION || vif->p2p)
++	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
+ 		return 0;
+ 
+ 	ret = iwl_mvm_beacon_filter_send_cmd(mvm, &cmd, flags);
 -- 
-1.7.10.4
+1.8.3.2
 
