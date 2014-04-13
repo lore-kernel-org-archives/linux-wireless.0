@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48156 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758237AbaDVUpy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 16:45:54 -0400
-Date: Tue, 22 Apr 2014 22:45:52 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Michael Leun <lkml20140418@newton.leun.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	arik@wizery.com, linux@eikelenboom.it
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-Message-ID: <20140422204552.GR27882@wotan.suse.de> (sfid-20140422_224606_904925_CB27910D)
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com> <20140422180003.6438dbb7@xenia.leun.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140422180003.6438dbb7@xenia.leun.net>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:44328 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983AbaDMTU0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Apr 2014 15:20:26 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so7420809wgh.22
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:25 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/47] iwlwifi: pcie: fix TX queue locking
+Date: Sun, 13 Apr 2014 22:19:25 +0300
+Message-Id: <1397416802-32403-10-git-send-email-egrumbach@gmail.com> (sfid-20140413_212035_686086_83D815E7)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 22, 2014 at 06:00:03PM +0200, Michael Leun wrote:
-> On Mon, 21 Apr 2014 20:39:33 -0700
-> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
-> 
-> 
-> 
-> > that'd be appreciated as an alternative. I'm also very curious to hear
-> > no one else would have run into the same regression as you have.
-> 
-> I only see this on an Acer PTZ1825 with an ath9k wireless card, but
-> that machine was not sold with that wlan card, so other people with the
-> same model won't neccesarily see the same issue.
+From: Johannes Berg <johannes.berg@intel.com>
 
-OK I see the issue and its clear now how this could have
-gone through, the wiphy comes from the country IE and it
-could have gone disappearing during suspend / hotplug, so
-we do need to check for it again.
+When updating the write pointer, the TX queue should be locked
+to get consistent state, fix that in the interrupt handler.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f054137..4f375b6 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1602,7 +1602,8 @@ __reg_process_hint_country_ie(struct wiphy *wiphy,
- 			return REG_REQ_IGNORE;
- 		return REG_REQ_ALREADY_SET;
- 	} else {
--		if (wiphy->regulatory_flags & REGULATORY_COUNTRY_IE_IGNORE)
-+		if (wiphy &&
-+		    wiphy->regulatory_flags & REGULATORY_COUNTRY_IE_IGNORE)
- 			return REG_REQ_IGNORE;
- 	}
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 57e98cc..152c763 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1042,8 +1042,11 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	if (inta & CSR_INT_BIT_WAKEUP) {
+ 		IWL_DEBUG_ISR(trans, "Wakeup interrupt\n");
+ 		iwl_pcie_rxq_check_wrptr(trans);
+-		for (i = 0; i < trans->cfg->base_params->num_of_queues; i++)
++		for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
++			spin_lock(&trans_pcie->txq[i].lock);
+ 			iwl_pcie_txq_inc_wr_ptr(trans, &trans_pcie->txq[i]);
++			spin_unlock(&trans_pcie->txq[i].lock);
++		}
  
+ 		isr_stats->wakeup++;
+ 
+-- 
+1.8.3.2
+
