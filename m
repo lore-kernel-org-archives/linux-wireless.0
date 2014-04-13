@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f169.google.com ([209.85.220.169]:63626 "EHLO
-	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbaDPHHU (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:61109 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983AbaDMTUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 03:07:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
- <1397544101-18135-2-git-send-email-wens@csie.org> <20140415142024.GD3207@lukather>
- <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com>
-From: Alexandre Courbot <gnurou@gmail.com>
-Date: Wed, 16 Apr 2014 16:06:59 +0900
-Message-ID: <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com> (sfid-20140416_090748_468446_6966CAF9)
-Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
- based lookup
-To: Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Apr 2014 15:20:40 -0400
+Received: by mail-wi0-f180.google.com with SMTP id q5so3132437wiv.13
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:39 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/47] iwlwifi: mvm: Fix warning message when exit thermal throttling
+Date: Sun, 13 Apr 2014 22:19:35 +0300
+Message-Id: <1397416802-32403-20-git-send-email-egrumbach@gmail.com> (sfid-20140413_213517_494664_D469D655)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 3:12 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
-> On Tue, Apr 15, 2014 at 11:20 PM, Maxime Ripard
-> <maxime.ripard@free-electrons.com> wrote:
->> Hi Chen-Yu,
->>
->> On Tue, Apr 15, 2014 at 02:41:35PM +0800, Chen-Yu Tsai wrote:
->>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
->>> phandles by name only, through gpios/gpio-names, and not by index.
->>
->> IIRC, gpios only uses the *-gpios properties, and not gpios/gpio-names
->> pattern seen on various other things.
->>
->> Is it some new property you introduce? If so, please add it to the
->> documentation.
->>
->> Now, I'm not sure that having two distinct representations of GPIOs in
->> the DT is a good thing. Yes, it's looking odd compared to other
->> similar bindings, but it's what we have to deal with.
->
-> Mmmm I *think* I somehow remember a discussion about this topic
-> recently, but I cannot find it. Maybe Chen-yu could point us to the
-> conclusion of this discussion and the rationale for (re)implementing
-> named GPIOs this way?
+From: Eytan Lifshitz <eytan.lifshitz@intel.com>
 
-Aha, here maybe:
+When NIC exit thermal throttling while having minimal tx-backoff
+restriction, the warning message that indicate about that state
+won't show up. Fixed.
 
-https://lkml.org/lkml/2014/1/21/164
+Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/tt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-However I don't see a clear conclusion that we should implement that
-scheme. Not that I am strongly against it, but I'd like to see a
-practical purpose for it.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index 7a99fa3..cee4e72 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -484,7 +484,8 @@ void iwl_mvm_tt_handler(struct iwl_mvm *mvm)
+ 		IWL_WARN(mvm,
+ 			 "Due to high temperature thermal throttling initiated\n");
+ 		tt->throttle = true;
+-	} else if (tt->throttle && !tt->dynamic_smps && tt->tx_backoff == 0 &&
++	} else if (tt->throttle && !tt->dynamic_smps &&
++		   tt->tx_backoff == tt->min_backoff &&
+ 		   temperature <= params->tx_protection_exit) {
+ 		IWL_WARN(mvm,
+ 			 "Temperature is back to normal thermal throttling stopped\n");
+-- 
+1.8.3.2
+
