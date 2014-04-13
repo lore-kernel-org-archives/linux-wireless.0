@@ -1,109 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:47911 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbaDXUFn (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:50191 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755052AbaDMTUP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 16:05:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <CALhHN=oYVjMqQG8XyHuWik14R6hGUSbt986YLXqH361gio6CjQ@mail.gmail.com>
-References: <1397645621-32447-1-git-send-email-janusz.dziedzic@tieto.com>
- <CAB=NE6VNHBrk+HWGLZxNOBFXsGv6XLQus8zTx-AP2Ye6jbgnPA@mail.gmail.com> <CALhHN=oYVjMqQG8XyHuWik14R6hGUSbt986YLXqH361gio6CjQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 24 Apr 2014 13:05:20 -0700
-Message-ID: <CAB=NE6U631JBCXMx_foeC7-LtiyA94XP3sc5FBFsoeL1mYC4jQ@mail.gmail.com> (sfid-20140424_220610_637623_E35CDA1B)
-Subject: Re: [PATCH] cfg80211: reg: track crda request
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Lennart Poettering <mzoybt@0pointer.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Apr 2014 15:20:15 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so7262114wes.18
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:14 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/47] iwlwifi: pcie: don't leave the new NICs awake for commands
+Date: Sun, 13 Apr 2014 22:19:18 +0300
+Message-Id: <1397416802-32403-3-git-send-email-egrumbach@gmail.com> (sfid-20140413_212024_867915_2FA73CDD)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 12:24 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> On 22 April 2014 19:33, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
->> As is, we don't ever bail out and could end up triggering CRDA to be
->> called every ~3 seconds with this patch. This is why I had added the
->> opportunistic triggers, which are technically still in place today but
->> there are only a few entries for those to kick off: beacon hints on 5
->> GHz for cards that enable beacon hints. I don't think its a good idea
->> we have a a recurring timer trigger for this. I think we need to
->> consider a time at which we should give up on CRDA being present and
->> instead rely on userspace to let us know its ready (ideally userspace
->> would do something with inotify on the path) so we can kick the queue
->> again.
->>
->
-> I think about such counter/limitation before.
-> But next I remove such counter.
-> In case we don't have CRDA nor using INTERNAL_REGD - this mean we
-> don't have correct regulatory configuration.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Just a clarification -- by don't have correct regulatory configuration
-you mean 'limited' regulatory configuration, or restricted -- the
-world regulatory domain.
+A hardware bug had been discovered on 7260 / 3160 and 7265
+and the workaround for this bug is to force the NIC to stay
+awake as long as we have host commands in flight. This
+workaround has been introduced for all NICs in a previous
+patch:
 
-> Why then should we stop warning about this?
+b9439491055a ("iwlwifi: pcie: keep the NIC awake when commands are in flight")
 
-WARN_ONCE() should solve this and get users / system integrators who
-don't install either to do so, having a message pop up on the log ever
-3 seconds however is doomed to cause a rant by anyone. An example
-reasonable complaint might come from system integrators who are
-comfortable with the restricted world regulatory domain, or by some
-system integrators who are OK with the custom regulatory domains which
-some drivers have that the API supports. Filling up their hard drive's
-is not nice, specially if we can avoid it sensibly.
+In newer NICs, this bug is solved, so we can let the NIC go
+to sleep even when we send commands. The hardware will wake
+up when we increment the scheduler write pointer.
+Make the workaround conditional to only use it on affected
+hardware.
 
-I'm learning that with systemd's socket activation support [0] we
-should have a guarantee that any messages sent by the kernel even
-early can can eventually be eaten up by udev, but what is unclear to
-me is if udev will queue up any pending requests for rules to be
-triggered for a binary which is on a filesystem not yet mounted. In
-other words -- I think we should strive to solve this on userspace as
-adding support for this in the kernel seems silly if we can do it in
-userspace to solve all similar type of udev event rule dependency on
-binaries.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c   | 1 +
+ drivers/net/wireless/iwlwifi/iwl-config.h | 3 +++
+ drivers/net/wireless/iwlwifi/pcie/tx.c    | 9 ++++++---
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
-Since I am not exactly sure if without systemd udev will get all
-kernel events, even during early boot, I do think having something
-sort of timeout for now maybe with WARN_ONCE() is reasonable but do
-not think something recurring would be good.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 003a546..c42d80c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -107,6 +107,7 @@ static const struct iwl_base_params iwl7000_base_params = {
+ 	.max_event_log_size = 512,
+ 	.shadow_reg_enable = true,
+ 	.pcie_l1_allowed = true,
++	.apmg_wake_up_wa = true,
+ };
+ 
+ static const struct iwl_ht_params iwl7000_ht_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 3f17dc3..8c16730 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -146,6 +146,8 @@ static inline u8 num_of_ant(u8 mask)
+  * @wd_timeout: TX queues watchdog timeout
+  * @max_event_log_size: size of event log buffer size for ucode event logging
+  * @shadow_reg_enable: HW shadow register support
++ * @apmg_wake_up_wa: should the MAC access REQ be asserted when a command
++ *	is in flight. This is due to a HW bug in 7260, 3160 and 7265.
+  */
+ struct iwl_base_params {
+ 	int eeprom_size;
+@@ -160,6 +162,7 @@ struct iwl_base_params {
+ 	u32 max_event_log_size;
+ 	const bool shadow_reg_enable;
+ 	const bool pcie_l1_allowed;
++	const bool apmg_wake_up_wa;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 3b0c72c..0368609 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1028,7 +1028,8 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 		}
+ 	}
+ 
+-	if (q->read_ptr == q->write_ptr) {
++	if (trans->cfg->base_params->apmg_wake_up_wa &&
++	    q->read_ptr == q->write_ptr) {
+ 		spin_lock_irqsave(&trans_pcie->reg_lock, flags);
+ 		WARN_ON(!trans_pcie->cmd_in_flight);
+ 		trans_pcie->cmd_in_flight = false;
+@@ -1405,9 +1406,11 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	/*
+ 	 * wake up the NIC to make sure that the firmware will see the host
+ 	 * command - we will let the NIC sleep once all the host commands
+-	 * returned.
++	 * returned. This needs to be done only on NICs that have
++	 * apmg_wake_up_wa set.
+ 	 */
+-	if (!trans_pcie->cmd_in_flight) {
++	if (trans->cfg->base_params->apmg_wake_up_wa &&
++	    !trans_pcie->cmd_in_flight) {
+ 		trans_pcie->cmd_in_flight = true;
+ 		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
+ 					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-- 
+1.8.3.2
 
-[0] http://0pointer.de/blog/projects/socket-activation.html
-
-> In case we will have counter eg. 10 x 3 seconds, we can't be sure if that is:
-> - not mounted fs (fsck other ...) case
-
-Hadn't considered at what point a forced long fsck might last but
-again this is an issue other udev rules would run into as well.
-
-> - there isn't any CRDA in the system (quite possible when using openwrt) case
-
-Well we can distinguish this by the type of call that set the
-regulatory domain, if the db.txt was compiled into the kernel cfg80211
-manages setting that, so we can distinguish there if needed, right now
-set_regdom() doesn't tell us if an internal db was used or not, but
-that can easily change. Also if we need to change code to behave
-differently for the timeout consideration, or maybe disregard it,
-config_enabled(CONFIG_CFG80211_INTERNAL_REGDB) can be used.
-
-> - when have a lot of messages in dmesg you will not know there is not
-> CRDA in the system
-
-Since you broke out the different cases -- I think this timeout seems
-to make more sense now only if CONFIG_CFG80211_INTERNAL_REGDB was not
-enabled, at least using WARN_ONCE() as that can be important for any
-system integrator, but CONFIG_CFG80211_INTERNAL_REGDB was enabled a
-simple info message stating CRDA was not found seems reasonable.
-
-> In case of recurring timer when you will check dmes you will be sure
-> there isn't any CRDA binary - and there will be clear message about
-> this.
-> Because of that I didn't add this counter.
-
-I think we can do better, let me know what you think of the above.
-
-  Luis
