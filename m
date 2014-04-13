@@ -1,65 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:49989 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751305AbaD1I5Z convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:57576 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755628AbaDMTVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 04:57:25 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so5142034wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Apr 2014 01:57:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140428082225.GA15459@jouni.qca.qualcomm.com>
-References: <20140428082225.GA15459@jouni.qca.qualcomm.com>
-Date: Mon, 28 Apr 2014 10:57:23 +0200
-Message-ID: <CA+BoTQ=gP49PDuyYovQmc-jtFwKN6JDOToSsT20ssnJZGaqieQ@mail.gmail.com> (sfid-20140428_105729_808807_C3D44759)
-Subject: Re: [PATCH 2/3] mac80211: Support dynamic AP mode channel width changes
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Apr 2014 15:21:11 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so7403266wgh.10
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:10 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 41/47] iwlwifi: mvm: BT Coex - send priority tables from iwl_send_bt_init_conf
+Date: Sun, 13 Apr 2014 22:19:56 +0300
+Message-Id: <1397416802-32403-41-git-send-email-egrumbach@gmail.com> (sfid-20140413_213516_331951_9FFFFFA6)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 April 2014 10:22, Jouni Malinen <jouni@qca.qualcomm.com> wrote:
-> Implement the new cfg80211 capability to enable mac80211-based drivers
-> to support for dynamic channel bandwidth changes (e.g., HT 20/40 MHz
-> changes).
->
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  net/mac80211/cfg.c |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index aaa59d7..1ce407a 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -3949,6 +3949,21 @@ static int ieee80211_set_qos_map(struct wiphy *wiphy,
->         return 0;
->  }
->
-> +static int ieee80211_set_ap_channel(struct wiphy *wiphy,
-> +                                   struct net_device *dev,
-> +                                   struct cfg80211_chan_def *chandef)
-> +{
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       int ret;
-> +       u32 changed = 0;
-> +
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Shouldn't interface combinations be verified here? What if there was a
-bandwidth upgrade (after a downgrade) but in the meantime a vif with a
-to-be incompatible chandef was brought up? I think the existing usage
-of ieee80211_vif_change_bandwidth() in ieee80211_config_bw() already
-suffers from this problem or am I missing something?
+Calling iwl_send_bt_init_conf for INIT firmware is not a
+problem, and calling iwl_send_bt_prio_tbl from
+iwl_send_bt_init_conf allows us to prepare for new API.
 
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 6 +++++-
+ drivers/net/wireless/iwlwifi/mvm/fw.c   | 6 +-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h  | 1 -
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
-> +       ret = ieee80211_vif_change_bandwidth(sdata, chandef, &changed);
-> +       if (ret == 0)
-> +               ieee80211_bss_info_change_notify(sdata, changed);
-> +
-> +       return ret;
-> +}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index a1403d4..0918635 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -104,7 +104,7 @@ static const u8 iwl_bt_prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX] = {
+ #define BT_DISABLE_REDUCED_TXPOWER_THRESHOLD	(-65)
+ #define BT_ANTENNA_COUPLING_THRESHOLD		(30)
+ 
+-int iwl_send_bt_prio_tbl(struct iwl_mvm *mvm)
++static int iwl_send_bt_prio_tbl(struct iwl_mvm *mvm)
+ {
+ 	return iwl_mvm_send_cmd_pdu(mvm, BT_COEX_PRIO_TABLE, CMD_SYNC,
+ 				    sizeof(struct iwl_bt_coex_prio_tbl_cmd),
+@@ -570,6 +570,10 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 	int ret;
+ 	u32 flags;
+ 
++	ret = iwl_send_bt_prio_tbl(mvm);
++	if (ret)
++		return ret;
++
+ 	bt_cmd = kzalloc(sizeof(*bt_cmd), GFP_KERNEL);
+ 	if (!bt_cmd)
+ 		return -ENOMEM;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index e7a2639..3d99cf5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -288,7 +288,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 		goto error;
+ 	}
+ 
+-	ret = iwl_send_bt_prio_tbl(mvm);
++	ret = iwl_send_bt_init_conf(mvm);
+ 	if (ret)
+ 		goto error;
+ 
+@@ -424,10 +424,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	if (ret)
+ 		goto error;
+ 
+-	ret = iwl_send_bt_prio_tbl(mvm);
+-	if (ret)
+-		goto error;
+-
+ 	ret = iwl_send_bt_init_conf(mvm);
+ 	if (ret)
+ 		goto error;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index afca542..ed22201 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -923,7 +923,6 @@ void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ void iwl_mvm_d0i3_enable_tx(struct iwl_mvm *mvm, __le16 *qos_seq);
+ 
+ /* BT Coex */
+-int iwl_send_bt_prio_tbl(struct iwl_mvm *mvm);
+ int iwl_send_bt_init_conf(struct iwl_mvm *mvm);
+ int iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
+ 			     struct iwl_rx_cmd_buffer *rxb,
+-- 
+1.8.3.2
 
-
-Michał
