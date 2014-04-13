@@ -1,103 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:34850 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758186AbaDBJ6v (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:34675 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755670AbaDMTVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Apr 2014 05:58:51 -0400
-From: David Herrmann <dh.herrmann@gmail.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Tom Gundersen <teg@jklm.no>,
-	Johannes berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kay Sievers <kay.sievers@vrfy.org>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v6 2/4] mac80211: set NET_NAME_USER for user-space created ifs
-Date: Wed,  2 Apr 2014 11:58:24 +0200
-Message-Id: <1396432706-14470-3-git-send-email-dh.herrmann@gmail.com> (sfid-20140402_120055_535620_B076A89F)
-In-Reply-To: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
-References: <1396432706-14470-1-git-send-email-dh.herrmann@gmail.com>
+	Sun, 13 Apr 2014 15:21:18 -0400
+Received: by mail-wi0-f173.google.com with SMTP id z2so3135230wiv.6
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:21:17 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 46/47] iwlwifi: mvm: Re-factor enabling uAPSD logic
+Date: Sun, 13 Apr 2014 22:20:01 +0300
+Message-Id: <1397416802-32403-46-git-send-email-egrumbach@gmail.com> (sfid-20140413_213514_920382_0E17293B)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nl80211 interface allows creating new netdevs from user-space. The
-name is *always* provided by user-space, so we should set NET_NAME_USER to
-provide that information via sysfs. But we must not set it for the default
-wlan%d names as these are kernel-provided names.
+From: Avri Altman <avri.altman@intel.com>
 
-This allows udev to not rename dynamically created wifi devices (like wifi
-P2P devices).
+The driver can enable uAPSD and specify some of its related parameters.
+This patch organizes this logic in a separate function.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
-Acked-by: Tom Gundersen <teg@jklm.no>
-Acked-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/cfg.c         | 2 +-
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/iface.c       | 2 ++
- net/mac80211/main.c        | 2 +-
- 4 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/power.c | 43 +++++++++++++++++++-------------
+ 1 file changed, 25 insertions(+), 18 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index aaa59d7..804cf0a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -31,7 +31,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	err = ieee80211_if_add(local, name, &wdev, type, params);
-+	err = ieee80211_if_add(local, name, NET_NAME_USER, &wdev, type, params);
- 	if (err)
- 		return ERR_PTR(err);
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 222c28b..1a938c3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1470,6 +1470,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- int ieee80211_iface_init(void);
- void ieee80211_iface_exit(void);
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
-+		     unsigned char name_assign_type,
- 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params);
- int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b8d331e..fe84853 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1574,6 +1574,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 2e6f477..78309f7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -268,6 +268,30 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 		IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
  }
  
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
-+		     unsigned char name_assign_type,
- 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params)
- {
-@@ -1617,6 +1618,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 					+ IEEE80211_ENCRYPT_HEADROOM;
- 		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
++static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
++				       struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++	if (!memcmp(mvmvif->uapsd_misbehaving_bssid, vif->bss_conf.bssid,
++		    ETH_ALEN))
++		return false;
++
++	if (vif->p2p &&
++	    !(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD))
++		return false;
++	/*
++	 * Avoid using uAPSD if P2P client is associated to GO that uses
++	 * opportunistic power save. This is due to current FW limitation.
++	 */
++	if (vif->p2p &&
++	    (vif->bss_conf.p2p_noa_attr.oppps_ctwindow &
++	    IEEE80211_P2P_OPPPS_ENABLE_BIT))
++		return false;
++
++	return true;
++}
++
+ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+ 				    struct iwl_mac_power_cmd *cmd)
+@@ -280,7 +304,6 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 	bool radar_detect = false;
+ 	struct iwl_mvm_vif *mvmvif __maybe_unused =
+ 		iwl_mvm_vif_from_mac80211(vif);
+-	bool allow_uapsd = true;
  
-+		ndev->name_assign_type = name_assign_type;
- 		ret = dev_alloc_name(ndev, ndev->name);
- 		if (ret < 0) {
- 			free_netdev(ndev);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b055f6a5..ee32a83 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1012,7 +1012,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 							    mvmvif->color));
+@@ -346,23 +369,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
+ 	}
  
- 	/* add one default STA interface if supported */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
--		result = ieee80211_if_add(local, "wlan%d", NULL,
-+		result = ieee80211_if_add(local, "wlan%d", NET_NAME_ENUM, NULL,
- 					  NL80211_IFTYPE_STATION, NULL);
- 		if (result)
- 			wiphy_warn(local->hw.wiphy,
+-	if (!memcmp(mvmvif->uapsd_misbehaving_bssid, vif->bss_conf.bssid,
+-		    ETH_ALEN))
+-		allow_uapsd = false;
+-
+-	if (vif->p2p &&
+-	    !(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD))
+-		allow_uapsd = false;
+-	/*
+-	 * Avoid using uAPSD if P2P client is associated to GO that uses
+-	 * opportunistic power save. This is due to current FW limitation.
+-	 */
+-	if (vif->p2p &&
+-	    vif->bss_conf.p2p_noa_attr.oppps_ctwindow &
+-	    IEEE80211_P2P_OPPPS_ENABLE_BIT)
+-		allow_uapsd = false;
+-
+-	if (allow_uapsd)
++	if (iwl_mvm_power_allow_uapsd(mvm, vif))
+ 		iwl_mvm_power_configure_uapsd(mvm, vif, cmd);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
 -- 
-1.9.1
+1.8.3.2
 
