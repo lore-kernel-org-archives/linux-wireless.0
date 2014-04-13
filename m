@@ -1,40 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4815 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934583AbaDJDps (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 23:45:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
-	<5341F1A9.2030202@candelatech.com>
-	<CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com>
-	<53435F89.60500@candelatech.com>
-	<CA+BoTQk6G4-h8HQENbK9snrXo6j6FW4D+07XKZMEEuvWiu03ww@mail.gmail.com>
-	<53441D95.9000409@candelatech.com>
-	<CA+BoTQkCDiUiV7dsg-myOZXQEB=B7JHH8NWm5BHsp1xExjLkSA@mail.gmail.com>
-	<5345849A.5090603@candelatech.com>
-Date: Thu, 10 Apr 2014 06:45:39 +0300
-In-Reply-To: <5345849A.5090603@candelatech.com> (Ben Greear's message of "Wed,
-	09 Apr 2014 10:34:18 -0700")
-Message-ID: <87eh15j198.fsf@kamboji.qca.qualcomm.com> (sfid-20140410_054611_966915_B93FCDCA)
+Received: from nm33-vm6.bullet.mail.sg3.yahoo.com ([106.10.151.229]:35186 "EHLO
+	nm33-vm6.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751278AbaDMPFj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Apr 2014 11:05:39 -0400
+Message-ID: <1397401537.30203.YahooMailBasic@web193506.mail.sg3.yahoo.com> (sfid-20140413_170614_686988_6F99D3DE)
+Date: Sun, 13 Apr 2014 23:05:37 +0800 (SGT)
+From: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Subject: Re: [ath9k-devel] Wifi client Bluetooth coexistence; non smooth video streams
+To: =?utf-8?B?6ams5paH5rab?= <xmgwinner@hotmail.com>
+Cc: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1396668507.37072.YahooMailBasic@web193504.mail.sg3.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Hello Mr.马文涛,
+     Thanks for your suggestions. This had an improvement on the video quality.
+ Regards
+ Sandeep.
+--------------------------------------------
+On Sat, 5/4/14, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
 
-> My version of supplicant does not support -T.  I have just sync'd down the
-> latest upstream hostapd code and will see if that adds the support.
-
-You need to enable CONFIG_DEBUG_LINUX_TRACING in wpasupplicant.
-
-http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
-
--- 
-Kalle Valo
+ Subject: Re: [ath9k-devel] Wifi client Bluetooth coexistence; non smooth video streams
+ To: "马文涛" <xmgwinner@hotmail.com>
+ Cc: "ath9k-devel" <ath9k-devel@venema.h4ckr.net>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+ Date: Saturday, 5 April, 2014, 8:58 AM
+ 
+ 
+ Hello Mr.马文涛,
+     Thanks for your suggestions....will try and
+ let u know the results.
+ Regards
+ Sandeep.
+ 
+ --------------------------------------------
+ On Fri, 4/4/14, 马文涛 <xmgwinner@hotmail.com>
+ wrote:
+ 
+  Subject: RE: [ath9k-devel] Wifi client Bluetooth
+ coexistence; non smooth video streams
+  To: "sandeep suresh" <sandeep.suresh@yahoo.co.in>
+  Date: Friday, 4 April, 2014, 11:59 PM
+  
+  
+  
+  
+  Hi sandeep,
+  I never used wifi just like you. So I only have
+  some advices for you.1. Video needs more
+  throughput, so 7:3 or 8:2 seams better.2. If you
+  use RTSP to transmit video, I guess you can short the
+ switch
+  time to reduce the delay. Just try to set period to
+  100ms or less for test. I think it will be
+  better. 
+  
+  
+  > Date: Fri, 4 Apr 2014 09:55:40 +0800
+  > From: sandeep.suresh@yahoo.co.in
+  > To: adrian@freebsd.org;
+ ath9k-devel@lists.ath9k.org;
+  linux-wireless@vger.kernel.org
+  > Subject: [ath9k-devel] Wifi client Bluetooth
+  coexistence;    non smooth video streams
+  > 
+  > Dear all,
+  >    Please help if any one have encountered
+ simillar
+  problems or other guidance on this, Please.
+  > 
+  > The following is my set-up:
+  > Linksys Access point. Cisco 802.11g camera connected
+ as
+  a wifi client to Linksys. I have a development board in
+  which i have AR9287 as the Wifi chipset associated as wifi
+  client to linksys. The development board has Bluetooth
+  dongle for streaming audio etc. The development board has
+ a
+  LCD display and I stream the video stream from camera at
+ 640
+  x 480 resolution, MPEG-4, 10fps (also tried with 15, 30
+  fps).
+  > 
+  > Software: For the Wifi client on the development
+ board,
+  I am using the ath9k driver with btcoex_enable=1.
+  > 2-wire coexistence. I am allowing 40% of the time for
+  Bluetooth an 60% of the time for WiFi. The period is
+ around
+  200ms.
+  > 
+  > Observations: 
+  > 1. The video streams are not smooth. There will be a
+  small pause of a second or two between frames and hence we
+  do not see smooth transitions.
+  > 2. Sometimes it looks like, the streams are bufferred
+  and played back at a rapid pace. So, one can see like a
+ fast
+  forward play of video streams on the board.
+  > 3. Disabling coexistence does not have these
+  observations.
+  > Please help.
+  > Regards
+  > Sandeep.
+  > _______________________________________________
+  > ath9k-devel mailing list
+  > ath9k-devel@lists.ath9k.org
+  > https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+      
+         
+           
+   
+  
+ _______________________________________________
+ ath9k-devel mailing list
+ ath9k-devel@lists.ath9k.org
+ https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+ 
