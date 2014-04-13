@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932816AbaDVOxt (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:42497 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754338AbaDMNQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 10:53:49 -0400
-Message-ID: <1398178421.4211.12.camel@jlt4.sipsolutions.net> (sfid-20140422_165357_117043_5479382E)
-Subject: Re: [PATCH 11/12] cfg80211/mac80211: rename
- cfg80211_chandef_dfs_required()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Gang" <gamerh2o@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 22 Apr 2014 16:53:41 +0200
-In-Reply-To: <00719736535b7e8348c746cf44cc453dd7893e14.1398055854.git.gamerh2o@gmail.com> (sfid-20140421_065526_850039_ECC986BC)
-References: <cover.1398055853.git.gamerh2o@gmail.com>
-	 <00719736535b7e8348c746cf44cc453dd7893e14.1398055854.git.gamerh2o@gmail.com>
-	 (sfid-20140421_065526_850039_ECC986BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 Apr 2014 09:16:05 -0400
+Received: by mail-wg0-f43.google.com with SMTP id x13so7058852wgg.26
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 06:16:03 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] regulatory: don't rule out some valid rules
+Date: Sun, 13 Apr 2014 16:15:58 +0300
+Message-Id: <1397394958-6827-1-git-send-email-eliad@wizery.com> (sfid-20140413_151611_012875_834BBCD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-04-21 at 12:53 +0800, Zhao, Gang wrote:
-> Change the name to cfg80211_chandef_dfs_check to emphasize that the
-> function isn't a bool function, its return value must be fully
-> checked.
-> 
-> Also rename the helper function's name to
-> cfg80211_do_chandef_dfs_check for consistency.
-> 
-> Variable width in cfg80211_chandef_dfs_check() needn't to be checked
-> for sanity, since above cfg80211_chandef_valid() already checked the
-> sanity of chandef->width.
-> 
-> Since cfg80211.h is touched, also correct a typo in comment.
+commit 6d87df6 ("regdb: allow 40 MHz on world roaming
+channels 12/13") in wireless-regdb did the following
+change:
 
-I think there's too much work ongoing in this area to safely apply this.
+-        # Channel 12 - 13. No HT40 channel fits here
+-        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
++        # Channel 12 - 13.
++        (2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
 
-johannes
+in order to allow HT40+ on lower channels (such as 9).
+
+However, the current regulatory rules verification forbids
+such rules, as 2482 - 2457 < 40.
+Remove this requirement from the rules verification function.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/wireless/reg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6c4b507..c8a5c34 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -610,8 +610,7 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ 
+ 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+ 
+-	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
+-	    freq_range->max_bandwidth_khz > freq_diff)
++	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
+ 		return false;
+ 
+ 	return true;
+-- 
+1.8.5.2.229.g4448466.dirty
 
