@@ -1,38 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaDYIJ4 (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:44733 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516AbaDMTUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Apr 2014 04:09:56 -0400
-Message-ID: <1398413370.4152.0.camel@jlt4.sipsolutions.net> (sfid-20140425_101023_657543_6BB6B7C0)
-Subject: Re: [PATCH 2/5] mwifiex: add firmware dump feature for PCIe
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Date: Fri, 25 Apr 2014 10:09:30 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com> (sfid-20140425_053549_713612_80638BD2)
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-	 <1397760423-11455-2-git-send-email-bzhao@marvell.com>
-	 <87a9bb5c2c.fsf@purkki.adurom.net> <20140425013756.GA3410@tuxdriver.com>
-	 <477F20668A386D41ADCC57781B1F70430F70A2AE8E@SC-VEXCH1.marvell.com>
-	 (sfid-20140425_053549_713612_80638BD2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 Apr 2014 15:20:55 -0400
+Received: by mail-we0-f173.google.com with SMTP id w61so7202584wes.4
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:54 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 30/47] iwlwifi: remove IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT flag
+Date: Sun, 13 Apr 2014 22:19:45 +0300
+Message-Id: <1397416802-32403-30-git-send-email-egrumbach@gmail.com> (sfid-20140413_213514_794685_D3870B71)
+In-Reply-To: <534AE330.2020805@gmail.com>
+References: <534AE330.2020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-04-24 at 20:35 -0700, Bing Zhao wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Sorry about the hassle. We will find a proper way to implement this.
+All the supported firmwares have this flag set.
 
-FWIW, a pretty simple way is to trigger a uevent or so and have a
-debugfs file that all the info can be read out from in userspace.
+Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw.h          |  1 -
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |  3 +--
+ drivers/net/wireless/iwlwifi/mvm/fw.c          |  6 ------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |  2 --
+ drivers/net/wireless/iwlwifi/mvm/power.c       | 20 --------------------
+ 5 files changed, 1 insertion(+), 31 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 9cb4ad9..c9a3ca6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -107,7 +107,6 @@ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_MFP			= BIT(2),
+ 	IWL_UCODE_TLV_FLAGS_P2P			= BIT(3),
+ 	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
+-	IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT	= BIT(6),
+ 	IWL_UCODE_TLV_FLAGS_SHORT_BL		= BIT(7),
+ 	IWL_UCODE_TLV_FLAGS_RX_ENERGY_API	= BIT(8),
+ 	IWL_UCODE_TLV_FLAGS_TIME_EVENT_API_V2	= BIT(9),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 9b59e1d..d372ca6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -592,8 +592,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		return;
+ 	}
+ 
+-	if ((mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT) &&
+-	    iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
++	if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_CAM &&
+ 	    ((vif->type == NL80211_IFTYPE_STATION && !vif->p2p) ||
+ 	     (vif->type == NL80211_IFTYPE_STATION && vif->p2p &&
+ 	      mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BSS_P2P_PS_DCM)))
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 7ce2006..e7a2639 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -468,12 +468,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	/* Initialize tx backoffs to the minimal possible */
+ 	iwl_mvm_tt_tx_backoff(mvm, 0);
+ 
+-	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)) {
+-		ret = iwl_power_legacy_set_cam_mode(mvm);
+-		if (ret)
+-			goto error;
+-	}
+-
+ 	ret = iwl_mvm_power_update_device(mvm);
+ 	if (ret)
+ 		goto error;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 9f2ecf2..a0fb7b1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -877,8 +877,6 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm,
+ int rs_pretty_print_rate(char *buf, const u32 rate);
+ 
+ /* power management */
+-int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm);
+-
+ int iwl_mvm_power_update_device(struct iwl_mvm *mvm);
+ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index a1ce8d2..ab92a63 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -437,9 +437,6 @@ int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
+ 		.flags = cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK),
+ 	};
+ 
+-	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT))
+-		return 0;
+-
+ 	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD))
+ 		return 0;
+ 
+@@ -646,9 +643,6 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT))
+-		return 0;
+-
+ 	iwl_mvm_power_set_pm(mvm, &vifs);
+ 
+ 	/* disable PS if CAM */
+@@ -698,10 +692,6 @@ int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
+ 	struct iwl_mac_power_cmd cmd = {};
+ 	int pos = 0;
+ 
+-	if (WARN_ON(!(mvm->fw->ucode_capa.flags &
+-		      IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)))
+-		return 0;
+-
+ 	mutex_lock(&mvm->mutex);
+ 	memcpy(&cmd, &mvmvif->mac_pwr_cmd, sizeof(cmd));
+ 	mutex_unlock(&mvm->mutex);
+@@ -941,13 +931,3 @@ int iwl_mvm_update_beacon_filter(struct iwl_mvm *mvm,
+ 
+ 	return iwl_mvm_enable_beacon_filter(mvm, vif, flags);
+ }
+-
+-int iwl_power_legacy_set_cam_mode(struct iwl_mvm *mvm)
+-{
+-	struct iwl_powertable_cmd cmd = {
+-		.keep_alive_seconds = POWER_KEEP_ALIVE_PERIOD_SEC,
+-	};
+-
+-	return iwl_mvm_send_cmd_pdu(mvm, POWER_TABLE_CMD, CMD_SYNC,
+-				    sizeof(cmd), &cmd);
+-}
+-- 
+1.8.3.2
 
