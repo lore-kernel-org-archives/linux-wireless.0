@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:56241 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755475AbaDMTUs (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:33776 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaDNH2t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:48 -0400
-Received: by mail-we0-f178.google.com with SMTP id u56so7244656wes.37
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:47 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/47] iwlwifi: mvm: replace BUG_ON by WARN_ON in scan.c
-Date: Sun, 13 Apr 2014 22:19:40 +0300
-Message-Id: <1397416802-32403-25-git-send-email-egrumbach@gmail.com> (sfid-20140413_213516_915726_7A12617D)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+	Mon, 14 Apr 2014 03:28:49 -0400
+Received: by mail-ee0-f50.google.com with SMTP id c13so6174531eek.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 00:28:48 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 3/3] ath10k: skip suspending when recovering
+Date: Mon, 14 Apr 2014 09:22:26 +0200
+Message-Id: <1397460146-19450-4-git-send-email-michal.kazior@tieto.com> (sfid-20140414_092856_463989_CC77EBCF)
+In-Reply-To: <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+ <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+It doesn't make much sense to even try suspending
+the device when recovering. Recovering means the
+device is unresponsive and waiting for suspend
+procedure means taking a 3 second timeout waiting
+for tx credits.
 
-While the scan_cmd should really be allocated in init (and
-we do fail init in case the allocation failed), it doesn't
-mean we should lock up the machine if something really bad
-happened.
+This speeds up firmware recovery significantly.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/scan.c   | 5 ++++-
- drivers/net/wireless/iwlwifi/pcie/trans.c | 3 +++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index c91dc84..9e760d0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -348,7 +348,10 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 	struct iwl_mvm_scan_params params = {};
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 6abde37..75b3dfb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -680,8 +680,8 @@ static void ath10k_core_restart(struct work_struct *work)
  
- 	lockdep_assert_held(&mvm->mutex);
--	BUG_ON(mvm->scan_cmd == NULL);
+ 	switch (ar->state) {
+ 	case ATH10K_STATE_ON:
+-		ath10k_halt(ar);
+ 		ar->state = ATH10K_STATE_RESTARTING;
++		ath10k_halt(ar);
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
+@@ -908,7 +908,9 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	/* try to suspend target */
+-	ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
++	if (ar->state != ATH10K_STATE_RESTARTING)
++		ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
 +
-+	/* we should have failed registration if scan_cmd was NULL */
-+	if (WARN_ON(mvm->scan_cmd == NULL))
-+		return -ENOMEM;
- 
- 	IWL_DEBUG_SCAN(mvm, "Handling mac80211 scan request\n");
- 	mvm->scan_status = IWL_MVM_SCAN_OS;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 4845d50..f98ef1e 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1278,6 +1278,8 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- 			continue;
- 		if (!(BIT(cnt) & txq_bm))
- 			continue;
-+
-+		IWL_DEBUG_TX_QUEUES(trans, "Emptying queue %d...\n", cnt);
- 		txq = &trans_pcie->txq[cnt];
- 		q = &txq->q;
- 		wr_ptr = ACCESS_ONCE(q->write_ptr);
-@@ -1300,6 +1302,7 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- 			ret = -ETIMEDOUT;
- 			break;
- 		}
-+		IWL_DEBUG_TX_QUEUES(trans, "Queue %d is now empty.\n", cnt);
- 	}
- 
- 	if (!ret)
+ 	ath10k_debug_stop(ar);
+ 	ath10k_htc_stop(&ar->htc);
+ 	ath10k_htt_detach(&ar->htt);
 -- 
-1.8.3.2
+1.8.5.3
 
