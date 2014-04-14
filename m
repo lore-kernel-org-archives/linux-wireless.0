@@ -1,50 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:36734 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044AbaDTGGR (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:35609 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954AbaDNJ2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 02:06:17 -0400
-Received: by mail-wi0-f178.google.com with SMTP id bs8so836862wib.5
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 23:06:15 -0700 (PDT)
-Message-ID: <535363D5.4070708@gmail.com> (sfid-20140420_080651_369630_3388EB10)
-Date: Sun, 20 Apr 2014 09:06:13 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Alexander Monakov <amonakov@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi null pointer dereference
-References: <CABtfrpCY7cOkw-dPwv5=8YxNAd4idpvyQV9zL3gU9RQiaSxpCw@mail.gmail.com>	<CANUX_P0fLsNx+c7VnVggbZSGvnarF3inP7M115p-up3DfXyuuA@mail.gmail.com>	<CABtfrpDYL55KJ=Ehr0E8wNtLMbcMmJohz3oA9BgtriMv7hw_qw@mail.gmail.com>	<CABtfrpAY7OvH38E_+4QLGwWr2iQB1Rq45zzxdZwdM2Q7rc1NpA@mail.gmail.com>	<5350B340.9020201@gmail.com>	<53512D04.5070808@gmail.com>	<CABtfrpB440bsy7xDu1pdTu2zM+ZJHLDQKb4MLaMRf4hnVXBsNQ@mail.gmail.com>	<53513BC4.7020502@gmail.com> <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com>
-In-Reply-To: <CABtfrpDcZq=Ss=Zv9u0P3vz1D8rmgJ_jXGut-kZ0tkOmDZq9aw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Apr 2014 05:28:14 -0400
+Received: by mail-ee0-f52.google.com with SMTP id e49so6320094eek.39
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:28:13 -0700 (PDT)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 2/2 V3] ath10k: Fix pmf for action frames
+Date: Mon, 14 Apr 2014 11:27:22 +0200
+Message-Id: <1397467642-23544-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140414_112830_967994_A832EBBB)
+In-Reply-To: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
+References: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Fix sending and receiveing protected managment frames.
+Lack of protected flag for received protected action frames
+causes report these frames as unprotected robust action frames.
+If the driver in AP mode sent frame with protected flag and
+CCMP header using IEEE80211_KEY_FLAG_SW_MGMT_TX flag,
+the FW encrypted frames once again. From user side all
+received SA Query Requests and Responses were skipped and
+all protected action frames were sent as malformed packets.
 
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    5 ++++-
+ drivers/net/wireless/ath/ath10k/wmi.c |   24 ++++++++++++++++++++----
+ 2 files changed, 24 insertions(+), 5 deletions(-)
 
-On 04/18/2014 11:33 PM, Alexander Monakov wrote:
-> On Fri, Apr 18, 2014 at 6:50 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>> I have to say that this is really strange - I must miss something. It looks like the ISR is called even before it is requested...
->>>> So I definitely want to understand what is happening here before applying the fix.
->>>
->>> Sure, I can help with further investigation.  Would it help if I bisected?
->>>
->>
->> I can't decline such an offer:)
->>
->> Note that the "bad" commit might be in pci too.
->> As a first try, I'd try 3.13.
->> I've made quite a few changes in the ISR for 3.14.
-> 
-> It bisects to
-> 
-> commit 2dbc368d7fded35ed221a3751405b15e06eb8925
-> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Date:   Mon Dec 9 11:09:47 2013 +0200
-> 
->     iwlwifi: pcie: track interrupt mask in SW
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 58ec5a7..38035dc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -54,7 +54,10 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		arg.key_cipher = WMI_CIPHER_AES_CCM;
+-		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
++		if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
++		else
++			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		arg.key_cipher = WMI_CIPHER_TKIP;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d4b48ef..6d8a097 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -639,6 +639,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 	struct sk_buff *wmi_skb;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int len;
++	u32 buf_len = skb->len;
+ 	u16 fc;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -648,6 +649,15 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 		return -EINVAL;
+ 
+ 	len = sizeof(cmd->hdr) + skb->len;
++
++	if ((ieee80211_is_action(hdr->frame_control) ||
++	     ieee80211_is_deauth(hdr->frame_control) ||
++	     ieee80211_is_disassoc(hdr->frame_control)) &&
++	     ieee80211_has_protected(hdr->frame_control)) {
++		len += IEEE80211_CCMP_MIC_LEN;
++		buf_len += IEEE80211_CCMP_MIC_LEN;
++	}
++
+ 	len = round_up(len, 4);
+ 
+ 	wmi_skb = ath10k_wmi_alloc_skb(len);
+@@ -659,7 +669,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
+ 	cmd->hdr.tx_rate = 0;
+ 	cmd->hdr.tx_power = 0;
+-	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
++	cmd->hdr.buf_len = __cpu_to_le32(buf_len);
+ 
+ 	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
+ 	memcpy(cmd->buf, skb->data, skb->len);
+@@ -957,10 +967,16 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	 * frames with Protected Bit set. */
+ 	if (ieee80211_has_protected(hdr->frame_control) &&
+ 	    !ieee80211_is_auth(hdr->frame_control)) {
+-		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
+-				RX_FLAG_MMIC_STRIPPED;
+-		hdr->frame_control = __cpu_to_le16(fc &
++		status->flag |= RX_FLAG_DECRYPTED;
++
++		if (!ieee80211_is_action(hdr->frame_control) &&
++		    !ieee80211_is_deauth(hdr->frame_control) &&
++		    !ieee80211_is_disassoc(hdr->frame_control)) {
++			status->flag |= RX_FLAG_IV_STRIPPED |
++					RX_FLAG_MMIC_STRIPPED;
++			hdr->frame_control = __cpu_to_le16(fc &
+ 					~IEEE80211_FCTL_PROTECTED);
++		}
+ 	}
+ 
+ 	ath10k_dbg(ATH10K_DBG_MGMT,
+-- 
+1.7.9.5
 
-Yeah - ok.
-Thank you for this information.
-I'll check again later.
