@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:58494 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030515AbaDJMw3 convert rfc822-to-8bit (ORCPT
+Received: from www.carbon4.de ([85.214.213.20]:47319 "EHLO
+	h2156042.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755315AbaDNRyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Apr 2014 08:52:29 -0400
+	Mon, 14 Apr 2014 13:54:53 -0400
+Date: Mon, 14 Apr 2014 20:00:08 +0200
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: The list for a Better Approach To Mobile Ad-hoc
+	 Networking <b.a.t.m.a.n@lists.open-mesh.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [B.A.T.M.A.N.] [PATCH 2/7] mac80211: add get_expected_throughput
+ API
+Message-ID: <20140414180008.GW26376@medion.lan> (sfid-20140414_195505_689130_F212E0A1)
+References: <1397484205-20905-1-git-send-email-antonio@meshcoding.com>
+ <1397484205-20905-2-git-send-email-antonio@meshcoding.com>
 MIME-Version: 1.0
-In-Reply-To: <20140410124045.GX19349@intel.com>
-References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
-	<CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
-	<CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
-	<20140410124045.GX19349@intel.com>
-Date: Thu, 10 Apr 2014 08:52:28 -0400
-Message-ID: <CA+5PVA52wqaRezzhn2Oqb1FM-yuVsbD4eQq422sXRrpLbfzRbA@mail.gmail.com> (sfid-20140410_145233_782216_6504A66F)
-Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux v3.14-12042-g69cd9eba3886
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-gpio@vger.kernel.org,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397484205-20905-2-git-send-email-antonio@meshcoding.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 8:40 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> On Thu, Apr 10, 2014 at 08:22:12AM -0400, Josh Boyer wrote:
->> On Thu, Apr 10, 2014 at 2:50 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> > 2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
->> >> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
->> >> module on the MacBookPro 10,2 I have here.  This works fine with Linux
->> >> v3.14-7333-g59ecc26004e7.  There have been no changes between those
->> >> two versions to bcma itself, but the GPIO merge did go in that window.
->> >>  I can attempt to do a bisect tomorrow, but looking over some of the
->> >> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
->> >> hoping someone here has an idea on what the issue might be and has
->> >> some possible things for me to test for fixes.
->> >
->> > Bug report: https://lkml.org/lkml/2014/3/24/262
->> > Patch: https://lkml.org/lkml/2014/3/24/293
->> > Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
->> > (all links are for the same thread).
->> >
->> > Now you simply have to find above patch in some git tree :) Not sure
->> > if it's already in Linus's one.
->>
->> Ah, wonderful.  I now wish I would have found those in my searching
->> before doing the bisect.  Oh well.  For what it's worth, my bisect
->> landed on the same commit.
->>
->> The fix isn't in Linus' tree or linux-next.  I'm guessing Mika is
->> either still on vacation, or hasn't sent out the formal fix yet.
->
-> No, not on vacation anymore (unfortunately). I did send the formal patch
-> already:
->
-> https://lkml.org/lkml/2014/3/31/135
->
-> but it isn't merged to Linus' GPIO tree yet.
+* Antonio Quartulli <antonio@meshcoding.com> [14.04.2014 16:53]:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+> 
+> Add get_expected_throughput() API to mac80211 so that each
+> driver can implement its own version based on the RC
 
-Ah, ok great.  I'll test that today.  Thanks.
+Without understanding this fully: thank you.
 
-josh
+What is not clear to me: the function returns Mbps/100.
+Why not simply kilobit/second?
+
+Also: does it return expected_goodput or "only" throughput?
+Because we want to use this value not internally only it should
+reflect the real usecase (and should also be human-readable).
+
+For a meshnet it is important to know, that a 10mbit ethernet line
+is faster than a 60 mbit wireless link with a low tx-probability.
+
+bye, Bastian Bittorf
