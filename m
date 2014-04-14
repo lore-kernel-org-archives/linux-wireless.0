@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:53121 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162484AbaDCIRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Apr 2014 04:17:40 -0400
-Message-ID: <533D17C0.3020808@neratec.com> (sfid-20140403_101746_914208_1A3C5DE1)
-Date: Thu, 03 Apr 2014 10:11:44 +0200
-From: Matthias May <matthias.may@neratec.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:63499 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbaDNCT4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Apr 2014 22:19:56 -0400
 MIME-Version: 1.0
-To: "Shu, Nick" <Nick.Shu@spirent.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iw scan command failed
-References: <153F35912E69C446A72CF7D6417EBADE7CF1C4@SPCCOREXCMBX01.AD.SPIRENTCOM.COM>
-In-Reply-To: <153F35912E69C446A72CF7D6417EBADE7CF1C4@SPCCOREXCMBX01.AD.SPIRENTCOM.COM>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <31741678.fEkJSmnf5n@daeseok-laptop.cloud.net>
+References: <31741678.fEkJSmnf5n@daeseok-laptop.cloud.net>
+Date: Mon, 14 Apr 2014 11:19:56 +0900
+Message-ID: <CAHb8M2Bt2+MD_ZKmA89j4bSmmJ--ut-uvXCWj1_1Q2xaKvLEkQ@mail.gmail.com> (sfid-20140414_042007_427967_E9C0F89A)
+Subject: Re: [PATCH 2/2] nfc: remove unneeded nfc_put_device() calls
+From: DaeSeok Youn <daeseok.youn@gmail.com>
+To: David Miller <davem@davemloft.net>, lauro.venancio@openbossa.org
+Cc: aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well exactly what it says: your interface is down ;)
-Set it up with: ip link set wlan0 up
+Hi,
 
-Regards
-Matthias
+Can you review this patch?
 
-On 02/04/14 23:26, Shu, Nick wrote:
-> Hi, All:
-> Got an issue when using "iw" to configure my WIFI card.
-> Issued a scan command and got a "command failed, operation not permitted"
-> Then changed to root as somebody suggested to do it again, it got worse and said network down. See below for screen capture:
+Thanks.
+Daeseok Youn
+
+2014-04-02 16:56 GMT+09:00 Daeseok Youn <daeseok.youn@gmail.com>:
 >
-> spirent@coast198:~$ iw dev wlan0 scan
-> command failed: Operation not permitted (-1)
-> spirent@coast198:~$ su
-> Password:
-> root@coast198:/home/spirent# iw dev wlan0 scan
-> command failed: Network is down (-100)
+> If local is NULL, nfs_put_device() is called twice.
+> So nfs_put_device() in "if (!local)" is removed.
 >
-> System set up:
-> Running Ubuntu 13.10 server version, using a mini PCIe card with QCA9880 chip (ath10k driver should be in 3.11 kernel release).
+> Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
+> ---
+>  net/nfc/netlink.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
 >
-> Can somebody tell me what's wrong?
+> diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+> index b2ad570..3e0a676 100644
+> --- a/net/nfc/netlink.c
+> +++ b/net/nfc/netlink.c
+> @@ -1038,7 +1038,6 @@ static int nfc_genl_llc_sdreq(struct sk_buff *skb, struct genl_info *info)
 >
-> Thank you!
->
-> Nick Shu
->
->
->
-> E-mail confidentiality.
-> --------------------------------
-> This e-mail contains confidential and / or privileged information belonging to Spirent Communications plc, its affiliates and / or subsidiaries. If you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution and / or the taking of any action based upon reliance on the contents of this transmission is strictly forbidden. If you have received this message in error please notify the sender by return e-mail and delete it from your system.
->
-> Spirent Communications plc
-> Northwood Park, Gatwick Road, Crawley, West Sussex, RH10 9XN, United Kingdom.
-> Tel No. +44 (0) 1293 767676
-> Fax No. +44 (0) 1293 767677
->
-> Registered in England Number 470893
-> Registered at Northwood Park, Gatwick Road, Crawley, West Sussex, RH10 9XN, United Kingdom.
->
-> Or if within the US,
->
-> Spirent Communications,
-> 26750 Agoura Road, Calabasas, CA, 91302, USA.
-> Tel No. 1-818-676- 2300
+>         local = nfc_llcp_find_local(dev);
+>         if (!local) {
+> -               nfc_put_device(dev);
+>                 rc = -ENODEV;
+>                 goto exit;
+>         }
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Matthias May
-Software Engineer
-
-Neratec Solutions AG
-Postfach 83, CH-8608 Bubikon, Switzerland
-Direct: +41 55 253 2074
-Office: +41 55 253 2000
-Fax:    +41 55 253 2070
-email:  matthias.may@neratec.com
-Web:   www.neratec.com
-
+> 1.7.4.4
+>
+>
