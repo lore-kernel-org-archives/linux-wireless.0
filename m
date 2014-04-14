@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:39870 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753867AbaDXIxZ convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14961 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755238AbaDNWbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 04:53:25 -0400
-Received: by mail-we0-f175.google.com with SMTP id q58so1907119wes.20
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 01:53:24 -0700 (PDT)
+	Mon, 14 Apr 2014 18:31:16 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.15] mwifiex: process event before command response
+Date: Mon, 14 Apr 2014 15:31:05 -0700
+Message-ID: <1397514666-4656-1-git-send-email-bzhao@marvell.com> (sfid-20140415_003121_799353_D3BBE6A2)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj986fsmUD2kvEN=vjHK32cunyFO+8bH-y7ZoWZAMkcunJ2w@mail.gmail.com>
-References: <1398327250-12923-1-git-send-email-yeohchunyeow@gmail.com>
-	<CA+BoTQkBCGyKYDaOMgdCi4Yw+SXeuRS+t0rGE8o=8+x2q5N74w@mail.gmail.com>
-	<CAEFj986fsmUD2kvEN=vjHK32cunyFO+8bH-y7ZoWZAMkcunJ2w@mail.gmail.com>
-Date: Thu, 24 Apr 2014 10:53:24 +0200
-Message-ID: <CA+BoTQ=uvkjK-BYJL3gympEiraZupLdh67XzMjuGviQ4iaVuiw@mail.gmail.com> (sfid-20140424_131004_086842_E180125F)
-Subject: Re: [PATCH] ath10k: don't allow stand alone monitor mode for non-AP firmware
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 April 2014 10:50, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> I think Monitor operation should be performed on a best effort basis.
->> This means monitor_start/stop should be attempted once number of
->> non-monitor vdevs changes.
->
-> I am too clear about this. Do you mean that actually we can have
-> monitor mode on non-monitor vdevs in firmware 636?
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-No. What I mean is we should attempt to start monitor vdev once at
-least 1 non-monitor vdev is present and stop monitor vdev is last
-non-monitor vdev is about to be stopped on 636.
+During extended scan, SCAN report event is always followed by
+command response. Sometimes It is observed that command response
+is processed before SCAN report which leads to a crash, because
+current command node is cleared while handling the response.
+This patch makes sure that driver's main thread gives priority
+to events over command responses.
 
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Maithili Hinge <maithili@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 77db088..9c771b3 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -292,6 +292,12 @@ process_start:
+ 			while ((skb = skb_dequeue(&adapter->usb_rx_data_q)))
+ 				mwifiex_handle_rx_packet(adapter, skb);
+ 
++		/* Check for event */
++		if (adapter->event_received) {
++			adapter->event_received = false;
++			mwifiex_process_event(adapter);
++		}
++
+ 		/* Check for Cmd Resp */
+ 		if (adapter->cmd_resp_received) {
+ 			adapter->cmd_resp_received = false;
+@@ -304,12 +310,6 @@ process_start:
+ 			}
+ 		}
+ 
+-		/* Check for event */
+-		if (adapter->event_received) {
+-			adapter->event_received = false;
+-			mwifiex_process_event(adapter);
+-		}
+-
+ 		/* Check if we need to confirm Sleep Request
+ 		   received previously */
+ 		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+-- 
+1.8.2.3
+
