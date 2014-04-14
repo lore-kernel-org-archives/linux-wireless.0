@@ -1,128 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:43196 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752470AbaDZRJr (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:64948 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbaDNJ2M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Apr 2014 13:09:47 -0400
-Message-ID: <535BE84F.2060502@infradead.org> (sfid-20140426_191021_438906_19ADA7A4)
-Date: Sat, 26 Apr 2014 10:09:35 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
-MIME-Version: 1.0
-To: Masanari Iida <standby24x7@gmail.com>, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	quozl@laptop.org
-Subject: Re: [PATCH/V2] staging: rtl8192e: Fix typo in rtl8192e
-References: <20140424214908.GE12124@us.netrek.org> <1398522950-31439-1-git-send-email-standby24x7@gmail.com>
-In-Reply-To: <1398522950-31439-1-git-send-email-standby24x7@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Apr 2014 05:28:12 -0400
+Received: by mail-ee0-f49.google.com with SMTP id c41so6353318eek.36
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:28:11 -0700 (PDT)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 1/2 V3] mac80211: add option to generate CCMP IVs only for mgmt frames
+Date: Mon, 14 Apr 2014 11:27:21 +0200
+Message-Id: <1397467642-23544-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20140414_112831_677190_53A6FB3D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/14 07:35, Masanari Iida wrote:
-> Fix spelling typo in comments within rtl8192e.
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> Reviewed-by: James Cameron <quozl@laptop.org>
-> 
-> ---
->  drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c | 2 +-
->  drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c    | 2 +-
->  drivers/staging/rtl8192e/rtl8192e/rtl_wx.c        | 2 +-
->  drivers/staging/rtl8192e/rtl819x_TSProc.c         | 2 +-
->  drivers/staging/rtl8192e/rtllib_rx.c              | 2 +-
->  drivers/staging/rtl8192e/rtllib_softmac.c         | 2 +-
->  6 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-> index 5f10e40..79d86b9 100644
-> --- a/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-> +++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_cmdpkt.c
-> @@ -373,7 +373,7 @@ u32 cmpk_message_handle_rx(struct net_device *dev,
->  		default:
->  
->  			RT_TRACE(COMP_CMDPKT, "---->cmpk_message_handle_rx():"
-> -				 "unknow CMD Element\n");
-> +				 "unknown CMD Element\n");
->  			return 1;
->  		}
->  
-> diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-> index 5d6d304..b4bfafe 100644
-> --- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-> +++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-> @@ -1555,7 +1555,7 @@ static bool SetRFPowerState8190(struct net_device *dev,
->  
->  		default:
->  			bResult = false;
-> -			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknow state"
-> +			RT_TRACE(COMP_ERR, "SetRFPowerState8190(): unknown state"
->  				 " to set: 0x%X!!!\n", eRFPowerState);
->  			break;
->  		}
-> diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-> index 498995d..091dfe7 100644
-> --- a/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-> +++ b/drivers/staging/rtl8192e/rtl8192e/rtl_wx.c
-> @@ -1213,7 +1213,7 @@ static iw_handler r8192_wx_handlers[] = {
->  };
->  
->  /*
-> - * the following rule need to be follwing,
-> + * the followed rules need to be following,
+Some chips can encrypt managment frames in HW, but
+require generated IV in the frame. Add a key flag
+that allows us to achieve this.
 
-      the following rules need to be followed:
-or
-      these listed rules need to be followed:
-or
-      this list of rules should be used:
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ include/net/mac80211.h |   16 ++++++++++------
+ net/mac80211/wpa.c     |    5 ++++-
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-etc.
-
->   * Odd : get (world access),
->   * even : set (root access)
->   * */
-> diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> index 29608e5..52b2977 100644
-> --- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> +++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> @@ -79,7 +79,7 @@ static void RxPktPendingTimeout(unsigned long data)
->  
->  		if (index > REORDER_WIN_SIZE) {
->  			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
-> -				     " Rx Reorer struct buffer full!!\n");
-> +				     " Rx Reorder struct buffer full!!\n");
->  			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
->  					       flags);
->  			return;
-> diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-> index 6c8a8e1..7413816 100644
-> --- a/drivers/staging/rtl8192e/rtllib_rx.c
-> +++ b/drivers/staging/rtl8192e/rtllib_rx.c
-> @@ -712,7 +712,7 @@ static void RxReorderIndicatePacket(struct rtllib_device *ieee,
->  
->  		if (index > REORDER_WIN_SIZE) {
->  			RTLLIB_DEBUG(RTLLIB_DL_ERR, "RxReorderIndicatePacket():"
-> -				     " Rx Reorer struct buffer full!!\n");
-> +				     " Rx Reorder struct buffer full!!\n");
->  			spin_unlock_irqrestore(&(ieee->reorder_spinlock),
->  					       flags);
->  			return;
-> diff --git a/drivers/staging/rtl8192e/rtllib_softmac.c b/drivers/staging/rtl8192e/rtllib_softmac.c
-> index 4bf72bc..d65cba4 100644
-> --- a/drivers/staging/rtl8192e/rtllib_softmac.c
-> +++ b/drivers/staging/rtl8192e/rtllib_softmac.c
-> @@ -543,7 +543,7 @@ void rtllib_softmac_scan_syncro(struct rtllib_device *ieee, u8 is_mesh)
->  				goto out; /* scan completed */
->  		} while (!ieee->active_channel_map[ch]);
->  
-> -		/* this fuction can be called in two situations
-> +		/* this function can be called in two situations
->  		 * 1- We have switched to ad-hoc mode and we are
->  		 *    performing a complete syncro scan before conclude
->  		 *    there are no interesting cell and to create a
-> 
-
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2de7ff4..80d7a5e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1202,14 +1202,18 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  *	fall back to software crypto. Note that this flag deals only with
+  *	RX, if your crypto engine can't deal with TX you can also set the
+  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
++ * @IEEE80211_KEY_FLAG_GENERATE_IV_MGMT: This flag should be set by the
++ *	driver for a CCMP key to indicate that is requires IV generation
++ *	only for managment frames (MFP).
+  */
+ enum ieee80211_key_flags {
+-	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+-	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
+-	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
+-	IEEE80211_KEY_FLAG_SW_MGMT_TX	= 1<<4,
+-	IEEE80211_KEY_FLAG_PUT_IV_SPACE = 1<<5,
+-	IEEE80211_KEY_FLAG_RX_MGMT	= 1<<6,
++	IEEE80211_KEY_FLAG_GENERATE_IV		= BIT(1),
++	IEEE80211_KEY_FLAG_GENERATE_MMIC	= BIT(2),
++	IEEE80211_KEY_FLAG_PAIRWISE		= BIT(3),
++	IEEE80211_KEY_FLAG_SW_MGMT_TX		= BIT(4),
++	IEEE80211_KEY_FLAG_PUT_IV_SPACE		= BIT(5),
++	IEEE80211_KEY_FLAG_RX_MGMT		= BIT(6),
++	IEEE80211_KEY_FLAG_GENERATE_IV_MGMT	= BIT(7),
+ };
+ 
+ /**
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b8600e3..5b16a36 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -406,7 +406,10 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+-	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
++	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
++	    !((info->control.hw_key->flags &
++	      IEEE80211_KEY_FLAG_GENERATE_IV_MGMT) &&
++	      ieee80211_is_mgmt(hdr->frame_control))) {
+ 		/*
+ 		 * hwaccel has no need for preallocated room for CCMP
+ 		 * header or MIC fields
 -- 
-~Randy
+1.7.9.5
+
