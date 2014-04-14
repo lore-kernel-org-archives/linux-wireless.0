@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:44384 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbaDHGc7 convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:62608 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883AbaDNJv5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 02:32:59 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x13so447733wgg.26
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Apr 2014 23:32:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87bnwdnslk.fsf@kamboji.qca.qualcomm.com>
-References: <1396337123-12622-1-git-send-email-michal.kazior@tieto.com>
-	<1396610926-5787-1-git-send-email-michal.kazior@tieto.com>
-	<1396610926-5787-3-git-send-email-michal.kazior@tieto.com>
-	<87bnwdnslk.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 8 Apr 2014 08:32:58 +0200
-Message-ID: <CA+BoTQ=-vrJ_tize+uwCp5jgM7pvPZ0s9bGUK42Ko1TCHzmfzg@mail.gmail.com> (sfid-20140408_083327_493834_709C59D9)
-Subject: Re: [PATCH v2 2/2] ath10k: refactor radar detection code
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Apr 2014 05:51:57 -0400
+Received: by mail-pd0-f178.google.com with SMTP id x10so7859656pdj.23
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:51:56 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/6] mac80211: remove config option check
+Date: Mon, 14 Apr 2014 17:51:31 +0800
+Message-Id: <ad0e43bccb39bdc9139601059ca014278ef0aba9.1397469036.git.gamerh2o@gmail.com> (sfid-20140414_115402_530518_B0AC68E8)
+In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 April 2014 16:04, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> If 20MHz CAC completed successfully then
->> subsequent CAC with wider bandwidth (40Mhz, 80Mhz)
->> with identical control frequency did not start
->> monitor vdev making it impossible to detect any
->> radar pulses during intended CAC.
->>
->> It also was incorrect to assume ath10k_config() will
->> be called after CAC is finished. Theoretically for
->> non-HT channels nothing changes between CAC and
->> start_ap() (albeit in practice this can be
->> different). The incorrect assumption led to CAC
->> not being stopped on non-HT chandefs leading to
->> all Rx being drooped making it impossible for
->> clients to associate.
->>
->> While at it clean up the code a bit.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> @@ -858,6 +830,11 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
->>               return ret;
->>       }
->>
->> +     if (!WARN_ON(ar->num_started_vdevs == 0)) {
->
-> Even though this is correct, I think it's still a bit evil. For example,
-> I missed '!' the first time I looked at this. Even this is a line
-> longer, I think it would be easier to read:
->
-> WARN_ON(ar->num_started_vdevs == 0);
->
-> if (ar->num_started_vdevs != 0) {
->         ...
-> }
+Sanity check and error handling code shouldn't be put into
+CONFIG_MAC80211_VERBOSE_DEBUG block, since verbose debug option is
+used to control whether to print debug messages.
 
-Sound reasonably.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/tx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 48650da..59715da 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1205,13 +1205,11 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		int q = info->hw_queue;
+ 
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		if (WARN_ON_ONCE(q >= local->hw.queues)) {
+ 			__skb_unlink(skb, skbs);
+ 			ieee80211_free_txskb(&local->hw, skb);
+ 			continue;
+ 		}
+-#endif
+ 
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 		if (local->queue_stop_reasons[q] ||
+-- 
+1.9.0
 
-Michał
