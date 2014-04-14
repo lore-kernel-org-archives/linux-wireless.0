@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stator.leun.net ([85.214.203.199]:35560 "EHLO stator.leun.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753268AbaDVVcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Apr 2014 17:32:35 -0400
-Date: Tue, 22 Apr 2014 23:32:13 +0200
-From: Michael Leun <lkml20140418@newton.leun.net>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	arik@wizery.com, linux@eikelenboom.it
-Subject: Re: [PATCH 0/2] cfg80211: two reg fixes
-Message-ID: <20140422233213.780405d1@xenia.leun.net> (sfid-20140422_233243_343404_16B9F757)
-In-Reply-To: <20140422204552.GR27882@wotan.suse.de>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
-	<20140422180003.6438dbb7@xenia.leun.net>
-	<20140422204552.GR27882@wotan.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:38119 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbaDNH0j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Apr 2014 03:26:39 -0400
+Received: by mail-ee0-f44.google.com with SMTP id e49so6309934eek.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 00:26:38 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 3/4] ath10k: prevent beacon memory leak
+Date: Mon, 14 Apr 2014 09:20:09 +0200
+Message-Id: <1397460010-19153-4-git-send-email-michal.kazior@tieto.com> (sfid-20140414_092650_259229_B262F36F)
+In-Reply-To: <1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
+References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+ <1397460010-19153-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 22 Apr 2014 22:45:52 +0200
-"Luis R. Rodriguez" <mcgrof@suse.com> wrote:
+If DMA mapping of next beacon failed ath10k leaked
+the beacon.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> > I only see this on an Acer PTZ1825 with an ath9k wireless card, but
-> > that machine was not sold with that wlan card, so other people with
-> > the same model won't neccesarily see the same issue.
-> 
-> OK I see the issue and its clear now how this could have
-> gone through, the wiphy comes from the country IE and it
-> could have gone disappearing during suspend / hotplug, so
-> we do need to check for it again.
-[...]
-> -		if (wiphy->regulatory_flags &
-> REGULATORY_COUNTRY_IE_IGNORE)
-> +		if (wiphy &&
-> +		    wiphy->regulatory_flags &
-> REGULATORY_COUNTRY_IE_IGNORE) return REG_REQ_IGNORE;
-
-Yup, thats it. I can hear it whisper "put me into stable".
-
-Thanks!
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 11176cc..72cc4f2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1441,6 +1441,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 					ATH10K_SKB_CB(bcn)->paddr);
+ 		if (ret) {
+ 			ath10k_warn("failed to map beacon: %d\n", ret);
++			dev_kfree_skb_any(bcn);
+ 			goto skip;
+ 		}
+ 
 -- 
-MfG,
-
-Michael Leun
+1.8.5.3
 
