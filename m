@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:53823 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbaDNT1i (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:45615 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbaDNH2s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 15:27:38 -0400
-Received: by mail-wi0-f170.google.com with SMTP id bs8so5853194wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 12:27:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com>
-References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
-	<1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
-	<1393852248.10039.5.camel@jlt4.sipsolutions.net>
-	<CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
-	<CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
-	<CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
-	<CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
-	<CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
-	<CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
-	<CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
-	<CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
-	<CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com>
-Date: Mon, 14 Apr 2014 12:27:36 -0700
-Message-ID: <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com> (sfid-20140414_212742_129337_F2B068A1)
-Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
-From: Colleen T <colleen@cozybit.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Apr 2014 03:28:48 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so6271857eei.28
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 00:28:47 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 2/3] ath10k: don't wait for device init if it crashed
+Date: Mon, 14 Apr 2014 09:22:25 +0200
+Message-Id: <1397460146-19450-3-git-send-email-michal.kazior@tieto.com> (sfid-20140414_092853_069847_586C19AD)
+In-Reply-To: <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
+References: <1397038028-7665-1-git-send-email-michal.kazior@tieto.com>
+ <1397460146-19450-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+When warm resetting it's possible for device to
+crash during initialization. Instead of waiting 3
+seconds just return failure as soon as
+FW_IND_EVENT_PENDING is set.
 
-Applying Arik's patch on top of Luis' resolves our problem.
+This speeds up device bootup and recovery in some
+cases.
 
-You also get my:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * add a comment before if() [Kalle]
 
-Tested-by: Colleen Twitty <colleen@cozybit.com>
+ drivers/net/wireless/ath/ath10k/pci.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Thanks,
--Colleen
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cd3b00c..66b1f30 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2452,6 +2452,10 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		if (val == 0xffffffff)
+ 			continue;
+ 
++		/* the device has crashed so don't bother trying anymore */
++		if (val & FW_IND_EVENT_PENDING)
++			break;
++
+ 		if (val & FW_IND_INITIALIZED)
+ 			break;
+ 
+@@ -2470,6 +2474,12 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 		goto out;
+ 	}
+ 
++	if (val & FW_IND_EVENT_PENDING) {
++		ath10k_warn("device has crashed during init\n");
++		ret = -ECOMM;
++		goto out;
++	}
++
+ 	if (!(val & FW_IND_INITIALIZED)) {
+ 		ath10k_err("failed to receive initialized event from target: %08x\n",
+ 			   val);
+-- 
+1.8.5.3
 
-On Sun, Apr 13, 2014 at 5:50 AM, Eliad Peller <eliad@wizery.com> wrote:
-> On Wed, Apr 9, 2014 at 7:33 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>
->> Seems I might have found the culprit - reg_todo is called while the
->> request to CRDA is in flight and the patch in question causes the
->> already-in-process user-request to be handled again. Since it's the
->> same regdomain as the last request (it's the last request itself), we
->> get this:
->>
->> treatment = __reg_process_hint_user(user_request);
->> if (treatment == REG_REQ_IGNORE ||
->>    treatment == REG_REQ_ALREADY_SET) {
->> kfree(user_request); <------
->> return treatment;
->> }
->>
->> Can you try adding the attached patch? It just replaced relevant
->> kfree-s with a function that avoids freeing the last request.
->>
-> i encountered a similar panic, and this patch seems to fix it.
-> so you get my:
->
-> Tested-by: Eliad Peller <eliad@wizery.com>
->
-> Eliad.
