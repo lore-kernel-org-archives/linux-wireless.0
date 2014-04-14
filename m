@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f196.google.com ([209.85.212.196]:51184 "EHLO
-	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbaDQPrt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41759 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbaDNSaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 11:47:49 -0400
-Received: by mail-wi0-f196.google.com with SMTP id d1so280153wiv.11
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 08:47:48 -0700 (PDT)
+	Mon, 14 Apr 2014 14:30:17 -0400
+Date: Mon, 14 Apr 2014 14:22:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2014-04-13
+Message-ID: <20140414182242.GF27324@tuxdriver.com> (sfid-20140414_203031_780713_A012E66F)
+References: <534A8A49.2030100@gmail.com>
+ <534A96DB.90505@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
-References: <CAEnUK=Oi6FL48o_L-Ax6U=qVNWg8YbXRYTa_G1sJGj_H0HvCMg@mail.gmail.com>
-	<CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
-Date: Thu, 17 Apr 2014 18:47:48 +0300
-Message-ID: <CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com> (sfid-20140417_174753_631962_9497E545)
-Subject: Fwd: RTL8192CU chip strange works
-From: =?UTF-8?B?0JDRgNGC0LXQvCDQodC10YDQs9C40LXQvdC60L4=?=
-	<imtaurin@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <534A96DB.90505@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello! I bought a device TP-Link wn8200nd with Realtek RTL8192CU chip.
+On Sun, Apr 13, 2014 at 04:53:31PM +0300, Emmanuel Grumbach wrote:
+> 
+> 
+> On 04/13/2014 03:59 PM, Emmanuel Grumbach wrote:
+> > Hi John,
+> > 
+> > This is a first pull request of fixes for 3.15.
+> > 
+> > I have new device IDs and a new firmware API. These are the trivial ones. The less trivial ones are Johannes's fix that delays the enablement of an interrupt coalescing hardware until after association - this fixes a few connection problems seen in the field. Eyal has a bunch of rate control fixes. I decided to add these for 3.15 because they fix some disconnection and packet loss scenarios which were reported by the field. I also have a fix for a memory leak that happens only with a very new NIC.
+> > 
+> > I'll be with low connectivity for the coming week and a half, so I want hope you won't have any issues with this pull request. If you do have issues, please let me know, but I am not sure I'll be able to handle the problems immediately.
+> > 
+> > Thanks!
+> > a6bc92803e7f765e02c923cf37c8e280e729642aa6bc92803e7f765e02c923cf37c8e280e729642aa6bc92803e7f765e02c923cf37c8e280e729642a
+> > The following changes since commit 67b3bd4e65f0854aca70e0134d59b1daede49504:
+> > 
+> >   brcmfmac: fallback to mimo_bw_cap for older firmwares (2014-03-20 11:55:41 -0400)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> > 
+> > for you to fetch changes up to f59913dfbb8ce07d7fb527f67b26791aa849aa1c:
+> > 
+> 
+> I had a typo in the stable address in one of the patches - new HEAD: a6bc92803e7f765e02c923cf37c8e280e729642a
 
-I have troubles to connect it to the my Asus RT-N16 under Linux (Gentoo).
+Pulling now...
 
-It connecting to WiFi spot in my phones. But it can't connect to Asus
-RT-N16 in Linux. It connects to Asus RT-N16 only under Windows.
-I used drivers from various Linux kernels and used drivers from your
-official site, but there is no success. I absolutely can't understand
-what's happening. Why in Linux I can connect to some devices but I
-can't connect to my home router. (Router works fine for 3 years)
-Every time connection asks me a password, I enter it, but in minute or
-less it wants me to enter password one more time. (I even change
-password to very easy, password is right)
-
-I read a lot off information about it, and I know many people which
-have similar problems.
-
-Please help me. I think all troubles in the driver. I can send you all
-information that you need.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
