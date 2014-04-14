@@ -1,62 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:41732 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703AbaDRExc (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:45792 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbaDNJwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Apr 2014 00:53:32 -0400
-Date: Fri, 18 Apr 2014 14:46:19 +1000
-From: James Cameron <quozl@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: John Tobias <john.tobias.ph@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
-Message-ID: <20140418044619.GF24166@us.netrek.org> (sfid-20140418_065336_464233_BB9299CB)
-References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
- <1397710914-10061-2-git-send-email-bzhao@marvell.com>
- <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com>
+	Mon, 14 Apr 2014 05:52:00 -0400
+Received: by mail-pb0-f42.google.com with SMTP id rr13so8075741pbb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2014 02:51:59 -0700 (PDT)
+From: "Zhao, Gang" <gamerh2o@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3/6] mac80211: minor changes to ieee80211_reconfig()
+Date: Mon, 14 Apr 2014 17:51:32 +0800
+Message-Id: <14b385a08ccf4d9ca90d54acb84e7414aed761a8.1397469036.git.gamerh2o@gmail.com> (sfid-20140414_115408_353388_2395BC62)
+In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+In-Reply-To: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
+References: <8b5c4a61ae1f49400478b030fa7ae4e3a5ca2bcb.1397469035.git.gamerh2o@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 04:33:58PM -0700, Bing Zhao wrote:
-> Hi John,
-> 
-> > Hi Bing,
-> > 
-> > Assuming the timeout happened due to a firmware bug. Does the
-> > firmware able to recover after setting adapter->cmd_sent = false
-> > and the firmware could accept a new commands without locking?.
-> 
-> That "adapter->cmd_sent = false" was hoping the firmware is still
-> alive and can respond to a new command. The reality is that the
-> timeout usually indicates the firmware has already hung. Sending
-> another command won't recover it in this case.
+Try to update chanctx only if local->use_chanctx is true.
 
-I'm dealing with a firmware hang when more than 13 nodes are in an
-ad-hoc IBSS, and I've just found out isn't entirely a firmware hang;
-in that we can see beacons and probe responses from the card, using
-tcpdump and monitor mode.
+P2P_DEVICE doesn't support ieee80211_bss_info_change_notify() for now,
+so it's not needed to set changed flags for P2P_DEVICE. Besides, flag
+BSS_CHANGED_IDLE is already set in the common change flags.
 
-I'm interested to know if the "firmware hangs" that you experiment
-with prevent autonomous RF TX, or if RF TX typically proceeds.
+Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
+---
+ net/mac80211/util.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
-> I guess you are using SDIO chip. If your host controller supports
-> MMC_POWER_OFF/UP, you can reset the chip with this approach:
-> 
->         mmc_remove_host(host);
->         /* some delay */
->         mmc_add_host(host);
-
-Thanks, adding that to my list of things to try, as I am using SDIO too.
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 275c94f..191e558 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1565,17 +1565,17 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		list_for_each_entry(ctx, &local->chanctx_list, list)
+ 			WARN_ON(drv_add_chanctx(local, ctx));
+ 		mutex_unlock(&local->chanctx_mtx);
+-	}
+ 
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-		ieee80211_assign_chanctx(local, sdata);
+-	}
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (!ieee80211_sdata_running(sdata))
++				continue;
++			ieee80211_assign_chanctx(local, sdata);
++		}
+ 
+-	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata && ieee80211_sdata_running(sdata))
+-		ieee80211_assign_chanctx(local, sdata);
++		sdata = rtnl_dereference(local->monitor_sdata);
++		if (sdata && ieee80211_sdata_running(sdata))
++			ieee80211_assign_chanctx(local, sdata);
++	}
+ 
+ 	/* add STAs back */
+ 	mutex_lock(&local->sta_mtx);
+@@ -1671,13 +1671,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			}
+ 			break;
+ 		case NL80211_IFTYPE_WDS:
+-			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 		case NL80211_IFTYPE_MONITOR:
+-			/* ignore virtual */
+-			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+-			changed = BSS_CHANGED_IDLE;
++			/* nothing to do */
+ 			break;
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.9.0
+
