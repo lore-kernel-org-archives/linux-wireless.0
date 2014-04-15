@@ -1,52 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:35767 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755201AbaDTOkV convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:47413 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754712AbaDOMiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 10:40:21 -0400
-Received: by mail-ob0-f180.google.com with SMTP id wm4so3359301obc.25
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 07:40:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com>
-References: <CAEnUK=Oi6FL48o_L-Ax6U=qVNWg8YbXRYTa_G1sJGj_H0HvCMg@mail.gmail.com>
-	<CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
-	<CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com>
-Date: Sun, 20 Apr 2014 16:40:20 +0200
-Message-ID: <CABikg9xyB5_Lhzadax-PdHw_1WPGqPYdASYxVgtxDw+GXzhJbA@mail.gmail.com> (sfid-20140420_164035_251971_1C0AF555)
-Subject: Re: RTL8192CU chip strange works
-From: Sergei Antonov <saproj@gmail.com>
-To: =?UTF-8?B?0JDRgNGC0LXQvCDQodC10YDQs9C40LXQvdC60L4=?=
-	<imtaurin@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Apr 2014 08:38:05 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 1/2] cfg80211: Add attributes describing prohibited channel bandwidth
+Date: Tue, 15 Apr 2014 14:37:55 +0200
+Message-Id: <1397565476-4348-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140415_143948_794270_86537A7C)
+In-Reply-To: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1397565476-4348-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 April 2014 17:47, Артем Сергиенко <imtaurin@gmail.com> wrote:
-> Hello! I bought a device TP-Link wn8200nd with Realtek RTL8192CU chip.
->
-> I have troubles to connect it to the my Asus RT-N16 under Linux (Gentoo).
->
-> It connecting to WiFi spot in my phones. But it can't connect to Asus
-> RT-N16 in Linux. It connects to Asus RT-N16 only under Windows.
-> I used drivers from various Linux kernels and used drivers from your
-> official site, but there is no success. I absolutely can't understand
-> what's happening. Why in Linux I can connect to some devices but I
-> can't connect to my home router. (Router works fine for 3 years)
-> Every time connection asks me a password, I enter it, but in minute or
-> less it wants me to enter password one more time. (I even change
-> password to very easy, password is right)
->
-> I read a lot off information about it, and I know many people which
-> have similar problems.
->
-> Please help me. I think all troubles in the driver. I can send you all
-> information that you need.
+Since there are frequency bands (e.g. 5.9GHz) allowing channels
+with only 10 or 5 MHz bandwidth, this patch adds attributes that
+allow keeping track about this information.
 
-Some possibly useful information:
-1. wpa_supplicant's verbose logs. On my computer it is normally
-started with -B to run in background, and when I want to investigate
-an issue I run it without -B and with -dd to get a verbose log in the
-console.
-2. What version of rtlwifi firmware is loaded? Look it up in dmesg.
-Other relevant strings from dmesg may be helpful too.
+When channel attributes are reported to user-space, make sure to
+not break old tools, i.e. if the 'split wiphy dump' is enabled,
+report the extra attributes (if present) describing the bandwidth
+restrictions.  If the 'split wiphy dump' is not enabled,
+completely omit those channels that have flags set to either
+IEEE80211_CHAN_NO_10MHZ or IEEE80211_CHAN_NO_20MHZ.
+
+Add the check for new bandwidth restriction flags in
+cfg80211_chandef_usable() to comply with the restrictions.
+
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ include/net/cfg80211.h       |  6 ++++++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/chan.c          |  2 ++
+ net/wireless/nl80211.c       | 13 +++++++++++++
+ 4 files changed, 27 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9496fe5..4e9016d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -111,6 +111,10 @@ enum ieee80211_band {
+  *	restrictions.
+  * @IEEE80211_CHAN_INDOOR_ONLY: see %NL80211_FREQUENCY_ATTR_INDOOR_ONLY
+  * @IEEE80211_CHAN_GO_CONCURRENT: see %NL80211_FREQUENCY_ATTR_GO_CONCURRENT
++ * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
++ *	on this channel.
++ * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
++ *	on this channel.
+  *
+  */
+ enum ieee80211_channel_flags {
+@@ -125,6 +129,8 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
+ 	IEEE80211_CHAN_INDOOR_ONLY	= 1<<9,
+ 	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
++	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
++	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
+ };
+ 
+ #define IEEE80211_CHAN_NO_HT40 \
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 513bfd7..0592032 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2358,6 +2358,10 @@ enum nl80211_band_attr {
+  *	connected to an AP with DFS and radar detection on the UNII band (it is
+  *	up to user-space, i.e., wpa_supplicant to perform the required
+  *	verifications)
++ * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
++ *	on this channel in current regulatory domain.
++ * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
++ *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+@@ -2384,6 +2388,8 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_DFS_CAC_TIME,
+ 	NL80211_FREQUENCY_ATTR_INDOOR_ONLY,
+ 	NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
++	NL80211_FREQUENCY_ATTR_NO_20MHZ,
++	NL80211_FREQUENCY_ATTR_NO_10MHZ,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index c61bcdd..aee2dc2 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -616,12 +616,14 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 		width = 5;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_10:
++		prohibited_flags |= IEEE80211_CHAN_NO_10MHZ;
+ 		width = 10;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
+ 		if (!ht_cap->ht_supported)
+ 			return false;
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
++		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 		width = 20;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_40:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 232d15c..2f0a1b1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -567,6 +567,13 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 				   struct ieee80211_channel *chan,
+ 				   bool large)
+ {
++	/* Some channels must be completely excluded from the
++	 * list to protect old user-space tools from breaking
++	 */
++	if (!large && chan->flags &
++	    (IEEE80211_CHAN_NO_10MHZ | IEEE80211_CHAN_NO_20MHZ))
++		return 0;
++
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
+ 			chan->center_freq))
+ 		goto nla_put_failure;
+@@ -620,6 +627,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 		if ((chan->flags & IEEE80211_CHAN_GO_CONCURRENT) &&
+ 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_GO_CONCURRENT))
+ 			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
++			goto nla_put_failure;
++		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
++		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
++			goto nla_put_failure;
+ 	}
+ 
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+-- 
+1.9.2
+
