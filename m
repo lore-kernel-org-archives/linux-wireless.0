@@ -1,31 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094AbaDKIAi (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:45021 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbaDOQTX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2014 04:00:38 -0400
-Message-ID: <1397203220.4420.7.camel@jlt4.sipsolutions.net> (sfid-20140411_100041_456798_326B79C3)
-Subject: Re: [PATCH] cfg80211: reg: set DFS CAC time in case of custom regd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 11 Apr 2014 10:00:20 +0200
-In-Reply-To: <1397044032-2723-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140409_134736_078810_42F4AA17)
-References: <1397044032-2723-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20140409_134736_078810_42F4AA17)
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 15 Apr 2014 12:19:23 -0400
+Date: Tue, 15 Apr 2014 17:18:08 +0100
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: linux-sunxi <linux-sunxi@googlegroups.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [linux-sunxi] Re: [PATCH 7/7] ARM: sun7i: cubietruck: enable
+ bluetooth module
+Message-ID: <20140415171808.6d60d134@alan.etchedpixels.co.uk> (sfid-20140415_181939_850749_E80B05CB)
+In-Reply-To: <CAGb2v643HyvFdhQ0znreB8ENXHWpcx6tFwdeU7VuU8KYWcT4ZA@mail.gmail.com>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	<1397544101-18135-8-git-send-email-wens@csie.org>
+	<20140415144215.GG3207@lukather>
+	<CAGb2v643HyvFdhQ0znreB8ENXHWpcx6tFwdeU7VuU8KYWcT4ZA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-04-09 at 13:47 +0200, Janusz Dziedzic wrote:
-> Set DFS CAC time also in case of using custom
-> and strict regulatory from drivers. In other case
-> we could have unset DFS CAC time directly after
-> driver loaded and before issue regulatory set from
-> user mode.
+> For our use case here, which is a bluetooth chip connected on the UART,
+> there is no in kernel representation or driver to tie them to. Same goes
+> for UART based GPS chips. They just so happen to require toggling a GPIO,
+> and maybe enabling a specific clock, to get it running. Afterwards,
+> accessing it is done solely from userspace. For our Broadcom chips, the
+> user has to upload its firmware first, then designate the tty as a Bluetooth
+> HCI using hciattach.
 
-Applied.
+Somewhat similar on some ordinary PC systems. ACPI describes the
+properties there but the same things apply - its a device mostly
+controlled by a blob of userspace and having a bunch of GPIO lines that
+do stuff like turn it on and off.
 
-johannes
+Is there any reason for not describing it properly and letting the
+userspace code fish it out of the devicetree ?
 
+There's no fundamental reason that it's magically different because of
+the location of the driver. Given in a few cases we have a choice of
+kernel or user space devices for the same hardware thats even more true ?
+
+Failing that we have a long standing proposal never implemented for
+adding GPIO awareness to the tty layer. There are a few other use
+cases for it including gpio widgets with serial and either some of the
+modem lines hacked in via GPIO or with additional control lines for
+stuff like smartcard reading interfaces.
+
+https://lkml.org/lkml/2012/5/16/288
+
+In hindsight I'd do it slightly differently and make each "gpio" a pair
+of values (purpose,number).
+
+Alan
