@@ -1,65 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:49753 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786AbaDAHyL convert rfc822-to-8bit (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:41131 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751029AbaDOOpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 03:54:11 -0400
-Received: by mail-wi0-f169.google.com with SMTP id hm4so4308450wib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Apr 2014 00:54:09 -0700 (PDT)
+	Tue, 15 Apr 2014 10:45:05 -0400
+Date: Tue, 15 Apr 2014 16:44:16 +0200
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 6/7] net: rfkill: gpio: add clock-frequency device tree
+ property
+Message-ID: <20140415144416.GH3207@lukather> (sfid-20140415_164559_620068_408D6013)
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-7-git-send-email-wens@csie.org>
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEew5X5Ux9Wpi0g0xqiMk2ULxoeEQvb8SkXBkpmQDjMCxQ@mail.gmail.com>
-References: <1395409651-26120-1-git-send-email-michal.kazior@tieto.com>
-	<1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
-	<1396262371-6466-14-git-send-email-michal.kazior@tieto.com>
-	<CAB3XZEcYPPruXSxndMcbaek0ozLZV9GGpqKOAO0WPC6CcT-j7Q@mail.gmail.com>
-	<CA+BoTQkXWscUL-XLL1sBNb=eXahafoCUazsNKVFU08X9bPdBPQ@mail.gmail.com>
-	<CAB3XZEew5X5Ux9Wpi0g0xqiMk2ULxoeEQvb8SkXBkpmQDjMCxQ@mail.gmail.com>
-Date: Tue, 1 Apr 2014 09:54:09 +0200
-Message-ID: <CA+BoTQ=DXmWuYtX8XmHuD1Lia=h8pFhJ1wXOSBv+bURzrFREmQ@mail.gmail.com> (sfid-20140401_095414_908195_4F0BB526)
-Subject: Re: [PATCH v3 13/13] mac80211: implement multi-vif in-place reservations
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4LFBTxd4L5NLO6ly"
+In-Reply-To: <1397544101-18135-7-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 April 2014 09:46, Eliad Peller <eliad@wizery.com> wrote:
-> On Tue, Apr 1, 2014 at 8:10 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 31 March 2014 18:15, Eliad Peller <eliad@wizery.com> wrote:
->>> On Mon, Mar 31, 2014 at 1:39 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
 
-[...]
+--4LFBTxd4L5NLO6ly
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->>>> +err_unassign:
->>>> +       list_for_each_entry_continue_reverse(sdata, &ctx->reserved_vifs,
->>>> +                                            reserved_chanctx_list)
->>>> +               drv_unassign_vif_chanctx(local, sdata, ctx);
->>>> +       ieee80211_del_chanctx(local, new_ctx);
->>>> +err_revert:
->>>> +       kfree_rcu(new_ctx, rcu_head);
->>>> +       WARN_ON(ieee80211_add_chanctx(local, ctx));
->>>> +       list_add_rcu(&ctx->list, &local->chanctx_list);
->>>> +       list_for_each_entry(sdata, &ctx->reserved_vifs, reserved_chanctx_list) {
->>>> +               sdata->radar_required = sdata->reserved_radar_required;
->>>> +               rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
->>>> +               WARN_ON(drv_assign_vif_chanctx(local, sdata, ctx));
->>>> +       }
->>> seems like the list_for_each_entry should actually be under err_unassign?
->>
->> No. This is correct. The err_unassign is used to bail out if any
->> drv_assign_vif_chanctx fails mid-way. We want to unassign only those
->> vif-chanctx we only managed to assign.
->>
-> sure. i failed to explain - i'm referring only to the radar_required
-> swapping - it seems to happen only later.
+On Tue, Apr 15, 2014 at 02:41:40PM +0800, Chen-Yu Tsai wrote:
+> Some devices, such as Broadcom Bluetooth devices, require a specific
+> clock rate for the clock tied to the rfkill device. Add a clock-frequency
+> property so we can specify this from the device tree.
+>=20
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
-You mean to split the list_for_each_entry from err_revert into 2
-parts: one that reverts the radar_required swapping and the other one
-re-assigning vif-chanctx? I'm not really sure if that's necessary? The
-`ctx` (old chanctx) should still be configured as it was wrt radar
-detection. Or is there something that I'm missing?
+I think such a property belongs to the device that requires it, and
+not to the rfkill that controls it.
 
+Maxime
 
-Michał
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+--4LFBTxd4L5NLO6ly
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTTUXAAAoJEBx+YmzsjxAgsCUP/iA4SYjm+jYyJMCgApwwXNKw
+w/VFkZpJUOm3raQQ/L+Xi2KSm4+xkXr7G3MbsIX1hkst2uuuOFUjSTsejkFrHbj2
+hhH5cgZyag3qYI5ZYFxqF9kKpe0x7TdyWWGM9MMH3Gi2DgkwtnoA537XxSK8DRK7
+mfczf7sIuimy/sqZugnYFntFw+r61jBz0NyG6C34tXYkyUHQwqVVKkCP+ev7d5j+
+vgNXAgMNutArLpTVJtQcTDrRXgAmjx2jCVekk2+N4Xiv1Whil9uIZ93i99cMBJSR
+72sDpenoaXYsBH5MZAusnxHwft/TFq/xlEVXvIwKHb3pn9JinbRNkMrN0rAFOCVM
+MOIau7s1R2DrEjMEQGxrxQayjXbZWDsZu5Xv/OkRCSNK69dpL9Wpz/WHvwIhsvSy
+EhW7DAztAiUMeYuc137Re68gU4VLCNrtRTe4UuZKwkW25ps9DJtrz4b6bqA/Ct/X
+I4Fnuk/v0uY6VYW03gmJTF8Oa0bztz4tRcgirfZVzFvYjUBc0VQp9l6DcuBohi7k
+DXZyQmCHq0x0AcVvxuiDi7GJ+sIJHbq8TBiaK2NbpzTJADlG0XN2vojfb0Jyr6jk
+zv1qLqTCv40qt8xqiOoSolLcsYQZTjpd4t9y4oIyjKU8g874WpSDHlb7EXT01UYS
+iA+4sA6cuZ/t/O3VwhpC
+=ksvN
+-----END PGP SIGNATURE-----
+
+--4LFBTxd4L5NLO6ly--
