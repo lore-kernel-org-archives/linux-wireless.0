@@ -1,72 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:38533 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751004AbaDTWhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 18:37:09 -0400
-Date: Mon, 21 Apr 2014 00:36:51 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36238 "EHLO
+	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbaDOHWV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2014 03:22:21 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [wireless-next][PATCH 1/2] b43: ssb: refuse to support more
- than IEEE 802.11 core
-Message-ID: <20140421003651.594f14c0@wiggum> (sfid-20140421_003752_027534_38F2F02E)
-In-Reply-To: <CACna6rwjEP8qZ+SWQEOREmr=4wBJSgeNY_mG5GQpOWem7Jgrgw@mail.gmail.com>
-References: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
-	<20140420205452.79a95330@wiggum>
-	<CACna6rwjEP8qZ+SWQEOREmr=4wBJSgeNY_mG5GQpOWem7Jgrgw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/dFn4sBEf8+D7yznyTBJvMi+"; protocol="application/pgp-signature"
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-sunxi@googlegroups.com
+Subject: [PATCH 6/7] net: rfkill: gpio: add clock-frequency device tree property
+Date: Tue, 15 Apr 2014 14:41:40 +0800
+Message-Id: <1397544101-18135-7-git-send-email-wens@csie.org> (sfid-20140415_092507_403739_75CAE4FB)
+In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/dFn4sBEf8+D7yznyTBJvMi+
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Some devices, such as Broadcom Bluetooth devices, require a specific
+clock rate for the clock tied to the rfkill device. Add a clock-frequency
+property so we can specify this from the device tree.
 
-On Sun, 20 Apr 2014 21:29:01 +0200
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt | 2 ++
+ net/rfkill/rfkill-gpio.c                                 | 5 +++++
+ 2 files changed, 7 insertions(+)
 
-> Do you think it's OK to push this small patchset and continue cleaning
-> process later? I'm afraid it may take a lot of time to clean in
-> completely and patchset would be huge. That's why I wanted to handle
-> it with small steps.
+diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+index a23da65..67b5edb 100644
+--- a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
++++ b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+@@ -11,6 +11,7 @@ Required properties:
+ 
+ Optional properties:
+ - clocks		: phandle to clock to enable/disable
++- clock-frequency	: desired clock rate for the given clock
+ 
+ Example:
+ 
+@@ -21,4 +22,5 @@ Example:
+ 		gpios = <&pio 7 18 0>;
+ 		gpio-names = "reset";
+ 		clocks = <&clk_out_a>;
++		clock-frequency = <32678>;
+ 	};
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index a174359..14ac8c1 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -38,6 +38,7 @@ struct rfkill_gpio_data {
+ 
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
++	uint32_t		clk_frequency;
+ 
+ 	bool			clk_enabled;
+ };
+@@ -90,6 +91,7 @@ static int rfkill_gpio_dt_probe(struct device *dev,
+ 	rfkill->name = np->name;
+ 	of_property_read_string(np, "rfkill-name", &rfkill->name);
+ 	of_property_read_u32(np, "rfkill-type", &rfkill->type);
++	of_property_read_u32(np, "clock-frequency", &rfkill->clk_frequency);
+ 
+ 	return 0;
+ }
+@@ -122,6 +124,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+ 
++	if (!IS_ERR(rfkill->clk) && rfkill->clk_frequency > 0)
++		clk_set_rate(rfkill->clk, rfkill->clk_frequency);
++
+ 	gpio = devm_gpiod_get_index(&pdev->dev, "reset", 0);
+ 	if (!IS_ERR(gpio)) {
+ 		ret = gpiod_direction_output(gpio, 0);
+-- 
+1.9.1
 
-Yes absolutely. The changes are huge and small steps are appreciated.
-Try moving variables one group at a time. Not one huge patch that moves eve=
-rything.
-Nobody would be able to review that.
-
---=20
-Michael.
-
-----
-Please use PGP/GPG encryption.
-Key-ID: F532BE1D908D8B0E
---------
-
---Sig_/dFn4sBEf8+D7yznyTBJvMi+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTVEwGAAoJEPUyvh2QjYsOV6kP/32m9fCISuXRTxI1CN0Aer5a
-SxBn/oXbldXKENzmQxFLa/gQ/FT9h89pyUnV4k8uycBrObhio/BKTHaOYGx7pwy9
-ef2gMJw97cI+3q4MFYrcp3tPcRcUyo6xpe5Ntl5aE5PgAqtxEhZgxAN8E9k8yuHE
-9eCv816qMmcxcpla9tBYPpGRfOexQCr5pRGl4W2qjv1NsTXCX4JxMaWEftP4tV6E
-KQXOufNg52fdipxWD8mGGj/NBYEHNZnoQm4bPbJ5i7WXkBAjOJNLbiq5MfRGf0a3
-idyiMrBJRT168jZY+pXU7Pn9Z7VeZZvRFt8JKbcFqpIIo7HSGV6u9hx3iMxe+piu
-DHP8/nabUvWR0I/06J1bkH1NsGvWogDnNuw9RH+tRYqlyzNM8AfYiKLO77/7wPnu
-c0zUZjcyw6eOeTVUJArSZmRBv10SRx0SGop0L/CyvBTBHt4T7St3dN/NlaRM4hS8
-zokVLuMavkxBUZZtZOT5HpxzdR7NlS4eyCiOCXhggtryucR00+7470xaGL8wr8AH
-3vjziy4wbJPvEgZM7m9yZo+as6KC9X/MbbN8zWfYW8Bf7y4c7rLciFi88SpQftEC
-0oiv+65yFGdar47nwnucM6JtfmY3UVyxXQUsL47dBzTL3V9Y1gx5KZxa+3GVAqMS
-ohFAYT7s43OYg6Ihmc8j
-=PDCr
------END PGP SIGNATURE-----
-
---Sig_/dFn4sBEf8+D7yznyTBJvMi+--
