@@ -1,82 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37185 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbaDAFcr convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37226 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930AbaDOGeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Apr 2014 01:32:47 -0400
-Received: by mail-wi0-f177.google.com with SMTP id cc10so4416067wib.10
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Mar 2014 22:32:46 -0700 (PDT)
+	Tue, 15 Apr 2014 02:34:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>,
+	<ath10k@lists.infradead.org>
+Subject: Pull request: ath 20140415
+Date: Tue, 15 Apr 2014 09:34:31 +0300
+Message-ID: <87mwfndrt4.fsf@kamboji.qca.qualcomm.com> (sfid-20140415_083441_877831_517932B2)
 MIME-Version: 1.0
-In-Reply-To: <53399E42.2090504@candelatech.com>
-References: <53399E42.2090504@candelatech.com>
-Date: Tue, 1 Apr 2014 07:32:46 +0200
-Message-ID: <CA+BoTQmfBGJxwFnpq+7dE7MgL_db5gkCvRVfhk9YFAAPLZQwHQ@mail.gmail.com> (sfid-20140401_073251_448808_1D703722)
-Subject: Re: ath10k: ieee80211_restart_work called with hardware scan in progress
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 March 2014 18:56, Ben Greear <greearb@candelatech.com> wrote:
-> This came from a customer (demo) system.  Firmware is 10.1.389 based, modified
-> by us.  It has lots of known issues, but I haven't seen the warning
-> below before, and not sure it is specifically a bug with ath10k or not.
+Hi John,
 
-Hmm..
+here's a pull request for ath6kl and ath10k with changes accumulated
+just before and during the merge window. Please let me know if there any
+problems.
 
+Here's the list of changes:
 
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
-> Mar 31 13:49:54 ct521-5332 kernel: ath10k: could not start hw scan (-108)
+----------------------------------------------------------------------
 
--108 = ESHUTDOWN. This can be a result of calling ath10k_halt() IOW
-driver is stopping by mac80211 request or ath10k_core_restart() was
-called. I suppose the latter is the case here.
+For ath6kl Kalle fixed a bunch of checkpatch warnings.
 
-ath10k_halt() calls ieee80211_scan_completed(hw, true) if necessary.
-But since it only sets 1 or 2 bits in local->scanning in mac80211 and
-schedules local->scan_work I suspect you can end up having
-local->restart_work scheduled sooner in some cases (both use different
-workqueues: scan_work uses per-hw queue, restart_work uses global
-system queue) and see the following:
+In ath10k we had more changes, major ones being:
 
-> Mar 31 13:49:54 ct521-5332 kernel: ieee80211_restart_work called with hardware scan in progress
-> Mar 31 13:49:54 ct521-5332 kernel: Modules linked in: nf_nat_ipv4 nf_nat fuse 8021q mrp garp stp llc macvlan pktgen coretemp hwmon sunrpc ipv6 uinput
-> snd_hda_codec_realtek snd_hda_codec_generic ath10k_pci ath10k_core snd_hda_intel mac80211 snd_hda_codec snd_hwdep snd_seq snd_seq_device iTCO_wdt e1000e
-> microcode ath gpio_ich snd_pcm iTCO_vendor_support ppdev ptp snd_timer parport_pc snd cfg80211 parport serio_raw pps_core soundcore pcspkr i2c_i801 lpc_ich i915
-> drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iptable_nat]
-> Mar 31 13:49:54 ct521-5332 kernel: CPU: 0 PID: 11818 Comm: kworker/0:0 Tainted: G        WC   3.14.0-rc7-wl-ath+ #4
-> Mar 31 13:49:54 ct521-5332 kernel: Hardware name: To be filled by O.E.M. To be filled by O.E.M./To be filled by O.E.M., BIOS 4.6.3 09/05/2011
-> Mar 31 13:49:54 ct521-5332 kernel: Workqueue: events ieee80211_restart_work [mac80211]
-> Mar 31 13:49:54 ct521-5332 kernel: 0000000000000009 ffff8800bd865d68 ffffffff815ab0a5 ffff88022bc0ec38
-> Mar 31 13:49:54 ct521-5332 kernel: ffff8800bd865db8 ffff8800bd865da8 ffffffff810c1aa8 ffff8800bd865d88
-> Mar 31 13:49:54 ct521-5332 kernel: ffffffffa03858ce ffff8802214d5650 ffff8802214d45e0 ffff8802214d5650
-> Mar 31 13:49:54 ct521-5332 kernel: Call Trace:
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff815ab0a5>] dump_stack+0x4e/0x71
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810c1aa8>] warn_slowpath_common+0x77/0x91
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffffa03858ce>] ? ieee80211_restart_work+0x49/0x68 [mac80211]
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810c1b56>] warn_slowpath_fmt+0x41/0x43
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffffa03858ce>] ieee80211_restart_work+0x49/0x68 [mac80211]
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d52af>] process_one_work+0x162/0x216
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d5724>] worker_thread+0x12f/0x1fd
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d55f5>] ? rescuer_thread+0x268/0x268
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810d55f5>] ? rescuer_thread+0x268/0x268
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da37f>] kthread+0xa0/0xa8
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da2df>] ? __kthread_parkme+0x5c/0x5c
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff815b5b4c>] ret_from_fork+0x7c/0xb0
-> Mar 31 13:49:54 ct521-5332 kernel: [<ffffffff810da2df>] ? __kthread_parkme+0x5c/0x5c
-> Mar 31 13:49:54 ct521-5332 kernel: ---[ end trace fd8ccdaa79168e68 ]---
+* fix memory allocation failures after a firmware crash (Michal)
 
-It seems to me that any mac80211-driver can hit this as long as it
-requests a restart during a scan while something queued via
-ieee80211_queue_work() blocks (that something could be driver worker)
-long enough.
+* some rework of DFS configuration to enable it correctly in all cases
+  (Michal)
 
+* add a new firmware crash option to make it possible to crash 10.1
+  firmware for testing purposes (Marek P)
 
-Michał
+* fix RTS/CTS protection in certain cases (Marek K)
+
+* fix wrong RSSI and rate reporting in some cases (Janusz)
+
+* fix firmware stats reporting (Chun, Ben & Bartosz)
+
+----------------------------------------------------------------------
+
+The following changes since commit 70dd77b4c50da518b57b8b9b125a8c9aabe9bc1a:
+
+  ath10k: do not overwrite max_antenna_gain (2014-03-07 10:14:10 +0200)
+
+are available in the git repository at:
+
+  git://github.com/kvalo/ath.git for-linville
+
+for you to fetch changes up to 4bfee8e8c13fc9477eb9420efd5a5d12e32ac614:
+
+  ath10k: improve htc tx credit debugging prints (2014-04-11 08:35:56 +0300)
+
+----------------------------------------------------------------
+Bartosz Markowski (1):
+      ath10k: update wal_dbg_tx_stats structure with missing parameter.
+
+Ben Greear (4):
+      ath10k: better firmware loading error messages
+      ath10k: add otp and firmware boot error messages
+      ath10k: fix getting stats from firmware
+      ath10k: add the Rx rate in FW stats
+
+Chun-Yeow Yeoh (3):
+      ath10k: allow the supported rate change by reassociate peer
+      ath10k: fix the peer mac address in getting stats
+      ath10k: add extra pdev stats on 10.1 firmware
+
+Janusz Dziedzic (12):
+      ath10k: add ath10k_htt_rx_amsdu_allowed function
+      ath10k: Fill per-ppdu info in rx_info only once
+      ath10k: move rx related functions to htt_rx.c
+      ath10k: rename process_rx_rates to ath10k_htt_rx_h_rates
+      ath10k: introduce ieee80211_rx_status to htt_rx_info
+      ath10k: setup rx channel per ppdu
+      ath10k: kill not needed fields from htt_rx_info
+      ath10k: return error when ath10k_htt_rx_amsdu_pop() fail
+      ath10k: improve way we play with attention flags
+      ath10k: finally kill htt_rx_info
+      ath10k: introduce rx_status htt template
+      ath10k: fix rssi and rate reporting
+
+Kalle Valo (18):
+      ath6kl: fix struct hif_scatter_req list handling
+      ath6kl: fix blank lines before and after braces
+      ath6kl: use braces on both arms of if statement
+      ath6kl: remove spaces before semicolon
+      ath6kl: remove unnecessary line continuations
+      ath6kl: update Kconfig descriptions
+      ath10k: separate result parameter in ath10k_bmi_execute()
+      ath10k: check otp.bin result
+      ath10k: unify warning messages in mac.c
+      ath10k: cleanup ath10k_pci_wait_for_target_init()
+      ath10k: add module parameter to disable cold reset
+      ath10k: fix name of target_ps module parameter
+      ath10k: advertise only firmware API 2 files
+      ath10k: delete ar_pci->fw_indicator_address
+      ath10k: improve pci debug messages
+      ath10k: add module parameter values to the pci info print
+      ath10k: print chip id during boot
+      ath10k: cleanup debug messages in ath10k_wmi_event_host_swba()
+
+Marek Kwaczynski (1):
+      ath10k: add recalc RTS/CTS protection method
+
+Marek Puzyniak (2):
+      ath10k: add soft/hard firmware crash option to simulate_fw_crash
+      ath10k: update regulatory domain settings for 10.x firmware
+
+Michal Kazior (7):
+      ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()
+      ath10k: split ce initialization and allocation
+      ath10k: deinit copy engine before resetting
+      ath10k: refactor monitor code
+      ath10k: reorder functions
+      ath10k: refactor radar detection code
+      ath10k: improve htc tx credit debugging prints
+
+ drivers/net/wireless/ath/ath10k/bmi.c      |   13 +-
+ drivers/net/wireless/ath/ath10k/bmi.h      |    2 +-
+ drivers/net/wireless/ath/ath10k/ce.c       |  356 +++++++------
+ drivers/net/wireless/ath/ath10k/ce.h       |   15 +-
+ drivers/net/wireless/ath/ath10k/core.c     |   85 ++--
+ drivers/net/wireless/ath/ath10k/core.h     |   18 +-
+ drivers/net/wireless/ath/ath10k/debug.c    |  109 +++-
+ drivers/net/wireless/ath/ath10k/htc.c      |   12 +-
+ drivers/net/wireless/ath/ath10k/htt.h      |   21 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c   |  513 ++++++++++++-------
+ drivers/net/wireless/ath/ath10k/hw.h       |    1 +
+ drivers/net/wireless/ath/ath10k/mac.c      |  763 +++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/pci.c      |  219 +++++---
+ drivers/net/wireless/ath/ath10k/pci.h      |    3 -
+ drivers/net/wireless/ath/ath10k/txrx.c     |  183 -------
+ drivers/net/wireless/ath/ath10k/txrx.h     |    1 -
+ drivers/net/wireless/ath/ath10k/wmi.c      |   62 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h      |   98 +++-
+ drivers/net/wireless/ath/ath6kl/Kconfig    |   30 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    9 +-
+ drivers/net/wireless/ath/ath6kl/core.c     |    6 +-
+ drivers/net/wireless/ath/ath6kl/debug.c    |    4 -
+ drivers/net/wireless/ath/ath6kl/debug.h    |    2 +-
+ drivers/net/wireless/ath/ath6kl/hif.c      |    3 -
+ drivers/net/wireless/ath/ath6kl/hif.h      |    4 +-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |   23 +-
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   10 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |    1 -
+ drivers/net/wireless/ath/ath6kl/main.c     |   10 +-
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   17 +-
+ drivers/net/wireless/ath/ath6kl/target.h   |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   31 +-
+ drivers/net/wireless/ath/ath6kl/usb.c      |    2 -
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   19 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    1 -
+ 35 files changed, 1499 insertions(+), 1149 deletions(-)
+
+-- 
+Kalle Valo
