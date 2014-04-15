@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44977 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758051AbaD2P7v (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:41004 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751006AbaDOOaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Apr 2014 11:59:51 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: remove BUG_ON usage
-Date: Tue, 29 Apr 2014 17:59:39 +0200
-Message-Id: <1398787180-6494-1-git-send-email-johannes@sipsolutions.net> (sfid-20140429_175956_612097_DDAB5305)
+	Tue, 15 Apr 2014 10:30:05 -0400
+Date: Tue, 15 Apr 2014 16:26:26 +0200
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 3/7] net: rfkill: gpio: use
+ clk_prepare_enable/clk_disable_unprepare
+Message-ID: <20140415142626.GE3207@lukather> (sfid-20140415_163013_462759_2C5179F1)
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-4-git-send-email-wens@csie.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SNIs70sCzqvszXB4"
+In-Reply-To: <1397544101-18135-4-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-These really can't trigger unless somebody messes up the code,
-but don't make debugging it needlessly complicated, WARN and
-return instead of BUG_ON().
+--SNIs70sCzqvszXB4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 2 +-
- net/wireless/sme.c  | 6 ++++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+On Tue, Apr 15, 2014 at 02:41:37PM +0800, Chen-Yu Tsai wrote:
+> rfkill-gpio calls clk_enable() without first calling clk_prepare(),
+> resulting in a warning and no effect. Switch to clk_prepare_enable()
+> and clk_disable_unprepare.
+>=20
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index b3ff3697239a..f509da4d9be9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -690,7 +690,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	rtnl_lock();
- 	rdev->wiphy.registered = false;
- 
--	BUG_ON(!list_empty(&rdev->wdev_list));
-+	WARN_ON(!list_empty(&rdev->wdev_list));
- 
- 	/*
- 	 * First remove the hardware from everywhere, this makes
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index e2923a3f2e5c..4bc21a2b1989 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -149,7 +149,8 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
- 	case CFG80211_CONN_SCAN_AGAIN:
- 		return cfg80211_conn_scan(wdev);
- 	case CFG80211_CONN_AUTHENTICATE_NEXT:
--		BUG_ON(!rdev->ops->auth);
-+		if (WARN_ON(!rdev->ops->auth))
-+			return -EOPNOTSUPP;
- 		wdev->conn->state = CFG80211_CONN_AUTHENTICATING;
- 		return cfg80211_mlme_auth(rdev, wdev->netdev,
- 					  params->channel, params->auth_type,
-@@ -161,7 +162,8 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
- 	case CFG80211_CONN_AUTH_FAILED:
- 		return -ENOTCONN;
- 	case CFG80211_CONN_ASSOCIATE_NEXT:
--		BUG_ON(!rdev->ops->assoc);
-+		if (WARN_ON(!rdev->ops->assoc))
-+			return -EOPNOTSUPP;
- 		wdev->conn->state = CFG80211_CONN_ASSOCIATING;
- 		if (wdev->conn->prev_bssid_valid)
- 			req.prev_bssid = wdev->conn->prev_bssid;
--- 
-1.9.0
+Acked-by: Maxime Ripard <maxime.ripard@free-electrons.com>
 
+Maxime
+
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+--SNIs70sCzqvszXB4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTTUGSAAoJEBx+YmzsjxAgltsP/25whL2Q+l/Vks71a1UiTrhM
+7S8uB+SizMEbO6n0hhZIAOZnP1R+X/owngIBfoK+CDYrjLREszCNwgepClaxLvNk
+mP8usqbhoUv+NNqhunB5ZAxgEwK8YEXIF2LT+R7gOTlkVJlJib0JXgIdS9wTkt3P
+wB75DJqAhfc3KZFDMvL+Qri85tyYbk+U81NLwAcUVyXCMRcBgIwRrRZ696hjlDDx
+sLl5LJy81LrvcxCmPPl8cG8ZgCaynpQ4WCWfeKB7KDbrYb6rym0oDVgZ14eqC0yP
+lrn5zXiIK/hK7CuJEHSoLXY36pnS3Ib1PIRyAU/OdB3Rlq3h0So+PlcNBA62OLO+
+TOnIi3Qetq3gLhJ2u6KcOOVJa8UbYHmpGLP6iZhvIImz58i1RpaPoKbQV76zyiyB
+9Qx7nCOpazS8BjaVQsWo3JjBZGzK5nPVZzVhK4Fagy6rCQj5yv2yIHbsPpKuAU/V
+ImmVsiWHMXbtlwH5hCDA3grNvXcmgzbt5th4bh8C5gg2TXLGJETTJ45OgO7ONTin
+PwPtLeau5el9VzX03giXcgArMumnkB1UHZ0dTRErCtNIaRaoWeJQO4EOKksRcqtZ
+KIBEkDaWJAV1hn7feM3KxJeSI6QjplROHwxWdLPo3OC6Vl3SyjHiJiOKd/xrjTKw
+KzCpKQ2LpTh+GLkrJdVh
+=p77M
+-----END PGP SIGNATURE-----
+
+--SNIs70sCzqvszXB4--
