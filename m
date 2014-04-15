@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:45001 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714AbaDXXDs convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:65435 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753727AbaDORI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Apr 2014 19:03:48 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hi2so1864322wib.11
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2014 16:03:47 -0700 (PDT)
-MIME-Version: 1.0
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Fri, 25 Apr 2014 01:03:26 +0200
-Message-ID: <CA+V6dmjwfsrDSDQWHHCFbW9L14GnzifoSjH5UOS4zTSusRtYow@mail.gmail.com> (sfid-20140425_010418_489005_A49FE239)
-Subject: Odd network behaviors with an Intel Wireless 7260
-To: linux-wireless@vger.kernel.org
-Cc: Ryan Houdek <sonicadvance1@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Apr 2014 13:08:26 -0400
+Message-ID: <1397581703.8212.5.camel@x220> (sfid-20140415_190903_078912_8F069EC8)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	openwrt-devel@lists.openwrt.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	open@hauke-m.de, list@hauke-m.de, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, antonynpavlov@gmail.com,
+	Florian Fainelli <florian@openwrt.org>
+Date: Tue, 15 Apr 2014 19:08:23 +0200
+In-Reply-To: <20140213201421.GJ22203@tuxdriver.com>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+	 <1391971686-9517-10-git-send-email-richard@nod.at>
+	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
+	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+	 <52F8C373.9060108@rempel-privat.de>
+	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+	 <20140213201421.GJ22203@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi linux-wireless folks,
+On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
+> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
+> > John, can you delay the merging of this patch for a few months, I will
+> > try to prepare the necessary patches to add AR231x architecture to the
+> > kernel and send them to linux-mips.
+> 
+> OK -- looking forward to your patches.
 
-I have been getting some weird network behaviors with my Intel
-Wireless 7260 adapter that I cannot explain by anything else than a
-driver/firmware bug. I'm out of ideas on how to debug this issue.
+So am I. Is there any news on this front?
 
-My network configuration is fairly basic: IPv4 over 802.11n,
-AP/default gateway is 192.168.0.1, my Intel 7260 STA is 192.168.0.2.
-Several AP/gateway hardware and software have been tested and have
-shown the same problem.
 
-On 192.168.0.2 I am constantly running some ICMP pings to 192.168.0.1
-and 8.8.8.8. Randomly, the pings from 192.168.0.2 to 8.8.8.8 start
-failing (responses never received) while the pings to 192.168.0.1
-continue to succeed without any trouble. When tcpdumping on the
-gateway, I see the pings to 8.8.8.8 being successfully forwarded and
-responses being sent back to the STA (so this is not a routing issue
-on the gateway - and again, I've tested several combinations of hw/sw
-on the gateway).
+Paul Bolle
 
-Another example: my TCP sessions on the Intel 7260 STA to the internet
-will start randomly freezing, but my TCP sessions going through
-tunnels on another LAN host (let's say, 192.168.0.3) to the internet
-will work fine.
-
-After 30s-1min30 the problem fixes itself and packets start being
-received by the STA again.
-
-I only see this from the Intel 7260 host and not from any other WLAN
-device connected to the AP, which is another strong evidence that the
-issue is on the STA side.
-
-I've shared this with some other people using an Intel 7260 adapter on
-Linux and found someone having a similar issue. I'm not sure how
-widespread it is and could not find an existing bug report.
-
-What are the next steps to get useful debugging information out of
-this issue? I unfortunately do not have the required hardware to do
-monitor-mode sniffing of what's happening at the L2 level.
-
-Thanks,
-
--- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
