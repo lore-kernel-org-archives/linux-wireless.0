@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51045 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753678AbaD0Ohr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Apr 2014 10:37:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.15] ath9k_hw: do not lower ANI setting below default on AR913x
-Date: Sun, 27 Apr 2014 16:37:39 +0200
-Message-Id: <1398609459-42175-1-git-send-email-nbd@openwrt.org> (sfid-20140427_163752_007281_3FDBD16A)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1048 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbaDOQOB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2014 12:14:01 -0400
+Date: Tue, 15 Apr 2014 19:13:56 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Allow HT capa override to add 40 MHz intolerant
+Message-ID: <20140415161356.GA14293@jouni.qca.qualcomm.com> (sfid-20140415_181408_065355_35CF34C8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the amount of noise fluctuates strongly, low immunity settings
-can sometimes disrupt signal detection on AR913x chips. When that
-happens, no OFDM/CCK errors are reported anymore, and ANI tunes the
-radio to the lowest immunity settings.
-Usually rx/tx fails as well in that case.
+This can be useful for testing purposes to confirm valid AP behavior on
+HT 20/40 co-existence functionality.
 
-To fix this, keep noise immunity settings at or above ANI default level,
-which will keep radio parameters at or above INI values.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/mac80211/ht.c   |   18 +++++++++++++++++-
+ net/mac80211/main.c |    3 ++-
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 6d47783..ba502a2 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -155,6 +155,9 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 		ATH9K_ANI_RSSI_THR_LOW,
- 		ATH9K_ANI_RSSI_THR_HIGH);
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index c150b68..7ddb260 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -31,6 +31,18 @@ static void __check_htcap_disable(struct ieee80211_ht_cap *ht_capa,
+ 	}
+ }
  
-+	if (AR_SREV_9100(ah) && immunityLevel < ATH9K_ANI_OFDM_DEF_LEVEL)
-+		immunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
++static void __check_htcap_enable(struct ieee80211_ht_cap *ht_capa,
++				  struct ieee80211_ht_cap *ht_capa_mask,
++				  struct ieee80211_sta_ht_cap *ht_cap,
++				  u16 flag)
++{
++	__le16 le_flag = cpu_to_le16(flag);
 +
- 	if (!scan)
- 		aniState->ofdmNoiseImmunityLevel = immunityLevel;
- 
-@@ -235,6 +238,9 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
- 		BEACON_RSSI(ah), ATH9K_ANI_RSSI_THR_LOW,
- 		ATH9K_ANI_RSSI_THR_HIGH);
- 
-+	if (AR_SREV_9100(ah) && immunityLevel < ATH9K_ANI_CCK_DEF_LEVEL)
-+		immunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
++	if ((ht_capa_mask->cap_info & le_flag) &&
++	    (ht_capa->cap_info & le_flag))
++		ht_cap->cap |= flag;
++}
 +
- 	if (ah->opmode == NL80211_IFTYPE_STATION &&
- 	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_LOW &&
- 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
+ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 				     struct ieee80211_sta_ht_cap *ht_cap)
+ {
+@@ -59,7 +71,7 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 	smask = (u8 *)(&ht_capa_mask->mcs.rx_mask);
+ 
+ 	/* NOTE:  If you add more over-rides here, update register_hw
+-	 * ht_capa_mod_msk logic in main.c as well.
++	 * ht_capa_mod_mask logic in main.c as well.
+ 	 * And, if this method can ever change ht_cap.ht_supported, fix
+ 	 * the check in ieee80211_add_ht_ie.
+ 	 */
+@@ -86,6 +98,10 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 	__check_htcap_disable(ht_capa, ht_capa_mask, ht_cap,
+ 			      IEEE80211_HT_CAP_MAX_AMSDU);
+ 
++	/* Allow user to enable 40 MHz intolerant bit. */
++	__check_htcap_enable(ht_capa, ht_capa_mask, ht_cap,
++			     IEEE80211_HT_CAP_40MHZ_INTOLERANT);
++
+ 	/* Allow user to decrease AMPDU factor */
+ 	if (ht_capa_mask->ampdu_params_info &
+ 	    IEEE80211_HT_AMPDU_PARM_FACTOR) {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4c1bf61..d1d50f7 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -446,7 +446,8 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
+ 	.cap_info = cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 				IEEE80211_HT_CAP_MAX_AMSDU |
+ 				IEEE80211_HT_CAP_SGI_20 |
+-				IEEE80211_HT_CAP_SGI_40),
++				IEEE80211_HT_CAP_SGI_40 |
++				IEEE80211_HT_CAP_40MHZ_INTOLERANT),
+ 	.mcs = {
+ 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
+ 			     0xff, 0xff, 0xff, 0xff, 0xff, },
 -- 
-1.8.5.2 (Apple Git-48)
+1.7.9.5
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
