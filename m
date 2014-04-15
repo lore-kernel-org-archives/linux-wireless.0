@@ -1,98 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33759 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755968AbaD1PrA (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:41013 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751116AbaDOOaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Apr 2014 11:47:00 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath9k_hw: update ar9300 initvals
-Date: Mon, 28 Apr 2014 21:17:07 +0530
-Message-ID: <1398700028-28410-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20140428_174727_525627_2C1ECCC4)
+	Tue, 15 Apr 2014 10:30:05 -0400
+Date: Tue, 15 Apr 2014 16:27:00 +0200
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 4/7] net: rfkill: gpio: fix reversed clock enable state
+Message-ID: <20140415142700.GF3207@lukather> (sfid-20140415_163048_280325_D1F72E72)
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-5-git-send-email-wens@csie.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2FkSFaIQeDFoAt0B"
+In-Reply-To: <1397544101-18135-5-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * rfsat gainchange hysteresis of rf_gain stuck with large
-   interference present.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h | 2 +-
- drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h | 2 +-
- drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h | 2 +-
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h     | 2 +-
- drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+--2FkSFaIQeDFoAt0B
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 0a6163e..c38399b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -410,7 +410,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
--	{0x00009e40, 0x0d261820},
-+	{0x00009e40, 0x0d261800},
- 	{0x00009e4c, 0x00001004},
- 	{0x00009e50, 0x00ff03f1},
- 	{0x00009e54, 0x00000000},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-index f76139b..2c42ff0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-@@ -592,7 +592,7 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
--	{0x00009e40, 0x0d261820},
-+	{0x00009e40, 0x0d261800},
- 	{0x00009e4c, 0x00001004},
- 	{0x00009e50, 0x00ff03f1},
- 	{0x00009fc0, 0x803e4788},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
-index 0ac8be9..2154efc 100644
---- a/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
-@@ -231,7 +231,7 @@ static const u32 ar9331_1p2_baseband_core[][2] = {
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
--	{0x00009e40, 0x0d261820},
-+	{0x00009e40, 0x0d261800},
- 	{0x00009e4c, 0x00001004},
- 	{0x00009e50, 0x00ff03f1},
- 	{0x00009fc0, 0x803e4788},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-index a01f0ed..9cf7cca 100644
---- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-@@ -318,7 +318,7 @@ static const u32 ar9340_1p0_baseband_core[][2] = {
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
--	{0x00009e40, 0x0d261820},
-+	{0x00009e40, 0x0d261800},
- 	{0x00009e4c, 0x00001004},
- 	{0x00009e50, 0x00ff03f1},
- 	{0x00009e54, 0x00000000},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-index e6aec2c..a5ca652 100644
---- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-@@ -90,7 +90,7 @@ static const u32 ar9580_1p0_baseband_core[][2] = {
- 	{0x00009e30, 0x06336f77},
- 	{0x00009e34, 0x6af6532f},
- 	{0x00009e38, 0x0cc80c00},
--	{0x00009e40, 0x0d261820},
-+	{0x00009e40, 0x0d261800},
- 	{0x00009e4c, 0x00001004},
- 	{0x00009e50, 0x00ff03f1},
- 	{0x00009e54, 0x00000000},
--- 
-1.9.2
+On Tue, Apr 15, 2014 at 02:41:38PM +0800, Chen-Yu Tsai wrote:
+> rfkill-gpio has clk_enabled =3D blocked, which is true when rfkill
+> blocks the device. This results in calling clock enable/disable at
+> the wrong time. Reversing the value fixes this.
+>=20
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
+Acked-by: Maxime Ripard <maxime.ripard@free-electrons.com>
+
+Thanks!
+Maxime
+
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+--2FkSFaIQeDFoAt0B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIbBAEBAgAGBQJTTUG0AAoJEBx+YmzsjxAg6CEP93OnZUrmCgxusnW1kCg8OUN3
+OJXIJEg+vKvI3AkFuKDN5l5CVmWngT1TnaRj4TvPOza1YaL+TorEIKIxZUEhj+QV
+AP1ViZW+xUJhC6Ky6dYKp3UI7s3xh28Vev6tuPI+G26B+FfAwTp0nVmujXyBT0cD
+CL3CgLCCS5SBBaZonIIL9roHdhBoZJUseFyXNSCmYDBnp0keMxpz3CBs5WnFaE0o
+3vE+KUWoYy90WzbxiZjxaqxAiHOHL2gkev0XQFusvr31ZeZ15KkdZILfo9YXVhTT
+/u0XkQXh1D16QKZWnoW072pNwZSm/XezbSLUp+XJRVETa3X6PI7GNyhba0U7i8J6
+Q0gqZAUC2chIRBzcR0P9rYqAQztDjxFRwSJIiYB+z470Igw0t3VSFg4VQY3NKpP0
+g1XIM320KquxHsDxY0jNw7ITTxYDIEzj+mbJYPgvO4coommUbuTfVInp/+a6jlXi
+byiALmU4Ol8qv9vhU7FTaeQiC/TbVcwp8PF4rKGojb1CRg10vTDDFbZNkUCrZcSI
+noZSGdzKgOymtUN/SQFnA83m19lAUJkjJnVfZ32JGCNq97oBiL9DmGDSHpCnhsl7
+4eA9srwBuZmbS9cTJTCoMhKUpUq6DXI8yZ487jikrmtZTSrUD1reC27PK9heh/rE
+DhFHwxwBAR3+gTbpBdU=
+=7eiL
+-----END PGP SIGNATURE-----
+
+--2FkSFaIQeDFoAt0B--
