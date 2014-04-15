@@ -1,70 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:28286 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750861AbaDKGtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Apr 2014 02:49:11 -0400
-Date: Fri, 11 Apr 2014 09:56:24 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Josh Boyer <jwboyer@fedoraproject.org>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Oops in acpi_gpiochip_add on MacBookPro with Linux
- v3.14-12042-g69cd9eba3886
-Message-ID: <20140411065624.GB19349@intel.com> (sfid-20140411_084932_361908_0AEE62E2)
-References: <CA+5PVA5VBns=hkOSViucrpT340uG0=hgrWqf=LYHTBFAe74tBg@mail.gmail.com>
- <CACna6ry+FOYykZpzycEjDA+ncGNLk6eXkwadXy548h9dgU1Bgw@mail.gmail.com>
- <CA+5PVA4ijLmwRKHD4RYE6qSqkN7p8v1GB9w9GAGAJKG45bBTnw@mail.gmail.com>
- <20140410124045.GX19349@intel.com>
- <CACRpkdaBg5KjvksHRB3z2R6KehYcFC=4MEHedfcE6tP4GTh+Qw@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:33924 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaDOVAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Apr 2014 17:00:07 -0400
+Message-ID: <534D9DD1.2070004@wwwdotorg.org> (sfid-20140415_230032_764411_8E8E3450)
+Date: Tue, 15 Apr 2014 15:00:01 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACRpkdaBg5KjvksHRB3z2R6KehYcFC=4MEHedfcE6tP4GTh+Qw@mail.gmail.com>
+To: Chen-Yu Tsai <wens@csie.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+CC: Alexandre Courbot <gnurou@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+	netdev@vger.kernel.org, linux-sunxi@googlegroups.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 5/7] net: rfkill: gpio: add device tree support
+References: <1397544101-18135-1-git-send-email-wens@csie.org> <1397544101-18135-6-git-send-email-wens@csie.org>
+In-Reply-To: <1397544101-18135-6-git-send-email-wens@csie.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 08:47:23PM +0200, Linus Walleij wrote:
-> On Thu, Apr 10, 2014 at 2:40 PM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > On Thu, Apr 10, 2014 at 08:22:12AM -0400, Josh Boyer wrote:
-> >> On Thu, Apr 10, 2014 at 2:50 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> >> > 2014-04-09 23:09 GMT+02:00 Josh Boyer <jwboyer@fedoraproject.org>:
-> >> >> With Linux v3.14-12042-g69cd9eba3886 I get an oops from the bcma
-> >> >> module on the MacBookPro 10,2 I have here.  This works fine with Linux
-> >> >> v3.14-7333-g59ecc26004e7.  There have been no changes between those
-> >> >> two versions to bcma itself, but the GPIO merge did go in that window.
-> >> >>  I can attempt to do a bisect tomorrow, but looking over some of the
-> >> >> GPIO commits it seems pretty relevant to the ACPI GPIO changes.  I'm
-> >> >> hoping someone here has an idea on what the issue might be and has
-> >> >> some possible things for me to test for fixes.
-> >> >
-> >> > Bug report: https://lkml.org/lkml/2014/3/24/262
-> >> > Patch: https://lkml.org/lkml/2014/3/24/293
-> >> > Tested by Sabrina: https://lkml.org/lkml/2014/3/24/304
-> >> > (all links are for the same thread).
-> >> >
-> >> > Now you simply have to find above patch in some git tree :) Not sure
-> >> > if it's already in Linus's one.
-> >>
-> >> Ah, wonderful.  I now wish I would have found those in my searching
-> >> before doing the bisect.  Oh well.  For what it's worth, my bisect
-> >> landed on the same commit.
-> >>
-> >> The fix isn't in Linus' tree or linux-next.  I'm guessing Mika is
-> >> either still on vacation, or hasn't sent out the formal fix yet.
-> >
-> > No, not on vacation anymore (unfortunately). I did send the formal patch
-> > already:
-> >
-> > https://lkml.org/lkml/2014/3/31/135
-> >
-> > but it isn't merged to Linus' GPIO tree yet.
-> 
-> I've queued this for fixes!
-> 
-> Will send upstream ASAP.
+On 04/15/2014 12:41 AM, Chen-Yu Tsai wrote:
 
-Thanks!
+Patch description?
+
+> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+
+> +Required properties:
+
+> +- gpios		: At most two GPIO phandles
+> +- gpio-names	: Shall be "reset" or "shutdown", matching gpios.
+> +		  If both are provided, the "reset" GPIO is toggled first.
+
+As Maxime mentioned, this is an unusual way of defining GPIOs. If this
+new way is acceptable, then I'd suggest more precise wording, e.g.:
+
+- gpios: Must contain an entry for each entry in gpio-names.
+  See ../gpio/gpio.txt for details.
+- gpio-names: May contain any or all of the following entries:
+  - reset
+  - shutdown
+
+> +- rfkill-type	: Type of RFKILL device: 1 for WiFi, 2 for BlueTooth, etc.
+> +		  See include/uapi/linux/rfkill.h for all valid values
+
+It would be nice if include/dt-bindings/rfkill-gpio.h existed and
+contained e.g.:
+
+#define RFKILL_TYPE_BLUETOOTH 2
+
+So that:
+
+> +Example:
+> +
+> +	rfkill_bt {
+...
+> +		rfkill-type = <2>;
+
+Could be written as:
+
+		rfkill-type = <RFKILL_TYPE_BLUETOOTH>;
+
