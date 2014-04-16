@@ -1,154 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:56691 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756333AbaDQN2D (ORCPT
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:59813 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754399AbaDPGMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 09:28:03 -0400
-Received: by mail-pb0-f54.google.com with SMTP id ma3so382313pbc.27
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 06:28:02 -0700 (PDT)
-From: "Zhao, Gang" <gamerh2o@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 5/6] mac80211: replace wiphy_debug() with wiphy_dbg()
-Date: Thu, 17 Apr 2014 21:27:13 +0800
-Message-Id: <b3169c1d090d6e5b97ff397585dcea6d548227b3.1397741141.git.gamerh2o@gmail.com> (sfid-20140417_152807_896230_D0C96462)
-In-Reply-To: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
-References: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
-In-Reply-To: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
-References: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
+	Wed, 16 Apr 2014 02:12:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140415142024.GD3207@lukather>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-2-git-send-email-wens@csie.org> <20140415142024.GD3207@lukather>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Wed, 16 Apr 2014 15:12:26 +0900
+Message-ID: <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com> (sfid-20140416_081318_537705_5202B2FC)
+Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
+ based lookup
+To: Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dynamic debug function wiphy_dbg() is more convenient for debugging,
-and if user doesn't enable CONFIG_DYNAMIC_DEBUG, it will fall back to
-normal static debug, just as what wiphy_debug() does.
+On Tue, Apr 15, 2014 at 11:20 PM, Maxime Ripard
+<maxime.ripard@free-electrons.com> wrote:
+> Hi Chen-Yu,
+>
+> On Tue, Apr 15, 2014 at 02:41:35PM +0800, Chen-Yu Tsai wrote:
+>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
+>> phandles by name only, through gpios/gpio-names, and not by index.
+>
+> IIRC, gpios only uses the *-gpios properties, and not gpios/gpio-names
+> pattern seen on various other things.
+>
+> Is it some new property you introduce? If so, please add it to the
+> documentation.
+>
+> Now, I'm not sure that having two distinct representations of GPIOs in
+> the DT is a good thing. Yes, it's looking odd compared to other
+> similar bindings, but it's what we have to deal with.
 
-When all the users of wiphy_debug() are gone, wiphy_debug() can be
-removed.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Zhao, Gang <gamerh2o@gmail.com>
----
- net/mac80211/cfg.c  |  6 +++---
- net/mac80211/main.c |  8 ++++----
- net/mac80211/mlme.c | 10 +++++-----
- net/mac80211/rate.c |  4 ++--
- net/mac80211/rx.c   |  6 +++---
- net/mac80211/tx.c   |  4 ++--
- 6 files changed, 19 insertions(+), 19 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index aaa59d7..4ac047e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2097,9 +2097,9 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
- 
- 	sdata->tx_conf[params->ac] = p;
- 	if (drv_conf_tx(local, sdata, params->ac, &p)) {
--		wiphy_debug(local->hw.wiphy,
--			    "failed to set TX queue parameters for AC %d\n",
--			    params->ac);
-+		wiphy_dbg(local->hw.wiphy,
-+			  "failed to set TX queue parameters for AC %d\n",
-+			  params->ac);
- 		return -EINVAL;
- 	}
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b055f6a5..aed2f5d 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -993,8 +993,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	result = ieee80211_wep_init(local);
- 	if (result < 0)
--		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
--			    result);
-+		wiphy_dbg(local->hw.wiphy, "Failed to initialize wep: %d\n",
-+			  result);
- 
- 	local->hw.conf.flags = IEEE80211_CONF_IDLE;
- 
-@@ -1005,8 +1005,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	result = ieee80211_init_rate_ctrl_alg(local,
- 					      hw->rate_control_algorithm);
- 	if (result < 0) {
--		wiphy_debug(local->hw.wiphy,
--			    "Failed to initialize rate control algorithm\n");
-+		wiphy_dbg(local->hw.wiphy,
-+			  "Failed to initialize rate control algorithm\n");
- 		goto fail_rate;
- 	}
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dee50ae..1e1bdd2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3523,11 +3523,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
--			wiphy_debug(local->hw.wiphy,
--				    "%s: No probe response from AP %pM"
--				    " after %dms, disconnecting.\n",
--				    sdata->name,
--				    bssid, probe_wait_ms);
-+			wiphy_dbg(local->hw.wiphy,
-+				  "%s: No probe response from AP %pM"
-+				  " after %dms, disconnecting.\n",
-+				  sdata->name,
-+				  bssid, probe_wait_ms);
- 
- 			ieee80211_sta_connection_lost(sdata, bssid,
- 				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY, false);
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 8fdadfd..b91be51 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -739,8 +739,8 @@ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
- 	WARN_ON(local->rate_ctrl);
- 	local->rate_ctrl = ref;
- 
--	wiphy_debug(local->hw.wiphy, "Selected rate control algorithm '%s'\n",
--		    ref->ops->name);
-+	wiphy_dbg(local->hw.wiphy, "Selected rate control algorithm '%s'\n",
-+		  ref->ops->name);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 216c45b..c86a4d6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3176,9 +3176,9 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 		skb = skb_copy(skb, GFP_ATOMIC);
- 		if (!skb) {
- 			if (net_ratelimit())
--				wiphy_debug(local->hw.wiphy,
--					"failed to copy skb for %s\n",
--					sdata->name);
-+				wiphy_dbg(local->hw.wiphy,
-+					  "failed to copy skb for %s\n",
-+					  sdata->name);
- 			return true;
- 		}
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 19d36d4..48650da 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1483,8 +1483,8 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 		return 0;
- 
- 	if (pskb_expand_head(skb, head_need, tail_need, GFP_ATOMIC)) {
--		wiphy_debug(local->hw.wiphy,
--			    "failed to reallocate TX buffer\n");
-+		wiphy_dbg(local->hw.wiphy,
-+			  "failed to reallocate TX buffer\n");
- 		return -ENOMEM;
- 	}
- 
--- 
-1.9.0
-
+Mmmm I *think* I somehow remember a discussion about this topic
+recently, but I cannot find it. Maybe Chen-yu could point us to the
+conclusion of this discussion and the rationale for (re)implementing
+named GPIOs this way?
