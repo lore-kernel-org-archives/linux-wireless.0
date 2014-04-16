@@ -1,85 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:61196 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933338AbaDINfz (ORCPT
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:43922 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134AbaDPJUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 09:35:55 -0400
-Received: by mail-ee0-f45.google.com with SMTP id d17so1885015eek.18
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 06:35:53 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, luca@coelho.fi,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 03/13] mac80211: prevent chanctx overcommit
-Date: Wed,  9 Apr 2014 15:29:24 +0200
-Message-Id: <1397050174-26121-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_153654_433749_61CEB77C)
-In-Reply-To: <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
-References: <1396262371-6466-1-git-send-email-michal.kazior@tieto.com>
- <1397050174-26121-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 16 Apr 2014 05:20:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <1397581703.8212.5.camel@x220>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+ <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
+ <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+ <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+ <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+ <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+ <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+ <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Wed, 16 Apr 2014 13:20:10 +0400
+Message-ID: <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com> (sfid-20140416_112122_608952_3ACF13DB)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	Florian Fainelli <florian@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not allocate more channel contexts than a
-driver is capable for currently matching interface
-combination.
+2014-04-15 21:08 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> On Thu, 2014-02-13 at 15:14 -0500, John W. Linville wrote:
+>> On Wed, Feb 12, 2014 at 02:50:30PM +0400, Sergey Ryazanov wrote:
+>> > John, can you delay the merging of this patch for a few months, I will
+>> > try to prepare the necessary patches to add AR231x architecture to the
+>> > kernel and send them to linux-mips.
+>>
+>> OK -- looking forward to your patches.
+>
+> So am I. Is there any news on this front?
+>
 
-This allows the ieee80211_vif_reserve_chanctx() to
-act as a guard against breaking interface
-combinations.
+Work still in progress :(
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 57b8ab1..fcb2cd8 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -9,6 +9,25 @@
- #include "ieee80211_i.h"
- #include "driver-ops.h"
- 
-+static int ieee80211_num_chanctx(struct ieee80211_local *local)
-+{
-+	struct ieee80211_chanctx *ctx;
-+	int num = 0;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	list_for_each_entry(ctx, &local->chanctx_list, list)
-+		num++;
-+
-+	return num;
-+}
-+
-+static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
-+{
-+	lockdep_assert_held(&local->chanctx_mtx);
-+	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
-+}
-+
- static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
- {
- 	switch (sta->bandwidth) {
-@@ -751,13 +770,16 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
- 			 * context, reserve our current context
- 			 */
- 			new_ctx = curr_ctx;
--		} else {
-+		} else if (ieee80211_can_create_new_chanctx(local)) {
- 			/* create a new context and reserve it */
- 			new_ctx = ieee80211_new_chanctx(local, chandef, mode);
- 			if (IS_ERR(new_ctx)) {
- 				ret = PTR_ERR(new_ctx);
- 				goto out;
- 			}
-+		} else {
-+			ret = -EBUSY;
-+			goto out;
- 		}
- 	}
- 
 -- 
-1.8.5.3
-
+BR,
+Sergey
