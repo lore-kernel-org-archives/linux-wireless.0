@@ -1,97 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:51087 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753722AbaDDPjU (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:51267 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755688AbaDPKyV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Apr 2014 11:39:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140404141319.GB2147@redhat.com>
-References: <1396536536-26423-1-git-send-email-richard.genoud@gmail.com>
- <20140404080453.GA1448@redhat.com> <533E8242.8080203@gmail.com> <20140404141319.GB2147@redhat.com>
-From: Richard Genoud <richard.genoud@gmail.com>
-Date: Fri, 4 Apr 2014 17:38:58 +0200
-Message-ID: <CACQ1gAgMNM89mM_m_=G85-DAD1xSoo0j6E8vWTZ2cYhg48zNsA@mail.gmail.com> (sfid-20140404_173942_894262_006FC176)
-Subject: Re: [PATCH] rt2x00: Endless loop on hub port power down
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Apr 2014 06:54:21 -0400
+Received: by mail-ee0-f49.google.com with SMTP id c41so8596498eek.8
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 03:54:20 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] cfg80211: reg: track crda request
+Date: Wed, 16 Apr 2014 12:53:41 +0200
+Message-Id: <1397645621-32447-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140416_125432_443733_8F6929E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-04-04 16:13 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
-> On Fri, Apr 04, 2014 at 11:58:26AM +0200, Richard Genoud wrote:
->> On 04/04/2014 10:04, Stanislaw Gruszka wrote:
->> > On Thu, Apr 03, 2014 at 04:48:56PM +0200, Richard Genoud wrote:
->> >> I've met an endless (or at least very long) loop if I power down the usb
->> >> port on witch a usb wifi key is plugged.
->> >> (Ok, it's not very smart to power down a usb port when a usb key is in
->> >> used... but still, I think that should not lead to an endless loop).
->> >>
->> >> I have a lot of:
->> >> ieee80211 phy1: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71
->> >>
->> >> (-71==-EPROTO)
->> >>
->> >> How to reproduce:
->> >> - plug an usb wifi key
->> >> - ip link set wlan0 up
->> >> - hub-ctrl -b usb_bus -d usb_device -P usb_port -p 0
->> >>
->> >> hub-ctrl source: https://github.com/codazoda/hub-ctrl.c/blob/master/hub-ctrl.c
->> >>
->> >> The following patch prevents the endless loop, but I'm really not sure
->> >> that The Right Way To Do It (R)
->> >
->> > If device disappear, we should get -ENODEV status, why we get -EPROTO ?
->>
->> I trace it down, and the EPROTO status comes from ctx.status (returned from usb_start_wait_urb() in drivers/usb/core/message.c)
->> And, in my case, the ctx.status is set to EPROTO in qtd_copy_status() ( drivers/usb/host/ehci-q.c )
->> in the code:
->> } else if (token & QTD_STS_XACT) {
->>       /* timeout, bad CRC, wrong PID, etc */
->>       ehci_dbg(ehci, "devpath %s ep%d%s 3strikes\n",
->>               urb->dev->devpath,
->>               usb_pipeendpoint(urb->pipe),
->>               usb_pipein(urb->pipe) ? "in" : "out");
->>       status = -EPROTO;
->>
->> enabling this log, I get:
->> atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
->> atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
->> atmel-ehci 700000.ehci: devpath 2.1 ep1in 3strikes
->> atmel-ehci 700000.ehci: devpath 2.1 ep0in 3strikes
->> ieee80211 phy0: rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed -71
->
-> Thanks, ehci driver behaviour seems to be fine. Could you check if updating
-> rt2800 firmware (I assume you have some RT2800 usb dongle) change the situation,
-> i.e. we stop getting -EPROTO errors. To install new firmware, you can download
-> rt2870.bin blob from:
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-January/005610.html
-> and need to replace /lib/firmware/rt2870.bin file.
->
-> Stanislaw
-It's the same behaviour:
+Track CRDA request and handle timeout when no answer
+from CRDA. This could happen when crda is not available
+yet (not mounted fs), eg. during OS startup and cfg80211
+built-in to the kernel.
+Before we could stuck when processing last request
+without ability to process current and any further
+regulatory requests.
 
-dmesg | grep firm
-[   13.648437] ieee80211 phy0: rt2x00lib_request_firmware: Info -
-Loading firmware file 'rt2870.bin'
-[   13.656250] ieee80211 phy0: rt2x00lib_request_firmware: Info -
-Firmware detected - version: 0.33
-# disable_usb_port 1
-# [   31.398437] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x07 failed for offset 0x1700 with error -71
-[   31.804687] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x07 failed for offset 0x0438 with error -71
-[   32.226562] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x07 failed for offset 0x0438 with error -71
-[   32.640625] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x06 failed for offset 0x0408 with error -71
-[   33.062500] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x06 failed for offset 0x0408 with error -71
-[   33.617187] ieee80211 phy0: rt2x00usb_vendor_request: Error -
-Vendor Request 0x07 failed for offset 0x1700 with error -71
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Tested-by: Sander Eikelenboom <linux@eikelenboom.it>
+Tested-by: Colleen Twitty <colleen@cozybit.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/reg.c |   45 ++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 34 insertions(+), 11 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 220c4a2..a2d2719 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -512,6 +512,10 @@ reg_call_crda(struct regulatory_request *request)
+ {
+ 	if (call_crda(request->alpha2))
+ 		return REG_REQ_IGNORE;
++
++	/* Setup timeout to check if CRDA is alive */
++	queue_delayed_work(system_power_efficient_wq,
++			   &reg_timeout, msecs_to_jiffies(3142));
+ 	return REG_REQ_OK;
+ }
+ 
+@@ -1542,8 +1546,7 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
+ 
+-	if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
+-		cancel_delayed_work(&reg_timeout);
++	cancel_delayed_work(&reg_timeout);
+ 
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+@@ -1810,6 +1813,9 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
+ 
++	REG_DBG_PRINT("Process regulatory hint called by %s\n",
++		      reg_initiator_name(reg_request->initiator));
++
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+ 
+@@ -1818,12 +1824,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		reg_process_hint_core(reg_request);
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_USER:
+-		treatment = reg_process_hint_user(reg_request);
+-		if (treatment == REG_REQ_IGNORE ||
+-		    treatment == REG_REQ_ALREADY_SET)
+-			return;
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, msecs_to_jiffies(3142));
++		reg_process_hint_user(reg_request);
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (!wiphy)
+@@ -1864,7 +1865,8 @@ static void reg_process_pending_hints(void)
+ 
+ 	/* When last_request->processed becomes true this will be rescheduled */
+ 	if (lr && !lr->processed) {
+-		REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
++		REG_DBG_PRINT("Pending %s regulatory request, waiting for it to be processed...\n",
++			      reg_initiator_name(lr->initiator));
+ 		return;
+ 	}
+ 
+@@ -2615,9 +2617,30 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
+ 
+ static void reg_timeout_work(struct work_struct *work)
+ {
+-	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
++	struct regulatory_request *lr;
++
+ 	rtnl_lock();
+-	restore_regulatory_settings(true);
++
++	lr = get_last_request();
++	REG_DBG_PRINT("Timeout while waiting for CRDA to reply %s request, restoring regulatory settings\n",
++		      reg_initiator_name(lr->initiator));
++
++	switch (lr->initiator) {
++	case NL80211_REGDOM_SET_BY_CORE:
++	case NL80211_REGDOM_SET_BY_DRIVER:
++		/* Call CRDA again for last request */
++		reg_process_hint(lr);
++		break;
++	case NL80211_REGDOM_SET_BY_USER:
++		restore_regulatory_settings(true);
++		break;
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		restore_regulatory_settings(false);
++		break;
++	default:
++		WARN_ON(1);
++		break;
++	}
+ 	rtnl_unlock();
+ }
+ 
+-- 
+1.7.9.5
+
