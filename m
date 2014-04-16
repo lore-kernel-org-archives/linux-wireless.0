@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41759 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbaDNSaR (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:50107 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048AbaDPGQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Apr 2014 14:30:17 -0400
-Date: Mon, 14 Apr 2014 14:22:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2014-04-13
-Message-ID: <20140414182242.GF27324@tuxdriver.com> (sfid-20140414_203031_780713_A012E66F)
-References: <534A8A49.2030100@gmail.com>
- <534A96DB.90505@gmail.com>
+	Wed, 16 Apr 2014 02:16:11 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so10362999wgh.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Apr 2014 23:16:10 -0700 (PDT)
+Message-ID: <534E2027.1020007@gmail.com> (sfid-20140416_081616_856990_87BEBD2A)
+Date: Wed, 16 Apr 2014 08:16:07 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <534A96DB.90505@gmail.com>
+To: Fariya <fariyaf@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: Submission of firmware for driver RSI
+References: <533EDA4E.9020308@gmail.com> <CAG+h2qhpYYCeCJujURwgzt87MrLS2x=daeS0Ac+5p3jV_gWZTw@mail.gmail.com>
+In-Reply-To: <CAG+h2qhpYYCeCJujURwgzt87MrLS2x=daeS0Ac+5p3jV_gWZTw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 13, 2014 at 04:53:31PM +0300, Emmanuel Grumbach wrote:
-> 
-> 
-> On 04/13/2014 03:59 PM, Emmanuel Grumbach wrote:
-> > Hi John,
-> > 
-> > This is a first pull request of fixes for 3.15.
-> > 
-> > I have new device IDs and a new firmware API. These are the trivial ones. The less trivial ones are Johannes's fix that delays the enablement of an interrupt coalescing hardware until after association - this fixes a few connection problems seen in the field. Eyal has a bunch of rate control fixes. I decided to add these for 3.15 because they fix some disconnection and packet loss scenarios which were reported by the field. I also have a fix for a memory leak that happens only with a very new NIC.
-> > 
-> > I'll be with low connectivity for the coming week and a half, so I want hope you won't have any issues with this pull request. If you do have issues, please let me know, but I am not sure I'll be able to handle the problems immediately.
-> > 
-> > Thanks!
-> > a6bc92803e7f765e02c923cf37c8e280e729642aa6bc92803e7f765e02c923cf37c8e280e729642aa6bc92803e7f765e02c923cf37c8e280e729642a
-> > The following changes since commit 67b3bd4e65f0854aca70e0134d59b1daede49504:
-> > 
-> >   brcmfmac: fallback to mimo_bw_cap for older firmwares (2014-03-20 11:55:41 -0400)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> > 
-> > for you to fetch changes up to f59913dfbb8ce07d7fb527f67b26791aa849aa1c:
-> > 
-> 
-> I had a typo in the stable address in one of the patches - new HEAD: a6bc92803e7f765e02c923cf37c8e280e729642a
+On 04/16/2014 04:18 AM, Fariya wrote:
 
-Pulling now...
+> I submitted the RSI 91x firmware [around 2 weeks back] for inclusion
+> in the git linux-firmware repo to Ben Hutchings, as well as emailed it
+> to the linux-wireless mailing list. However, I have so far not got any
+> confirmation of it being included in the linux-firmware repo. Now that
+> the RSI 91x driver is part of the latest kernel, I would of course
+> want the firmware to be in, as well. Can someone suggest how do I go
+> about this/know the status of this?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The README says:
+
+>> Maintainers are really busy, so don't expect a prompt reply.
+
+patience...
