@@ -1,85 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43375 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017AbaDWViS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Apr 2014 17:38:18 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id s3NLcHgs030242
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2014 14:38:17 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1kemxer3xy-7
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Apr 2014 14:38:17 -0700
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 23 Apr 2014 14:37:09 -0700
-Subject: RE: mwifiex: add firmware dump feature for PCIe
-Message-ID: <477F20668A386D41ADCC57781B1F70430F70A2A9EA@SC-VEXCH1.marvell.com> (sfid-20140423_233827_187267_10C6DF1D)
-References: <20140423143029.GA28228@mwanda>
-In-Reply-To: <20140423143029.GA28228@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:1080 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753240AbaDPNJV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2014 09:09:21 -0400
+Message-ID: <534E80B9.5010702@redhat.com> (sfid-20140416_150949_228990_D825A854)
+Date: Wed, 16 Apr 2014 15:08:09 +0200
+From: Hans de Goede <hdegoede@redhat.com>
 MIME-Version: 1.0
+To: linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+CC: Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-gpio@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [linux-sunxi] Re: [PATCH 7/7] ARM: sun7i: cubietruck: enable
+ bluetooth module
+References: <1397544101-18135-1-git-send-email-wens@csie.org> <1397544101-18135-8-git-send-email-wens@csie.org> <20140415144215.GG3207@lukather> <CAGb2v643HyvFdhQ0znreB8ENXHWpcx6tFwdeU7VuU8KYWcT4ZA@mail.gmail.com> <20140416094428.GK3207@lukather>
+In-Reply-To: <20140416094428.GK3207@lukather>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Hi,
 
-> Hello Amitkumar Karwar,
+On 04/16/2014 11:44 AM, Maxime Ripard wrote:
+> Hi,
 > 
-> The patch e050c76fcf49: "mwifiex: add firmware dump feature for PCIe"
-> from Apr 17, 2014, leads to the following static checker warning:
+> Please try to keep me in CC, even though the ML doesn't make it easy..
 > 
-> 	drivers/net/wireless/mwifiex/pcie.c:2252 mwifiex_pcie_fw_dump_work()
-> 	error: we previously assumed 'adapter' could be null (see line 2251)
-
-Thanks for reporting this error.
-
+> On Wed, Apr 16, 2014 at 12:06:59AM +0800, Chen-Yu Tsai wrote:
+>>>> @@ -139,4 +152,16 @@
+>>>>       reg_usb2_vbus: usb2-vbus {
+>>>>               status = "okay";
+>>>>       };
+>>>> +
+>>>> +     rfkill_bt {
+>>>> +             compatible = "rfkill-gpio";
+>>>> +             pinctrl-names = "default";
+>>>> +             pinctrl-0 = <&bt_pwr_pin_cubietruck>, <&clk_out_a_pins_a>;
+>>>> +             clocks = <&clk_out_a>;
+>>>> +             clock-frequency = <32768>;
+>>>> +             gpios = <&pio 7 18 0>; /* PH18 */
+>>>> +             gpio-names = "reset";
+>>>> +             rfkill-name = "bt";
+>>>> +             rfkill-type = <2>;
+>>>> +     };
+>>>
+>>> Hmmm, I don't think that's actually right.
+>>>
+>>> If you have such a device, then I'd expect it to be represented as a
+>>> full device in the DT, probably with one part for the WiFi, one part
+>>> for the Bluetooth, and here the definition of the rfkill device that
+>>> controls it.
+>>
+>> The AP6210 is not one device, but 2 separate chips in one module. Each
+>> chip has its own controls and interface. They just so happen to share
+>> the same enclosure. Even 2-in-1 chips by Broadcom have separate controls
+>> and interfaces. The WiFi side is most likely connected via SDIO, while
+>> the Bluetooth side is connected to a UART, and optionally I2S for sound.
 > 
-> drivers/net/wireless/mwifiex/pcie.c
->   2228  /* This function dump firmware memory to file */
->   2229  static void mwifiex_pcie_fw_dump_work(struct work_struct *work)
->   2230  {
->   2231          struct mwifiex_adapter *adapter =
->   2232                          container_of(work, struct mwifiex_adapter, iface_work);
->   2233          unsigned int reg, reg_start, reg_end;
->   2234          u8 *dbg_ptr;
->   2235          struct timeval t;
->   2236          u8 dump_num = 0, idx, i, read_reg, doneflag = 0;
->   2237          enum rdwr_status stat;
->   2238          u32 memory_size;
->   2239          u8 filename[MAX_FULL_NAME_LEN];
->   2240          mm_segment_t fs;
->   2241          loff_t pos;
->   2242          u8 *end_ptr;
->   2243          u8 *name_prefix = "/var/log/fw_dump_";
->   2244          struct memory_type_mapping mem_type_mapping_tbl[] = {
->   2245                  {"ITCM", NULL, NULL, 0xF0},
->   2246                  {"DTCM", NULL, NULL, 0xF1},
->   2247                  {"SQRAM", NULL, NULL, 0xF2},
->   2248                  {"IRAM", NULL, NULL, 0xF3},
->   2249          };
->   2250
->   2251          if (!adapter) {
->                      ^^^^^^^
-> Check.
+> It's even easier to represent then.
 > 
->   2252                  dev_err(adapter->dev, "Could not dump firmwware info\n");
->                                 ^^^^^^^^^^^^
-> Dereference.
-
-You are right, adapter is NULL here. I will send a patch to fix it.
-
+>>> But tying parts of the device to the rfkill that controls it, such as
+>>> the clocks, or the frequency it runs at seems just wrong.
+>>
+>> I understand where you're coming from. For devices on buses that require
+>> drivers (such as USB, SDIO) these properties probably should be tied to
+>> the device node.
+>>
+>> For our use case here, which is a bluetooth chip connected on the UART,
+>> there is no in kernel representation or driver to tie them to. Same goes
+>> for UART based GPS chips. They just so happen to require toggling a GPIO,
+>> and maybe enabling a specific clock, to get it running. Afterwards,
+>> accessing it is done solely from userspace. For our Broadcom chips, the
+>> user has to upload its firmware first, then designate the tty as a Bluetooth
+>> HCI using hciattach.
+>>
+>> We are using the rfkill device as a on-off switch.
 > 
->   2253                  return;
->   2254          }
+> I understand your point, but the fact that it's implemented in
+> user-space, or that UART is not a bus (which probably should be), is
+> only a Linux specific story, and how it's implemented in Linux (even
+> if the whole rfkill node is another one, but let's stay on topic).
 > 
-> The main question is why are we writing to /var and /tmp anyway instead
-> of putting this in debugfs or sysfs?
+> This is a huge abstraction leak.
+> 
+> Let's say you need the I2S stream you mentionned for some
+> reason. Would you tie the audio stream to the rfkill node as well?
+> I'm sorry, but from an hardware description perspective, it makes no
+> sense.
 
-AFAIK, the debugfs or sysfs cannot store/hold the files we retrieve from firmware at the scene. We write fw_dump files to rootfs so that the files are stored even if the system reboots due to hung_task timeout. 
+Sorry wens, but I have to agree with Maxime here. What I really would
+like to see is the bluetooth part of the AP6210 be a child node of the
+uart node like how i2c slaves are child nodes of the i2c master node.
 
-Thanks,
-Bing
+With my distro maintainer had on, I say that even under Linux we will
+need this. Sure we can get things to work from userspace manually,
+by running the necessary commands. But we want things to work automatically,
+so we will need to know about the attached bluetooth device in userspace,
+and the proper way to do that is to put the info in devicetree. I've not
+yet thought about how userspace can then extract and react on this info,
+but for things to work plug and play with a generic distro rootfs we
+will need to eventually have some udev rules doing the firmware loading
+and hciattach. Which starts with being able to identify that the uart
+has a bcm hci bluetooth adapter attached.
+
+Regards,
+
+Hans
