@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33161 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756235AbaDHWIE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 18:08:04 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.15] mac80211: suppress BSS info change notifications for AP_VLAN
-Date: Wed,  9 Apr 2014 00:08:01 +0200
-Message-Id: <1396994881-54087-1-git-send-email-nbd@openwrt.org> (sfid-20140409_000809_686177_E29301F7)
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:54238 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbaDPKiw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2014 06:38:52 -0400
+Received: by mail-pd0-f175.google.com with SMTP id x10so10587109pdj.20
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 03:38:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com>
+References: <1393376982-28276-1-git-send-email-mcgrof@do-not-panic.com>
+ <1393376982-28276-3-git-send-email-mcgrof@do-not-panic.com>
+ <1393852248.10039.5.camel@jlt4.sipsolutions.net> <CANrMYP6Rvv4EBjY9-78bdm70G_3YGZFrJH9tFz5XVsbSSi-m=Q@mail.gmail.com>
+ <CAB=NE6X02Apk8XFt7yomQKwNoENvKAy1QbGBknQUGJ2ZDs73Gw@mail.gmail.com>
+ <CANrMYP4GhDZZzYkyyVCHKpb7YvJzNbFZn77hZH9T+y7HTQ4R=w@mail.gmail.com>
+ <CAB=NE6UHKptAvbt1OM4O_cRiCj2wyEKGF2fFPsO_rQ0EUZQahA@mail.gmail.com>
+ <CAFED-j=OAMJzFkjgCDx8YMHpEWfpZ6h4UQSRK7DQigrNuaOSig@mail.gmail.com>
+ <CAB=NE6UGWfZxU6zi=XzLKWeN+1aFgxTVUpr349FVHBsRgSGo+A@mail.gmail.com>
+ <CANrMYP7Meef9rt4aX_EeREq0z7uRtT6oSB6pjE3AqeHMx1GwJw@mail.gmail.com>
+ <CA+XVXffzFWsJOU+PLWkeoce1+dDvrqruyi3_GG7V-6dfWpK7gA@mail.gmail.com>
+ <CAB3XZEc6iXzEYcpYXEdYMQ0-yJxMbNvRGay3ezJX-yaXFksH9g@mail.gmail.com> <CANrMYP7QPoT-b_6GRWz6fOFeoO0c8LU09deRi3HFRB_wQJiUKQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 16 Apr 2014 13:38:37 +0300
+Message-ID: <CA+XVXfdxZqLVe3_wT3pY-rdY_7KXz_iXFd7Z8JCfXrDwpP8ciQ@mail.gmail.com> (sfid-20140416_123859_407803_D7E63C07)
+Subject: Re: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
+To: Colleen T <colleen@cozybit.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes warnings on tx power changes
+Thanks for testing Colleen!
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'll respin the patch on top of wireless-testing.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b055f6a5..4172d42 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -199,7 +199,7 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 
--	if (!changed)
-+	if (!changed || sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		return;
- 
- 	drv_bss_info_changed(local, sdata, &sdata->vif.bss_conf, changed);
--- 
-1.8.5.2 (Apple Git-48)
+Arik
 
+On Mon, Apr 14, 2014 at 10:27 PM, Colleen T <colleen@cozybit.com> wrote:
+> Hello,
+>
+> Applying Arik's patch on top of Luis' resolves our problem.
+>
+> You also get my:
+>
+> Tested-by: Colleen Twitty <colleen@cozybit.com>
+>
+> Thanks,
+> -Colleen
+>
+> On Sun, Apr 13, 2014 at 5:50 AM, Eliad Peller <eliad@wizery.com> wrote:
+>> On Wed, Apr 9, 2014 at 7:33 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>>>
+>>> Seems I might have found the culprit - reg_todo is called while the
+>>> request to CRDA is in flight and the patch in question causes the
+>>> already-in-process user-request to be handled again. Since it's the
+>>> same regdomain as the last request (it's the last request itself), we
+>>> get this:
+>>>
+>>> treatment = __reg_process_hint_user(user_request);
+>>> if (treatment == REG_REQ_IGNORE ||
+>>>    treatment == REG_REQ_ALREADY_SET) {
+>>> kfree(user_request); <------
+>>> return treatment;
+>>> }
+>>>
+>>> Can you try adding the attached patch? It just replaced relevant
+>>> kfree-s with a function that avoids freeing the last request.
+>>>
+>> i encountered a similar panic, and this patch seems to fix it.
+>> so you get my:
+>>
+>> Tested-by: Eliad Peller <eliad@wizery.com>
+>>
+>> Eliad.
