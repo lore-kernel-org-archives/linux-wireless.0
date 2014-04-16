@@ -1,47 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60674 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbaDHCcR (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:35938 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbaDPLJv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Apr 2014 22:32:17 -0400
-Message-ID: <53435F89.60500@candelatech.com> (sfid-20140408_043238_826769_41F6F095)
-Date: Mon, 07 Apr 2014 19:31:37 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT 0/4] ath10k: fix flushing and tx stalls
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>	<5341F1A9.2030202@candelatech.com> <CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com>
-In-Reply-To: <CA+BoTQndgEB7X-RUPPkxdjnp96LJzbv6=Q9K4XTTrky-QwE4Ww@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 16 Apr 2014 07:09:51 -0400
+Received: by mail-wi0-f176.google.com with SMTP id r20so1167891wiv.15
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 04:09:50 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, colleen@cozybit.com,
+	mcgrof@do-not-panic.com, linux@eikelenboom.it,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] cfg80211: avoid freeing last_request while in flight
+Date: Wed, 16 Apr 2014 14:09:47 +0300
+Message-Id: <1397646587-11078-1-git-send-email-arik@wizery.com> (sfid-20140416_130955_271511_F8DBC776)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2014 02:11 AM, Michal Kazior wrote:
+Avoid freeing the last request while it is being processed. This can
+happen in some cases if reg_work is kicked for some reason while the
+currently pending request is in flight.
 
-> These logs are not enough. I'd love to see traces for this to see what
-> frames are actually submitted and when tx credits are replenished.
->
-> I also wonder if this can be somehow related to your FW changes to
-> allow connecting multiple client virtual interfaces to a single AP?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+This is to be applied on top of
+"cfg80211: fix processing world regdomain when non modular"
 
-I think it is unlikely due to my firmware changes...little of that touched
-the handling of management frames.  It might very well be a basic problem in
-either the firmware or driver when using multiple station VIFS.  I think that
-aside from my testing that code has not been used much.
+ net/wireless/reg.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-Note my followup email that problems started with patch 3/4...not sure you
-saw that one or not.  I saw similar failure to associate & get DHCP (and
-slow/hung user-space) without the kernel error logs.
-
-I've added the first two patches to my tree and will continue to run
-with them since they do not appear to cause problems so far.
-
-Thanks,
-Ben
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f59aaac..5ec04dc 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -240,8 +240,16 @@ static char user_alpha2[2];
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+ 
+-static void reg_free_request(struct regulatory_request *lr)
++static void reg_free_request(struct regulatory_request *request)
+ {
++	if (request != get_last_request())
++		kfree(request);
++}
++
++static void reg_free_last_request(void)
++{
++	struct regulatory_request *lr = get_last_request();
++
+ 	if (lr != &core_request_world && lr)
+ 		kfree_rcu(lr, rcu_head);
+ }
+@@ -254,7 +262,7 @@ static void reg_update_last_request(struct regulatory_request *request)
+ 	if (lr == request)
+ 		return;
+ 
+-	reg_free_request(lr);
++	reg_free_last_request();
+ 	rcu_assign_pointer(last_request, request);
+ }
+ 
+@@ -1616,7 +1624,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	treatment = __reg_process_hint_user(user_request);
+ 	if (treatment == REG_REQ_IGNORE ||
+ 	    treatment == REG_REQ_ALREADY_SET) {
+-		kfree(user_request);
++		reg_free_request(user_request);
+ 		return treatment;
+ 	}
+ 
+@@ -1676,14 +1684,14 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 	case REG_REQ_OK:
+ 		break;
+ 	case REG_REQ_IGNORE:
+-		kfree(driver_request);
++		reg_free_request(driver_request);
+ 		return treatment;
+ 	case REG_REQ_INTERSECT:
+ 		/* fall through */
+ 	case REG_REQ_ALREADY_SET:
+ 		regd = reg_copy_regd(get_cfg80211_regdom());
+ 		if (IS_ERR(regd)) {
+-			kfree(driver_request);
++			reg_free_request(driver_request);
+ 			return REG_REQ_IGNORE;
+ 		}
+ 		rcu_assign_pointer(wiphy->regd, regd);
+@@ -1777,10 +1785,10 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
+ 	case REG_REQ_IGNORE:
+ 		/* fall through */
+ 	case REG_REQ_ALREADY_SET:
+-		kfree(country_ie_request);
++		reg_free_request(country_ie_request);
+ 		return treatment;
+ 	case REG_REQ_INTERSECT:
+-		kfree(country_ie_request);
++		reg_free_request(country_ie_request);
+ 		/*
+ 		 * This doesn't happen yet, not sure we
+ 		 * ever want to support it for this case.
+@@ -1841,7 +1849,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	return;
+ 
+ out_free:
+-	kfree(reg_request);
++	reg_free_request(reg_request);
+ }
+ 
+ /*
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.1.2
 
