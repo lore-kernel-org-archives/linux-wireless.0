@@ -1,113 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35938 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755372AbaDPLJv (ORCPT
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:39553 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583AbaDPJ5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Apr 2014 07:09:51 -0400
-Received: by mail-wi0-f176.google.com with SMTP id r20so1167891wiv.15
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Apr 2014 04:09:50 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, colleen@cozybit.com,
-	mcgrof@do-not-panic.com, linux@eikelenboom.it,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] cfg80211: avoid freeing last_request while in flight
-Date: Wed, 16 Apr 2014 14:09:47 +0300
-Message-Id: <1397646587-11078-1-git-send-email-arik@wizery.com> (sfid-20140416_130955_271511_F8DBC776)
+	Wed, 16 Apr 2014 05:57:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-2-git-send-email-wens@csie.org> <20140415142024.GD3207@lukather>
+ <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com> <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Wed, 16 Apr 2014 17:56:54 +0800
+Message-ID: <CAGb2v65PF=i3pL58JycJLyp-TjsEeVxO-uDuZ6xrEob5oJLj5g@mail.gmail.com> (sfid-20140416_115749_789240_80468D13)
+Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
+ based lookup
+To: Alexandre Courbot <gnurou@gmail.com>
+Cc: Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid freeing the last request while it is being processed. This can
-happen in some cases if reg_work is kicked for some reason while the
-currently pending request is in flight.
+Hi,
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
-This is to be applied on top of
-"cfg80211: fix processing world regdomain when non modular"
+On Wed, Apr 16, 2014 at 3:06 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
+> On Wed, Apr 16, 2014 at 3:12 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
+>> On Tue, Apr 15, 2014 at 11:20 PM, Maxime Ripard
+>> <maxime.ripard@free-electrons.com> wrote:
+>>> Hi Chen-Yu,
+>>>
+>>> On Tue, Apr 15, 2014 at 02:41:35PM +0800, Chen-Yu Tsai wrote:
+>>>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
+>>>> phandles by name only, through gpios/gpio-names, and not by index.
+>>>
+>>> IIRC, gpios only uses the *-gpios properties, and not gpios/gpio-names
+>>> pattern seen on various other things.
+>>>
+>>> Is it some new property you introduce? If so, please add it to the
+>>> documentation.
+>>>
+>>> Now, I'm not sure that having two distinct representations of GPIOs in
+>>> the DT is a good thing. Yes, it's looking odd compared to other
+>>> similar bindings, but it's what we have to deal with.
+>>
+>> Mmmm I *think* I somehow remember a discussion about this topic
+>> recently, but I cannot find it. Maybe Chen-yu could point us to the
+>> conclusion of this discussion and the rationale for (re)implementing
+>> named GPIOs this way?
+>
+> Aha, here maybe:
+>
+> https://lkml.org/lkml/2014/1/21/164
 
- net/wireless/reg.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+They're also mentioned in:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f59aaac..5ec04dc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -240,8 +240,16 @@ static char user_alpha2[2];
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--static void reg_free_request(struct regulatory_request *lr)
-+static void reg_free_request(struct regulatory_request *request)
- {
-+	if (request != get_last_request())
-+		kfree(request);
-+}
-+
-+static void reg_free_last_request(void)
-+{
-+	struct regulatory_request *lr = get_last_request();
-+
- 	if (lr != &core_request_world && lr)
- 		kfree_rcu(lr, rcu_head);
- }
-@@ -254,7 +262,7 @@ static void reg_update_last_request(struct regulatory_request *request)
- 	if (lr == request)
- 		return;
- 
--	reg_free_request(lr);
-+	reg_free_last_request();
- 	rcu_assign_pointer(last_request, request);
- }
- 
-@@ -1616,7 +1624,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
- 	    treatment == REG_REQ_ALREADY_SET) {
--		kfree(user_request);
-+		reg_free_request(user_request);
- 		return treatment;
- 	}
- 
-@@ -1676,14 +1684,14 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--		kfree(driver_request);
-+		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		regd = reg_copy_regd(get_cfg80211_regdom());
- 		if (IS_ERR(regd)) {
--			kfree(driver_request);
-+			reg_free_request(driver_request);
- 			return REG_REQ_IGNORE;
- 		}
- 		rcu_assign_pointer(wiphy->regd, regd);
-@@ -1777,10 +1785,10 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_IGNORE:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
--		kfree(country_ie_request);
-+		reg_free_request(country_ie_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
--		kfree(country_ie_request);
-+		reg_free_request(country_ie_request);
- 		/*
- 		 * This doesn't happen yet, not sure we
- 		 * ever want to support it for this case.
-@@ -1841,7 +1849,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	return;
- 
- out_free:
--	kfree(reg_request);
-+	reg_free_request(reg_request);
- }
- 
- /*
--- 
-1.8.1.2
+https://lkml.org/lkml/2014/2/25/581
 
+> However I don't see a clear conclusion that we should implement that
+> scheme. Not that I am strongly against it, but I'd like to see a
+> practical purpose for it.
+
+Again no clear conclusion on this. I wrote this as it was one possible
+way out of the index-based GPIO stuff.
+
+Hopefully others will chime in and we can decide whether this is what
+we want or not.
+
+
+Cheers
+ChenYu
