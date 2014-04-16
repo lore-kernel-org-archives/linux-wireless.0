@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:51927 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaDHI7x (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:49092 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751301AbaDPT6b convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Apr 2014 04:59:53 -0400
-Received: by mail-vc0-f179.google.com with SMTP id ij19so512710vcb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Apr 2014 01:59:53 -0700 (PDT)
+	Wed, 16 Apr 2014 15:58:31 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jonathan McDowell <noodles@earth.li>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Re: Intel 7260 not working in 802.11n mode
+Date: Wed, 16 Apr 2014 19:58:01 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com> (sfid-20140416_215835_676357_99012E1A)
+References: <20140407003648.GA19740@earth.li>
+ <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
+ <20140407064556.GN24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
+ <20140407152312.GO24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
+ <20140416061043.GZ24850@earth.li>
+In-Reply-To: <20140416061043.GZ24850@earth.li>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1396947132.5936.5.camel@jlt4.sipsolutions.net>
-References: <1396411509-4660-1-git-send-email-yeohchunyeow@gmail.com>
-	<1396947132.5936.5.camel@jlt4.sipsolutions.net>
-Date: Tue, 8 Apr 2014 16:59:53 +0800
-Message-ID: <CAEFj986dM9S9=SYUL1CZz8cNNgbhScDn-_Rz_2-hgv_9+K0D4Q@mail.gmail.com> (sfid-20140408_105957_408581_DB73293C)
-Subject: Re: [PATCH] mac80211: update last_tx_rate only for data frame
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 8, 2014 at 4:52 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2014-04-02 at 12:05 +0800, Chun-Yeow Yeoh wrote:
->> Rate controller in firmware may also return the Tx Rate
->> used for management frame that is usually sent as lowest
->> Tx Rate (1Mbps in 2.4GHz). So update the last_tx_rate only
->> if it is data frame.
->
-> I guess this makes some sense, although maybe the rate shouldn't be
-> reported then?
+> On Sun, Apr 13, 2014 at 11:07:10AM +0000, Grumbach, Emmanuel wrote:
+> > > > Your log seems healthy - you associate at Apr  6 17:17:20 and
+> > > > disassociate at Apr  6 17:18:05 - was that intentional?
+> > >
+> > > All I did was load the module with the debug parameter set, let
+> > > Network Manager do its thing and wait for the connection to fail,
+> > > then unload the module. NM is reporting that the DHCP times out - log at:
+> > >
+> > > http://the.earth.li/~noodles/iwlfail-nm.log
+> > >
+> > > I'd be blaming Network Manager or some other piece of configuration
+> > > if it wasn't for the fact that disabling 11n makes things work.
+> > >
+> > I really can't see anything bad in this log.
+> > Can you run tracing?
+> >
+> > sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e
+> > cfg80211
+> >
+> > this will create a trace.dat file which I'd like to look at.
+> 
+> http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
+> 
+> and for completeness, with disable_11n=1:
+> 
+> http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
+> 
+> In both cases I started the trace, flipped the hardware wifi disable switch, let
+> Network Manager do its thing.
+> 
 
-If you are referring to the last_tx_rate, we are using this to
-calculate the Airtime Link Metric in the mesh mode.
-
-----
-Chun-Yeow
+Thanks for this. I am on vacation right now and won't be able to look at this straight away.
+Please don't remove the files from your web server.
+Also - if you can open a bug on bugzilla.kernel.org - this would be best.
+Cc ilw@linux.intel.com to your bug. Thanks!
