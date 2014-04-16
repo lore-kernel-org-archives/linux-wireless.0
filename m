@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:39555 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbaDTT3C convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 15:29:02 -0400
-Received: by mail-oa0-f43.google.com with SMTP id eb12so3519209oac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 12:29:01 -0700 (PDT)
+Received: from the.earth.li ([46.43.34.31]:59987 "EHLO the.earth.li"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752014AbaDPGKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Apr 2014 02:10:48 -0400
+Date: Wed, 16 Apr 2014 07:10:43 +0100
+From: Jonathan McDowell <noodles@earth.li>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Ilw] Re: Intel 7260 not working in 802.11n mode
+Message-ID: <20140416061043.GZ24850@earth.li> (sfid-20140416_081052_673178_425C49B8)
+References: <20140407003648.GA19740@earth.li>
+ <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
+ <20140407064556.GN24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
+ <20140407152312.GO24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140420205452.79a95330@wiggum>
-References: <1398018659-17263-1-git-send-email-zajec5@gmail.com>
-	<20140420205452.79a95330@wiggum>
-Date: Sun, 20 Apr 2014 21:29:01 +0200
-Message-ID: <CACna6rwjEP8qZ+SWQEOREmr=4wBJSgeNY_mG5GQpOWem7Jgrgw@mail.gmail.com> (sfid-20140420_212905_984121_F82B3529)
-Subject: Re: [wireless-next][PATCH 1/2] b43: ssb: refuse to support more than
- IEEE 802.11 core
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-04-20 20:54 GMT+02:00 Michael Büsch <m@bues.ch>:
-> On Sun, 20 Apr 2014 20:30:58 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->
->> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
->> index 69fc3d6..cf84cf2 100644
->> --- a/drivers/net/wireless/b43/main.c
->> +++ b/drivers/net/wireless/b43/main.c
->> @@ -5486,39 +5486,42 @@ int b43_ssb_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
->>       struct b43_bus_dev *dev;
->>       struct b43_wl *wl;
->>       int err;
->> -     int first = 0;
->>
->>       dev = b43_bus_dev_ssb_init(sdev);
->>       if (!dev)
->>               return -ENOMEM;
->>
->>       wl = ssb_get_devtypedata(sdev);
->
->
-> The whole "struct b43_wl" and "ssb_get_devtypedata" was to support multiple
-> cores of the same type in a single driver instance (= b43 multicore).
-> With multicore support being removed, everything in b43_wl could be merged into b43_wldev.
-> Also the use of ssb_get_devtypedata could probably be removed, too.
->
-> This will simplify a lot of the b43 startup and shutdown code.
+On Sun, Apr 13, 2014 at 11:07:10AM +0000, Grumbach, Emmanuel wrote:
+> > > Your log seems healthy - you associate at Apr  6 17:17:20 and
+> > > disassociate at Apr  6 17:18:05 - was that intentional?
+> > 
+> > All I did was load the module with the debug parameter set, let Network
+> > Manager do its thing and wait for the connection to fail, then unload the
+> > module. NM is reporting that the DHCP times out - log at:
+> > 
+> > http://the.earth.li/~noodles/iwlfail-nm.log
+> > 
+> > I'd be blaming Network Manager or some other piece of configuration if it
+> > wasn't for the fact that disabling 11n makes things work.
+> > 
+> I really can't see anything bad in this log.
+> Can you run tracing?
+> 
+> sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e cfg80211
+> 
+> this will create a trace.dat file which I'd like to look at.
 
-Yeah, I've noticed that, but this will be a bit complex to clean all
-that code. I planned to handle this in future with further patches.
+http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
 
-Do you think it's OK to push this small patchset and continue cleaning
-process later? I'm afraid it may take a lot of time to clean in
-completely and patchset would be huge. That's why I wanted to handle
-it with small steps.
+and for completeness, with disable_11n=1:
+
+http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
+
+In both cases I started the trace, flipped the hardware wifi disable
+switch, let Network Manager do its thing.
+
+J.
+
+-- 
+I just Fedexed my soul to hell. I'm *real* clever.
