@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:33924 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbaDOVAH (ORCPT
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:63626 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaDPHHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 17:00:07 -0400
-Message-ID: <534D9DD1.2070004@wwwdotorg.org> (sfid-20140415_230032_764411_8E8E3450)
-Date: Tue, 15 Apr 2014 15:00:01 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Wed, 16 Apr 2014 03:07:20 -0400
 MIME-Version: 1.0
-To: Chen-Yu Tsai <wens@csie.org>,
+In-Reply-To: <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com>
+References: <1397544101-18135-1-git-send-email-wens@csie.org>
+ <1397544101-18135-2-git-send-email-wens@csie.org> <20140415142024.GD3207@lukather>
+ <CAAVeFuLDhTVGDnmYtnxEY8hhn6HE6tU9OB24WDPtmxEHjiRiuQ@mail.gmail.com>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Wed, 16 Apr 2014 16:06:59 +0900
+Message-ID: <CAAVeFu+rJXH=Uat5_qWPu6OfmDAFxHj2b+n=OSmwtSw4s+fv6w@mail.gmail.com> (sfid-20140416_090748_468446_6966CAF9)
+Subject: Re: [PATCH 1/7] gpiolib: gpiolib-of: Implement device tree gpio-names
+ based lookup
+To: Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Chen-Yu Tsai <wens@csie.org>,
 	Linus Walleij <linus.walleij@linaro.org>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-CC: Alexandre Courbot <gnurou@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-	netdev@vger.kernel.org, linux-sunxi@googlegroups.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
 	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 5/7] net: rfkill: gpio: add device tree support
-References: <1397544101-18135-1-git-send-email-wens@csie.org> <1397544101-18135-6-git-send-email-wens@csie.org>
-In-Reply-To: <1397544101-18135-6-git-send-email-wens@csie.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/15/2014 12:41 AM, Chen-Yu Tsai wrote:
+On Wed, Apr 16, 2014 at 3:12 PM, Alexandre Courbot <gnurou@gmail.com> wrote:
+> On Tue, Apr 15, 2014 at 11:20 PM, Maxime Ripard
+> <maxime.ripard@free-electrons.com> wrote:
+>> Hi Chen-Yu,
+>>
+>> On Tue, Apr 15, 2014 at 02:41:35PM +0800, Chen-Yu Tsai wrote:
+>>> This patch provides of_get_gpiod_flags_by_name(), which looks up GPIO
+>>> phandles by name only, through gpios/gpio-names, and not by index.
+>>
+>> IIRC, gpios only uses the *-gpios properties, and not gpios/gpio-names
+>> pattern seen on various other things.
+>>
+>> Is it some new property you introduce? If so, please add it to the
+>> documentation.
+>>
+>> Now, I'm not sure that having two distinct representations of GPIOs in
+>> the DT is a good thing. Yes, it's looking odd compared to other
+>> similar bindings, but it's what we have to deal with.
+>
+> Mmmm I *think* I somehow remember a discussion about this topic
+> recently, but I cannot find it. Maybe Chen-yu could point us to the
+> conclusion of this discussion and the rationale for (re)implementing
+> named GPIOs this way?
 
-Patch description?
+Aha, here maybe:
 
-> diff --git a/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt b/Documentation/devicetree/bindings/rfkill/rfkill-gpio.txt
+https://lkml.org/lkml/2014/1/21/164
 
-> +Required properties:
-
-> +- gpios		: At most two GPIO phandles
-> +- gpio-names	: Shall be "reset" or "shutdown", matching gpios.
-> +		  If both are provided, the "reset" GPIO is toggled first.
-
-As Maxime mentioned, this is an unusual way of defining GPIOs. If this
-new way is acceptable, then I'd suggest more precise wording, e.g.:
-
-- gpios: Must contain an entry for each entry in gpio-names.
-  See ../gpio/gpio.txt for details.
-- gpio-names: May contain any or all of the following entries:
-  - reset
-  - shutdown
-
-> +- rfkill-type	: Type of RFKILL device: 1 for WiFi, 2 for BlueTooth, etc.
-> +		  See include/uapi/linux/rfkill.h for all valid values
-
-It would be nice if include/dt-bindings/rfkill-gpio.h existed and
-contained e.g.:
-
-#define RFKILL_TYPE_BLUETOOTH 2
-
-So that:
-
-> +Example:
-> +
-> +	rfkill_bt {
-...
-> +		rfkill-type = <2>;
-
-Could be written as:
-
-		rfkill-type = <RFKILL_TYPE_BLUETOOTH>;
-
+However I don't see a clear conclusion that we should implement that
+scheme. Not that I am strongly against it, but I'd like to see a
+practical purpose for it.
