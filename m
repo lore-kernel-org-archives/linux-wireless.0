@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:38418 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983AbaDMTUb (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38422 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756787AbaDQAn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:31 -0400
-Received: by mail-wi0-f177.google.com with SMTP id cc10so3130493wib.10
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:30 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/47] iwlwifi: mvm: remove redundant empty line
-Date: Sun, 13 Apr 2014 22:19:29 +0300
-Message-Id: <1397416802-32403-14-git-send-email-egrumbach@gmail.com> (sfid-20140413_213516_442068_C61FD3DF)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+	Wed, 16 Apr 2014 20:43:28 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Hold tx-lock while detaching htt.
+Date: Wed, 16 Apr 2014 17:42:37 -0700
+Message-Id: <1397695357-14028-1-git-send-email-greearb@candelatech.com> (sfid-20140417_024331_954425_FB51D1FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+And check for null pool in the tx path (which would
+indicate we are detaching).
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rx.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
-index 69f6aa6..ac9a84e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
-@@ -60,7 +60,6 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *****************************************************************************/
- #include "iwl-trans.h"
--
- #include "mvm.h"
- #include "fw-api.h"
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 22a4542..0698d6f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -143,10 +143,19 @@ static void ath10k_htt_tx_cleanup_pending(struct ath10k_htt *htt)
  
+ void ath10k_htt_tx_detach(struct ath10k_htt *htt)
+ {
++	struct dma_pool *tx_pool_tmp;
++
+ 	ath10k_htt_tx_cleanup_pending(htt);
++
++	spin_lock_bh(&htt->tx_lock);
+ 	kfree(htt->pending_tx);
+ 	kfree(htt->used_msdu_ids);
+-	dma_pool_destroy(htt->tx_pool);
++	tx_pool_tmp = htt->tx_pool;
++	htt->tx_pool = NULL;
++	spin_unlock_bh(&htt->tx_lock);
++
++	dma_pool_destroy(tx_pool_tmp);
++
+ 	return;
+ }
+ 
+@@ -403,6 +412,13 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		goto err;
+ 
+ 	spin_lock_bh(&htt->tx_lock);
++
++	/* Check if we are detached... */
++	if (! htt->tx_pool) {
++		spin_unlock_bh(&htt->tx_lock);
++		goto err_tx_dec;
++	}
++
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt);
+ 	if (res < 0) {
+ 		spin_unlock_bh(&htt->tx_lock);
 -- 
-1.8.3.2
+1.7.11.7
 
