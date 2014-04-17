@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:55212 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754190AbaDMNCK (ORCPT
+Received: from smtprelay0070.hostedemail.com ([216.40.44.70]:46526 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750918AbaDQRPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 09:02:10 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/13] iwlwifi: mvm: delay enabling smart FIFO until after beacon RX
-Date: Sun, 13 Apr 2014 16:01:51 +0300
-Message-Id: <1397394123-25102-1-git-send-email-egrumbach@gmail.com> (sfid-20140413_150215_437499_7383700E)
-In-Reply-To: <534A8A49.2030100@gmail.com>
-References: <534A8A49.2030100@gmail.com>
+	Thu, 17 Apr 2014 13:15:04 -0400
+Message-ID: <1397754900.3104.5.camel@joe-AO725> (sfid-20140417_191509_000613_6CAA08EB)
+Subject: Re: [PATCH 1/6] p54: replace wiphy_debug() with wiphy_dbg()
+From: Joe Perches <joe@perches.com>
+To: "Zhao, Gang" <gamerh2o@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Date: Thu, 17 Apr 2014 10:15:00 -0700
+In-Reply-To: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
+References: <d0cc78c16143f5f54ebcfc4a71e340d8c646aa82.1397741141.git.gamerh2o@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-04-17 at 21:27 +0800, Zhao, Gang wrote:
+> Dynamic debug function wiphy_dbg() is more convenient for debugging,
+> and if user doesn't enable CONFIG_DYNAMIC_DEBUG, it will fall back to
+> normal static debug, just as what wiphy_debug() does.
 
-If we have no beacon data before association, delay smart FIFO
-enablement until after we have this data.
+Hi.
 
-Not doing so can cause association failures in extremely silent
-environments (usually only a shielded box/room) as beacon RX is
-not sent to the host immediately, and then the association time
-event ends without the host receiving any beacon even though it
-was on the air - it's just stuck on the FIFO.
+Your premise is not correct.
 
-Cc: <stable@vger.kernel.org> [3.14]
-Fixes: 1f3b0ff8ecce ("iwlwifi: mvm: Add Smart FIFO support")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- drivers/net/wireless/iwlwifi/mvm/sf.c       | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+wiphy_debug will always emit a message.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 4dd9ff4..f0cebf1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1332,6 +1332,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		 */
- 		iwl_mvm_remove_time_event(mvm, mvmvif,
- 					  &mvmvif->time_event_data);
-+		iwl_mvm_sf_update(mvm, vif, false);
- 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, CMD_SYNC));
- 	} else if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS |
- 			      BSS_CHANGED_QOS)) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sf.c b/drivers/net/wireless/iwlwifi/mvm/sf.c
-index 8401627..88809b2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sf.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sf.c
-@@ -274,7 +274,8 @@ int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *changed_vif,
- 				return -EINVAL;
- 			if (changed_vif->type != NL80211_IFTYPE_STATION) {
- 				new_state = SF_UNINIT;
--			} else if (changed_vif->bss_conf.assoc) {
-+			} else if (changed_vif->bss_conf.assoc &&
-+				   changed_vif->bss_conf.dtim_period) {
- 				mvmvif = iwl_mvm_vif_from_mac80211(changed_vif);
- 				sta_id = mvmvif->ap_sta_id;
- 				new_state = SF_FULL_ON;
--- 
-1.8.3.2
+wiphy_dbg will only emit a message when #DEBUG
+is #defined or CONFIG_DYNAMIC_DEBUG is enabled
+and the message is specifically enabled by the
+dynamic_debug control file.
+
+> When all the users of wiphy_debug() are gone, wiphy_debug() can be
+> removed.
+
+Not really.
+
+Please use git format-patch --cover-letter when
+sending a patch series so that these sorts of
+replies can be done to the cover letter of the
+series instead of individually.
+
+Using a cover-letter "[PATCH 0/N]" also makes it
+easier for maintainers to send acknowledgements
+if applying the entire series.
+
 
