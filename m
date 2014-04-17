@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:36236 "EHLO
-	mirror2.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbaDOHWT (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40083 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751149AbaDQSrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Apr 2014 03:22:19 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: Linus Walleij <linus.walleij@linaro.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Arnd Bergmann <arnd@arndb.de>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-gpio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-sunxi@googlegroups.com
-Subject: [PATCH 3/7] net: rfkill: gpio: use clk_prepare_enable/clk_disable_unprepare
-Date: Tue, 15 Apr 2014 14:41:37 +0800
-Message-Id: <1397544101-18135-4-git-send-email-wens@csie.org> (sfid-20140415_092514_264901_88C5C87D)
-In-Reply-To: <1397544101-18135-1-git-send-email-wens@csie.org>
-References: <1397544101-18135-1-git-send-email-wens@csie.org>
+	Thu, 17 Apr 2014 14:47:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/5] mwifiex: increase tx/rx AMPDU window sizes for STA 11ac mode
+Date: Thu, 17 Apr 2014 11:47:02 -0700
+Message-ID: <1397760423-11455-4-git-send-email-bzhao@marvell.com> (sfid-20140417_204802_583130_D3BF21FF)
+In-Reply-To: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill-gpio calls clk_enable() without first calling clk_prepare(),
-resulting in a warning and no effect. Switch to clk_prepare_enable()
-and clk_disable_unprepare.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+This will help to aggregate more packets which yields better
+throughput results for 11ac chipsets.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/rfkill/rfkill-gpio.c | 4 ++--
+ drivers/net/wireless/mwifiex/decl.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 9c4a5eb..29ff07c 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -49,10 +49,10 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
- 		gpiod_set_value(rfkill->shutdown_gpio, 0);
- 		gpiod_set_value(rfkill->reset_gpio, 0);
- 		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
--			clk_disable(rfkill->clk);
-+			clk_disable_unprepare(rfkill->clk);
- 	} else {
- 		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
--			clk_enable(rfkill->clk);
-+			clk_prepare_enable(rfkill->clk);
- 		gpiod_set_value(rfkill->reset_gpio, 1);
- 		gpiod_set_value(rfkill->shutdown_gpio, 1);
- 	}
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index b8e15ee..38da6ff 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -46,8 +46,8 @@
+ #define MWIFIEX_STA_AMPDU_DEF_RXWINSIZE        64
+ #define MWIFIEX_UAP_AMPDU_DEF_TXWINSIZE        32
+ #define MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE        16
+-#define MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE   32
+-#define MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE   48
++#define MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE   64
++#define MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE   64
+ #define MWIFIEX_11AC_UAP_AMPDU_DEF_TXWINSIZE   48
+ #define MWIFIEX_11AC_UAP_AMPDU_DEF_RXWINSIZE   32
+ 
 -- 
-1.9.1
+1.8.2.3
 
