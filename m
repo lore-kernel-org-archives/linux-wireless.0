@@ -1,85 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:60616 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932826AbaDIKzf (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:47145 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbaDQKol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:55:35 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so1708696eek.40
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:55:33 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFTv2 4/5] ath10k: wait for mgmt tx when flushing too
-Date: Wed,  9 Apr 2014 12:48:50 +0200
-Message-Id: <1397040531-6224-5-git-send-email-michal.kazior@tieto.com> (sfid-20140409_125542_498290_F9D11FF9)
-In-Reply-To: <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com>
- <1397040531-6224-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 17 Apr 2014 06:44:41 -0400
+Date: Thu, 17 Apr 2014 13:44:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: eyal@wizery.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: iwlwifi: mvm: rs: use correct max expected throughput figures
+Message-ID: <20140417104439.GA9658@mwanda> (sfid-20140417_124445_274778_EBD7A79E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 10.1 firmware uses WMI to Tx management frames
-but ath10k_flush() didn't care. This could lead to
-some frames not being sent.
+Hello Eyal Shapira,
 
-Although there are no Tx completions for WMI
-mangement frames it's still better to at least
-wait for ath10k queue to be drained.
+The patch 198266a3c110: "iwlwifi: mvm: rs: use correct max expected
+throughput figures" from Mar 31, 2014, leads to the following static
+checker warning:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+	drivers/net/wireless/iwlwifi/mvm/rs.c:2433 iwl_mvm_rs_rate_init()
+	warn: was expecting a 64 bit value instead of '(2)'
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index adb5da1..1d95500 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3782,19 +3782,27 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 
- 	mutex_lock(&ar->conf_mutex);
- 
--	if (ar->state == ATH10K_STATE_WEDGED)
-+	if (ar->state == ATH10K_STATE_WEDGED) {
-+		ret = -EBUSY;
- 		goto skip;
-+	}
- 
- 	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
--			bool empty;
-+			bool htt_empty, wmi_empty;
-+			unsigned long flags;
- 
- 			spin_lock_bh(&ar->htt.tx_lock);
--			empty = (ar->htt.num_pending_tx == 0);
-+			htt_empty = (ar->htt.num_pending_tx == 0);
- 			spin_unlock_bh(&ar->htt.tx_lock);
- 
-+			spin_lock_irqsave(&ar->wmi_mgmt_tx_queue.lock, flags);
-+			wmi_empty = skb_queue_len(&ar->wmi_mgmt_tx_queue) == 0;
-+			spin_unlock_irqrestore(&ar->wmi_mgmt_tx_queue.lock,
-+					       flags);
-+
- 			skip = (ar->state == ATH10K_STATE_WEDGED);
- 
--			(empty || skip);
-+			((htt_empty && wmi_empty) || skip);
- 		}), ATH10K_FLUSH_TIMEOUT_HZ);
- 
- 	if (ret <= 0 || skip)
-@@ -3803,6 +3811,11 @@ static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 
- skip:
- 	mutex_unlock(&ar->conf_mutex);
-+
-+	/* empty mgmt tx queue doesn't mean mgmt tx is flushed because the last
-+	 * frame still may be processed by a worker */
-+	if (ret > 0 && !skip)
-+		cancel_work_sync(&ar->wmi_mgmt_tx_work);
- }
- 
- /* TODO: Implement this function properly
--- 
-1.8.5.3
+drivers/net/wireless/iwlwifi/mvm/rs.c
+  2427                  /* active_siso_rate mask includes 9 MBits (bit 5),
+  2428                   * and CCK (bits 0-3), supp_rates[] does not;
+  2429                   * shift to convert format, force 9 MBits off.
+  2430                   */
+  2431                  lq_sta->active_siso_rate = ht_cap->mcs.rx_mask[0] << 1;
+  2432                  lq_sta->active_siso_rate |= ht_cap->mcs.rx_mask[0] & 0x1;
+  2433                  lq_sta->active_siso_rate &= ~((u16)0x2);
 
+Your patch changes this from being a u16 to being a unsigned long and
+triggers this static checker warning.  The code still works fine because
+the u16 cast is a no-op which ends up being processed as
+"~((type promote to int)(u16)0x2)".  The negative bit gets pushed out to
+64 bits giving "0xfffffffffffffffd" which we want.  But it's still a
+confusing left over remnant.
+
+Also this struct has another definition where it is still a u16 in the
+drivers/net/wireless/iwlwifi/dvm/ driver.
+
+  2434                  lq_sta->active_siso_rate <<= IWL_FIRST_OFDM_RATE;
+  2435  
+  2436                  /* Same here */
+  2437                  lq_sta->active_mimo2_rate = ht_cap->mcs.rx_mask[1] << 1;
+  2438                  lq_sta->active_mimo2_rate |= ht_cap->mcs.rx_mask[1] & 0x1;
+  2439                  lq_sta->active_mimo2_rate &= ~((u16)0x2);
+                                                        ^^^^^^^
+Same here.
+
+  2440                  lq_sta->active_mimo2_rate <<= IWL_FIRST_OFDM_RATE;
+  2441  
+  2442                  lq_sta->is_vht = false;
+  2443          } else {
+
+regards,
+dan carpenter
