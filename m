@@ -1,107 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:48984 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755215AbaDTLGL (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48498 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751429AbaDQFCP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Apr 2014 07:06:11 -0400
-Received: by mail-ee0-f54.google.com with SMTP id d49so2908523eek.41
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2014 04:06:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/9] b43: N-PHY: random updates and typo fixes all around
-Date: Sun, 20 Apr 2014 13:05:45 +0200
-Message-Id: <1397991951-13478-4-git-send-email-zajec5@gmail.com> (sfid-20140420_130649_698361_75C48774)
-In-Reply-To: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
-References: <1397991951-13478-1-git-send-email-zajec5@gmail.com>
+	Thu, 17 Apr 2014 01:02:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout handler
+Date: Wed, 16 Apr 2014 22:01:54 -0700
+Message-ID: <1397710914-10061-2-git-send-email-bzhao@marvell.com> (sfid-20140417_070713_408345_4407DB6E)
+In-Reply-To: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index e9658ee..cbeb299 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -419,7 +419,8 @@ static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
- 		static const u16 clip[] = { 0xFFFF, 0xFFFF };
- 		if (nphy->deaf_count++ == 0) {
- 			nphy->classifier_state = b43_nphy_classifier(dev, 0, 0);
--			b43_nphy_classifier(dev, 0x7, 0);
-+			b43_nphy_classifier(dev, 0x7,
-+					    B43_NPHY_CLASSCTL_WAITEDEN);
- 			b43_nphy_read_clip_detection(dev, nphy->clip_state);
- 			b43_nphy_write_clip_detection(dev, clip);
+When command timeout occurs due to a firmware/hardware bug,
+there is no chance of next command being successful. We will
+keep cmd_sent flag on so that next command won't be sent to
+firmware.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 1062c91..8dee6c8 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -955,8 +955,6 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 			adapter->cmd_wait_q.status = -ETIMEDOUT;
+ 			wake_up_interruptible(&adapter->cmd_wait_q.wait);
+ 			mwifiex_cancel_pending_ioctl(adapter);
+-			/* reset cmd_sent flag to unblock new commands */
+-			adapter->cmd_sent = false;
  		}
-@@ -1164,23 +1165,20 @@ static void b43_nphy_run_samples(struct b43_wldev *dev, u16 samps, u16 loops,
- 	u16 seq_mode;
- 	u32 tmp;
- 
--	if (nphy->hang_avoid)
--		b43_nphy_stay_in_carrier_search(dev, true);
-+	b43_nphy_stay_in_carrier_search(dev, true);
- 
- 	if ((nphy->bb_mult_save & 0x80000000) == 0) {
- 		tmp = b43_ntab_read(dev, B43_NTAB16(15, 87));
- 		nphy->bb_mult_save = (tmp & 0xFFFF) | 0x80000000;
  	}
- 
-+	/* TODO: add modify_bbmult argument */
- 	if (!dev->phy.is_40mhz)
- 		tmp = 0x6464;
- 	else
- 		tmp = 0x4747;
- 	b43_ntab_write(dev, B43_NTAB16(15, 87), tmp);
- 
--	if (nphy->hang_avoid)
--		b43_nphy_stay_in_carrier_search(dev, false);
--
- 	b43_phy_write(dev, B43_NPHY_SAMP_DEPCNT, (samps - 1));
- 
- 	if (loops != 0xFFFF)
-@@ -1213,6 +1211,8 @@ static void b43_nphy_run_samples(struct b43_wldev *dev, u16 samps, u16 loops,
- 		b43err(dev->wl, "run samples timeout\n");
- 
- 	b43_phy_write(dev, B43_NPHY_RFSEQMODE, seq_mode);
-+
-+	b43_nphy_stay_in_carrier_search(dev, false);
- }
- 
- /**************************************************
-@@ -1736,7 +1736,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
- 
- 	b43_phy_set(dev, B43_NPHY_RFCTL_OVER, 0x1);
- 	b43_phy_set(dev, B43_NPHY_RFCTL_CMD, B43_NPHY_RFCTL_CMD_RXTX);
--	b43_phy_mask(dev, B43_NPHY_TXF_40CO_B1S1, ~0x1);
-+	b43_phy_mask(dev, B43_NPHY_RFCTL_OVER, ~0x1);
- 
- 	for (i = 0; i < ARRAY_SIZE(regs_to_store); i++)
- 		b43_phy_write(dev, regs_to_store[i], saved_regs_phy[i]);
-@@ -2681,7 +2681,7 @@ static void b43_nphy_workarounds_rev3plus(struct b43_wldev *dev)
- 	/* Dropped probably-always-true condition */
- 	b43_phy_write(dev, B43_NPHY_ED_CRS40ASSERTTHRESH0, 0x03eb);
- 	b43_phy_write(dev, B43_NPHY_ED_CRS40ASSERTTHRESH1, 0x03eb);
--	b43_phy_write(dev, B43_NPHY_ED_CRS40DEASSERTTHRESH1, 0x0341);
-+	b43_phy_write(dev, B43_NPHY_ED_CRS40DEASSERTTHRESH0, 0x0341);
- 	b43_phy_write(dev, B43_NPHY_ED_CRS40DEASSERTTHRESH1, 0x0341);
- 	b43_phy_write(dev, B43_NPHY_ED_CRS20LASSERTTHRESH0, 0x042b);
- 	b43_phy_write(dev, B43_NPHY_ED_CRS20LASSERTTHRESH1, 0x042b);
-@@ -5205,7 +5205,7 @@ static int b43_phy_initn(struct b43_wldev *dev)
- 	b43_phy_write(dev, B43_NPHY_TXMACIF_HOLDOFF, 0x0015);
- 	b43_phy_write(dev, B43_NPHY_TXMACDELAY, 0x0320);
- 	if (phy->rev >= 3 && phy->rev <= 6)
--		b43_phy_write(dev, B43_NPHY_PLOAD_CSENSE_EXTLEN, 0x0014);
-+		b43_phy_write(dev, B43_NPHY_PLOAD_CSENSE_EXTLEN, 0x0032);
- 	b43_nphy_tx_lp_fbw(dev);
- 	if (phy->rev >= 3)
- 		b43_nphy_spur_workaround(dev);
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
 -- 
-1.8.4.5
+1.8.2.3
 
