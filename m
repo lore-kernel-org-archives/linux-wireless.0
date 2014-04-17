@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s13.blu0.hotmail.com ([65.55.111.88]:14047 "EHLO
-	blu0-omc2-s13.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759235AbaD3Rux convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Apr 2014 13:50:53 -0400
-Message-ID: <BLU0-SMTP5388FC10A36BF1D90FE79FA9410@phx.gbl> (sfid-20140430_195056_845767_E8F61E12)
-Date: Wed, 30 Apr 2014 14:50:46 -0300
-From: Nicolas Vaquero <nicovaq92@hotmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Sven Eckelmann <sven@narfation.org>
-CC: Tim Gardner <rtg.canonical@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel source
-References: <535E7741.1030607@lwfinger.net> <3262959.TlL8alHHte@bentobox> <53610B15.4000607@lwfinger.net>
-In-Reply-To: <53610B15.4000607@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:44572 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751465AbaDQJKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2014 05:10:01 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 1/2] rt2x00: fix beaconing on USB
+Date: Thu, 17 Apr 2014 11:08:47 +0200
+Message-Id: <1397725728-2786-1-git-send-email-sgruszka@redhat.com> (sfid-20140417_111009_699863_B9BE220D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you want, I can reinstall Ubuntu 12.04 and update it to the lastest 
-Kernel version from Update Manager.
-Teach me how to make a Bug Report and I'll send it to you.
-(Sorry for my English, maybe your eyes are bleeding)
+When disable beaconing we clear register with beacon and newer set it
+back, what make we stop send beacons infinitely.
 
-Nicolas
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-El 30/04/14 11:39, Larry Finger escribió:
-> Sven and Tim,
->
-> Attached is a one-line fix for the problem that shows up between 
-> 3.8.0-36 and 3.8.0-37. It is just a bare patch file, but feel free to 
-> add any explanatory text to make it a proper commit.
->
-> I have no real understanding as to why this line of code does not 
-> cause any problems with later kernel versions, but it does here. In 
-> addition, I have not had any reports of problems with other users. 
-> That makes me suspect some kind of bad interaction with the user-space 
-> network control components in 12.04.
->
-> Would it be helpful for Nicolas to prepare a bug report at Ubuntu?
->
-> Larry
->
->
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index ddeb5a7..a87ee9b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -621,20 +621,18 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 				      bss_conf->bssid);
+ 
+ 	/*
+-	 * Update the beacon. This is only required on USB devices. PCI
+-	 * devices fetch beacons periodically.
+-	 */
+-	if (changes & BSS_CHANGED_BEACON && rt2x00_is_usb(rt2x00dev))
+-		rt2x00queue_update_beacon(rt2x00dev, vif);
+-
+-	/*
+ 	 * Start/stop beaconing.
+ 	 */
+ 	if (changes & BSS_CHANGED_BEACON_ENABLED) {
+ 		if (!bss_conf->enable_beacon && intf->enable_beacon) {
+-			rt2x00queue_clear_beacon(rt2x00dev, vif);
+ 			rt2x00dev->intf_beaconing--;
+ 			intf->enable_beacon = false;
++			/*
++			 * Clear beacon in the H/W for this vif. This is needed
++			 * to disable beaconing on this particular interface
++			 * and keep it running on other interfaces.
++			 */
++			rt2x00queue_clear_beacon(rt2x00dev, vif);
+ 
+ 			if (rt2x00dev->intf_beaconing == 0) {
+ 				/*
+@@ -645,11 +643,15 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 				rt2x00queue_stop_queue(rt2x00dev->bcn);
+ 				mutex_unlock(&intf->beacon_skb_mutex);
+ 			}
+-
+-
+ 		} else if (bss_conf->enable_beacon && !intf->enable_beacon) {
+ 			rt2x00dev->intf_beaconing++;
+ 			intf->enable_beacon = true;
++			/*
++			 * Upload beacon to the H/W. This is only required on
++			 * USB devices. PCI devices fetch beacons periodically.
++			 */
++			if (rt2x00_is_usb(rt2x00dev))
++				rt2x00queue_update_beacon(rt2x00dev, vif);
+ 
+ 			if (rt2x00dev->intf_beaconing == 1) {
+ 				/*
+-- 
+1.8.4.2
 
