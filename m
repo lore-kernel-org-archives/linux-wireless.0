@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:65191 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932883AbaDIKHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Apr 2014 06:07:43 -0400
-Received: by mail-ee0-f46.google.com with SMTP id t10so1669737eei.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Apr 2014 03:07:42 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/4] ath10k: prevent beacon memory leak
-Date: Wed,  9 Apr 2014 12:01:24 +0200
-Message-Id: <1397037685-7485-4-git-send-email-michal.kazior@tieto.com> (sfid-20140409_120752_980020_52538786)
-In-Reply-To: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
-References: <1397037685-7485-1-git-send-email-michal.kazior@tieto.com>
+Received: from the.earth.li ([46.43.34.31]:52084 "EHLO the.earth.li"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750971AbaDQRbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2014 13:31:22 -0400
+Date: Thu, 17 Apr 2014 18:31:18 +0100
+From: Jonathan McDowell <noodles@earth.li>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Ilw] Re: Intel 7260 not working in 802.11n mode
+Message-ID: <20140417173118.GC24850@earth.li> (sfid-20140417_193126_161297_250DD7A2)
+References: <20140407003648.GA19740@earth.li>
+ <CANUX_P3H=F1C1H6NvdvpTHQh1JqvPjvyUjAygSQgeNyZ-q6=ZQ@mail.gmail.com>
+ <20140407064556.GN24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DC6723@HASMSX103.ger.corp.intel.com>
+ <20140407152312.GO24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DCA5EC@HASMSX103.ger.corp.intel.com>
+ <20140416061043.GZ24850@earth.li>
+ <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303DCC00F@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If DMA mapping of next beacon failed ath10k leaked
-the beacon.
+On Wed, Apr 16, 2014 at 07:58:01PM +0000, Grumbach, Emmanuel wrote:
+> > > I really can't see anything bad in this log.
+> > > Can you run tracing?
+> > >
+> > > sudo trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211 -e
+> > > cfg80211
+> > >
+> > > this will create a trace.dat file which I'd like to look at.
+> > 
+> > http://the.earth.li/~noodles/iwlwifi/broken-trace.dat.xz
+> > 
+> > and for completeness, with disable_11n=1:
+> > 
+> > http://the.earth.li/~noodles/iwlwifi/working-trace.dat.xz
+> > 
+> > In both cases I started the trace, flipped the hardware wifi disable switch, let
+> > Network Manager do its thing.
+> > 
+> Thanks for this. I am on vacation right now and won't be able to look
+> at this straight away.
+>
+> Please don't remove the files from your web server.  Also - if you can
+> open a bug on bugzilla.kernel.org - this would be best.  Cc
+> ilw@linux.intel.com to your bug. Thanks!
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 1 +
- 1 file changed, 1 insertion(+)
+No problem; bug 74311 raised. I'll leave the files around.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 35c7d52..ca51f17 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1450,6 +1450,7 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 					ATH10K_SKB_CB(bcn)->paddr);
- 		if (ret) {
- 			ath10k_warn("failed to map beacon: %d\n", ret);
-+			dev_kfree_skb_any(bcn);
- 			goto skip;
- 		}
- 
+J.
+
 -- 
-1.8.5.3
-
+I wondered why I lost three stones last week.
