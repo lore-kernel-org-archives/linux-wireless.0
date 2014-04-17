@@ -1,78 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:50210 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603AbaDSVKO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Apr 2014 17:10:14 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b57so2620346eek.12
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Apr 2014 14:10:12 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][next] b43: G-PHY: fix random mistakes to match specs
-Date: Sat, 19 Apr 2014 23:10:05 +0200
-Message-Id: <1397941805-1695-1-git-send-email-zajec5@gmail.com> (sfid-20140419_231100_038459_9498FD03)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:48624 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111AbaDQJ1E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Apr 2014 05:27:04 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 2/2] rt2x00: restore original beaconing state
+Date: Thu, 17 Apr 2014 11:08:48 +0200
+Message-Id: <1397725728-2786-2-git-send-email-sgruszka@redhat.com> (sfid-20140417_112713_191847_A3A5F2CC)
+In-Reply-To: <1397725728-2786-1-git-send-email-sgruszka@redhat.com>
+References: <1397725728-2786-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-That are pretty minor changes, but I have them queued for years, so I
-guess it's finally time to do some cleaning.
----
- drivers/net/wireless/b43/phy_g.c | 6 +++---
- drivers/net/wireless/b43/wa.c    | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+After changing local per interface beacon setting restore original
+global beaconing state.
 
-diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-index 12f467b..8f5c14b 100644
---- a/drivers/net/wireless/b43/phy_g.c
-+++ b/drivers/net/wireless/b43/phy_g.c
-@@ -1587,6 +1587,7 @@ static void b43_phy_initb5(struct b43_wldev *dev)
- 	b43_write16(dev, 0x03E4, (b43_read16(dev, 0x03E4) & 0xFFC0) | 0x0004);
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c | 15 +++++++--------
+ drivers/net/wireless/rt2x00/rt61pci.c   | 10 +++++-----
+ drivers/net/wireless/rt2x00/rt73usb.c   | 10 +++++-----
+ 3 files changed, 17 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 41d4a81..c17fcf2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1005,10 +1005,9 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 				   entry->skb->len + padding_len);
+ 
+ 	/*
+-	 * Enable beaconing again.
++	 * Restore beaconing state.
+ 	 */
+-	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
+-	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+ 
+ 	/*
+ 	 * Clean up beacon skb.
+@@ -1039,13 +1038,14 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
+ void rt2800_clear_beacon(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	u32 reg;
++	u32 orig_reg, reg;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+-	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
++	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &orig_reg);
++	reg = orig_reg;
+ 	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+@@ -1055,10 +1055,9 @@ void rt2800_clear_beacon(struct queue_entry *entry)
+ 	rt2800_clear_beacon_register(rt2x00dev, entry->entry_idx);
+ 
+ 	/*
+-	 * Enabled beaconing again.
++	 * Restore beaconing state.
+ 	 */
+-	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
+-	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+ }
+ EXPORT_SYMBOL_GPL(rt2800_clear_beacon);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 2440298..9048a9c 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2031,13 +2031,14 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ static void rt61pci_clear_beacon(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	u32 reg;
++	u32 orig_reg, reg;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+-	rt2x00mmio_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	rt2x00mmio_register_read(rt2x00dev, TXRX_CSR9, &orig_reg);
++	reg = orig_reg;
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00mmio_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 
+@@ -2048,10 +2049,9 @@ static void rt61pci_clear_beacon(struct queue_entry *entry)
+ 				  HW_BEACON_OFFSET(entry->entry_idx), 0);
+ 
+ 	/*
+-	 * Enable beaconing again.
++	 * Restore global beaconing state.
+ 	 */
+-	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
+-	rt2x00mmio_register_write(rt2x00dev, TXRX_CSR9, reg);
++	rt2x00mmio_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
  }
  
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/Init/B6 */
- static void b43_phy_initb6(struct b43_wldev *dev)
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index a140170..95724ff 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1597,13 +1597,14 @@ static void rt73usb_clear_beacon(struct queue_entry *entry)
  {
- 	struct b43_phy *phy = &dev->phy;
-@@ -1670,7 +1671,7 @@ static void b43_phy_initb6(struct b43_wldev *dev)
- 		b43_radio_write16(dev, 0x50, 0x20);
- 	}
- 	if (phy->radio_rev <= 2) {
--		b43_radio_write16(dev, 0x7C, 0x20);
-+		b43_radio_write16(dev, 0x50, 0x20);
- 		b43_radio_write16(dev, 0x5A, 0x70);
- 		b43_radio_write16(dev, 0x5B, 0x7B);
- 		b43_radio_write16(dev, 0x5C, 0xB0);
-@@ -1686,9 +1687,8 @@ static void b43_phy_initb6(struct b43_wldev *dev)
- 		b43_phy_write(dev, 0x2A, 0x8AC0);
- 	b43_phy_write(dev, 0x0038, 0x0668);
- 	b43_set_txpower_g(dev, &gphy->bbatt, &gphy->rfatt, gphy->tx_control);
--	if (phy->radio_rev <= 5) {
-+	if (phy->radio_rev == 4 || phy->radio_rev == 5)
- 		b43_phy_maskset(dev, 0x5D, 0xFF80, 0x0003);
--	}
- 	if (phy->radio_rev <= 2)
- 		b43_radio_write16(dev, 0x005D, 0x000D);
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	unsigned int beacon_base;
+-	u32 reg;
++	u32 orig_reg, reg;
  
-diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-index 9b1a038..c218c08 100644
---- a/drivers/net/wireless/b43/wa.c
-+++ b/drivers/net/wireless/b43/wa.c
-@@ -441,7 +441,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+-	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &orig_reg);
++	reg = orig_reg;
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
  
- static void b43_wa_tr_ltov(struct b43_wldev *dev) /* TR Lookup Table Original Values */
- {
--	b43_gtab_write(dev, B43_GTAB_ORIGTR, 0, 0xC480);
-+	b43_gtab_write(dev, B43_GTAB_ORIGTR, 0, 0x7654);
+@@ -1614,10 +1615,9 @@ static void rt73usb_clear_beacon(struct queue_entry *entry)
+ 	rt2x00usb_register_write(rt2x00dev, beacon_base, 0);
+ 
+ 	/*
+-	 * Enable beaconing again.
++	 * Restore beaconing state.
+ 	 */
+-	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
+-	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
  }
  
- static void b43_wa_cpll_nonpilot(struct b43_wldev *dev)
+ static int rt73usb_get_tx_data_len(struct queue_entry *entry)
 -- 
-1.8.4.5
+1.8.4.2
 
