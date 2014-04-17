@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54380 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:4243 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751139AbaDQSrl (ORCPT
+	by vger.kernel.org with ESMTP id S1750736AbaDQXeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Apr 2014 14:47:41 -0400
+	Thu, 17 Apr 2014 19:34:09 -0400
 From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+To: John Tobias <john.tobias.ph@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	Amitkumar Karwar <akarwar@marvell.com>,
 	Avinash Patil <patila@marvell.com>,
 	Maithili Hinge <maithili@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 5/5] mwifiex: enable aggregation for TID 6 and 7 streams
-Date: Thu, 17 Apr 2014 11:47:03 -0700
-Message-ID: <1397760423-11455-5-git-send-email-bzhao@marvell.com> (sfid-20140417_204800_421283_AD004D13)
-In-Reply-To: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
-References: <1397760423-11455-1-git-send-email-bzhao@marvell.com>
+	Xinming Hu <huxm@marvell.com>
+Date: Thu, 17 Apr 2014 16:33:58 -0700
+Subject: RE: [PATCH 2/2] mwifiex: don't clear cmd_sent flag in timeout
+ handler
+Message-ID: <477F20668A386D41ADCC57781B1F70430F70686650@SC-VEXCH1.marvell.com> (sfid-20140418_013414_385261_37DD825D)
+References: <1397710914-10061-1-git-send-email-bzhao@marvell.com>
+	<1397710914-10061-2-git-send-email-bzhao@marvell.com>
+ <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+In-Reply-To: <CACUGKYMWqr2-YAXhPzo8GfPPYBd2xoD_zf56FzqpkzN=X80X8A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-Currently AMSDU and AMPDU aggregation is enabled for TID 0 to
-TID 5 streams. Lets enable it for remaining two streams also.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 9 ---------
- 1 file changed, 9 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 0a7cc74..94b6c74 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -426,15 +426,6 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
- 							priv->tos_to_tid_inv[i];
- 		}
- 
--		priv->aggr_prio_tbl[6].amsdu
--					= priv->aggr_prio_tbl[6].ampdu_ap
--					= priv->aggr_prio_tbl[6].ampdu_user
--					= BA_STREAM_NOT_ALLOWED;
--
--		priv->aggr_prio_tbl[7].amsdu = priv->aggr_prio_tbl[7].ampdu_ap
--					= priv->aggr_prio_tbl[7].ampdu_user
--					= BA_STREAM_NOT_ALLOWED;
--
- 		mwifiex_set_ba_params(priv);
- 		mwifiex_reset_11n_rx_seq_num(priv);
- 
--- 
-1.8.2.3
-
+SGkgSm9obiwNCg0KPiBIaSBCaW5nLA0KPiANCj4gQXNzdW1pbmcgdGhlIHRpbWVvdXQgaGFwcGVu
+ZWQgZHVlIHRvIGEgZmlybXdhcmUgYnVnLiBEb2VzIHRoZSBmaXJtd2FyZQ0KPiBhYmxlIHRvIHJl
+Y292ZXIgYWZ0ZXIgc2V0dGluZyBhZGFwdGVyLT5jbWRfc2VudCA9IGZhbHNlIGFuZCB0aGUNCj4g
+ZmlybXdhcmUgY291bGQgYWNjZXB0IGEgbmV3IGNvbW1hbmRzIHdpdGhvdXQgbG9ja2luZz8uDQoN
+ClRoYXQgImFkYXB0ZXItPmNtZF9zZW50ID0gZmFsc2UiIHdhcyBob3BpbmcgdGhlIGZpcm13YXJl
+IGlzIHN0aWxsIGFsaXZlIGFuZCBjYW4gcmVzcG9uZCB0byBhIG5ldyBjb21tYW5kLiBUaGUgcmVh
+bGl0eSBpcyB0aGF0IHRoZSB0aW1lb3V0IHVzdWFsbHkgaW5kaWNhdGVzIHRoZSBmaXJtd2FyZSBo
+YXMgYWxyZWFkeSBodW5nLiBTZW5kaW5nIGFub3RoZXIgY29tbWFuZCB3b24ndCByZWNvdmVyIGl0
+IGluIHRoaXMgY2FzZS4NCg0KPiBTZWVtcywgdGhpcyBpcyB0aGUgYnVnIEkgd2FzIGVuY291bnRl
+cmluZyBhbmQgY291bGRuJ3QgYWNjZXNzIHRoZQ0KPiBtbGFuMCBpbnRlcmZhY2UgYW55bW9yZS4u
+Lg0KDQpUaGlzIHBhdGNoIGl0c2VsZiBkb2Vzbid0IHNvbHZlIGFueSBleGlzdGluZyBpc3N1ZS4g
+SXQgaGVscHMga2VlcCB0aGUgc2NlbmUgb2YgdGhlIGluaXRpYWwgdGltZW91dCBmb3IgaW52ZXN0
+aWdhdGlvbi4NCg0KPiANCj4gSXMgdGhlcmUgYSB3YXkgdG8gZm9yY2UgdGhlIGZpcm13YXJlIHRv
+IHJlc2V0IGl0IHdpdGhvdXQgcmVib290aW5nIGl0Py4NCg0KSSBndWVzcyB5b3UgYXJlIHVzaW5n
+IFNESU8gY2hpcC4gSWYgeW91ciBob3N0IGNvbnRyb2xsZXIgc3VwcG9ydHMgTU1DX1BPV0VSX09G
+Ri9VUCwgeW91IGNhbiByZXNldCB0aGUgY2hpcCB3aXRoIHRoaXMgYXBwcm9hY2g6DQoNCiAgICAg
+ICAgbW1jX3JlbW92ZV9ob3N0KGhvc3QpOw0KICAgICAgICAvKiBzb21lIGRlbGF5ICovDQogICAg
+ICAgIG1tY19hZGRfaG9zdChob3N0KTsNCg0KUmVnYXJkcywNCkJpbmcNCg0KPiANCj4gUmVnYXJk
+cywNCj4gDQo+IGpvaG4NCj4gDQo+IA0KPiBPbiBXZWQsIEFwciAxNiwgMjAxNCBhdCAxMDowMSBQ
+TSwgQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogQW1pdGt1
+bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IFdoZW4gY29tbWFuZCB0
+aW1lb3V0IG9jY3VycyBkdWUgdG8gYSBmaXJtd2FyZS9oYXJkd2FyZSBidWcsDQo+ID4gdGhlcmUg
+aXMgbm8gY2hhbmNlIG9mIG5leHQgY29tbWFuZCBiZWluZyBzdWNjZXNzZnVsLiBXZSB3aWxsDQo+
+ID4ga2VlcCBjbWRfc2VudCBmbGFnIG9uIHNvIHRoYXQgbmV4dCBjb21tYW5kIHdvbid0IGJlIHNl
+bnQgdG8NCj4gPiBmaXJtd2FyZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEFtaXRrdW1hciBL
+YXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQmluZyBaaGFv
+IDxiemhhb0BtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bXdpZmlleC9jbWRldnQuYyB8IDIgLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIgZGVsZXRpb25z
+KC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9j
+bWRldnQuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMNCj4gPiBpbmRl
+eCAxMDYyYzkxLi44ZGVlNmM4IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L213aWZpZXgvY21kZXZ0LmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
+L2NtZGV2dC5jDQo+ID4gQEAgLTk1NSw4ICs5NTUsNiBAQCBtd2lmaWV4X2NtZF90aW1lb3V0X2Z1
+bmModW5zaWduZWQgbG9uZyBmdW5jdGlvbl9jb250ZXh0KQ0KPiA+ICAgICAgICAgICAgICAgICAg
+ICAgICAgIGFkYXB0ZXItPmNtZF93YWl0X3Euc3RhdHVzID0gLUVUSU1FRE9VVDsNCj4gPiAgICAg
+ICAgICAgICAgICAgICAgICAgICB3YWtlX3VwX2ludGVycnVwdGlibGUoJmFkYXB0ZXItPmNtZF93
+YWl0X3Eud2FpdCk7DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgbXdpZmlleF9jYW5jZWxf
+cGVuZGluZ19pb2N0bChhZGFwdGVyKTsNCj4gPiAtICAgICAgICAgICAgICAgICAgICAgICAvKiBy
+ZXNldCBjbWRfc2VudCBmbGFnIHRvIHVuYmxvY2sgbmV3IGNvbW1hbmRzICovDQo+ID4gLSAgICAg
+ICAgICAgICAgICAgICAgICAgYWRhcHRlci0+Y21kX3NlbnQgPSBmYWxzZTsNCj4gPiAgICAgICAg
+ICAgICAgICAgfQ0KPiA+ICAgICAgICAgfQ0KPiA+ICAgICAgICAgaWYgKGFkYXB0ZXItPmh3X3N0
+YXR1cyA9PSBNV0lGSUVYX0hXX1NUQVRVU19JTklUSUFMSVpJTkcpDQo+ID4gLS0NCj4gPiAxLjgu
+Mi4zDQo+ID4NCj4gPiAtLQ0KPiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
+IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4NCj4gPiB0aGUgYm9keSBv
+ZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
