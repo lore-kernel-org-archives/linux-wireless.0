@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:61109 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983AbaDMTUk (ORCPT
+Received: from mail-wi0-f196.google.com ([209.85.212.196]:51184 "EHLO
+	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154AbaDQPrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Apr 2014 15:20:40 -0400
-Received: by mail-wi0-f180.google.com with SMTP id q5so3132437wiv.13
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Apr 2014 12:20:39 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 17 Apr 2014 11:47:49 -0400
+Received: by mail-wi0-f196.google.com with SMTP id d1so280153wiv.11
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2014 08:47:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
+References: <CAEnUK=Oi6FL48o_L-Ax6U=qVNWg8YbXRYTa_G1sJGj_H0HvCMg@mail.gmail.com>
+	<CAEnUK=MSX1uj0JYdOKj-FyM944=_PXMRmxZSLrfmW3y=QyoWKQ@mail.gmail.com>
+Date: Thu, 17 Apr 2014 18:47:48 +0300
+Message-ID: <CAEnUK=Pd7TwhABQLgX8zqhJBwh57ZE90AUXq+PCT4j7-sE2AKg@mail.gmail.com> (sfid-20140417_174753_631962_9497E545)
+Subject: Fwd: RTL8192CU chip strange works
+From: =?UTF-8?B?0JDRgNGC0LXQvCDQodC10YDQs9C40LXQvdC60L4=?=
+	<imtaurin@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/47] iwlwifi: mvm: Fix warning message when exit thermal throttling
-Date: Sun, 13 Apr 2014 22:19:35 +0300
-Message-Id: <1397416802-32403-20-git-send-email-egrumbach@gmail.com> (sfid-20140413_213517_494664_D469D655)
-In-Reply-To: <534AE330.2020805@gmail.com>
-References: <534AE330.2020805@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Hello! I bought a device TP-Link wn8200nd with Realtek RTL8192CU chip.
 
-When NIC exit thermal throttling while having minimal tx-backoff
-restriction, the warning message that indicate about that state
-won't show up. Fixed.
+I have troubles to connect it to the my Asus RT-N16 under Linux (Gentoo).
 
-Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+It connecting to WiFi spot in my phones. But it can't connect to Asus
+RT-N16 in Linux. It connects to Asus RT-N16 only under Windows.
+I used drivers from various Linux kernels and used drivers from your
+official site, but there is no success. I absolutely can't understand
+what's happening. Why in Linux I can connect to some devices but I
+can't connect to my home router. (Router works fine for 3 years)
+Every time connection asks me a password, I enter it, but in minute or
+less it wants me to enter password one more time. (I even change
+password to very easy, password is right)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
-index 7a99fa3..cee4e72 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
-@@ -484,7 +484,8 @@ void iwl_mvm_tt_handler(struct iwl_mvm *mvm)
- 		IWL_WARN(mvm,
- 			 "Due to high temperature thermal throttling initiated\n");
- 		tt->throttle = true;
--	} else if (tt->throttle && !tt->dynamic_smps && tt->tx_backoff == 0 &&
-+	} else if (tt->throttle && !tt->dynamic_smps &&
-+		   tt->tx_backoff == tt->min_backoff &&
- 		   temperature <= params->tx_protection_exit) {
- 		IWL_WARN(mvm,
- 			 "Temperature is back to normal thermal throttling stopped\n");
--- 
-1.8.3.2
+I read a lot off information about it, and I know many people which
+have similar problems.
 
+Please help me. I think all troubles in the driver. I can send you all
+information that you need.
